@@ -25,16 +25,16 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 |                              |                         | [Re-identification]()                            |                        |
 |                              |                         | [Semantic Segmentation]()                        |                        |
 
-|  Maths     | Programming Language | Resources              |
-|------------|----------------------|------------------------|
-|            | [Swift]()            | [Anaconda]()           |
-|            | [Python]()           | [Docker]()             |
-|            |                      | [Effective Study]()    |
-|            |                      | [Linux]()              |
-|            |                      | [Pip]()                |
-|            |                      | [Project Management]() |
-|            |                      | [Misc]()               |
-|            |                      | [Writing]()            |
+|  Maths     | Programming Language | Resources                         |
+|------------|----------------------|-----------------------------------|
+|            | [Swift]()            | [Anaconda](resources/anaconda.md) |
+|            | [Python]()           | [Docker]()                        |
+|            |                      | [Effective Study]()               |
+|            |                      | [Linux]()                         |
+|            |                      | [Pip]()                           |
+|            |                      | [Project Management]()            |
+|            |                      | [Misc]()                          |
+|            |                      | [Writing]()                       |
 
 
 ## Projects
