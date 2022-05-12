@@ -1,6 +1,6 @@
 <div align="center">
 <p>
-   <img width="800" src="../../data/images/docker.png"></a>
+   <img height="200px" src="../../data/images/docker.png"></a>
 </p>
 <br>
 

@@ -2,7 +2,6 @@
 <p>
    <img width="850" src="../data/images/research.png"></a>
 </p>
-<br>
 
 <img src="../data/logo/one_100.png" width="32"> <span style="color:rgb(255, 59, 48);">Research Handbook</span> <img src="../data/logo/square_96.png" width="32">
 =============================
