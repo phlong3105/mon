@@ -8,8 +8,9 @@ Docker
 =============================
 
 <p align="center">
-  <a href="#installation">Installation</a> •
-  <a href="../../data/pdf/docker_cheatsheet.pdf">Cheatsheet</a>
+    <a href="https://github.com/phlong3105/one/blob/master/data/pdf/docker_cheatsheet.pdf">
+        <img src="../../data/images/paper.png" height="32" alt="Cheatsheet"/>
+    </a>
 </p>
 </div>
 

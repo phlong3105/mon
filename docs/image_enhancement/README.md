@@ -6,10 +6,6 @@
 Image Enhancement
 =============================
 
-<p align="center">
-  <a href="#methods">Methods</a> •
-  <a href="#data">Data</a> 
-</p>
 </div>
 
 - Image enhancement is the procedure of improving the quality and the information content of original data before processing.
