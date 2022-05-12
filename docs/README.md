@@ -30,10 +30,8 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 |            | [Swift]()            | [Anaconda](resources/anaconda.md) |
 |            | [Python]()           | [Docker](resources/docker.md)     |
 |            |                      | [Effective Study]()               |
-|            |                      | [Linux]()                         |
 |            |                      | [Pip]()                           |
 |            |                      | [Project Management]()            |
-|            |                      | [Misc]()                          |
 |            |                      | [Writing]()                       |
 
 
@@ -54,6 +52,6 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 ## Misc
 
 <div align="center">
-<img src="../data/images/lifecycle.png" width="850">
-<img src="../data/images/stoicism.png"  width="850">
+<img src="../data/images/lifecycle.png" width="600">
+<img src="../data/images/stoicism.png"  width="600">
 </div>

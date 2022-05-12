@@ -5,7 +5,8 @@ Anaconda
 
 <p align="center">
   <a href="#installation">Installation</a> •
-  <a href="../../data/pdf/conda_cheatsheet.pdf">Cheatsheet</a>
+  <a href="../../data/pdf/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
+  <a href="../../data/pdf/pip_cheatsheet.pdf">PIP Cheatsheet</a>
 </p>
 </div>
 
