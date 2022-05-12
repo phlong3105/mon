@@ -1,0 +1,8 @@
+# train and val datasets (image directory or *.txt file with image paths)
+train: a2i2haze/extra/uavdt/train/images
+val  : a2i2haze/extra/a2i2haze/dryrun/images
+test : a2i2haze/extra/a2i2haze/dryrun/images
+
+# number of classes
+nc   : 1
+names: ["vehicle"]

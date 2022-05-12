@@ -1,0 +1,16 @@
+{
+  "class_labels": [
+    { "name": "ignored regions", "id": 0,  "color": [128, 128, 128] },
+    { "name": "pedestrian"     , "id": 1,  "color": [220,  20,  60] },
+    { "name": "people"         , "id": 2,  "color": [255,   0,   0] },
+    { "name": "bicycle"        , "id": 3,  "color": [119,  11,  32] },
+    { "name": "car"            , "id": 4,  "color": [  0,   0, 142] },
+    { "name": "van"            , "id": 5,  "color": [  0,   0,  90] },
+    { "name": "truck"          , "id": 6,  "color": [  0,   0,  70] },
+    { "name": "tricycle"       , "id": 7,  "color": [255,  45,  85] },
+    { "name": "awning-tricycle", "id": 8,  "color": [ 88,  86, 214] },
+    { "name": "bus"            , "id": 9,  "color": [  0,  60, 100] },
+    { "name": "motor"          , "id": 10, "color": [  0,   0, 230] },
+    { "name": "others"         , "id": 11, "color": [  0,   0,   0] }
+  ]
+}

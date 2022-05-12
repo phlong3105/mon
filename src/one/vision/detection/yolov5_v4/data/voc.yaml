@@ -1,0 +1,22 @@
+# PASCAL VOC dataset http://host.robots.ox.ac.uk/pascal/VOC/
+# Train command: python train.py --aicity2021 voc.yaml
+# Default dataset location is next to /yolov5:
+#   /parent_folder
+#     /VOC
+#     /yolov5
+
+
+# download command/URL (optional)
+download: bash aicity2021/scripts/get_voc.sh
+
+# train and val aicity2021 as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: ../../../../../datasets/VOC/images/train/  # 16551 images
+val  : ../../../../../datasets/VOC/images/val/    # 4952 images
+
+# number of classes
+nc   : 20
+names: [ 
+  "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair",
+  "cow", "diningtable", "dog",  "horse", "motorbike", "person", "pottedplant", 
+  "sheep", "sofa", "train", "tvmonitor" 
+]

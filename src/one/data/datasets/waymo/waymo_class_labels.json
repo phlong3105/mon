@@ -1,0 +1,9 @@
+{
+  "class_labels": [
+    { "name": "unknown",    "id": 0, "color": [128, 128, 128] },
+    { "name": "vehicle",    "id": 1, "color": [  0,   0, 142] },
+    { "name": "pedestrian", "id": 2, "color": [220,  20,  60] },
+    { "name": "sign",       "id": 3, "color": [119,  11,  32] },
+    { "name": "cyclist",    "id": 4, "color": [119,  11,  32] }
+  ]
+}
