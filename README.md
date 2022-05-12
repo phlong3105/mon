@@ -9,6 +9,7 @@ metrics, ..., datasets, and models.
 <p align="center">
   <a href="#installation">Installation</a> •
   <a href="#how-to-use">How To Use</a> •
+  <a href="docs/README.md">Handbook</a> •
   <a href="#citation">Citation</a> •
   <a href="#contact">Contact</a>
 </p>
@@ -85,6 +86,7 @@ pip install --upgrade -e .
 
 
 ## <div align="center">How To Use</div>
+
 To be updated.
 
 
