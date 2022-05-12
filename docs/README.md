@@ -13,50 +13,17 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 ## Knowledge Base
 
-| Machine Learning             | Learning Process        | 
-|------------------------------|-------------------------|
-| [Anomaly Detection]()        | [Data Processing]()     |
-| [Classification]()           | [Model Training]()      |
-| [Clustering]()               | [Analysis-Evaluation]() |
-| [Dimensionality Reduction]() | [Model Deployment]()    |
-| [Learning Technique]()       |                         |
-| [Neural Network]()           |                         |
-| [Regression]()               |                         |
-
-<details open>
-<summary><b style="font-size:18px">01. Machine Learning</b></summary>
-
-- [Anomaly Detection]()
-- [Classification]()
-- [Clustering]()
-- [Dimensionality Reduction]()
-- [Learning Technique]()
-- [Neural Network]()
-- [Regression]()
-</details>
-
-<details open>
-<summary><b style="font-size:18px">02. Learning Process</b></summary>
-
-- [Data Processing]()
-- [Model Training]()
-- [Analysis-Evaluation]()
-- [Model Deployment]()
-</details>
-
-<details open>
-<summary><b style="font-size:18px">03. Computer Vision</b></summary>
-
-- [Action Recognition]()
-- [Image Classification]()
-- [Image Enhancement](docs/image_enhancement/README.md)
-- [Instance Segmentation]()
-- [Lane Detection]()
-- [Object Detection]()
-- [Object Tracking]()
-- [Re-identification]()
-- [Semantic Segmentation]()
-</details>
+| Machine Learning             | Learning Process        | Computer Vision                                       |
+|------------------------------|-------------------------|-------------------------------------------------------|
+| [Anomaly Detection]()        | [Data Processing]()     | [Action Recognition]()                                |
+| [Classification]()           | [Model Training]()      | [Image Classification]()                              |
+| [Clustering]()               | [Analysis-Evaluation]() | [Image Enhancement](docs/image_enhancement/README.md) |
+| [Dimensionality Reduction]() | [Model Deployment]()    | [Instance Segmentation]()                             |
+| [Learning Technique]()       |                         | [Lane Detection]()                                    |
+| [Neural Network]()           |                         | [Object Detection]()                                  |
+| [Regression]()               |                         | [Object Tracking]()                                   | 
+|                              |                         | [Re-identification]()                                 |
+|                              |                         | [Semantic Segmentation]()                             |
 
 <details open>
 <summary><b style="font-size:18px">04. Image Processing</b></summary>
