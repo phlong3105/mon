@@ -4,14 +4,24 @@
 </p>
 <br>
 
-<span style="color:rgb(255, 59, 48);">The Research Handbook</span> <img src="../data/logo/square_96.png" width="32">
+<img src="../data/logo/one_100.png" width="32"> <span style="color:rgb(255, 59, 48);">Research Handbook</span> <img src="../data/logo/square_96.png" width="32">
 =============================
 </div>
 
-`The Research Handbook` is a comprehensive guide to modern computer vision with machine learning and deep learning methods and technologies. We summarize various types of machine learning methods, related theory, and the best practices when applying in competitive competitions and real-world applications.
+The `Research Handbook` is a comprehensive guide to modern computer vision with machine learning and deep learning methods and technologies. We summarize various types of machine learning methods, related theory, and the best practices when applying in competitive competitions and real-world applications.
 
 
 ## Knowledge Base
+
+| Machine Learning             | Learning Process        | 
+|------------------------------|-------------------------|
+| [Anomaly Detection]()        | [Data Processing]()     |
+| [Classification]()           | [Model Training]()      |
+| [Clustering]()               | [Analysis-Evaluation]() |
+| [Dimensionality Reduction]() | [Model Deployment]()    |
+| [Learning Technique]()       |                         |
+| [Neural Network]()           |                         |
+| [Regression]()               |                         |
 
 <details open>
 <summary><b style="font-size:18px">01. Machine Learning</b></summary>
@@ -26,7 +36,7 @@
 </details>
 
 <details open>
-<summary><b style="font-size:18px">02. Machine/Deep Learning</b></summary>
+<summary><b style="font-size:18px">02. Learning Process</b></summary>
 
 - [Data Processing]()
 - [Model Training]()
