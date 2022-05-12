@@ -13,31 +13,28 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 ## Knowledge Base
 
-| Machine Learning             | Learning Process        | Computer Vision                                       | Image Processing       | Maths | Programming Language |
-|------------------------------|-------------------------|-------------------------------------------------------|------------------------|-------|----------------------|
-| [Anomaly Detection]()        | [Data Processing]()     | [Action Recognition]()                                | [Feature Extraction]() |       | [Swift]()            |
-| [Classification]()           | [Model Training]()      | [Image Classification]()                              | [Geometry]()           |       | [Python]()           |
-| [Clustering]()               | [Analysis-Evaluation]() | [Image Enhancement](docs/image_enhancement/README.md) | [Image Acquisition]()  |       |                      |
-| [Dimensionality Reduction]() | [Model Deployment]()    | [Instance Segmentation]()                             | [Image Registration]() |       |                      |
-| [Learning Technique]()       |                         | [Lane Detection]()                                    | [Motion Analysis]()    |       |                      |
-| [Neural Network]()           |                         | [Object Detection]()                                  | [Reconstruction]()     |       |                      |
-| [Regression]()               |                         | [Object Tracking]()                                   |                        |       |                      |
-|                              |                         | [Re-identification]()                                 |                        |       |                      |
-|                              |                         | [Semantic Segmentation]()                             |                        |       |                      |
+| Machine Learning             | Learning Process        | Computer Vision                                       | Image Processing       |
+|------------------------------|-------------------------|-------------------------------------------------------|------------------------|
+| [Anomaly Detection]()        | [Data Processing]()     | [Action Recognition]()                                | [Feature Extraction]() |
+| [Classification]()           | [Model Training]()      | [Image Classification]()                              | [Geometry]()           |
+| [Clustering]()               | [Analysis-Evaluation]() | [Image Enhancement](docs/image_enhancement/README.md) | [Image Acquisition]()  |
+| [Dimensionality Reduction]() | [Model Deployment]()    | [Instance Segmentation]()                             | [Image Registration]() |
+| [Learning Technique]()       |                         | [Lane Detection]()                                    | [Motion Analysis]()    |
+| [Neural Network]()           |                         | [Object Detection]()                                  | [Reconstruction]()     |
+| [Regression]()               |                         | [Object Tracking]()                                   |                        |
+|                              |                         | [Re-identification]()                                 |                        |
+|                              |                         | [Semantic Segmentation]()                             |                        |
 
-
-<details open>
-<summary><b style="font-size:18px">07. Resources</b></summary>
-
-- [Anaconda]()
-- [Docker]()
-- [Effective Study]()
-- [Linux]()
-- [Pip]()
-- [Project Management]()
-- [Misc]()
-- [Writing]()
-</details>
+|  Maths     | Programming Language | Resources              |
+|------------|----------------------|------------------------|
+|            | [Swift]()            | [Anaconda]()           |
+|            | [Python]()           | [Docker]()             |
+|            |                      | [Effective Study]()    |
+|            |                      | [Linux]()              |
+|            |                      | [Pip]()                |
+|            |                      | [Project Management]() |
+|            |                      | [Misc]()               |
+|            |                      | [Writing]()            |
 
 
 ## Projects
