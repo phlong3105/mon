@@ -39,34 +39,13 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 ## Projects
 
-<details open>
-<summary><b style="font-size:18px">Challenges</b></summary>
-
-- [AI City]()
-- [AutoNUE]()
-- [KATECH]()
-- [KODAS]()
-- [NTIRE]()
-- [UG2+]()
-- [VisDrone]()
-- [Waymo]()
-</details>
-
-<details open>
-<summary><b style="font-size:18px">Aerial Vehicle</b></summary>
-
-- NA
-</details>
-
-<details open>
-<summary><b style="font-size:18px">Autonomous Vehicle</b></summary>
-
-- [Autonomous Sensor]()
-- [Scene Understanding]()
-</details>
-
-<details open>
-<summary><b style="font-size:18px">Surveillance System</b></summary>
-
-- [Edge TSS]()
-</details>
+| Challenges   | Aerial Vehicle | Autonomous Vehicle      | Surveillance System |
+|--------------|----------------|-------------------------|---------------------|
+| [AI City]()  |                | [Autonomous Sensor]()   | [Edge TSS]()        |
+| [AutoNUE]()  |                | [Scene Understanding]() |                     |
+| [KATECH]()   |                |                         |                     |
+| [KODAS]()    |                |                         |                     |
+| [NTIRE]()    |                |                         | )                   |
+| [UG2+]()     |                |                         |                     |
+| [VisDrone]() |                |                         |                     |
+| [Waymo]()    |                |                         |                     |
