@@ -45,7 +45,7 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 | [AutoNUE]()  |                | [Scene Understanding]() |                     |
 | [KATECH]()   |                |                         |                     |
 | [KODAS]()    |                |                         |                     |
-| [NTIRE]()    |                |                         | )                   |
+| [NTIRE]()    |                |                         |                     |
 | [UG2+]()     |                |                         |                     |
 | [VisDrone]() |                |                         |                     |
 | [Waymo]()    |                |                         |                     |
