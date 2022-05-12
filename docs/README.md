@@ -28,7 +28,7 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 |  Maths     | Programming Language | Resources                         |
 |------------|----------------------|-----------------------------------|
 |            | [Swift]()            | [Anaconda](resources/anaconda.md) |
-|            | [Python]()           | [Docker]()                        |
+|            | [Python]()           | [Docker](resources/docker.md)     |
 |            |                      | [Effective Study]()               |
 |            |                      | [Linux]()                         |
 |            |                      | [Pip]()                           |
