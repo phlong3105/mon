@@ -1,6 +1,6 @@
 <div align="center">
 <p>
-   <img width="850" src="../data/images/banner.jpeg"></a>
+   <img width="850" src="../data/images/research.png"></a>
 </p>
 <br>
 
