@@ -1,17 +1,15 @@
 <div align="center">
 <p>
-   <img height="200px" src="../../data/images/docker.png"></a>
+   <img height="200px" src="../../data/images/docker.png">
 </p>
 <br>
 
 Docker
 =============================
 
-<p align="center">
-    <a href="https://github.com/phlong3105/one/blob/master/data/pdf/docker_cheatsheet.pdf">
-        <img src="../../data/images/paper.png" height="32" alt="Cheatsheet"/>
-    </a>
-</p>
+<div align="center">
+    <a href="https://github.com/phlong3105/one/blob/master/data/pdf/docker_cheatsheet.pdf">Cheatsheet</a>
+</div>
 </div>
 
 ## Installation

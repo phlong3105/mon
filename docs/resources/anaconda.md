@@ -3,10 +3,10 @@
 Anaconda
 =============================
 
-<p align="center">
-  <a href="../../data/pdf/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
-  <a href="../../data/pdf/pip_cheatsheet.pdf">PIP Cheatsheet</a>
-</p>
+<div align="center">
+  <a href="https://github.com/phlong3105/one/blob/master/data/pdf/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
+  <a href="https://github.com/phlong3105/one/blob/master/data/pdf/pip_cheatsheet.pdf">PIP Cheatsheet</a>
+</div>
 </div>
 
 ## Installation
