@@ -13,28 +13,17 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 ## Knowledge Base
 
-| Machine Learning             | Learning Process        | Computer Vision                                       |
-|------------------------------|-------------------------|-------------------------------------------------------|
-| [Anomaly Detection]()        | [Data Processing]()     | [Action Recognition]()                                |
-| [Classification]()           | [Model Training]()      | [Image Classification]()                              |
-| [Clustering]()               | [Analysis-Evaluation]() | [Image Enhancement](docs/image_enhancement/README.md) |
-| [Dimensionality Reduction]() | [Model Deployment]()    | [Instance Segmentation]()                             |
-| [Learning Technique]()       |                         | [Lane Detection]()                                    |
-| [Neural Network]()           |                         | [Object Detection]()                                  |
-| [Regression]()               |                         | [Object Tracking]()                                   | 
-|                              |                         | [Re-identification]()                                 |
-|                              |                         | [Semantic Segmentation]()                             |
-
-<details open>
-<summary><b style="font-size:18px">04. Image Processing</b></summary>
-
-- [Feature Extraction]()
-- [Geometry]()
-- [Image Acquisition]()
-- [Image Registration]()
-- [Motion Analysis]()
-- [Reconstruction]()
-</details>
+| Machine Learning             | Learning Process        | Computer Vision                                       | Image Processing       |
+|------------------------------|-------------------------|-------------------------------------------------------|------------------------|
+| [Anomaly Detection]()        | [Data Processing]()     | [Action Recognition]()                                | [Feature Extraction]() |
+| [Classification]()           | [Model Training]()      | [Image Classification]()                              | [Geometry]()           |
+| [Clustering]()               | [Analysis-Evaluation]() | [Image Enhancement](docs/image_enhancement/README.md) | [Image Acquisition]()  |
+| [Dimensionality Reduction]() | [Model Deployment]()    | [Instance Segmentation]()                             | [Image Registration]() |
+| [Learning Technique]()       |                         | [Lane Detection]()                                    | [Motion Analysis]()    |
+| [Neural Network]()           |                         | [Object Detection]()                                  | [Reconstruction]()     |
+| [Regression]()               |                         | [Object Tracking]()                                   |                        |
+|                              |                         | [Re-identification]()                                 |                        |
+|                              |                         | [Semantic Segmentation]()                             |                        |
 
 <details open>
 <summary><b style="font-size:18px">05. Maths</b></summary>
