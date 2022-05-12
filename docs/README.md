@@ -49,3 +49,11 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 | [UG2+]()     |                |                         |                     |
 | [VisDrone]() |                |                         |                     |
 | [Waymo]()    |                |                         |                     |
+
+
+## Misc
+
+<div align="center">
+<img src="../data/images/lifecycle.png" width="850">
+<img src="../data/images/stoicism.png"  width="850">
+</div>
