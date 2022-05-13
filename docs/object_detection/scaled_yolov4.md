@@ -211,10 +211,8 @@ In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. I
 <summary><b style="font-size:16px">Ablation Study on YOLOv4-large</b></summary>
 
 <div align="center">
-	<figure>
-	  <img width="350" src="../../data/images/scaled_yolov4_large_ablation.png">
-	  <figcaption>Ablation study of training schedule with/without fine-tuning.</figcaption>
-	</figure>
+	<img width="350" src="../../data/images/scaled_yolov4_large_ablation.png">
+	<p>Ablation study of training schedule with/without fine-tuning.</p>
 </div>
 
 - For YOLOv4-large, 300 epochs are firstly executed and then followed by 150 epochs for fine-tuning using stronger data augmentation method.
