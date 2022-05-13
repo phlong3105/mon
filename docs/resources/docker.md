@@ -5,7 +5,7 @@ Docker
 =============================
 
 <div align="center">
-    <a href="https://github.com/phlong3105/one/blob/master/data/pdf/docker_cheatsheet.pdf">Cheatsheet</a>
+    <a href="../../data/pdf/docker_cheatsheet.pdf">Cheatsheet</a>
 </div>
 </div>
 
