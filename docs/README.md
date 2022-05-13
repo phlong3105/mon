@@ -11,6 +11,59 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 
 ## Knowledge Base
+<table>
+    <tr>
+        <th>Category</th>
+        <th>Topics</th>
+    </tr>
+    <tr>
+        <td><b>Machine&nbsp;Learning</b></td>
+        <td>
+            <a href="" style="margin:5px">Anomaly&nbsp;Detection</a>
+            <a href="" style="margin:5px">Classification</a>
+            <a href="" style="margin:5px">Clustering</a>
+            <a href="" style="margin:5px">Dimensionality&nbsp;Reduction</a>
+            <a href="" style="margin:5px">Neural&nbsp;Network</a>
+            <a href="" style="margin:5px">Regression</a>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Learning&nbsp;Process</b></td>
+        <td>
+            <a href="" style="margin:5px">Data&nbsp;Processing</a>
+            <a href="" style="margin:5px">Model&nbsp;Training</a>
+            <a href="" style="margin:5px">Analysis-Evaluation</a>
+            <a href="" style="margin:5px">Model&nbsp;Deployment</a>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Computer&nbsp;Vision</b></td>
+        <td>
+            <a href="" style="margin:5px">Action&nbsp;Recognition</a>
+            <a href="" style="margin:5px">Image&nbsp;Classification</a>
+            <a href="https://github.com/phlong3105/one/blob/master/docs/image_enhancement/README.md" style="margin:5px">Image&nbsp;Enhancement</a>
+            <a href="" style="margin:5px">Instance&nbsp;Segmentation</a>
+            <a href="" style="margin:5px">Lane&nbsp;Detection</a>
+            <a href="" style="margin:5px">Object&nbsp;Detection</a>
+            <a href="" style="margin:5px">Object&nbsp;Tracking</a>
+            <a href="" style="margin:5px">Re-identification</a>
+            <a href="" style="margin:5px">Semantic&nbsp;Segmentation</a>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Computer&nbsp;Vision</b></td>
+        <td>
+            <a href="" style="margin:5px">Feature&nbsp;Extraction</a>
+            <a href="" style="margin:5px">Geometry</a>
+            <a href="" style="margin:5px">Image&nbsp;Acquisition</a>
+            <a href="" style="margin:5px">Image&nbsp;Registration</a>
+            <a href="" style="margin:5px">Motion&nbsp;Analysis</a>
+            <a href="" style="margin:5px">Reconstruction</a>
+        </td>
+    </tr>
+</table>
+
+
 
 | Machine Learning             | Learning Process        | Computer Vision                                  | Image Processing       |
 |------------------------------|-------------------------|--------------------------------------------------|------------------------|

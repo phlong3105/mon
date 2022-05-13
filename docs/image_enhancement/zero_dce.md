@@ -3,6 +3,11 @@
 Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 =============================
 
+<div>
+    <p>Chunle Guo, Chongyi Li, Jichang Guo, Chen Change Loy, Junhui Hou, Sam Kwong, Cong Runmin</p>
+    <p>CVPR 2020</p>
+</div>
+
 <div align="center">
     <a href="https://li-chongyi.github.io/Proj_Zero-DCE.html">Website</a> •
     <a href="https://github.com/phlong3105/one/blob/master/data/pdf/zero_dce.pdf">Paper</a> •
@@ -95,3 +100,15 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
     <img width="600" src="../../data/images/zero_dce_results_04.gif"><br/>
 </div>
 </details>
+
+
+## Citation
+```text
+@Article{Zero-DCE,
+    author  = {Chunle Guo and Chongyi Li and Jichang Guo and Chen Change Loy and Junhui Hou and Sam Kwong and Cong Runmin},
+    title   = {Zero-reference deep curve estimation for low-light image enhancement},
+    journal = {CVPR},
+    pape    = {1780--1789},
+    year    = {2020}
+}
+```
