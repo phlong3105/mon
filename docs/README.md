@@ -19,46 +19,46 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
     <tr>
         <td><b>Machine&nbsp;Learning</b></td>
         <td>
-            <a href="">Anomaly&nbsp;Detection</a> &nbsp;
-            <a href="">Classification</a> &nbsp;
-            <a href="">Clustering</a> &nbsp;
-            <a href="">Dimensionality&nbsp;Reduction</a> &nbsp;
-            <a href="">Neural&nbsp;Network</a> &nbsp;
-            <a href="">Regression</a> &nbsp;
+            <a href="">Anomaly&nbsp;Detection</a> &nbsp;&nbsp;
+            <a href="">Classification</a> &nbsp;&nbsp;
+            <a href="">Clustering</a> &nbsp;&nbsp;
+            <a href="">Dimensionality&nbsp;Reduction</a> &nbsp;&nbsp;
+            <a href="">Neural&nbsp;Network</a> &nbsp;&nbsp;
+            <a href="">Regression</a> &nbsp;&nbsp;
         </td>
     </tr>
     <tr>
         <td><b>Learning&nbsp;Process</b></td>
         <td>
-            <a href="" style="margin:5px">Data&nbsp;Processing</a>
-            <a href="" style="margin:5px">Model&nbsp;Training</a>
-            <a href="" style="margin:5px">Analysis-Evaluation</a>
-            <a href="" style="margin:5px">Model&nbsp;Deployment</a>
+            <a href="">Data&nbsp;Processing</a> &nbsp;&nbsp;
+            <a href="">Model&nbsp;Training</a> &nbsp;&nbsp;
+            <a href="">Analysis-Evaluation</a> &nbsp;&nbsp;
+            <a href="">Model&nbsp;Deployment</a> &nbsp;&nbsp;
         </td>
     </tr>
     <tr>
         <td><b>Computer&nbsp;Vision</b></td>
         <td>
-            <a href="" style="margin:5px">Action&nbsp;Recognition</a>
-            <a href="" style="margin:5px">Image&nbsp;Classification</a>
-            <a href="https://github.com/phlong3105/one/blob/master/docs/image_enhancement/README.md" style="margin:5px">Image&nbsp;Enhancement</a>
-            <a href="" style="margin:5px">Instance&nbsp;Segmentation</a>
-            <a href="" style="margin:5px">Lane&nbsp;Detection</a>
-            <a href="" style="margin:5px">Object&nbsp;Detection</a>
-            <a href="" style="margin:5px">Object&nbsp;Tracking</a>
-            <a href="" style="margin:5px">Re-identification</a>
-            <a href="" style="margin:5px">Semantic&nbsp;Segmentation</a>
+            <a href="">Action&nbsp;Recognition</a> &nbsp;&nbsp;
+            <a href="">Image&nbsp;Classification</a> &nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/docs/image_enhancement/README.md">Image&nbsp;Enhancement</a> &nbsp;&nbsp;
+            <a href="">Instance&nbsp;Segmentation</a> &nbsp;&nbsp;
+            <a href="">Lane&nbsp;Detection</a> &nbsp;&nbsp;
+            <a href="">Object&nbsp;Detection</a> &nbsp;&nbsp;
+            <a href="">Object&nbsp;Tracking</a> &nbsp;&nbsp;
+            <a href="">Re-identification</a> &nbsp;&nbsp;
+            <a href="">Semantic&nbsp;Segmentation</a> &nbsp;&nbsp;
         </td>
     </tr>
     <tr>
-        <td><b>Computer&nbsp;Vision</b></td>
+        <td><b>Image&nbsp;Processing</b></td>
         <td>
-            <a href="" style="margin:5px">Feature&nbsp;Extraction</a>
-            <a href="" style="margin:5px">Geometry</a>
-            <a href="" style="margin:5px">Image&nbsp;Acquisition</a>
-            <a href="" style="margin:5px">Image&nbsp;Registration</a>
-            <a href="" style="margin:5px">Motion&nbsp;Analysis</a>
-            <a href="" style="margin:5px">Reconstruction</a>
+            <a href="">Feature&nbsp;Extraction</a> &nbsp;&nbsp;
+            <a href="">Geometry</a> &nbsp;&nbsp;
+            <a href="">Image&nbsp;Acquisition</a> &nbsp;&nbsp;
+            <a href="">Image&nbsp;Registration</a> &nbsp;&nbsp;
+            <a href="">Motion&nbsp;Analysis</a> &nbsp;&nbsp;
+            <a href="">Reconstruction</a> &nbsp;&nbsp;
         </td>
     </tr>
 </table>
