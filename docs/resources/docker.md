@@ -1,8 +1,5 @@
 <div align="center">
-<p>
-   <img height="200px" src="../../data/images/docker.png">
-</p>
-<br>
+<img height="200px" src="../../data/images/docker.png">
 
 Docker
 =============================
@@ -17,7 +14,8 @@ Docker
 <details open>
 <summary><b style="font-size:18px">Docker</b></summary>
 
-1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including images, containers, volumes, and networks, are preserved:
+1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including 
+images, containers, volumes, and networks, are preserved:
 ```shell
 sudo apt-get remove docker docker-engine docker.io containerd runc
 sudo apt-get purge docker-ce docker-ce-cli containerd.io

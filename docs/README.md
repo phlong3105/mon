@@ -1,9 +1,7 @@
 <div align="center">
-<p>
-   <img width="850" src="../data/images/research.png"></a>
-</p>
+<img width="850" src="../data/images/research.png">
 
-<img src="../data/logo/one_100.png" width="32"> <span style="color:rgb(255, 59, 48);">Research Handbook</span> <img src="../data/logo/square_96.png" width="32">
+<img src="../data/logo/one_100.png" width="32"> Research Handbook <img src="../data/logo/square_96.png" width="32">
 =============================
 </div>
 
@@ -31,6 +29,7 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
         <td><b>Learning&nbsp;Process</b></td>
         <td>
             <a href="">Data&nbsp;Processing</a> &nbsp;&nbsp;
+			<a href="">Learning&nbsp;Technique</a> &nbsp;&nbsp;
             <a href="">Model&nbsp;Training</a> &nbsp;&nbsp;
             <a href="">Analysis-Evaluation</a> &nbsp;&nbsp;
             <a href="">Model&nbsp;Deployment</a> &nbsp;&nbsp;
@@ -44,7 +43,7 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
             <a href="https://github.com/phlong3105/one/blob/master/docs/image_enhancement/README.md">Image&nbsp;Enhancement</a> &nbsp;&nbsp;
             <a href="">Instance&nbsp;Segmentation</a> &nbsp;&nbsp;
             <a href="">Lane&nbsp;Detection</a> &nbsp;&nbsp;
-            <a href="">Object&nbsp;Detection</a> &nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/docs/object_detection/README.md">Object&nbsp;Detection</a> &nbsp;&nbsp;
             <a href="">Object&nbsp;Tracking</a> &nbsp;&nbsp;
             <a href="">Re-identification</a> &nbsp;&nbsp;
             <a href="">Semantic&nbsp;Segmentation</a> &nbsp;&nbsp;
@@ -128,7 +127,6 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 
 ## Misc
-
 <div align="center">
 <img src="../data/images/lifecycle.png" width="500">
 <img src="../data/images/stoicism.png"  width="500">

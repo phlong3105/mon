@@ -18,9 +18,9 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 
 
 ## Highlight
-1. We propose the first low-light enhancement network that is **independent of paired and unpaired training data**, thus avoiding the risk of overfitting. As a result, our method generalizes well to various lighting conditions. 
-2. We design an image-specific curve that is able to **approximate pixel-wise and higher-order curves by iteratively applying itself**. Such image-specific curve can effectively perform mapping within a wide dynamic range. 
-3. We show the potential of training a deep image enhancement model in the absence of reference images through task-specific non-reference loss functions that indirectly evaluate enhancement quality. It is capable of processing images in real-time **(about 500 FPS for images of size 640x480x3 on GPU)** and takes only 30 minutes for training.
+- We propose the first low-light enhancement network that is **independent of paired and unpaired training data**, thus avoiding the risk of overfitting. As a result, our method generalizes well to various lighting conditions. 
+- We design an image-specific curve that is able to **approximate pixel-wise and higher-order curves by iteratively applying itself**. Such image-specific curve can effectively perform mapping within a wide dynamic range. 
+- We show the potential of training a deep image enhancement model in the absence of reference images through task-specific non-reference loss functions that indirectly evaluate enhancement quality. It is capable of processing images in real-time **(about 500 FPS for images of size 640x480x3 on GPU)** and takes only 30 minutes for training.
 
 
 ## Method

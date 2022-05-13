@@ -14,7 +14,8 @@ Anaconda
 <details open>
 <summary><b style="font-size:18px">Ubuntu and MacOS</b></summary>
 
-If the path is not automatically add to the `.bashrc` file. So in this case, we can manually add it as follows:
+If the path is not automatically add to the `.bashrc` file. So in this case, 
+we can manually add it as follows:
 
 ```shell
 sudo nano ~/.basrc        # Ubuntu
