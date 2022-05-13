@@ -36,6 +36,7 @@ from one.vision.detection.scaled_yolov4.utils.torch_utils import is_parallel
 torch.set_printoptions(linewidth=320, precision=5, profile='long')
 np.set_printoptions(linewidth=320, formatter={'float_kind': '{:11.5g}'.format})  # format short g, %precision=5
 matplotlib.rc('font', **{'size': 11})
+matplotlib.use("Agg")  # for writing to files only
 
 # Prevent OpenCV from multithreading (to use PyTorch DataLoader)
 cv2.setNumThreads(0)
@@ -1344,7 +1345,7 @@ def plot_labels(labels, save_dir=''):
     # plot dataset labels
     c, b = labels[:, 0], labels[:, 1:].transpose()  # classes, boxes
     nc = int(c.max() + 1)  # number of classes
-
+    
     fig, ax = plt.subplots(2, 2, figsize=(8, 8), tight_layout=True)
     ax = ax.ravel()
     ax[0].hist(c, bins=np.linspace(0, nc, nc + 1) - 0.5, rwidth=0.8)
@@ -1356,6 +1357,7 @@ def plot_labels(labels, save_dir=''):
     ax[2].set_xlabel('width')
     ax[2].set_ylabel('height')
     plt.savefig(Path(save_dir) / 'labels.png', dpi=200)
+    matplotlib.use("Agg")  # for writing to files only
     plt.close()
 
 

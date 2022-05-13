@@ -470,6 +470,7 @@ def parse_opt():
     parser.add_argument("--sync-bn",      default=False,                      action="store_true", help="use SyncBatchNorm, only available in DDP mode")
     parser.add_argument("--local_rank",   default=-1,                         type=int, help="DDP parameter, do not modify")
     parser.add_argument("--logdir",       default="runs/",                    type=str, help="logging directory")
+    parser.add_argument("--verbose",      default="False",                    type=bool, help="Verbosity")
     opt = parser.parse_args()
     return opt
 
