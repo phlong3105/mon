@@ -27,7 +27,7 @@ Scaled-YOLOv4: Scaling Cross Stage Partial Network
 
 
 ## Method
-In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. It is better to know them before Scaled-YOLOv4.
+In Scaled-YOLOv4, there are many prior arts used, e.g. [CSPNet](../image_classification/cspnet.md), OSANet, YOLOv4. It is better to know them before Scaled-YOLOv4.
 
 ### 1. Principle of Model Scaling
 <details open>
@@ -48,9 +48,9 @@ In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. I
 	<p>FLOPs of different computational layers with/without CSP-ization.</p>
 </div>
 
-- CSPNet is applied to ResNet, ResNeXt, and Darknet, the changes in the amount of computations are observed in the below table. 
-- In brief, CSPNet splits the input into two paths. One performs convolutions. One performs no convolution. They are fused at the output.
-- **CSPNet can effectively reduce the amount of computations (FLOPs)** on ResNet, ResNeXt, and Darknet by 23.5%, 46.7%, and 50.0%, respectively.
+- [CSPNet](../image_classification/cspnet.md) is applied to ResNet, ResNeXt, and Darknet, the changes in the amount of computations are observed in the below table. 
+- In brief, [CSPNet](../image_classification/cspnet.md) splits the input into two paths. One performs convolutions. One performs no convolution. They are fused at the output.
+- **[CSPNet](../image_classification/cspnet.md) can effectively reduce the amount of computations (FLOPs)** on ResNet, ResNeXt, and Darknet by 23.5%, 46.7%, and 50.0%, respectively.
 
 > Therefore, CSP-ized models are used as the best model for performing model scaling.
 

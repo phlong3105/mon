@@ -3,123 +3,201 @@
 CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
 =============================
 <div>
-	<p>Chien-Yao Wang, Alexey Bochkovskiy, Hong-Yuan Mark Liao</p>
-	<p>CVPR 2021</p>
+	<p>Chien-Yao Wang and Hong-Yuan Mark Liao and Yueh-Hua Wu and Ping-Yang Chen and Jun-Wei Hsieh and I-Hau Yeh</p>
+	<p>CVPRW 2020</p>
 </div>
 
 <div align="center">
 	<a href="../../data/pdf/cspnet.pdf">Paper</a> •
-    <a href="https://github.com/WongKinYiu/ScaledYOLOv4">Code</a> •
-	<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf">Ref01</a> •
+    <a href="https://github.com/WongKinYiu/CrossStagePartialNetworks">Code</a> •
+	<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf">Ref01</a>
 </div>
 </div>
 
 
 ## Highlight
-- First, YOLOv4 is re-designed to form YOLOv4-CSP. 
-- Then, a network scaling approach that modifies not only the depth, width, resolution, but also structure of the network, which finally forms Scaled-YOLOv4.
+- **Cross Stage Partial Network (CSPNet)** is designed, to attribute the problem to the duplicate gradient information within network optimization, **complexity can be largely reduced while maintaining the accuracy**. 
+- It can be applied to various networks such as DenseNet, ResNeXt and ResNet. **Later on, this CSPNet is used in YOLOv4 and Scaled-YOLOv4**.
 
 <div align="center">
-	<img width="700" src="../../data/images/cspnet_sota.png">
+	<img width="800" src="../../data/images/cspnet_sota.png">
 	<p>CSPNet not only reduces computation cost and memory usage of the networks, but also benefit on inference speed and accuracy.</p>
 </div>
 
 
 ## Method
-In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. It is better to know them before Scaled-YOLOv4.
-
-### 1. Principle of Model Scaling
-<details open>
-<summary><b style="font-size:16px">General Principle of Model Scaling</b></summary>
-
+### 1. Duplicate Gradient Information in DenseNet
 <div align="center">
-	<img width="400" src="../../data/images/scaled_yolov4_flop.png">
+	<img width="700" src="../../data/images/cspnet_densenet.png">
 	<p>FLOPs of different computational layers with different model scaling factors.</p>
 </div>
 
-- Let the scaling factors that can be used to adjust the image size, the number of layers, and the number of channels be **_α_**, **_β_**, and **_γ_**, respectively.
-- For the k-layer CNNs with _b_ base layer channels, when these scaling factors vary, the corresponding changes on FLOPs are shown as below table.
-
-> **The scaling size, depth and width cause increase in the computation cost**. They respectively show square, linear, and square increase.
-
+- In DenseNet, the output of the ith dense layer will be concatenated with the input of the ith dense layer. This concatenated outcome becomes the input of the (i+1)th dense layer:
 <div align="center">
-	<img width="350" src="../../data/images/scaled_yolov4_flop_csp.png">
-	<p>FLOPs of different computational layers with/without CSP-ization.</p>
+	<img width="200" src="../../data/images/cspnet_math_01.png">
 </div>
 
-- CSPNet is applied to ResNet, ResNeXt, and Darknet, the changes in the amount of computations are observed in the below table. 
-- In brief, CSPNet splits the input into two paths. One performs convolutions. One performs no convolution. They are fused at the output.
-- **CSPNet can effectively reduce the amount of computations (FLOPs)** on ResNet, ResNeXt, and Darknet by 23.5%, 46.7%, and 50.0%, respectively.
+- If one makes use of a backpropagation algorithm to update weights, the equations of weight updating can be written as:
+<div align="center">
+	<img width="200" src="../../data/images/cspnet_math_02.png">
+</div>
 
-> Therefore, CSP-ized models are used as the best model for performing model scaling.
+> It is found that large amount of gradient information are reused for updating weights of different dense layers. This will result in different dense layers repeatedly learn copied gradient information.
+
+### 2. CSPNet (CSPDenseNet, CSPResNet & CSPResNeXt)
+<details open>
+<summary><b style="font-size:16px">Cross Stage Partial DenseNet (CSPDenseNet)</b></summary>
+
+<div align="center">
+	<img width="700" src="../../data/images/cspnet_cspdensenet.png">
+	<p>Cross Stage Partial DenseNet (CSPDenseNet).</p>
+</div>
+
+- CSPNet separates feature map of the base layer into two part, one part will go through a dense block and a transition layer; the other one part is then combined with transmitted feature map to the next stage.
+- The equations of feed-forward pass and weight updating of CSPDenseNet become:
+
+<div align="center">
+	<img width="250" src="../../data/images/cspnet_math_03.png"><br/>
+	<img width="300" src="../../data/images/cspnet_math_04.png">
+</div>
+
+- The gradients coming from the dense layers are separately integrated.
+- On the other hand, the feature map that did not go through the dense layers is also separately integrated.
+- As to the gradient information for updating weights, **both sides do not contain duplicate gradient information that belongs to other sides.**
+
+> The proposed CSPDenseNet preserves the advantages of DenseNet’s feature reuse characteristics, but at the same time prevents an excessively amount of duplicate gradient information by truncating the gradient flow.
 
 </details>
+
+<details open>
+<summary><b style="font-size:16px">Partial Dense Block Variants</b></summary>
+
+<div align="center">
+	<img width="700" src="../../data/images/cspnet_feature_fusion_strategies.png">
+	<p>Different kind of feature fusion strategies.</p>
+</div>
+
+- The purpose of designing partial transition layers is to maximize the difference of gradient combination.
+- Two variants are designed.
+  - CSP (Fusion First): concatenate the feature maps generated by two parts, and then do transition operation. 
+    - If this strategy is adopted, a large amount of gradient information will be reused. 
+  - CSP (Fusion last): The output from the dense block will go through the transition layer and then do concatenation. 
+    - The gradient information will not be reused since the gradient flow is truncated.
+
+</details>
+
+<details open>
+<summary><b style="font-size:16px">Applying CSPNet to Other Architectures</b></summary>
+
+<div align="center">
+	<img width="500" src="../../data/images/cspnet_resne(x)t.png">
+	<p>Applying CSPNet to ResNe(X)t.</p>
+</div>
+
+- CSPNet can be also easily applied to ResNet and ResNeXt. 
+- Since only half of the feature channels are going through Res(X)Blocks, there is no need to introduce the bottleneck layer anymore.
+
+</details>
+
+### 3. Exact Fusion Model (EFM)
+<div align="center">
+	<img width="800" src="../../data/images/cspnet_pyramid_fusion_strategies.png">
+	<p>Different feature pyramid fusion strategies.</p>
+</div>
+
+- **EFM is proposed to capture an appropriate Field of View (FoV) for each anchor**, which enhances the accuracy of the one-stage object detector. 
+- EFM is proposed to **better aggregate the initial feature pyramid**. 
+- Since the concatenated feature maps from the feature pyramid are enormous, it introduces a great amount of memory and computation cost. To alleviate the problem, **the Maxout technique is incorporated to compress the feature maps**.
 
 
 ## Ablation Studies
 <details open>
-<summary><b style="font-size:16px">CSP-ized Model</b></summary>
+<summary><b style="font-size:16px">CSPNet on ImageNet</b></summary>
 
 <div align="center">
-	<img width="400" src="../../data/images/scaled_yolov4_ablation_cspized_models.png">
-	<p>Ablation study of CSP-ized models @ 608x608.</p>
+	<img width="500" src="../../data/images/cspnet_imagenet_ablation.png">
+	<p>Ablation study of CSPNet on ImageNet.</p>
 </div>
 
-- Darknet53 (D53) is used as backbone and FPN with SPP (FPNSPP) and PAN with SPP (PANSPP) are chosen as necks to design ablation studies.
-- LeakyReLU (Leaky) and Mish activation function are tried.
+- PeleeNet is used as baseline.
+- Different partial ratios γ and the different feature fusion strategies are used for ablation study.
 
-> **CSP-ized models have greatly reduced the amount of parameters and computations by 32%, and brought improvements in both Batch 8 throughput and AP.** 
-> 
-> Both **CD53s-CFPNSPP-Mish, and CD53s-CPANSPP-Leaky** have the same batch 8 throughput with D53-FPNSPP-Leaky, but they respectively **have 1% and 1.6% AP improvement with lower computing resources**.
+> Compared to the baseline PeleeNet, the proposed CSPPeleeNet achieves the best performance, it can cut down 13% computation, but at the same time upgrade the accuracy by 0.2%.
 >
-> Therefore, **CD53s-CPANSPP-Mish is decided to used**, as it results in the highest AP in the above table as the backbone of YOLOv4-CSP.
+> If the partial ratio is adjusted to γ = 0.25, the accuracy is improved by 0.8% and at the same time 3% computation is cut down.
+
+</details>
+
+<details open>
+<summary><b style="font-size:16px">EFM on MS-COCO</b></summary>
+
+<div align="center">
+	<img width="500" src="../../data/images/cspnet_coco_ablation.png">
+	<p>Ablation study of EFM on MS COCO.</p>
+</div>
+
+- CSPPeleeNet is used as backbone.
+- GIoU, SPP (in SPPNet), and SAM (in CBAM) are also applied to EFM for study.
+- PRN and ThunderNet are included for comparison.
+- Although the introduction of GIoU can upgrade AP by 0.7%, the AP50 is, however, significantly degraded by 2.7%. GIoU training is not used at the end.
+- Since SAM is better than SPP, EFM (SAM) is used as **final architecture**.
+- In addition, CSPPeleeNet with **Swish activation is not considered** as for consideration of hardware design acceleration.
 
 </details>
 
 
 ## Results
 <details open>
-<summary><b style="font-size:16px">Large-Model</b></summary>
+<summary><b style="font-size:16px">ImageNet Image Classification</b></summary>
 
 <div align="center">
-	<img width="700" src="../../data/images/scaled_yolov4_large_results.png">
-	<p>Comparison of state-of-the-art object detectors</p>
+	<img width="500" src="../../data/images/cspnet_imagenet_sota.png">
+	<p>Compare with state-of-the-art methods on ImageNet.</p>
 </div>
 
-- When comparing **YOLOv4-CSP** with the same accuracy of EfficientDet-D3 (47.5% vs 47.5%), **the inference speed is 1.9 times**. 
-- When **YOLOv4-P5** is compared with EfficientDet-D5 with the same accuracy (51.8% vs 51.5%), **the inference speed is 2.9 times**. 
-- The situation is similar to the comparisons between YOLOv4-P6 vs EfficientDet-D7 (54.5% vs 53.7%) and YOLOv4-P7 vs EfficientDet-D7x (55.5% vs 55.1%). In both cases, **YOLOv4-P6 and YOLOv4-P7 are, respectively, 3.7 times and 2.5 times faster in terms of inference speed**.
+- There are a lot of findings here for each CSPNet model. 
+- But basically, when the concept of CSPNet is introduced, the computational load is reduced at least by 10% and the accuracy is either remain unchanged or upgraded. 
+- CSPResNeXt-50 all achieve the best result. As to the 10-crop test, CSPResNeXt-50 also outperforms Res2Net-50 and Res2NeXt-50.
 
-> As shown in the figure at the top of the story and also the table above, **all scaled YOLOv4 models, including YOLOv4-CSP, YOLOv4-P5, YOLOv4-P6, YOLOv4-P7, are Pareto optimal on all indicators**.
+</details>
+
+<details open>
+<summary><b style="font-size:16px"> MS-COCO Object Detection</b></summary>
 
 <div align="center">
-	<img width="300" src="../../data/images/scaled_yolov4_large_tta_results.png">
-	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
+	<img width="800" src="../../data/images/cspnet_coco_sota.png">
+	<p>Compare with state-of-the-art methods on MS-COCO Object Detection</p>
 </div>
 
-- With **test-time augmentation (TTA)**, YOLOv4-P5, YOLOv4-P6, and YOLOv4-P7 gets 1.1%, 0.7%, and 0.5% **higher AP**, respectively.
+- If compared to object detectors running at **30~100 fps, CSPResNeXt50 with PANet (SPP) achieves the best performance** in AP, AP50 and AP75. They receive, respectively, 38.4%, 60.6%, and 41.6% detection rates. 
+- If compared to state-of-the-art LRF [38] under the input image size 512×512, CSPResNeXt50 with PANet (SPP) outperforms ResNet101 with LRF by 0.7% AP, 1.5% AP50 and 1.1% AP75. 
+- If compared to object detectors running at **100~200 fps, CSPPeleeNet with EFM (SAM) boosts 12.1% AP50 at the same speed as Pelee [37] and increases 4.1% [37] at the same speed as CenterNet [45]**. 
+- If compared to very fast object detectors such as ThunderNet [25], YOLOv3-tiny [29], and YOLOv3-tiny-PRN [35], the proposed **CSPDenseNetb Reference with PRN is the fastest**. It can reach **400 fps frame rate**, i.e., 133 fps faster than ThunderNet with SNet49. 
+- If compared to ThunderNet146, CSPPeleeNet Reference with PRN (3l) increases the frame rate by 19 fps while maintaining the same level of AP50.
+
+</details>
+
+<details open>
+<summary><b style="font-size:16px">Inference Rate</b></summary>
 
 <div align="center">
-	<img width="500" src="../../data/images/scaled_yolov4_p7_resolutions.png">
-	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
+	<img width="500" src="../../data/images/cspnet_inference_rate.png">
+	<p>Inference rate on mobile GPU (mGPU) and CPU real-time object detectors (in fps).</p>
 </div>
 
-- FPN-like architecture is a naïve once-for-all model while YOLOv4 has some stages of top-down path and detection branch. 
-- YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 represent the model which has removed {P7} and {P7, P6} stages from the trained YOLOv4-P7.
-
-> As shown above, YOLOv4-P7 has the best AP at high resolution, while **YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 have the best AP at middle and low resolution**, respectively. This means that we can use subnets of FPN-like models to execute the object detection task well.
+- The above experiments are based on NVIDIA Jetson TX2 and Intel Core i9–9900K with OpenCV DNN module. No model compression or quantization is applied. 
+- Similarly, **with CSPNet applied**, it can achieve **high fps** and **high AP50**.
 
 </details>
 
 
 ## Citation
 ```text
-@InProceedings{Wang2021,
-    author    = {Chien-Yao Wang and Alexey Bochkovskiy and Hong-Yuan Mark Liao},
-    title     = {{Scaled-YOLOv4}: Scaling Cross Stage Partial Network},
-    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-    month     = {June},
-    year      = {2021},
-    pages     = {13029-13038}
+@inproceedings{Wang2020,
+  title	 	= {CSPNet: A new backbone that can enhance learning capability of cnn},
+  author 	= {Chien-Yao Wang and Hong-Yuan Mark Liao and Yueh-Hua Wu and Ping-Yang Chen and Jun-Wei Hsieh and I-Hau Yeh},
+  booktitle = {CVPRW},
+  pages		= {390--391},
+  year		= {2020}
 }
 ```
