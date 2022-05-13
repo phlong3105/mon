@@ -9,7 +9,9 @@ Scaled-YOLOv4: Scaling Cross Stage Partial Network
 
 <div align="center">
 	<a href="https://github.com/phlong3105/one/tree/master/data/pdf/scaled_yolov4.pdf">Paper</a> •
-    <a href="https://github.com/WongKinYiu/ScaledYOLOv4">Code</a>
+    <a href="https://github.com/WongKinYiu/ScaledYOLOv4">Code</a> •
+	<a href="https://sh-tsang.medium.com/review-scaled-yolov4-scaling-cross-stage-partial-network-51e3c515b0a7">Ref01</a> •
+	<a href="https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982#:~:text=yolov4%2Dcsp.cfg-,Scaled%20YOLO%20v4%20is%20the%20best%20neural%20network%20for%20object,15%20FPS%20to%201774%20FPS.">Ref02</a>
 </div>
 </div>
 
@@ -17,6 +19,11 @@ Scaled-YOLOv4: Scaling Cross Stage Partial Network
 ## Highlight
 - First, YOLOv4 is re-designed to form YOLOv4-CSP. 
 - Then, a network scaling approach that modifies not only the depth, width, resolution, but also structure of the network, which finally forms Scaled-YOLOv4.
+
+<div align="center">
+	<img width="700" src="../../data/images/scaled_yolov4_sota.png">
+	<p>Chart of Accuracy (vertical axis) and Latency (horizontal axis) on a Tesla V100 GPU (Volta) with batch = 1 without using TensorRT.</p>
+</div>
 
 
 ## Method
@@ -174,7 +181,7 @@ In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. I
 ## Ablation Studies
 
 <details open>
-<summary><b style="font-size:16px">Ablation Study on CSP-ized Model</b></summary>
+<summary><b style="font-size:16px">CSP-ized Model</b></summary>
 
 <div align="center">
 	<img width="400" src="../../data/images/scaled_yolov4_ablation_cspized_models.png">
@@ -193,7 +200,7 @@ In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. I
 </details>
 
 <details open>
-<summary><b style="font-size:16px">Ablation Study on YOLOv4-tiny</b></summary>
+<summary><b style="font-size:16px">YOLOv4-tiny</b></summary>
 
 <div align="center">
 	<img width="350" src="../../data/images/scaled_yolov4_tiny_ablation.png">
@@ -208,7 +215,7 @@ In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. I
 </details>
 
 <details open>
-<summary><b style="font-size:16px">Ablation Study on YOLOv4-large</b></summary>
+<summary><b style="font-size:16px">YOLOv4-large</b></summary>
 
 <div align="center">
 	<img width="350" src="../../data/images/scaled_yolov4_large_ablation.png">
@@ -224,5 +231,69 @@ In Scaled-YOLOv4, there are many prior arts used, e.g. CSPNet, OSANet, YOLOv4. I
 
 ## Results
 
+<details open>
+<summary><b style="font-size:16px">Large-Model</b></summary>
+
+<div align="center">
+	<img width="700" src="../../data/images/scaled_yolov4_large_results.png">
+	<p>Comparison of state-of-the-art object detectors</p>
+</div>
+
+- When comparing **YOLOv4-CSP** with the same accuracy of EfficientDet-D3 (47.5% vs 47.5%), **the inference speed is 1.9 times**. 
+- When **YOLOv4-P5** is compared with EfficientDet-D5 with the same accuracy (51.8% vs 51.5%), **the inference speed is 2.9 times**. 
+- The situation is similar to the comparisons between YOLOv4-P6 vs EfficientDet-D7 (54.5% vs 53.7%) and YOLOv4-P7 vs EfficientDet-D7x (55.5% vs 55.1%). In both cases, **YOLOv4-P6 and YOLOv4-P7 are, respectively, 3.7 times and 2.5 times faster in terms of inference speed**.
+
+> As shown in the figure at the top of the story and also the table above, **all scaled YOLOv4 models, including YOLOv4-CSP, YOLOv4-P5, YOLOv4-P6, YOLOv4-P7, are Pareto optimal on all indicators**.
+
+<div align="center">
+	<img width="300" src="../../data/images/scaled_yolov4_large_tta_results.png">
+	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
+</div>
+
+- With **test-time augmentation (TTA)**, YOLOv4-P5, YOLOv4-P6, and YOLOv4-P7 gets 1.1%, 0.7%, and 0.5% **higher AP**, respectively.
+
+<div align="center">
+	<img width="500" src="../../data/images/scaled_yolov4_p7_resolutions.png">
+	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
+</div>
+
+- FPN-like architecture is a naïve once-for-all model while YOLOv4 has some stages of top-down path and detection branch. 
+- YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 represent the model which has removed {P7} and {P7, P6} stages from the trained YOLOv4-P7.
+
+> As shown above, YOLOv4-P7 has the best AP at high resolution, while **YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 have the best AP at middle and low resolution**, respectively. This means that we can use subnets of FPN-like models to execute the object detection task well.
+
+</details>
+
+<details open>
+<summary><b style="font-size:16px">Tiny-Model</b></summary>
+
+<div align="center">
+	<img width="400" src="../../data/images/scaled_yolov4_tiny_results.png">
+	<p>Comparison of state-of-the-art tiny models.</p>
+</div>
+
+<div align="center">
+	<img width="400" src="../../data/images/scaled_yolov4_tiny_fps.png">
+	<p>FPS of YOLOv4-tiny on embedded devices.</p>
+</div>
+
+- YOLOv4-tiny is put on different embedded GPUs for testing, including Xavier AGX, Xavier NX, Jetson TX2, Jetson NANO. 
+- If FP16 and batch size 4 are adopted to test **Xavier AGX** and **Xavier NX**, the frame rate can reach **380 FPS** and **199 FPS** respectively. 
+- In addition, if one uses TensorRT FP16 to run YOLOv4-tiny on general GPU **RTX 2080ti**, when the **batch size** respectively equals to **1 and 4**, the respective frame rate can reach **773 FPS** and **1774 FPS**, which is extremely fast.
+
+> YOLOv4-tiny can achieve real-time performance no matter which device is used.
+
+</details>
+
 
 ## Citation
+```text
+@InProceedings{Wang2021,
+    author    = {Chien-Yao Wang and Alexey Bochkovskiy and Hong-Yuan Mark Liao},
+    title     = {{Scaled-YOLOv4}: Scaling Cross Stage Partial Network},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2021},
+    pages     = {13029-13038}
+}
+```
