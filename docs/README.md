@@ -61,49 +61,75 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
             <a href="">Reconstruction</a> &nbsp;&nbsp;
         </td>
     </tr>
+    <tr>
+        <td><b>Maths</b></td>
+        <td>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Programming&nbsp;Language</b></td>
+        <td>
+            <a href="">Swift</a> &nbsp;&nbsp;
+            <a href="">Python</a> &nbsp;&nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td><b>Resources</b></td>
+        <td>
+            <a href="https://github.com/phlong3105/one/blob/master/docs/resources/anaconda.md">Anaconda</a> &nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/docs/resources/docker.md">Docker</a> &nbsp;&nbsp;
+            <a href="">Effective&nbsp;Study</a> &nbsp;&nbsp;
+            <a href="">Pip</a> &nbsp;&nbsp;
+            <a href="">Project&nbsp;Management</a> &nbsp;&nbsp;
+            <a href="">Writing</a> &nbsp;&nbsp;
+        </td>
+    </tr>
 </table>
 
 
-
-| Machine Learning             | Learning Process        | Computer Vision                                  | Image Processing       |
-|------------------------------|-------------------------|--------------------------------------------------|------------------------|
-| [Anomaly Detection]()        | [Data Processing]()     | [Action Recognition]()                           | [Feature Extraction]() |
-| [Classification]()           | [Model Training]()      | [Image Classification]()                         | [Geometry]()           |
-| [Clustering]()               | [Analysis-Evaluation]() | [Image Enhancement](image_enhancement/README.md) | [Image Acquisition]()  |
-| [Dimensionality Reduction]() | [Model Deployment]()    | [Instance Segmentation]()                        | [Image Registration]() |
-| [Learning Technique]()       |                         | [Lane Detection]()                               | [Motion Analysis]()    |
-| [Neural Network]()           |                         | [Object Detection]()                             | [Reconstruction]()     |
-| [Regression]()               |                         | [Object Tracking]()                              |                        |
-|                              |                         | [Re-identification]()                            |                        |
-|                              |                         | [Semantic Segmentation]()                        |                        |
-
-|  Maths     | Programming Language | Resources                         |
-|------------|----------------------|-----------------------------------|
-|            | [Swift]()            | [Anaconda](resources/anaconda.md) |
-|            | [Python]()           | [Docker](resources/docker.md)     |
-|            |                      | [Effective Study]()               |
-|            |                      | [Pip]()                           |
-|            |                      | [Project Management]()            |
-|            |                      | [Writing]()                       |
-
-
 ## Projects
-
-| Challenges   | Aerial Vehicle | Autonomous Vehicle      | Surveillance System |
-|--------------|----------------|-------------------------|---------------------|
-| [AI City]()  |                | [Autonomous Sensor]()   | [Edge TSS]()        |
-| [AutoNUE]()  |                | [Scene Understanding]() |                     |
-| [KATECH]()   |                |                         |                     |
-| [KODAS]()    |                |                         |                     |
-| [NTIRE]()    |                |                         |                     |
-| [UG2+]()     |                |                         |                     |
-| [VisDrone]() |                |                         |                     |
-| [Waymo]()    |                |                         |                     |
+<table>
+    <tr>
+        <th>Category</th>
+        <th>Projects</th>
+    </tr>
+    <tr>
+        <td><b>Challenges</b></td>
+        <td>
+            <a href="">AI&nbsp;City&nbsp;Challenge</a> &nbsp;&nbsp;
+            <a href="">AutoNUE</a> &nbsp;&nbsp;
+            <a href="">KATECH</a> &nbsp;&nbsp;
+            <a href="">KODAS</a> &nbsp;&nbsp;
+            <a href="">NTIRE</a> &nbsp;&nbsp;
+            <a href="">UG2+</a> &nbsp;&nbsp;
+            <a href="">VisDrone</a> &nbsp;&nbsp;
+            <a href="">Waymo</a> &nbsp;&nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td><b>Aerial&nbsp;Vehicle</b></td>
+        <td>
+        </td>
+    </tr>
+    <tr>
+        <td><b>Autonomous&nbsp;Vehicle</b></td>
+        <td>
+            <a href="">Autonomous&nbsp;Sensor</a> &nbsp;&nbsp;
+            <a href="">Scene&nbsp;Understanding</a> &nbsp;&nbsp;
+        </td>
+    </tr>
+    <tr>
+        <td><b>Surveillance&nbsp;System</b></td>
+        <td>
+            <a href="">Edge&nbsp;TSS</a> &nbsp;&nbsp;
+        </td>
+    </tr>
+</table>
 
 
 ## Misc
 
 <div align="center">
-<img src="../data/images/lifecycle.png" width="600">
-<img src="../data/images/stoicism.png"  width="600">
+<img src="../data/images/lifecycle.png" width="500">
+<img src="../data/images/stoicism.png"  width="500">
 </div>
