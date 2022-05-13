@@ -1,6 +1,6 @@
 <div align="center">
 
-One <img src="data/logo/one_32.png" width="32"> : One Research Framework To Rule Them All
+One <img src="data/one_100.png" width="32"> : One Research Framework To Rule Them All
 =============================
 `one` is a foundational library for computer vision research. 
 It includes supporting functions, data types, data classes, layers, losses, 
@@ -9,7 +9,7 @@ metrics, ..., datasets, and models.
 <p align="center">
   <a href="#installation">Installation</a> •
   <a href="#how-to-use">How To Use</a> •
-  <a href="docs/README.md">Handbook</a> •
+  <a href="handbook/README.md">Handbook</a> •
   <a href="#citation">Citation</a> •
   <a href="#contact">Contact</a>
 </p>
