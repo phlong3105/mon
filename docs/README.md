@@ -19,12 +19,12 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
     <tr>
         <td><b>Machine&nbsp;Learning</b></td>
         <td>
-            <a href="" style="margin:5px">Anomaly&nbsp;Detection</a>
-            <a href="" style="margin:5px">Classification</a>
-            <a href="" style="margin:5px">Clustering</a>
-            <a href="" style="margin:5px">Dimensionality&nbsp;Reduction</a>
-            <a href="" style="margin:5px">Neural&nbsp;Network</a>
-            <a href="" style="margin:5px">Regression</a>
+            <a href="">Anomaly&nbsp;Detection</a> &nbsp;
+            <a href="">Classification</a> &nbsp;
+            <a href="">Clustering</a> &nbsp;
+            <a href="">Dimensionality&nbsp;Reduction</a> &nbsp;
+            <a href="">Neural&nbsp;Network</a> &nbsp;
+            <a href="">Regression</a> &nbsp;
         </td>
     </tr>
     <tr>
