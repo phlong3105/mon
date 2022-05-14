@@ -6,5 +6,5 @@
 
 from __future__ import annotations
 
-from .configs import *
+from .data import *
 from .trident import *

@@ -6,6 +6,6 @@
 
 from __future__ import annotations
 
-from .configs import *
+from .data import *
 from .zerodce import *
 from .zerodcepp import *
