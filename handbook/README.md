@@ -66,7 +66,7 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
         </td>
     </tr>
     <tr>
-        <td><b>Programming&nbsp;Language</b></td>
+        <td><b>Programming Language</b></td>
         <td>
             <a href="">Swift</a> &nbsp;&nbsp;
             <a href="">Python</a> &nbsp;&nbsp;
@@ -78,7 +78,6 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
             <a href="https://github.com/phlong3105/one/blob/master/docs/resources/anaconda.md">Anaconda</a> &nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/docs/resources/docker.md">Docker</a> &nbsp;&nbsp;
             <a href="">Effective&nbsp;Study</a> &nbsp;&nbsp;
-            <a href="">Pip</a> &nbsp;&nbsp;
             <a href="">Project&nbsp;Management</a> &nbsp;&nbsp;
             <a href="">Writing</a> &nbsp;&nbsp;
         </td>

@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
-from .action import *
-from .classification import *
-from .detection import *
-from .enhancement import *
+from .action_recognition import *
+from .action_recognition import *
+from .image_classification import *
+from .image_enhancement import *
+from .lane_detection import *
+from .object_detection import *
