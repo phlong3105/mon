@@ -39,10 +39,11 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
         <td><b>Computer&nbsp;Vision</b></td>
         <td>
             <a href="">Action&nbsp;Recognition</a> &nbsp;&nbsp;
+			<a href="">Action&nbsp;Detection</a> &nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/docs/image_classification/README.md">Image&nbsp;Classification (Backbone)</a> &nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/docs/image_enhancement/README.md">Image&nbsp;Enhancement</a> &nbsp;&nbsp;
             <a href="">Instance&nbsp;Segmentation</a> &nbsp;&nbsp;
-            <a href="">Lane&nbsp;Detection</a> &nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/docs/lane_detection/README.md">Lane&nbsp;Detection</a> &nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/docs/object_detection/README.md">Object&nbsp;Detection</a> &nbsp;&nbsp;
             <a href="">Object&nbsp;Tracking</a> &nbsp;&nbsp;
             <a href="">Re-identification</a> &nbsp;&nbsp;
