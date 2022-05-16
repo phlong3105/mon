@@ -130,10 +130,10 @@ Weights                = Union[Tensor,
                                ListOrTupleAnyT[float],
                                ListOrTupleAnyT[int]]
 
-ForwardOutput          = tuple[Tensors, Optional[Tensor]]
-StepOutput             = Union[Tensor, dict[str, Any]]
+ForwardOutput          = tuple[TensorsOrArrays, Optional[TensorsOrArrays]]
+StepOutput             = Union[TensorsOrArrays, dict]
 EpochOutput            = list[StepOutput]
-EvalOutput             = list[dict[str, float]]
+EvalOutput             = list[dict]
 PredictOutput          = Union[list[Any], list[list[Any]]]
 
 
@@ -775,7 +775,7 @@ class VisionBackend(Enum):
 
 
 # MARK: - Builders
-# NOTE: Layers
+# NOTE: NN Layers
 ACT_LAYERS           = Factory(name="act_layers")
 ATTN_LAYERS          = Factory(name="attn_layers")
 ATTN_POOL_LAYERS     = Factory(name="attn_pool_layers")
@@ -828,5 +828,5 @@ IMAGENET_INCEPTION_STD  = (0.5, 0.5, 0.5)
 IMAGENET_DPN_MEAN       = (124 / 255, 117 / 255, 104 / 255)
 IMAGENET_DPN_STD        = tuple([1 / (.0167 * 255)] * 3)
 
-PI = torch.tensor(3.14159265358979323846)
+PI             = torch.tensor(3.14159265358979323846)
 VISION_BACKEND = VisionBackend.PIL

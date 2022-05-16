@@ -82,8 +82,8 @@ class ImageEnhancer(BaseModel, metaclass=ABCMeta):
         transformed input to `forward_once()`.
 
         Args:
-            x (Tensor):
-                Input of shape [B, C, H, W].
+            x (Tensor[B, C, H, W]):
+                Input.
             augment (bool):
                 Augmented inference. Default: `False`.
                 
@@ -103,8 +103,8 @@ class ImageEnhancer(BaseModel, metaclass=ABCMeta):
         """Forward pass once. Implement the logic for a single forward pass.
 
 		Args:
-			x (Tensor):
-				Input of shape [B, C, H, W].
+			x (Tensor[B, C, H, W]):
+				Input.
 
 		Returns:
 			yhat (Tensor):
@@ -118,8 +118,8 @@ class ImageEnhancer(BaseModel, metaclass=ABCMeta):
         """Forward pass for features extraction.
 
         Args:
-            x (Tensor):
-                Input of shape [B, C, H, W].
+            x (Tensor[B, C, H, W]):
+                Input.
             out_indexes (Indexes, optional):
                 List of layers' indexes to extract features. This is called
                 in `forward_features()` and is useful when the model

@@ -496,9 +496,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             self.test_metrics  = metrics
             
     @staticmethod
-    def create_metrics(
-        metrics: Optional[Metrics_]
-    ) -> Optional[list[Metric]]:
+    def create_metrics(metrics: Optional[Metrics_]) -> Optional[list[Metric]]:
         if isinstance(metrics, Metric):
             return [metrics]
         elif isinstance(metrics, dict):
@@ -627,10 +625,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         the metrics, we only need the final predictions and ground-truth.
 
         Args:
-            x (Tensor):
-                Input of shape [B, C, H, W].
-            y (Tensor):
-                Ground-truth of shape [B, C, H, W].
+            x (Tensor[B, C, H, W]):
+                Input.
+            y (Tensor[B, C, H, W]):
+                Ground-truth.
                 
         Returns:
             yhat (Tensor):
@@ -662,8 +660,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         transformed input to `forward_once()`.
 
         Args:
-            x (Tensor):
-                Input shape [B, C, H, W].
+            x (Tensor[B, C, H, W]):
+                Input.
             augment (bool):
                 Augmented inference. Default: `False`.
                 
@@ -678,8 +676,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
-            x (Tensor):
-                Input of shape [B, C, H, W].
+            x (Tensor[B, C, H, W]):
+                Input.
             
         Returns:
             yhat (Tensor):
@@ -697,8 +695,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         classifier or backbone.
 
         Args:
-            x (Tensor):
-                Input of shape [B, C, H, W].
+            x (Tensor[B, C, H, W]):
+                Input.
             out_indexes (Indexes, optional):
                 List of layers' indexes to extract features. This is called
                 in `forward_features()` and is useful when the model is used as
