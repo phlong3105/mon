@@ -15,7 +15,6 @@ import argparse
 import glob
 import os
 import sys
-from math import atan
 from typing import Optional
 from typing import Union
 
@@ -35,6 +34,7 @@ from one.vision.lane_detection.lane_detector import LaneDetector
 
 __all__ = [
     "AdvancedLaneDetector",
+    "run",
 ]
 
 
@@ -693,7 +693,8 @@ def run(opt):
     
     # NOTE: Video capture
     path = config.path
-    if path == "" or path is None:
+    if path == "" or path is None or \
+        (isinstance(path, str) and not os.path.isdir(path)):
         path = os.getcwd()
     video_file = os.path.join(path, config.video_file)
     capture    = cv2.VideoCapture(video_file)
@@ -703,22 +704,24 @@ def run(opt):
         sys.exit()
     
     # NOTE: Video writer
-    output = opt.output
-    if output == "" or not is_video_file(output):
-        output = f"{video_file.split('.')[0]}_results.mp4"
-    w      = round(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
-    h      = round(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps    = capture.get(cv2.CAP_PROP_FPS)
-    delay  = int(1000 / fps)
-    angle  = 0
-    # Create the `VideoWriter()` object
-    writer = cv2.VideoWriter(
-        output, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h)
-    )
+    if opt.save_video:
+        output = opt.output
+        if output == "" or output is None or \
+            (isinstance(output, str) and not is_video_file(output)):
+            output = f"{video_file.split('.')[0]}_results.mp4"
+        w      = round(capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        h      = round(capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps    = capture.get(cv2.CAP_PROP_FPS)
+        delay  = int(1000 / fps)
+        angle  = 0
+        writer = cv2.VideoWriter(
+            output, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h)
+        )
     
     # NOTE: Lane detector
     lane_detector = AdvancedLaneDetector(config=config)
-
+    
+    # NOTE: Main loop
     if opt.verbose:
         cv2.namedWindow("frame",      cv2.WINDOW_NORMAL)
         cv2.namedWindow("color_warp", cv2.WINDOW_NORMAL)
@@ -729,8 +732,9 @@ def run(opt):
             break
 
         img_out, angle, color_warp, draw_poly_img = lane_detector.forward(x=frame)
-
-        writer.write(img_out)
+        
+        if opt.save_video:
+            writer.write(img_out)
         if opt.verbose:
             cv2.imshow("frame",      img_out)
             cv2.imshow("color_warp", color_warp)
@@ -738,15 +742,17 @@ def run(opt):
         if cv2.waitKey(1) == 27:
             break
 
-    capture.release()
-    writer.release()
     cv2.destroyAllWindows()
-
+    capture.release()
+    if opt.save_video:
+        writer.release()
+    
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config",  default="./data/challenge.yml",             type=str)
-    parser.add_argument("--output",  default="./data/lane_detection_result.mp4", type=str)
-    parser.add_argument("--verbose", default=True,                               type=bool)
+    parser.add_argument("--config",     default="./data/challenge.yml", type=str)
+    parser.add_argument("--output",     default="",                     type=str)
+    parser.add_argument("--save_video", default=True,                   type=bool)
+    parser.add_argument("--verbose",    default=True,                   type=bool)
     opt = parser.parse_args()
     run(opt)

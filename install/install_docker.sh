@@ -97,5 +97,5 @@ else
 fi
 if [ -d "$root_dir" ];
 then
-	echo "DATASETS_DIR=$datasets_dir" > "${root_dir}/pycharm.env"
+  echo "DATASETS_DIR=$datasets_dir" > "${root_dir}/pycharm.env"
 fi
