@@ -1,0 +1,8 @@
+path                 : ""
+video_file           : "challenge.mp4"
+offset               : 300
+src_points           : [[190, 720], [596, 447], [685, 447,], [1125, 720]]
+camera_matrix        : null
+distortion_coeffs    : null
+camera_calib_dir     : "data/camera_calib"
+camera_undistored_dir: "data/camera_undistored"

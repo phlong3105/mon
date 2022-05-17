@@ -88,3 +88,19 @@ class LaneDetector(BaseModel, metaclass=ABCMeta):
                 Default: `None`.
         """
         pass
+
+    # MARK: Visualize
+    
+    def show_results(
+        self,
+        x            : Optional[TensorsOrArrays] = None,
+        y            : Optional[TensorsOrArrays] = None,
+        yhat         : Optional[TensorsOrArrays] = None,
+        filepath     : Optional[str]             = None,
+        image_quality: int                       = 95,
+        verbose      : bool                      = False,
+        show_max_n   : int                       = 8,
+        wait_time    : float                     = 0.01,
+        *args, **kwargs
+    ):
+        pass
