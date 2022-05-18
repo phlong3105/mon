@@ -29,6 +29,7 @@ from tqdm import tqdm
 from one.core import console
 from one.core import error_console
 from one.core import MODELS
+from one.core import progress_bar
 from one.io import create_dirs
 from one.io import is_image_file
 from one.io import is_video_file
@@ -743,27 +744,29 @@ def run(opt):
         cv2.namedWindow("frame",      cv2.WINDOW_NORMAL)
         cv2.namedWindow("color_warp", cv2.WINDOW_NORMAL)
         cv2.namedWindow("draw_poly",  cv2.WINDOW_NORMAL)
-    pbar = tqdm(total=round(capture.get(cv2.CAP_PROP_FRAME_COUNT)), desc=f"Processing")
-    while True:
-        ret, frame = capture.read()
-        if not ret:
-            break
-
-        image_out, angle, color_warp, draw_poly_image = lane_detector.forward(x=frame)
-        if angle > 1.5 or angle < -1.5:
-            lane_detector.is_init = True
-        else:
-            lane_detector.is_init = False
-        
-        if opt.save_video:
-            writer.write(image_out)
-        if opt.verbose:
-            cv2.imshow("frame",      image_out)
-            cv2.imshow("color_warp", color_warp)
-            cv2.imshow("draw_poly",  draw_poly_image)
-        if cv2.waitKey(1) == 27:
-            break
-        pbar.update(1)
+    with progress_bar() as pbar:
+        for idx in pbar.track(
+            range(round(capture.get(cv2.CAP_PROP_FRAME_COUNT))),
+            description=f"[bright_yellow]Processing frames"
+        ):
+            ret, frame = capture.read()
+            if not ret:
+                break
+    
+            image_out, angle, color_warp, draw_poly_image = lane_detector.forward(x=frame)
+            if angle > 1.5 or angle < -1.5:
+                lane_detector.is_init = True
+            else:
+                lane_detector.is_init = False
+            
+            if opt.save_video:
+                writer.write(image_out)
+            if opt.verbose:
+                cv2.imshow("frame",      image_out)
+                cv2.imshow("color_warp", color_warp)
+                cv2.imshow("draw_poly",  draw_poly_image)
+            if cv2.waitKey(1) == 27:
+                break
 
     cv2.destroyAllWindows()
     capture.release()
