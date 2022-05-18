@@ -59,6 +59,10 @@ class AdvancedLaneDetector(LaneDetector):
         
         src_points (np.ndarray):
         
+        nx (int):
+            Number of horizontal corners in the calibration board.
+        ny (int):
+            Number of vertical corners in the calibration board.
         camera_matrix (np.ndarray):
             Camera intrinsics matrix.
         distortion_coeffs (np.ndarray):
@@ -78,6 +82,8 @@ class AdvancedLaneDetector(LaneDetector):
         path                 : Optional[str]        = os.path.join(os.getcwd(), "data"),
         offset               : Optional[int]        = 300,
         src_points           : Optional[np.ndarray] = None,
+        nx                   : int                  = 9,
+        ny                   : int                  = 6,
         camera_matrix        : Optional[np.ndarray] = None,
         distortion_coeffs    : Optional[np.ndarray] = None,
         camera_calib_dir     : Optional[str]        = os.path.join(os.getcwd(), "data", "camera_calib"),
@@ -89,6 +95,8 @@ class AdvancedLaneDetector(LaneDetector):
         self.path                  = path
         self.offset                = offset
         self.src_points            = np.array(src_points, dtype=np.float32)
+        self.nx                    = nx
+        self.ny                    = ny
         self.camera_matrix         = camera_matrix
         self.distortion_coeffs     = distortion_coeffs
         self.camera_calib_dir      = camera_calib_dir
@@ -193,8 +201,8 @@ class AdvancedLaneDetector(LaneDetector):
         
         # Prepare object points. From the provided calibration images, 9*6
         # corners are identified
-        nx            = 9
-        ny            = 6
+        nx            = self.nx
+        ny            = self.ny
         object_points = []
         image_points  = []
         # Object points are real world points, here a 3D coordinates matrix is
@@ -765,7 +773,7 @@ def run(opt):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config",     default="harder_challenge.yml", type=str)
+    parser.add_argument("--config",     default="sample.yml", type=str)
     parser.add_argument("--output",     default="",           type=str)
     parser.add_argument("--save_video", default=True,         type=bool)
     parser.add_argument("--verbose",    default=False,        type=bool)

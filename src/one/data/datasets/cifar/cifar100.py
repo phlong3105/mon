@@ -98,7 +98,7 @@ class CIFAR100DataModule(DataModule):
         if self.class_labels is None:
             self.load_class_labels()
     
-    def setup(self, phase: Optional[ModelState] = None):
+    def setup(self, model_state: Optional[ModelState] = None):
         """There are also data operations you might want to perform on every
         GPU. Use setup to do things like:
             - Count number of classes.
@@ -108,7 +108,7 @@ class CIFAR100DataModule(DataModule):
             assigned in init).
 
         Args:
-            phase (ModelState, optional):
+            model_state (ModelState, optional):
                 ModelState to use: [None, ModelState.TRAINING, ModelState.TESTING].
                 Set to "None" to setup all train, val, and test data.
                 Default: `None`.
@@ -116,7 +116,7 @@ class CIFAR100DataModule(DataModule):
         console.log(f"Setup [red]CIFAR-100[/red] datasets.")
         
         # NOTE: Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelState.TRAINING]:
+        if model_state in [None, ModelState.TRAINING]:
             full_dataset = CIFAR100(
                 self.dataset_dir, train=True, download=True,
                 transform=self.transform, **self.dataset_kwargs
@@ -124,7 +124,7 @@ class CIFAR100DataModule(DataModule):
             self.train, self.val = random_split(full_dataset, [45000, 5000])
 
         # NOTE: Assign test datasets for use in dataloader(s)
-        if phase in [None, Phase.TESTING]:
+        if model_state in [None, ModelState.TESTING]:
             self.test = CIFAR100(
                 self.dataset_dir, train=False, download=True,
                 transform=self.transform, **self.dataset_kwargs

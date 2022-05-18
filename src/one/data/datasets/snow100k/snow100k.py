@@ -251,7 +251,7 @@ class Snow100KDataModule(DataModule):
         if self.class_labels is None:
             self.load_class_labels()
     
-    def setup(self, phase: Optional[ModelState] = None):
+    def setup(self, model_state: Optional[ModelState] = None):
         """There are also data operations you might want to perform on every
         GPU.
 
@@ -264,13 +264,13 @@ class Snow100KDataModule(DataModule):
             - Define collate_fn for you custom dataset.
 
         Args:
-            phase (ModelState, optional):
+            model_state (ModelState, optional):
                 ModelState to use: [None, ModelState.TRAINING, ModelState.TESTING].
                 Set to "None" to setup all train, val, and test data.
                 Default: `None`.
         """
         # NOTE: Assign train/val datasets for use in dataloaders
-        if phase is None or phase is ModelState.TRAINING:
+        if model_state is None or model_state is ModelState.TRAINING:
             full_dataset = Snow100K(
                 root=self.dataset_dir, split="train", **self.dataset_kwargs
             )
@@ -283,7 +283,7 @@ class Snow100KDataModule(DataModule):
             self.collate_fn   = getattr(full_dataset, "collate_fn",   None)
             
         # NOTE: Assign test datasets for use in dataloader(s)
-        if phase is None or phase is Phase.TESTING:
+        if model_state is None or model_state is ModelState.TESTING:
             self.test = Snow100K(
                 root=self.dataset_dir, split="test", **self.dataset_kwargs
             )

@@ -181,7 +181,7 @@ class LIMEDataModule(DataModule):
         if self.class_labels is None:
             self.load_class_labels()
     
-    def setup(self, phase: Optional[ModelState] = None):
+    def setup(self, model_state: Optional[ModelState] = None):
         """There are also data operations you might want to perform on every GPU.
 
         Todos:
@@ -193,14 +193,14 @@ class LIMEDataModule(DataModule):
             - Define collate_fn for you custom dataset.
 
         Args:
-            phase (ModelState, optional):
+            model_state (ModelState, optional):
                 ModelState to use: [None, ModelState.TRAINING, ModelState.TESTING]. Set to
                 "None" to setup all train, val, and test data. Default: `None`.
         """
         console.log(f"Setup [red]LIME[/red] datasets.")
         
         # NOTE: Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelState.TRAINING]:
+        if model_state in [None, ModelState.TRAINING]:
             full_dataset = LIME(root=self.dataset_dir, **self.dataset_kwargs)
             train_size   = int(0.8 * len(full_dataset))
             val_size     = len(full_dataset) - train_size
@@ -211,7 +211,7 @@ class LIMEDataModule(DataModule):
             self.collate_fn   = getattr(full_dataset, "collate_fn",   None)
             
         # NOTE: Assign test datasets for use in dataloader(s)
-        if phase in [None, Phase.TESTING]:
+        if model_state in [None, ModelState.TESTING]:
             self.test         = LIME(root=self.dataset_dir, **self.dataset_kwargs)
             self.class_labels = getattr(self.test, "class_labels", None)
             self.collate_fn   = getattr(self.test, "collate_fn",   None)

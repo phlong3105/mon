@@ -199,7 +199,7 @@ class FusionCubePPDataModule(DataModule):
         if self.class_labels is None:
             self.load_class_labels()
     
-    def setup(self, phase: Optional[ModelState] = None):
+    def setup(self, model_state: Optional[ModelState] = None):
         """There are also data operations you might want to perform on every GPU.
 
         Todos:
@@ -211,14 +211,14 @@ class FusionCubePPDataModule(DataModule):
             - Define collate_fn for you custom dataset.
 
         Args:
-            phase (ModelState, optional):
+            model_state (ModelState, optional):
                 ModelState to use: [None, ModelState.TRAINING, ModelState.TESTING]. Set to
                 "None" to setup all train, val, and test data. Default: `None`.
         """
         console.log(f"Setup [red]FusionCube++[/red] datasets.")
         
         # NOTE: Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelState.TRAINING]:
+        if model_state in [None, ModelState.TRAINING]:
             full_dataset = FusionCubePP(
                 root=self.dataset_dir, split="train", **self.dataset_kwargs
             )
@@ -231,7 +231,7 @@ class FusionCubePPDataModule(DataModule):
             self.collate_fn   = getattr(full_dataset, "collate_fn",   None)
             
         # NOTE: Assign test datasets for use in dataloader(s)
-        if phase in [None, Phase.TESTING]:
+        if model_state in [None, ModelState.TESTING]:
             self.test         = FusionCubePP(
                 root=self.dataset_dir, split="test", **self.dataset_kwargs
             )

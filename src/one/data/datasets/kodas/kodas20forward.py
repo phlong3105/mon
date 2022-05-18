@@ -271,7 +271,7 @@ class KODAS20ForwardDataModule(DataModule):
         if self.class_labels is None:
             self.load_class_labels()
     
-    def setup(self, phase: Optional[ModelState] = None):
+    def setup(self, model_state: Optional[ModelState] = None):
         """There are also data operations you might want to perform on every
         GPU.
         
@@ -284,7 +284,7 @@ class KODAS20ForwardDataModule(DataModule):
             - Define collate_fn for you custom dataset.
 
         Args:
-            phase (ModelState, optional):
+            model_state (ModelState, optional):
                 ModelState to use: [None, ModelState.TRAINING, ModelState.TESTING].
                 Set to "None" to setup all train, val, and test data.
                 Default: `None`.
@@ -292,14 +292,14 @@ class KODAS20ForwardDataModule(DataModule):
         console.log(f"Setup [red]KODAS 2020 Forward Detection[/red] datasets.")
         
         # NOTE: Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelState.TRAINING]:
+        if model_state in [None, ModelState.TRAINING]:
             self.train = KODAS20Forward(root=self.dataset_dir, split="train", **self.dataset_kwargs)
             self.val   = KODAS20Forward(root=self.dataset_dir, split="val",   **self.dataset_kwargs)
             self.class_labels = getattr(self.train, "class_labels", None)
             self.collate_fn   = getattr(self.train, "collate_fn",  None)
 
         # NOTE: Assign test datasets for use in dataloader(s)
-        if phase in [None, Phase.TESTING]:
+        if model_state in [None, ModelState.TESTING]:
             self.test = KODAS20Forward(root=self.dataset_dir, split="val", **self.dataset_kwargs)
             self.class_labels = getattr(self.test, "class_labels", None)
             self.collate_fn   = getattr(self.test, "collate_fn",  None)

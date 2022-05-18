@@ -260,7 +260,7 @@ class CARLAEnhanceDataModule(DataModule):
         if self.class_labels is None:
             self.load_class_labels()
     
-    def setup(self, phase: Optional[ModelState] = None):
+    def setup(self, model_state: Optional[ModelState] = None):
         """There are also data operations you might want to perform on every
         GPU.
 
@@ -273,7 +273,7 @@ class CARLAEnhanceDataModule(DataModule):
 			- Define collate_fn for you custom dataset.
 
 		Args:
-			phase (ModelState, optional):
+			model_state (ModelState, optional):
 				ModelState to use: [None, ModelState.TRAINING, ModelState.TESTING].
 				Set to "None" to setup all train, val, and test data.
 				Default: `None`.
@@ -290,12 +290,12 @@ class CARLAEnhanceDataModule(DataModule):
         self.train, self.val, self.test = random_split(
             full_dataset, [train_size, val_size, test_size]
         )
-        if phase in [None, ModelState.TRAINING]:
+        if model_state in [None, ModelState.TRAINING]:
             self.class_labels = getattr(self.train, "class_labels", None)
             self.collate_fn   = getattr(self.train, "collate_fn", None)
 
         # NOTE: Assign test datasets for use in dataloader(s)
-        if phase in [None, Phase.TESTING]:
+        if model_state in [None, ModelState.TESTING]:
             self.class_labels = getattr(self.test, "class_labels", None)
             self.collate_fn   = getattr(self.test, "collate_fn",  None)
         
