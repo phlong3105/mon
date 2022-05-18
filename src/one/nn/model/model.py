@@ -157,8 +157,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.basename      = basename
         self.name          = name
+        self.basename      = basename
         self.fullname      = fullname
         self.shape         = shape
         self.num_classes   = num_classes
@@ -225,8 +225,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         """Assign the model's basename. In case of `None`, it will be
         `self.name`.
 		"""
-        self._basename = (basename if basename is not None and basename != ""
-                          else self.name)
+        self._basename = (
+            basename if basename is not None and basename != ""
+            else self.name
+        )
     
     @property
     def size(self) -> Optional[Int3T]:

@@ -1,5 +1,5 @@
 path                 : ""
-video_file           : "challenge.mp4"
+video_file           : "sample.mp4"
 offset               : 300
 src_points           : [[190, 720], [596, 447], [685, 447,], [1125, 720]]
 camera_matrix        : null
