@@ -16,9 +16,19 @@ Object Detection
 
 ## Methods
 
+<details open>
+<summary><b style="font-size:18px">SOTA</b></summary>
+
+<div align="center">
+	<img height="400" src="data/object_detection_sota.png">
+</div>
+
+</details>
+
 | Status | Method                                | Method Type   | Task               | Date       | Publication |
 |:------:|---------------------------------------|---------------|--------------------|------------|-------------|
 |   🟩   | [**Scaled-YOLOv4**](scaled_yolov4.md) | Deep Learning | `Object detection` | 2021/06/25 | CVPR 2021   |
+|   🟩   | [**YOLOR**](yolor.md)                 | Deep Learning | `Object detection` |            | arXiv       |
 |   🟩   | [**YOLOv5**](yolov5.md)               | Deep Learning | `Object detection` |            |             |
 
 
