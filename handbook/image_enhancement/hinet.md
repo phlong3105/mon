@@ -49,23 +49,23 @@ HINet: Half Instance Normalization Network for Image Restoration
     - Stacking HIN Block in each subnetwork’s encoder → the receptive field at each scale is expanded → the robustness of features is also improved.
 
 
-- Adopt cross-stage feature fusion (CSFF) [55] and supervised attention module (SAM) [55] between two stages to enrich the multi-scale features and facilitate achieving performance gain respectively.
+- Adopt cross-stage feature fusion (CSFF) and supervised attention module (SAM) between two stages to enrich the multi-scale features and facilitate achieving performance gain respectively.
 
 </details>
 
 <details open>
 <summary><b style="font-size:16px">2. U-Net</b></summary>
 
-- In each stage, use one 3×3 convolutional layer to extract the initial features.
+- In each stage, use one $3 × 3$ convolutional layer to extract the initial features.
 - Then those features are input into an encoder-decoder architecture with 4 down-samplings and upsamplings.
-    - Use convolution with kernel size=4 for downsampling
-    - Use transposed convolution with kernel size=2 for upsampling
+    - Use convolution with kernel $size = 4$ for downsampling
+    - Use transposed convolution with kernel $size = 2$ for upsampling
 
 
 - In the encoder: design HIN Blocks to extract features in each scale, and double the channels of features when downsampling.
-- In the decoder: use ResBlocks [15] to extract high-level features, and fuse features from the encoder component to compensate for the loss of information caused by resampling.
-- As for ResBlock, use leaky ReLU [29] with a negative slope equal to 0.2 and remove batch normalization.
-- Finally, get the residual output of the reconstructed image by using one 3×3 convolution.  
+- In the decoder: use ResBlocks to extract high-level features, and fuse features from the encoder component to compensate for the loss of information caused by resampling.
+- As for ResBlock, use leaky ReLU with a negative slope equal to 0.2 and remove batch normalization.
+- Finally, get the residual output of the reconstructed image by using one $3 × 3$ convolution.  
 
 </details>
 
@@ -77,7 +77,7 @@ HINet: Half Instance Normalization Network for Image Restoration
 
 > Enrich the multi-scale features of the next stage.
 
-- For **SAM**: replace the 1×1 convolutions in the original module with 3×3 convolutions and add bias in each convolution. 
+- For **SAM**: replace the $1 × 1$ convolutions in the original module with 3×3 convolutions and add bias in each convolution. 
 
 > By introducing SAM, the useful features at the current stage can propagate to the next stage and the less informative ones will be suppressed by the attention masks
 
@@ -100,7 +100,23 @@ HINet: Half Instance Normalization Network for Image Restoration
 - The first part $F_{mid1}$ is normalized by IN with learnable affine parameters and then concatenates with $F_{mid2}$ in channel dimension.
 - HIN blocks use IN on the half of the channels and keep context information by the other half of the channels.
 - Later experiments will also show that this design is more friendly to features in shallow layers of the network. After the concat operation, the residual features $R_{out} ∈ \mathbb{R}^{C_{out}×H×W}$ are obtained by passing features to one $3 × 3$ convolution layer and two leaky ReLU layers, which is shown in Figure 3 a.
-- Finally, HIN blocks output Fout by add Rout with shortcut features (obtained after 1×1 convolution).
+- Finally, HIN blocks output $F_{out}$ by add $R_{out}$ with shortcut features (obtained after $1 × 1$ convolution).
+
+</details>
+
+<details open>
+<summary><b style="font-size:16px">5. Loss Function</b></summary>
+
+- PSNR loss: use Peak Signal-to-Noise Ratio (PSNR) as the metric of the loss function.
+    
+```text
+$Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
+```
+    
+- where:
+  - $X_i ∈ \mathbb{R}^{N×C×H×W}$ denotes the input of subnetwork $i$, where $N$ is the batch size of data, $C$ is the number of channels, $H$ and $W$ are spatial size.
+  - $R_i ∈ \mathbb{R}^{N×C×H×W}$ denotes the final predict of subnetwork $i$.
+  - $Y ∈ \mathbb{R}^{N×C×H×W}$ is the ground truth in each stage.
 
 </details>
 
@@ -109,6 +125,34 @@ HINet: Half Instance Normalization Network for Image Restoration
 
 
 ## Results
+
+<details open>
+<summary><b style="font-size:16px">Implementation Details</b></summary>
+
+- **Datasets**:
+  - Denoising: SIDD
+  - Deblurring: 
+    - GoPro
+    - REDS for image deblurring with JPEG artifacts, and we denote it as REDS dataset for simplicity.
+  - Deraining: Rain13k (13,712 clean-rain image pairs).
+
+- **Training**:
+  - Adam optimizer: learning rate is set to $2×10^{−4}$ by default, and decreased to $1 × 10^{−7}$ with cosine annealing strategy.
+  - Train on $256 × 256$ patches with a batch size of 64 for $4 × 10^5$ iterations.
+  - Apply flip and rotation as data augmentation.
+  - We customize the network to the desired complexity by applying a scale factor $s$ on the number of channels, *e.g*. “HINet s×” denotes scaling the number of channels in basic HINet $s$ times.
+
+</details>
+
+<details open>
+<summary><b style="font-size:16px">Results</b></summary>
+
+<div align="center">
+    <img width="800" src="data/hinet_results_01.png"><br/>
+    <img width="500" src="data/hinet_results_02.png"><br/>
+    <img width="500" src="data/hinet_results_03.png"><br/>
+</div>
+</details>
 
 
 ## Citation
