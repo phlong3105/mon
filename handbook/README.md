@@ -54,12 +54,12 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
     <tr>
         <td><b>Image&nbsp;Processing</b></td>
         <td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/camera_calibration/README.md">Camera&nbsp;Calibration</a> &nbsp;&nbsp;
             <a href="">Feature&nbsp;Extraction</a> &nbsp;&nbsp;
             <a href="">Geometry</a> &nbsp;&nbsp;
             <a href="">Image&nbsp;Acquisition</a> &nbsp;&nbsp;
             <a href="">Image&nbsp;Registration</a> &nbsp;&nbsp;
             <a href="">Motion&nbsp;Analysis</a> &nbsp;&nbsp;
-            <a href="">Reconstruction</a> &nbsp;&nbsp;
         </td>
     </tr>
     <tr>

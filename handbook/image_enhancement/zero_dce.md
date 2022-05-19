@@ -32,7 +32,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 
 ## Ablation Studies
 <details open>
-<summary><b>1. Contribution of Each Loss</b></summary>
+<summary><b style="font-size:16px">1. Contribution of Each Loss</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_ablation_01.png"><br/>
@@ -41,7 +41,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </details>
 
 <details open>
-<summary><b>2. Effect of Parameter Settings</b></summary>
+<summary><b style="font-size:16px">2. Effect of Parameter Settings</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_ablation_02.png"><br/>
@@ -50,7 +50,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </details>
 
 <details open>
-<summary><b>3. Impact of Training Data</b></summary>
+<summary><b style="font-size:16px">3. Impact of Training Data</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_ablation_03.png"><br/>
@@ -59,7 +59,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </details>
 
 <details open>
-<summary><b>4. Advantage of Three-channel Adjustment</b></summary>
+<summary><b style="font-size:16px">4. Advantage of Three-channel Adjustment</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_ablation_04.png"><br/>
@@ -70,7 +70,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 
 ## Results
 <details open>
-<summary><b>1. Visual Comparisons on Typical Low-light Images</b></summary>
+<summary><b style="font-size:16px">1. Visual Comparisons on Typical Low-light Images</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_results_01.png"><br/>
@@ -78,7 +78,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </details>
 
 <details open>
-<summary><b>2. Visual Face Detection Results Before and After Enhanced by Zero-DCE</b></summary>
+<summary><b style="font-size:16px">2. Visual Face Detection Results Before and After Enhanced by Zero-DCE</b></summary>
 
 <div align="center">
     <img width="400" src="data/zero_dce_results_02.png"><br/>
@@ -86,7 +86,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </details>
 
 <details open>
-<summary><b>3. Real Low-light Video with Variational Illumination Enanced by Zero-DCE</b></summary>
+<summary><b style="font-size:16px">3. Real Low-light Video with Variational Illumination Enanced by Zero-DCE</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_results_03.gif"><br/>
@@ -94,7 +94,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </details>
 
 <details open>
-<summary><b>4. Self-training (taking first 100 frames as training data) for Low-light Video Enhancement</b></summary>
+<summary><b style="font-size:16px">4. Self-training (taking first 100 frames as training data) for Low-light Video Enhancement</b></summary>
 
 <div align="center">
     <img width="600" src="data/zero_dce_results_04.gif"><br/>
