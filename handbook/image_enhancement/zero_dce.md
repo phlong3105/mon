@@ -26,7 +26,7 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 ## Method
 <div align="center">
     <img width="800" src="data/zero_dce_framework.png"><br/>
-    <p align="justify">The pipeline of our method. (a) The framework of Zero-DCE. A DCE-Net is devised to estimate a set of best-fitting Light-Enhancement curves (LE-curves: LE(I(x);α)=I(x)+αI(x)(1-I(x))) to iteratively enhance a given input image. (b, c) LE-curves with different adjustment parameters α and numbers of iteration n. In (c), α1, α2, and α3 are equal to -1 while n is equal to 4. In each subfigure, the horizontal axis represents the input pixel values while the vertical axis represents the output pixel values.</p>
+    <p align="justify">The pipeline of our method. (a) The framework of Zero-DCE. A DCE-Net is devised to estimate a set of best-fitting Light-Enhancement curves (LE-curves: LE(I(x);α)=I(x)+αI(x)(1-I(x))) to iteratively enhance a given input image. (b, c) LE-curves with different adjustment parameters α and numbers of iteration n. In (c), α1, α2, and α3 are equal to -1 while n is equal to 4. In each sub-figure, the horizontal axis represents the input pixel values while the vertical axis represents the output pixel values.</p>
 </div>
 
 
