@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from one.io import is_json_file
 from one.io import load
 
-x_units = {
+x_units       = {
     "ms" : "(ms)",
     "fps": "(FPS)",
 }
