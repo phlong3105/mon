@@ -83,6 +83,7 @@ def plot_sota(opt):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    
     parser.add_argument("--data",   default="data.json",     type=str)
     parser.add_argument("--x",      default="speed_v100_b1", type=str)
     parser.add_argument("--y",      default="map_val",       type=str)
