@@ -1,7 +1,7 @@
 <div align="center">
 <img width="800" src="data/banner.png">
 
-<img src="../data/one_100.png" width="32"> Research Handbook <img src="../data/square_96.png" width="32">
+<img src="data/one_100.png" width="32"> Research Handbook <img src="data/square_96.png" width="32">
 =============================
 </div>
 
