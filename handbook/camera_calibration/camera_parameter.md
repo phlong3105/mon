@@ -32,12 +32,6 @@ What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
   - Pixel coordinate system (2D)
 
 
-- The extrinsic matrix is a transformation matrix from the world coordinate system to the camera coordinate system, while the intrinsic matrix is a transformation matrix that converts points from the camera coordinate system to the pixel coordinate system.
-  - **World-to-Camera**: 3D-3D projection. Rotation, Scaling, Translation 
-  - **Camera-to-Image**: 3D-2D projection. Loss of information. Depends on the camera model and its parameters (pinhole, f-theta, etc)
-  - **Image-to-Pixel**: 2D-2D projection. Continuous to discrete. Quantization and origin shift.
-
-
 <details open>
 <summary><b style="font-size:16px">1. World coordinate system (3D)</b></summary>
 
@@ -143,3 +137,9 @@ What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 
 
 </details>
+
+### Summary
+- The extrinsic matrix is a transformation matrix from the world coordinate system to the camera coordinate system, while the intrinsic matrix is a transformation matrix that converts points from the camera coordinate system to the pixel coordinate system.
+  - **World-to-Camera**: 3D-3D projection. Rotation, Scaling, Translation 
+  - **Camera-to-Image**: 3D-2D projection. Loss of information. Depends on the camera model and its parameters (pinhole, f-theta, etc)
+  - **Image-to-Pixel**: 2D-2D projection. Continuous to discrete. Quantization and origin shift.
