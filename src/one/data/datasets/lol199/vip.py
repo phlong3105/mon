@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - VIP
+# MARK: - Module
 
 @DATASETS.register(name="vip")
 class VIP(UnsupervisedImageDataset):
@@ -153,8 +153,6 @@ class VIP(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - VIPDataModule
 
 @DATAMODULES.register(name="vip")
 class VIPDataModule(DataModule):

@@ -51,7 +51,7 @@ __all__ = [
 ]
 
 
-# MARK: - IEC22Fusion
+# MARK: - Module
 
 @DATASETS.register(name="iec22fusion")
 class IEC22Fusion(UnsupervisedImageDataset):
@@ -216,8 +216,6 @@ class IEC22Fusion(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - IEC22FusionDataModule
 
 @DATAMODULES.register(name="iec22fusion")
 class IEC22FusionDataModule(DataModule):

@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 
-# MARK: - CIFAR100
+# MARK: - Module
 
 @DATASETS.register(name="cifar100")
 class CIFAR100(CIFAR10):
@@ -56,8 +56,6 @@ class CIFAR100(CIFAR10):
         "md5"     : "7973b15100ade9c7d40fb424638fde48",
     }
 
-
-# MARK: - CIFAR100DataModule
 
 @DATAMODULES.register(name="cifar100")
 class CIFAR100DataModule(DataModule):

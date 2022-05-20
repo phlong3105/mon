@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - NPE
+# MARK: - Module
 
 @DATASETS.register(name="npe")
 class NPE(UnsupervisedImageDataset):
@@ -153,9 +153,7 @@ class NPE(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - NPEDataModule
-
+        
 @DATAMODULES.register(name="npe")
 class NPEDataModule(DataModule):
     """NPE DataModule."""

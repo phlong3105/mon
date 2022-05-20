@@ -38,7 +38,7 @@ __all__ = [
 ]
 
 
-# MARK: - Snow100K
+# MARK: - Module
 
 @DATASETS.register(name="snow100k")
 class Snow100K(ImageEnhancementDataset):
@@ -223,8 +223,6 @@ class Snow100K(ImageEnhancementDataset):
         pass
         
         
-# MARK: - Snow100KDataModule
-
 @DATAMODULES.register(name="snow100k")
 class Snow100KDataModule(DataModule):
     """Snow100K DataModule."""

@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - LoL
+# MARK: - Module
 
 @DATASETS.register(name="gladnet")
 class GLADNet(ImageEnhancementDataset):
@@ -167,8 +167,6 @@ class GLADNet(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
 
-
-# MARK: - GLADNetDataModule
 
 @DATAMODULES.register(name="gladnet")
 class GLADNetDataModule(DataModule):

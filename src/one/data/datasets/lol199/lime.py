@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - LIME
+# MARK: - Module
 
 @DATASETS.register(name="lime")
 class LIME(UnsupervisedImageDataset):
@@ -152,8 +152,6 @@ class LIME(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - LIMEDataModule
 
 @DATAMODULES.register(name="lime")
 class LIMEDataModule(DataModule):

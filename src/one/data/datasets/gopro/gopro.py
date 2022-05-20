@@ -38,7 +38,7 @@ __all__ = [
 ]
 
 
-# MARK: - GoPro
+# MARK: - Module
 
 @DATASETS.register(name="gopro")
 class GoPro(ImageEnhancementDataset):
@@ -216,8 +216,6 @@ class GoPro(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
 
-
-# MARK: - GoProDataModule
 
 @DATAMODULES.register(name="gopro")
 class GoProDataModule(DataModule):

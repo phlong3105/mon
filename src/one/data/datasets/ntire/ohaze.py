@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - IHaze
+# MARK: - Module
 
 @DATASETS.register(name="ohaze")
 class OHaze(ImageEnhancementDataset):
@@ -184,8 +184,6 @@ class OHaze(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - IHazeDataModule
 
 @DATAMODULES.register(name="ohaze")
 class OHazeDataModule(DataModule):

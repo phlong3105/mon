@@ -94,7 +94,7 @@ datasets
 """
 
 
-# MARK: - WaymoDetection2D
+# MARK: - Module
 
 @DATASETS.register(name="waymodet2d")
 class WaymoDetection2D(ObjectDetectionDataset):
@@ -327,9 +327,7 @@ class WaymoDetection2D(ObjectDetectionDataset):
             path 	    = os.path.join(current_dir, "waymo_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
         
-
-# MARK: - WaymoDetection2DDataModule
-
+        
 @DATAMODULES.register(name="waymodet2d")
 class WaymoDetection2DDataModule(DataModule):
     """Waymo Detection 2D DataModule."""

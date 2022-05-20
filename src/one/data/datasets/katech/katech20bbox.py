@@ -82,7 +82,7 @@ Where:
 """
 
 
-# MARK: - KATECH20Bbox
+# MARK: - Module
 
 @DATASETS.register(name="katech20bbox")
 class KATECH20Bbox(ObjectDetectionDataset):
@@ -256,8 +256,6 @@ class KATECH20Bbox(ObjectDetectionDataset):
             path = os.path.join(current_dir, "katech20_26_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
 
-
-# MARK: - KATECH20BboxDataModule
 
 @DATAMODULES.register(name="katech20bbox")
 class KATECH20BboxDataModule(DataModule):

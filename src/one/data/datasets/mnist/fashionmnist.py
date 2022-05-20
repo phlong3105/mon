@@ -30,7 +30,7 @@ __all__ = [
 ]
 
 
-# MARK: - FashionMNIST
+# MARK: - Module
 
 @DATASETS.register(name="fashionmnist")
 class FashionMNIST(MNIST):
@@ -52,8 +52,6 @@ class FashionMNIST(MNIST):
         "Shirt", "Sneaker", "Bag", "Ankle boot"
     ]
 
-
-# MARK: - FashionMNISTDataModule
 
 @DATAMODULES.register(name="fashionmnist")
 class FashionMNISTDataModule(DataModule):

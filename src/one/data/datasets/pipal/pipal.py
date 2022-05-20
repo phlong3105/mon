@@ -50,7 +50,7 @@ __all__ = [
 ]
 
 
-# MARK: - PIPAL
+# MARK: - Module
 
 @DATASETS.register(name="pipal")
 class PIPAL(ImageEnhancementDataset):
@@ -186,8 +186,6 @@ class PIPAL(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - PIPALDataModule
 
 @DATAMODULES.register(name="pipal")
 class PIPALDataModule(DataModule):

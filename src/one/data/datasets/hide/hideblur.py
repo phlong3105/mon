@@ -38,7 +38,7 @@ __all__ = [
 ]
 
 
-# MARK: - HIDEBlur
+# MARK: - Module
 
 @DATASETS.register(name="hideblur")
 class HIDEBlur(ImageEnhancementDataset):
@@ -274,8 +274,6 @@ class HIDEBlur(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
 
-
-# MARK: - HIDEBlurDataModule
 
 @DATAMODULES.register(name="hideblur")
 class HIDEBlurDataModule(DataModule):

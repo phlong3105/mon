@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 
-# MARK: - COCO17Detection
+# MARK: - Module
 
 @DATASETS.register(name="coco17detection")
 class COCO17Detection(ObjectDetectionDataset):
@@ -186,8 +186,6 @@ class COCO17Detection(ObjectDetectionDataset):
             path = os.path.join(current_dir, "coco17_80_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
     
-
-# MARK: - COCO17DetectionDataModule
 
 @DATAMODULES.register(name="coco17detection")
 class COCO17DetectionDataModule(DataModule):

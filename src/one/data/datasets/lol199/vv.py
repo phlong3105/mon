@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - VV
+# MARK: - Module
 
 @DATASETS.register(name="vv")
 class VV(UnsupervisedImageDataset):
@@ -153,8 +153,6 @@ class VV(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - VVDataModule
 
 @DATAMODULES.register(name="vv")
 class VVDataModule(DataModule):

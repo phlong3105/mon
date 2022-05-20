@@ -47,7 +47,7 @@ __all__ = [
 ]
 
 
-# MARK: - RESIDE
+# MARK: - Module
 
 @DATASETS.register(name="reside")
 class RESIDE(ImageEnhancementDataset):
@@ -361,8 +361,6 @@ class RESIDE(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - SateHaze1KDataModule
 
 @DATAMODULES.register(name="reside")
 class RESIDEDataModule(DataModule):

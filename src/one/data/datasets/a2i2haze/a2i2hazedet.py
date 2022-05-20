@@ -46,7 +46,7 @@ __all__ = [
 ]
 
 
-# MARK: - A2I2HazeDetection
+# MARK: - Module
 
 @DATASETS.register(name="a2i2hazedet")
 class A2I2HazeDetection(ObjectDetectionDataset):
@@ -262,8 +262,6 @@ class A2I2HazeDetection(ObjectDetectionDataset):
             path          = os.path.join(current_dir, "../../../../../onedetection/src/onedetection/datasets/a2i2haze/a2i2_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
         
-
-# MARK: - A2I2HazeDetection
 
 @DATAMODULES.register(name="a2i2hazedet")
 class A2I2HazeDetectionDataModule(DataModule):

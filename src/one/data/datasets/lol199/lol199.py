@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - LoL199
+# MARK: - Module
 
 @DATASETS.register(name="lol199")
 class LoL199(UnsupervisedImageDataset):
@@ -230,8 +230,6 @@ class LoL199(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - LoL199DataModule
 
 @DATAMODULES.register(name="lol199")
 class LoL199DataModule(DataModule):

@@ -51,7 +51,7 @@ __all__ = [
 ]
 
 
-# MARK: - IEC22
+# MARK: - Module
 
 @DATASETS.register(name="iec22")
 class IEC22(UnsupervisedImageDataset):
@@ -167,8 +167,6 @@ class IEC22(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - IEC22DataModule
 
 @DATAMODULES.register(name="iec22")
 class IEC22DataModule(DataModule):

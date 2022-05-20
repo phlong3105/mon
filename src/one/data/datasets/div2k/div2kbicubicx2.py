@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - Div2KBicubicX2
+# MARK: - Module
 
 @DATASETS.register(name="div2kbicubicx2")
 class Div2KBicubicX2(ImageEnhancementDataset):
@@ -167,8 +167,6 @@ class Div2KBicubicX2(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - Div2KBicubicX2DataModule
 
 @DATAMODULES.register(name="div2kbicubicx2")
 class Div2KBicubicX2DataModule(DataModule):

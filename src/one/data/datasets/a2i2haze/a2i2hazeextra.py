@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - A2I2HazeExtra
+# MARK: - Module
 
 @DATASETS.register(name="a2i2hazeextra")
 class A2I2HazeExtra(ImageEnhancementDataset):
@@ -296,8 +296,6 @@ class A2I2HazeExtra(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - A2I2HazeExtraDataModule
 
 @DATAMODULES.register(name="a2i2hazeextra")
 class A2I2HazeExtraDataModule(DataModule):

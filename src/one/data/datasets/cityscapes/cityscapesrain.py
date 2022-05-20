@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 
-# MARK: - CityscapesRain
+# MARK: - Module
 
 @DATASETS.register(name="cityscapesrain")
 class CityscapesRain(ImageEnhancementDataset):
@@ -288,8 +288,6 @@ class CityscapesRain(ImageEnhancementDataset):
         path        = os.path.join(current_dir, "cityscapes_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
     
-
-# MARK: - CityscapesRainDataModule
 
 @DATAMODULES.register(name="cityscapes_rain")
 class CityscapesRainDataModule(DataModule):

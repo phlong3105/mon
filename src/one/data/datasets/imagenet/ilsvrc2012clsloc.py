@@ -41,7 +41,7 @@ __all__ = [
 ]
 
 
-# MARK: - ILSVRC2012ClsLoc
+# MARK: - Module
 
 @DATASETS.register(name="ilsvrc2012clsloc")
 class ILSVRC2012ClsLoc(ImageClassificationDataset):
@@ -243,8 +243,6 @@ class ILSVRC2012ClsLoc(ImageClassificationDataset):
             path = os.path.join(current_dir, "imagenet_1k_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
     
-
-# MARK: - ILSVRC2012ClsLocDataModule
 
 @DATAMODULES.register(name="ilsvrc2012clsloc")
 class ILSVRC2012ClsLocDataModule(DataModule):

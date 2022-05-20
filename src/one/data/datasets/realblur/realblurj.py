@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - RealBlurJ
+# MARK: - Module
 
 @DATASETS.register(name="realblurj")
 class RealBlurJ(ImageEnhancementDataset):
@@ -202,8 +202,6 @@ class RealBlurJ(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
 
-
-# MARK: - RealBlurJDataModule
 
 @DATAMODULES.register(name="realblurj")
 class RealBlurJDataModule(DataModule):

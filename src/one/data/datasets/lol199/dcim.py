@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - DCIM
+# MARK: - Module
 
 @DATASETS.register(name="dcim")
 class DCIM(UnsupervisedImageDataset):
@@ -153,8 +153,6 @@ class DCIM(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - DCIMDataModule
 
 @DATAMODULES.register(name="dcim")
 class DCIMDataModule(DataModule):

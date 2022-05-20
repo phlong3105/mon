@@ -42,7 +42,7 @@ __all__ = [
 ]
 
 
-# MARK: - MNIST
+# MARK: - Module
 
 @DATASETS.register(name="mnist")
 class MNIST(VisionDataset):
@@ -248,8 +248,6 @@ class MNIST(VisionDataset):
     def extra_repr(self) -> str:
         return "Split: {}".format("Train" if self.train is True else "Test")
 
-
-# MARK: - MNISTDataModule
 
 @DATAMODULES.register(name="mnist")
 class MNISTDataModule(DataModule):

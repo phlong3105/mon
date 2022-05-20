@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - MEF
+# MARK: - Module
 
 @DATASETS.register(name="mef")
 class MEF(UnsupervisedImageDataset):
@@ -152,8 +152,6 @@ class MEF(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - MEFDataModule
 
 @DATAMODULES.register(name="mef")
 class MEFDataModule(DataModule):

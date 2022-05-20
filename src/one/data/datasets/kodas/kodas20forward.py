@@ -58,7 +58,7 @@ Where:
 """
 
 
-# MARK: - KODAS20Forward
+# MARK: - Module
 
 @DATASETS.register(name="kodas20forward")
 class KODAS20Forward(ObjectDetectionDataset):
@@ -242,8 +242,6 @@ class KODAS20Forward(ObjectDetectionDataset):
             path        = os.path.join(current_dir, "kodas20_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
 
-
-# MARK: - KODAS20ForwardDataModule
 
 @DATAMODULES.register(name="kodas20forward")
 class KODAS20ForwardDataModule(DataModule):

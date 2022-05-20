@@ -38,7 +38,7 @@ __all__ = [
 ]
 
 
-# MARK: - SICE
+# MARK: - Module
 
 @DATASETS.register(name="sice")
 class SICE(ImageEnhancementDataset):
@@ -198,8 +198,6 @@ class SICE(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - SICEDataModule
 
 @DATAMODULES.register(name="sice")
 class SICEDataModule(DataModule):

@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - SICE
+# MARK: - Module
 
 @DATASETS.register(name="sice_unsupervised")
 class SICEUnsupervised(UnsupervisedImageDataset):
@@ -155,8 +155,6 @@ class SICEUnsupervised(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - SICEUnsupervisedDataModule
 
 @DATAMODULES.register(name="sice_unsupervised")
 class SICEUnsupervisedDataModule(DataModule):

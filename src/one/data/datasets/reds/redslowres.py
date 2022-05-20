@@ -49,7 +49,7 @@ __all__ = [
 ]
 
 
-# MARK: - REDSLowRes
+# MARK: - Module
 
 @DATASETS.register(name="redslowres")
 class REDSLowRes(ImageEnhancementDataset):
@@ -235,8 +235,6 @@ class REDSLowRes(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - REDSLowResDataModule
 
 @DATAMODULES.register(name="redslowres")
 class REDSLowResDataModule(DataModule):

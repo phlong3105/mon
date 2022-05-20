@@ -123,7 +123,7 @@ Examples:
 """
 
 
-# MARK: - VisDrone19Detection
+# MARK: - Module
 
 @DATASETS.register(name="visdrone19det")
 class VisDrone19Detection(ObjectDetectionDataset):
@@ -315,9 +315,7 @@ class VisDrone19Detection(ObjectDetectionDataset):
             path 	    = os.path.join(current_dir, "visdrone19_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
         
-
-# MARK: - VisDrone19DetectionDataModule
-
+        
 @DATAMODULES.register(name="visdrone19det")
 class VisDrone19DetectionDataModule(DataModule):
     """VisDrone 2019 Detection DataModule."""

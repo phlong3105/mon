@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - DeepUPE
+# MARK: - Module
 
 @DATASETS.register(name="deepupe")
 class DeepUPE(ImageEnhancementDataset):
@@ -166,8 +166,6 @@ class DeepUPE(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
 
-
-# MARK: - DeepUPEDataModule
 
 @DATAMODULES.register(name="deepupe")
 class DeepUPEDataModule(DataModule):

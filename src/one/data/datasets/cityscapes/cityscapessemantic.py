@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 
-# MARK: - CityscapesSemantic
+# MARK: - Module
 
 @DATASETS.register(name="cityscapessemantic")
 class CityscapesSemantic(SemanticSegmentationDataset):
@@ -265,8 +265,6 @@ class CityscapesSemantic(SemanticSegmentationDataset):
         path        = os.path.join(current_dir, "cityscapes_class_labels.json")
         self.class_labels = ClassLabels.create_from_file(label_path=path)
     
-
-# MARK: - CityscapesSemanticDataModule
 
 @DATAMODULES.register(name="cityscapessemantic")
 class CityscapesSemanticDataModule(DataModule):

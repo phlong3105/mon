@@ -36,7 +36,7 @@ __all__ = [
 ]
 
 
-# MARK: - SID
+# MARK: - Module
 
 @DATASETS.register(name="sid")
 class SID(ImageEnhancementDataset):
@@ -187,8 +187,6 @@ class SID(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - SIDDataModule
 
 @DATAMODULES.register(name="sid")
 class SIDDataModule(DataModule):

@@ -41,7 +41,7 @@ __all__ = [
 ]
 
 
-# MARK: - CIFAR10
+# MARK: - Module
 
 @DATASETS.register(name="cifar10")
 class CIFAR10(VisionDataset):
@@ -207,8 +207,6 @@ class CIFAR10(VisionDataset):
     def extra_repr(self) -> str:
         return "Split: {}".format("Train" if self.train is True else "Test")
 
-
-# MARK: - CIFAR10DataModule
 
 @DATAMODULES.register(name="cifar10")
 class CIFAR10DataModule(DataModule):

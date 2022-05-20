@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - Rain100
+# MARK: - Module
 
 @DATASETS.register(name="rain100")
 class Rain100(ImageEnhancementDataset):
@@ -171,8 +171,6 @@ class Rain100(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
     
-
-# MARK: - Rain100DataModule
 
 @DATAMODULES.register(name="rain100")
 class Rain100DataModule(DataModule):

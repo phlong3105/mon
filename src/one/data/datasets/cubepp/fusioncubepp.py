@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 
-# MARK: - FusionCubePP
+# MARK: - Module
 
 @DATASETS.register(name="fusioncube++")
 class FusionCubePP(UnsupervisedImageDataset):
@@ -170,8 +170,6 @@ class FusionCubePP(UnsupervisedImageDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - FusionCubePPDataModule
 
 @DATAMODULES.register(name="fusioncube++")
 class FusionCubePPDataModule(DataModule):

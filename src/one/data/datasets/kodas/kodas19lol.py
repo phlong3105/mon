@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-# MARK: - KODAS19LoL
+# MARK: - Module
 
 @DATASETS.register(name="kodas19lol")
 class KODAS19LoL(ImageEnhancementDataset):
@@ -189,8 +189,6 @@ class KODAS19LoL(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - KODAS19LoLDataModule
 
 @DATAMODULES.register(name="kodas19lol")
 class KODAS19LoLDataModule(DataModule):

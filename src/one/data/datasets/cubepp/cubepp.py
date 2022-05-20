@@ -44,7 +44,7 @@ __all__ = [
 ]
 
 
-# MARK: - CubePP
+# MARK: - Module
 
 @DATASETS.register(name="cube++")
 class CubePP(ImageEnhancementDataset):
@@ -174,8 +174,6 @@ class CubePP(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - CubePPDataModule
 
 @DATAMODULES.register(name="cube++")
 class CubePPDataModule(DataModule):

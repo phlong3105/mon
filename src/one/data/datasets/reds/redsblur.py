@@ -49,7 +49,7 @@ __all__ = [
 ]
 
 
-# MARK: - REDSBlur
+# MARK: - Module
 
 @DATASETS.register(name="redsblur")
 class REDSBlur(ImageEnhancementDataset):
@@ -254,8 +254,6 @@ class REDSBlur(ImageEnhancementDataset):
         """Load ClassLabels."""
         pass
         
-
-# MARK: - REDSBlurDataModule
 
 @DATAMODULES.register(name="redsblur")
 class REDSBlurDataModule(DataModule):
