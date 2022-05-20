@@ -24,8 +24,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from munch import Munch
 from numpy import ndarray
-from tqdm import tqdm
 
+from one.core import Arrays
 from one.core import console
 from one.core import error_console
 from one.core import MODELS
@@ -305,29 +305,30 @@ class AdvancedLaneDetector(LaneDetector):
                 self.left_fit_hist  = np.delete(self.left_fit_hist, 0, 0)
                 self.right_fit_hist = np.delete(self.right_fit_hist, 0, 0)
     
-        # Checking
-        draw_poly_image = self.draw_poly_lines(
-            binary_warped, left_fit_x, right_fit_x, plot_y
-        )
-    
         left_curve_rad, right_curve_rad = self.measure_curvature_meters(
-            binary_warped, left_fit_x, right_fit_x, plot_y
+            binary_warped = binary_warped,
+            left_fit_x    = left_fit_x,
+            right_fit_x   = right_fit_x,
+            plot_y        = plot_y
         )
         vehicle_pos = self.measure_position_meters(
-            binary_warped, left_fit, right_fit
+            binary_warped = binary_warped,
+            left_fit      = left_fit,
+            right_fit     = right_fit
         )
-        out_image, color_warp_image, new_warp = self.project_lane_info(
-            image           = x,
-            binary_warped   = binary_warped,
-            plot_y          = plot_y,
-            left_fit_x      = left_fit_x,
-            right_fit_x     = right_fit_x,
-            m_inv           = m_inv,
-            left_curve_rad  = left_curve_rad,
-            right_curve_rad = right_curve_rad,
-            vehicle_pos     = vehicle_pos
-        )
-        return out_image, vehicle_pos, color_warp_image, draw_poly_image
+        
+        yhat = {
+            "image"          : x,
+            "binary_warped"  : binary_warped,
+            "plot_y"         : plot_y,
+            "left_fit_x"     : left_fit_x,
+            "right_fit_x"    : right_fit_x,
+            "m_inv"          : m_inv,
+            "left_curve_rad" : left_curve_rad,
+            "right_curve_rad": right_curve_rad,
+            "vehicle_pos"    : vehicle_pos,
+        }
+        return yhat
 
     # STEP 2: Perspective Transform from Car Camera to Bird's Eye View
     def warp_image(self, image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -596,9 +597,86 @@ class AdvancedLaneDetector(LaneDetector):
         # side of the center of the lane
         vehicle_pos = ((binary_warped.shape[1] // 2) - center_lanes_x_pos) * xm_per_pix
         return vehicle_pos
+    
+    # MARK: Visualize
+    
+    def show_results(
+        self,
+        x            : Optional[np.ndarray] = None,
+        y            : Optional[Arrays]     = None,
+        yhat         : Optional[Arrays]     = None,
+        filepath     : Optional[str]        = None,
+        image_quality: int                  = 95,
+        verbose      : bool                 = False,
+        show_max_n   : int                  = 8,
+        wait_time    : float                = 0.01,
+        *args, **kwargs
+    ) -> Arrays:
+        image           = yhat["image"]
+        binary_warped   = yhat["binary_warped"]
+        plot_y          = yhat["plot_y"]
+        left_fit_x      = yhat["left_fit_x"]
+        right_fit_x     = yhat["right_fit_x"]
+        m_inv           = yhat["m_inv"]
+        left_curve_rad  = yhat["left_curve_rad"]
+        right_curve_rad = yhat["right_curve_rad"]
+        vehicle_pos     = yhat["vehicle_pos"]
+        
+        draw_poly_image = self.draw_poly_lines(
+            binary_warped = binary_warped,
+            left_fit_x    = left_fit_x,
+            right_fit_x   = right_fit_x,
+            plot_y        = plot_y
+        )
+        out_image, color_warp_image, new_warp = self.project_lane_info(
+            image           = image,
+            binary_warped   = binary_warped,
+            plot_y          = plot_y,
+            left_fit_x      = left_fit_x,
+            right_fit_x     = right_fit_x,
+            m_inv           = m_inv,
+            left_curve_rad  = left_curve_rad,
+            right_curve_rad = right_curve_rad,
+            vehicle_pos     = vehicle_pos
+        )
+        # End visualization steps
+        return out_image, color_warp_image, new_warp, draw_poly_image
 
     # STEP 7: Project Lane Delimitations Back on Image Plane and Add Text for
     # Lane Info
+    def draw_poly_lines(
+	    self,
+	    binary_warped: np.ndarray,
+	    left_fit_x   : np.ndarray,
+	    right_fit_x  : np.ndarray,
+	    plot_y       : np.ndarray
+    ) -> np.ndarray:
+        # Create an image to draw on and an image to show the selection window
+        out_image    = np.dstack((binary_warped, binary_warped, binary_warped)) * 255
+        window_image = np.zeros_like(out_image)
+        margin       = 100
+        
+        # Generate a polygon to illustrate the search window area
+        # And recast the x and y points into usable format for cv2.fillPoly()
+        left_line_window1  = np.array([np.transpose(np.vstack([left_fit_x - margin, plot_y]))])
+        left_line_window2  = np.array([np.flipud(np.transpose(np.vstack([left_fit_x + margin, plot_y])))])
+        left_line_pts      = np.hstack((left_line_window1, left_line_window2))
+        right_line_window1 = np.array([np.transpose(np.vstack([right_fit_x - margin, plot_y]))])
+        right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fit_x + margin, plot_y])))])
+        right_line_pts     = np.hstack((right_line_window1, right_line_window2))
+    
+        # Draw the lane onto the warped blank image
+        cv2.fillPoly(window_image, np.int_([left_line_pts]),  (100, 100, 0))
+        cv2.fillPoly(window_image, np.int_([right_line_pts]), (100, 100, 0))
+        result = cv2.addWeighted(out_image, 1, window_image, 0.3, 0)
+        
+        # Plot the polynomial lines onto the image
+        plt.plot(left_fit_x,  plot_y, color="green")
+        plt.plot(right_fit_x, plot_y, color="blue")
+        
+        # End visualization steps
+        return result
+    
     def project_lane_info(
         self,
         image          : np.ndarray,
@@ -664,41 +742,6 @@ class AdvancedLaneDetector(LaneDetector):
     
         return out_image, color_warp_img, new_warp
     
-    # MARK: Visualize
-    
-    def draw_poly_lines(
-	    self,
-	    binary_warped: np.ndarray,
-	    left_fit_x   : np.ndarray,
-	    right_fit_x  : np.ndarray,
-	    plot_y       : np.ndarray
-    ) -> np.ndarray:
-        # Create an image to draw on and an image to show the selection window
-        out_image    = np.dstack((binary_warped, binary_warped, binary_warped)) * 255
-        window_image = np.zeros_like(out_image)
-        margin       = 100
-        
-        # Generate a polygon to illustrate the search window area
-        # And recast the x and y points into usable format for cv2.fillPoly()
-        left_line_window1  = np.array([np.transpose(np.vstack([left_fit_x - margin, plot_y]))])
-        left_line_window2  = np.array([np.flipud(np.transpose(np.vstack([left_fit_x + margin, plot_y])))])
-        left_line_pts      = np.hstack((left_line_window1, left_line_window2))
-        right_line_window1 = np.array([np.transpose(np.vstack([right_fit_x - margin, plot_y]))])
-        right_line_window2 = np.array([np.flipud(np.transpose(np.vstack([right_fit_x + margin, plot_y])))])
-        right_line_pts     = np.hstack((right_line_window1, right_line_window2))
-    
-        # Draw the lane onto the warped blank image
-        cv2.fillPoly(window_image, np.int_([left_line_pts]),  (100, 100, 0))
-        cv2.fillPoly(window_image, np.int_([right_line_pts]), (100, 100, 0))
-        result = cv2.addWeighted(out_image, 1, window_image, 0.3, 0)
-        
-        # Plot the polynomial lines onto the image
-        plt.plot(left_fit_x,  plot_y, color="green")
-        plt.plot(right_fit_x, plot_y, color="blue")
-        
-        # End visualization steps
-        return result
-
 
 # MARK: - Main
 
@@ -745,7 +788,7 @@ def run(opt):
         cv2.namedWindow("color_warp", cv2.WINDOW_NORMAL)
         cv2.namedWindow("draw_poly",  cv2.WINDOW_NORMAL)
     with progress_bar() as pbar:
-        for idx in pbar.track(
+        for _ in pbar.track(
             range(round(capture.get(cv2.CAP_PROP_FRAME_COUNT))),
             description=f"[bright_yellow]Processing frames"
         ):
@@ -753,7 +796,9 @@ def run(opt):
             if not ret:
                 break
     
-            image_out, angle, color_warp, draw_poly_image = lane_detector.forward(x=frame)
+            yhat  = lane_detector.forward(x=frame)
+            angle = yhat["vehicle_pos"]
+            image_out, color_warp, draw_poly_image = lane_detector.show_results(yhat=yhat)
             if angle > 1.5 or angle < -1.5:
                 lane_detector.is_init = True
             else:
