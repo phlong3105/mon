@@ -166,7 +166,7 @@ class GLADNet(ImageEnhancementDataset):
     def load_class_labels(self):
         """Load ClassLabels."""
         pass
-        
+
 
 # MARK: - GLADNetDataModule
 
