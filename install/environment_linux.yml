@@ -32,10 +32,13 @@ dependencies:
     # NVIDIA for general computing on graphical processing units (GPUs).
   - git
   - git-lfs
+    # Git
   - librsvg
   - libiconv
   - python=3.9
+    # Python
   - pyqt
+    # Qt
   - pip
   - pip:
         - cython

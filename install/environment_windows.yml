@@ -2,7 +2,7 @@
 #   conda config --append channels conda-forge
 #
 # - Install:
-#   conda env create -f environment_mac.yml
+#   conda env create -f environment.yml
 # 
 # - Install cudatoolkit separately:
 #   conda install cudatoolkit=11.3
@@ -11,7 +11,7 @@
 #   conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch -c conda-forge
 #
 # - Update:
-#   conda env update --name one --file environment_mac.yml
+#   conda env update --name one --file environment.yml
 #
 # - Update all pip packages:
 #   pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
@@ -25,9 +25,9 @@ channels:
   - conda-forge
 
 dependencies:
-  # - cudatoolkit=11.3
+  - cudatoolkit=11.3
   # - cudatoolkit-dev=11.3
-  # - cudnn
+  - cudnn
     # CUDA is a parallel computing platform and programming model developed by
     # NVIDIA for general computing on graphical processing units (GPUs).
   - git
@@ -61,8 +61,8 @@ dependencies:
           # Image Polygonal Annotation with Python
           # https://github.com/wkentaro/labelme
         - Markdown
-          # This is a Python implementation of John Gruber's Markdown
-        - matplotlib==3.5.1
+          # This is a Python implementation of John Gruber's Markdown.
+        - matplotlib>=3.5.1
           # Matplotlib is a plotting library for the Python programming language
           # and its numerical mathematics extension NumPy.
         - mediapipe
@@ -71,7 +71,7 @@ dependencies:
         - munch
           # Munch is a dictionary that supports attribute-style access.
         - mypy
-          # Static Typing for Python
+          # Static Typing for Python.
         - multipledispatch
           # A relatively sane approach to multiple dispatch in Python.
         - ninja
@@ -84,7 +84,7 @@ dependencies:
         # - opencv-contrib-python==4.4.0.46         ; sys_platform=="win32" or sys_platform=="linux"
         - opencv-python-headless==4.4.0.46        ; sys_platform=="darwin"
         - opencv-contrib-python-headless==4.4.0.46; sys_platform=="darwin"
-          # OpenCV library
+          # OpenCV library.
         - ordered-enum
           # A small library for adding total orderings to enums.
         - pandas
@@ -99,7 +99,7 @@ dependencies:
           # Python interface to Graphviz's Dot language.
         - PyQt5
           # Qt UI.
-        - pytorch-lightning==1.5.10
+        - pytorch-lightning>=1.6.1
           # Pytorch lightning.
         - pyvips
           # A fast image processing library with low memory needs.
@@ -116,8 +116,8 @@ dependencies:
           # image.
         - requests
           # Python HTTP for Humans.
-        - rich  
-          # Rich is a Python library for rich text and beautiful formatting in 
+        - rich
+          # Rich is a Python library for rich text and beautiful formatting in
           # the terminal.
         - scikit-learn
           # Simple and efficient tools for predictive data analysis.
@@ -133,8 +133,8 @@ dependencies:
           # A small Python library that automatically sets CUDA_VISIBLE_DEVICES
           # to the least-loaded GPU on multi-GPU systems.
         - tensorboard
-          # TensorBoard is a tool for providing the measurements and
-          # visualizations needed during the machine learning workflow.
+          # TensorBoard is a tool for providing the measurements and visualizations
+          # needed during the machine learning workflow.
         - thop
           # FLOPs computation.
         - timm
@@ -143,12 +143,12 @@ dependencies:
           # and reference training / validation scripts that aim to pull
           # together a wide variety of SOTA models with ability to reproduce
           # ImageNet training results.
-        # - --find-links https://download.pytorch.org/whl/cu113/torch_stable.html
+        - --extra-index-url https://download.pytorch.org/whl/cu113
         - torch
         - torchvision
         - torchaudio
           # PyTorch.
-        - torchmetrics[all]
+        - torchmetrics
           # git+https://github.com/PytorchLightning/metrics.git@release/latest
         - torchsummary
           # Model summary in PyTorch.
@@ -160,4 +160,4 @@ dependencies:
           # Weights & Biases logger.
         - xmltodict
           # `xmltodict` is a Python module that makes working with XML feel
-          # like you are working with [JSON].
+          # like you are working with JSON.
