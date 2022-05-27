@@ -11,7 +11,7 @@ import argparse
 import matplotlib.pyplot as plt
 
 from one.io import is_json_file
-from one.io import load
+from one.io import load_file
 
 x_units       = {
     "ms" : "(ms)",
@@ -40,7 +40,7 @@ acceptable_ys = {
 # MARK: - Functional
 
 def plot_sota(opt):
-    data = load(opt.data)
+    data = load_file(opt.data)
     for model, values in data.items():
         points     = values["points"]
         linestyle  = values["linestyle"]

@@ -135,7 +135,7 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
                                         } if dynamic else None)
 
         # Checks
-        model_onnx = onnx.load(f)  # load onnx model
+        model_onnx = onnx.load_file(f)  # load onnx model
         onnx.checker.check_model(model_onnx)  # check onnx model
         # LOGGER.info(onnx.helper.printable_graph(model_onnx.graph))  # print
 

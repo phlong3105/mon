@@ -21,6 +21,7 @@ import xmltodict
 import yaml
 
 from one.core import FILE_HANDLERS
+from one.core import ScalarListOrTupleAnyT
 
 try:
     from yaml import CLoader as FullLoader, CDumper as Dumper
@@ -28,8 +29,9 @@ except ImportError:
     from yaml import FullLoader, Dumper
     
 __all__ = [
-    "dump",
-    "load",
+    "dump_file",
+    "load_file",
+    "merge_files",
     "BaseFileHandler",
     "JsonHandler",
     "PickleHandler",
@@ -40,7 +42,7 @@ __all__ = [
 
 # MARK: - Functional
 
-def dump(
+def dump_file(
     obj        : Any,
     path       : Union[str, Path, TextIO],
     file_format: Optional[str] = None,
@@ -58,7 +60,7 @@ def dump(
             file specified by the filename or file-like object.
         file_format (str, optional):
             If not specified, the file format will be inferred from the file
-            extension, otherwise use the specified one. Currently supported
+            extension, otherwise use the specified one. Currently, supported
             formats include "json", "yaml/yml" and "pickle/pkl".
     
     Returns:
@@ -75,7 +77,7 @@ def dump(
     if file_format not in FILE_HANDLERS:
         raise ValueError(f"`file_format` must be one of {FILE_HANDLERS}. "
                          f"But got: {file_format}.")
-
+    
     handler = FILE_HANDLERS.build(name=file_format)
     if path is None:
         return handler.dump_to_str(obj, **kwargs)
@@ -87,7 +89,7 @@ def dump(
         raise TypeError("`file` must be a filename str or a file-object.")
     
     
-def load(
+def load_file(
     path       : Union[str, Path, TextIO],
     file_format: Optional[str] = None,
     **kwargs
@@ -124,6 +126,50 @@ def load(
         raise TypeError("`file` must be a filepath str or a file-object.")
     return data
 
+
+def merge_files(
+    in_paths   : ScalarListOrTupleAnyT[Union[str, Path, TextIO]],
+    out_path   : Union[str, Path, TextIO],
+    file_format: Optional[str] = None,
+    **kwargs
+) -> Union[bool, str]:
+    """Merge data from json/yaml/pickle strings or files.
+    
+    Args:
+        in_paths (str, Path, TextIO, list[str, Path, TextIO]):
+            Paths to join.
+        out_path (str, Path, TextIO):
+            If not specified, then the object is dump to a str, otherwise to a
+            file specified by the filename or file-like object.
+        file_format (str, optional):
+            If not specified, the file format will be inferred from the file
+            extension, otherwise use the specified one. Currently, supported
+            formats include "json", "yaml/yml" and "pickle/pkl".
+    
+    Returns:
+        (bool, str):
+            `True` for success, `False` otherwise.
+    """
+    if isinstance(in_paths, (str, Path, TextIO)):
+        in_paths = [in_paths]
+    in_paths = [str(p) for p in in_paths]
+    
+    # Read data
+    data     = None
+    for p in in_paths:
+        d = load_file(path=p)
+        if isinstance(d, list):
+            data = [] if data is None else data
+            data += d
+        elif isinstance(d, dict):
+            data = {} if data is None else data
+            data |= d
+        else:
+            raise TypeError()
+    
+    # Dump data
+    return dump_file(obj=data, path=out_path, file_format=file_format)
+    
 
 # MARK: - Modules
 
@@ -237,7 +283,7 @@ class PickleHandler(BaseFileHandler):
     def dump_to_fileobj(self, obj, path: Union[str, TextIO], **kwargs):
         """Dump data from the given obj to the filepath or file-like object.
         """
-        kwargs.setdefault("protocol", 2)
+        kwargs.setdefault("protocol", 4)
         pickle.dump(obj, path, **kwargs)
         
     def dump_to_str(self, obj, **kwargs) -> bytes:

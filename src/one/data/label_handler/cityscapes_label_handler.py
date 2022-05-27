@@ -21,9 +21,9 @@ from one.data.label_handler.base import BaseLabelHandler
 from one.imgproc import box_xywh_to_xyxy
 from one.imgproc import box_xyxy_to_cxcywh_norm
 from one.imgproc.spatial import box
-from one.io import dump
+from one.io import dump_file
 from one.io import is_json_file
-from one.io import load
+from one.io import load_file
 
 __all__ = [
 	"CityscapesLabelHandler"
@@ -79,7 +79,7 @@ class CityscapesLabelHandler(BaseLabelHandler):
 				A `VisualData` item.
 		"""
 		# NOTE: Load content from file
-		label_dict = load(label_path) if is_json_file(label_path) else None
+		label_dict = load_file(label_path) if is_json_file(label_path) else None
 		height0    = label_dict.get("imgHeight")
 		width0     = label_dict.get("imgWidth")
 		objects    = label_dict.get("objects")
@@ -167,4 +167,4 @@ class CityscapesLabelHandler(BaseLabelHandler):
 		label_dict["objects"] = objs
 		
 		# NOTE: Dump to file
-		dump(obj=label_dict, path=path, file_format="json")
+		dump_file(obj=label_dict, path=path, file_format="json")

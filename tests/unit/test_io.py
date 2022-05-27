@@ -8,6 +8,8 @@ import cv2
 
 from one import FFmpegVideoLoader
 from one import FFmpegVideoWriter
+from one import load_file
+from one import merge_files
 
 
 # MARK: - Test Video IO
@@ -43,3 +45,20 @@ def test_ffmpeg_video_writer():
 				video_writer.close()
 				cv2.destroyAllWindows()
 				break
+
+
+# MARK: - Test File IO
+
+def test_merge_files():
+	file1 = "../../data/predictions0.pkl"
+	file2 = "../../data/predictions1.pkl"
+	merge_files(
+		in_paths    = [file1, file2],
+		out_path    = "../../data/predictions.pkl",
+		file_format = "pkl"
+	)
+	
+
+def test_pickle_loader():
+	data = load_file("../../data/sample_val_predictions.pkl")
+	print(data["May"])

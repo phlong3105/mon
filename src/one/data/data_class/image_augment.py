@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Union
 
-from one.io import load
+from one.io import load_file
 
 __all__ = [
 	"Augment",
@@ -84,7 +84,7 @@ class ImageAugment:
 				Filepath to the config file that stores the augmentation
 				configs.
 		"""
-		aug = load(path=path)
+		aug = load_file(path=path)
 		if aug is None:
 			raise ValueError(f"No configs found at: {path}.")
 		return cls(**aug)

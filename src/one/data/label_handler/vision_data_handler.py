@@ -20,9 +20,9 @@ from one.data.data_class import VisionData
 from one.data.label_handler.base import BaseLabelHandler
 from one.imgproc import box_cxcywh_norm_to_xyxy
 from one.imgproc import compute_box_area
-from one.io import dump
+from one.io import dump_file
 from one.io import is_json_file
-from one.io import load
+from one.io import load_file
 
 __all__ = [
     "VisionDataHandler"
@@ -66,7 +66,7 @@ class VisionDataHandler(BaseLabelHandler):
                 A `VisualData` item.
         """
         # NOTE: Load content from file
-        l = load(label_path) if is_json_file(label_path) else None
+        l = load_file(label_path) if is_json_file(label_path) else None
 
         image_info = ImageInfo()
         if hasattr(l, "image_info"):
@@ -139,4 +139,4 @@ class VisionDataHandler(BaseLabelHandler):
         ordered_data["objects"] = objects
 
         # NOTE: Dump to file
-        dump(obj=data_out, path=path, file_format="json", indent=4)
+        dump_file(obj=data_out, path=path, file_format="json", indent=4)

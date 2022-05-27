@@ -16,13 +16,12 @@ import cv2
 import numpy as np
 from joblib import delayed
 from joblib import Parallel
-from tqdm import tqdm
 
 from one.core import progress_bar
 from one.core import VisionBackend
 from one.imgproc import box_xyxy_to_cxcywh_norm
 from one.io import create_dirs
-from one.io import load
+from one.io import load_file
 from one.io import read_image
 from one.utils import datasets_dir
 
@@ -187,7 +186,7 @@ def convert_yolo_labels_asynchronous(
 def read_pkl_results():
 	pkl_file = os.path.join(datasets_dir, "chalearn", "ltd", "toolkit", "sample_predictions.pkl")
 	txt_file = pkl_file.replace(".pkl", ".txt")
-	contents = load(path=pkl_file)
+	contents = load_file(path=pkl_file)
 	print(contents["Apr"])
 	with open(txt_file, "w") as w:
 		# w.write()

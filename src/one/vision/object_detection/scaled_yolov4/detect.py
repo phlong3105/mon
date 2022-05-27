@@ -44,8 +44,19 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 # MARK: - Functional
 
 def detect(opt, save_img=False):
-    out, source, weights, view_img, save_txt, imgsz = \
-        opt.output, opt.source, opt.weights, opt.view_img, opt.save_txt, opt.img_size
+    weights      = opt.weights
+    source       = opt.source
+    out          = opt.output
+    imgsz        = opt.img_size
+    batch_size   = opt.batch_size
+    conf_thres   = opt.conf_thres
+    iou_thres    = opt.iou_thres
+    view_img     = opt.view_img
+    save_txt     = opt.save_txt
+    classes      = opt.classes
+    agnostic_nms = opt.agnostic_nms
+    augment      = opt.augment
+    update       = opt.update
     webcam = source == "0" or source.startswith("rtsp") or source.startswith("http") or source.endswith(".txt")
 
     # Initialize
@@ -95,15 +106,15 @@ def detect(opt, save_img=False):
 
         # Inference
         t1   = time_synchronized()
-        pred = model(img, augment=opt.augment)[0]
+        pred = model(img, augment=augment)[0]
 
         # Apply NMS
         pred = non_max_suppression(
-            pred,
-            opt.conf_thres,
-            opt.iou_thres,
-            classes  = opt.classes,
-            agnostic = opt.agnostic_nms
+            prediction = pred,
+            conf_thres = conf_thres,
+            iou_thres  = iou_thres,
+            classes    = classes,
+            agnostic   = agnostic_nms
         )
         t2   = time_synchronized()
 
@@ -117,11 +128,11 @@ def detect(opt, save_img=False):
                 p, s, im0 = path[i], "%g: " % i, im0s[i].copy()
             else:
                 p, s, im0 = path, "", im0s
-
+            
             save_path = str(Path(out) / Path(p).name)
             txt_path  = str(Path(out) / Path(p).stem) + ("_%g" % dataset.frame if dataset.mode == "video" else "")
-            s  += "%gx%g " % img.shape[2:]  # print string
-            gn  = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
+            s        += "%gx%g " % img.shape[2:]  # print string
+            gn        = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -136,11 +147,7 @@ def detect(opt, save_img=False):
                     if save_txt:  # Write to file
                         xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         with open(txt_path + ".txt", "a") as f:
-                            if cls == 0:
-                                name = "vehicle"
-                                f.write(("%s " + "%.2f " * 5 + "\n") % (name, *xyxy, conf))  # label format
-                            else:
-                                f.write(("%g " * 5 + "\n") % (cls, *xywh))  # label format
+                            f.write(("%g " * 5 + "\n") % (cls, *xyxy))  # label format
 
                     if save_img or view_img:  # Add bbox to image
                         label = "%s" % (names[int(cls)])
@@ -175,7 +182,7 @@ def detect(opt, save_img=False):
 
     if save_txt or save_img:
         print("Results saved to %s" % Path(out))
-        if platform == "darwin" and not opt.update:  # MacOS
+        if platform == "darwin" and not update:  # MacOS
             os.system("open " + save_path)
 
     print("Done. (%.3fs)" % (time.time() - t0))

@@ -149,7 +149,7 @@ class BaseVideoLoader(metaclass=ABCMeta):
 			files (list):
 				List of image files.
 			rel_paths (list):
-				List of images" relative paths corresponding to data.
+				List of images' relative paths corresponding to data.
 		"""
 	
 	def __del__(self):

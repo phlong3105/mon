@@ -20,9 +20,9 @@ from one.data.label_handler.base import BaseLabelHandler
 from one.imgproc import box_cxcywh_norm_to_xyxy
 from one.imgproc import box_xyxy_to_cxcywh_norm
 from one.imgproc import compute_box_area
-from one.io import dump
+from one.io import dump_file
 from one.io import is_xml_file
-from one.io import load
+from one.io import load_file
 
 """
 from one.core import error_console
@@ -115,7 +115,7 @@ class PascalLabelHandler(BaseLabelHandler):
 			                 f"But got: {shape0}.")
 		
 		# NOTE: Load content from file
-		label_dict = load(label_path) if is_xml_file(label_path) else None
+		label_dict = load_file(label_path) if is_xml_file(label_path) else None
 		label_dict = label_dict.get("annotation")
 		version    = label_dict.get("ver", 0)
 		folder     = label_dict.get("folder")
@@ -218,4 +218,4 @@ class PascalLabelHandler(BaseLabelHandler):
 		label_dict["annotation"] = label_dict
 		
 		# NOTE: Dump to file
-		dump(obj=label_dict, path=path, file_format="xml")
+		dump_file(obj=label_dict, path=path, file_format="xml")

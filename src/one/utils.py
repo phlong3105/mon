@@ -14,7 +14,7 @@ from typing import Union
 from munch import Munch
 
 from one.io import create_dirs
-from one.io import load
+from one.io import load_file
 
 __all__ = [
     "content_root_dir",
@@ -55,7 +55,7 @@ def load_config(config: Union[str, dict, Munch]) -> Munch:
 	"""
     # NOTE: Load dictionary from file and convert to namespace using Munch
     if isinstance(config, str):
-        config_dict = load(path=config)
+        config_dict = load_file(path=config)
     elif isinstance(config, (dict, Munch)):
         config_dict = config
     else:

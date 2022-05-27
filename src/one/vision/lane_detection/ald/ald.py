@@ -34,7 +34,7 @@ from one.io import create_dirs
 from one.io import is_image_file
 from one.io import is_video_file
 from one.io import is_yaml_file
-from one.io import load
+from one.io import load_file
 from one.vision.lane_detection.lane_detector import LaneDetector
 
 __all__ = [
@@ -749,7 +749,7 @@ def run(opt):
     if not is_yaml_file(opt.config):
         opt.config = os.path.join(os.getcwd(), "data", opt.config)
     if is_yaml_file(opt.config):
-        config = Munch(load(opt.config))
+        config = Munch(load_file(opt.config))
     else:
         raise RuntimeError(f"`config` cannot be initialized with: {opt.config}.")
     

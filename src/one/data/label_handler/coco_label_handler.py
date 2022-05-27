@@ -18,9 +18,9 @@ from one.data.data_class import ObjectAnnotation as Annotation
 from one.data.data_class import VisionData
 from one.data.label_handler.base import BaseLabelHandler
 from one.imgproc import box_xywh_to_cxcywh_norm
-from one.io import dump
+from one.io import dump_file
 from one.io import is_json_file
-from one.io import load
+from one.io import load_file
 
 __all__ = [
 	"CocoDetectionLabelHandler"
@@ -127,7 +127,7 @@ class CocoDetectionLabelHandler(BaseLabelHandler):
 			raise AssertionError(f"`label_path` must be a JSON file. "
 			                     f"But got: {label_path}")
 		
-		label_dict  = load(label_path)
+		label_dict  = load_file(label_path)
 		info	    = label_dict.get("info", 	    None)
 		licenses    = label_dict.get("licenses",    None)
 		categories  = label_dict.get("categories",  None)
@@ -258,4 +258,4 @@ class CocoDetectionLabelHandler(BaseLabelHandler):
 				annotations.append(annotation)
 				
 		# NOTE: Dump to file
-		dump(obj=label_dict, path=path, file_format="json")
+		dump_file(obj=label_dict, path=path, file_format="json")

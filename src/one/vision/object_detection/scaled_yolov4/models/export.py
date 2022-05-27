@@ -61,7 +61,7 @@ if __name__ == "__main__":
         )
 
         # Checks
-        onnx_model = onnx.load(f)  # load onnx model
+        onnx_model = onnx.load_file(f)  # load onnx model
         onnx.checker.check_model(onnx_model)  # check onnx model
         print(onnx.helper.printable_graph(onnx_model.graph))  # print a human readable model
         print("ONNX export success, saved as %s" % f)

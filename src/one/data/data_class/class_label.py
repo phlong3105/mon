@@ -16,7 +16,7 @@ from munch import Munch
 
 from one.core import console
 from one.core import print_table
-from one.io import load
+from one.io import load_file
 
 __all__ = [
     "ClassLabels",
@@ -84,7 +84,7 @@ class ClassLabels:
         """Create a `ClassLabels` object from a file that contains all
         class_labels.
         """
-        labels_dict = load(path=label_path)
+        labels_dict = load_file(path=label_path)
         class_labels = labels_dict["class_labels"]
         class_labels = Munch.fromDict(class_labels)
         return ClassLabels(class_labels=class_labels)

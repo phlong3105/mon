@@ -18,7 +18,7 @@ from torchvision.transforms import InterpolationMode
 
 from one.core import TRANSFORMS
 from one.core import Transforms_
-from one.io import load
+from one.io import load_file
 
 __all__ = [
 	"BaseAugment",
@@ -145,7 +145,7 @@ class BaseAugmentModule(nn.Module, metaclass=ABCMeta):
 				Filepath to the config file that stores the augmentation
 				configs.
 		"""
-		config = load(path=path)
+		config = load_file(path=path)
 		if config is None:
 			raise ValueError(f"No configs can be found at: {path}.")
 		return cls(**config)
