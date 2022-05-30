@@ -2,7 +2,7 @@
 <img width="800" src="data/object_detection.png">
 <br><br>
 <div>
-	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="https://github.com/phlong3105/one/blob/master/handbook/data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../data/badge/handbook_home.svg"></a>
 </div>
 
 Object Detection
