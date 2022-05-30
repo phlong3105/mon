@@ -9,7 +9,7 @@ YOLOv5: v6.1 - TensorRT, TensorFlow Edge TPU and OpenVINO Export and Inference
 =============================
 
 <div align="center">
-    <a href="https://github.com/ultralytics/yolov5">Code</a>
+    <a href="https://github.com/ultralytics/yolov5"><img src="../data/badge/paper_code.svg"></a>
 </div>
 </div>
 

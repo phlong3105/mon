@@ -13,10 +13,10 @@ Scaled-YOLOv4: Scaling Cross Stage Partial Network
 </div>
 
 <div align="center">
-	<a href="data/scaled_yolov4.pdf">Paper</a> •
-    <a href="https://github.com/WongKinYiu/ScaledYOLOv4">Code</a> •
-	<a href="https://sh-tsang.medium.com/review-scaled-yolov4-scaling-cross-stage-partial-network-51e3c515b0a7">Ref01</a> •
-	<a href="https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982#:~:text=yolov4%2Dcsp.cfg-,Scaled%20YOLO%20v4%20is%20the%20best%20neural%20network%20for%20object,15%20FPS%20to%201774%20FPS.">Ref02</a>
+	<a href="data/scaled_yolov4.pdf"><img src="../data/badge/paper_paper.svg"></a>
+    <a href="https://github.com/WongKinYiu/ScaledYOLOv4"><img src="../data/badge/paper_code.svg"></a>
+	<a href="https://sh-tsang.medium.com/review-scaled-yolov4-scaling-cross-stage-partial-network-51e3c515b0a7"><img src="../data/badge/paper_reference.svg"></a>
+	<a href="https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982#:~:text=yolov4%2Dcsp.cfg-,Scaled%20YOLO%20v4%20is%20the%20best%20neural%20network%20for%20object,15%20FPS%20to%201774%20FPS."><img src="../data/badge/paper_reference.svg"></a>
 </div>
 </div>
 

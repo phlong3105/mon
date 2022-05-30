@@ -12,7 +12,7 @@ Advanced Lane Detection
 </div>
 
 <div align="center">
-    <a href="https://github.com/OanaGaskey/Advanced-Lane-Detection">Code</a>
+    <a href="https://github.com/OanaGaskey/Advanced-Lane-Detection"><img src="../data/badge/paper_code.svg"></a>
 </div>
 </div>
 

@@ -9,8 +9,8 @@ You Only Learn One Representation: Unified Network for Multiple Tasks
 =============================
 
 <div align="center">
-	<a href="data/yolor.pdf">Paper</a>
-    <a href="https://github.com/WongKinYiu/yolor">Code</a>
+	<a href="data/yolor.pdf"><img src="../data/badge/paper_paper.svg"></a>
+    <a href="https://github.com/WongKinYiu/yolor"><img src="../data/badge/paper_code.svg"></a>
 </div>
 </div>
 

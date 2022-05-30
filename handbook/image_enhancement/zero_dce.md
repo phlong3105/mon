@@ -13,10 +13,10 @@ Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 </div>
 
 <div align="center">
-    <a href="https://li-chongyi.github.io/Proj_Zero-DCE.html">Website</a> •
-    <a href="data/zero_dce.pdf">Paper</a> •
-    <a href="data/zero_dce_sup.pdf">Supplement</a> •
-    <a href="https://github.com/Li-Chongyi/Zero-DCE">Code</a>
+    <a href="https://li-chongyi.github.io/Proj_Zero-DCE.html"><img src="../data/badge/paper_website.svg"></a>
+    <a href="data/zero_dce.pdf"><img src="../data/badge/paper_paper.svg"></a>
+    <a href="data/zero_dce_sup.pdf"><img src="../data/badge/paper_supplement.svg"></a>
+    <a href="https://github.com/Li-Chongyi/Zero-DCE"><img src="../data/badge/paper_code.svg"></a>
 </div>
 </div>
 

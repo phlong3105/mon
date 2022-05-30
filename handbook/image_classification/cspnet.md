@@ -12,9 +12,9 @@ CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
 </div>
 
 <div align="center">
-	<a href="data/cspnet.pdf">Paper</a> •
-    <a href="https://github.com/WongKinYiu/CrossStagePartialNetworks">Code</a> •
-	<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf">Ref01</a>
+	<a href="data/cspnet.pdf"><img src="../data/badge/paper_paper.svg"></a>
+    <a href="https://github.com/WongKinYiu/CrossStagePartialNetworks"><img src="../data/badge/paper_code.svg"></a>
+	<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf"><img src="../data/badge/paper_reference.svg"></a>
 </div>
 </div>
 
