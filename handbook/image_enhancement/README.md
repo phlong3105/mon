@@ -30,21 +30,19 @@ variety of tasks such as low-light enhancement, de-rain, de-snow, de-haze, etc.
 		<th rowspan="2">Publication</th>
     </tr>
 	<tr>
-  		<td align="center"><code>Deep</code></td>
-		<td align="center"><code><nobr>Non-deep</nobr></code></td>
-  		<td align="center"><code><nobr>Low-light</nobr></code></td>
-		<td align="center"><code>Deblur</code></td>
-		<td align="center"><code>Denoise</code></td>
-  		<td align="center"><code>Derain</code></td>
-  		<td align="center"><code>Desnow</code></td>
-  		<td align="center"><code>Dehaze</code></td>
+  		<td align="center" nowrap><code>Deep</code></td>
+		<td align="center" nowrap><code><nobr>Non-deep</nobr></code></td>
+  		<td align="center" nowrap><code>Low-light</code></td>
+		<td align="center" nowrap><code>Deblur</code></td>
+		<td align="center" nowrap><code>Denoise</code></td>
+  		<td align="center" nowrap><code>Derain</code></td>
+  		<td align="center" nowrap><code>Desnow</code></td>
+  		<td align="center" nowrap><code>Dehaze</code></td>
  	</tr>
 	<tr>
   		<td align="center">🟩</td>
-		<td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/zero_dce.md">
-				<nobr><b>Zero-DCE</b></nobr>
-			</a>
+		<td nowrap>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/zero_dce.md"><b>Zero-DCE</b></a>
 		</td>
   		<td align="center">x</td>
 		<td align="center">&nbsp;</td>
@@ -59,10 +57,8 @@ variety of tasks such as low-light enhancement, de-rain, de-snow, de-haze, etc.
  	</tr>
 	<tr>
   		<td align="center">🟩</td>
-		<td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/mprnet.md">
-				<nobr><b>MRPNet</b></nobr>
-			</a>
+		<td nowrap>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/mprnet.md"><b>MRPNet</b></a>
 		</td>
   		<td align="center">x</td>
 		<td align="center">&nbsp;</td>
@@ -77,10 +73,8 @@ variety of tasks such as low-light enhancement, de-rain, de-snow, de-haze, etc.
  	</tr>
 	<tr>
   		<td align="center">🟩</td>
-		<td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/hinet.md">
-				<nobr><b>HINet</b></nobr>
-			</a>
+		<td nowrap>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/hinet.md"><b>HINet</b></a>
 		</td>
   		<td align="center">x</td>
 		<td align="center">&nbsp;</td>
