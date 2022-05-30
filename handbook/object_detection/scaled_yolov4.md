@@ -1,4 +1,9 @@
 <div align="center">
+<br><br>
+<div>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../data/handbook_home_badge.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md"><img src="../data/handbook_object_detection_badge.svg"></a>
+</div>
 
 Scaled-YOLOv4: Scaling Cross Stage Partial Network
 =============================
