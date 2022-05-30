@@ -15,6 +15,13 @@ Object Detection
 
 
 ## Methods
+<details open>
+<summary><b style="font-size:18px">Road Map of Object Detection</b></summary>
+
+<div align="center">
+	<img height="500" src="data/milestones.png">
+</div>
+</details>
 
 <details open>
 <summary><b style="font-size:18px">SOTA</b></summary>
@@ -22,7 +29,6 @@ Object Detection
 <div align="center">
 	<img height="400" src="data/object_detection_sota.png">
 </div>
-
 </details>
 
 | Status | Method                                 | Architecture | Stage       | Anchor         | Date       | Publication    |
