@@ -107,8 +107,6 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
     </tr>
     <tr>
         <td><b>Aerial&nbsp;Vehicle</b></td>
-        <td>
-        </td>
     </tr>
     <tr>
         <td><b>Autonomous&nbsp;Vehicle</b></td>
