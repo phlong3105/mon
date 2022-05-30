@@ -14,9 +14,9 @@ Camera Calibration
 
 ## Methods
 
-| Status | Method                                      | Method Type | Task     | Date | Publication |
-|:------:|---------------------------------------------|-------------|----------|------|-------------|
-|   🟩   | [**Camera Parameter**](camera_parameter.md) |             | `Theory` |      |             |
+| Status | Method                                      | Architecture | Date       | Publication                    |
+|:------:|---------------------------------------------|--------------|------------|--------------------------------|
+|   🟩   | [**Camera Parameter**](camera_parameter.md) |              | 2022/03/01 | Towards&nbsp;Data&nbsp;Science |
 
 
 ## Data

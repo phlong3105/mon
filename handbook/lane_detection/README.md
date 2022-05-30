@@ -15,9 +15,9 @@ Lane Detection
 
 ## Methods
 
-| Status | Method                                                    | Method Type      | Task               | Date       | Publication |
-|:------:|-----------------------------------------------------------|------------------|--------------------|------------|-------------|
-|   🟩   | [**Advanced Lane Detection**](advanced_lane_detection.md) | Image Processing | `Lane detection`   | 2020/01/10 | GitHub      |
+| Status | Method                                                    | Architecture | Date       | Publication |
+|:------:|-----------------------------------------------------------|--------------|------------|-------------|
+|   🟩   | [**Advanced Lane Detection**](advanced_lane_detection.md) | `Non-deep`   | 2020/01/10 | GitHub      |
 
 
 ## Data
