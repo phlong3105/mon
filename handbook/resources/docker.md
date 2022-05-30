@@ -1,11 +1,11 @@
 <div align="center">
-<img height="200px" src="../data/docker.png">
+<img width="800px" src="data/docker.png">
 
 Docker
 =============================
 
 <div align="center">
-    <a href="../data/docker_cheatsheet.pdf">Cheatsheet</a>
+    <a href="data/docker_cheatsheet.pdf">Cheatsheet</a>
 </div>
 </div>
 
@@ -46,7 +46,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 <details open>
 <summary><b style="font-size:18px">NVIDIA Docker</b></summary>
 
-<div align="center"><img width="480" src="../data/nvidia_docker.png"></a></div>
+<div align="center"><img width="480" src="data/nvidia_docker.png"></div>
 
 ```shell
 # Setup the stable repository and the GPG key

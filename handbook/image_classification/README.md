@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="../data/image_classification.png">
+<img width="800" src="data/image_classification.png">
 
 Image Classification (Backbone)
 =============================

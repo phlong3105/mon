@@ -4,8 +4,8 @@ Anaconda
 =============================
 
 <div align="center">
-  <a href="../data/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
-  <a href="../data/pip_cheatsheet.pdf">PIP Cheatsheet</a>
+  <a href="data/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
+  <a href="data/pip_cheatsheet.pdf">PIP Cheatsheet</a>
 </div>
 </div>
 
