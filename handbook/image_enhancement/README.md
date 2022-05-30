@@ -15,26 +15,84 @@ variety of tasks such as low-light enhancement, de-rain, de-snow, de-haze, etc.
 
 | Status | Method                      | Method Type   | Task                                    | Date       | Publication                     |
 |:------:|-----------------------------|---------------|-----------------------------------------|------------|---------------------------------|
-|   🟩   | [**Zero-DCE**](zero_dce.md) | Deep Learning | `Low-light`                             | 2020/06/19 | CVPR&nbsp;2002, TPAMI&nbsp;2021 |
+|   🟩   | [**Zero-DCE**](zero_dce.md) | Deep Learning | `Low-light`                             | 2020/06/19 | CVPR&nbsp;2020, TPAMI&nbsp;2021 |
 |   🟩   | **MRPNet**                  | Deep Learning | `Derain`, `Desnow`, `Dehaze`, `Denoise` | 2021/06/25 | CVPR&nbsp;2021                  |
 |   🟩   | [**HINet**](hinet.md)       | Deep Learning | `Derain`, `Deblur`, `Denoise`           | 2021/06/25 | CVPR&nbsp;2021                  |
 
 
 <table>
- <tr>
-  <td colspan="2">&nbsp;</td>
-  <td>&nbsp;</td>
- </tr>
- <tr>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
- </tr>
- <tr>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
-  <td>&nbsp;</td>
- </tr>
+	<tr>
+        <th rowspan="2">Status</th>
+        <th rowspan="2">Method</th>
+		<th colspan="2">Architecture</th>
+		<th colspan="6">Task</th>
+		<th rowspan="2">Date</th>
+		<th rowspan="2">Publication</th>
+    </tr>
+	<tr>
+  		<td align="center"><code>Deep</code></td>
+		<td align="center"><code><nobr>Non-deep</nobr></code></td>
+  		<td align="center"><code><nobr>Low-light</nobr></code></td>
+		<td align="center"><code>Deblur</code></td>
+		<td align="center"><code>Denoise</code></td>
+  		<td align="center"><code>Derain</code></td>
+  		<td align="center"><code>Desnow</code></td>
+  		<td align="center"><code>Dehaze</code></td>
+ 	</tr>
+	<tr>
+  		<td align="center">🟩</td>
+		<td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/zero_dce.md">
+				<nobr><b>Zero-DCE</b></nobr>
+			</a>
+		</td>
+  		<td align="center">x</td>
+		<td align="center">&nbsp;</td>
+		<td align="center">x</td>
+  		<td align="center">&nbsp;</td>
+  		<td align="center">&nbsp;</td>
+  		<td align="center">&nbsp;</td>
+  		<td align="center">&nbsp;</td>    
+  		<td align="center">&nbsp;</td>    
+  		<td>2020/06/19</td>    
+  		<td>CVPR&nbsp;2020, TPAMI&nbsp;2021</td>
+ 	</tr>
+	<tr>
+  		<td align="center">🟩</td>
+		<td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/mprnet.md">
+				<nobr><b>MRPNet</b></nobr>
+			</a>
+		</td>
+  		<td align="center">x</td>
+		<td align="center">&nbsp;</td>
+		<td align="center">&nbsp;</td>
+  		<td align="center">&nbsp;</td>
+  		<td align="center">x</td>
+  		<td align="center">x</td>
+  		<td align="center">x</td>    
+  		<td align="center">x</td>    
+  		<td>2021/06/25</td>    
+  		<td>CVPR&nbsp;2021</td>
+ 	</tr>
+	<tr>
+  		<td align="center">🟩</td>
+		<td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/hinet.md">
+				<nobr><b>HINet</b></nobr>
+			</a>
+		</td>
+  		<td align="center">x</td>
+		<td align="center">&nbsp;</td>
+		<td align="center">&nbsp;</td>
+  		<td align="center">x</td>
+  		<td align="center">x</td>
+  		<td align="center">x</td>
+  		<td align="center">&nbsp;</td>    
+  		<td align="center">&nbsp;</td>    
+  		<td>2021/06/25</td>    
+  		<td>CVPR&nbsp;2021</td>
+ 	</tr>
 </table>
 
 ## Data
