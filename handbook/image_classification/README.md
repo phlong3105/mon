@@ -11,9 +11,9 @@ Image Classification (Backbone)
 
 ## Methods
 
-| Status | Method                  | Method Type   | Task                               | Date       | Publication |
-|:------:|-------------------------|---------------|------------------------------------|------------|-------------|
-|   🟩   | [**CSPNet**](cspnet.md) | Deep Learning | `Backbone`, `Image classification` | 2020/06/25 | CVPRW 2020  |
+| Status | Method                  | Method Type   | Task                               | Date       | Publication     |
+|:------:|-------------------------|---------------|------------------------------------|------------|-----------------|
+|   🟩   | [**CSPNet**](cspnet.md) | Deep Learning | `Backbone`, `Image classification` | 2020/06/25 | CVPRW&nbsp;2020 |
 
 
 ## Data
