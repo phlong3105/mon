@@ -48,7 +48,7 @@ case "$OSTYPE" in
   darwin*)
     echo "MacOS"
     # Create `one` env
-    env_yml_path="${current_dir}/environment_macos.yml"
+    env_yml_path="${current_dir}/environment_mac.yml"
     if { conda env list | grep 'one'; } >/dev/null 2>&1; then
       echo "Update 'one' environment:"
       conda env update --name one -f "${env_yml_path}"

@@ -119,6 +119,7 @@ def convert_yolo_labels(
 	split     : str = "train",
 	save_image: bool = False,
 	verbose   : bool = False,
+	*args, **kwargs
 ):
 	"""Convert labels to YOLO format.
 
@@ -131,7 +132,7 @@ def convert_yolo_labels(
 			Should show image with drawn bounding boxes. Default: `False`.
 	"""
 	image_pattern = os.path.join(
-		datasets_dir, "chalearn", "ltd", split, "*", "images", "*", "*", "*.jpg"
+		datasets_dir, "chalearn", "../../../../../../../projects/chalearn/data/ltd22", split, "*", "images", "*", "*", "*.jpg"
 	)
 	with progress_bar() as pbar:
 		for image_file in pbar.track(
@@ -147,6 +148,7 @@ def convert_yolo_labels_asynchronous(
 	split     : str = "train",
 	save_image: bool = False,
 	verbose   : bool = False,
+	*args, **kwargs
 ):
 	"""Convert labels to YOLO format in asynchronous mode.
 	
@@ -159,7 +161,7 @@ def convert_yolo_labels_asynchronous(
 			Should show image with drawn bounding boxes. Default: `False`.
 	"""
 	image_pattern = os.path.join(
-		datasets_dir, "chalearn", "ltd", split, "*", "images", "*", "*", "*.jpg"
+		datasets_dir, "chalearn", "../../../../../../../projects/chalearn/data/ltd22", split, "*", "images", "*", "*", "*.jpg"
 	)
 	image_files   = glob.glob(image_pattern)
 	with progress_bar() as pbar:
@@ -184,7 +186,7 @@ def convert_yolo_labels_asynchronous(
 
 
 def read_pkl_results():
-	pkl_file = os.path.join(datasets_dir, "chalearn", "ltd", "toolkit", "sample_predictions.pkl")
+	pkl_file = os.path.join(datasets_dir, "chalearn", "../../../../../../../projects/chalearn/data/ltd22", "toolkit", "sample_predictions.pkl")
 	txt_file = pkl_file.replace(".pkl", ".txt")
 	contents = load_file(path=pkl_file)
 	print(contents["Apr"])
@@ -203,7 +205,7 @@ def shuffle_images_labels(split: str = "train", subset: str = "month"):
 			Subset of the data. One of: [`day`, `week`, `month`].
 	"""
 	label_pattern = os.path.join(
-		datasets_dir, "chalearn", "ltd", split, subset, "yolo", "*", "*", "*.txt"
+		datasets_dir, "chalearn", "../../../../../../../projects/chalearn/data/ltd22", split, subset, "yolo", "*", "*", "*.txt"
 	)
 	label_files = glob.glob(label_pattern)
 	random.shuffle(label_files)
@@ -221,10 +223,10 @@ def shuffle_images_labels(split: str = "train", subset: str = "month"):
 		):
 			idx       = f"{i}".zfill(8)
 			out_image = os.path.join(
-				datasets_dir, "chalearn", "ltd", "extra", subset, split, "images", f"{idx}.jpg"
+				datasets_dir, "chalearn", "../../../../../../../projects/chalearn/data/ltd22", "extra", subset, split, "images", f"{idx}.jpg"
 			)
 			out_label = os.path.join(
-				datasets_dir, "chalearn", "ltd", "extra", subset, split, "labels", f"{idx}.txt"
+				datasets_dir, "chalearn", "../../../../../../../projects/chalearn/data/ltd22", "extra", subset, split, "labels", f"{idx}.txt"
 			)
 			create_dirs(paths=[os.path.dirname(out_image)])
 			create_dirs(paths=[os.path.dirname(out_label)])
