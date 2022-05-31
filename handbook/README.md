@@ -14,7 +14,10 @@ when applying in competitive competitions and real-world applications.
 ## Knowledge Base
 <table>
     <tr>
-        <th>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Field&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+        <td colspan="2"><h2>Knowledge Base</h2></td>
+    </tr>
+	<tr>
+        <th>Field</th>
         <th>Topics</th>
     </tr>
     <tr>
