@@ -126,6 +126,6 @@ when applying in competitive competitions and real-world applications.
 
 ## Misc
 <div align="center">
-<img src="data/lifecycle.png" height="250">
-<img src="data/stoicism.png"  height="250">
+	<img src="data/lifecycle.png" height="250">
+	<img src="data/stoicism.png"  height="250">
 </div>
