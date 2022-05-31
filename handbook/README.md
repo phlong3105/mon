@@ -14,54 +14,45 @@ when applying in competitive competitions and real-world applications.
 ## Knowledge Base
 <table>
     <tr>
-        <th>Category</th>
+        <th>Field</th>
         <th>Topics</th>
     </tr>
     <tr>
         <td><b>Machine&nbsp;Learning</b></td>
         <td>
-            <a href="">Anomaly&nbsp;Detection</a>&nbsp;&nbsp;
-            <a href="">Classification</a>&nbsp;&nbsp;
-            <a href="">Clustering</a>&nbsp;&nbsp;
-            <a href="">Dimensionality&nbsp;Reduction</a>&nbsp;&nbsp;
-            <a href="">Neural&nbsp;Network</a>&nbsp;&nbsp;
-            <a href="">Regression</a>&nbsp;&nbsp;
+            <a href="">Anomaly&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Classification</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Clustering</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Dimensionality&nbsp;Reduction</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Neural&nbsp;Network</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Regression</a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/modeling/README.md"><b>Modeling*</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
     <tr>
-        <td><b>Learning&nbsp;Process</b></td>
+        <td><b>Vision</b></td>
         <td>
-            <a href="">Data&nbsp;Processing</a>&nbsp;&nbsp;
-			<a href="">Learning&nbsp;Technique</a>&nbsp;&nbsp;
-            <a href="">Model&nbsp;Training</a>&nbsp;&nbsp;
-            <a href="">Analysis-Evaluation</a>&nbsp;&nbsp;
-            <a href="">Model&nbsp;Deployment</a>&nbsp;&nbsp;
-        </td>
-    </tr>
-    <tr>
-        <td><b>Computer&nbsp;Vision</b></td>
-        <td>
-            <a href="https://github.com/phlong3105/one/blob/master/handbook/action_recognition/README.md">Action&nbsp;Recognition</a>&nbsp;&nbsp;
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/action_detection/README.md">Action&nbsp;Detection</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/one/blob/master/handbook/image_classification/README.md">Image&nbsp;Classification (Backbone)</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/README.md">Image&nbsp;Enhancement</a>&nbsp;&nbsp;
-            <a href="">Instance&nbsp;Segmentation</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/one/blob/master/handbook/lane_detection/README.md">Lane&nbsp;Detection</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md">Object&nbsp;Detection</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/one/blob/master/handbook/object_tracking/README.md">Object&nbsp;Tracking</a>&nbsp;&nbsp;
-            <a href="">Re-identification</a>&nbsp;&nbsp;
-            <a href="">Semantic&nbsp;Segmentation</a>&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/action_recognition/README.md">Action&nbsp;Recognition</a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/action_detection/README.md">Action&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/image_classification/README.md">Image&nbsp;Classification (Backbone)</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/README.md">Image&nbsp;Enhancement</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Instance&nbsp;Segmentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/lane_detection/README.md">Lane&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md">Object&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/object_tracking/README.md">Object&nbsp;Tracking</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Re-identification</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Semantic&nbsp;Segmentation</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
     <tr>
         <td><b>Image&nbsp;Processing</b></td>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/camera_calibration/README.md">Camera&nbsp;Calibration</a>&nbsp;&nbsp;
-            <a href="">Feature&nbsp;Extraction</a>&nbsp;&nbsp;
-            <a href="">Geometry</a>&nbsp;&nbsp;
-            <a href="">Image&nbsp;Acquisition</a>&nbsp;&nbsp;
-            <a href="">Image&nbsp;Registration</a>&nbsp;&nbsp;
-            <a href="">Motion&nbsp;Analysis</a>&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/camera_calibration/README.md">Camera&nbsp;Calibration</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Feature&nbsp;Extraction</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Geometry</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Image&nbsp;Acquisition</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Image&nbsp;Registration</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Motion&nbsp;Analysis</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
     <tr>
@@ -72,18 +63,18 @@ when applying in competitive competitions and real-world applications.
     <tr>
         <td><b>Tools</b></td>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/anaconda.md">Anaconda</a>&nbsp;&nbsp;
- 			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/docker.md">Docker</a>&nbsp;&nbsp;
-            <a href="">Swift</a>&nbsp;&nbsp;
-            <a href="">Python</a>&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/anaconda.md">Anaconda</a>&nbsp;&nbsp;&nbsp;&nbsp;
+ 			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/docker.md">Docker</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Swift</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Python</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
     <tr>
         <td><b>Resources</b></td>
         <td>
-            <a href="">Effective&nbsp;Study</a>&nbsp;&nbsp;
-            <a href="">Project&nbsp;Management</a>&nbsp;&nbsp;
-            <a href="">Writing</a>&nbsp;&nbsp;
+            <a href="">Effective&nbsp;Study</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Project&nbsp;Management</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Writing</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
 </table>
@@ -92,22 +83,23 @@ when applying in competitive competitions and real-world applications.
 ## Projects
 <table>
     <tr>
-        <th>Category</th>
+        <th>Topic</th>
         <th>Projects</th>
     </tr>
     <tr>
         <td><b>Challenges</b></td>
         <td>
-            <a href="https://github.com/phlong3105/aic/blob/master/docs/README.md">AI&nbsp;City&nbsp;Challenge</a>&nbsp;&nbsp;
-            <a href="">AutoNUE</a>&nbsp;&nbsp;
-			<a href="https://github.com/phlong3105/chalearn/blob/master/docs/README.md">ChaLearn</a>&nbsp;&nbsp;
-            <a href="">KATECH</a>&nbsp;&nbsp;
-            <a href="">KODAS</a>&nbsp;&nbsp;
-            <a href="">NTIRE</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/ug2/blob/master/docs/README.md">UG2+</a>&nbsp;&nbsp;
-            <a href="https://github.com/phlong3105/visdrone/blob/master/docs/README.md">VisDrone</a>&nbsp;&nbsp;
-			<a href="https://github.com/phlong3105/vpriors/blob/master/docs/README.md">VPriors</a>&nbsp;&nbsp;
-            <a href="">Waymo</a>&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/aic/blob/master/docs/README.md">AI&nbsp;City&nbsp;Challenge</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">AutoNUE</a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/chalearn/blob/master/docs/README.md">ChaLearn</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">KATECH</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">KODAS</a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/nico/README.md">NICO</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">NTIRE</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/ug2/blob/master/docs/README.md">UG2+</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/visdrone/blob/master/docs/README.md">VisDrone</a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/vpriors/blob/master/docs/README.md">VPriors</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Waymo</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
     <tr>
@@ -116,14 +108,14 @@ when applying in competitive competitions and real-world applications.
     <tr>
         <td><b>Autonomous&nbsp;Vehicle</b></td>
         <td>
-            <a href="">Autonomous&nbsp;Sensor</a>&nbsp;&nbsp;
-            <a href="">Scene&nbsp;Understanding</a>&nbsp;&nbsp;
+            <a href="">Autonomous&nbsp;Sensor</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a href="">Scene&nbsp;Understanding</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
     <tr>
         <td><b>Surveillance&nbsp;System</b></td>
         <td>
-            <a href="">Edge&nbsp;TSS</a>&nbsp;&nbsp;
+            <a href="">Edge&nbsp;TSS</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
 </table>
