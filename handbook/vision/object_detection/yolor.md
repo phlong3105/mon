@@ -3,7 +3,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
-    <a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="../../data/badge/handbook_vision.svg"></a>
+    <img src="../../data/badge/handbook_vision.svg">
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md"><img src="../../data/badge/handbook_object_detection.svg"></a>
 </div>
 

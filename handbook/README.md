@@ -21,9 +21,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><b>Machine&nbsp;Learning</b></a>
+			<b>Machine&nbsp;Learning</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><img src="data/badge/handbook_machine_learning.svg"></a>
+			<img src="data/badge/handbook_machine_learning.svg">
 		</td>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/modeling/README.md"><b>Modeling*</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -37,9 +37,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><b>Vision</b></a>
+			<b>Vision</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="data/badge/handbook_vision.svg"></a>
+			<img src="data/badge/handbook_vision.svg">
 		</td>
         <td>
             <a href="https://github.com/phlong3105/one/blob/master/handbook/vision/action_recognition/README.md">Action&nbsp;Recognition</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -56,9 +56,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/README.md"><b>Image&nbsp;Processing</b></a>
+			<b>Image&nbsp;Processing</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/README.md"><img src="data/badge/handbook_image_processing.svg"></a>
+			<img src="data/badge/handbook_image_processing.svg">
 		</td>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/camera_calibration/README.md">Camera&nbsp;Calibration</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -71,18 +71,18 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/maths/README.md"><b>Maths</b></a>
+			<b>Maths</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/maths/README.md"><img src="data/badge/handbook_maths.svg"></a>
+			<img src="data/badge/handbook_maths.svg">
 		</td>
         <td>
         </td>
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/tools/README.md"><b>Tools</b></a>
+			<b>Tools</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/tools/README.md"><img src="data/badge/handbook_tools.svg"></a>
+			<img src="data/badge/handbook_tools.svg">
 		</td>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/anaconda.md">Anaconda</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -93,9 +93,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/README.md"><b>Resources</b></a>
+			<b>Resources</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/README.md"><img src="data/badge/handbook_resources.svg"></a>
+			<img src="data/badge/handbook_resources.svg">
 		</td>
         <td>
             <a href="">Effective&nbsp;Study</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -112,9 +112,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/challenges/README.md"><b>Challenges</b></a>
+			<b>Challenges</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/challenges/README.md"><img src="data/badge/handbook_challenges.svg"></a>
+			<img src="data/badge/handbook_challenges.svg">
 		</td>
         <td>
             <a href="https://github.com/phlong3105/aic/blob/master/docs/README.md">AI&nbsp;City&nbsp;Challenge</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -132,16 +132,16 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/aerial_vehicle/README.md"><b>Aerial&nbsp;Vehicle</b></a>
+			<b>Aerial&nbsp;Vehicle</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/aerial_vehicle/README.md"><img src="data/badge/handbook_aerial_vehicle.svg"></a>
+			<img src="data/badge/handbook_aerial_vehicle.svg">
 		</td>
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/autonomous_vehicle/README.md"><b>Autonomous&nbsp;Vehicle</b></a>
+			<b>Autonomous&nbsp;Vehicle</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/autonomous_vehicle/README.md"><img src="data/badge/handbook_autonomous_vehicle.svg"></a>
+			<img src="data/badge/handbook_autonomous_vehicle.svg">
 		</td>
         <td>
             <a href="">Autonomous&nbsp;Sensor</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -150,9 +150,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/surveillance_system/README.md"><b>Surveillance&nbsp;System</b></a>
+			<b>Surveillance&nbsp;System</b>
 			<br>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/surveillance_system/README.md"><img src="data/badge/handbook_surveillance_system.svg"></a>
+			<img src="data/badge/handbook_surveillance_system.svg">
 		</td>
         <td>
             <a href="">Edge&nbsp;TSS</a>&nbsp;&nbsp;&nbsp;&nbsp;

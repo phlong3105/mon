@@ -2,7 +2,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
-    <a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/README.md"><img src="../../data/badge/handbook_image_processing.svg"></a>
+    <img src="../../data/badge/handbook_image_processing.svg">
 </div>
 
 What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
