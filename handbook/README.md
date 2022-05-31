@@ -13,7 +13,7 @@ when applying in competitive competitions and real-world applications.
 
 <table>
     <tr>
-        <td colspan="2"><h2>Knowledge Base</h2></td>
+        <td colspan="2"><b style="font-size:18px">Knowledge Base</b></td>
     </tr>
 	<tr>
         <th>Field</th>
