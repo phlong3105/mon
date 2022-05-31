@@ -3,6 +3,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="../../data/badge/handbook_vision.svg"></a>
 </div>
 
 Image Classification (Backbone)
@@ -15,9 +16,9 @@ Image Classification (Backbone)
 
 ## Methods
 
-| Status                             | Method                  | Architecture | Date       | Publication     |
-|:-----------------------------------|-------------------------|--------------|------------|-----------------|
-| <img src="../data/badge/read.svg"> | [**CSPNet**](cspnet.md) | `Deep`       | 2020/06/25 | CVPRW&nbsp;2020 |
+| Status                                | Method                  | Architecture | Date       | Publication     |
+|:--------------------------------------|-------------------------|--------------|------------|-----------------|
+| <img src="../../data/badge/read.svg"> | [**CSPNet**](cspnet.md) | `Deep`       | 2020/06/25 | CVPRW&nbsp;2020 |
 
 
 ## Data

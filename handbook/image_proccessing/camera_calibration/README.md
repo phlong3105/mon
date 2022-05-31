@@ -18,9 +18,9 @@ Camera Calibration
 
 ## Methods
 
-| Status                             | Method                                      | Architecture | Date       | Publication                    |
-|:-----------------------------------|---------------------------------------------|--------------|------------|--------------------------------|
-| <img src="../data/badge/read.svg"> | [**Camera Parameter**](camera_parameter.md) |              | 2022/03/01 | Towards&nbsp;Data&nbsp;Science |
+| Status                                | Method                                      | Architecture | Date       | Publication                    |
+|:--------------------------------------|---------------------------------------------|--------------|------------|--------------------------------|
+| <img src="../../data/badge/read.svg"> | [**Camera Parameter**](camera_parameter.md) |              | 2022/03/01 | Towards&nbsp;Data&nbsp;Science |
 
 
 ## Data

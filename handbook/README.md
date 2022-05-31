@@ -32,7 +32,11 @@ when applying in competitive competitions and real-world applications.
         </td>
     </tr>
     <tr>
-        <td><a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><b>Vision</b></a></td>
+        <td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><b>Vision</b></a>
+			<br>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="data/badge/handbook_vision.svg"></a>
+		</td>
         <td>
             <a href="https://github.com/phlong3105/one/blob/master/handbook/vision/action_recognition/README.md">Action&nbsp;Recognition</a>&nbsp;&nbsp;&nbsp;&nbsp;
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/action_detection/README.md">Action&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -123,6 +127,6 @@ when applying in competitive competitions and real-world applications.
 
 ## Misc
 <div align="center">
-<img src="data/lifecycle.png" height="300">
-<img src="data/stoicism.png"  height="300">
+<img src="data/lifecycle.png" height="250">
+<img src="data/stoicism.png"  height="250">
 </div>

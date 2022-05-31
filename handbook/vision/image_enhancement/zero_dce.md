@@ -2,6 +2,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="../../data/badge/handbook_vision.svg"></a>
 </div>
 
 Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement

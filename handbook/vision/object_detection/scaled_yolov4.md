@@ -2,6 +2,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="../../data/badge/handbook_vision.svg"></a>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md"><img src="../../data/badge/handbook_object_detection.svg"></a>
 </div>
 
@@ -18,6 +19,7 @@ Scaled-YOLOv4: Scaling Cross Stage Partial Network
 	<a href="https://sh-tsang.medium.com/review-scaled-yolov4-scaling-cross-stage-partial-network-51e3c515b0a7"><img src="../../data/badge/paper_reference.svg"></a>
 	<a href="https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982#:~:text=yolov4%2Dcsp.cfg-,Scaled%20YOLO%20v4%20is%20the%20best%20neural%20network%20for%20object,15%20FPS%20to%201774%20FPS."><img src="../../data/badge/paper_reference.svg"></a>
 </div>
+
 </div>
 
 

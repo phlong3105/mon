@@ -2,6 +2,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
+    <a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="../../data/badge/handbook_vision.svg"></a>
 </div>
 
 CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
@@ -16,6 +17,7 @@ CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
     <a href="https://github.com/WongKinYiu/CrossStagePartialNetworks"><img src="../../data/badge/paper_code.svg"></a>
 	<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf"><img src="../../data/badge/paper_reference.svg"></a>
 </div>
+
 </div>
 
 

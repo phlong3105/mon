@@ -3,6 +3,7 @@
 <br><br>
 <div>
 	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="../../data/badge/handbook_vision.svg"></a>
 </div>
 
 Lane Detection
@@ -19,9 +20,9 @@ Lane Detection
 
 ## Methods
 
-| Status                             | Method                                                    | Architecture | Date       | Publication |
-|:-----------------------------------|-----------------------------------------------------------|--------------|------------|-------------|
-| <img src="../data/badge/read.svg"> | [**Advanced Lane Detection**](advanced_lane_detection.md) | `Non-deep`   | 2020/01/10 | GitHub      |
+| Status                                | Method                                                    | Architecture | Date       | Publication |
+|:--------------------------------------|-----------------------------------------------------------|--------------|------------|-------------|
+| <img src="../../data/badge/read.svg"> | [**Advanced Lane Detection**](advanced_lane_detection.md) | `Non-deep`   | 2020/01/10 | GitHub      |
 
 
 ## Data
