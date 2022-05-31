@@ -15,9 +15,9 @@ Image Classification (Backbone)
 
 ## Methods
 
-| Status | Method                  | Architecture | Date       | Publication     |
-|:------:|-------------------------|--------------|------------|-----------------|
-|   🟩   | [**CSPNet**](cspnet.md) | `Deep`       | 2020/06/25 | CVPRW&nbsp;2020 |
+| Status                             | Method                  | Architecture | Date       | Publication     |
+|:-----------------------------------|-------------------------|--------------|------------|-----------------|
+| <img src="../data/badge/read.svg"> | [**CSPNet**](cspnet.md) | `Deep`       | 2020/06/25 | CVPRW&nbsp;2020 |
 
 
 ## Data

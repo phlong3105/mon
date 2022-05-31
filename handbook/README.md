@@ -5,7 +5,10 @@
 =============================
 </div>
 
-The `Research Handbook` is a comprehensive guide to modern computer vision with machine learning and deep learning methods and technologies. We summarize various types of machine learning methods, related theory, and the best practices when applying in competitive competitions and real-world applications.
+The `Research Handbook` is a comprehensive guide to modern computer vision with 
+machine learning and deep learning methods and technologies. We summarize 
+various types of machine learning methods, related theory, and the best practices 
+when applying in competitive competitions and real-world applications.
 
 
 ## Knowledge Base
@@ -38,8 +41,8 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
     <tr>
         <td><b>Computer&nbsp;Vision</b></td>
         <td>
-            <a href="">Action&nbsp;Recognition</a>&nbsp;&nbsp;
-			<a href="">Action&nbsp;Detection</a>&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/one/blob/master/handbook/action_recognition/README.md">Action&nbsp;Recognition</a>&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/action_detection/README.md">Action&nbsp;Detection</a>&nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/handbook/image_classification/README.md">Image&nbsp;Classification (Backbone)</a>&nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/handbook/image_enhancement/README.md">Image&nbsp;Enhancement</a>&nbsp;&nbsp;
             <a href="">Instance&nbsp;Segmentation</a>&nbsp;&nbsp;
@@ -95,13 +98,15 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
     <tr>
         <td><b>Challenges</b></td>
         <td>
-            <a href="">AI&nbsp;City&nbsp;Challenge</a>&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/aic/blob/master/docs/README.md">AI&nbsp;City&nbsp;Challenge</a>&nbsp;&nbsp;
             <a href="">AutoNUE</a>&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/chalearn/blob/master/docs/README.md">ChaLearn</a>&nbsp;&nbsp;
             <a href="">KATECH</a>&nbsp;&nbsp;
             <a href="">KODAS</a>&nbsp;&nbsp;
             <a href="">NTIRE</a>&nbsp;&nbsp;
-            <a href="">UG2+</a>&nbsp;&nbsp;
-            <a href="">VisDrone</a>&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/ug2/blob/master/docs/README.md">UG2+</a>&nbsp;&nbsp;
+            <a href="https://github.com/phlong3105/visdrone/blob/master/docs/README.md">VisDrone</a>&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/vpriors/blob/master/docs/README.md">VPriors</a>&nbsp;&nbsp;
             <a href="">Waymo</a>&nbsp;&nbsp;
         </td>
     </tr>
@@ -126,6 +131,6 @@ The `Research Handbook` is a comprehensive guide to modern computer vision with 
 
 ## Misc
 <div align="center">
-<img src="data/lifecycle.png" width="500">
-<img src="data/stoicism.png"  width="500">
+<img src="data/lifecycle.png" height="300">
+<img src="data/stoicism.png"  height="300">
 </div>
