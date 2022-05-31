@@ -79,11 +79,9 @@ when applying in competitive competitions and real-world applications.
             <a href="">Writing</a>&nbsp;&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
-</table>
-
-
-## Projects
-<table>
+	<tr>
+        <td colspan="2"><h2>Projects</h2></td>
+    </tr>
     <tr>
         <th>Topic</th>
         <th>Projects</th>
