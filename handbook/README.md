@@ -56,7 +56,7 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<b>Image&nbsp;Processing</b>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/README.md"><b>Image&nbsp;Processing</b></a>
 			<br>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/README.md"><img src="data/badge/handbook_image_processing.svg"></a>
 		</td>
@@ -70,12 +70,20 @@ when applying in competitive competitions and real-world applications.
         </td>
     </tr>
     <tr>
-        <td><b>Maths</b></td>
+        <td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/maths/README.md"><b>Maths</b></a>
+			<br>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/maths/README.md"><img src="data/badge/handbook_maths.svg"></a>
+		</td>
         <td>
         </td>
     </tr>
     <tr>
-        <td><b>Tools</b></td>
+        <td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/tools/README.md"><b>Tools</b></a>
+			<br>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/tools/README.md"><img src="data/badge/handbook_tools.svg"></a>
+		</td>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/anaconda.md">Anaconda</a>&nbsp;&nbsp;&nbsp;&nbsp;
  			<a href="https://github.com/phlong3105/one/blob/master/handbook/resources/docker.md">Docker</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -84,7 +92,11 @@ when applying in competitive competitions and real-world applications.
         </td>
     </tr>
     <tr>
-        <td><b>Resources</b></td>
+        <td>
+			<b>Resources</b>
+			<br>
+			<img src="data/badge/handbook_resources.svg">
+		</td>
         <td>
             <a href="">Effective&nbsp;Study</a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="">Project&nbsp;Management</a>&nbsp;&nbsp;&nbsp;&nbsp;
