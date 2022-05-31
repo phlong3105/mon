@@ -20,7 +20,11 @@ when applying in competitive competitions and real-world applications.
         <th>Topics</th>
     </tr>
     <tr>
-        <td><a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><b>Machine&nbsp;Learning</b></a></td>
+        <td>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><b>Machine&nbsp;Learning</b></a>
+			<br>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><img src="data/badge/handbook_machine_learning.svg"></a>
+		</td>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/modeling/README.md"><b>Modeling*</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/anomaly_detection/README.md">Anomaly&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
@@ -34,6 +38,7 @@ when applying in competitive competitions and real-world applications.
     <tr>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><b>Vision</b></a>
+			<br>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="data/badge/handbook_vision.svg"></a>
 		</td>
         <td>
