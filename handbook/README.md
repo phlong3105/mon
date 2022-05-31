@@ -55,7 +55,11 @@ when applying in competitive competitions and real-world applications.
         </td>
     </tr>
     <tr>
-        <td><b>Image&nbsp;Processing</b></td>
+        <td>
+			<b>Image&nbsp;Processing</b>
+			<br>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/README.md"><img src="data/badge/handbook_image_processing.svg"></a>
+		</td>
         <td>
 			<a href="https://github.com/phlong3105/one/blob/master/handbook/image_processing/camera_calibration/README.md">Camera&nbsp;Calibration</a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="">Feature&nbsp;Extraction</a>&nbsp;&nbsp;&nbsp;&nbsp;
