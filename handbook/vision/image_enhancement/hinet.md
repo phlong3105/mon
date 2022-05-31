@@ -1,7 +1,7 @@
 <div align="center">
 <br><br>
 <div>
-	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
 </div>
 
 HINet: Half Instance Normalization Network for Image Restoration
@@ -13,8 +13,8 @@ HINet: Half Instance Normalization Network for Image Restoration
 </div>
 
 <div align="center">
-    <a href="data/hinet.pdf"><img src="../data/badge/paper_paper.svg"></a>
-    <a href="https://github.com/megvii-model/HINet"><img src="../data/badge/paper_code.svg"></a>
+    <a href="data/hinet.pdf"><img src="../../data/badge/paper_paper.svg"></a>
+    <a href="https://github.com/megvii-model/HINet"><img src="../../data/badge/paper_code.svg"></a>
 </div>
 </div>
 

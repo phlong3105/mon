@@ -1,8 +1,8 @@
 <div align="center">
-<img width="800" src="./data/camera_calibration.png">
+<img width="800" src="data/camera_calibration.png">
 <br><br>
 <div>
-	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
 </div>
 
 Camera Calibration

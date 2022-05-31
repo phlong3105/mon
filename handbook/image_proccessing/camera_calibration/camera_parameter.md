@@ -1,14 +1,14 @@
 <div align="center">
 <br><br>
 <div>
-	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
 </div>
 
 What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 =============================
 
 <div align="center">
-    <a href="https://towardsdatascience.com/what-are-intrinsic-and-extrinsic-camera-parameters-in-computer-vision-7071b72fb8ec#:~:text=The%20extrinsic%20matrix%20is%20a,to%20the%20pixel%20coordinate%20system."><img src="../data/badge/paper_website.svg"></a>
+    <a href="https://towardsdatascience.com/what-are-intrinsic-and-extrinsic-camera-parameters-in-computer-vision-7071b72fb8ec#:~:text=The%20extrinsic%20matrix%20is%20a,to%20the%20pixel%20coordinate%20system."><img src="../../data/badge/paper_website.svg"></a>
 </div>
 </div>
 

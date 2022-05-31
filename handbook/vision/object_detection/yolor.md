@@ -2,8 +2,8 @@
 <img width="800" src="data/yolor.png">
 <br><br>
 <div>
-	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../data/badge/handbook_home.svg"></a>
-	<a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md"><img src="../data/badge/handbook_object_detection.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/README.md"><img src="../../data/badge/handbook_home.svg"></a>
+	<a href="https://github.com/phlong3105/one/blob/master/handbook/object_detection/README.md"><img src="../../data/badge/handbook_object_detection.svg"></a>
 </div>
 
 You Only Learn One Representation: Unified Network for Multiple Tasks
@@ -15,11 +15,11 @@ You Only Learn One Representation: Unified Network for Multiple Tasks
 </div>
 
 <div align="center">
-	<a href="data/yolor.pdf"><img src="../data/badge/paper_paper.svg"></a>
-    <a href="https://github.com/WongKinYiu/yolor"><img src="../data/badge/paper_code.svg"></a>
-  	<a href="https://viblo.asia/p/paper-explain-yolor-su-khoi-dau-cho-mot-xu-huong-moi-Ljy5VREy5ra"><img src="../data/badge/paper_reference.svg"></a>
-    <a href="https://medium.com/augmented-startups/is-yolor-better-and-faster-than-yolov4-54812da66cc1"><img src="../data/badge/paper_reference.svg"></a>
-    <a href="https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D."><img src="../data/badge/paper_reference.svg"></a>
+	<a href="data/yolor.pdf"><img src="../../data/badge/paper_paper.svg"></a>
+    <a href="https://github.com/WongKinYiu/yolor"><img src="../../data/badge/paper_code.svg"></a>
+  	<a href="https://viblo.asia/p/paper-explain-yolor-su-khoi-dau-cho-mot-xu-huong-moi-Ljy5VREy5ra"><img src="../../data/badge/paper_reference.svg"></a>
+    <a href="https://medium.com/augmented-startups/is-yolor-better-and-faster-than-yolov4-54812da66cc1"><img src="../../data/badge/paper_reference.svg"></a>
+    <a href="https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D."><img src="../../data/badge/paper_reference.svg"></a>
 </div>
 
 </div>
