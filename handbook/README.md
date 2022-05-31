@@ -11,7 +11,6 @@ various types of machine learning methods, related theory, and the best practice
 when applying in competitive competitions and real-world applications.
 
 
-## Knowledge Base
 <table>
     <tr>
         <td colspan="2"><h2>Knowledge Base</h2></td>
