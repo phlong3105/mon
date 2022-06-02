@@ -41,9 +41,9 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<b>Vision</b>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><b>Vision</b></a>
 			<br>
-			<img src="data/badge/handbook_vision.svg">
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/vision/README.md"><img src="data/badge/handbook_vision.svg"></a>
 		</td>
         <td>
             <a href="https://github.com/phlong3105/one/blob/master/handbook/vision/action_recognition/README.md">Action&nbsp;Recognition</a>&nbsp;&nbsp;&nbsp;&nbsp;
