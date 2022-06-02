@@ -21,15 +21,19 @@ when applying in competitive competitions and real-world applications.
     </tr>
     <tr>
         <td>
-			<b>Machine&nbsp;Learning</b>
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><b>Machine&nbsp;Learning</b></a>
 			<br>
-			<img src="data/badge/handbook_machine_learning.svg">
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/README.md"><img src="data/badge/handbook_machine_learning.svg"></a>
 		</td>
         <td>
-			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/modeling/README.md"><b>Modeling*</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/data_processing/README.md"><b>Data&nbsp;Processing</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/data_processing/README.md"><b>Training-Testing</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/data_processing/README.md"><b>Deployment</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
+			<br><br>
             <a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/anomaly_detection/README.md">Anomaly&nbsp;Detection</a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/classification/README.md">Classification</a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="">Clustering</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="https://github.com/phlong3105/one/blob/master/handbook/machine_learning/deep_learning/README.md"><b>Deep&nbsp;Learning*</b></a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="">Dimensionality&nbsp;Reduction</a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="">Neural&nbsp;Network</a>&nbsp;&nbsp;&nbsp;&nbsp;
             <a href="">Regression</a>&nbsp;&nbsp;&nbsp;&nbsp;
