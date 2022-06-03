@@ -56,7 +56,9 @@ def select_device(device="", batch_size=None):
         print("Using CPU")
 
     print("")  # skip a line
-    return torch.device(f"cuda:{device}" if cuda else "cpu")
+    if isinstance(device, str) and device.isnumeric():
+        return torch.device(f"cuda:{device}" if cuda else "cpu")
+    return torch.device(f"cuda:0" if cuda else "cpu")
 
 
 def time_synchronized():
