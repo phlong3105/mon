@@ -13,7 +13,7 @@ arXiv 2022
 <a href="https://medium.com/@sabrinaherbst/model-soups-for-higher-performing-models-1d4818126191"><img src="../../data/badge/reference.svg"></a>
 </div>
 
-<video src="https://github.com/phlong3105/one/blob/1.0/docs/machine_learning/serving/data/model_soups_paper_explained.mp4" width=180></video>
+[![Video](https://github.com/phlong3105/one/blob/1.0/docs/machine_learning/serving/data/model_soups_paper_explained.mov)](https://github.com/phlong3105/one/blob/1.0/docs/machine_learning/serving/data/model_soups_paper_explained.mp4)
 
 
 ## Highlight
