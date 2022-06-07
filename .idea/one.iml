@@ -4,41 +4,8 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/third_party" />
       <excludeFolder url="file://$MODULE_DIR$/data" />
-      <excludeFolder url="file://$MODULE_DIR$/src/cpp" />
-      <excludeFolder url="file://$MODULE_DIR$/src/swift" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_896/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_896_2/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_896_3/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_1536/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_1536_2/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_1536_3/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/scaled_yolov4/exp0_yolov4-p7_chalearnltdmonth_1920/weights" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/alexnet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/convnext" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/densenet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/dpn" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/hinet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/mnasnet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/mobilenet_v2" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/mprnet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/rdn" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/resnet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/resnext" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/shufflenet_v2" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/squeezenet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/trident" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/vgg" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/wide_resnet" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/xception" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/yolor" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/yolov5_v6_1" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/zerodce" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained/zerodce++" />
       <excludeFolder url="file://$MODULE_DIR$/.sync" />
-      <excludeFolder url="file://$MODULE_DIR$/scripts/chalearn22/inference" />
-      <excludeFolder url="file://$MODULE_DIR$/pretrained" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (one)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
