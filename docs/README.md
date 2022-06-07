@@ -15,7 +15,7 @@ when applying in competitive competitions and real-world applications.
 
 ## Knowledge Base
 
-### [Machine Learning](machine_learning/README.md) ![Machine Learning](data/badge/handbook_machine_learning.svg)
+### [Machine Learning](machine_learning/README.md) ![Machine Learning](data/badge/machine_learning.svg)
 
 | [Data&nbsp;Processing](machine_learning/data_processing/README.md) | [Training-Testing](machine_learning/training/README.md) | [Model&nbsp;Serving](machine_learning/serving/README.md) |
 |:------------------------------------------------------------------:|:-------------------------------------------------------:|:--------------------------------------------------------:|
@@ -29,7 +29,7 @@ when applying in competitive competitions and real-world applications.
 |:---------------------------------------------------:|
 |            ![Regression](data/photo.png)            | 
 
-### [Vision](vision/README.md) ![Vision](data/badge/handbook_vision.svg)
+### [Vision](vision/README.md) ![Vision](data/badge/vision.svg)
 
 | [Action&nbsp;Recognition](vision/action_recognition/README.md) | [Action&nbsp;Detection](vision/action_detection/README.md) | [Image&nbsp;Classification](vision/image_classification/README.md) | [Image&nbsp;Enhancement](vision/image_enhancement/README.md) | [Instance&nbsp;Segmentation](vision/instance_segmentation/README.md) | [Lane&nbsp;Detection](vision/lane_detection/README.md) |
 |:--------------------------------------------------------------:|:----------------------------------------------------------:|:------------------------------------------------------------------:|:------------------------------------------------------------:|:--------------------------------------------------------------------:|:------------------------------------------------------:|
@@ -39,13 +39,13 @@ when applying in competitive competitions and real-world applications.
 |:----------------------------------------------------------:|:--------------------------------------------------------:|:-----------------------------------------------------:|:--------------------------------------------------------------------:|
 |          ![Object&nbsp;Detection](data/photo.png)          |         ![Object&nbsp;Tracking](data/photo.png)          |          ![Reidentification](data/photo.png)          |            ![Semantic&nbsp;Segmentation](data/photo.png)             | 
 
-### [Image Processing](image_processing/README.md) ![Image Processing](data/badge/handbook_image_processing.svg)
+### [Image Processing](image_processing/README.md) ![Image Processing](data/badge/image_processing.svg)
 
 | [Camera&nbsp;Calibration](image_processing/camera_calibration/README.md) | [Feature&nbsp;Extraction](image_processing/feature_extraction/README.md) | [Geometry](image_processing/geometry/README.md) | [Image&nbsp;Acquisition](image_processing/image_acquisition/README.md) | [Image&nbsp;Registration](image_processing/image_registration/README.md) | [Motion&nbsp;Analysis](image_processing/motion_analysis/README.md) |
 |:------------------------------------------------------------------------:|:------------------------------------------------------------------------:|:-----------------------------------------------:|:----------------------------------------------------------------------:|:------------------------------------------------------------------------:|:------------------------------------------------------------------:|
 |                ![Camera&nbsp;Calibratio](data/photo.png)                 |                ![Feature&nbsp;Extraction](data/photo.png)                |           ![Geometry](data/photo.png)           |               ![Image&nbsp;Acquisition](data/photo.png)                |                ![Image&nbsp;Registration](data/photo.png)                |              ![Motion&nbsp;Analysis](data/photo.png)               |
 
-### Tools ![Tools](data/badge/handbook_tools.svg)
+### Tools ![Tools](data/badge/tools.svg)
 
 | [Anaconda ](tools/anaconda.md) | [Docker](tools/docker.md) | [Swift](tools/swift.md)  | [Python](tools/python.md) |
 |:------------------------------:|:-------------------------:|:------------------------:|:-------------------------:|
@@ -54,7 +54,7 @@ when applying in competitive competitions and real-world applications.
 
 ## Projects
 
-### [Challenges](challenges/README.md) ![Challenges](data/badge/handbook_challenges.svg)
+### [Challenges](challenges/README.md) ![Challenges](data/badge/challenges.svg)
 
 | [AI&nbsp;City](challenges/ai_city/README.md) | [AutoNue](challenges/autonue/README.md) | [ChaLearn](challenges/chalearn/README.md) | [KATECH](challenges/katech/README.md) | [KODAS](challenges/kodas/README.md) | [NICO](challenges/nico/README.md) |
 |:--------------------------------------------:|:---------------------------------------:|:-----------------------------------------:|:-------------------------------------:|:-----------------------------------:|:---------------------------------:|
@@ -70,7 +70,7 @@ when applying in competitive competitions and real-world applications.
 |:------------------------------------------------------------------------:|:----------------------------------------------------------------------------:|
 |                ![Autonomous&nbsp;Sensor](data/photo.png)                 |                 ![Scene&nbsp;Understanding](data/photo.png)                  |
 
-### [Surveillance System](surveillance_system/README.md) ![Surveillance System](data/badge/handbook_surveillance_system.svg)
+### [Surveillance System](surveillance_system/README.md) ![Surveillance System](data/badge/surveillance_system.svg)
 
 | [Edge&nbsp;TSS](surveillance_system/edge_tss/README.md) |
 |:-------------------------------------------------------:|
