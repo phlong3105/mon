@@ -20,6 +20,10 @@ arXiv 2022
 </div>
 
 
+
+https://user-images.githubusercontent.com/6915498/172331427-f9b7a0c8-d8d3-470d-9c94-843afe2662e8.mov
+
+
 ## Highlight
 Recently, researchers from various universities and companies published a 
 paper on ArXiv, introducing a concept called **Model Soups**. 
