@@ -1,0 +1,10 @@
+path                 : ""
+video_file           : "sample.mp4"
+offset               : 300
+src_points           : [[190, 720], [596, 447], [685, 447,], [1125, 720]]
+nx                   : 9
+ny                   : 6
+camera_matrix        : null
+distortion_coeffs    : null
+camera_calib_dir     : "camera_calib"
+camera_undistored_dir: "camera_undistored"

@@ -1,0 +1,18 @@
+# general things to ignore
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~
+*.pt
+*.pth
+*.weights
+/.sync/
+/data/
+/pretrained/
+/scripts/chalearn22/inference/
+/src/one/pretrained/
+/third_party/

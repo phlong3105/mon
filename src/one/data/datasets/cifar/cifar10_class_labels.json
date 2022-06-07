@@ -1,0 +1,14 @@
+{
+    "class_labels": [
+        { "name": "airplane",   "id": 0 },
+        { "name": "automobile", "id": 1 },
+        { "name": "bird",       "id": 2 },
+        { "name": "cat",        "id": 3 },
+        { "name": "deer",       "id": 4 },
+        { "name": "dog",        "id": 5 },
+        { "name": "frog",       "id": 6 },
+        { "name": "horse",      "id": 7 },
+        { "name": "ship",       "id": 8 },
+        { "name": "truck",      "id": 9 }
+    ]
+}
