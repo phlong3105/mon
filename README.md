@@ -57,7 +57,6 @@ nvidia-docker run --name one -it \
 </details>
 
 <details open>
-
 <summary>Installation using conda</summary>
 
 ```shell
