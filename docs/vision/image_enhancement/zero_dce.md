@@ -2,7 +2,7 @@
 
 Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement
 =============================
-Chunle Guo, Chongyi Li, Jichang Guo, Chen Change Loy, Junhui Hou, Sam Kwong, 
+Chunle Guo, Chongyi Li, Jichang Guo, Chen Change Loy, Junhui Hou, Sam Kwong,
 and Cong Runmin
 
 CVPR 2020
@@ -13,24 +13,24 @@ CVPR 2020
 <a href="https://github.com/Li-Chongyi/Zero-DCE"><img src="../../data/badge/code.svg"></a>
 </div>
 
-
 ## Highlight
-We propose the first low-light enhancement network that is **independent of 
-paired and unpaired training data**, thus avoiding the risk of overfitting. 
-As a result, our method generalizes well to various lighting conditions. 
 
-We design an image-specific curve that is able to **approximate pixel-wise 
-and higher-order curves by iteratively applying itself**. Such image-specific 
-curve can effectively perform mapping within a wide dynamic range. 
+We propose the first low-light enhancement network that is **independent of
+paired and unpaired training data**, thus avoiding the risk of overfitting.
+As a result, our method generalizes well to various lighting conditions.
 
-We show the potential of training a deep image enhancement model in the 
-absence of reference images through task-specific non-reference loss functions 
-that indirectly evaluate enhancement quality. It is capable of processing images 
-in real-time **(about 500 FPS for images of size 640x480x3 on GPU)** and takes 
+We design an image-specific curve that is able to **approximate pixel-wise
+and higher-order curves by iteratively applying itself**. Such image-specific
+curve can effectively perform mapping within a wide dynamic range.
+
+We show the potential of training a deep image enhancement model in the
+absence of reference images through task-specific non-reference loss functions
+that indirectly evaluate enhancement quality. It is capable of processing images
+in real-time **(about 500 FPS for images of size 640x480x3 on GPU)** and takes
 only 30 minutes for training.
 
-
 ## Method
+
 <div align="center">
     <img width="800" src="data/zero_dce_framework.png"><br/>
     <p align="justify">The pipeline of our method. (a) The framework of 
@@ -43,8 +43,8 @@ only 30 minutes for training.
 	the output pixel values.</p>
 </div>
 
-
 ## Ablation Studies
+
 <details open>
 <summary><b style="font-size:16px">1. Contribution of Each Loss</b></summary>
 
@@ -84,8 +84,8 @@ only 30 minutes for training.
 </div>
 </details>
 
-
 ## Results
+
 <details open>
 <summary><b style="font-size:16px">1. Visual Comparisons on Typical Low-light Images</b></summary>
 
@@ -121,8 +121,8 @@ only 30 minutes for training.
 </div>
 </details>
 
-
 ## Citation
+
 ```text
 @Article{Zero-DCE,
     author  = {Chunle Guo and Chongyi Li and Jichang Guo and Chen Change Loy and Junhui Hou and Sam Kwong and Cong Runmin},

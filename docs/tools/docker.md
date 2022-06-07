@@ -7,14 +7,14 @@ Docker
 <a href="data/docker_cheatsheet.pdf">Cheatsheet</a>
 </div>
 
-
 ## Installation
 
 <details open>
 <summary><b style="font-size:18px">Docker</b></summary>
 
-1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including 
-images, containers, volumes, and networks, are preserved:
+1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including
+   images, containers, volumes, and networks, are preserved:
+
 ```shell
 sudo apt-get remove docker docker-engine docker.io containerd runc
 sudo apt-get purge docker-ce docker-ce-cli containerd.io
@@ -23,6 +23,7 @@ sudo rm -rf /var/lib/containerd
 ```
 
 2. Install using the repository:
+
 ```shell
 sudo apt-get update
 sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release

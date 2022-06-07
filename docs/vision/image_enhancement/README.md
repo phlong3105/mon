@@ -5,14 +5,13 @@ Image Enhancement
 =============================
 </div>
 
-
 ## Overview
-Image enhancement is the procedure of improving the quality and the 
+
+Image enhancement is the procedure of improving the quality and the
 information content of original data before processing.
 
-In the new era of deep learning, deep image enhancement models can perform a 
+In the new era of deep learning, deep image enhancement models can perform a
 variety of tasks such as low-light enhancement, de-rain, de-snow, de-haze, etc.
-
 
 ## Methods
 

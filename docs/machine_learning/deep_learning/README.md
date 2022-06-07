@@ -5,7 +5,6 @@ Deep Learning
 =============================
 </div>
 
-
 ## Methods
 
 | Status                                   | Method | Technique | Date | Publication |

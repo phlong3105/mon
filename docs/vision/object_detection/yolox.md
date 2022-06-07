@@ -10,17 +10,12 @@ arXiv<
 <a href="https://github.com/Megvii-BaseDetection/YOLOX"><img src="../../data/badge/code.svg"></a>
 </div>
 
-
 ## Highlight
-
 
 ## Method
 
-
 ## Ablation Studies
 
-
 ## Results
-
 
 ## Citation
