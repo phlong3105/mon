@@ -13,9 +13,11 @@ arXiv 2022
 <a href="https://medium.com/@sabrinaherbst/model-soups-for-higher-performing-models-1d4818126191"><img src="../../data/badge/reference.svg"></a>
 </div>
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=0Z0p22Q_JS8" target="_blank">
- <img src="http://img.youtube.com/vi/0Z0p22Q_JS8/mqdefault.jpg" alt="Watch the video" border="10" />
-</a>
+
+<div align="center">
+
+[![Watch the video](https://img.youtube.com/vi/0Z0p22Q_JS8/0.jpg)](https://youtu.be/0Z0p22Q_JS8)
+</div>
 
 
 ## Highlight
