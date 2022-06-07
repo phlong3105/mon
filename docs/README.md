@@ -64,7 +64,7 @@ when applying in competitive competitions and real-world applications.
 |:-----------------------------------:|:--------------------------------:|:-----------------------------------------:|:---------------------------------------:|:-----------------------------------:|
 |      ![NTIRE](data/photo.png)       |     ![UG2+](data/photo.png)      |        ![VisDrone](data/photo.png)        |       ![VPriors](data/photo.png)        |      ![Waymo](data/photo.png)       |
 
-### [Autonomous Vehicle](autonomous_vehicle/README.md) ![Autonomous Vehicle](data/badge/handbook_autonomous_vehicle.svg)
+### [Autonomous Vehicle](autonomous_vehicle/README.md) ![Autonomous Vehicle](data/badge/autonomous_vehicle.svg)
 
 | [Autonomous&nbsp;Sensor](autonomous_vehicle/autonomous_sensor/README.md) | [Scene&nbsp;Understanding](autonomous_vehicle/scene_understanding/README.md) |
 |:------------------------------------------------------------------------:|:----------------------------------------------------------------------------:|
