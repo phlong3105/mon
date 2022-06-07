@@ -8,9 +8,9 @@ and I-Hau Yeh
 
 CVPRW 2020
 
-<a href="data/cspnet.pdf"><img src="../../data/badge/paper_paper.svg"></a>
-<a href="https://github.com/WongKinYiu/CrossStagePartialNetworks"><img src="../../data/badge/paper_code.svg"></a>
-<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf"><img src="../../data/badge/paper_reference.svg"></a>
+<a href="data/cspnet.pdf"><img src="../../data/badge/paper.svg"></a>
+<a href="https://github.com/WongKinYiu/CrossStagePartialNetworks"><img src="../../data/badge/code.svg"></a>
+<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf"><img src="../../data/badge/reference.svg"></a>
 </div>
 
 

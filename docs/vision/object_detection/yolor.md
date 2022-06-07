@@ -7,11 +7,11 @@ Chien-Yao Wang, I-Hau Yeh, and Hong-Yuan Mark Liao
 
 arXiv
 
-<a href="data/yolor.pdf"><img src="../../data/badge/paper_paper.svg"></a>
-<a href="https://github.com/WongKinYiu/yolor"><img src="../../data/badge/paper_code.svg"></a>
-<a href="https://viblo.asia/p/paper-explain-yolor-su-khoi-dau-cho-mot-xu-huong-moi-Ljy5VREy5ra"><img src="../../data/badge/paper_reference.svg"></a>
-<a href="https://medium.com/augmented-startups/is-yolor-better-and-faster-than-yolov4-54812da66cc1"><img src="../../data/badge/paper_reference.svg"></a>
-<a href="https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D."><img src="../../data/badge/paper_reference.svg"></a>
+<a href="data/yolor.pdf"><img src="../../data/badge/paper.svg"></a>
+<a href="https://github.com/WongKinYiu/yolor"><img src="../../data/badge/code.svg"></a>
+<a href="https://viblo.asia/p/paper-explain-yolor-su-khoi-dau-cho-mot-xu-huong-moi-Ljy5VREy5ra"><img src="../../data/badge/reference.svg"></a>
+<a href="https://medium.com/augmented-startups/is-yolor-better-and-faster-than-yolov4-54812da66cc1"><img src="../../data/badge/reference.svg"></a>
+<a href="https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D."><img src="../../data/badge/reference.svg"></a>
 </div>
 
 

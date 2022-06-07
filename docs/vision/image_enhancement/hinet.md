@@ -6,8 +6,8 @@ Liangyu Chen, Xin Lu, Jie Zhang, Xiaojie Chu, and Chengpeng Chen
 
 CVPR 2021
 
-<a href="data/hinet.pdf"><img src="../../data/badge/paper_paper.svg"></a>
-<a href="https://github.com/megvii-model/HINet"><img src="../../data/badge/paper_code.svg"></a>
+<a href="data/hinet.pdf"><img src="../../data/badge/paper.svg"></a>
+<a href="https://github.com/megvii-model/HINet"><img src="../../data/badge/code.svg"></a>
 </div>
 
 

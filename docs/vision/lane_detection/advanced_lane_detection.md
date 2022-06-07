@@ -6,7 +6,7 @@ Oana Gaskey
 
 GitHub 2020
 
-<a href="https://github.com/OanaGaskey/Advanced-Lane-Detection"><img src="../../data/badge/paper_code.svg"></a>
+<a href="https://github.com/OanaGaskey/Advanced-Lane-Detection"><img src="../../data/badge/code.svg"></a>
 </div>
 
 

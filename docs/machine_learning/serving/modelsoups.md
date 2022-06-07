@@ -4,13 +4,13 @@ Model Soups: Averaging Weights of Multiple Fine-tuned Models Improves Accuracy w
 =============================
 Mitchell Wortsman, Gabriel Ilharco, Samir Yitzhak Gadre, Rebecca Roelofs, 
 Raphael Gontijo-Lopes, Ari S. Morcos, Hongseok Namkoong, Ali Farhadi, 
-Yair Carmon, Simon Kornblith, Ludwig Schmidt
+Yair Carmon, Simon Kornblith, and Ludwig Schmidt
 
 arXiv 2022
 
-<a href="data/model_soups.pdf"><img src="../../data/badge/paper_paper.svg"></a>
-<a href="https://github.com/Burf/ModelSoups"><img src="../../data/badge/paper_code.svg"></a>
-<a href="https://medium.com/@sabrinaherbst/model-soups-for-higher-performing-models-1d4818126191"><img src="../../data/badge/paper_reference.svg"></a>
+<a href="data/model_soups.pdf"><img src="../../data/badge/paper.svg"></a>
+<a href="https://github.com/Burf/ModelSoups"><img src="../../data/badge/code.svg"></a>
+<a href="https://medium.com/@sabrinaherbst/model-soups-for-higher-performing-models-1d4818126191"><img src="../../data/badge/reference.svg"></a>
 </div>
 
 

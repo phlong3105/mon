@@ -7,10 +7,10 @@ and Cong Runmin
 
 CVPR 2020
 
-<a href="https://li-chongyi.github.io/Proj_Zero-DCE.html"><img src="../../data/badge/paper_website.svg"></a>
-<a href="data/zero_dce.pdf"><img src="../../data/badge/paper_paper.svg"></a>
-<a href="data/zero_dce_sup.pdf"><img src="../../data/badge/paper_supplement.svg"></a>
-<a href="https://github.com/Li-Chongyi/Zero-DCE"><img src="../../data/badge/paper_code.svg"></a>
+<a href="https://li-chongyi.github.io/Proj_Zero-DCE.html"><img src="../../data/badge/website.svg"></a>
+<a href="data/zero_dce.pdf"><img src="../../data/badge/paper.svg"></a>
+<a href="data/zero_dce_sup.pdf"><img src="../../data/badge/supplement.svg"></a>
+<a href="https://github.com/Li-Chongyi/Zero-DCE"><img src="../../data/badge/code.svg"></a>
 </div>
 
 

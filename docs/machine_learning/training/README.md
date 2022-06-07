@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/training.png">
+<img src="data/training.png" width="800">
 
 Training-Testing Models
 =============================
