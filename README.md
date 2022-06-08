@@ -1,6 +1,7 @@
 <div align="center">
+<img src="docs/data/one.png">
 
-<img src="docs/data/one.png"> <br> One Research Framework
+One Research Framework
 =============================
 
 <a href="#installation">Installation</a> •
@@ -8,7 +9,6 @@
 <a href="docs/README.md">Handbook</a> •
 <a href="#citation">Citation</a> •
 <a href="#contact">Contact</a>
-
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytorch-lightning)](https://pypi.org/project/pytorch-lightning/)
 [![Conda](https://img.shields.io/conda/v/conda-forge/pytorch-lightning?label=conda&color=success)](https://anaconda.org/conda-forge/pytorch-lightning)
