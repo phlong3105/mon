@@ -1,7 +1,7 @@
 <div align="center">
 <img src="data/one.png">
 
-Handbook
+Research Handbook
 =============================
 </div>
 
