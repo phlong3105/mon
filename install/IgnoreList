@@ -1,4 +1,4 @@
-﻿# IgnoreList is a UTF-8 encoded .txt file that helps you specify single files, paths and rules 
+# IgnoreList is a UTF-8 encoded .txt file that helps you specify single files, paths and rules 
 # for ignoring during the synchronization job. It supports "?" and "*" wildcard symbols.
 #
 #
@@ -54,3 +54,4 @@ DfsrPrivate
 /data
 \datasets
 \data
+pycharm.env

@@ -16,9 +16,9 @@ applying in competitive competitions and real-world applications.
 
 ### [Machine Learning](machine_learning/README.md) ![Machine Learning](data/badge/machine_learning.svg)
 
-| [Data&nbsp;Processing](machine_learning/data_processing/README.md) | [Training-Testing](machine_learning/training/README.md) | [Model&nbsp;Serving](machine_learning/serving/README.md) |
-|:------------------------------------------------------------------:|:-------------------------------------------------------:|:--------------------------------------------------------:|
-|              ![Data&nbsp;Processing](data/photo.png)               |           ![Training-Testing](data/photo.png)           |          ![Model&nbsp;Serving](data/photo.png)           |
+|            [Data&nbsp;Processing](machine_learning/data_processing/README.md)            |        [Training-Testing](machine_learning/training/README.md)         |     [Model&nbsp;Serving](machine_learning/serving/README.md)     |
+|:----------------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|:----------------------------------------------------------------:|
+| ![Data&nbsp;Processing](machine_learning/data_processing/data/data_processing_small.gif) | ![Training-Testing](machine_learning/training/data/training_small.gif) | ![Model&nbsp;Serving](machine_learning/serving/data/serving.gif) |
 
 | [Anomaly&nbsp;Detection](machine_learning/anomaly_detection/README.md) | [Classification](machine_learning/classification/README.md) | [Clustering](machine_learning/clustering/README.md) | [Deep&nbsp;Learning](machine_learning/deep_learning/README.md) | [Dimensionality&nbsp;Reduction](machine_learning/dimensionality_reduction/README.md) | [Neural&nbsp;Network](machine_learning/neural_network/README.md) |
 |:----------------------------------------------------------------------:|:-----------------------------------------------------------:|:---------------------------------------------------:|:--------------------------------------------------------------:|:------------------------------------------------------------------------------------:|:----------------------------------------------------------------:|
@@ -30,38 +30,38 @@ applying in competitive competitions and real-world applications.
 
 ### [Vision](vision/README.md) ![Vision](data/badge/vision.svg)
 
-| [Action&nbsp;Recognition](vision/action_recognition/README.md) | [Action&nbsp;Detection](vision/action_detection/README.md) | [Image&nbsp;Classification](vision/image_classification/README.md) | [Image&nbsp;Enhancement](vision/image_enhancement/README.md) | [Instance&nbsp;Segmentation](vision/instance_segmentation/README.md) | [Lane&nbsp;Detection](vision/lane_detection/README.md) |
-|:--------------------------------------------------------------:|:----------------------------------------------------------:|:------------------------------------------------------------------:|:------------------------------------------------------------:|:--------------------------------------------------------------------:|:------------------------------------------------------:|
-|           ![Action&nbsp;Recognition](data/photo.png)           |          ![Action&nbsp;Detection](data/photo.png)          |            ![Image&nbsp;Classification](data/photo.png)            |          ![Image&nbsp;Enhancement](data/photo.png)           |            ![Instance&nbsp;Segmentation](data/photo.png)             |         ![Lane&nbsp;Detection](data/photo.png)         |
+|             [Action&nbsp;Recognition](vision/action_recognition/README.md)              |            [Action&nbsp;Detection](vision/action_detection/README.md)             | [Image&nbsp;Classification](vision/image_classification/README.md) |             [Image&nbsp;Enhancement](vision/image_enhancement/README.md)             |               [Instance&nbsp;Segmentation](vision/instance_segmentation/README.md)               |           [Lane&nbsp;Detection](vision/lane_detection/README.md)            |
+|:---------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|:------------------------------------------------------------------:|:------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|
+| ![Action&nbsp;Recognition](vision/action_recognition/data/action_recognition_small.gif) | ![Action&nbsp;Detection](vision/action_detection/data/action_detection_small.gif) |            ![Image&nbsp;Classification](data/photo.png)            | ![Image&nbsp;Enhancement](vision/image_enhancement/data/image_enhancement_small.gif) | ![Instance&nbsp;Segmentation](vision/instance_segmentation/data/instance_segmentation_small.gif) | ![Lane&nbsp;Detection](vision/lane_detection/data/lane_detection_small.gif) |
 
-| [Object&nbsp;Detection](vision/object_detection/README.md) | [Object&nbsp;Tracking](vision/object_tracking/README.md) | [Reidentification](vision/reidentification/README.md) | [Semantic&nbsp;Segmentation](vision/semantic_segmentation/README.md) | 
-|:----------------------------------------------------------:|:--------------------------------------------------------:|:-----------------------------------------------------:|:--------------------------------------------------------------------:|
-|          ![Object&nbsp;Detection](data/photo.png)          |         ![Object&nbsp;Tracking](data/photo.png)          |          ![Reidentification](data/photo.png)          |            ![Semantic&nbsp;Segmentation](data/photo.png)             | 
+|         [Object&nbsp;Detection](vision/object_detection/README.md)          | [Object&nbsp;Tracking](vision/object_tracking/README.md) | [Reidentification](vision/reidentification/README.md) |               [Semantic&nbsp;Segmentation](vision/semantic_segmentation/README.md)               | 
+|:---------------------------------------------------------------------------:|:--------------------------------------------------------:|:-----------------------------------------------------:|:------------------------------------------------------------------------------------------------:|
+| ![Object&nbsp;Detection](vision/object_detection/data/object_detection.gif) |         ![Object&nbsp;Tracking](data/photo.png)          |          ![Reidentification](data/photo.png)          | ![Semantic&nbsp;Segmentation](vision/semantic_segmentation/data/semantic_segmentation_small.gif) | 
 
 ### [Image Processing](image_processing/README.md) ![Image Processing](data/badge/image_processing.svg)
 
-| [Camera&nbsp;Calibration](image_processing/camera_calibration/README.md) | [Feature&nbsp;Extraction](image_processing/feature_extraction/README.md) | [Geometry](image_processing/geometry/README.md) | [Image&nbsp;Acquisition](image_processing/image_acquisition/README.md) | [Image&nbsp;Registration](image_processing/image_registration/README.md) | [Motion&nbsp;Analysis](image_processing/motion_analysis/README.md) |
-|:------------------------------------------------------------------------:|:------------------------------------------------------------------------:|:-----------------------------------------------:|:----------------------------------------------------------------------:|:------------------------------------------------------------------------:|:------------------------------------------------------------------:|
-|                ![Camera&nbsp;Calibratio](data/photo.png)                 |                ![Feature&nbsp;Extraction](data/photo.png)                |           ![Geometry](data/photo.png)           |               ![Image&nbsp;Acquisition](data/photo.png)                |                ![Image&nbsp;Registration](data/photo.png)                |              ![Motion&nbsp;Analysis](data/photo.png)               |
+| [Camera&nbsp;Calibration](image_processing/camera_calibration/README.md) | [Feature&nbsp;Extraction](image_processing/feature_extraction/README.md) | [Filtering](image_processing/filtering/README.md) | [Histogram](image_processing/histogram/README.md) | [Spatial](image_processing/spatial/README.md) | [Spatial Temporal](image_processing/spatial_temporal/README.md) |
+|:------------------------------------------------------------------------:|:------------------------------------------------------------------------:|:-------------------------------------------------:|:-------------------------------------------------:|:---------------------------------------------:|:---------------------------------------------------------------:|
+|                ![Camera&nbsp;Calibratio](data/photo.png)                 |                ![Feature&nbsp;Extraction](data/photo.png)                |           ![Filtering](data/photo.png)            |           ![Histogram](data/photo.png)            |          ![Spatial](data/photo.png)           |               ![Spatial Temporal](data/photo.png)               |
 
 ### Tools ![Tools](data/badge/tools.svg)
 
-| [Anaconda ](tools/anaconda.md) | [Docker](tools/docker.md) | [Swift](tools/swift.md)  | [Python](tools/python.md) |
-|:------------------------------:|:-------------------------:|:------------------------:|:-------------------------:|
-|  ![Anaconda](data/photo.png)   | ![Docker](data/photo.png) | ![Swift](data/photo.png) | ![Python](data/photo.png) |
+|    [Anaconda ](tools/anaconda.md)    |    [Docker](tools/docker.md)     |    [Swift](tools/swift.md)     |    [Python](tools/python.md)     |
+|:------------------------------------:|:--------------------------------:|:------------------------------:|:--------------------------------:|
+| ![Anaconda](tools/data/anaconda.gif) | ![Docker](tools/data/docker.gif) | ![Swift](tools/data/apple.gif) | ![Python](tools/data/python.gif) |
 
 
 ## Projects
 
 ### [Challenges](challenges/README.md) ![Challenges](data/badge/challenges.svg)
 
-| [AI&nbsp;City](challenges/ai_city/README.md) | [AutoNue](challenges/autonue/README.md) | [ChaLearn](challenges/chalearn/README.md) | [KATECH](challenges/katech/README.md) | [KODAS](challenges/kodas/README.md) | [NICO](challenges/nico/README.md) |
-|:--------------------------------------------:|:---------------------------------------:|:-----------------------------------------:|:-------------------------------------:|:-----------------------------------:|:---------------------------------:|
-|       ![AI&nbsp;City](data/photo.png)        |       ![AutoNue](data/photo.png)        |        ![ChaLearn](data/photo.png)        |       ![KATECH](data/photo.png)       |      ![KODAS](data/photo.png)       |      ![NICO](data/photo.png)      |
+|        [AI&nbsp;City](challenges/ai_city/README.md)        | [AutoNue](challenges/autonue/README.md) |        [ChaLearn](challenges/chalearn/README.md)         | [KATECH](challenges/katech/README.md) | [KODAS](challenges/kodas/README.md) | [NICO](challenges/nico/README.md) |
+|:----------------------------------------------------------:|:---------------------------------------:|:--------------------------------------------------------:|:-------------------------------------:|:-----------------------------------:|:---------------------------------:|
+| ![AI&nbsp;City](challenges/ai_city/data/ai_city_small.gif) |       ![AutoNue](data/photo.png)        | ![ChaLearn](challenges/chalearn/data/chalearn_small.gif) |       ![KATECH](data/photo.png)       |      ![KODAS](data/photo.png)       |      ![NICO](data/photo.png)      |
 
-| [NTIRE](challenges/ntire/README.md) | [UG2+](challenges/ug2/README.md) | [VisDrone](challenges/visdrone/README.md) | [VPriors](challenges/vpriors/README.md) | [Waymo](challenges/waymo/README.md) |
-|:-----------------------------------:|:--------------------------------:|:-----------------------------------------:|:---------------------------------------:|:-----------------------------------:|
-|      ![NTIRE](data/photo.png)       |     ![UG2+](data/photo.png)      |        ![VisDrone](data/photo.png)        |       ![VPriors](data/photo.png)        |      ![Waymo](data/photo.png)       |
+| [NTIRE](challenges/ntire/README.md) |       [UG2+](challenges/ug2/README.md)       | [VisDrone](challenges/visdrone/README.md) | [VIPriors](challenges/vipriors/README.md) | [Waymo](challenges/waymo/README.md) |
+|:-----------------------------------:|:--------------------------------------------:|:-----------------------------------------:|:-----------------------------------------:|:-----------------------------------:|
+|      ![NTIRE](data/photo.png)       |  ![UG2+](challenges/ug2/data/ug2_small.gif)  |        ![VisDrone](data/photo.png)        |        ![VIPriors](data/photo.png)        |      ![Waymo](data/photo.png)       |
 
 ### [Autonomous Vehicle](autonomous_vehicle/README.md) ![Autonomous Vehicle](data/badge/autonomous_vehicle.svg)
 
