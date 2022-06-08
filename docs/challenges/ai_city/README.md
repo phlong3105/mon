@@ -19,3 +19,9 @@ There is a need for platforms that allow for appropriate analysis from edge to
 cloud, which will accelerate the development and deployment of these models.
 
 ## Contests
+
+### AIC22
+
+| [Track 1: City-Scale Multi-Camera Vehicle Tracking](aic22_track1.md) | 
+|:--------------------------------------------------------------------:|
+|                   ![Track 1](../../data/photo.png)                   | 
