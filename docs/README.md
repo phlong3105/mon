@@ -8,11 +8,18 @@ Research Handbook
 The `One Research Handbook` is a comprehensive knowledge base of our works
 related to computer vision, machine learning, and deep learning. We summarize
 various types of machine learning methods, related theory, and the best
-practices when applying in competitive competitions and real-world applications.
+practices when applying in competitive challenges and real-world applications.
 
 ## Knowledge Base
 
-### [Machine Learning](machine_learning/README.md) ![Machine Learning](data/badge/machine_learning.svg)
+### [Machine Learning](machine_learning/README.md)
+
+|                                                                                                           |                                                                                                           |                                                                                                           |
+|:---------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|
+| [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) |
+| [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) |
+
+
 
 |            [Data Processing](machine_learning/data_processing/README.md)            |        [Training-Testing](machine_learning/training/README.md)         |     [Model Serving](machine_learning/serving/README.md)     |
 |:-----------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|:-----------------------------------------------------------:|
@@ -26,7 +33,7 @@ practices when applying in competitive competitions and real-world applications.
 |:---------------------------------------------------:|
 |            ![Regression](data/photo.png)            | 
 
-### [Vision](vision/README.md) ![Vision](data/badge/vision.svg)
+### [Vision](vision/README.md)
 
 |             [Action Recognition](vision/action_recognition/README.md)              |            [Action Detection](vision/action_detection/README.md)             | [Image Classification](vision/image_classification/README.md) |             [Image Enhancement](vision/image_enhancement/README.md)             |               [Instance Segmentation](vision/instance_segmentation/README.md)               |           [Lane Detection](vision/lane_detection/README.md)            |
 |:----------------------------------------------------------------------------------:|:----------------------------------------------------------------------------:|:-------------------------------------------------------------:|:-------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|
@@ -36,13 +43,13 @@ practices when applying in competitive competitions and real-world applications.
 |:----------------------------------------------------------------------:|:---------------------------------------------------:|:-----------------------------------------------------:|:-------------------------------------------------------------------------------------------:|
 | ![Object Detection](vision/object_detection/data/object_detection.gif) |         ![Object Tracking](data/photo.png)          |          ![Reidentification](data/photo.png)          | ![Semantic Segmentation](vision/semantic_segmentation/data/semantic_segmentation_small.gif) | 
 
-### [Image Processing](image_processing/README.md) ![Image Processing](data/badge/image_processing.svg)
+### [Image Processing](image_processing/README.md)
 
 | [Camera Calibration](image_processing/camera_calibration/README.md) | [Feature Extraction](image_processing/feature_extraction/README.md) | [Filtering](image_processing/filtering/README.md) | [Histogram](image_processing/histogram/README.md) | [Spatial](image_processing/spatial/README.md) | [Spatial Temporal](image_processing/spatial_temporal/README.md) |
 |:-------------------------------------------------------------------:|:-------------------------------------------------------------------:|:-------------------------------------------------:|:-------------------------------------------------:|:---------------------------------------------:|:---------------------------------------------------------------:|
 |                ![Camera Calibratio](data/photo.png)                 |                ![Feature Extraction](data/photo.png)                |           ![Filtering](data/photo.png)            |           ![Histogram](data/photo.png)            |          ![Spatial](data/photo.png)           |               ![Spatial Temporal](data/photo.png)               |
 
-### Tools ![Tools](data/badge/tools.svg)
+### Tools
 
 |    [Anaconda ](tools/anaconda.md)    |    [Docker](tools/docker.md)     |    [Swift](tools/swift.md)     |    [Python](tools/python.md)     |
 |:------------------------------------:|:--------------------------------:|:------------------------------:|:--------------------------------:|
@@ -51,7 +58,7 @@ practices when applying in competitive competitions and real-world applications.
 
 ## Projects
 
-### [Challenges](challenges/README.md) ![Challenges](data/badge/challenges.svg)
+### [Challenges](challenges/README.md)
 
 |        [AI City](challenges/ai_city/README.md)        | [AutoNue](challenges/autonue/README.md) |        [ChaLearn](challenges/chalearn/README.md)         | [KATECH](challenges/katech/README.md) | [KODAS](challenges/kodas/README.md) | [NICO](challenges/nico/README.md) |
 |:-----------------------------------------------------:|:---------------------------------------:|:--------------------------------------------------------:|:-------------------------------------:|:-----------------------------------:|:---------------------------------:|
@@ -61,13 +68,13 @@ practices when applying in competitive competitions and real-world applications.
 |:-----------------------------------:|:--------------------------------------------:|:-----------------------------------------:|:-----------------------------------------:|:-----------------------------------:|
 |      ![NTIRE](data/photo.png)       |  ![UG2+](challenges/ug2/data/ug2_small.gif)  |        ![VisDrone](data/photo.png)        |        ![VIPriors](data/photo.png)        |      ![Waymo](data/photo.png)       |
 
-### [Autonomous Vehicle](autonomous_vehicle/README.md) ![Autonomous Vehicle](data/badge/autonomous_vehicle.svg)
+### [Autonomous Vehicle](autonomous_vehicle/README.md)
 
 | [Autonomous Sensor](autonomous_vehicle/autonomous_sensor/README.md) | [Scene Understanding](autonomous_vehicle/scene_understanding/README.md) |
 |:-------------------------------------------------------------------:|:-----------------------------------------------------------------------:|
 |                ![Autonomous Sensor](data/photo.png)                 |                 ![Scene Understanding](data/photo.png)                  |
 
-### [Surveillance System](surveillance_system/README.md) ![Surveillance System](data/badge/surveillance_system.svg)
+### [Surveillance System](surveillance_system/README.md)
 
 | [Edge TSS](surveillance_system/edge_tss/README.md) |
 |:--------------------------------------------------:|
