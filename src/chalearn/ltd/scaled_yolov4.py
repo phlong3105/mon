@@ -24,13 +24,12 @@ import torch.backends.cudnn as cudnn
 from numpy import random
 from tqdm import tqdm
 
-import one
 import one.vision.object_detection.scaled_yolov4.test as test
 import one.vision.object_detection.scaled_yolov4.train as train
+from chalearn import data_dir
 from chalearn import pretrained_dir
 from one import console
 from one import create_dirs
-from one import data_dir
 from one import load_file
 from one import progress_bar
 from one.vision.object_detection.scaled_yolov4 import apply_classifier
@@ -149,7 +148,7 @@ train_configs = {
         "cfg"         : os.path.join(yolov4_root_dir, "models", "yolov4-p7.yaml"),
         "data"        : os.path.join(current_dir, "chalearnltdmonth.yaml"),
         "hyp"         : os.path.join(yolov4_root_dir, "data", "hyp.scratch.yaml"),
-        "epochs"      : 50,
+        "epochs"      : 100,
         "batch_size"  : 4,
         "img_size"    : [1920, 1920],
         "rect"        : False,
@@ -177,8 +176,8 @@ test_configs = {}
 detect_configs = {
     "yolov4-p7_chalearnltdmonth_1920": {
         "weights"     : [
-            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
@@ -211,6 +210,31 @@ detect_configs = {
         "source"      : os.path.join(data_dir, "chalearn", "ltd", "val"),
         "output"      : os.path.join("inference", "output"),
         "img_size"    : 1536,
+        "batch_size"  : 2,
+        "conf_thres"  : 0.01,
+        "iou_thres"   : 0.5,
+        "device"      : "0",
+        "view_img"    : False,
+        "save_img"    : False,
+        "save_txt"    : True,
+        "classes"     : None,
+        "agnostic_nms": True,
+        "augment"     : True,
+        "update"      : False,
+        "verbose"     : False,
+        "recreate"    : False,
+    },
+    "yolov4-p7_chalearnltdmonth_896" : {
+        "weights"     : [
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
+        ],
+        "source"      : os.path.join(data_dir, "chalearn", "ltd", "val"),
+        "output"      : os.path.join("inference", "output"),
+        "img_size"    : 896,
         "batch_size"  : 2,
         "conf_thres"  : 0.01,
         "iou_thres"   : 0.5,

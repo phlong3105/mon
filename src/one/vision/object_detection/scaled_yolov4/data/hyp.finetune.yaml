@@ -1,4 +1,4 @@
-lr0         : 0.01    # initial learning rate (SGD=1E-2, Adam=1E-3)
+lr0         : 0.05    # 0.01    # initial learning rate (SGD=1E-2, Adam=1E-3)
 momentum    : 0.937   # SGD momentum/Adam beta1
 weight_decay: 0.0005  # optimizer weight decay 5e-4
 giou        : 0.05    # GIoU loss gain

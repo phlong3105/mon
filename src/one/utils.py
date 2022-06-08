@@ -36,7 +36,7 @@ data_dir         = os.getenv("DATA_DIR", None)                        # In case 
 if data_dir is None:
     data_dir = "/data"  # Run from Docker container
 if not os.path.isdir(data_dir):
-    data_dir = os.path.join(pretrained_dir, "data")  # Run from `one` package
+    data_dir = os.path.join(content_root_dir, "data")  # Run from `one` package
 if not os.path.isdir(data_dir):
     data_dir = ""
 
