@@ -10,7 +10,7 @@ import argparse
 import os
 
 from chalearn import pretrained_dir
-from chalearn.ltd.scaled_yolov4 import run_train
+from chalearn.object_detection.scaled_yolov4 import run_train
 
 
 # MARK: - Main

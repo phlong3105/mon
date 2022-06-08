@@ -117,9 +117,9 @@ train_configs = {
     },
     "yolov4-p7_chalearnltdmonth_1536": {
         # "weights"     : os.path.join(yolov4_pretrained_dir, "yolov4-p7_coco.pt"),
-        "weights"     : os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
+        "weights"     : os.path.join(pretrained_dir,  "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
         "cfg"         : os.path.join(yolov4_root_dir, "models", "yolov4-p7.yaml"),
-        "data"        : os.path.join(current_dir, "chalearnltdmonth.yaml"),
+        "data"        : os.path.join(current_dir,     "chalearnltdmonth.yaml"),
         "hyp"         : os.path.join(yolov4_root_dir, "data", "hyp.scratch.yaml"),
         "epochs"      : 100,
         "batch_size"  : 8,

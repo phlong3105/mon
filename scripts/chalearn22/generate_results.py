@@ -9,8 +9,8 @@ from __future__ import annotations
 import argparse
 import os
 
-from chalearn.ltd.scaled_yolov4 import create_pkl_from_txts
-from chalearn.ltd.scaled_yolov4 import merge_pkls
+from chalearn.object_detection.scaled_yolov4 import create_pkl_from_txts
+from chalearn.object_detection.scaled_yolov4 import merge_pkls
 
 
 # MARK: - Main
