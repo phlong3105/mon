@@ -5,8 +5,6 @@ AI City Challenge
 =============================
 </div>
 
-## Overview
-
 Transportation is one of the largest segments that can benefit from actionable
 insights derived from data captured by sensors. Between traffic, signaling
 systems, transportation systems, infrastructure, and transit, the opportunity
@@ -22,13 +20,13 @@ cloud, which will accelerate the development and deployment of these models.
 
 ### [AIC21](https://www.aicitychallenge.org/2021-ai-city/)
 
-| Track                                                                |       <div style="width:100px">property</div>       |
+| Track                                                                |           <div style="width:100px"></div>           |
 |:---------------------------------------------------------------------|:---------------------------------------------------:|
 | [Track 1: City-Scale Multi-Camera Vehicle Tracking](aic21_track1.md) | [![Track 1](../../data/photo.png)](aic21_track1.md) |
 
 ### [AIC22](https://www.aicitychallenge.org/)
 
-| Track                                                                                                |       <div style="width:100px">property</div>       |
+| Track                                                                                                |           <div style="width:100px"></div>           |
 |:-----------------------------------------------------------------------------------------------------|:---------------------------------------------------:|
 | [Track 1: City-Scale Multi-Camera Vehicle Tracking](aic22_track1.md)                                 | [![Track 1](../../data/photo.png)](aic22_track1.md) |
 | [Track 2: Tracked-Vehicle Retrieval by Natural Language Descriptions](aic22_track2.md)               | [![Track 2](../../data/photo.png)](aic22_track2.md) |

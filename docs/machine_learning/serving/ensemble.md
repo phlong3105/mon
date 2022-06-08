@@ -5,8 +5,6 @@ Ensemble Models
 =============================
 </div>
 
-## Overview
-
 Ensemble models is a machine learning approach to combine multiple other models
 in the prediction process. Those models are referred to as base estimators. It
 is a solution to overcome the following technical challenges of building a

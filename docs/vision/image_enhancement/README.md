@@ -5,8 +5,6 @@ Image Enhancement
 =============================
 </div>
 
-## Overview
-
 Image enhancement is the procedure of improving the quality and the
 information content of original data before processing.
 

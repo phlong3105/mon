@@ -5,8 +5,6 @@ Learning
 =============================
 </div>
 
-## Overview
-
 Neural networks learn a mapping function from inputs to outputs that can be
 summarized as solving the problem of function approximation.
 

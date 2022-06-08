@@ -5,8 +5,6 @@ Model Serving
 =============================
 </div>
 
-## Overview
-
 A common grumble among data science or machine learning researchers or
 practitioners is that putting a model in production is difficult. As a result,
 some claim that a large percentage, 87%, of models never see the light of the

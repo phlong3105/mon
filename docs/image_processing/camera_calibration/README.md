@@ -5,8 +5,6 @@ Camera Calibration
 =============================
 </div>
 
-## Overview
-
 Camera calibration (also known as camera resectioning) is the process of
 estimating intrinsic and/or extrinsic parameters.
 
