@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/data_processing.png">
+<img src="data/data_processing.png" width="1000">
 
 Data Processing
 =============================
@@ -7,6 +7,6 @@ Data Processing
 
 ## Methods
 
-| Status                                   | Method | Technique | Date | Publication |
-|:-----------------------------------------|--------|-----------|------|-------------|
-| <img src="../../data/badge/reading.svg"> |        |           |      |             |
+| Status | Method | Technique | Date | Publication |
+|:------:|--------|-----------|------|-------------|
+|   📑   |        |           |      |             |

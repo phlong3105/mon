@@ -31,8 +31,12 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 ## Method
 
 <div align="center">
-    <img width="800" src="data/hinet_architecture.png"><br/>
-    <p align="justify">Proposed Half Instance Normalization Network (HINet). The encoder of each subnetwork contains Half Instance Normalization Blocks (HIN Block). For simplicity, we only show 3 layers of HIN Block in the figure, and HINet has a total of 5 layers. We adopt CSFF and SAM modules from MPRNet [56].</p>
+    <img src="data/hinet_architecture.png" width="800">
+    <p align="justify">Proposed Half Instance Normalization Network (HINet). 
+    The encoder of each subnetwork contains Half Instance Normalization Blocks 
+    (HIN Block). For simplicity, we only show 3 layers of HIN Block in the 
+    figure, and HINet has a total of 5 layers. We adopt CSFF and SAM modules 
+    from MPRNet [56].</p>
 </div>
 
 <details open>
@@ -113,7 +117,7 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
   influence of batch dimension, which can keep more scale information than BN.
 
 <div align="center">
-    <img width="400" src="data/hinet_hin_block.png"><br/>
+    <img src="data/hinet_hin_block.png" width="400"> 
 </div>
 
 - HIN block firstly takes the input features $F_{in} ∈ \mathbb{R}^{C_{in}×H×W}$
@@ -186,9 +190,9 @@ $Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
 <summary><b style="font-size:16px">Results</b></summary>
 
 <div align="center">
-    <img width="800" src="data/hinet_results_01.png"><br/>
-    <img width="500" src="data/hinet_results_02.png"><br/>
-    <img width="500" src="data/hinet_results_03.png"><br/>
+    <img src="data/hinet_results_01.png" width="800">
+    <img src="data/hinet_results_02.png" width="500">
+    <img src="data/hinet_results_03.png" width="500">
 </div>
 </details>
 

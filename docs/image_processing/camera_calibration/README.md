@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/camera_calibration.png">
+<img src="data/camera_calibration.png" width="1000">
 
 Camera Calibration
 =============================
@@ -20,6 +20,6 @@ and removes lens distortion, which degrades accuracy.
 
 ## Methods
 
-| Status                                | Method                                           | Architecture | Date       | Publication                    |
-|:--------------------------------------|--------------------------------------------------|--------------|------------|--------------------------------|
-| <img src="../../data/badge/read.svg"> | [**Camera&nbsp;Parameter**](camera_parameter.md) |              | 2022/03/01 | Towards&nbsp;Data&nbsp;Science |
+| Status | Method                                           | Architecture | Date       | Publication                    |
+|:------:|--------------------------------------------------|--------------|------------|--------------------------------|
+|   ✅    | [**Camera&nbsp;Parameter**](camera_parameter.md) |              | 2022/03/01 | Towards&nbsp;Data&nbsp;Science |

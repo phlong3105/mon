@@ -117,6 +117,6 @@ pivotal. Let’s briefly discuss them.
 
 ## Methods
 
-| Status                                | Method                          | Pattern                     | Date       | Publication    |
-|:--------------------------------------|---------------------------------|-----------------------------|------------|----------------|
-| <img src="../../data/badge/read.svg"> | [**ModelSoups**](modelsoups.md) | [**Ensemble**](ensemble.md) | 2021/02/02 | AAAI&nbsp;2021 |
+| Status | Method                          | Pattern                     | Date       | Publication    |
+|:------:|---------------------------------|-----------------------------|------------|----------------|
+|   ✅    | [**ModelSoups**](modelsoups.md) | [**Ensemble**](ensemble.md) | 2021/02/02 | AAAI&nbsp;2021 |

@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/image_classification.png">
+<img src="data/image_classification.png" width="1000" >
 
 Image Classification (Backbone)
 =============================
@@ -13,6 +13,6 @@ classification) labels to a given image.
 
 ## Methods
 
-| Status                                | Method                  | Architecture | Date       | Publication     |
-|:--------------------------------------|-------------------------|--------------|------------|-----------------|
-| <img src="../../data/badge/read.svg"> | [**CSPNet**](cspnet.md) | `Deep`       | 2020/06/25 | CVPRW&nbsp;2020 |
+| Status | Method                  | Architecture | Date       | Publication     |
+|:------:|-------------------------|--------------|------------|-----------------|
+|   ✅    | [**CSPNet**](cspnet.md) | Deep         | 2020/06/25 | CVPRW&nbsp;2020 |

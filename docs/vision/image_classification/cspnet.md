@@ -23,7 +23,7 @@ It can be applied to various networks such as DenseNet, ResNeXt and ResNet.
 **Later on, this CSPNet is used in YOLOv4 and Scaled-YOLOv4**.
 
 <div align="center">
-	<img width="800" src="data/cspnet_sota.png">
+	<img src="data/cspnet_sota.png "width="800">
 	<p>CSPNet not only reduces computation cost and memory usage of the 
     networks, but also benefit on inference speed and accuracy.</p>
 </div>
@@ -33,7 +33,7 @@ It can be applied to various networks such as DenseNet, ResNeXt and ResNet.
 ### 1. Duplicate Gradient Information in DenseNet
 
 <div align="center">
-	<img width="700" src="data/cspnet_densenet.png">
+	<img  src="data/cspnet_densenet.png" width="700">
 	<p>FLOPs of different computational layers with different model scaling factors.</p>
 </div>
 
@@ -41,13 +41,13 @@ In DenseNet, the output of the ith dense layer will be concatenated with the
 input of the ith dense layer. This concatenated outcome becomes the input of
 the (i+1)th dense layer:
 <div align="center">
-	<img width="200" src="data/cspnet_math_01.png">
+	<img src="data/cspnet_math_01.png" width="200">
 </div>
 
 If one makes use of a backpropagation algorithm to update weights, the
 equations of weight updating can be written as:
 <div align="center">
-	<img width="200" src="data/cspnet_math_02.png">
+	<img src="data/cspnet_math_02.png" width="200">
 </div>
 
 > It is found that large amount of gradient information are reused for updating
@@ -60,7 +60,7 @@ equations of weight updating can be written as:
 <summary><b style="font-size:16px">Cross Stage Partial DenseNet (CSPDenseNet)</b></summary>
 
 <div align="center">
-	<img width="700" src="data/cspnet_cspdensenet.png">
+	<img src="data/cspnet_cspdensenet.png" width="700">
 	<p>Cross Stage Partial DenseNet (CSPDenseNet).</p>
 </div>
 
@@ -71,8 +71,8 @@ combined with transmitted feature map to the next stage.
 The equations of feed-forward pass and weight updating of CSPDenseNet become:
 
 <div align="center">
-	<img width="250" src="data/cspnet_math_03.png"><br/>
-	<img width="300" src="data/cspnet_math_04.png">
+	<img src="data/cspnet_math_03.png" width="250"><br/>
+	<img src="data/cspnet_math_04.png" width="300">
 </div>
 
 - The gradients coming from the dense layers are separately integrated.
@@ -91,7 +91,7 @@ The equations of feed-forward pass and weight updating of CSPDenseNet become:
 <summary><b style="font-size:16px">Partial Dense Block Variants</b></summary>
 
 <div align="center">
-	<img width="700" src="data/cspnet_feature_fusion_strategies.png">
+	<img src="data/cspnet_feature_fusion_strategies.png" width="700">
 	<p>Different kind of feature fusion strategies.</p>
 </div>
 
@@ -114,7 +114,7 @@ Two variants are designed.
 <summary><b style="font-size:16px">Applying CSPNet to Other Architectures</b></summary>
 
 <div align="center">
-	<img width="500" src="data/cspnet_resne(x)t.png">
+	<img src="data/cspnet_resne(x)t.png" width="500">
 	<p>Applying CSPNet to ResNe(X)t.</p>
 </div>
 
@@ -127,7 +127,7 @@ is no need to introduce the bottleneck layer anymore.
 ### 3. Exact Fusion Model (EFM)
 
 <div align="center">
-	<img width="800" src="data/cspnet_pyramid_fusion_strategies.png">
+	<img src="data/cspnet_pyramid_fusion_strategies.png" width="800">
 	<p>Different feature pyramid fusion strategies.</p>
 </div>
 
@@ -146,7 +146,7 @@ problem, **the Maxout technique is incorporated to compress the feature maps**.
 <summary><b style="font-size:16px">CSPNet on ImageNet</b></summary>
 
 <div align="center">
-	<img width="500" src="data/cspnet_imagenet_ablation.png">
+	<img src="data/cspnet_imagenet_ablation.png" width="500">
 	<p>Ablation study of CSPNet on ImageNet.</p>
 </div>
 
@@ -167,7 +167,7 @@ problem, **the Maxout technique is incorporated to compress the feature maps**.
 <summary><b style="font-size:16px">EFM on MS-COCO</b></summary>
 
 <div align="center">
-	<img width="500" src="data/cspnet_coco_ablation.png">
+	<img src="data/cspnet_coco_ablation.png" width="500">
 	<p>Ablation study of EFM on MS COCO.</p>
 </div>
 
@@ -189,7 +189,7 @@ problem, **the Maxout technique is incorporated to compress the feature maps**.
 <summary><b style="font-size:16px">ImageNet Image Classification</b></summary>
 
 <div align="center">
-	<img width="500" src="data/cspnet_imagenet_sota.png">
+	<img src="data/cspnet_imagenet_sota.png" width="500">
 	<p>Compare with state-of-the-art methods on ImageNet.</p>
 </div>
 
@@ -208,7 +208,7 @@ CSPResNeXt-50 also outperforms Res2Net-50 and Res2NeXt-50.
 <summary><b style="font-size:16px"> MS-COCO Object Detection</b></summary>
 
 <div align="center">
-	<img width="800" src="data/cspnet_coco_sota.png">
+	<img src="data/cspnet_coco_sota.png" width="800">
 	<p>Compare with state-of-the-art methods on MS-COCO Object Detection</p>
 </div>
 
@@ -238,7 +238,7 @@ the frame rate by 19 fps while maintaining the same level of AP50.
 <summary><b style="font-size:16px">Inference Rate</b></summary>
 
 <div align="center">
-	<img width="500" src="data/cspnet_inference_rate.png">
+	<img src="data/cspnet_inference_rate.png" width="500">
 	<p>Inference rate on mobile GPU (mGPU) and CPU real-time object detectors 
     (in fps).</p>
 </div>

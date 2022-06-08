@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/yolor.png">
+<img src="data/yolor.png" width="1000">
 
 You Only Learn One Representation: Unified Network for Multiple Tasks
 =============================

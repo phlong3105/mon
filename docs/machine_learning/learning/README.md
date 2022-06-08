@@ -1,5 +1,5 @@
 <div align="center">
-<img src="data/training.png" width="800">
+<img src="data/training.png" width="1000">
 
 Learning
 =============================
@@ -178,6 +178,6 @@ involves choosing a number of components and hyperparameters.
 
 ## Methods
 
-| Status                                   | Method                  | Technique                                              | Date       | Publication |
-|:-----------------------------------------|-------------------------|--------------------------------------------------------|------------|-------------|
-| <img src="../../data/badge/reading.svg"> | [**DecAug**](decaug.md) | [**Out-of-Distribution (OoD) Generalization**](ood.md) | 2021/05/10 | arXiv       |
+| Status | Method                  | Technique                                              | Date       | Publication |
+|:------:|-------------------------|--------------------------------------------------------|------------|-------------|
+|   📑   | [**DecAug**](decaug.md) | [**Out-of-Distribution (OoD) Generalization**](ood.md) | 2021/05/10 | arXiv       |

@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/transformation.png">
+<img src="data/transformation.png" width="1000">
 
 What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 =============================
@@ -31,7 +31,7 @@ transformations, we first need to understand **4 different coordinate systems**.
 <summary><b style="font-size:16px">1. World Coordinate System (3D)</b></summary>
 
 <div align="center">
-    <img width="600" src="data/world_coordinate_system.png"><br/>
+    <img src="data/world_coordinate_system.png" width="600">
 </div>
 
 **[Xw, Yw, Zw]**: It is a 3D basic cartesian coordinate system with arbitrary
@@ -45,7 +45,7 @@ can be denoted as Pw = (Xw, Yw, Zw).
 <summary><b style="font-size:16px">2. Object/Camera Coordinate System (3D)</b></summary>
 
 <div align="center">
-    <img width="600" src="data/camera_coordinate_system.png"><br/>
+    <img src="data/camera_coordinate_system.png" width="600"> 
 </div>
 
 **[Xc, Yc, Zc]**: It's the coordinate system that measures relative to the
@@ -56,7 +56,7 @@ the camera lens (camera principal axis) as shown in the image above (z-axis
 facing inward to the camera lens).
 
 <div align="center">
-    <img width="600" src="data/camera_extrinsic_matrix.png"><br/>
+    <img src="data/camera_extrinsic_matrix.png" width="600"> 
 </div>
 
 One can go from the world coordinate system to object coordinate system
@@ -74,7 +74,7 @@ One can go from the world coordinate system to object coordinate system
 <summary><b style="font-size:16px">3. Image Coordinate System (2D) [Pinhole Model]</b></summary>
 
 <div align="center">
-    <img width="600" src="data/image_coordinate_system.png"><br/>
+    <img src="data/image_coordinate_system.png" width="600"> 
 </div>
 
 **[Xi, Yi]**: A 2D coordinate system that has the 3D points in the camera
@@ -97,9 +97,9 @@ a camera with a Pinhole Model.
   alpha and beta respectively).
 
 <div align="center">
-    <img width="600" src="data/pinhole_camera_01.png"><br/>
-    <img width="600" src="data/pinhole_camera_02.png"><br/>
-    <img width="600" src="data/pinhole_camera_03.png"><br/>
+    <img src="data/pinhole_camera_01.png" width="600">
+    <img src="data/pinhole_camera_02.png" width="600">
+    <img src="data/pinhole_camera_03.png" width="600">
 </div>
 
 Hence, in the matrix form, we have the following transformation matrix from the
@@ -108,7 +108,7 @@ camera coordinate system to the image coordinate system. This transformation
 intrinsic matrix
 
 <div align="center">
-  <img width="600" src="data/pinhole_camera_04.png"><br/>
+  <img src="data/pinhole_camera_04.png" width="600">
 </div>
 </details>
 
@@ -116,7 +116,7 @@ intrinsic matrix
 <summary><b style="font-size:16px">4. Pixel Coordinate System (2D)</b></summary>
 
 <div align="center">
-    <img width="600" src="data/pixel_coordinate_system_01.png"><br/>
+    <img src="data/pixel_coordinate_system_01.png" width="600">
 </div>
 
 **[u, v]**: This represents the integer values by discretizing the points in the
@@ -130,14 +130,14 @@ The pixel coordinates system has the origin at the left-top corner, hence a
 translation operator (c_x, c_y) is also required alongside the discretization.
 
 <div align="center">
-    <img width="600" src="data/pixel_coordinate_system_02.png"><br/>
+    <img src="data/pixel_coordinate_system_02.png" width="600">
 </div>
 
 The complete transformation from the image coordinate system to pixel
 coordinate system can be shown in the matrix form as below.
 
 <div align="center">
-    <img width="600" src="data/pixel_coordinate_system_03.png"><br/>
+    <img src="data/pixel_coordinate_system_03.png" width="600">
 </div>
 
 Sometimes, the 2D image plane is not a rectangle but rather is skewed i.e. the
@@ -152,7 +152,7 @@ converts points from the ideal rectangular plane to the skewed plane can be
 found as below
 
 <div align="center">
-    <img width="600" src="data/pixel_coordinate_system_04.png"><br/>
+    <img src="data/pixel_coordinate_system_04.png" width="600">
 </div>
 
 These two transformation matrices i.e. **transformation from rectangular image
@@ -164,9 +164,9 @@ Combining the three transformation matrices yields the camera extrinsic matrix
 as shown below
 
 <div align="center">
-    <img width="600" src="data/camera_intrinsic_matrix_01.png"><br/>
-    <img width="600" src="data/camera_intrinsic_matrix_02.png"><br/>
-    <img width="600" src="data/camera_intrinsic_matrix_03.png"><br/>
+    <img src="data/camera_intrinsic_matrix_01.png" width="600">
+    <img src="data/camera_intrinsic_matrix_02.png" width="600">
+    <img src="data/camera_intrinsic_matrix_03.png" width="600">
 </div>
 </details>
 

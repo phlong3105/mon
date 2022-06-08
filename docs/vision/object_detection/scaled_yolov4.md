@@ -21,7 +21,7 @@ resolution, but also structure of the network, which finally forms
 Scaled-YOLOv4.
 
 <div align="center">
-	<img width="700" src="data/scaled_yolov4_sota.png">
+	<img src="data/scaled_yolov4_sota.png" width="700">
 	<p>Chart of Accuracy (vertical axis) and Latency (horizontal axis) on a Tesla V100 GPU (Volta) with batch = 1 without using TensorRT.</p>
 </div>
 
@@ -37,7 +37,7 @@ know them before Scaled-YOLOv4.
 <summary><b style="font-size:16px">General Principle of Model Scaling</b></summary>
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_flop.png">
+	<img src="data/scaled_yolov4_flop.png" width="400">
 	<p>FLOPs of different computational layers with different model scaling factors.</p>
 </div>
 
@@ -51,7 +51,7 @@ vary, the corresponding changes on FLOPs are shown as above table.
 > They respectively show square, linear, and square increase.
 
 <div align="center">
-	<img width="350" src="data/scaled_yolov4_flop_csp.png">
+	<img src="data/scaled_yolov4_flop_csp.png" width="350">
 	<p>FLOPs of different computational layers with/without CSP-ization.</p>
 </div>
 
@@ -74,11 +74,11 @@ vary, the corresponding changes on FLOPs are shown as above table.
 <summary><b style="font-size:16px">Scaling Tiny Models for Low-End Devices</b></summary>
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_osanet_dense_layer.png">
+	<img src="data/scaled_yolov4_osanet_dense_layer.png" width="400">
 	<p>Dense layer in DenseNet & OSA layer in VoVNet/OSANet.</p>
 </div>
 <div align="center">
-	<img width="300" src="data/scaled_yolov4_osanet_dense_layer_flop.png">
+	<img src="data/scaled_yolov4_osanet_dense_layer_flop.png" width="300">
 	<p>Dense layer in DenseNet & OSA layer in VoVNet/OSANet.</p>
 </div>
 
@@ -93,8 +93,9 @@ vary, the corresponding changes on FLOPs are shown as above table.
 > computation complexity.
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_osanet_nc.png">
-	<p>Number of channel of OSANet, CSPOSANet, and CSPOSANet with partial in computational block (PCB).</p>
+	<img src="data/scaled_yolov4_osanet_nc.png" width="400">
+	<p>Number of channel of OSANet, CSPOSANet, and CSPOSANet with partial in 
+    computational block (PCB).</p>
 </div>
 
 - A new concept of gradient truncation is performed between computational block
@@ -107,7 +108,7 @@ vary, the corresponding changes on FLOPs are shown as above table.
 > The CSPOSANet is designed to **dynamically adjust the channel allocation**.
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_osanet_cio.png">
+	<img src="data/scaled_yolov4_osanet_cio.png" width="400">
 	<p>The CIO of OSA, CSP, and the designed CSPOSANet.</p>
 </div>
 - Minimize Convolutional Input/Output (CIO) is an indicator that can measure
@@ -121,7 +122,7 @@ the status of DRAM IO.
 <summary><b style="font-size:16px">Scaling Large Models for High-End GPUs</b></summary>
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_model_scaling_factors.png">
+	<img src="data/scaled_yolov4_model_scaling_factors.png" width="400">
 	<p>Model scaling factors of different parts of object detectors.</p>
 </div>
 
@@ -136,7 +137,7 @@ the status of DRAM IO.
 receptive field of the feature vector.**
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_effect_of_receptive_field.png">
+	<img src="data/scaled_yolov4_effect_of_receptive_field.png" width="400">
 	<p>Effect of receptive field caused by different model scaling factors.</p>
 </div>
 
@@ -170,7 +171,7 @@ converted into original Darknet residual layer.
 <summary><b style="font-size:16px">Neck</b></summary>
 
 <div align="center">
-	<img width="500" src="data/scaled_yolov4_spp.png">
+	<img src="data/scaled_yolov4_spp.png" width="500">
 	<p>Computational blocks of reversed Dark layer (SPP) and reversed CSP dark 
 	layers (SPP).</p>
 </div>
@@ -189,7 +190,7 @@ computation list group of the CSPPAN.
 ### 3. Scaled-YOLOv4: YOLOv4-tiny
 
 <div align="center">
-	<img width="350" src="data/scaled_yolov4_tiny.png">
+	<img src="data/scaled_yolov4_tiny.png" width="350">
 	<p>Computational block of YOLOv4-tiny.</p>
 </div>
 
@@ -203,7 +204,7 @@ YOLOv4.
 ### 4. Scaled-YOLOv4: YOLOv4-large
 
 <div align="center">
-	<img width="700" src="data/scaled_yolov4_large.png">
+	<img src="data/scaled_yolov4_large.png" width="700">
 	<p>Computational block of YOLOv4-tiny.</p>
 </div>
 
@@ -226,7 +227,7 @@ is designed and can be scaled up to **YOLOv4-P6** and **YOLOv4-P7**.
 <summary><b style="font-size:16px">CSP-ized Model</b></summary>
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_ablation_cspized_models.png">
+	<img src="data/scaled_yolov4_ablation_cspized_models.png" width="400">
 	<p>Ablation study of CSP-ized models @ 608x608.</p>
 </div>
 
@@ -250,7 +251,7 @@ is designed and can be scaled up to **YOLOv4-P6** and **YOLOv4-P7**.
 <summary><b style="font-size:16px">YOLOv4-tiny</b></summary>
 
 <div align="center">
-	<img width="350" src="data/scaled_yolov4_tiny_ablation.png">
+	<img src="data/scaled_yolov4_tiny_ablation.png" width="350">
 	<p>Ablation study of partial at different position in computational block.</p>
 </div>
 
@@ -267,7 +268,7 @@ higher AP.
 <summary><b style="font-size:16px">YOLOv4-large</b></summary>
 
 <div align="center">
-	<img width="350" src="data/scaled_yolov4_large_ablation.png">
+	<img src="data/scaled_yolov4_large_ablation.png" width="350">
 	<p>Ablation study of training schedule with/without fine-tuning.</p>
 </div>
 
@@ -284,7 +285,7 @@ epochs for fine-tuning using stronger data augmentation method.
 <summary><b style="font-size:16px">Large-Model</b></summary>
 
 <div align="center">
-	<img width="700" src="data/scaled_yolov4_large_results.png">
+	<img src="data/scaled_yolov4_large_results.png" width="700">
 	<p>Comparison of state-of-the-art object detectors</p>
 </div>
 
@@ -304,7 +305,7 @@ faster in terms of inference speed**.
 > YOLOv4-P7, are Pareto optimal on all indicators**.
 
 <div align="center">
-	<img width="300" src="data/scaled_yolov4_large_tta_results.png">
+	<img src="data/scaled_yolov4_large_tta_results.png" width="300">
 	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
 </div>
 
@@ -312,7 +313,7 @@ With **test-time augmentation (TTA)**, YOLOv4-P5, YOLOv4-P6, and YOLOv4-P7 gets
 1.1%, 0.7%, and 0.5% **higher AP**, respectively.
 
 <div align="center">
-	<img width="500" src="data/scaled_yolov4_p7_resolutions.png">
+	<img src="data/scaled_yolov4_p7_resolutions.png" width="500">
 	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
 </div>
 
@@ -332,12 +333,12 @@ YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 represent the model which has removed {P7} and
 <summary><b style="font-size:16px">Tiny-Model</b></summary>
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_tiny_results.png">
+	<img src="data/scaled_yolov4_tiny_results.png" width="400">
 	<p>Comparison of state-of-the-art tiny models.</p>
 </div>
 
 <div align="center">
-	<img width="400" src="data/scaled_yolov4_tiny_fps.png">
+	<img src="data/scaled_yolov4_tiny_fps.png" width="400">
 	<p>FPS of YOLOv4-tiny on embedded devices.</p>
 </div>
 

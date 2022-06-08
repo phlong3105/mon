@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800" src="data/deep_learning.png">
+<img src="data/deep_learning.png" width="1000">
 
 Deep Learning
 =============================
@@ -7,6 +7,6 @@ Deep Learning
 
 ## Methods
 
-| Status                                   | Method | Technique | Date | Publication |
-|:-----------------------------------------|--------|-----------|------|-------------|
-| <img src="../../data/badge/reading.svg"> |        |           |      |             |
+| Status | Method | Technique | Date | Publication |
+|:------:|--------|-----------|------|-------------|
+|   📑   |        |           |      |             |

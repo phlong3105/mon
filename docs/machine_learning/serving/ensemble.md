@@ -1,5 +1,5 @@
 <div align="center">
-<img src="data/ensemble.png" width="800">
+<img src="data/ensemble.png" width="1000">
 
 Ensemble Models
 =============================

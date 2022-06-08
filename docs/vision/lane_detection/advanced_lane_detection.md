@@ -23,7 +23,7 @@ Image transformation is necessary for camera calibration and for perspective
 transform to obtain a bird's eye view of the road.
 
 <div align="center">
-	<img width="400" src="data/lane_detection.gif">
+	<img src="data/lane_detection.gif" width="400">
 </div>
 
 ## Method
@@ -46,7 +46,7 @@ OpenCV `undistort` function is used to transform the images using the camera
 matrix and distortion coefficients.
 
 <div align="center">
-	<img width="700" src="data/undistorted_chessboard.png">
+	<img src="data/undistorted_chessboard.png" width="700">
 </div>
 
 The result of the camera calibration technique is visible when comparing these
@@ -55,7 +55,7 @@ the road picture it's more subtle. Nevertheless, an undistorted picture would
 lead to an incorrect road curvature calculation.
 
 <div align="center">
-	<img width="700" src="data/undistorted_road.png">
+	<img src="data/undistorted_road.png" width="700">
 </div>
 
 ### 2. Perspective Transform from Camera Angle to Bird's Eye View
@@ -70,7 +70,7 @@ destination
 points are identified directly from the image for the perspective transform.
 
 <div align="center">
-	<img width="700" src="data/ending_points.png">
+	<img src="data/ending_points.png" width="700">
 </div>
 
 OpenCV provides perspective transform functions to calculate the transformation
@@ -79,7 +79,7 @@ Using `warpPerspective` function, the bird's eye view perspective transform is
 performed.
 
 <div align="center">
-	<img width="700" src="data/warp_perspective.png">
+	<img src="data/warp_perspective.png" width="700">
 </div>
 
 ### 3. Process Binary Thresholded Images
@@ -104,7 +104,7 @@ The fourth transformation is on the hue component with values from 10 to 25,
 which were identified as corresponding to yellow.
 
 <div align="center">
-	<img width="800" src="data/binary_threshold.png">
+	<img src="data/binary_threshold.png" width="800">
 </div>
 
 ### 4. Lane Line Detection Using Histogram
@@ -131,7 +131,7 @@ Here, the identified left and right line pixels are marked in red and blue
 respectively. The second degree polynomial is traced on the resulting image.
 
 <div align="center">
-	<img width="800" src="data/fit_poly.png">
+	<img src="data/fit_poly.png" width="800">
 </div>
 
 ### 5. Detection of Lane Lines Based on Previous Cycle
@@ -151,7 +151,7 @@ are fitted with a second degree polynomial function for each left and right
 side.
 
 <div align="center">
-	<img width="800" src="data/prev_poly.png">
+	<img src="data/prev_poly.png width="800"">
 </div>
 
 ### 6. Calculate Vehicle Position and Curve Radius

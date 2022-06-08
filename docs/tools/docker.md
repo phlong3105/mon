@@ -1,5 +1,5 @@
 <div align="center">
-<img width="800px" src="data/docker.png">
+<img src="data/docker.png" width="1000px">
 
 Docker
 =============================
@@ -46,7 +46,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 <details>
 <summary><b style="font-size:18px">NVIDIA Docker</b></summary>
 
-<div align="center"><img width="480" src="data/nvidia_docker.png"></div>
+<div align="center"><img src="data/nvidia_docker.png" width="480"></div>
 
 ```shell
 # Setup the stable repository and the GPG key

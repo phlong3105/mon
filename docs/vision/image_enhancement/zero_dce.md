@@ -32,7 +32,7 @@ only 30 minutes for training.
 ## Method
 
 <div align="center">
-    <img width="800" src="data/zero_dce_framework.png"><br/>
+    <img src="data/zero_dce_framework.png" width="800">
     <p align="justify">The pipeline of our method. (a) The framework of 
 	Zero-DCE. A DCE-Net is devised to estimate a set of best-fitting 
 	Light-Enhancement curves (LE-curves: LE(I(x);α)=I(x)+αI(x)(1-I(x))) 
@@ -49,8 +49,10 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">1. Contribution of Each Loss</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_ablation_01.png"><br/>
-    <p align="justify">Ablation study of the contribution of each loss (spatial consistency loss Lspa, exposure control loss Lexp, color constancy loss Lcol, illumination smoothness loss LtvA).</p>
+    <img src="data/zero_dce_ablation_01.png" width="600">
+    <p align="justify">Ablation study of the contribution of each loss 
+	(spatial consistency loss Lspa, exposure control loss Lexp, color constancy 
+	loss Lcol, illumination smoothness loss LtvA).</p>
 </div>
 </details>
 
@@ -58,8 +60,10 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">2. Effect of Parameter Settings</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_ablation_02.png"><br/>
-    <p align="justify">Ablation study of the effect of parameter settings. l-f-n represents the proposed Zero-DCE with l convolutional layers, f feature maps of each layer (except the last layer), and n iterations.</p>
+    <img src="data/zero_dce_ablation_02.png" width="600">
+    <p align="justify">Ablation study of the effect of parameter settings. 
+	l-f-n represents the proposed Zero-DCE with l convolutional layers, f 
+	feature maps of each layer (except the last layer), and n iterations.</p>
 </div>
 </details>
 
@@ -67,8 +71,13 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">3. Impact of Training Data</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_ablation_03.png"><br/>
-    <p align="justify">To test the impact of training data, we retrain the Zero-DCE on different datasets: 1) only 900 low-light images out of 2,422 images in the original training set (Zero-DCELow), 2) 9,000 unlabeled low-light images provided in the DARK FACE dataset (Zero-DCELargeL), and 3) 4800 multi-exposure images from the data augmented combination of Part1 and Part2 subsets in the SICE dataset (Zero-DCELargeLH).</p>
+    <img src="data/zero_dce_ablation_03.png" width="600">
+    <p align="justify">To test the impact of training data, we retrain the 
+	Zero-DCE on different datasets: 1) only 900 low-light images out of 2,422 
+	images in the original training set (Zero-DCELow), 2) 9,000 unlabeled 
+	low-light images provided in the DARK FACE dataset (Zero-DCELargeL), and 
+	3) 4800 multi-exposure images from the data augmented combination of Part1 
+	and Part2 subsets in the SICE dataset (Zero-DCELargeLH).</p>
 </div>
 </details>
 
@@ -76,8 +85,9 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">4. Advantage of Three-channel Adjustment</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_ablation_04.png"><br/>
-    <p align="justify">Ablation study of the advantage of three-channel adjustment (RGB, CIE Lab, YCbCr color spaces).</p>
+    <img src="data/zero_dce_ablation_04.png" width="600">
+    <p align="justify">Ablation study of the advantage of three-channel 
+	adjustment (RGB, CIE Lab, YCbCr color spaces).</p>
 </div>
 </details>
 
@@ -87,7 +97,7 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">1. Visual Comparisons on Typical Low-light Images</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_results_01.png"><br/>
+    <img src="data/zero_dce_results_01.png" width="600">
 </div>
 </details>
 
@@ -95,7 +105,7 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">2. Visual Face Detection Results Before and After Enhanced by Zero-DCE</b></summary>
 
 <div align="center">
-    <img width="400" src="data/zero_dce_results_02.png"><br/>
+    <img src="data/zero_dce_results_02.png" width="400">
 </div>
 </details>
 
@@ -103,7 +113,7 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">3. Real Low-light Video with Variational Illumination Enanced by Zero-DCE</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_results_03.gif"><br/>
+    <img src="data/zero_dce_results_03.gif" width="600">
 </div>
 </details>
 
@@ -111,7 +121,7 @@ only 30 minutes for training.
 <summary><b style="font-size:16px">4. Self-training (taking first 100 frames as training data) for Low-light Video Enhancement</b></summary>
 
 <div align="center">
-    <img width="600" src="data/zero_dce_results_04.gif"><br/>
+    <img src="data/zero_dce_results_04.gif" width="600">
 </div>
 </details>
 
