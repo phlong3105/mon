@@ -1,7 +1,7 @@
 <div align="center">
 <img src="data/training.png" width="800">
 
-Training-Testing Models
+Learning
 =============================
 </div>
 
