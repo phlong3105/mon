@@ -14,24 +14,11 @@ practices when applying in competitive challenges and real-world applications.
 
 ### [Machine Learning](machine_learning/README.md)
 
-| [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) |
-|:---------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|
-| [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) | [**Data Processing** <br> ![Data Processing](data/photo.png)](machine_learning/data_processing/README.md) |
-
-
-
-|            [Data Processing](machine_learning/data_processing/README.md)            |        [Training-Testing](machine_learning/training/README.md)         |     [Model Serving](machine_learning/serving/README.md)     |
-|:-----------------------------------------------------------------------------------:|:----------------------------------------------------------------------:|:-----------------------------------------------------------:|
-| ![Data Processing](machine_learning/data_processing/data/data_processing_small.gif) | ![Training-Testing](machine_learning/training/data/training_small.gif) | ![Model Serving](machine_learning/serving/data/serving.gif) |
-
-| [Anomaly Detection](machine_learning/anomaly_detection/README.md) | [Classification](machine_learning/classification/README.md) | [Clustering](machine_learning/clustering/README.md) | [Deep Learning](machine_learning/deep_learning/README.md) | [Dimensionality Reduction](machine_learning/dimensionality_reduction/README.md) | [Neural Network](machine_learning/neural_network/README.md) |
-|:-----------------------------------------------------------------:|:-----------------------------------------------------------:|:---------------------------------------------------:|:---------------------------------------------------------:|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------:|
-|               ![Anomaly Detection](data/photo.png)                |              ![Classification](data/photo.png)              |            ![Clustering](data/photo.png)            |             ![Deep Learning](data/photo.png)              |                   ![Dimensionality Reduction](data/photo.png)                   |              ![Neural Network](data/photo.png)              |
-
-| [Regression](machine_learning/regression/README.md) | 
-|:---------------------------------------------------:|
-|            ![Regression](data/photo.png)            | 
-
+| [**Data Processing** <br> ![Data Processing](machine_learning/data_processing/data/data_processing_small.gif)](machine_learning/data_processing/README.md) | [**Training** <br> ![Training](machine_learning/training/data/training_small.gif)](machine_learning/training/README.md) | [**Serving** <br> ![Data Processing](machine_learning/serving/data/serving.gif)](machine_learning/serving/README.md) |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------:|
+|                           [**Classification** <br> ![Classification](data/photo.png)](machine_learning/classification/README.md)                           |             [**Clustering** <br> ![Data Processing](data/photo.png)](machine_learning/clustering/README.md)             |         [**Deep Learning** <br> ![Deep Learning](data/photo.png)](machine_learning/deep_learning/README.md)          |
+|         [**Dimensionality <br> Reduction** <br> ![Dimensionality Reduction](data/photo.png)](machine_learning/dimensionality_reduction/README.md)          |         [**Neural Network** <br> ![Neural Network](data/photo.png)](machine_learning/neural_network/README.md)          |              [**Regression** <br> ![Regression](data/photo.png)](machine_learning/regression/README.md)              |
+                                                                                                                                                                                                                                                                                         
 ### [Vision](vision/README.md)
 
 |             [Action Recognition](vision/action_recognition/README.md)              |            [Action Detection](vision/action_detection/README.md)             | [Image Classification](vision/image_classification/README.md) |             [Image Enhancement](vision/image_enhancement/README.md)             |               [Instance Segmentation](vision/instance_segmentation/README.md)               |           [Lane Detection](vision/lane_detection/README.md)            |
