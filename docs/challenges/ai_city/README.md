@@ -1,9 +1,9 @@
 <div align="center">
-	<img src="data/ai_city.gif" width="1000">
-</div>
+<img src="data/ai_city.gif" width="1000">
 
 AI City Challenge
 =============================
+</div>
 
 ## Overview
 
