@@ -18,10 +18,9 @@ https://user-images.githubusercontent.com/6915498/172331427-f9b7a0c8-d8d3-470d-9
 ## Highlight
 
 Recently, researchers from various universities and companies published a paper
-on ArXiv, introducing a concept called **Model Soups**.
-
-Model Soups are supposed to boost the accuracy of machine learning models by
-averaging the weights of models trained with various hyperparameters.
+on ArXiv, introducing a concept called **Model Soups**. Model Soups are supposed
+to boost the accuracy of machine learning models by averaging the weights of
+models trained with various hyperparameters.
 
 ## Method
 
