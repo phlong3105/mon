@@ -38,10 +38,8 @@ Some textbooks refer to such architecture as **meta-algorithms**.
   <img src="data/ensemble_algorithms.png" width="600">
   <p>Diversifying the model predictions using multiple algorithms.</p>
 </div>
-
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Ensemble Learning</b></summary>
 
