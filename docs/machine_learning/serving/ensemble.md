@@ -19,7 +19,7 @@ single estimator:
 - Features noise and bias: The model relies heavily on one or a few features
   while making a prediction.
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Ensemble Algorithms</b></summary>
 
 A single algorithm may not make the perfect prediction for a given dataset.
@@ -40,7 +40,7 @@ Some textbooks refer to such architecture as **meta-algorithms**.
 </div>
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Ensemble Learning</b></summary>
 
 Ensemble learning is a combination of several machine learning models in one
@@ -63,7 +63,7 @@ of mapping the features with variant decision boundaries.
 
 ## Basic Ensemble Techniques
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Max Voting</b></summary>
 
 The max voting method is generally used for classification problems. In this
@@ -83,7 +83,7 @@ voting would be something like this:
  
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Averaging</b></summary>
 
 In this method, we take an average of predictions from all the models and use it
@@ -100,7 +100,7 @@ i.e. (5+4+5+4+4)/5 = 4.4
 
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Weighted Average</b></summary>
 
 All models are assigned different weights defining the importance of each model
@@ -120,14 +120,14 @@ The result is calculated as [(5*0.23) + (4*0.23) + (5*0.18) + (
 
 ## Advanced Ensemble Techniques
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Stacking</b></summary>
 
 Stacking is a learning technique that uses predictions from multiple models (for
 example decision tree, knn or svm) to build a new model. This model is used for
 making predictions on the test set.
 
-<details open>
+<details>
 <summary>Below is a step-wise explanation for a simple stacked ensemble</summary>
 
 | Step                                                                                                                                                              |                                      | 
@@ -141,7 +141,7 @@ making predictions on the test set.
 </details>
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Blending</b></summary>
 
 Blending follows the same approach as **stacking** but uses only a holdout (
@@ -149,7 +149,7 @@ validation) set from the train set to make predictions. In other words, unlike
 stacking, the predictions are made on the holdout set only. The holdout set and
 the predictions are used to build a model which is run on the test set.
 
-<details open>
+<details>
 <summary>Here is a detailed explanation of the blending process:</summary>
 
 | Step                                                                                                                                                                     |                                      | 
@@ -161,7 +161,7 @@ the predictions are used to build a model which is run on the test set.
 </details>
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Bagging</b></summary>
 
 The idea behind bagging is combining the results of multiple models (for
@@ -198,7 +198,7 @@ for bagging may be less than the original set.
 
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Boosting</b></summary>
 
 Before we go further, here’s another question for you: If a data point is
@@ -215,7 +215,7 @@ the previous model.
 > dataset, but they work well for some part of the dataset. Thus, each model
 > actually boosts the performance of the ensemble.
 
-<details open>
+<details>
 <summary>Let’s understand the way boosting works in the below steps:</summary>
 
 | Step                                                                                                                                                                                                                                                                                                                                                                                         |                                      | 

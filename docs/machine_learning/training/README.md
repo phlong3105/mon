@@ -26,7 +26,7 @@ the technique in general and is by far the most time-consuming, both in terms
 of effort required to configure the process and computational complexity
 required to execute the process.
 
-<details open>
+<details>
 <summary><b style="font-size:19px">Neural Nets Learn a Mapping Function</b></summary>
 
 Deep learning neural networks learn a mapping function.
@@ -54,7 +54,7 @@ during training. This ability to work well on specific examples and new examples
 is called the ability of the model to [**generalize**](generalization.md).
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:19px">Learning Network Weights Is Hard</b></summary>
 
 > Finding the parameters for neural networks in general is hard. In fact,
@@ -91,7 +91,7 @@ the model. A naive algorithm that navigates the error is likely to become
 misled, lost, and ultimately stuck, resulting in a poorly performing model.
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:19px">Navigating the Non-Convex Error Surface</b></summary>
 
 Neural network models can be thought to learn by navigating a **non-convex
@@ -127,7 +127,7 @@ gradient. As such, the algorithm used to train neural networks is also often
 referred to as simply backpropagation.
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:19px">Components of the Learning Algorithm</b></summary>
 
 Training a deep learning neural network model using SGD with backpropagation

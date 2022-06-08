@@ -24,7 +24,7 @@ models trained with various hyperparameters.
 
 ## Method
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Current Training Workflow</b></summary>
 
 Usually, after having picked out a model, data scientists will start to train
@@ -36,7 +36,7 @@ This one configuration will then be used while all other configurations (which
 might only be slightly worse than the best one) are discarded.
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Model Soups</b></summary>
 
 > Model Soups allow averaging the weights of the models without requiring
@@ -48,7 +48,7 @@ Wortsman et al. [1] came up with three different approaches to so-called Model
 Soups: **Uniform Soups**, **Greedy Soups**, **Learned Soups**.
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Uniform Soups</b></summary>
 
 Uniform Soups average the weights of all trained models. In the experiments
@@ -56,7 +56,7 @@ conducted, this method mostly ended up achieving a worse performance than the
 best performing model alone.
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Greedy Soups</b></summary>
 
 Greedy soups rely on ordering the different models, starting with the best one.
@@ -67,7 +67,7 @@ model will be added to the final model.
 > performance than the single best one would have on its own.
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Learned Soups</b></summary>
 
 The learned soup uses gradient-based minibatch optimisation. The main idea is to

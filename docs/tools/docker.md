@@ -9,7 +9,7 @@ Docker
 
 ## Installation
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Docker</b></summary>
 
 1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including
@@ -43,7 +43,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">NVIDIA Docker</b></summary>
 
 <div align="center"><img width="480" src="data/nvidia_docker.png"></div>

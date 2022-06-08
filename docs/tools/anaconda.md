@@ -9,7 +9,7 @@ Anaconda
 
 ## Installation
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Ubuntu and MacOS</b></summary>
 
 If the path is not automatically add to the `.bashrc` file. So in this case,
@@ -42,7 +42,7 @@ unset __conda_setup
 
 </details>
 
-<details open>
+<details>
 <summary><b style="font-size:18px">Windows</b></summary>
 
 Make sure to add the path to `anaconda3/bin` and `anaconda3/lib` in `PATH`
