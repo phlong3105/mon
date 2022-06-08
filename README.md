@@ -4,9 +4,9 @@
 One Research Framework
 =============================
 
+<a href="docs/README.md"><b>Handbook</b></a> •
 <a href="#installation">Installation</a> •
 <a href="#how-to-use">How To Use</a> •
-<a href="docs/README.md">Handbook</a> •
 <a href="#citation">Citation</a> •
 <a href="#contact">Contact</a>
 
