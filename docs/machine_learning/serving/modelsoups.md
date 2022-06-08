@@ -36,7 +36,6 @@ This one configuration will then be used while all other configurations (which
 might only be slightly worse than the best one) are discarded.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Model Soups</b></summary>
 
@@ -49,7 +48,6 @@ Wortsman et al. [1] came up with three different approaches to so-called Model
 Soups: **Uniform Soups**, **Greedy Soups**, **Learned Soups**.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Uniform Soups</b></summary>
 
@@ -58,7 +56,6 @@ conducted, this method mostly ended up achieving a worse performance than the
 best performing model alone.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Greedy Soups</b></summary>
 
@@ -70,7 +67,6 @@ model will be added to the final model.
 > performance than the single best one would have on its own.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Learned Soups</b></summary>
 

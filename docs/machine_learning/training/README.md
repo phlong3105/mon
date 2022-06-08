@@ -26,7 +26,6 @@ the technique in general and is by far the most time-consuming, both in terms
 of effort required to configure the process and computational complexity
 required to execute the process.
 
-<br>
 <details open>
 <summary><b style="font-size:19px">Neural Nets Learn a Mapping Function</b></summary>
 
@@ -55,7 +54,6 @@ during training. This ability to work well on specific examples and new examples
 is called the ability of the model to [**generalize**](generalization.md).
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:19px">Learning Network Weights Is Hard</b></summary>
 
@@ -93,7 +91,6 @@ the model. A naive algorithm that navigates the error is likely to become
 misled, lost, and ultimately stuck, resulting in a poorly performing model.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:19px">Navigating the Non-Convex Error Surface</b></summary>
 
@@ -130,7 +127,6 @@ gradient. As such, the algorithm used to train neural networks is also often
 referred to as simply backpropagation.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:19px">Components of the Learning Algorithm</b></summary>
 

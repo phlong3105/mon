@@ -18,7 +18,6 @@ some common considerations and common pitfalls for tooling and best practices
 and ML model serving patterns that are an essential part of your journey from
 model development to deployment in production.
 
-<br>
 <details open>
 <summary><b style="font-size:19px">Deploying, Serving and Inferencing Models at Scale</b></summary>
 
@@ -73,7 +72,6 @@ singularly. Instead, they operate jointly and often in four model patterns:
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:19px">Observing and Monitoring Model in Production</b></summary>
 

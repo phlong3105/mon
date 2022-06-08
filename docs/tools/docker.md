@@ -43,7 +43,6 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">NVIDIA Docker</b></summary>
 

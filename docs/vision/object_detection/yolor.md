@@ -62,7 +62,6 @@ neural networks**. This knowledge directly corresponds to observations that are
 supposed to be made.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Implicit Knowledge/Information (Kiến thức tiềm ẩn)</b></summary>
 
@@ -100,7 +99,6 @@ these include:
 - Kernel Alignment, and
 - More Functions.
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Manifold Space Reduction</b></summary>
 
@@ -109,7 +107,6 @@ dimensions of the manifold space so that we are able to achieve various tasks
 such as pose estimation and classification, amongst others.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Kernel Space Alignment</b></summary>
 

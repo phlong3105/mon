@@ -83,7 +83,6 @@ voting would be something like this:
  
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Averaging</b></summary>
 
@@ -101,7 +100,6 @@ i.e. (5+4+5+4+4)/5 = 4.4
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Weighted Average</b></summary>
 
@@ -143,7 +141,6 @@ making predictions on the test set.
 </details>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Blending</b></summary>
 
@@ -164,7 +161,6 @@ the predictions are used to build a model which is run on the test set.
 </details>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Bagging</b></summary>
 
@@ -202,7 +198,6 @@ for bagging may be less than the original set.
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Boosting</b></summary>
 

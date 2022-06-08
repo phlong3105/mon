@@ -70,7 +70,6 @@ vary, the corresponding changes on FLOPs are shown as above table.
 > scaling.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Scaling Tiny Models for Low-End Devices</b></summary>
 
@@ -118,7 +117,6 @@ the status of DRAM IO.
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Scaling Large Models for High-End GPUs</b></summary>
 
@@ -168,7 +166,6 @@ In order to get a better speed/accuracy trade-off, the first CSP stage is
 converted into original Darknet residual layer.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Neck</b></summary>
 
@@ -182,7 +179,6 @@ The PAN architecture in YOLOv4 is also CSP-ized as above. This new update
 effectively cuts down 40% of computation.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">SPP</b></summary>
 
@@ -250,7 +246,6 @@ is designed and can be scaled up to **YOLOv4-P6** and **YOLOv4-P7**.
 > highest AP in the above table as the backbone of YOLOv4-CSP.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">YOLOv4-tiny</b></summary>
 
@@ -268,7 +263,6 @@ higher AP.
 > architecture.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">YOLOv4-large</b></summary>
 
@@ -334,7 +328,6 @@ YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 represent the model which has removed {P7} and
 > models to execute the object detection task well.
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Tiny-Model</b></summary>
 

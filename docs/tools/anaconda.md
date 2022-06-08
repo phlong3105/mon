@@ -42,7 +42,6 @@ unset __conda_setup
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">Windows</b></summary>
 

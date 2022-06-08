@@ -27,7 +27,6 @@ Extrinsic and extrinsic parameters are transformation matrices that convert
 points from one coordinate system to the other. In order to understand these
 transformations, we first need to understand **4 different coordinate systems**.
 
-<br>
 <details open>
 <summary><b style="font-size:16px">1. World Coordinate System (3D)</b></summary>
 
@@ -42,7 +41,6 @@ For example a specific corner of the room. A point in this coordinate system
 can be denoted as Pw = (Xw, Yw, Zw).
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">2. Object/Camera Coordinate System (3D)</b></summary>
 
@@ -72,7 +70,6 @@ One can go from the world coordinate system to object coordinate system
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">3. Image Coordinate System (2D) [Pinhole Model]</b></summary>
 
@@ -115,7 +112,6 @@ intrinsic matrix
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">4. Pixel Coordinate System (2D)</b></summary>
 
@@ -174,7 +170,6 @@ as shown below
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Summary</b></summary>
 

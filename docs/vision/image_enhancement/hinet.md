@@ -35,7 +35,6 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
     <p align="justify">Proposed Half Instance Normalization Network (HINet). The encoder of each subnetwork contains Half Instance Normalization Blocks (HIN Block). For simplicity, we only show 3 layers of HIN Block in the figure, and HINet has a total of 5 layers. We adopt CSFF and SAM modules from MPRNet [56].</p>
 </div>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">1. Architecture</b></summary>
 
@@ -59,7 +58,6 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">2. U-Net</b></summary>
 
@@ -83,7 +81,6 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">3. Linking Sub-networks</b></summary>
 
@@ -103,7 +100,6 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">4. Half Instance Normalization Block</b></summary>
 
@@ -140,7 +136,6 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">5. Loss Function</b></summary>
 
@@ -187,7 +182,6 @@ $Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
 
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">Results</b></summary>
 

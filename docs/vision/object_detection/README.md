@@ -29,7 +29,6 @@ Here is a demo of object detection applied in autonomous vehicle:
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:18px">SOTA</b></summary>
 

@@ -54,7 +54,6 @@ only 30 minutes for training.
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">2. Effect of Parameter Settings</b></summary>
 
@@ -64,7 +63,6 @@ only 30 minutes for training.
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">3. Impact of Training Data</b></summary>
 
@@ -74,7 +72,6 @@ only 30 minutes for training.
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">4. Advantage of Three-channel Adjustment</b></summary>
 
@@ -94,7 +91,6 @@ only 30 minutes for training.
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">2. Visual Face Detection Results Before and After Enhanced by Zero-DCE</b></summary>
 
@@ -103,7 +99,6 @@ only 30 minutes for training.
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">3. Real Low-light Video with Variational Illumination Enanced by Zero-DCE</b></summary>
 
@@ -112,7 +107,6 @@ only 30 minutes for training.
 </div>
 </details>
 
-<br>
 <details open>
 <summary><b style="font-size:16px">4. Self-training (taking first 100 frames as training data) for Low-light Video Enhancement</b></summary>
 
