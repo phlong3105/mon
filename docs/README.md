@@ -17,15 +17,6 @@ applications.
 
 ### [Machine Learning](machine_learning/README.md)
 
-<table width="100%">
- <tr>
-  <td style="width:30%">text2.1</td>
-  <td style="width:30%">text2.2</td>
-  <td style="width:30%">text2.3</td>
- </tr>
-</table>
-
-
 |                                                                                             <img width=150/>                                                                                             |                                                                        <img width=150/>                                                                        |                                                                  <img width=150/>                                                                  |
 |:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------:|
 | [![Data Processing](machine_learning/data_processing/data/data_processing_small.gif)](machine_learning/data_processing/README.md) <br> [**Data Processing**](machine_learning/data_processing/README.md) | [![Training](machine_learning/learning/data/training_small.gif)](machine_learning/learning/README.md) <br> [**Training**](machine_learning/learning/README.md) | [![Serving](machine_learning/serving/data/serving.gif)](machine_learning/serving/README.md) <br> [**Serving**](machine_learning/serving/README.md) |
@@ -67,9 +58,9 @@ applications.
 
 ### [Autonomous Vehicle](autonomous_vehicle/README.md)
 
-|                                                                          <img width=150/>                                                                           |                                                                              <img width=150/>                                                                               | <img width=150/> |
-|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|
-| [![Autonomous Sensor](data/photo.png)](autonomous_vehicle/autonomous_sensor/README.md) <br> [**Autonomous Sensor**](autonomous_vehicle/autonomous_sensor/README.md) | [![Scene Understanding](data/photo.png)](autonomous_vehicle/scene_understanding/README.md) <br> [**Scene Understanding**](autonomous_vehicle/scene_understanding/README.md) |                  |
+|                                                                            <img width=150/>                                                                            |                                                                                <img width=150/>                                                                                | <img width=150/> |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|
+| [![Autonomous Sensor](data/photo.png)](autonomous_vehicle/autonomous_sensor/README.md) <br> [**Autonomous<br>Sensor**](autonomous_vehicle/autonomous_sensor/README.md) | [![Scene Understanding](data/photo.png)](autonomous_vehicle/scene_understanding/README.md) <br> [**Scene<br>Understanding**](autonomous_vehicle/scene_understanding/README.md) |                  |
 
 ### [Surveillance System](surveillance_system/README.md)
 

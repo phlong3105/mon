@@ -22,13 +22,13 @@ cloud, which will accelerate the development and deployment of these models.
 
 ### [AIC21](https://www.aicitychallenge.org/2021-ai-city/)
 
-|                                                         <img width=294/>                                                          | <img width=294/> | <img width=294/> |
+|                                                         <img width=150/>                                                          | <img width=150/> | <img width=150/> |
 |:---------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Track 1](../../data/photo.png)](aic21_track1.md) <br> [**Track 1: City-Scale Multi-Camera Vehicle Tracking**](aic21_track1.md) |    **&nbsp;**    |    **&nbsp;**    |
+| [![Track 1](../../data/photo.png)](aic21_track1.md) <br> [**Track 1: City-Scale Multi-Camera Vehicle Tracking**](aic21_track1.md) |                  |                  |
 
 ### [AIC22](https://www.aicitychallenge.org/)
 
-|                                                                         <img width=294/>                                                                          |                                                                  <img width=294/>                                                                   |                                                        <img style=294vw/>                                                        |
+|                                                                         <img width=150/>                                                                          |                                                                  <img width=150/>                                                                   |                                                         <img style=150/>                                                         |
 |:-----------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------:|
 |                 [![Track 1](../../data/photo.png)](aic22_track1.md) <br> [**Track 1: City-Scale Multi-Camera Vehicle Tracking**](aic22_track1.md)                 | [![Track 2](../../data/photo.png)](aic22_track2.md) <br> [**Track 2: Tracked-Vehicle Retrieval by Natural Language Descriptions**](aic22_track2.md) | [![Track 3](../../data/photo.png)](aic22_track4.md) <br> [**Track 3: Naturalistic Driving Action Recognition**](aic22_track3.md) |
 | [![Track 4](../../data/photo.png)](aic22_track4.md) <br> [**Track 4: Multi-Class Product Counting & Recognition for Automated Retail Checkout**](aic22_track4.md) |
