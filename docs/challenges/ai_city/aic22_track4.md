@@ -60,7 +60,7 @@ be declared the winner of this track.
 
 </details>
 
-## Data and Evaluation
+## Contest Details
 
 A growing application of AI and computer vision is in the retail industry. Of
 the various problems that can be addressed, this track focuses on accurate and
@@ -69,7 +69,7 @@ automatic check-out in a retail store. As the first version of this new track,
 holding items in front of the checkout counter**. Products may be occluded or
 very similar to each other.
 
-<details><summary><b>Data:</b></summary>
+<details><summary><b style="font-size:17px">Data:</b></summary>
 
 In test scenario, **the camera is mounted above the checkout counter and facing
 straight down while a customer is pretending to perform a checkout action by
@@ -102,7 +102,7 @@ We also provide segmentation labels for these images. For example,
 white area denotes the object area while the black shows the background.
 </details>
 
-<details><summary><b>Tasks:</b></summary>
+<details><summary><b style="font-size:17px">Tasks:</b></summary>
 
 Teams will be provided with the training set (with labels) and test set A (
 without labels). Test set B will be reserved for later testing.
@@ -132,7 +132,7 @@ deadline in order to ensure that no external data was used for training and the
 tasks were performed by algorithms and not humans.
 </details>
 
-<details><summary><b>Submission Format:</b></summary>
+<details><summary><b style="font-size:17px">Submission Format:</b></summary>
 
 To be ranked on the public leader board of test set A, one text file should be
 submitted to the online evaluation system containing, on each line, details of
@@ -155,7 +155,7 @@ Where:
 
 </details>
 
-<details><summary><b>Evaluation:</b></summary>
+<details><summary><b style="font-size:17px">Evaluation:</b></summary>
 
 Evaluation for track 4 will be based on model identification performance,
 measured by the **F1-score**. For the purpose of computing the F1-score, a

@@ -14,9 +14,9 @@ discovered.
 Object detection is often called object recognition, object identification,
 image detection, and these concepts are synonymous.
 
-Here is a demo of object detection applied in autonomous vehicle:
 <div align="center">
 	<img src="data/object_detection_01.gif" height="200">
+	<p>Here is a demo of object detection applied in autonomous vehicle</p>
 </div>
 
 ## Methods

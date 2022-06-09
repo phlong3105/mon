@@ -70,9 +70,9 @@ track.
 
 </details>
 
-## Data and Evaluation
+## Contest Details
 
-<details><summary><b>Data:</b></summary>
+<details><summary><b style="font-size:17px">Data:</b></summary>
 
 The data set contains 31 video clips (about 9 hours in total) captured from 20
 unique camera views (some cameras provide multiple video clips to cover
@@ -91,7 +91,7 @@ a small subset of ground truth labels (for demonstration purpose) are made
 available to participating teams. Data set B will be reserved for later testing.
 </details>
 
-<details><summary><b>Tasks:</b></summary>
+<details><summary><b style="font-size:17px">Tasks:</b></summary>
 
 A crucial tool in signal timing planning is capturing accurate movement- and
 class-specific vehicle counts. To be useful in online intelligent transportation
@@ -121,7 +121,7 @@ any output for video frames outside the range $[\max(t_0, t-15s), t]$ will be
 ignored in the online evaluation.
 </details>
 
-<details><summary><b>Submission Format:</b></summary>
+<details><summary><b style="font-size:17px">Submission Format:</b></summary>
 
 To be ranked on the public leader board of data set A, one text file should be
 submitted to the online evaluation system containing, on each line, details of
@@ -150,7 +150,7 @@ Where:
   values are accepted {1, 2} where 1 stands for “car” and 2 represents “truck”.
 </details>
 
-<details><summary><b>Evaluation:</b></summary>
+<details><summary><b style="font-size:17px">Evaluation:</b></summary>
 
 The Track 1 evaluation score ($S1$) is a weighted combination between the 
 Track 1 efficiency score ($S1_{efficiency}$) and the Track 1 effectiveness 

@@ -3,6 +3,7 @@
 
 AI City Challenge
 =============================
+<a href="https://www.aicitychallenge.org"><img src="../../data/badge/website.svg"></a>
 </div>
 
 <div align="justify">
@@ -22,9 +23,10 @@ cloud, which will accelerate the development and deployment of these models.
 
 ### [AIC21](https://www.aicitychallenge.org/2021-ai-city/)
 
-|                                                   <img width=150/>                                                   | <img width=150/> | <img width=150/> |
-|:--------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Track 1](data/aic21_track1_small.gif)](aic21_track1.md) <br> [**Track 1:<br> Vehicle Counting**](aic21_track1.md) |                  |                  |
+|                                                   <img width=150/>                                                    |                                               <img width=150/>                                                |                                         <img width=150/>                                          |
+|:---------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|
+| [![Track 1](data/aic21_track1_small.gif)](aic21_track1.md) <br> [**Track 1:<br> Vehicle Counting**](aic21_track1.md)  | [![Track 2](../../data/photo.png)](aic21_track2.md) <br> [**Track 2:<br> Reidentification**](aic21_track2.md) | [![Track 3](../../data/photo.png)](aic21_track3.md) <br> [**Track 3:<br> MTMC**](aic21_track3.md) |
+|    [![Track 4](../../data/photo.png)](aic21_track4.md) <br> [**Track 4:<br> Anomaly Detection**](aic21_track4.md)     |   [![Track 5](../../data/photo.png)](aic21_track5.md) <br> [**Track 5:<br> NL Tracking**](aic21_track5.md)    |                                                                                                   |
 
 ### [AIC22](https://www.aicitychallenge.org/)
 
