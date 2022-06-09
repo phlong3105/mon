@@ -22,9 +22,9 @@ cloud, which will accelerate the development and deployment of these models.
 
 ### [AIC21](https://www.aicitychallenge.org/2021-ai-city/)
 
-|                                                            <img style="width:30vw; min-width:30vw" max-width:30vw/>                                                            |                <img style="width:30%"/>                 |                <img style="width:30%"/>                 |
+|                                                           <img style="width:30vw; min-width:30vw max-width:30vw;"/>                                                            |                <img style="width:30%"/>                 |                <img style="width:30%"/>                 |
 |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------:|:-------------------------------------------------------:|
-| <div align="center" style="width:30vw">[![Track 1](../../data/photo.png)](aic21_track1.md) <br> [**Track 1: City-Scale Multi-Camera Vehicle Tracking**](aic21_track1.md)</div> | <div align="center" style="width:30vw">**&nbsp;**</div> | <div align="center" style="width:30vw">**&nbsp;**</div> |
+| <div align="center" style="width:30vw; min-width:30vw max-width:30vw;">[![Track 1](../../data/photo.png)](aic21_track1.md) <br> [**Track 1: City-Scale Multi-Camera Vehicle Tracking**](aic21_track1.md)</div> | <div align="center" style="width:30vw">**&nbsp;**</div> | <div align="center" style="width:30vw">**&nbsp;**</div> |
 
 ### [AIC22](https://www.aicitychallenge.org/)
 
