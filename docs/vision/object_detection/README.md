@@ -37,11 +37,11 @@ Here is a demo of object detection applied in autonomous vehicle:
 </div>
 </details>
 
-| Status | Method                                | Architecture | Stage     | Anchor       | Date       | Publication    |
-|:------:|---------------------------------------|--------------|-----------|--------------|------------|----------------|
-|   📑   | [**YOLOR**](yolor.md)                 | Deep         | One-stage | Anchor-based | 2021/05/10 | arXiv          |
-|   ✅    | [**Scaled-YOLOv4**](scaled_yolov4.md) | Deep         | One-stage | Anchor-based | 2021/06/25 | CVPR&nbsp;2021 |
-|   📑   | [**YOLOX**](yolox.md)                 | Deep         | One-stage | Anchor-free  | 2021/08/06 | arXiv          |
-|   ✅    | [**YOLOv5**](yolov5.md)               | Deep         | One-stage | Anchor-based |            |                |
+|          Status           | Method                                | Architecture | Stage     | Anchor       | Date       | Publication    |
+|:-------------------------:|---------------------------------------|--------------|-----------|--------------|------------|----------------|
+| :arrows_counterclockwise: | [**YOLOR**](yolor.md)                 | Deep         | One-stage | Anchor-based | 2021/05/10 | arXiv          |
+|             ✅             | [**Scaled-YOLOv4**](scaled_yolov4.md) | Deep         | One-stage | Anchor-based | 2021/06/25 | CVPR&nbsp;2021 |
+|            🔄             | [**YOLOX**](yolox.md)                 | Deep         | One-stage | Anchor-free  | 2021/08/06 | arXiv          |
+|             ✅             | [**YOLOv5**](yolov5.md)               | Deep         | One-stage | Anchor-based |            |                |
 
 </div>
