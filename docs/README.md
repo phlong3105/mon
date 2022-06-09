@@ -19,9 +19,9 @@ applications.
 
 <table>
  <tr>
-  <td>![Data Processing](machine_learning/data_processing/data/data_processing_small.gif)](machine_learning/data_processing/README.md)</td>
-  <td>text2.2</td>
-  <td>text2.3</td>
+  <td style="width:30%">text2.1</td>
+  <td style="width:30%">text2.2</td>
+  <td style="width:30%">text2.3</td>
  </tr>
 </table>
 
