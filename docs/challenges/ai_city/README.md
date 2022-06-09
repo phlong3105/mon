@@ -34,18 +34,3 @@ cloud, which will accelerate the development and deployment of these models.
 | [![Track 4](../../data/photo.png)](aic22_track4.md) <br> [**Track 4: Multi-Class Product Counting & Recognition for Automated Retail Checkout**](aic22_track4.md) |
 
 </div>
-
-<style>
-table th:first-of-type {
-    width: 10%;
-}
-table th:nth-of-type(2) {
-    width: 10%;
-}
-table th:nth-of-type(3) {
-    width: 50%;
-}
-table th:nth-of-type(4) {
-    width: 30%;
-}
-</style>
