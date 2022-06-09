@@ -155,6 +155,7 @@ Where:
 The Track 1 evaluation score ($S1$) is a weighted combination between the 
 Track 1 efficiency score ($S1_{efficiency}$) and the Track 1 effectiveness 
 score ($S1_{effectiveness}$).
+
 $$ S1 = \alpha S1_{efficiency} + \beta S1_{effectiveness} $$
 $$ where, \ \alpha=0.3, \ \beta=0.7 $$
 
@@ -162,7 +163,26 @@ The $S1_{efficiency}$ score is based on the total Execution Time provided by the
 contestant, adjusted by the Efficiency Base factor, and normalized within the
 range [0, 1.1x video play-back time].
 
-$$ S1_{efficiency} = \max(0, 1 - \frac{time \times base \textunderscore factor}{1.1 \times video \textunderscore total \textunderscore time}) $$
+$$ S1_{efficiency} = \max(0, 1 - \frac{time \times base \textunderscore
+factor}{1.1 \times video \textunderscore total \textunderscore time}) $$
+
+The $S1_{effectiveness}$ score is computed as a weighted average of normalized
+weighted root mean square error scores (nwRMSE) across all videos, movements,
+and vehicle classes in the test set, with proportional weights based on the
+number of vehicles of the given class in the movement. To reduce jitters due to
+labeling discrepancies, each video is split into k segments and we consider the
+cumulative vehicle counts from the start of the video to the end of each
+segment. The small count errors that may be seen in early buckets due to
+counting before or after the segment breakpoint will diminish as we approach the
+final segment. The nwRMSE score is the weighted RMSE (wRMSE) between the
+predicted and true cumulative vehicle counts, normalized by the true count of
+vehicles of that type in that movement. If the wRMSE score is greater than the
+true vehicle count, the nwRMSE score is assigned 0, else it is (1-wRMSE/vehicle
+count). To further reduce that impact of errors on early segments, the wRMSE
+score weighs each record incrementally in order to give more weight to recent
+records.
+
+$$wRMSE = \sqrt(\sum_{i=1}^{k} w_i \(x_i - x_i \)^2 )$$
 
 </details>
 
