@@ -155,7 +155,6 @@ Where:
 The Track 1 evaluation score ($S1$) is a weighted combination between the 
 Track 1 efficiency score ($S1_{efficiency}$) and the Track 1 effectiveness 
 score ($S1_{effectiveness}$).
-
 $$ S1 = \alpha S1_{efficiency} + \beta S1_{effectiveness} $$
 $$ where, \ \alpha=0.3, \ \beta=0.7 $$
 
@@ -181,7 +180,6 @@ true vehicle count, the nwRMSE score is assigned 0, else it is (1-wRMSE/vehicle
 count). To further reduce that impact of errors on early segments, the wRMSE
 score weighs each record incrementally in order to give more weight to recent
 records.
-
 $$ wRMSE = \sqrt{\sum_{i=1}^{k} w_i (\hat{x_i} - x_i)^2} $$
 $$ where, \ w_i = \frac{i}{\sum_{j=1}^{k} j} = \frac{2i}{k(k+1)} $$
 
