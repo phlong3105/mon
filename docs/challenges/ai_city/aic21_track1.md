@@ -156,7 +156,14 @@ The Track 1 evaluation score ($S1$) is a weighted combination between the
 Track 1 efficiency score ($S1_{efficiency}$) and the Track 1 effectiveness 
 score ($S1_{effectiveness}$).
 $$ S1 = \alpha S1_{efficiency} + \beta S1_{effectiveness} $$
-$$ where, \ \alpha=0.3, \beta=0.7 $$
+$$ where, \ \alpha=0.3, \ \beta=0.7 $$
+
+The $S1_{efficiency}$ score is based on the total Execution Time provided by the
+contestant, adjusted by the Efficiency Base factor, and normalized within the
+range [0, 1.1x video play-back time].
+
+$$ S1_{efficiency} = \max(0, 1 - \frac{time \times base factor}{1.1 \times video_total_time}) $$
+
 </details>
 
 ## Results
