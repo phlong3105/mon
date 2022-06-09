@@ -155,7 +155,7 @@ Where:
 The Track 1 evaluation score ($S1$) is a weighted combination between the 
 Track 1 efficiency score ($S1_{efficiency}$) and the Track 1 effectiveness 
 score ($S1_{effectiveness}$).
-$$ S1 = \alphaS1_{efficiency} + \betaS1_{effectiveness} $$
+$$ S1 = \alpha S1_{efficiency} + \beta S1_{effectiveness} $$
 where $\alpha=0.3, \beta=0.7$
 </details>
 
