@@ -22,26 +22,26 @@ Here is a demo of object detection applied in autonomous vehicle:
 ## Methods
 
 <details open>
-<summary><b style="font-size:18px">Road Map of Object Detection</b></summary>
+<summary><b>Road Map of Object Detection</b></summary>
 
 <div align="center">
-	<img src="data/milestones.png" height="500">
+	<img src="data/milestones.png">
 </div>
 </details>
 
 <details open>
-<summary><b style="font-size:18px">SOTA</b></summary>
+<summary><b>SOTA</b></summary>
 
 <div align="center">
-	<img src="data/milestones.png" height="400">
+	<img src="data/object_detection_sota.png">
 </div>
 </details>
 
-|          Status           | Method                                | Architecture | Stage     | Anchor       | Date       | Publication    |
-|:-------------------------:|---------------------------------------|--------------|-----------|--------------|------------|----------------|
-| :arrows_counterclockwise: | [**YOLOR**](yolor.md)                 | Deep         | One-stage | Anchor-based | 2021/05/10 | arXiv          |
-|             ✅             | [**Scaled-YOLOv4**](scaled_yolov4.md) | Deep         | One-stage | Anchor-based | 2021/06/25 | CVPR&nbsp;2021 |
-|            🔄             | [**YOLOX**](yolox.md)                 | Deep         | One-stage | Anchor-free  | 2021/08/06 | arXiv          |
-|             ✅             | [**YOLOv5**](yolov5.md)               | Deep         | One-stage | Anchor-based |            |                |
+| Status | Method                                      | Architecture | Stage           | Anchor             | Date       | Publication    |
+|:------:|---------------------------------------------|--------------|-----------------|--------------------|------------|----------------|
+|   🔄   | [**YOLOR**](yolor.md)                       | Deep         | One&#8209;stage | Anchor&#8209;based | 2021/05/10 | arXiv          |
+|   ✅    | [**Scaled&#8209;YOLOv4**](scaled_yolov4.md) | Deep         | One&#8209;stage | Anchor&#8209;based | 2021/06/25 | CVPR&nbsp;2021 |
+|   🔄   | [**YOLOX**](yolox.md)                       | Deep         | One&#8209;stage | Anchor&#8209;free  | 2021/08/06 | arXiv          |
+|   ✅    | [**YOLOv5**](yolov5.md)                     | Deep         | One&#8209;stage | Anchor&#8209;based |            |                |
 
 </div>
