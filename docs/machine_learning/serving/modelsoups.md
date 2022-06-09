@@ -15,6 +15,8 @@ arXiv 2022
 
 https://user-images.githubusercontent.com/6915498/172331427-f9b7a0c8-d8d3-470d-9c94-843afe2662e8.mov
 
+<div align="justify">
+
 ## Highlight
 
 Recently, researchers from various universities and companies published a paper
@@ -78,6 +80,7 @@ through this set.
 > Still, the approach requires having all models in memory at runtime, which
 > results in a big limitation. Given the size of today’s most commonly used
 > neural networks, it is hardly possible to compute a Learned Soup.
+
 </details>
 
 ## Ablation Studies
@@ -85,3 +88,5 @@ through this set.
 ## Results
 
 ## Citation
+
+</div>

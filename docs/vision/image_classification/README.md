@@ -5,6 +5,8 @@ Image Classification (Backbone)
 =============================
 </div>
 
+<div align="justify">
+
 Image Classification (often referred to as Image Recognition) is the task of
 associating one (single-label classification) or more (multi-label
 classification) labels to a given image.
@@ -14,3 +16,5 @@ classification) labels to a given image.
 | Status | Method                  | Architecture | Date       | Publication     |
 |:------:|-------------------------|--------------|------------|-----------------|
 |   ✅    | [**CSPNet**](cspnet.md) | Deep         | 2020/06/25 | CVPRW&nbsp;2020 |
+
+</div>

@@ -10,6 +10,8 @@ CVPR 2021
 <a href="https://github.com/megvii-model/HINet"><img src="../../data/badge/code.svg"></a>
 </div>
 
+<div align="justify">
+
 ## Highlight
 
 Normalization is widely used in high-level computer vision tasks:
@@ -208,3 +210,5 @@ $Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
     pages     = {182-192}
 }
 ```
+
+</div>

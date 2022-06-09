@@ -13,6 +13,8 @@ CVPR 2020
 <a href="https://github.com/Li-Chongyi/Zero-DCE"><img src="../../data/badge/code.svg"></a>
 </div>
 
+<div align="justify">
+
 ## Highlight
 
 We propose the first low-light enhancement network that is **independent of
@@ -136,3 +138,5 @@ only 30 minutes for training.
     year    = {2020}
 }
 ```
+
+</div>

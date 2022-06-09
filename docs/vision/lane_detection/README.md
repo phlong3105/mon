@@ -5,6 +5,8 @@ Lane Detection
 =============================
 </div>
 
+<div align="justify">
+
 Lane detection is the task of detecting lanes on a road from a camera. Here is a
 demo of lane detection in autonomous vehicle:
 <div align="center">
@@ -16,3 +18,5 @@ demo of lane detection in autonomous vehicle:
 | Status | Method                                                    | Architecture | Date       | Publication |
 |:------:|-----------------------------------------------------------|--------------|------------|-------------|
 |   ✅    | [**Advanced Lane Detection**](advanced_lane_detection.md) | Non-deep     | 2020/01/10 | GitHub      |
+
+</div>

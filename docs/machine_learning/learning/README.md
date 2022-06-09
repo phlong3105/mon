@@ -5,6 +5,8 @@ Learning
 =============================
 </div>
 
+<div align="justify">
+
 Neural networks learn a mapping function from inputs to outputs that can be
 summarized as solving the problem of function approximation.
 
@@ -146,8 +148,7 @@ involves choosing a number of components and hyperparameters.
     sensitive to the initial starting point.
   - As such, small random values are chosen as the initial model weights,
     although different techniques can be used to select the scale and
-    distribution
-    of these values.
+    distribution of these values.
 
 
 - **Batch Size**:
@@ -169,8 +170,7 @@ involves choosing a number of components and hyperparameters.
     enough set of model parameters is discovered.
   - The total number of iterations of the process is bounded by the number of
     complete passes through the training dataset after which the training
-    process
-    is terminated.
+    process is terminated.
 
 </details>
 
@@ -179,3 +179,5 @@ involves choosing a number of components and hyperparameters.
 | Status | Method                  | Technique                                              | Date       | Publication |
 |:------:|-------------------------|--------------------------------------------------------|------------|-------------|
 |   📑   | [**DecAug**](decaug.md) | [**Out-of-Distribution (OoD) Generalization**](ood.md) | 2021/05/10 | arXiv       |
+
+</div>

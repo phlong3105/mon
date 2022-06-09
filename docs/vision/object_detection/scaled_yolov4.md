@@ -12,6 +12,8 @@ CVPR 2021
 <a href="https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982#:~:text=yolov4%2Dcsp.cfg-,Scaled%20YOLO%20v4%20is%20the%20best%20neural%20network%20for%20object,15%20FPS%20to%201774%20FPS."><img src="../../data/badge/reference.svg"></a>
 </div>
 
+<div align="justify">
+
 ## Highlight
 
 First, YOLOv4 is re-designed to form YOLOv4-CSP.
@@ -368,3 +370,5 @@ extremely fast.
     pages     = {13029-13038}
 }
 ```
+
+</div>

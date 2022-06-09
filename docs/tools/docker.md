@@ -3,9 +3,10 @@
 
 Docker
 =============================
-
 <a href="data/docker_cheatsheet.pdf">Cheatsheet</a>
 </div>
+
+<div align="justify">
 
 ## Installation
 
@@ -66,3 +67,5 @@ sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 ```
 
 </details>
+
+</div>

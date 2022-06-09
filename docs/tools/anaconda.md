@@ -2,10 +2,11 @@
 
 Anaconda
 =============================
-
 <a href="data/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
 <a href="data/pip_cheatsheet.pdf">PIP Cheatsheet</a>
 </div>
+
+<div align="justify">
 
 ## Installation
 
@@ -48,3 +49,5 @@ unset __conda_setup
 Make sure to add the path to `anaconda3/bin` and `anaconda3/lib` in `PATH`
 environment.
 </details>
+
+</div>

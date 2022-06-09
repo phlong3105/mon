@@ -2,7 +2,6 @@
 
 CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
 =============================
-
 Chien-Yao Wang, Hong-Yuan Mark Liao, Yueh-Hua Wu, Ping-Yang Chen, Jun-Wei Hsieh,
 and I-Hau Yeh
 
@@ -15,6 +14,8 @@ CVPRW 2020
 
 ## Highlight
 
+<div align="justify">
+
 **Cross Stage Partial Network (CSPNet)** is designed, to attribute the problem
 to the duplicate gradient information within network optimization,
 **complexity can be largely reduced while maintaining the accuracy**.
@@ -23,7 +24,7 @@ It can be applied to various networks such as DenseNet, ResNeXt and ResNet.
 **Later on, this CSPNet is used in YOLOv4 and Scaled-YOLOv4**.
 
 <div align="center">
-	<img src="data/cspnet_sota.png "width="800">
+	<img src="data/cspnet_sota.png" "width="800">
 	<p>CSPNet not only reduces computation cost and memory usage of the 
     networks, but also benefit on inference speed and accuracy.</p>
 </div>
@@ -260,3 +261,5 @@ AP50**.
   year		= {2020}
 }
 ```
+
+</div>

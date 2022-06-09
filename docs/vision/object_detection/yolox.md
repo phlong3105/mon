@@ -4,11 +4,13 @@ YOLOX: Exceeding YOLO Series in 2021
 =============================
 Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun
 
-arXiv<
+arXiv
 
 <a href="data/yolox.pdf"><img src="../../data/badge/paper.svg"></a>
 <a href="https://github.com/Megvii-BaseDetection/YOLOX"><img src="../../data/badge/code.svg"></a>
 </div>
+
+<div align="justify">
 
 ## Highlight
 
@@ -19,3 +21,5 @@ arXiv<
 ## Results
 
 ## Citation
+
+</div>

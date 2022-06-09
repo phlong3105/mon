@@ -9,6 +9,8 @@ GitHub 2020
 <a href="https://github.com/OanaGaskey/Advanced-Lane-Detection"><img src="../../data/badge/code.svg"></a>
 </div>
 
+<div align="justify">
+
 ## Highlight
 
 Computer Vision algorithm to compute road curvature and lane vehicle offset
@@ -151,7 +153,7 @@ are fitted with a second degree polynomial function for each left and right
 side.
 
 <div align="center">
-	<img src="data/prev_poly.png width="800"">
+	<img src="data/prev_poly.png" width="800">
 </div>
 
 ### 6. Calculate Vehicle Position and Curve Radius
@@ -180,3 +182,5 @@ of the vehicle.
 ## Results
 
 ## Citation
+
+</div>

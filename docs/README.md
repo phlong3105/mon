@@ -5,13 +5,13 @@ Research Handbook
 =============================
 </div>
 
-<p align="justify">
+<div align="justify">
+
 The <code>One Research Handbook</code> is a comprehensive knowledge base of our 
 works related to computer vision, machine learning, and deep learning. We 
 summarize various types of machine learning methods, related theory, and the 
 best practices when applying in competitive challenges and real-world 
 applications.
-</p>
 
 ## Knowledge Base
 
@@ -67,3 +67,5 @@ applications.
 |                                                         <img width=150/>                                                          | <img width=150/> | <img width=150/> |
 |:---------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
 | [**Edge TSS**](surveillance_system/edge_tss/README.md) <br> [![Edge TSS](data/photo.png)](surveillance_system/edge_tss/README.md) |                  |                  |
+
+</div>

@@ -5,8 +5,12 @@ Data Processing
 =============================
 </div>
 
+<div align="justify">
+
 ## Methods
 
 | Status | Method | Technique | Date | Publication |
 |:------:|--------|-----------|------|-------------|
 |   📑   |        |           |      |             |
+
+</div>

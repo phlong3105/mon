@@ -5,7 +5,7 @@ Object Detection
 =============================
 </div>
 
-# Overview
+<div align="justify">
 
 The ultimate purpose of object detection is to locate important items, draw
 rectangular bounding boxes around them, and determine the class of each item
@@ -39,7 +39,9 @@ Here is a demo of object detection applied in autonomous vehicle:
 
 | Status | Method                                | Architecture | Stage     | Anchor       | Date       | Publication    |
 |:------:|---------------------------------------|--------------|-----------|--------------|------------|----------------|
-|   📑   | [**YOLOR**](yolor.md)                 | `Deep`       | One-stage | Anchor-based | 2021/05/10 | arXiv          |
-|   ✅    | [**Scaled-YOLOv4**](scaled_yolov4.md) | `Deep`       | One-stage | Anchor-based | 2021/06/25 | CVPR&nbsp;2021 |
-|   📑   | [**YOLOX**](yolox.md)                 | `Deep`       | One-stage | Anchor-free  | 2021/08/06 | arXiv          |
-|   ✅    | [**YOLOv5**](yolov5.md)               | `Deep`       | One-stage | Anchor-based |            |                |
+|   📑   | [**YOLOR**](yolor.md)                 | Deep         | One-stage | Anchor-based | 2021/05/10 | arXiv          |
+|   ✅    | [**Scaled-YOLOv4**](scaled_yolov4.md) | Deep         | One-stage | Anchor-based | 2021/06/25 | CVPR&nbsp;2021 |
+|   📑   | [**YOLOX**](yolox.md)                 | Deep         | One-stage | Anchor-free  | 2021/08/06 | arXiv          |
+|   ✅    | [**YOLOv5**](yolov5.md)               | Deep         | One-stage | Anchor-based |            |                |
+
+</div>

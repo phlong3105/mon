@@ -14,6 +14,8 @@ arXiv
 <a href="https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D."><img src="../../data/badge/reference.svg"></a>
 </div>
 
+<div align="justify">
+
 ## Highlight
 
 YOLOR (“You Only Learn One Representation”) is a SOTA machine learning
@@ -132,3 +134,5 @@ such as pose estimation and classification, amongst others.
   year    = {2021}
 }
 ```
+
+</div>
