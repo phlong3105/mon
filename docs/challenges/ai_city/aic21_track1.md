@@ -182,7 +182,8 @@ count). To further reduce that impact of errors on early segments, the wRMSE
 score weighs each record incrementally in order to give more weight to recent
 records.
 
-$$ wRMSE = \sqrt{\sum_{i=1}^{k} w_i \(\hat{x_i} - x_i \)^2} $$
+$$ wRMSE = \sqrt{\sum_{i=1}^{k} w_i (\hat{x_i} - x_i)^2} $$
+$$ where, \ w_i = \frac{i}{\sum_{j=1}^{k} j} = \frac{2i}{k(k+1)} $$
 
 </details>
 
