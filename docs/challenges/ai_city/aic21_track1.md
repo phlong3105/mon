@@ -183,7 +183,21 @@ records.
 $$ wRMSE = \sqrt{\sum_{i=1}^{k} w_i (\hat{x_i} - x_i)^2} $$
 $$ where, \ w_i = \frac{2i}{k(k+1)} $$
 
+Note that teams self-reporting incorrect Efficiency Base factors or Execution
+Times will be disqualified and their submissions will be removed from the
+challenge. Moreover, competition prizes will only be awarded based on the
+scoring obtained when executing the teams’ codes on the held-out Track 1 Dataset
+B. To ensure comparison fairness, Dataset B experiments will be executed on the
+same IoT device, an NVIDIA Jetson NX development kit board.
 
+The top 5 teams on the public leader board will be invited to submit their codes
+for testing on Dataset B and competing for the final prize. Teams should submit
+a package or a github repository containing all the source codes and detailed
+instructions to reproduce the experiments. All videos in the Dataset B come from
+the exact same 20 cameras as in the Dataset A and follow the exact same naming
+conventions. The submitted program should be able to load the configs for each
+camera (ROIs, MOIs, etc) based on the video names thus it can be directly
+applied on Dataset B.
 </details>
 
 ## Results
