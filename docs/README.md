@@ -17,7 +17,7 @@ applications.
 
 ### [Machine Learning](machine_learning/README.md)
 
-<table>
+<table width="100%">
  <tr>
   <td style="width:30%">text2.1</td>
   <td style="width:30%">text2.2</td>
