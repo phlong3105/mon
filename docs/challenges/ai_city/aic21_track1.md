@@ -162,7 +162,7 @@ The $S1_{efficiency}$ score is based on the total Execution Time provided by the
 contestant, adjusted by the Efficiency Base factor, and normalized within the
 range [0, 1.1x video play-back time].
 
-$$ S1_{efficiency} = \max(0, 1 - \frac{time \times base_factor}{1.1 \times video_total_time}) $$
+$$ S1_{efficiency} = \max(0, 1 - \frac{time \times base\_factor}{1.1 \times video\_total\_time}) $$
 
 </details>
 
