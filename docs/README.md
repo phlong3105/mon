@@ -5,15 +5,17 @@ Research Handbook
 =============================
 </div>
 
-The `One Research Handbook` is a comprehensive knowledge base of our works
-related to computer vision, machine learning, and deep learning. We summarize
-various types of machine learning methods, related theory, and the best
-practices when applying in competitive challenges and real-world applications.
+<p align="justify">
+The <code>One Research Handbook</code> is a comprehensive knowledge base of our 
+works related to computer vision, machine learning, and deep learning. We 
+summarize various types of machine learning methods, related theory, and the 
+best practices when applying in competitive challenges and real-world 
+applications.
+</p>
 
 ## Knowledge Base
 
 ### [Machine Learning](machine_learning/README.md)
-
 
 |                                                                                             <img width=150/>                                                                                             |                                                                        <img width=150/>                                                                        |                                                                  <img width=150/>                                                                  |
 |:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------:|

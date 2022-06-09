@@ -6,7 +6,7 @@ AI City Challenge
 </div>
 
 <p align="justify">
-Transportation is one of the largest segments that can benefit from actionable
+Transportation is one of the largest segments that can benefit from actionable 
 insights derived from data captured by sensors. Between traffic, signaling
 systems, transportation systems, infrastructure, and transit, the opportunity
 for insights from these sensors to make transportation systems smarter is
