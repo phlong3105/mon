@@ -22,15 +22,15 @@ cloud, which will accelerate the development and deployment of these models.
 
 ### [AIC21](https://www.aicitychallenge.org/2021-ai-city/)
 
-|                                         <img width=150/>                                          | <img width=150/> | <img width=150/> |
-|:-------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Track 1](../../data/photo.png)](aic21_track1.md) <br> [**Track 1:<br> MTMC**](aic21_track1.md) |                  |                  |
+|                                               <img width=150/>                                                | <img width=150/> | <img width=150/> |
+|:-------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
+| [![Track 1](../../data/photo.png)](aic21_track1.md) <br> [**Track 1:<br> Vehicle Counting**](aic21_track1.md) |                  |                  |
 
 ### [AIC22](https://www.aicitychallenge.org/)
 
-|                                               <img width=150/>                                               |                                             <img width=150/>                                              |                                                                    <img width=150/>                                                                    |
-|:------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|      [![Track 1](../../data/photo.png)](aic22_track1.md) <br> [**Track 1:<br> MTMC**](aic22_track1.md)       | [![Track 2](../../data/photo.png)](aic22_track2.md) <br> [**Track 2:<br> NL Retrieval**](aic22_track2.md) | [![Track 3](../../data/photo.png)](aic22_track4.md) <br> [**Track 3:<br> Driving Action**](aic22_track3.md) |
-| [![Track 4](../../data/photo.png)](aic22_track4.md) <br> [**Track 4:<br> Retail Checkout**](aic22_track4.md) |
+|                                                  <img width=150/>                                                   |                                             <img width=150/>                                              |                                              <img width=150/>                                               |
+|:-------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------:|
+|          [![Track 1](../../data/photo.png)](aic22_track1.md) <br> [**Track 1:<br> MTMC**](aic22_track1.md)          | [![Track 2](../../data/photo.png)](aic22_track2.md) <br> [**Track 2:<br> NL Retrieval**](aic22_track2.md) | [![Track 3](../../data/photo.png)](aic22_track4.md) <br> [**Track 3:<br> Driving Action**](aic22_track3.md) |
+| [![Track 4](data/aic22_track4_small.gif)](aic22_track4.md) <br> [**Track 4:<br> Retail Checkout**](aic22_track4.md) |
 
 </div>
