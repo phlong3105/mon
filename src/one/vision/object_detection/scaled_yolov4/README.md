@@ -131,7 +131,7 @@ python -m torch.distributed.launch --nproc_per_node 4 train.py --batch-size 64 -
 
 ## Citation
 
-```
+```text
 @InProceedings{Wang_2021_CVPR,
     author    = {Wang, Chien-Yao and Bochkovskiy, Alexey and Liao, Hong-Yuan Mark},
     title     = {{Scaled-YOLOv4}: Scaling Cross Stage Partial Network},

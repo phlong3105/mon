@@ -363,7 +363,7 @@ extremely fast.
 ```text
 @InProceedings{Wang2021,
     author    = {Chien-Yao Wang and Alexey Bochkovskiy and Hong-Yuan Mark Liao},
-    title     = {Scaled-YOLOv4: Scaling Cross Stage Partial Network},
+    title     = {{Scaled-YOLOv4}: Scaling Cross Stage Partial Network},
     booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
     month     = {June},
     year      = {2021},
