@@ -88,6 +88,33 @@ months_map_invert = {
 }
 
 train_configs = {
+    "yolov4-p7_chalearnltdmonth_384" : {
+        "weights"     : os.path.join(yolov4_pretrained_dir, "yolov4-p7_coco.pt"),
+        # "weights"     : os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2", "weights", "best.pt"),
+        "cfg"         : os.path.join(yolov4_root_dir, "models", "yolov4-p7.yaml"),
+        "data"        : os.path.join(current_dir, "chalearnltdmonth.yaml"),
+        "hyp"         : os.path.join(yolov4_root_dir, "data", "hyp.scratch.yaml"),
+        "epochs"      : 200,
+        "batch_size"  : 16,
+        "img_size"    : [384, 384],
+        "rect"        : True,
+        "resume"      : False,
+        "nosave"      : False,
+        "notest"      : False,
+        "noautoanchor": False,
+        "evolve"      : False,
+        "bucket"      : "",
+        "cache_images": False,
+        "name"        : "yolov4-p7_chalearnltdmonth_384",
+        "device"      : "0,1",
+        "multi_scale" : False,
+        "single_cls"  : False,
+        "adam"        : False,
+        "sync_bn"     : True,
+        "local_rank"  : -1,
+        "logdir"      : os.path.join(pretrained_dir, "scaled_yolov4"),
+        "verbose"     : False,
+    },
     "yolov4-p7_chalearnltdmonth_896" : {
         # "weights"     : os.path.join(yolov4_pretrained_dir, "yolov4-p7_coco.pt"),
         "weights"     : os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2", "weights", "best.pt"),
@@ -228,10 +255,12 @@ detect_configs = {
     },
     "yolov4-p7_chalearnltdmonth_1536": {
         "weights"     : [
-            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
-            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_3",  "weights", "best.pt"),
+            # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1280",   "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
-            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
+            # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
         ],
         "source"      : os.path.join(data_dir, "chalearn", "ltd", "val"),

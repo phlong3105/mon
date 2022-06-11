@@ -8,7 +8,7 @@ gpu_id=0
 for seq in ${seqs[@]}
 do
     CUDA_VISIBLE_DEVICES=${gpu_id} python detect.py  \
-        --pre-cfg "yolov4-p7_chalearnltdmonth_1280"  \
+        --pre-cfg "yolov4-p7_chalearnltdmonth_1536"  \
         --months ''${seq}  &
         gpu_id=$(($gpu_id + 1))
 
