@@ -7,7 +7,6 @@
       <excludeFolder url="file://$MODULE_DIR$/data" />
       <excludeFolder url="file://$MODULE_DIR$/.sync" />
     </content>
-    <content url="file://$MODULE_DIR$/../phlong3105.github.io" />
     <orderEntry type="jdk" jdkName="Python 3.9 (one)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
