@@ -19,7 +19,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-path", default=os.path.join("inference", "output"), type=str, help="Output path.")
     parser.add_argument("--from-txts",   default=True,                                action="store_true", help="Merge from YOLO's txt results.")
-    parser.add_argument("--conf-thres",  default=0.5,                                 type=float, help="Confidence threshold.")
+    parser.add_argument("--conf-thres",  default=0.5,                                 nargs="+", type=float, help="Confidence threshold. Can be a scalar value or a list/tuple of values for each class.")
     args = parser.parse_args()
     print(args)
     return args

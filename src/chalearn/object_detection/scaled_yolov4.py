@@ -403,9 +403,18 @@ def run_detect(args: Namespace):
 
 
 def create_pkl_from_txts(
-    output_path: str   = os.path.join("inference", "output"),
-    conf_thres : float = 0.5,
+    output_path: str = os.path.join("inference", "output"),
+    conf_thres : Union[float, list[float], tuple[float]] = 0.5,
 ):
+    """Merge YOLO results from txt files to a single .pkl file.
+    
+    Args:
+        output_path (str):
+            The output path for .pkl file.
+        conf_thres (float, list[float], tuple[float]):
+            Confidence threshold. Can be a scalar value or a list/tuple of
+            values for each class.
+    """
     predictions: dict = load_file(
         path=os.path.join(
             data_dir, "chalearn", "ltd", "toolkit",
@@ -416,7 +425,16 @@ def create_pkl_from_txts(
         for d, d_dict in m_dict.items():
             d_dict["boxes"]  = []
             d_dict["labels"] = []
-            
+    
+    if isinstance(conf_thres, (list, tuple)):
+        if len(conf_thres) != 4:
+            raise RuntimeError(
+                f"Length of `conf_thres` and number of classes must be the same. "
+                f"But got: {len(conf_thres)} != 4"
+            )
+    else:
+        conf_thres = [conf_thres for _ in range(4)]
+        
     with progress_bar() as pbar:
         for file in pbar.track(
             description="Merging...",
@@ -438,7 +456,7 @@ def create_pkl_from_txts(
                         x2   = float(row[3])
                         y2   = float(row[4])
                         conf = float(row[5])
-                        if conf >= conf_thres:
+                        if conf >= conf_thres[cls]:
                             predictions[month][day]["boxes"].append([x1, y1, x2, y2])
                             predictions[month][day]["labels"].append(int(cls))
                             
