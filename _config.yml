@@ -37,6 +37,7 @@ exclude     : [
   "README.md",
   "Rakefile",
   "docs/tests/",
+  "install/"
   "src/"
 ]
 
