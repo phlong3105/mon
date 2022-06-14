@@ -4,6 +4,6 @@ title    : Home
 nav_order: 1
 ---
 
-![One](data/one.png)
+![One](docs/data/one.png)
 
 ---
