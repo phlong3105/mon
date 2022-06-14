@@ -1,3 +1,13 @@
+---
+layout      : default
+title       : Docker
+nav_order   : 2
+parent		: Tools
+has_children: false
+has_toc     : false
+permalink   : /tools/docker
+---
+
 <div align="center">
 <img src="data/docker.png" width="1000px">
 
