@@ -19,7 +19,6 @@ when applying in competitive challenges and real-world applications.
 [Handbook](docs/README.md){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [Cite](#cite){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [Contact](#contact){: .btn .fs-5 .mb-4 .mb-md-0 } 
-[GitHub](https://github.com/phlong3105/one){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ---
 
