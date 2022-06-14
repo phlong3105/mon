@@ -17,7 +17,7 @@ remote_theme: just-the-docs/just-the-docs
 
 title      : One
 description: One Research Framework
-baseurl    : "/one" # the subpath of your site, e.g. /blog
+baseurl    : "/one/docs" # the subpath of your site, e.g. /blog
 url        : "https://phlong3105.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 permalink  : pretty
