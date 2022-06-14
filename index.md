@@ -17,6 +17,8 @@ when applying in competitive challenges and real-world applications.
 
 [Getting Started](#getting-started){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0.mr-2 } 
 [Handbook](docs/README.md){: .btn .fs-5 .mb-4 .mb-md-0 } 
+[Cite](#cite){: .btn .fs-5 .mb-4 .mb-md-0 } 
+[Contact](#contact){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [GitHub](https://github.com/phlong3105/one){: .btn .fs-5 .mb-4 .mb-md-0 }
 
 ---
@@ -48,3 +50,44 @@ one               # root directory
  |__ tests
  |__ third_party
 ```
+
+### Installation using `conda`
+
+```shell
+cd <to-where-you-want-to-save-one-dir>
+mkdir -p one
+mkdir -p one/data
+cd one
+
+# Install `aic22_track4` package
+git clone git@github.com:phlong3105/one
+cd one/install
+chmod +x install.sh
+conda init bash
+
+# Install package. When prompt to input the dataset directory path, you should 
+# enter: <some-path>/one/datasets
+bash -i install.sh
+cd ..
+pip install --upgrade -e .
+```
+
+## Cite
+
+If you find our work useful, please cite the following:
+
+```text
+@misc{Pham2022,  
+    author       = {Long Hoang Pham},  
+    title        = {One: One Research Framework},  
+    publisher    = {GitHub},
+    journal      = {GitHub repository},
+    howpublished = {\url{https://github.com/phlong3105/one}},
+    year         = {2022},
+}
+```
+
+## Contact
+
+If you have any questions, feel free to contact `Long Pham` 
+([longpham3105@gmail](longpham3105@gmail) or [phlong@skku.edu](phlong@skku.edu))
