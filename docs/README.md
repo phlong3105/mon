@@ -4,7 +4,7 @@ title       : Handbook
 nav_order   : 2
 has_children: true
 has_toc     : false
-permalink   : /one/handbook
+permalink   : /doc/handbook
 ---
 
 ![One](data/one_handbook.png)
