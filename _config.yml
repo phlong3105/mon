@@ -15,8 +15,8 @@
 # in the templates via {{ site.myvariable }}.
 remote_theme: just-the-docs/just-the-docs
 
-title      : One Research Handbook
-description: A simple research notes and documentation
+title      : One
+description: One Research Framework
 baseurl    : "/one" # the subpath of your site, e.g. /blog
 url        : "https://phlong3105.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 

@@ -1,16 +1,15 @@
 ---
-layout: default
-title: Home
-nav_order: 1
-description: "Just the Docs is a responsive Jekyll theme with built-in search that is easily customizable and hosted on GitHub Pages."
-permalink: /
+layout     : default
+title      : Home
+nav_order  : 1
+description:
+permalink  : /
 ---
 
 <div align="center">
 <img src="docs/data/one.png">
 
-One Research Framework
-=============================
+# One Research Framework
 
 <a href="docs/README.md"><b>Handbook</b></a> •
 <a href="#installation">Installation</a> •
