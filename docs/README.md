@@ -1,14 +1,18 @@
-<div align="center">
-<img src="data/one.png">
+---
+layout      : default
+title       : Handbook
+nav_order   : 2
+has_children: true
+---
 
-# Research Handbook
-</div>
+![One](data/one_handbook.png)
 
-The <code>One Research Handbook</code> is a comprehensive knowledge base of our 
-works related to computer vision, machine learning, and deep learning. We 
-summarize various types of machine learning methods, related theory, and the 
-best practices when applying in competitive challenges and real-world 
-applications.
+---
+
+The `One Handbook` is a comprehensive knowledge base of our works related to 
+computer vision, machine learning, and deep learning. We summarize various types 
+of machine learning methods, related theory, and the best practices when 
+applying in competitive challenges and real-world applications.
 
 ## Knowledge Base
 
@@ -21,6 +25,7 @@ applications.
 |     [![Dimensionality Reduction](data/photo.png)](machine_learning/dimensionality_reduction/README.md) <br> [**Dimensionality <br> Reduction**](machine_learning/dimensionality_reduction/README.md)     | [![Neural Network](data/photo.png)](machine_learning/neural_network/README.md) <br> [**Neural Network<br>&nbsp;**](machine_learning/neural_network/README.md)  |   [![Regression](data/photo.png)](machine_learning/regression/README.md) <br> [**Regression<br>&nbsp;**](machine_learning/regression/README.md)    |
                                                                                                                                                                                                                                                                                         
 ### [Vision](vision/README.md)
+
 |                                                                                                  <img width=150/>                                                                                                   |                                                                                                  <img width=150/>                                                                                                   |                                                                                <img width=150/>                                                                                |
 |:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 |         [![Data Processing](vision/action_recognition/data/action_recognition_small.gif)](vision/action_recognition/README.md) <br> [**Action Recognition<br>&nbsp;**](vision/action_recognition/README.md)         |             [![Action Detection](vision/action_detection/data/action_detection_small.gif)](vision/action_detection/README.md) <br> [**Action Detection<br>&nbsp;**](vision/action_detection/README.md)              |           [![Image Classification](data/photo.png)](vision/image_classification/README.md) <br> [**Image<br>Classification**](vision/image_classification/README.md)           |

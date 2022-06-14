@@ -84,7 +84,7 @@ aux_links:
   "One on GitHub":
     - "//github.com/phlong3105/one"
   "Home":
-    - "phlong.net"
+    - "//phlong.net"
 
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: false
