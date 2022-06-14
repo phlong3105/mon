@@ -17,6 +17,7 @@
 remote_theme: just-the-docs/just-the-docs
 title       : One
 description : One Research Framework
+logo        : "/docs/data/square_96.png"
 baseurl     : "/one" # the subpath of your site, e.g. /blog
 url         : "https://phlong3105.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 permalink   : pretty
@@ -79,8 +80,8 @@ heading_anchors: true
 
 # Aux links for the upper right navigation
 aux_links:
-  "Just the Docs on GitHub":
-    - "//github.com/just-the-docs/just-the-docs"
+  "One":
+    - "//github.com/phlong3105/one"
 
 # Makes Aux links open in a new tab. Default is false
 aux_links_new_tab: false
@@ -101,8 +102,6 @@ footer_content  : "Copyright &copy; 2017-2020 Patrick Marsceill. Distributed by 
 # Footer last edited timestamp
 last_edit_timestamp  : true # show or hide edit time - page must have `last_modified_date` defined in the frontmatter
 last_edit_time_format: "%b %e %Y at %I:%M %p" # uses ruby's time format: https://ruby-doc.org/stdlib-2.7.0/libdoc/time/rdoc/Time.html
-
-
 
 # Footer "Edit this page on GitHub" link text
 gh_edit_link      : true # show or hide edit this page link
