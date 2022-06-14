@@ -6,10 +6,12 @@ description:
 permalink  : /
 ---
 
-<div align="center">
-<img src="docs/data/one.png">
+![One](src="docs/data/one.png")
 
 # One Research Framework
+
+[Get started now](#getting-started){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 } [View it on GitHub](https://github.com/just-the-docs/just-the-docs){: .btn .fs-5 .mb-4 .mb-md-0 }
+
 
 <a href="docs/README.md"><b>Handbook</b></a> •
 <a href="#installation">Installation</a> •
@@ -19,7 +21,6 @@ permalink  : /
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytorch-lightning)](https://pypi.org/project/pytorch-lightning/)
 [![Conda](https://img.shields.io/conda/v/conda-forge/pytorch-lightning?label=conda&color=success)](https://anaconda.org/conda-forge/pytorch-lightning)
-</div>
 
 
 ## <div align="center">Installation</div>
