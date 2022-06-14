@@ -1,8 +1,7 @@
 <div align="center">
 <img src="data/one.png">
 
-Research Handbook
-=============================
+# Research Handbook
 </div>
 
 <div align="justify">
