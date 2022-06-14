@@ -28,7 +28,7 @@ exclude     : [
   "Gemfile.lock",
   "package.json",
   "package-lock.json",
-  "script/",
+  "scripts/",
   "LICENSE.txt",
   "lib/",
   "bin/",
