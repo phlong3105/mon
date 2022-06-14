@@ -37,8 +37,8 @@ exclude     : [
   "README.md",
   "Rakefile",
   "docs/tests/",
-  "install/"
-  "src/"
+  "install/",
+  "src/",
 ]
 
 # Regression tests
