@@ -14,7 +14,7 @@ nav_order: 1
 related to computer vision, machine learning, and deep learning.
 
 [Getting Started](#getting-started){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0.mr-2 } 
-[Handbook](https://phlong3105.github.io/handbook){: .btn .fs-5 .mb-4 .mb-md-0 } 
+[Handbook](https://phlong3105.github.io/one/handbook){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [Cite](#cite){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [Contact](#contact){: .btn .fs-5 .mb-4 .mb-md-0 } 
 
