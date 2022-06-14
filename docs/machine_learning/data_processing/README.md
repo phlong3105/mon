@@ -1,16 +1,16 @@
-<div align="center">
-<img src="data/data_processing.png" width="1000">
+---
+layout      : default
+title       : Data Processing
+parent		: Machine Learning
+nav_order   : 1
+has_children: false
+has_toc     : false
+---
 
-Data Processing
-=============================
-</div>
-
-<div align="justify">
+# Data Processing
 
 ## Methods
 
 | Status | Method | Technique | Date | Publication |
 |:------:|--------|-----------|------|-------------|
 |   📑   |        |           |      |             |
-
-</div>
