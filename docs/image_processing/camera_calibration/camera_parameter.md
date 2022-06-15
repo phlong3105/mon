@@ -9,7 +9,7 @@ has_toc     : false
 permalink   : /image_processing/camera_calibration/camera_parameter
 ---
 
-![data/transformation.png](data/transformation.png)
+![data/transformation.png](data/transformation.png){: .btn .fs-3 .mb-4 .mb-md-0 } 
 
 # What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 
