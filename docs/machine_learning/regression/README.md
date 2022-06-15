@@ -1,14 +1,14 @@
 ---
 layout      : default
-title       : Classification
+title       : Regression
 parent		: Machine Learning
-nav_order   : 4
+nav_order   : 9
 has_children: true
 has_toc     : false
-permalink   : /machine_learning/classification
+permalink   : /machine_learning/regression
 ---
 
-# Classification
+# Regression
 
 <details open markdown="block">
   <summary>Table of contents</summary>

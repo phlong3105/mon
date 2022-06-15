@@ -1,14 +1,14 @@
 ---
 layout      : default
-title       : Classification
+title       : Neural Network
 parent		: Machine Learning
-nav_order   : 4
+nav_order   : 8
 has_children: true
 has_toc     : false
-permalink   : /machine_learning/classification
+permalink   : /machine_learning/neural_network
 ---
 
-# Classification
+# Neural Network
 
 <details open markdown="block">
   <summary>Table of contents</summary>

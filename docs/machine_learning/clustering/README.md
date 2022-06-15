@@ -1,14 +1,14 @@
 ---
 layout      : default
-title       : Classification
+title       : Clustering
 parent		: Machine Learning
-nav_order   : 4
+nav_order   : 5
 has_children: true
 has_toc     : false
-permalink   : /machine_learning/classification
+permalink   : /machine_learning/clustering
 ---
 
-# Classification
+# Clustering
 
 <details open markdown="block">
   <summary>Table of contents</summary>

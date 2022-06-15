@@ -2,7 +2,7 @@
 layout      : default
 title       : Deep Learning
 parent		: Machine Learning
-nav_order   : 5
+nav_order   : 6
 has_children: true
 has_toc     : false
 permalink   : /machine_learning/deep_learning

@@ -1,14 +1,14 @@
 ---
 layout      : default
-title       : Classification
+title       : Dimensionality Reduction
 parent		: Machine Learning
-nav_order   : 4
+nav_order   : 7
 has_children: true
 has_toc     : false
-permalink   : /machine_learning/classification
+permalink   : /machine_learning/dimensionality_reduction
 ---
 
-# Classification
+# Dimensionality Reduction
 
 <details open markdown="block">
   <summary>Table of contents</summary>
