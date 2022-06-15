@@ -19,14 +19,6 @@ permalink   : /tools/docker
 1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including
    images, containers, volumes, and networks, are preserved:
 
-```js
-// Javascript code with syntax highlighting.
-var fun = function lang(l) {
-  dateformat.i18n = require('./lang/' + l)
-  return true;
-}
-```
-
 ```shell
 sudo apt-get remove docker docker-engine docker.io containerd runc
 sudo apt-get purge docker-ce docker-ce-cli containerd.io
