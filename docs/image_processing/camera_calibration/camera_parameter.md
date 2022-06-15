@@ -13,7 +13,7 @@ permalink   : /image_processing/camera_calibration/camera_parameter
 
 # What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 
-[![Website](../../data/badge/website.svg)](https://towardsdatascience.com/what-are-intrinsic-and-extrinsic-camera-parameters-in-computer-vision-7071b72fb8ec#:~:text=The%20extrinsic%20matrix%20is%20a,to%20the%20pixel%20coordinate%20system.){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Website](https://towardsdatascience.com/what-are-intrinsic-and-extrinsic-camera-parameters-in-computer-vision-7071b72fb8ec#:~:text=The%20extrinsic%20matrix%20is%20a,to%20the%20pixel%20coordinate%20system.){: .btn .fs-3 .mb-4 .mb-md-0 }
 
 <details open markdown="block">
   <summary>Table of contents</summary>
