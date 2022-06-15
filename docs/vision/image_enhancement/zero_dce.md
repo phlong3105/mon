@@ -5,7 +5,7 @@ parent	    : Image Enhancement
 grand_parent: Vision
 has_children: false
 has_toc     : false
-permalink   : /vision/image_enhancement/hinet
+permalink   : /vision/image_enhancement/zero_dce
 ---
 
 # Zero-Reference Deep Curve Estimation for Low-Light Image Enhancement

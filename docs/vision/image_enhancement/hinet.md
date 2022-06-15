@@ -9,6 +9,7 @@ permalink   : /vision/image_enhancement/hinet
 ---
 
 # HINet: Half Instance Normalization Network for Image Restoration
+
 Liangyu Chen, Xin Lu, Jie Zhang, Xiaojie Chu, and Chengpeng Chen
 
 CVPR 2021
