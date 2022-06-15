@@ -5,7 +5,7 @@ nav_order: 1
 permalink: /
 ---
 
-![One](docs/data/one.png)
+![One](data/one.png)
 
 ---
 
@@ -102,6 +102,29 @@ pip install --upgrade -e .
 |:------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------:|
 | [![Anaconda](tools/data/anaconda_small.gif)](https://phlong3105.github.io/one/tools/anaconda) <br> [**Anaconda**](https://phlong3105.github.io/one/tools/anaconda) | [![Docker](tools/data/docker_small.gif)](https://phlong3105.github.io/one/tools/docker) <br> [**Docker**](https://phlong3105.github.io/one/tools/docker) | [![Swift](tools/data/apple_small.gif)](https://phlong3105.github.io/one/tools/swift) <br> [**Swift**](https://phlong3105.github.io/one/tools/swift) |
 |      [![Python](tools/data/python_small.gif)](https://phlong3105.github.io/one/tools/python) <br> [**Python**](https://phlong3105.github.io/one/tools/python)      |                                                                                                                                                          |                                                                                                                                                     |
+
+## Projects
+
+### [Challenges](https://phlong3105.github.io/one/challenges)
+
+|                                                                                   <img width=150/>                                                                                   |                                                                        <img width=150/>                                                                        |                                                                                      <img width=150/>                                                                                      |
+|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| [![AI City](challenges/ai_city/data/ai_city_small.gif)](https://phlong3105.github.io/one/challenges/ai_city) <br> [**AI City**](https://phlong3105.github.io/one/challenges/ai_city) |   [![AutoNue](data/photo.png)](https://phlong3105.github.io/one/challenges/autonue) <br> [**AutoNue**](https://phlong3105.github.io/one/challenges/autonue)    | [![ChaLearn](challenges/chalearn/data/chalearn_small.gif)](https://phlong3105.github.io/one/challenges/chalearn) <br> [**ChaLearn**](https://phlong3105.github.io/one/challenges/chalearn) |
+|                [![KATECH](data/photo.png)](https://phlong3105.github.io/one/challenges/katech) <br> [**KATECH**](https://phlong3105.github.io/one/challenges/katech)                 |       [![KODAS](data/photo.png)](https://phlong3105.github.io/one/challenges/kodas) <br> [**KODAS**](https://phlong3105.github.io/one/challenges/kodas)        |                       [![NICO](data/photo.png)](https://phlong3105.github.io/one/challenges/nico) <br> [**NICO**](https://phlong3105.github.io/one/challenges/nico)                        |
+ |                  [![NTIRE](data/photo.png)](https://phlong3105.github.io/one/challenges/ntire) <br> [**NTIRE**](https://phlong3105.github.io/one/challenges/ntire)                   | [![UG2+](challenges/ug2/data/ug2_small.gif)](https://phlong3105.github.io/one/challenges/ug2) <br> [**UG2+**](https://phlong3105.github.io/one/challenges/ug2) |               [![VisDrone](data/photo.png)](https://phlong3105.github.io/one/challenges/visdrone) <br> [**VisDrone**](https://phlong3105.github.io/one/challenges/visdrone)                |
+ |            [![VIPriors](data/photo.png)](https://phlong3105.github.io/one/challenges/vipriors) <br> [**VIPriors**](https://phlong3105.github.io/one/challenges/vipriors)             |       [![Waymo](data/photo.png)](https://phlong3105.github.io/one/challenges/waymo) <br> [**Waymo+**](https://phlong3105.github.io/one/challenges/waymo)       |                                                                                                                                                                                            |
+
+### [Autonomous Vehicle](https://phlong3105.github.io/one/autonomous_vehicle)
+
+|                                                                                                   <img width=150/>                                                                                                   |                                                                                                       <img width=150/>                                                                                                       | <img width=150/> |
+|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|
+| [![Autonomous Sensor](data/photo.png)](https://phlong3105.github.io/one/autonomous_vehicle/autonomous_sensor) <br> [**Autonomous<br>Sensor**](https://phlong3105.github.io/one/autonomous_vehicle/autonomous_sensor) | [![Scene Understanding](data/photo.png)](https://phlong3105.github.io/one/autonomous_vehicle/scene_understanding) <br> [**Scene<br>Understanding**](https://phlong3105.github.io/one/autonomous_vehicle/scene_understanding) |                  |
+
+### [Surveillance System](https://phlong3105.github.io/one/surveillance_system)
+
+|                                                                               <img width=150/>                                                                               | <img width=150/> | <img width=150/> |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
+| [![Edge TSS](data/photo.png)](https://phlong3105.github.io/surveillance_system/edge_tss) <br>  [**Edge TSS**](https://phlong3105.github.io/one/surveillance_system/edge_tss) |                  |                  |
 
 ## Cite
 
