@@ -1,8 +1,10 @@
 ---
 layout      : default
 title       : Machine Learning
-parent		: Handbook
-nav_order   : 1
+nav_order   : 2
 has_children: true
-has_toc     : false
+has_toc     : true
+permalink   : /machine_learning
 ---
+
+# Machine Learning

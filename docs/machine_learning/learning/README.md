@@ -1,11 +1,24 @@
-<div align="center">
-<img src="data/training.png" width="1000">
+---
+layout      : default
+title       : Model Learning
+parent		: Machine Learning
+nav_order   : 2
+has_children: true
+has_toc     : true
+---
 
-Learning
-=============================
-</div>
+![data/training.png](data/training.png)
 
-<div align="justify">
+# Model Learning
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 Neural networks learn a mapping function from inputs to outputs that can be
 summarized as solving the problem of function approximation.
@@ -26,8 +39,7 @@ the technique in general and is by far the most time-consuming, both in terms
 of effort required to configure the process and computational complexity
 required to execute the process.
 
-<details>
-<summary><b style="font-size:19px">Neural Nets Learn a Mapping Function</b></summary>
+## Neural Nets Learn a Mapping Function
 
 Deep learning neural networks learn a mapping function.
 
@@ -52,10 +64,8 @@ A neural network model must learn in such a way that mapping works well for
 the training dataset, but also works well on new examples not seen by the model
 during training. This ability to work well on specific examples and new examples
 is called the ability of the model to [**generalize**](generalization.md).
-</details>
 
-<details>
-<summary><b style="font-size:19px">Learning Network Weights Is Hard</b></summary>
+## Learning Network Weights Is Hard
 
 > Finding the parameters for neural networks in general is hard. In fact,
 > training a neural network is the most challenging part of using the
@@ -89,10 +99,8 @@ find an optimal set of weights.
 An iterative process must be used to navigate the non-convex error surface of
 the model. A naive algorithm that navigates the error is likely to become
 misled, lost, and ultimately stuck, resulting in a poorly performing model.
-</details>
 
-<details>
-<summary><b style="font-size:19px">Navigating the Non-Convex Error Surface</b></summary>
+## Navigating the Non-Convex Error Surface
 
 Neural network models can be thought to learn by navigating a **non-convex
 error surface**.
@@ -125,10 +133,8 @@ derivative (e.g. the slope or the gradient) of the model error for specific
 model parameters, allowing model weights to be updated to move down the
 gradient. As such, the algorithm used to train neural networks is also often
 referred to as simply backpropagation.
-</details>
 
-<details>
-<summary><b style="font-size:19px">Components of the Learning Algorithm</b></summary>
+## Components of the Learning Algorithm
 
 Training a deep learning neural network model using SGD with backpropagation
 involves choosing a number of components and hyperparameters.
@@ -172,12 +178,8 @@ involves choosing a number of components and hyperparameters.
     complete passes through the training dataset after which the training
     process is terminated.
 
-</details>
-
 ## Methods
 
 | Status | Method                  | Technique                                              | Date       | Publication |
 |:------:|-------------------------|--------------------------------------------------------|------------|-------------|
 |   📑   | [**DecAug**](decaug.md) | [**Out-of-Distribution (OoD) Generalization**](ood.md) | 2021/05/10 | arXiv       |
-
-</div>

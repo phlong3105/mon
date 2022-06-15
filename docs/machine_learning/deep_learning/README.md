@@ -1,16 +1,20 @@
-<div align="center">
-<img src="data/deep_learning.png" width="1000">
+---
+layout      : default
+title       : Deep Learning
+parent		: Machine Learning
+nav_order   : 5
+has_children: true
+has_toc     : true
+---
 
-Deep Learning
-=============================
-</div>
+![data/deep_learning.png](data/deep_learning.png)
 
-<div align="justify">
+# Deep Learning
+
+---
 
 ## Methods
 
 | Status | Method | Technique | Date | Publication |
 |:------:|--------|-----------|------|-------------|
 |   📑   |        |           |      |             |
-
-</div>

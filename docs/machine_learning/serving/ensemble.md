@@ -1,3 +1,14 @@
+---
+layout      : default
+title       : Ensemble
+parent	    : Model Learning
+grand_parent: Machine Learning
+nav_order   : 1
+has_children: false
+has_toc     : false
+---
+
+
 <div align="center">
 <img src="data/ensemble.png" width="1000">
 

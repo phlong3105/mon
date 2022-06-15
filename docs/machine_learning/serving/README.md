@@ -1,9 +1,24 @@
-<div align="center">
-<img width="800" src="data/model_deployment.png">
+---
+layout      : default
+title       : Model Serving
+parent		: Machine Learning
+nav_order   : 3
+has_children: true
+has_toc     : true
+---
 
-Model Serving
-=============================
-</div>
+![data/model_deployment.png](data/model_deployment.png)
+
+# Model Serving
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 A common grumble among data science or machine learning researchers or
 practitioners is that putting a model in production is difficult. As a result,
@@ -16,8 +31,7 @@ some common considerations and common pitfalls for tooling and best practices
 and ML model serving patterns that are an essential part of your journey from
 model development to deployment in production.
 
-<details>
-<summary><b style="font-size:19px">Deploying, Serving and Inferencing Models at Scale</b></summary>
+## Deploying, Serving and Inferencing Models at Scale
 
 Once the model is trained and tested, with confidence that it met the
 business requirements for model accuracy, seven crucial requirements for
@@ -65,13 +79,11 @@ singularly. Instead, they operate jointly and often in four model patterns:
 **pipeline**, [**ensemble**](ensemble.md), **business logic**, and
 **online learning**. Each pattern has its purpose and merit.
 
-<div align="center">
-	<img src="data/ml_model_patterns_in_production.png" width="600">
-</div>
-</details>
+| ![data/ml_model_patterns_in_production.png](data/ml_model_patterns_in_production.png) |
+|:-------------------------------------------------------------------------------------:|
+|                                   <img width=600/>                                    |
 
-<details>
-<summary><b style="font-size:19px">Observing and Monitoring Model in Production</b></summary>
+## Observing and Monitoring Model in Production
 
 Model monitoring, often an overlooked stage as part of model development
 lifecycle, is critical to model’s viability in the post deployment production
@@ -110,8 +122,6 @@ pivotal. Let’s briefly discuss them.
   entire
   data infrastructure’s key components: data stores, web servers, routers,
   cluster nodes’ system health, etc.
-
-</details>
 
 ## Methods
 
