@@ -160,7 +160,7 @@ train_configs = {
         "bucket"      : "",
         "cache_images": False,
         "name"        : "yolov4-p7_chalearnltdmonth_1280",
-        "device"      : "0, 1",
+        "device"      : "0,1",
         "multi_scale" : False,
         "single_cls"  : False,
         "adam"        : False,
