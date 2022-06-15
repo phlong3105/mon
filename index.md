@@ -15,7 +15,7 @@ permalink: /
 related to computer vision, machine learning, and deep learning.
 
 [Getting Started](#getting-started){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0.mr-2 } 
-[Handbook](http://phlong3105.github.io/one/handbook){: .btn .fs-5 .mb-4 .mb-md-0 } 
+[Knowledge Base](#knowledge-base){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [Cite](#cite){: .btn .fs-5 .mb-4 .mb-md-0 } 
 [Contact](#contact){: .btn .fs-5 .mb-4 .mb-md-0 } 
 
@@ -69,6 +69,16 @@ bash -i install.sh
 cd ..
 pip install --upgrade -e .
 ```
+
+## Knowledge Base
+
+### Tools
+
+|                                                                      <img width=150/>                                                                      |                                       <img width=150/>                                       |                                    <img width=150/>                                     |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------:|
+| [![Anaconda](tools/data/anaconda_small.gif)](https://phlong3105.github.io/tools/anaconda) <br> [**Anaconda**](https://phlong3105.github.io/tools/anaconda) | [![Docker](tools/data/docker_small.gif)](tools/docker.md) <br> [**Docker**](tools/docker.md) | [![Swift](tools/data/apple_small.gif)](tools/swift.md) <br> [**Swift**](tools/swift.md) |
+|                                [![Python](tools/data/python_small.gif)](tools/python.md) <br> [**Python**](tools/python.md)                                |                                                                                              |                                                                                         |
+
 
 ## Cite
 
