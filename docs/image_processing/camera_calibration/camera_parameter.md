@@ -9,7 +9,9 @@ has_toc     : false
 permalink   : /image_processing/camera_calibration/camera_parameter
 ---
 
-![data/transformation.png](data/transformation.png) 
+<div align="center">
+<img src="data/transformation.png" width="800"/>
+</div>
 
 # What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 

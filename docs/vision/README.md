@@ -7,4 +7,4 @@ has_toc     : true
 permalink   : /vision
 ---
 
-# Machine Learning
+# Vision

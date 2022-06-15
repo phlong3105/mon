@@ -247,10 +247,10 @@ AP50**.
 
 ```text
 @inproceedings{Wang2020,
-  title	 	= {CSPNet: A new backbone that can enhance learning capability of cnn},
-  author 	= {Chien-Yao Wang and Hong-Yuan Mark Liao and Yueh-Hua Wu and Ping-Yang Chen and Jun-Wei Hsieh and I-Hau Yeh},
+  title     = {CSPNet: A new backbone that can enhance learning capability of cnn},
+  author    = {Chien-Yao Wang and Hong-Yuan Mark Liao and Yueh-Hua Wu and Ping-Yang Chen and Jun-Wei Hsieh and I-Hau Yeh},
   booktitle = {CVPRW},
-  pages		= {390--391},
-  year		= {2020}
+  pages     = {390--391},
+  year      = {2020}
 }
 ```
