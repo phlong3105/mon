@@ -1,11 +1,11 @@
 ---
 layout      : default
-title       : YOLOv5
+title       : YOLOX
 parent	    : Object Detection
 grand_parent: Vision
 has_children: false
 has_toc     : false
-permalink   : /vision/object_detection/yolov5
+permalink   : /vision/object_detection/yolox
 ---
 
 ![data/yolor.png](data/yolor.png)
