@@ -1,65 +1,117 @@
-
-![One](data/one_handbook.png)
+![One](docs/data/one.png)
 
 ---
 
-The `One Handbook` is a comprehensive knowledge base of our works related to
-computer vision, machine learning, and deep learning. We summarize various types
-of machine learning methods, related theory, and the best practices when
-applying in competitive challenges and real-world applications.
+# One Research Framework
+
+`One` is a comprehensive research framework and knowledge base of our works 
+related to computer vision, machine learning, and deep learning.
+
+[Getting Started](#getting-started) &nbsp;
+[Knowledge Base](#knowledge-base) &nbsp;
+[Cite](#cite) &nbsp;
+[Contact](#contact) 
+
+---
+
+## Getting Started
+
+### Prerequisite
+
+|            | Requirements                                                                                                                                                                                                                                         |
+|:-----------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **OS**     | [**Ubuntu 20.04 / 22.04**](https://ubuntu.com/download/desktop) (fully supports), `Windows 10` and `MacOS` (partially supports)                                                                                                                      |
+| **Env**    | [**Python>=3.9.0**](https://www.python.org/), [**PyTorch>=1.11.0**](https://pytorch.org/get-started/locally/), [**cudatoolkit=11.3**](https://pytorch.org/get-started/locally/), with [**anaconda**](https://www.anaconda.com/products/distribution) |	
+| **Editor** | [**PyCharm**](https://www.jetbrains.com/pycharm/download)                                                                                                                                                                                            |
+
+### Directory
+
+```text
+one               # root directory
+ |__ data         # contains data
+ |__ docs
+ |__ install      # helpful installation scripts       
+ |__ pretrained   # pretrained models weights
+ |__ scripts      # main scripts
+ |__ src
+ |      |__ one
+ |      |__ project1
+ |      |__ project2
+ |      |__ ..
+ |__ tests
+ |__ third_party
+```
+
+### Installation using `conda`
+
+```shell
+cd <to-where-you-want-to-save-one-dir>
+mkdir -p one
+mkdir -p one/data
+cd one
+
+# Install `aic22_track4` package
+git clone git@github.com:phlong3105/one
+cd one/install
+chmod +x install.sh
+conda init bash
+
+# Install package. When prompt to input the dataset directory path, you should 
+# enter: <some-path>/one/datasets
+bash -i install.sh
+cd ..
+pip install --upgrade -e .
+```
 
 ## Knowledge Base
 
-### [Machine Learning](machine_learning/README.md)
+### [Machine Learning](https://phlong3105.github.io/one/machine_learning)
 
-|                                                                                                         <img width=150/>                                                                                                         |                                                                        <img width=150/>                                                                        |                                                                  <img width=150/>                                                                  |
-|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------:|
-| [![Data Processing](machine_learning/data_processing/data/data_processing_small.gif)](https://phlong3105.github.io/docs/machine_learning/data_processing) <br> [**Data Processing**](machine_learning/data_processing/README.md) | [![Training](machine_learning/model_learning/data/training_small.gif)](machine_learning/model_learning/README.md) <br> [**Training**](machine_learning/model_learning/README.md) | [![Serving](machine_learning/model_serving/data/serving.gif)](machine_learning/model_serving/README.md) <br> [**Serving**](machine_learning/model_serving/README.md) |
-|                                       [![Classification](data/photo.png)](machine_learning/classification/README.md) <br> [**Classification**](machine_learning/classification/README.md)                                        |              [![Clustering](data/photo.png)](machine_learning/clustering/README.md) <br> [**Clustering**](machine_learning/clustering/README.md)               |  [![Deep Learning](data/photo.png)](machine_learning/deep_learning/README.md) <br> [**Deep Learning**](machine_learning/deep_learning/README.md)   |
-|                 [![Dimensionality Reduction](data/photo.png)](machine_learning/dimensionality_reduction/README.md) <br> [**Dimensionality <br> Reduction**](machine_learning/dimensionality_reduction/README.md)                 | [![Neural Network](data/photo.png)](machine_learning/neural_network/README.md) <br> [**Neural Network<br>&nbsp;**](machine_learning/neural_network/README.md)  |   [![Regression](data/photo.png)](machine_learning/regression/README.md) <br> [**Regression<br>&nbsp;**](machine_learning/regression/README.md)    |
-                                                                                                                                                                                                                                                                                        
-### [Vision](vision/README.md)
+|                                                                                                                    <img width="150"/>                                                                                                                    |                                                                                                        <img width="150"/>                                                                                                        |                                                                                                  <img width="150"/>                                                                                                  |
+|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| [![Data Processing](machine_learning/data_processing/data/data_processing_small.gif)](https://phlong3105.github.io/docs/machine_learning/data_processing) <br> [**Data Processing**](https://phlong3105.github.io/docs/machine_learning/data_processing) | [![Training](machine_learning/model_learning/data/training_small.gif)](https://phlong3105.github.io/docs/machine_learning/model_learning) <br> [**Training**](https://phlong3105.github.io/docs/machine_learning/model_learning) | [![Serving](machine_learning/model_serving/data/serving.gif)](https://phlong3105.github.io/docs/machine_learning/model_serving) <br> [**Serving**](https://phlong3105.github.io/docs/machine_learning/model_serving) |
+|                           [![Classification](data/photo.png)](https://phlong3105.github.io/docs/machine_learning/classification) <br> [**Classification**](https://phlong3105.github.io/docs/machine_learning/classification)                            |                       [![Clustering](data/photo.png)](https://phlong3105.github.io/docs/machine_learning/clustering) <br> [**Clustering**](https://phlong3105.github.io/docs/machine_learning/clustering)                        |           [![Deep Learning](data/photo.png)](https://phlong3105.github.io/docs/machine_learning/deep_learning) <br> [**Deep Learning**](https://phlong3105.github.io/docs/machine_learning//deep_learning)           |
+|    [![Dimensionality Reduction](data/photo.png)](https://phlong3105.github.io/docs/machine_learning//dimensionality_reduction) <br> [**Dimensionality <br> Reduction**](https://phlong3105.github.io/docs/machine_learning/dimensionality_reduction)     |          [![Neural Network](data/photo.png)](https://phlong3105.github.io/docs/machine_learning//neural_network) <br> [**Neural Network<br>&nbsp;**](https://phlong3105.github.io/docs/machine_learning/neural_network)          |            [![Regression](data/photo.png)](https://phlong3105.github.io/docs/machine_learning/regression) <br> [**Regression<br>&nbsp;**](https://phlong3105.github.io/docs/machine_learning/regression)             |
 
-|                                                                                                  <img width=150/>                                                                                                   |                                                                                                  <img width=150/>                                                                                                   |                                                                                <img width=150/>                                                                                |
-|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-|         [![Data Processing](vision/action_recognition/data/action_recognition_small.gif)](vision/action_recognition/README.md) <br> [**Action Recognition<br>&nbsp;**](vision/action_recognition/README.md)         |             [![Action Detection](vision/action_detection/data/action_detection_small.gif)](vision/action_detection/README.md) <br> [**Action Detection<br>&nbsp;**](vision/action_detection/README.md)              |           [![Image Classification](data/photo.png)](vision/image_classification/README.md) <br> [**Image<br>Classification**](vision/image_classification/README.md)           |
-|              [![Image Enhancement](vision/image_enhancement/data/image_enhancement_small.gif)](vision/image_enhancement/README.md) <br> [**Image<br>Enhancement**](vision/image_enhancement/README.md)              | [![Instance Segmentation](vision/instance_segmentation/data/instance_segmentation_small.gif)](vision/instance_segmentation/README.md) <br> [**Instance <br> Segmentation**](vision/instance_segmentation/README.md) | [![Lane Detection](vision/lane_detection/data/lane_detection_small.gif)](vision/lane_detection/README.md) <br> [**Lane Detection<br>&nbsp;**](vision/lane_detection/README.md) |
- |                  [![Object Detection](vision/object_detection/data/object_detection_small.gif)](vision/object_detection/README.md) <br> [**Object Detection**](vision/object_detection/README.md)                   |                                         [![Object Tracking](data/photo.png)](vision/object_tracking/README.md) <br> [**Object Tracking**](vision/object_tracking/README.md)                                         |                    [![Reidentification](data/photo.png)](vision/reidentification/README.md) <br>  [**Reidentification**](vision/reidentification/README.md)                    |
- | [![Semantic Segmentation](vision/semantic_segmentation/data/semantic_segmentation_small.gif)](vision/semantic_segmentation/README.md) <br> [**Semantic <br> Segmentation**](vision/semantic_segmentation/README.md) |                                                                                                                                                                                                                     |                                                                                                                                                                                |
- 
-### [Image Processing](image_processing/README.md)
+### [Vision](https://phlong3105.github.io/one/vision)
 
-|                                                                          <img width=150/>                                                                           |                                                                          <img width=150/>                                                                           |                                                                      <img width=150/>                                                                       |
-|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| [![Camera Calibration](data/photo.png)](image_processing/camera_calibration/README.md) <br> [**Camera Calibration**](image_processing/camera_calibration/README.md) | [![Feature Extraction](data/photo.png)](image_processing/feature_extraction/README.md) <br> [**Feature Extraction**](image_processing/feature_extraction/README.md) |               [![Filtering](data/photo.png)](image_processing/filtering/README.md) <br> [**Filtering**](image_processing/filtering/README.md)               |
-|                   [![Histogram](data/photo.png)](image_processing/histogram/README.md) <br> [**Histogram**](image_processing/histogram/README.md)                   |                       [![Spatial](data/photo.png)](image_processing/spatial/README.md) <br> [**Spatial**](image_processing/spatial/README.md)                       | [![Spatial Temporal](data/photo.png)](image_processing/spatial_temporal/README.md) <br> [**Spatial Temporal**](image_processing/spatial_temporal/README.md) |
+|                                                                                                                        <img width="150"/>                                                                                                                         |                                                                                                                        <img width="150"/>                                                                                                                         |                                                                                                      <img width="150"/>                                                                                                      |
+|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|         [![Data Processing](vision/action_recognition/data/action_recognition_small.gif)](https://phlong3105.github.io/one/vision/action_recognition) <br> [**Action Recognition<br>&nbsp;**](https://phlong3105.github.io/one/vision/action_recognition)         |             [![Action Detection](vision/action_detection/data/action_detection_small.gif)](https://phlong3105.github.io/one/vision/action_detection) <br> [**Action Detection<br>&nbsp;**](https://phlong3105.github.io/one/vision/action_detection)              |           [![Image Classification](data/photo.png)](https://phlong3105.github.io/one/vision/image_classification) <br> [**Image<br>Classification**](https://phlong3105.github.io/one/vision/image_classification)           |
+|              [![Image Enhancement](vision/image_enhancement/data/image_enhancement_small.gif)](https://phlong3105.github.io/one/vision/image_enhancement) <br> [**Image<br>Enhancement**](https://phlong3105.github.io/one/vision/image_enhancement)              | [![Instance Segmentation](vision/instance_segmentation/data/instance_segmentation_small.gif)](https://phlong3105.github.io/one/vision/instance_segmentation) <br> [**Instance <br> Segmentation**](https://phlong3105.github.io/one/vision/instance_segmentation) | [![Lane Detection](vision/lane_detection/data/lane_detection_small.gif)](https://phlong3105.github.io/one/vision/lane_detection) <br> [**Lane Detection<br>&nbsp;**](https://phlong3105.github.io/one/vision/lane_detection) |
+|                  [![Object Detection](vision/object_detection/data/object_detection_small.gif)](https://phlong3105.github.io/one/vision/object_detection) <br> [**Object Detection**](https://phlong3105.github.io/one/vision/object_detection)                   |                                         [![Object Tracking](data/photo.png)](https://phlong3105.github.io/one/vision/object_tracking) <br> [**Object Tracking**](https://phlong3105.github.io/one/vision/object_tracking)                                         |                    [![Reidentification](data/photo.png)](https://phlong3105.github.io/one/vision/reidentification) <br>  [**Reidentification**](https://phlong3105.github.io/one/vision/reidentification)                    |
+| [![Semantic Segmentation](vision/semantic_segmentation/data/semantic_segmentation_small.gif)](https://phlong3105.github.io/one/vision/semantic_segmentation) <br> [**Semantic <br> Segmentation**](https://phlong3105.github.io/one/vision/semantic_segmentation) |                                                                                                                                                                                                                                                                   |                                                                                                                                                                                                                              |
+
+### [Image Processing](https://phlong3105.github.io/one/image_processing)
+
+|                                                                                                <img width="150"/>                                                                                                 |                                                                                                <img width="150"/>                                                                                                 |                                                                                            <img width="150"/>                                                                                             |
+|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| [![Camera Calibration](data/photo.png)](https://phlong3105.github.io/one/image_processing/camera_calibration) <br> [**Camera Calibration**](https://phlong3105.github.io/one/image_processing/camera_calibration) | [![Feature Extraction](data/photo.png)](https://phlong3105.github.io/one/image_processing/feature_extraction) <br> [**Feature Extraction**](https://phlong3105.github.io/one/image_processing/feature_extraction) |               [![Filtering](data/photo.png)](https://phlong3105.github.io/one/image_processing/filtering) <br> [**Filtering**](https://phlong3105.github.io/one/image_processing/filtering)               |
+|                   [![Histogram](data/photo.png)](https://phlong3105.github.io/one/image_processing/histogram) <br> [**Histogram**](https://phlong3105.github.io/one/image_processing/histogram)                   |                       [![Spatial](data/photo.png)](https://phlong3105.github.io/one/image_processing/spatial) <br> [**Spatial**](https://phlong3105.github.io/one/image_processing/spatial)                       | [![Spatial Temporal](data/photo.png)](https://phlong3105.github.io/one/image_processing/spatial_temporal) <br> [**Spatial Temporal**](https://phlong3105.github.io/one/image_processing/spatial_temporal) |
 
 ### Tools
 
-|                                            <img width=150/>                                            |                                       <img width=150/>                                       |                                    <img width=150/>                                     |
-|:------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------:|
-| [![Anaconda](tools/data/anaconda_small.gif)](tools/anaconda.md) <br> [**Anaconda**](tools/anaconda.md) | [![Docker](tools/data/docker_small.gif)](tools/docker.md) <br> [**Docker**](tools/docker.md) | [![Swift](tools/data/apple_small.gif)](tools/swift.md) <br> [**Swift**](tools/swift.md) |
-|      [![Python](tools/data/python_small.gif)](tools/python.md) <br> [**Python**](tools/python.md)      |                                                                                              |                                                                                         |
+|                                                                         <img width="150"/>                                                                         |                                                                    <img width="150"/>                                                                    |                                                                 <img width="150"/>                                                                  |
+|:------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------:|
+| [![Anaconda](tools/data/anaconda_small.gif)](https://phlong3105.github.io/one/tools/anaconda) <br> [**Anaconda**](https://phlong3105.github.io/one/tools/anaconda) | [![Docker](tools/data/docker_small.gif)](https://phlong3105.github.io/one/tools/docker) <br> [**Docker**](https://phlong3105.github.io/one/tools/docker) | [![Swift](tools/data/apple_small.gif)](https://phlong3105.github.io/one/tools/swift) <br> [**Swift**](https://phlong3105.github.io/one/tools/swift) |
+|      [![Python](tools/data/python_small.gif)](https://phlong3105.github.io/one/tools/python) <br> [**Python**](https://phlong3105.github.io/one/tools/python)      |                                                                                                                                                          |                                                                                                                                                     |
 
-## Projects
+## Cite
 
-### [Challenges](challenges/README.md)
+If you find our work useful, please cite the following:
 
-|                                                            <img width=150/>                                                            |                                                <img width=150/>                                                |                                                               <img width=150/>                                                               |
-|:--------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------:|
-| [![AI City](challenges/ai_city/data/ai_city_small.gif)](challenges/ai_city/README.md) <br> [**AI City**](challenges/ai_city/README.md) |  [![AutoNue](data/photo.png)](challenges/autonue/README.md) <br> [**AutoNue**](challenges/autonue/README.md)   | [![ChaLearn](challenges/chalearn/data/chalearn_small.gif)](challenges/chalearn/README.md) <br> [**ChaLearn**](challenges/chalearn/README.md) |
-|                [![KATECH](data/photo.png)](challenges/katech/README.md) <br> [**KATECH**](challenges/katech/README.md)                 |      [![KODAS](data/photo.png)](challenges/kodas/README.md) <br> [**KODAS**](challenges/kodas/README.md)       |                       [![NICO](data/photo.png)](challenges/nico/README.md) <br> [**NICO**](challenges/nico/README.md)                        |
- |                  [![NTIRE](data/photo.png)](challenges/ntire/README.md) <br> [**NTIRE**](challenges/ntire/README.md)                   | [![UG2+](challenges/ug2/data/ug2_small.gif)](hallenges/ug2/README.md) <br> [**UG2+**](hallenges/ug2/README.md) |               [![VisDrone](data/photo.png)](challenges/visdrone/README.md) <br> [**VisDrone**](challenges/visdrone/README.md)                |
- |            [![VIPriors](data/photo.png)](challenges/vipriors/README.md) <br> [**VIPriors**](challenges/vipriors/README.md)             |      [![Waymo](data/photo.png)](challenges/waymo/README.md) <br> [**Waymo+**](challenges/waymo/README.md)      |                                                                                                                                              |
+```text
+@misc{Pham2022,  
+    author       = {Long Hoang Pham},  
+    title        = {One: One Research Framework},  
+    publisher    = {GitHub},
+    journal      = {GitHub repository},
+    howpublished = {\url{https://github.com/phlong3105/one}},
+    year         = {2022},
+}
+```
 
-### [Autonomous Vehicle](autonomous_vehicle/README.md)
+## Contact
 
-|                                                                            <img width=150/>                                                                            |                                                                                <img width=150/>                                                                                | <img width=150/> |
-|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|
-| [![Autonomous Sensor](data/photo.png)](autonomous_vehicle/autonomous_sensor/README.md) <br> [**Autonomous<br>Sensor**](autonomous_vehicle/autonomous_sensor/README.md) | [![Scene Understanding](data/photo.png)](autonomous_vehicle/scene_understanding/README.md) <br> [**Scene<br>Understanding**](autonomous_vehicle/scene_understanding/README.md) |                  |
-
-### [Surveillance System](surveillance_system/README.md)
-
-|                                                          <img width=150/>                                                          | <img width=150/> | <img width=150/> |
-|:----------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Edge TSS](data/photo.png)](surveillance_system/edge_tss/README.md) <br>  [**Edge TSS**](surveillance_system/edge_tss/README.md) |                  |                  |
+If you have any questions, feel free to contact `Long Pham` 
+([longpham3105@gmail](longpham3105@gmail) or [phlong@skku.edu](phlong@skku.edu))
