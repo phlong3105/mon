@@ -10,6 +10,8 @@ __pycache__/
 *.pt
 *.pth
 *.weights
+/.idea/
+/.jekyll-cache/
 /.sync/
 /data/
 /pretrained/
