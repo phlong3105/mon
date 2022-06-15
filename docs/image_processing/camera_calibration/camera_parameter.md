@@ -1,12 +1,21 @@
-<div align="center">
-<img src="data/transformation.png" width="1000">
+---
+layout      : default
+title       : Camera Parameter
+nav_order   : 4
+parent      : Camera Calibration
+grand_parent: Image Processing
+has_children: true
+has_toc     : true
+permalink   : /image_processing/camera_calibration/camera_parameter
+---
 
-What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
-=============================
-<a href="https://towardsdatascience.com/what-are-intrinsic-and-extrinsic-camera-parameters-in-computer-vision-7071b72fb8ec#:~:text=The%20extrinsic%20matrix%20is%20a,to%20the%20pixel%20coordinate%20system."><img src="../../data/badge/website.svg"></a>
-</div>
+![data/transformation.png](data/transformation.png)
 
-<div align="justify">
+# What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
+
+[![Website](../../data/badge/website.svg)](https://towardsdatascience.com/what-are-intrinsic-and-extrinsic-camera-parameters-in-computer-vision-7071b72fb8ec#:~:text=The%20extrinsic%20matrix%20is%20a,to%20the%20pixel%20coordinate%20system.)
+
+---
 
 ## Highlight
 
@@ -187,5 +196,3 @@ the pixel coordinate system.
   and origin shift.
 
 </details>
-
-</div>

@@ -14,7 +14,7 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-theme       : "just-the-docs"
+# theme       : "just-the-docs"
 remote_theme: just-the-docs/just-the-docs
 title       : One
 description : One Research Framework
