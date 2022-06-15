@@ -14,10 +14,10 @@ permalink: /
 `One` is a comprehensive research framework and knowledge base of our works 
 related to computer vision, machine learning, and deep learning.
 
-[Getting Started](#getting-started){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0.mr-2 } 
-[Knowledge Base](#knowledge-base){: .btn .fs-5 .mb-4 .mb-md-0 } 
-[Cite](#cite){: .btn .fs-5 .mb-4 .mb-md-0 } 
-[Contact](#contact){: .btn .fs-5 .mb-4 .mb-md-0 } 
+[Getting Started](#getting-started){: .btn .btn-primary .fs-3 .mb-4 .mb-md-0 } 
+[Knowledge Base](#knowledge-base){: .btn .fs-3 .mb-4 .mb-md-0 } 
+[Cite](#cite){: .btn .fs-3 .mb-4 .mb-md-0 } 
+[Contact](#contact){: .btn .fs-3 .mb-4 .mb-md-0 } 
 
 ---
 
