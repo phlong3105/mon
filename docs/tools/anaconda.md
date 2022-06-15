@@ -8,27 +8,23 @@ has_toc     : false
 permalink   : /tools/anaconda
 ---
 
-<div align="center">
+# Anaconda
 
-Anaconda
-=============================
-<a href="data/conda_cheatsheet.pdf">Conda Cheatsheet</a> •
-<a href="data/pip_cheatsheet.pdf">PIP Cheatsheet</a>
-</div>
+[Conda Cheatsheet](data/conda_cheatsheet.pdf) •
+[PIP Cheatsheet](data/pip_cheatsheet.pdf)
 
-<div align="justify">
+---
 
 ## Installation
 
-<details>
-<summary><b style="font-size:18px">Ubuntu and MacOS</b></summary>
+### Ubuntu and macOS
 
 If the path is not automatically add to the `.bashrc` file. So in this case,
 we can manually add it as follows:
 
 ```shell
-sudo nano ~/.basrc        # Ubuntu
-sudo nano ~/.bash_profile # MacOS
+sudo nano ~/.basrc         # Ubuntu
+sudo nano ~/.bash_profile  # MacOS
 ```
 
 Paste the following text at the end of the file:
@@ -51,13 +47,7 @@ unset __conda_setup
 # <<< conda init <<
 ```
 
-</details>
-
-<details>
-<summary><b style="font-size:18px">Windows</b></summary>
+### Windows
 
 Make sure to add the path to `anaconda3/bin` and `anaconda3/lib` in `PATH`
 environment.
-</details>
-
-</div>

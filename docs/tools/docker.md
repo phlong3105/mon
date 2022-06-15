@@ -8,20 +8,13 @@ has_toc     : false
 permalink   : /tools/docker
 ---
 
-<div align="center">
-<img src="data/docker.png" width="1000px">
+# Docker
 
-Docker
-=============================
-<a href="data/docker_cheatsheet.pdf">Cheatsheet</a>
-</div>
-
-<div align="justify">
+---
 
 ## Installation
 
-<details>
-<summary><b style="font-size:18px">Docker</b></summary>
+### Docker
 
 1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including
    images, containers, volumes, and networks, are preserved:
@@ -52,12 +45,11 @@ sudo apt-get update
 sudo apt-get install docker-ce docker-ce-cli containerd.io
 ```
 
-</details>
+### NVIDIA Docker
 
-<details>
-<summary><b style="font-size:18px">NVIDIA Docker</b></summary>
-
-<div align="center"><img src="data/nvidia_docker.png" width="480"></div>
+| ![nvidia_docker.png](data/nvidia_docker.png) |
+|:--------------------------------------------:|
+|        *Fig 1. NVIDIA docker stack.*         |
 
 ```shell
 # Setup the stable repository and the GPG key
@@ -75,7 +67,3 @@ sudo systemctl restart docker
 # At this point, a working setup can be tested by running a base CUDA container:
 sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 ```
-
-</details>
-
-</div>
