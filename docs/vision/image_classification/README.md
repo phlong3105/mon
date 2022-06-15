@@ -2,7 +2,6 @@
 layout      : default
 title       : Image Classification
 parent		: Vision
-nav_order   : 3
 has_children: true
 has_toc     : false
 permalink   : /vision/image_classification

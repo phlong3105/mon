@@ -1,16 +1,32 @@
-<div align="center">
+---
+layout      : default
+title       : YOLOv5
+parent	    : Object Detection
+grand_parent: Vision
+has_children: false
+has_toc     : false
+permalink   : /vision/object_detection/yolov5
+---
 
-YOLOX: Exceeding YOLO Series in 2021
-=============================
+![data/yolor.png](data/yolor.png)
+
+# YOLOX: Exceeding YOLO Series in 2021
+
 Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun
 
 arXiv
 
-<a href="data/yolox.pdf"><img src="../../data/badge/paper.svg"></a>
-<a href="https://github.com/Megvii-BaseDetection/YOLOX"><img src="../../data/badge/code.svg"></a>
-</div>
+[Paper](data/yolox.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Code](https://github.com/Megvii-BaseDetection/YOLOX){: .btn .fs-3 .mb-4 .mb-md-0 }
 
-<div align="justify">
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
 
@@ -21,5 +37,3 @@ arXiv
 ## Results
 
 ## Citation
-
-</div>

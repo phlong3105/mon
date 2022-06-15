@@ -1,15 +1,29 @@
-<div align="center">
+---
+layout      : default
+title       : ZeroDCE
+parent	    : Image Enhancement
+grand_parent: Vision
+has_children: false
+has_toc     : false
+permalink   : /vision/image_enhancement/hinet
+---
 
-Advanced Lane Detection
-=============================
+# Advanced Lane Detection
+
 Oana Gaskey
 
 GitHub 2020
 
-<a href="https://github.com/OanaGaskey/Advanced-Lane-Detection"><img src="../../data/badge/code.svg"></a>
-</div>
+[Code](https://github.com/OanaGaskey/Advanced-Lane-Detection){: .btn .fs-3 .mb-4 .mb-md-0 }
 
-<div align="justify">
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
 
@@ -24,9 +38,9 @@ to be identified but on top of that, the images needs to be undistorted.
 Image transformation is necessary for camera calibration and for perspective
 transform to obtain a bird's eye view of the road.
 
-<div align="center">
-	<img src="data/lane_detection.gif" width="400">
-</div>
+| ![data/lane_detection.gif](data/lane_detection.gif) |
+|:---------------------------------------------------:|
+|                 <img width="400" />                 |
 
 ## Method
 
@@ -47,22 +61,22 @@ geometry. The images provided present `9 * 6` corners to work with.
 OpenCV `undistort` function is used to transform the images using the camera
 matrix and distortion coefficients.
 
-<div align="center">
-	<img src="data/undistorted_chessboard.png" width="700">
-</div>
+| ![data/undistorted_chessboard.gif](data/undistorted_chessboard.gif) |
+|:-------------------------------------------------------------------:|
+|                         <img width="700" />                         |
 
 The result of the camera calibration technique is visible when comparing these
 pictures. While on the chessboard picture the distortion is more obvious, on
 the road picture it's more subtle. Nevertheless, an undistorted picture would
 lead to an incorrect road curvature calculation.
 
-<div align="center">
-	<img src="data/undistorted_road.png" width="700">
-</div>
+| ![data/undistorted_road.gif](data/undistorted_road.gif) |
+|:-------------------------------------------------------:|
+|                   <img width="700" />                   |
 
 ### 2. Perspective Transform from Camera Angle to Bird's Eye View
 
-To calucluate curvature, the ideal perspective is a bird's eye view. This means
+To calculate curvature, the ideal perspective is a bird's eye view. This means
 that the road is perceived from above, instead of at an angle through the
 vehicle's windshield.
 
@@ -71,18 +85,18 @@ common knowledge that the lane lines are in fact parallel. Source and
 destination
 points are identified directly from the image for the perspective transform.
 
-<div align="center">
-	<img src="data/ending_points.png" width="700">
-</div>
+| ![data/ending_points.gif](data/ending_points.gif) |
+|:-------------------------------------------------:|
+|                <img width="700" />                |
 
 OpenCV provides perspective transform functions to calculate the transformation
 matrix for the images given the source and destination points.
 Using `warpPerspective` function, the bird's eye view perspective transform is
 performed.
 
-<div align="center">
-	<img src="data/warp_perspective.png" width="700">
-</div>
+| ![data/warp_perspective.gif](data/warp_perspective.gif) |
+|:-------------------------------------------------------:|
+|                   <img width="700" />                   |
 
 ### 3. Process Binary Thresholded Images
 
@@ -105,9 +119,9 @@ This is particularly important to detect yellow lines on light concrete road.
 The fourth transformation is on the hue component with values from 10 to 25,
 which were identified as corresponding to yellow.
 
-<div align="center">
-	<img src="data/binary_threshold.png" width="800">
-</div>
+| ![data/binary_threshold.gif](data/binary_threshold.gif) |
+|:-------------------------------------------------------:|
+|                   <img width="700" />                   |
 
 ### 4. Lane Line Detection Using Histogram
 
@@ -132,9 +146,9 @@ line fit of the selected pixels.
 Here, the identified left and right line pixels are marked in red and blue
 respectively. The second degree polynomial is traced on the resulting image.
 
-<div align="center">
-	<img src="data/fit_poly.png" width="800">
-</div>
+| ![data/fit_poly.gif](data/fit_poly.gif) |
+|:---------------------------------------:|
+|           <img width="800" />           |
 
 ### 5. Detection of Lane Lines Based on Previous Cycle
 
@@ -152,9 +166,9 @@ The search returns `leftx`, `lefty`, `rightx`, `righty` pixel coordinates that
 are fitted with a second degree polynomial function for each left and right
 side.
 
-<div align="center">
-	<img src="data/prev_poly.png" width="800">
-</div>
+| ![data/prev_poly.gif](data/prev_poly.gif) |
+|:-----------------------------------------:|
+|            <img width="800" />            |
 
 ### 6. Calculate Vehicle Position and Curve Radius
 
@@ -182,5 +196,3 @@ of the vehicle.
 ## Results
 
 ## Citation
-
-</div>

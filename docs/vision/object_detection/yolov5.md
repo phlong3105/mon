@@ -1,11 +1,31 @@
-<div align="center">
+---
+layout      : default
+title       : YOLOv5
+parent	    : Object Detection
+grand_parent: Vision
+has_children: false
+has_toc     : false
+permalink   : /vision/object_detection/yolov5
+---
 
-YOLOv5: v6.1 - TensorRT, TensorFlow Edge TPU and OpenVINO Export and Inference
-=============================
-<a href="https://github.com/ultralytics/yolov5"><img src="../../data/badge/code.svg"></a>
-</div>
+![data/yolov5.png](data/yolor.png)
 
-<div align="justify">
+# YOLOv5: v6.1 - TensorRT, TensorFlow Edge TPU and OpenVINO Export and Inference
+
+Chien-Yao Wang, I-Hau Yeh, and Hong-Yuan Mark Liao
+
+arXiv
+
+[Code](https://github.com/ultralytics/yolov5){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
 
@@ -16,5 +36,3 @@ YOLOv5: v6.1 - TensorRT, TensorFlow Edge TPU and OpenVINO Export and Inference
 ## Results
 
 ## Citation
-
-</div>

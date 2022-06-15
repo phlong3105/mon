@@ -2,7 +2,6 @@
 layout      : default
 title       : Action Recognition
 parent		: Vision
-nav_order   : 2
 has_children: true
 has_toc     : false
 permalink   : /vision/action_recognition

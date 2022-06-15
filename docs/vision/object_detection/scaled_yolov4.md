@@ -1,18 +1,32 @@
-<div align="center">
+---
+layout      : default
+title       : Scaled-YOLOv4
+parent	    : Object Detection
+grand_parent: Vision
+has_children: false
+has_toc     : false
+permalink   : /vision/object_detection/scaled_yolo4
+---
 
-Scaled-YOLOv4: Scaling Cross Stage Partial Network
-=============================
+# Scaled-YOLOv4: Scaling Cross Stage Partial Network
+
 Chien-Yao Wang, Alexey Bochkovskiy, and Hong-Yuan Mark Liao
 
 CVPR 2021
 
-<a href="data/scaled_yolov4.pdf"><img src="../../data/badge/paper.svg"></a>
-<a href="https://github.com/WongKinYiu/ScaledYOLOv4"><img src="../../data/badge/code.svg"></a>
-<a href="https://sh-tsang.medium.com/review-scaled-yolov4-scaling-cross-stage-partial-network-51e3c515b0a7"><img src="../../data/badge/reference.svg"></a>
-<a href="https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982#:~:text=yolov4%2Dcsp.cfg-,Scaled%20YOLO%20v4%20is%20the%20best%20neural%20network%20for%20object,15%20FPS%20to%201774%20FPS."><img src="../../data/badge/reference.svg"></a>
-</div>
+[Paper](data/scaled_yolov4.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Code](https://github.com/WongKinYiu/ScaledYOLOv4){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Reference](https://sh-tsang.medium.com/review-scaled-yolov4-scaling-cross-stage-partial-network-51e3c515b0a7){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Reference](https://alexeyab84.medium.com/scaled-yolo-v4-is-the-best-neural-network-for-object-detection-on-ms-coco-dataset-39dfa22fa982){: .btn .fs-3 .mb-4 .mb-md-0 }
 
-<div align="justify">
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
 
@@ -22,10 +36,10 @@ Then, a network scaling approach that modifies not only the depth, width,
 resolution, but also structure of the network, which finally forms
 Scaled-YOLOv4.
 
-<div align="center">
-	<img src="data/scaled_yolov4_sota.png" width="700">
-	<p>Chart of Accuracy (vertical axis) and Latency (horizontal axis) on a Tesla V100 GPU (Volta) with batch = 1 without using TensorRT.</p>
-</div>
+|                                    ![data/scaled_yolov4_sota.png](data/scaled_yolov4_sota.png)                                     |
+|:----------------------------------------------------------------------------------------------------------------------------------:|
+| Chart of Accuracy (vertical axis) and Latency (horizontal axis) on a Tesla V100 GPU (Volta) with batch = 1 without using TensorRT. |
+|                                                        <img width="700" />                                                         |
 
 ## Method
 
@@ -35,32 +49,30 @@ know them before Scaled-YOLOv4.
 
 ### 1. Principle of Model Scaling
 
-<details open>
-<summary><b style="font-size:16px">General Principle of Model Scaling</b></summary>
+#### General Principle of Model Scaling
 
-<div align="center">
-	<img src="data/scaled_yolov4_flop.png" width="400">
-	<p>FLOPs of different computational layers with different model scaling factors.</p>
-</div>
+|          ![data/scaled_yolov4_flop.png](data/scaled_yolov4_flop.png)          |
+|:-----------------------------------------------------------------------------:|
+| FLOPs of different computational layers with different model scaling factors. |
+|                              <img width="400" />                              |
 
 Let the scaling factors that can be used to adjust the image size, the number
 of layers, and the number of channels be **_α_**, **_β_**, and **_γ_**,
 respectively. For the k-layer CNNs with _b_ base layer channels, when these
-scaling factors
-vary, the corresponding changes on FLOPs are shown as above table.
+scaling factors vary, the corresponding changes on FLOPs are shown as above
+table.
 
 > **The scaling size, depth and width cause increase in the computation cost**.
 > They respectively show square, linear, and square increase.
 
-<div align="center">
-	<img src="data/scaled_yolov4_flop_csp.png" width="350">
-	<p>FLOPs of different computational layers with/without CSP-ization.</p>
-</div>
+| ![data/scaled_yolov4_flop_csp.png](data/scaled_yolov4_flop_csp.png) |
+|:-------------------------------------------------------------------:|
+|  FLOPs of different computational layers with/without CSP-ization   |
+|                         <img width="350" />                         |
 
 - [CSPNet](../image_classification/cspnet.md) is applied to ResNet, ResNeXt,
   and Darknet, the changes in the amount of computations are observed in the
-  below
-  table.
+  below table.
 - In brief, [CSPNet](../image_classification/cspnet.md) splits the input into
   two paths. One performs convolutions. One performs no convolution. They are
   fused at the output.
@@ -70,19 +82,14 @@ vary, the corresponding changes on FLOPs are shown as above table.
 
 > Therefore, CSP-ized models are used as the best model for performing model
 > scaling.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">Scaling Tiny Models for Low-End Devices</b></summary>
+#### Scaling Tiny Models for Low-End Devices
 
-<div align="center">
-	<img src="data/scaled_yolov4_osanet_dense_layer.png" width="400">
-	<p>Dense layer in DenseNet & OSA layer in VoVNet/OSANet.</p>
-</div>
-<div align="center">
-	<img src="data/scaled_yolov4_osanet_dense_layer_flop.png" width="300">
-	<p>Dense layer in DenseNet & OSA layer in VoVNet/OSANet.</p>
-</div>
+|      ![data/scaled_yolov4_osanet_dense_layer.png](data/scaled_yolov4_osanet_dense_layer.png)      |
+|:-------------------------------------------------------------------------------------------------:|
+| ![data/scaled_yolov4_osanet_dense_layer_flop.png](data/scaled_yolov4_osanet_dense_layer_flop.png) |
+|                       Dense layer in DenseNet & OSA layer in VoVNet/OSANet.                       |
+|                                        <img width="300" />                                        |
 
 - Memory bandwidth, memory access cost (MACs), and DRAM traffic should also be
   considered.
@@ -94,11 +101,10 @@ vary, the corresponding changes on FLOPs are shown as above table.
 > The tiny model is designed with the help of OSANet, which has a smaller
 > computation complexity.
 
-<div align="center">
-	<img src="data/scaled_yolov4_osanet_nc.png" width="400">
-	<p>Number of channel of OSANet, CSPOSANet, and CSPOSANet with partial in 
-    computational block (PCB).</p>
-</div>
+|               ![data/scaled_yolov4_osanet_nc.png](data/scaled_yolov4_osanet_nc.png)               |
+|:-------------------------------------------------------------------------------------------------:|
+| Number of channel of OSANet, CSPOSANet, and CSPOSANet with partial in  computational block (PCB)  |
+|                                        <img width="400" />                                        |
 
 - A new concept of gradient truncation is performed between computational block
   of the CSPOSANet.
@@ -109,24 +115,23 @@ vary, the corresponding changes on FLOPs are shown as above table.
 
 > The CSPOSANet is designed to **dynamically adjust the channel allocation**.
 
-<div align="center">
-	<img src="data/scaled_yolov4_osanet_cio.png" width="400">
-	<p>The CIO of OSA, CSP, and the designed CSPOSANet.</p>
-</div>
+| ![data/scaled_yolov4_osanet_cio.png](data/scaled_yolov4_osanet_cio.png) |
+|:-----------------------------------------------------------------------:|
+|            The CIO of OSA, CSP, and the designed CSPOSANet.             |
+|                           <img width="400" />                           |
+
 - Minimize Convolutional Input/Output (CIO) is an indicator that can measure
 the status of DRAM IO.
 
 > When kg>b/2, **the proposed CSPOSANet can obtain the best CIO**.
 
-</details>
 
-<details open>
-<summary><b style="font-size:16px">Scaling Large Models for High-End GPUs</b></summary>
+#### Scaling Large Models for High-End GPUs
 
-<div align="center">
-	<img src="data/scaled_yolov4_model_scaling_factors.png" width="400">
-	<p>Model scaling factors of different parts of object detectors.</p>
-</div>
+| ![data/scaled_yolov4_model_scaling_factors.png](data/scaled_yolov4_model_scaling_factors.png) |
+|:---------------------------------------------------------------------------------------------:|
+|                 Model scaling factors of different parts of object detectors.                 |
+|                                      <img width="400" />                                      |
 
 - We hope to improve the accuracy and maintain the real-time inference speed
   after scaling up the CNN model, the above factors should be considered.
@@ -138,10 +143,10 @@ the status of DRAM IO.
 > **The ability to better predict the size of an object basically depends on the
 receptive field of the feature vector.**
 
-<div align="center">
-	<img src="data/scaled_yolov4_effect_of_receptive_field.png" width="400">
-	<p>Effect of receptive field caused by different model scaling factors.</p>
-</div>
+| ![data/scaled_yolov4_effect_of_receptive_field.png](data/scaled_yolov4_effect_of_receptive_field.png) |
+|:-----------------------------------------------------------------------------------------------------:|
+|                 Effect of receptive field caused by different model scaling factors.                  |
+|                                          <img width="400" />                                          |
 
 - It is apparent that width scaling can be independently operated.
 - The compound of {size^input, #stage} turns out with the best impact.
@@ -150,12 +155,9 @@ receptive field of the feature vector.**
 on size^input, #stage**, and then according to real-time requirements, **scaling
 is further performed on depth and width respectively**.
 
-</details>
-
 ### 2. Scaled-YOLOv4: CSP-ized YOLOv4 / YOLOv4-CSP
 
-<details open>
-<summary><b style="font-size:16px">Backbone</b></summary>
+#### Backbone
 
 The amount of computation of each CSPDarknet stage is _whb²(9/4 + 3/4 + 5k/2)_.
 
@@ -167,34 +169,28 @@ respectively.
 
 In order to get a better speed/accuracy trade-off, the first CSP stage is
 converted into original Darknet residual layer.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">Neck</b></summary>
+#### Neck
 
-<div align="center">
-	<img src="data/scaled_yolov4_spp.png" width="500">
-	<p>Computational blocks of reversed Dark layer (SPP) and reversed CSP dark 
-	layers (SPP).</p>
-</div>
+|               ![data/scaled_yolov4_spp.png](data/scaled_yolov4_spp.png)               |
+|:-------------------------------------------------------------------------------------:|
+| Computational blocks of reversed Dark layer (SPP) and reversed CSP dark layers (SPP). |
+|                                  <img width="500" />                                  |
 
 The PAN architecture in YOLOv4 is also CSP-ized as above. This new update
 effectively cuts down 40% of computation.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">SPP</b></summary>
+#### SPP
 
 Also, SPP module (SPPNet) is now inserted in the middle position of the first
 computation list group of the CSPPAN.
-</details>
 
 ### 3. Scaled-YOLOv4: YOLOv4-tiny
 
-<div align="center">
-	<img src="data/scaled_yolov4_tiny.png" width="350">
-	<p>Computational block of YOLOv4-tiny.</p>
-</div>
+| ![data/scaled_yolov4_tiny.png](data/scaled_yolov4_tiny.png) |
+|:-----------------------------------------------------------:|
+|             Computational block of YOLOv4-tiny.             |
+|                     <img width="350" />                     |
 
 YOLOv4-tiny is designed for low-end GPU device. **The CSPOSANet with partial
 in computational block (PCB) architecture** is used to form the backbone of
@@ -205,10 +201,10 @@ YOLOv4.
 
 ### 4. Scaled-YOLOv4: YOLOv4-large
 
-<div align="center">
-	<img src="data/scaled_yolov4_large.png" width="700">
-	<p>Computational block of YOLOv4-tiny.</p>
-</div>
+| ![data/scaled_yolov4_large.png](data/scaled_yolov4_large.png) |
+|:-------------------------------------------------------------:|
+|             Computational block of YOLOv4-large.              |
+|                      <img width="700" />                      |
 
 YOLOv4-large is designed for cloud GPU. A fully CSP-ized model **YOLOv4-P5**
 is designed and can be scaled up to **YOLOv4-P6** and **YOLOv4-P7**.
@@ -225,13 +221,12 @@ is designed and can be scaled up to **YOLOv4-P6** and **YOLOv4-P7**.
 
 ## Ablation Studies
 
-<details open>
-<summary><b style="font-size:16px">CSP-ized Model</b></summary>
+### CSP-ized Model
 
-<div align="center">
-	<img src="data/scaled_yolov4_ablation_cspized_models.png" width="400">
-	<p>Ablation study of CSP-ized models @ 608x608.</p>
-</div>
+| ![data/scaled_yolov4_ablation_cspized_models.png](data/scaled_yolov4_ablation_cspized_models.png) |
+|:-------------------------------------------------------------------------------------------------:|
+|                           Ablation study of CSP-ized models @ 608x608.                            |
+|                                        <img width="400" />                                        |
 
 - Darknet53 (D53) is used as backbone and FPN with SPP (FPNSPP) and PAN with
   SPP (PANSPP) are chosen as necks to design ablation studies.
@@ -247,15 +242,13 @@ is designed and can be scaled up to **YOLOv4-P6** and **YOLOv4-P7**.
 >
 > Therefore, **CD53s-CPANSPP-Mish is decided to used**, as it results in the
 > highest AP in the above table as the backbone of YOLOv4-CSP.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">YOLOv4-tiny</b></summary>
+### YOLOv4-tiny
 
-<div align="center">
-	<img src="data/scaled_yolov4_tiny_ablation.png" width="350">
-	<p>Ablation study of partial at different position in computational block.</p>
-</div>
+| ![data/scaled_yolov4_tiny_ablation.png](data/scaled_yolov4_tiny_ablation.png) |
+|:-----------------------------------------------------------------------------:|
+|    Ablation study of partial at different position in computational block.    |
+|                              <img width="350" />                              |
 
 The designed PCB technique can make the model more flexible, because such a
 design can be adjusted according to actual needs. The proposed COSA can get a
@@ -264,32 +257,28 @@ higher AP.
 > Therefore, **COSA-2x2x is finally chosen**, which received the **best
 > speed/accuracy trade-off** in the experiment as the **YOLOv4-tiny**
 > architecture.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">YOLOv4-large</b></summary>
+### YOLOv4-large
 
-<div align="center">
-	<img src="data/scaled_yolov4_large_ablation.png" width="350">
-	<p>Ablation study of training schedule with/without fine-tuning.</p>
-</div>
+| ![data/scaled_yolov4_large_ablation.png](data/scaled_yolov4_large_ablation.png) |
+|:-------------------------------------------------------------------------------:|
+|          Ablation study of training schedule with/without fine-tuning.          |
+|                               <img width="350" />                               |
 
 For YOLOv4-large, 300 epochs are firstly executed and then followed by 150
 epochs for fine-tuning using stronger data augmentation method.
 
 > **AP is improved with further fine-tuning using stronger data augmentation
 > method**.
-</details>
 
 ## Results
 
-<details open>
-<summary><b style="font-size:16px">Large-Model</b></summary>
+### Large-Model
 
-<div align="center">
-	<img src="data/scaled_yolov4_large_results.png" width="700">
-	<p>Comparison of state-of-the-art object detectors</p>
-</div>
+| ![data/scaled_yolov4_large_results.png](data/scaled_yolov4_large_results.png) |
+|:-----------------------------------------------------------------------------:|
+|               Comparison of state-of-the-art object detectors.                |
+|                              <img width="700" />                              |
 
 When comparing **YOLOv4-CSP** with the same accuracy of EfficientDet-D3
 (47.5% vs 47.5%), **the inference speed is 1.9 times**.
@@ -306,18 +295,18 @@ faster in terms of inference speed**.
 > **all scaled YOLOv4 models, including YOLOv4-CSP, YOLOv4-P5, YOLOv4-P6,
 > YOLOv4-P7, are Pareto optimal on all indicators**.
 
-<div align="center">
-	<img src="data/scaled_yolov4_large_tta_results.png" width="300">
-	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
-</div>
+| ![data/scaled_yolov4_large_tta_results.png](data/scaled_yolov4_large_tta_results.png) |
+|:-------------------------------------------------------------------------------------:|
+|           Results of YOLOv4-large models with test-time augmentation (TTA).           |
+|                                  <img width="300" />                                  |
 
 With **test-time augmentation (TTA)**, YOLOv4-P5, YOLOv4-P6, and YOLOv4-P7 gets
 1.1%, 0.7%, and 0.5% **higher AP**, respectively.
 
-<div align="center">
-	<img src="data/scaled_yolov4_p7_resolutions.png" width="500">
-	<p>Results of YOLOv4-large models with test-time augmentation (TTA)</p>
-</div>
+| ![data/scaled_yolov4_p7_resolutions.png](data/scaled_yolov4_p7_resolutions.png) |
+|:-------------------------------------------------------------------------------:|
+|        Results of YOLOv4-large models with test-time augmentation (TTA).        |
+|                               <img width="500" />                               |
 
 FPN-like architecture is a naïve once-for-all model while YOLOv4 has some stages
 of top-down path and detection branch.
@@ -329,20 +318,18 @@ YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 represent the model which has removed {P7} and
 > **YOLOv4-P7\P7 and YOLOv4-P7\P7\P6 have the best AP at middle and low
 > resolution**, respectively. This means that we can use subnets of FPN-like
 > models to execute the object detection task well.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">Tiny-Model</b></summary>
+### Tiny-Model
 
-<div align="center">
-	<img src="data/scaled_yolov4_tiny_results.png" width="400">
-	<p>Comparison of state-of-the-art tiny models.</p>
-</div>
+| ![data/scaled_yolov4_tiny_results.png](data/scaled_yolov4_tiny_results.png) |
+|:---------------------------------------------------------------------------:|
+|                 Comparison of state-of-the-art tiny models.                 |
+|                             <img width="400" />                             |
 
-<div align="center">
-	<img src="data/scaled_yolov4_tiny_fps.png" width="400">
-	<p>FPS of YOLOv4-tiny on embedded devices.</p>
-</div>
+| ![data/scaled_yolov4_tiny_fps.png](data/scaled_yolov4_tiny_fps.png) |
+|:-------------------------------------------------------------------:|
+|               FPS of YOLOv4-tiny on embedded devices.               |
+|                         <img width="400" />                         |
 
 YOLOv4-tiny is put on different embedded GPUs for testing, including Xavier AGX,
 Xavier NX, Jetson TX2, Jetson NANO.
@@ -356,7 +343,6 @@ the respective frame rate can reach **773 FPS** and **1774 FPS**, which is
 extremely fast.
 
 > YOLOv4-tiny can achieve real-time performance no matter which device is used.
-</details>
 
 ## Citation
 
@@ -370,5 +356,3 @@ extremely fast.
     pages     = {13029-13038}
 }
 ```
-
-</div>

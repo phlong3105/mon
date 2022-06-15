@@ -1,7 +1,6 @@
 ---
 layout      : default
 title       : Camera Parameter
-nav_order   : 4
 parent      : Camera Calibration
 grand_parent: Image Processing
 has_children: true
@@ -9,9 +8,7 @@ has_toc     : false
 permalink   : /image_processing/camera_calibration/camera_parameter
 ---
 
-<div align="center">
-<img src="data/transformation.png" width="800"/>
-</div>
+![data/transformation.png](data/transformation.png) 
 
 # What are Intrinsic and Extrinsic Camera Parameters in Computer Vision?
 

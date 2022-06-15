@@ -3,7 +3,6 @@ layout      : default
 title       : HiNet
 parent	    : Image Enhancement
 grand_parent: Vision
-nav_order   : 1
 has_children: false
 has_toc     : false
 permalink   : /vision/image_enhancement/hinet

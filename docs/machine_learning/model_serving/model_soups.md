@@ -3,7 +3,6 @@ layout      : default
 title       : Model Soups
 parent	    : Model Serving
 grand_parent: Machine Learning
-nav_order   : 2
 has_children: false
 has_toc     : false
 permalink   : /machine_learning/model_serving/model_soups

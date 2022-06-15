@@ -2,7 +2,6 @@
 layout      : default
 title       : Image Enhancement
 parent		: Vision
-nav_order   : 4
 has_children: true
 has_toc     : false
 permalink   : /vision/image_enhancement

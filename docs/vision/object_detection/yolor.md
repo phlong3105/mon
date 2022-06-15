@@ -1,20 +1,35 @@
-<div align="center">
-<img src="data/yolor.png" width="1000">
+---
+layout      : default
+title       : YOLOR
+parent	    : Object Detection
+grand_parent: Vision
+has_children: false
+has_toc     : false
+permalink   : /vision/object_detection/yolor
+---
 
-You Only Learn One Representation: Unified Network for Multiple Tasks
-=============================
+![data/yolor.png](data/yolor.png)
+
+# You Only Learn One Representation: Unified Network for Multiple Tasks
+
 Chien-Yao Wang, I-Hau Yeh, and Hong-Yuan Mark Liao
 
 arXiv
 
-<a href="data/yolor.pdf"><img src="../../data/badge/paper.svg"></a>
-<a href="https://github.com/WongKinYiu/yolor"><img src="../../data/badge/code.svg"></a>
-<a href="https://viblo.asia/p/paper-explain-yolor-su-khoi-dau-cho-mot-xu-huong-moi-Ljy5VREy5ra"><img src="../../data/badge/reference.svg"></a>
-<a href="https://medium.com/augmented-startups/is-yolor-better-and-faster-than-yolov4-54812da66cc1"><img src="../../data/badge/reference.svg"></a>
-<a href="https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D."><img src="../../data/badge/reference.svg"></a>
-</div>
+[Paper](data/yolor.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Code](https://github.com/WongKinYiu/yolor){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Reference](https://viblo.asia/p/paper-explain-yolor-su-khoi-dau-cho-mot-xu-huong-moi-Ljy5VREy5ra){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Reference](https://medium.com/augmented-startups/is-yolor-better-and-faster-than-yolov4-54812da66cc1){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Reference](https://viso.ai/deep-learning/yolor/#:~:text=YOLOR%20stands%20for%20%E2%80%9CYou%20Only,knowledge%20and%20explicit%20knowledge%20together%E2%80%9D){: .btn .fs-3 .mb-4 .mb-md-0 }
 
-<div align="justify">
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
 
@@ -38,19 +53,15 @@ compared to the [PP-YOLOv2](pp_yolov2.md), at the same inference speed.
 
 ## Method
 
-<div align="center">
-	<img width="700" src="data/yolor_architecture.png">
-	<p>YOLOR concept with implicit and explicit knowledge-based multi-task learning.</p>
-    <p>Chúng ta có thể thấy kiến thức tường minh được tính toán từ ảnh đầu vào 
-      trong quá trình forward. Trong khi đó, kiến thức tiềm ẩn không phụ thuộc 
-      vào ảnh đầu vào trong quá trình forward mà chúng là những đặc trưng cố 
-      định đóng vai trò giống như các tham số trong mô hình.</p>
-</div>
+|                                                                                                          ![data/yolor_architecture.png](data/yolor_architecture.png)                                                                                                           |
+|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|                                                                                                 YOLOR concept with implicit and explicit knowledge-based multi-task learning.                                                                                                  |
+| Chúng ta có thể thấy kiến thức tường minh được tính toán từ ảnh đầu vào trong quá trình forward. Trong khi đó, kiến thức tiềm ẩn không phụ thuộc vào ảnh đầu vào trong quá trình forward mà chúng là những đặc trưng cố định đóng vai trò giống như các tham số trong mô hình. | 
+|                                                                                                                              <img width="700" />                                                                                                                               |
 
 ### 1. Terminology
 
-<details open>
-<summary><b style="font-size:16px">Explicit Knowledge/Information (Kiến thức tường minh)</b></summary>
+#### Explicit Knowledge/Information (Kiến thức tường minh)
 
 Explicit knowledge is known as **normal learning, or things that you learn
 consciously**.
@@ -62,23 +73,19 @@ or image databases that are either thoroughly annotated or well organized
 Explicit knowledge for YOLOR **is obtained from the shallow layers of the
 neural networks**. This knowledge directly corresponds to observations that are
 supposed to be made.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">Implicit Knowledge/Information (Kiến thức tiềm ẩn)</b></summary>
+#### Implicit Knowledge/Information (Kiến thức tiềm ẩn)
 
 Implicit knowledge can effectively assist machine learning models in performing
 tasks with YOLOR.
 
 For humans, implicit knowledge refers to **the knowledge learnt subconsciously**
-,
-sort of like riding a bike or learning how to walk. It's derived from
+, sort of like riding a bike or learning how to walk. It's derived from
 experience.
 
 For neural networks, **implicit knowledge is obtained by features in the deep
 layers**. The knowledge that does not correspond to observations is known as
 implicit knowledge as well.
-</details>
 
 ### 2. Explicit Deep Learning
 
@@ -101,28 +108,23 @@ these include:
 - Kernel Alignment, and
 - More Functions.
 
-<details open>
-<summary><b style="font-size:16px">Manifold Space Reduction</b></summary>
+#### Manifold Space Reduction
 
 For manifold space reduction, my understanding is that we reduce the
 dimensions of the manifold space so that we are able to achieve various tasks
 such as pose estimation and classification, amongst others.
-</details>
 
-<details open>
-<summary><b style="font-size:16px">Kernel Space Alignment</b></summary>
-
-</details>
+#### Kernel Space Alignment
 
 ## Ablation Studies
 
 ## Results
 
-<div align="center">
-	<img width="500" src="data/yolor_results_01.png">
-    <img width="500" src="data/yolor_results_02.png">
-	<p>Performance of YOLOR vs. YOLO v4 and others.</p>
-</div>
+| ![data/yolor_results_01.png](data/yolor_results_01.png) |
+|:-------------------------------------------------------:|
+| ![data/yolor_results_02.png](data/yolor_results_02.png) |
+|      Performance of YOLOR vs. YOLO v4 and others.       |
+|                   <img width="500" />                   |
 
 ## Citation
 
@@ -134,5 +136,3 @@ such as pose estimation and classification, amongst others.
   year    = {2021}
 }
 ```
-
-</div>
