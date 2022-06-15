@@ -6,6 +6,7 @@ grand_parent: Machine Learning
 nav_order   : 1
 has_children: false
 has_toc     : false
+permalink   : /machine_learning/model_learning/decaug
 ---
 
 

@@ -1,22 +1,24 @@
 ---
 layout      : default
 title       : Ensemble
-parent	    : Model Learning
+parent	    : Model Serving
 grand_parent: Machine Learning
 nav_order   : 1
 has_children: false
 has_toc     : false
+permalink   : /machine_learning/model_serving/ensemble
 ---
 
+![data/ensemble.png](data/ensemble.png)
 
-<div align="center">
-<img src="data/ensemble.png" width="1000">
+# Ensemble Models
 
-Ensemble Models
-=============================
-</div>
-
-<div align="justify">
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
 
 Ensemble models is a machine learning approach to combine multiple other models
 in the prediction process. Those models are referred to as base estimators. It
@@ -30,8 +32,7 @@ single estimator:
 - Features noise and bias: The model relies heavily on one or a few features
   while making a prediction.
 
-<details>
-<summary><b style="font-size:18px">Ensemble Algorithms</b></summary>
+## Ensemble Algorithms
 
 A single algorithm may not make the perfect prediction for a given dataset.
 Machine learning algorithms have their limitations and producing a model with
@@ -45,14 +46,12 @@ generalization.
 The way to implement such aggregation can be achieved using some techniques.
 Some textbooks refer to such architecture as **meta-algorithms**.
 
-<div align="center">
-  <img src="data/ensemble_algorithms.png" width="600">
-  <p>Diversifying the model predictions using multiple algorithms.</p>
-</div>
-</details>
+| ![data/ensemble_algorithms.png](data/ensemble_algorithms.png) |
+|:-------------------------------------------------------------:|
+| Diversifying the model predictions using multiple algorithms. |
+|                      <img width="600"/>                       |
 
-<details>
-<summary><b style="font-size:18px">Ensemble Learning</b></summary>
+## Ensemble Learning
 
 Ensemble learning is a combination of several machine learning models in one
 problem. These models are known as **weak learners**. The intuition is that when
@@ -65,17 +64,14 @@ all the weak learners.
 One important aspect to mention is those weak learners can have different ways
 of mapping the features with variant decision boundaries.
 
-<div align="center">
-  <img src="data/ensemble_learning.png" width="600">
-  <p>Aggregated predictions using multiple weak learners of the same algorithm.</p>
-</div>
-
-</details>
+|         ![data/ensemble_learning.png](data/ensemble_learning.png)          |
+|:--------------------------------------------------------------------------:|
+| Aggregated predictions using multiple weak learners of the same algorithm. |
+|                             <img width="600"/>                             |
 
 ## Basic Ensemble Techniques
 
-<details>
-<summary><b style="font-size:18px">Max Voting</b></summary>
+### Max Voting
 
 The max voting method is generally used for classification problems. In this
 technique, multiple models are used to make predictions for each data point. The
@@ -91,11 +87,8 @@ voting would be something like this:
 | Colleague 1 | Colleague 2 | Colleague 3 | Colleague 4 | Colleague 5 | Final Rating |
 |:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:------------:|
 |      5      |      4      |      5      |      4      |      4      |    **4**     |
- 
-</details>
 
-<details>
-<summary><b style="font-size:18px">Averaging</b></summary>
+### Averaging
 
 In this method, we take an average of predictions from all the models and use it
 to make the final prediction. Averaging can be used for making predictions in
@@ -109,10 +102,7 @@ i.e. (5+4+5+4+4)/5 = 4.4
 |:-----------:|:-----------:|:-----------:|:-----------:|:-----------:|:------------:|
 |      5      |      4      |      5      |      4      |      4      |   **4.4**    |
 
-</details>
-
-<details>
-<summary><b style="font-size:18px">Weighted Average</b></summary>
+### Weighted Average
 
 All models are assigned different weights defining the importance of each model
 for prediction. For instance, if two of your colleagues are critics, while
@@ -127,19 +117,15 @@ The result is calculated as [(5*0.23) + (4*0.23) + (5*0.18) + (
 | weight |    0.23     |    0.23     |    0.18     |    0.18     |    0.18     |              |
 | rating |      5      |      4      |      5      |      4      |      4      |   **4.41**   |
 
-</details>
-
 ## Advanced Ensemble Techniques
 
-<details>
-<summary><b style="font-size:18px">Stacking</b></summary>
+### Stacking
 
 Stacking is a learning technique that uses predictions from multiple models (for
 example decision tree, knn or svm) to build a new model. This model is used for
 making predictions on the test set.
 
-<details>
-<summary>Below is a step-wise explanation for a simple stacked ensemble</summary>
+Below is a step-wise explanation for a simple stacked ensemble:
 
 | Step                                                                                                                                                              |                                      | 
 |:------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------|
@@ -149,19 +135,14 @@ making predictions on the test set.
 | 5. Steps 2 to 4 are repeated for another base model (say knn) resulting in another <br> set of predictions for the train set and test set.                        | ![Step 5](data/stacking_step_05.png) |
 | 6. The predictions from the train set are used as features to build a new model. <br> 7. This model is used to make final predictions on the test prediction set. | ![Step 6](data/stacking_step_06.png) |
 
-</details>
-</details>
-
-<details>
-<summary><b style="font-size:18px">Blending</b></summary>
+### Blending
 
 Blending follows the same approach as **stacking** but uses only a holdout (
 validation) set from the train set to make predictions. In other words, unlike
 stacking, the predictions are made on the holdout set only. The holdout set and
 the predictions are used to build a model which is run on the test set.
 
-<details>
-<summary>Here is a detailed explanation of the blending process:</summary>
+Here is a detailed explanation of the blending process:
 
 | Step                                                                                                                                                                     |                                      | 
 |:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------|
@@ -169,11 +150,7 @@ the predictions are used to build a model which is run on the test set.
 | 2. Model(s) are fitted on the training set. <br> 3. The predictions are made on the validation set and the test set.                                                     | ![Step 2](data/blending_step_03.png) |
 | 4. The validation set and its predictions are used as features to build a new model. <br> 5. This model is used to make final predictions on the test and meta-features. |                                      |
 
-</details>
-</details>
-
-<details>
-<summary><b style="font-size:18px">Bagging</b></summary>
+### Bagging
 
 The idea behind bagging is combining the results of multiple models (for
 instance, all decision trees) to get a generalized result. Here’s a question: If
@@ -186,10 +163,10 @@ techniques is bootstrapping.
 observations from the original dataset, with replacement. The size of the
 subsets is the same as the size of the original set.
 
-<div align="center">
-  <img src="data/bootstrapping.png" width="400">
-  <p>Boostrapping</p>
-</div>
+| ![data/bootstrapping.png](data/bootstrapping.png) |
+|:-------------------------------------------------:|
+|                   Boostrapping.                   |
+|                <img width="600"/>                 |
 
 **Bagging** (or Bootstrap Aggregating) technique uses these subsets (bags) to
 get a fair idea of the distribution (complete set). The size of subsets created
@@ -202,15 +179,12 @@ for bagging may be less than the original set.
 4. The final predictions are determined by combining the predictions from all
    the models.
 
-<div align="center">
-  <img src="data/bagging.png" width="400">
-  <p>Bagging</p>
-</div>
+| ![data/bagging.png](data/bagging.png) |
+|:-------------------------------------:|
+|               Bagging.                |
+|          <img width="400"/>           |
 
-</details>
-
-<details>
-<summary><b style="font-size:18px">Boosting</b></summary>
+### Boosting
 
 Before we go further, here’s another question for you: If a data point is
 incorrectly predicted by the first model, and then the next (probably all
@@ -226,16 +200,10 @@ the previous model.
 > dataset, but they work well for some part of the dataset. Thus, each model
 > actually boosts the performance of the ensemble.
 
-<details>
-<summary>Let’s understand the way boosting works in the below steps:</summary>
+Let’s understand the way boosting works in the below steps:
 
 | Step                                                                                                                                                                                                                                                                                                                                                                                         |                                      | 
 |:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-------------------------------------|
 | 1. A subset is created from the original dataset. <br> 2. Initially, all data points are given equal weights. <br> 3. A base model is created on this subset. <br> 4. This model is used to make predictions on the whole dataset                                                                                                                                                            | ![Step 4](data/boosting_step_04.png) |
 | 5. Errors are calculated using the actual values and predicted values. <br> 6. The observations which are incorrectly predicted, are given higher weights. <br> (Here, the three misclassified blue-plus points will be given higher weights) <br> 7. Another model is created and predictions are made on the dataset <br> (This model tries to correct the errors from the previous model) | ![Step 7](data/boosting_step_07.png) |
 | 8. Similarly, multiple models are created, each correcting the errors of the previous model. <br> 9. The final model (strong learner) is the weighted mean of all the models (weak learners).                                                                                                                                                                                                | ![Step 9](data/boosting_step_09.png) |
-
-</details>
-</details>
-
-</div>

@@ -4,7 +4,8 @@ title       : Model Serving
 parent		: Machine Learning
 nav_order   : 3
 has_children: true
-has_toc     : true
+has_toc     : false
+permalink   : /machine_learning/model_serving
 ---
 
 ![data/model_deployment.png](data/model_deployment.png)
@@ -127,4 +128,4 @@ pivotal. Let’s briefly discuss them.
 
 | Status | Method                          | Pattern                     | Date       | Publication    |
 |:------:|---------------------------------|-----------------------------|------------|----------------|
-|   ✅    | [**ModelSoups**](modelsoups.md) | [**Ensemble**](ensemble.md) | 2021/02/02 | AAAI&nbsp;2021 |
+|   ✅    | [**ModelSoups**](model_soups.md) | [**Ensemble**](ensemble.md) | 2021/02/02 | AAAI&nbsp;2021 |

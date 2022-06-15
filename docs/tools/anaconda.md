@@ -10,7 +10,8 @@ permalink   : /tools/anaconda
 
 # Anaconda
 
-[Conda Cheatsheet](data/conda_cheatsheet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 } [PIP Cheatsheet](data/pip_cheatsheet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Conda Cheatsheet](data/conda_cheatsheet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[PIP Cheatsheet](data/pip_cheatsheet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
 
 <details open markdown="block">
   <summary>Table of contents</summary>

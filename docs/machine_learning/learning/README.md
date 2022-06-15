@@ -4,7 +4,8 @@ title       : Model Learning
 parent		: Machine Learning
 nav_order   : 2
 has_children: true
-has_toc     : true
+has_toc     : false
+permalink   : /machine_learning/model_learning
 ---
 
 ![data/training.png](data/training.png)
