@@ -50,7 +50,6 @@ Some textbooks refer to such architecture as **meta-algorithms**.
 | ![data/ensemble_algorithms.png](data/ensemble_algorithms.png) |
 |:-------------------------------------------------------------:|
 | Diversifying the model predictions using multiple algorithms. |
-|                      <img width="600"/>                       |
 
 ## Ensemble Learning
 
@@ -68,7 +67,6 @@ of mapping the features with variant decision boundaries.
 |         ![data/ensemble_learning.png](data/ensemble_learning.png)          |
 |:--------------------------------------------------------------------------:|
 | Aggregated predictions using multiple weak learners of the same algorithm. |
-|                             <img width="600"/>                             |
 
 ## Basic Ensemble Techniques
 
@@ -167,7 +165,6 @@ subsets is the same as the size of the original set.
 | ![data/bootstrapping.png](data/bootstrapping.png) |
 |:-------------------------------------------------:|
 |                   Boostrapping.                   |
-|                <img width="600"/>                 |
 
 **Bagging** (or Bootstrap Aggregating) technique uses these subsets (bags) to
 get a fair idea of the distribution (complete set). The size of subsets created
@@ -183,7 +180,6 @@ for bagging may be less than the original set.
 | ![data/bagging.png](data/bagging.png) |
 |:-------------------------------------:|
 |               Bagging.                |
-|          <img width="400"/>           |
 
 ### Boosting
 

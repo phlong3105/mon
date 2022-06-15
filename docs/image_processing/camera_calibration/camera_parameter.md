@@ -49,7 +49,6 @@ transformations, we first need to understand **4 different coordinate systems**.
 | ![data/world_coordinate_system.png](data/world_coordinate_system.png) |
 |:---------------------------------------------------------------------:|
 |                *A 3D point in world coordinate system*                |
-|                           <img width=600/>                            | 
 
 **$[X_w, Y_w, Z_w]$**: It is a 3D basic cartesian coordinate system with 
 arbitrary origin.
@@ -63,7 +62,6 @@ can be denoted as $P_w = (X_w, Y_w, Z_w)$.
 |:-----------------------------------------------------------------------:|
 | ![data/camera_extrinsic_matrix.png](data/camera_extrinsic_matrix.png)   |
 |                *A 3D point in camera coordinate system*                 |
-|                            <img width=600/>                             | 
 
 **$[X_c, Y_c, Z_c]$**: It's the coordinate system that measures relative to the
 object/camera’s origin/orientation.
@@ -90,7 +88,6 @@ One can go from the world coordinate system to object coordinate system
 |       ![data/pinhole_camera_03.png](data/pinhole_camera_03.png)       |
 |       ![data/pinhole_camera_04.png](data/pinhole_camera_04.png)       |
 |                *A 2D point in image coordinate system*                |
-|                           <img width=600/>                            |
 
 **$[X_i, Y_i]$**: A 2D coordinate system that has the 3D points in the camera
 coordinate system projected onto a 2D plane (usually normal to the z-axis of
@@ -120,7 +117,6 @@ intrinsic matrix.
 | ![data/pixel_coordinate_system_01.png](data/pixel_coordinate_system_01.png) |
 |:---------------------------------------------------------------------------:|
 |                   *A 2D point in pixel coordinate system*                   |
-|                              <img width=600/>                               |
 
 **$[u, v]$**: This represents the integer values by discretizing the points in 
 the image coordinate system.
@@ -134,14 +130,12 @@ translation operator $(c_x, c_y)$ is also required alongside the discretization.
 
 | ![data/pixel_coordinate_system_02.png](data/pixel_coordinate_system_02.png) |
 |:---------------------------------------------------------------------------:|
-|                              <img width=600/>                               |
 
 The complete transformation from the image coordinate system to pixel
 coordinate system can be shown in the matrix form as below.
 
 | ![data/pixel_coordinate_system_03.png](data/pixel_coordinate_system_03.png) |
 |:---------------------------------------------------------------------------:|
-|                              <img width=600/>                               |
 
 Sometimes, the 2D image plane is not a rectangle but rather is skewed i.e. the
 angle between the X and Y axis is not 90 degrees.
@@ -156,7 +150,6 @@ found as below
 
 | ![data/pixel_coordinate_system_04.png](data/pixel_coordinate_system_04.png) |
 |:---------------------------------------------------------------------------:|
-|                              <img width=600/>                               |
 
 
 These two transformation matrices i.e. **transformation from rectangular image
@@ -171,7 +164,6 @@ as shown below
 |:---------------------------------------------------------------------------:|
 | ![data/camera_intrinsic_matrix_02.png](data/camera_intrinsic_matrix_02.png) |
 | ![data/camera_intrinsic_matrix_03.png](data/camera_intrinsic_matrix_03.png) |
-|                              <img width=600/>                               |
 
 
 ### Summary

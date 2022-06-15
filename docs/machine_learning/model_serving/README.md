@@ -82,7 +82,6 @@ singularly. Instead, they operate jointly and often in four model patterns:
 
 | ![data/ml_model_patterns_in_production.png](data/ml_model_patterns_in_production.png) |
 |:-------------------------------------------------------------------------------------:|
-|                                   <img width=600/>                                    |
 
 ## Observing and Monitoring Model in Production
 

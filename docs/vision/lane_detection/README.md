@@ -25,7 +25,6 @@ demo of lane detection in autonomous vehicle:
 
 | ![data/lane_detection.gif](data/lane_detection.gif) |
 |:---------------------------------------------------:|
-|                <img height="200" />                 |
 
 ## Methods
 

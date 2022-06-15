@@ -57,7 +57,6 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 | ![nvidia_docker.png](data/nvidia_docker.png) |
 |:--------------------------------------------:|
 |        *Fig 1. NVIDIA docker stack.*         |
-|               <img width=150/>               |
 
 ```shell
 # Setup the stable repository and the GPG key

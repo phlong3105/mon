@@ -45,17 +45,11 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 
 ## Method
 
-<div align="center">
-    <img src="data/hinet_architecture.png" width="800">
-    <p align="justify">Proposed Half Instance Normalization Network (HINet). 
-    The encoder of each subnetwork contains Half Instance Normalization Blocks 
-    (HIN Block). For simplicity, we only show 3 layers of HIN Block in the 
-    figure, and HINet has a total of 5 layers. We adopt CSFF and SAM modules 
-    from MPRNet [56].</p>
-</div>
+|                                                                                                                     ![data/hinet_architecture.png](data/hinet_architecture.png)                                                                                                                     |
+|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| Proposed Half Instance Normalization Network (HINet). The encoder of each subnetwork contains Half Instance Normalization Blocks (HIN Block). For simplicity, we only show 3 layers of HIN Block in the figure, and HINet has a total of 5 layers. We adopt CSFF and SAM modules from MPRNet [56].  |
 
-<details open>
-<summary><b style="font-size:16px">1. Architecture</b></summary>
+### 1. Architecture
 
 - Adopt 2 simple U-Nets architecture.
 - Half Instance Normalization Block (HIN Block):
@@ -75,10 +69,7 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
   between two stages to enrich the multi-scale features and facilitate achieving
   performance gain respectively.
 
-</details>
-
-<details open>
-<summary><b style="font-size:16px">2. U-Net</b></summary>
+### 2. U-Net
 
 - In each stage, use one $3 × 3$ convolutional layer to extract the initial
   features.
@@ -98,10 +89,7 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 - Finally, get the residual output of the reconstructed image by using one $3 ×
   3$ convolution.
 
-</details>
-
-<details open>
-<summary><b style="font-size:16px">3. Linking Sub-networks</b></summary>
+### 3. Linking Sub-networks
 
 - Use **cross-stage feature fusion (CSFF)** module and **supervised attention
   module (SAM)** to connect 2 subnetworks.
@@ -117,10 +105,7 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 > the next stage and the less informative ones will be suppressed by the attention
 > masks
 
-</details>
-
-<details open>
-<summary><b style="font-size:16px">4. Half Instance Normalization Block</b></summary>
+### 4. Half Instance Normalization Block
 
 > Because of variance of small image patches differ a lot among mini-batches and
 > the different formulations of training and testing, BN is not commonly used in
@@ -131,9 +116,8 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 - Further, IN re-calibrates the mean and variance of features without the
   influence of batch dimension, which can keep more scale information than BN.
 
-<div align="center">
-    <img src="data/hinet_hin_block.png" width="400"> 
-</div>
+| ![data/hinet_hin_block.png](data/hinet_hin_block.png) |
+|:-----------------------------------------------------:|
 
 - HIN block firstly takes the input features $F_{in} ∈ \mathbb{R}^{C_{in}×H×W}$
   and generates intermediate features $F_{mid} ∈ \mathbb{R}^{C_{out}×H×W}$ with
@@ -153,10 +137,7 @@ This model is neck-to-neck comparable with the [MPRNet](mprnet.md)
 - Finally, HIN blocks output $F_{out}$ by add $R_{out}$ with shortcut features (
   obtained after $1 × 1$ convolution).
 
-</details>
-
-<details open>
-<summary><b style="font-size:16px">5. Loss Function</b></summary>
+### 5. Loss Function
 
 - PSNR loss: use Peak Signal-to-Noise Ratio (PSNR) as the metric of the loss
   function.
@@ -172,14 +153,11 @@ $Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
   - $R_i ∈ \mathbb{R}^{N×C×H×W}$ denotes the final predict of subnetwork $i$.
   - $Y ∈ \mathbb{R}^{N×C×H×W}$ is the ground truth in each stage.
 
-</details>
-
 ## Ablation Studies
 
 ## Results
 
-<details open>
-<summary><b style="font-size:16px">Implementation Details</b></summary>
+### Implementation Details
 
 - **Datasets**:
   - Denoising: SIDD
@@ -199,17 +177,12 @@ $Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
     factor $s$ on the number of channels, *e.g*. “HINet s×” denotes scaling the
     number of channels in basic HINet $s$ times.
 
-</details>
+### Results
 
-<details open>
-<summary><b style="font-size:16px">Results</b></summary>
-
-<div align="center">
-    <img src="data/hinet_results_01.png" width="800">
-    <img src="data/hinet_results_02.png" width="500">
-    <img src="data/hinet_results_03.png" width="500">
-</div>
-</details>
+| ![data/hinet_results_01.png](data/hinet_results_01.png) |
+|:-------------------------------------------------------:|
+| ![data/hinet_results_02.png](data/hinet_results_02.png) |
+| ![data/hinet_results_03.png](data/hinet_results_03.png) |
 
 ## Citation
 

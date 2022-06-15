@@ -57,7 +57,6 @@ compared to the [PP-YOLOv2](pp_yolov2.md), at the same inference speed.
 |:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
 |                                                                                                 YOLOR concept with implicit and explicit knowledge-based multi-task learning.                                                                                                  |
 | Chúng ta có thể thấy kiến thức tường minh được tính toán từ ảnh đầu vào trong quá trình forward. Trong khi đó, kiến thức tiềm ẩn không phụ thuộc vào ảnh đầu vào trong quá trình forward mà chúng là những đặc trưng cố định đóng vai trò giống như các tham số trong mô hình. | 
-|                                                                                                                              <img width="700" />                                                                                                                               |
 
 ### 1. Terminology
 
@@ -124,7 +123,6 @@ such as pose estimation and classification, amongst others.
 |:-------------------------------------------------------:|
 | ![data/yolor_results_02.png](data/yolor_results_02.png) |
 |      Performance of YOLOR vs. YOLO v4 and others.       |
-|                   <img width="500" />                   |
 
 ## Citation
 

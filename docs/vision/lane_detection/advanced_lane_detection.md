@@ -40,7 +40,6 @@ transform to obtain a bird's eye view of the road.
 
 | ![data/lane_detection.gif](data/lane_detection.gif) |
 |:---------------------------------------------------:|
-|                 <img width="400" />                 |
 
 ## Method
 
@@ -72,7 +71,6 @@ lead to an incorrect road curvature calculation.
 
 | ![data/undistorted_road.gif](data/undistorted_road.gif) |
 |:-------------------------------------------------------:|
-|                   <img width="700" />                   |
 
 ### 2. Perspective Transform from Camera Angle to Bird's Eye View
 
@@ -87,7 +85,6 @@ points are identified directly from the image for the perspective transform.
 
 | ![data/ending_points.gif](data/ending_points.gif) |
 |:-------------------------------------------------:|
-|                <img width="700" />                |
 
 OpenCV provides perspective transform functions to calculate the transformation
 matrix for the images given the source and destination points.
@@ -96,7 +93,6 @@ performed.
 
 | ![data/warp_perspective.gif](data/warp_perspective.gif) |
 |:-------------------------------------------------------:|
-|                   <img width="700" />                   |
 
 ### 3. Process Binary Thresholded Images
 
@@ -121,7 +117,6 @@ which were identified as corresponding to yellow.
 
 | ![data/binary_threshold.gif](data/binary_threshold.gif) |
 |:-------------------------------------------------------:|
-|                   <img width="700" />                   |
 
 ### 4. Lane Line Detection Using Histogram
 
@@ -148,7 +143,6 @@ respectively. The second degree polynomial is traced on the resulting image.
 
 | ![data/fit_poly.gif](data/fit_poly.gif) |
 |:---------------------------------------:|
-|           <img width="800" />           |
 
 ### 5. Detection of Lane Lines Based on Previous Cycle
 
@@ -168,7 +162,6 @@ side.
 
 | ![data/prev_poly.gif](data/prev_poly.gif) |
 |:-----------------------------------------:|
-|            <img width="800" />            |
 
 ### 6. Calculate Vehicle Position and Curve Radius
 

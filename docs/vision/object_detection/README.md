@@ -30,7 +30,6 @@ image detection, and these concepts are synonymous.
 |  ![data/object_detection_01.gif](data/object_detection_01.gif)   |
 |:----------------------------------------------------------------:|
 | Here is a demo of object detection applied in autonomous vehicle | 
-|                       <img height="200" />                       |
 
 ## Methods
 
@@ -38,13 +37,11 @@ image detection, and these concepts are synonymous.
 
 | ![data/milestones.png](data/milestones.png) |
 |:-------------------------------------------:|
-|                                             | 
  
 ### SOTA
 
 | ![data/object_detection_sota.png](data/object_detection_sota.png) |
 |:-----------------------------------------------------------------:|
-|                                                                   | 
 
 | Status | Method                                      | Architecture | Stage           | Anchor             | Date       | Publication    |
 |:------:|---------------------------------------------|--------------|-----------------|--------------------|------------|----------------|
