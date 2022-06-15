@@ -1,16 +1,30 @@
-<div align="center">
+---
+layout      : default
+title       : HiNet
+parent	    : Image Enhancement
+grand_parent: Vision
+nav_order   : 1
+has_children: false
+has_toc     : false
+permalink   : /vision/image_enhancement/hinet
+---
 
-HINet: Half Instance Normalization Network for Image Restoration
-=============================
+# HINet: Half Instance Normalization Network for Image Restoration
 Liangyu Chen, Xin Lu, Jie Zhang, Xiaojie Chu, and Chengpeng Chen
 
 CVPR 2021
 
-<a href="data/hinet.pdf"><img src="../../data/badge/paper.svg"></a>
-<a href="https://github.com/megvii-model/HINet"><img src="../../data/badge/code.svg"></a>
-</div>
+[Paper](data/hinet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Code](https://github.com/megvii-model/HINet){: .btn .fs-3 .mb-4 .mb-md-0 }
 
-<div align="justify">
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
 
@@ -210,5 +224,3 @@ $Loss= -\sum_{i=1}^{2} PSNR((R_i + X_i), Y)$
     pages     = {182-192}
 }
 ```
-
-</div>

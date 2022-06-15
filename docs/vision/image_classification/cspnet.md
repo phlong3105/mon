@@ -1,20 +1,34 @@
-<div align="center">
+---
+layout      : default
+title       : CSPNet
+parent	    : Image Classification
+grand_parent: Vision
+nav_order   : 1
+has_children: false
+has_toc     : false
+permalink   : /vision/image_classification/cspnet
+---
 
-CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
-=============================
+# CSPNet: A New Backbone That Can Enhance Learning Capability of CNN
 Chien-Yao Wang, Hong-Yuan Mark Liao, Yueh-Hua Wu, Ping-Yang Chen, Jun-Wei Hsieh,
 and I-Hau Yeh
 
 CVPRW 2020
 
-<a href="data/cspnet.pdf"><img src="../../data/badge/paper.svg"></a>
-<a href="https://github.com/WongKinYiu/CrossStagePartialNetworks"><img src="../../data/badge/code.svg"></a>
-<a href="https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf"><img src="../../data/badge/reference.svg"></a>
-</div>
+[Paper](data/cspnet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Code](https://github.com/WongKinYiu/CrossStagePartialNetworks){: .btn .fs-3 .mb-4 .mb-md-0 }
+[Reference](https://sh-tsang.medium.com/review-cspnet-a-new-backbone-that-can-enhance-learning-capability-of-cnn-da7ca51524bf){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 ## Highlight
-
-<div align="justify">
 
 **Cross Stage Partial Network (CSPNet)** is designed, to attribute the problem
 to the duplicate gradient information within network optimization,
@@ -23,33 +37,35 @@ to the duplicate gradient information within network optimization,
 It can be applied to various networks such as DenseNet, ResNeXt and ResNet.
 **Later on, this CSPNet is used in YOLOv4 and Scaled-YOLOv4**.
 
-<div align="center">
-	<img src="data/cspnet_sota.png" "width="800">
-	<p>CSPNet not only reduces computation cost and memory usage of the 
-    networks, but also benefit on inference speed and accuracy.</p>
-</div>
+|                                        ![data/cspnet_sota.png](data/cspnet_sota.png)                                         |
+|:----------------------------------------------------------------------------------------------------------------------------:|
+| CSPNet not only reduces computation cost and memory usage of the networks, but also benefit on inference speed and accuracy. |
+|                                                     <img "width="800"/>                                                      |
 
 ## Method
 
 ### 1. Duplicate Gradient Information in DenseNet
 
-<div align="center">
-	<img  src="data/cspnet_densenet.png" width="700">
-	<p>FLOPs of different computational layers with different model scaling factors.</p>
-</div>
+|             ![data/cspnet_densenet.png](data/cspnet_densenet.png)             |
+|:-----------------------------------------------------------------------------:|
+| FLOPs of different computational layers with different model scaling factors. |
+|                              <img "width="700"/>                              |
+
 
 In DenseNet, the output of the ith dense layer will be concatenated with the
 input of the ith dense layer. This concatenated outcome becomes the input of
 the (i+1)th dense layer:
-<div align="center">
-	<img src="data/cspnet_math_01.png" width="200">
-</div>
+
+| ![data/cspnet_math_01.png](data/cspnet_math_01.png) |
+|:---------------------------------------------------:|
+|                 <img "width="200"/>                 |
 
 If one makes use of a backpropagation algorithm to update weights, the
 equations of weight updating can be written as:
-<div align="center">
-	<img src="data/cspnet_math_02.png" width="200">
-</div>
+
+| ![data/cspnet_math_02.png](data/cspnet_math_02.png) |
+|:---------------------------------------------------:|
+|                 <img "width="200"/>                 |
 
 > It is found that large amount of gradient information are reused for updating
 > weights of different dense layers. This will result in different dense layers
@@ -57,13 +73,12 @@ equations of weight updating can be written as:
 
 ### 2. CSPNet (CSPDenseNet, CSPResNet & CSPResNeXt)
 
-<details open>
-<summary><b style="font-size:16px">Cross Stage Partial DenseNet (CSPDenseNet)</b></summary>
+#### Cross Stage Partial DenseNet (CSPDenseNet)
 
-<div align="center">
-	<img src="data/cspnet_cspdensenet.png" width="700">
-	<p>Cross Stage Partial DenseNet (CSPDenseNet).</p>
-</div>
+| ![data/cspnet_cspdensenet.png](data/cspnet_cspdensenet.png) |
+|:-----------------------------------------------------------:|
+|         Cross Stage Partial DenseNet (CSPDenseNet).         |
+|                     <img "width="700"/>                     |
 
 CSPNet separates feature map of the base layer into two part, one part will
 go through a dense block and a transition layer; the other one part is then
@@ -71,10 +86,10 @@ combined with transmitted feature map to the next stage.
 
 The equations of feed-forward pass and weight updating of CSPDenseNet become:
 
-<div align="center">
-	<img src="data/cspnet_math_03.png" width="250"><br/>
-	<img src="data/cspnet_math_04.png" width="300">
-</div>
+| ![data/cspnet_math_03.png](data/cspnet_math_03.png) |
+|:---------------------------------------------------:|
+| ![data/cspnet_math_04.png](data/cspnet_math_04.png) |
+|                 <img "width="300"/>                 |
 
 - The gradients coming from the dense layers are separately integrated.
 - On the other hand, the feature map that did not go through the dense layers
@@ -85,16 +100,13 @@ The equations of feed-forward pass and weight updating of CSPDenseNet become:
 > The proposed CSPDenseNet preserves the advantages of DenseNet’s feature reuse
 > characteristics, but at the same time prevents an excessively amount of
 > duplicate gradient information by truncating the gradient flow.
-</details>
 
-<br>
-<details open>
-<summary><b style="font-size:16px">Partial Dense Block Variants</b></summary>
+#### Partial Dense Block Variants
 
-<div align="center">
-	<img src="data/cspnet_feature_fusion_strategies.png" width="700">
-	<p>Different kind of feature fusion strategies.</p>
-</div>
+| ![data/cspnet_feature_fusion_strategies.png](data/cspnet_feature_fusion_strategies.png) |
+|:---------------------------------------------------------------------------------------:|
+|                      Different kind of feature fusion strategies.                       |
+|                                   <img "width="700"/>                                   |
 
 The purpose of designing partial transition layers is to maximize the
 difference of gradient combination.
@@ -108,29 +120,25 @@ Two variants are designed.
   transition layer and then do concatenation. The gradient information will not
   be reused since the gradient flow is truncated.
 
-</details>
 
-<br>
-<details open>
-<summary><b style="font-size:16px">Applying CSPNet to Other Architectures</b></summary>
+#### Applying CSPNet to Other Architectures
 
-<div align="center">
-	<img src="data/cspnet_resne(x)t.png" width="500">
-	<p>Applying CSPNet to ResNe(X)t.</p>
-</div>
+| ![data/cspnet_resne(x)t.png](data/cspnet_resne(x)t.png) |
+|:-------------------------------------------------------:|
+|              Applying CSPNet to ResNe(X)t.              |
+|                   <img "width="500"/>                   |
 
 CSPNet can be also easily applied to ResNet and ResNeXt.
 
 Since only half of the feature channels are going through Res(X)Blocks, there
 is no need to introduce the bottleneck layer anymore.
-</details>
 
 ### 3. Exact Fusion Model (EFM)
 
-<div align="center">
-	<img src="data/cspnet_pyramid_fusion_strategies.png" width="800">
-	<p>Different feature pyramid fusion strategies.</p>
-</div>
+| ![data/cspnet_pyramid_fusion_strategies.png](data/cspnet_pyramid_fusion_strategies.png) |
+|:---------------------------------------------------------------------------------------:|
+|                      Different feature pyramid fusion strategies.                       |
+|                                   <img "width="800"/>                                   |
 
 **EFM is proposed to capture an appropriate Field of View (FoV) for each
 anchor**, which enhances the accuracy of the one-stage object detector.
@@ -143,13 +151,12 @@ problem, **the Maxout technique is incorporated to compress the feature maps**.
 
 ## Ablation Studies
 
-<details open>
-<summary><b style="font-size:16px">CSPNet on ImageNet</b></summary>
+### CSPNet on ImageNet
 
-<div align="center">
-	<img src="data/cspnet_imagenet_ablation.png" width="500">
-	<p>Ablation study of CSPNet on ImageNet.</p>
-</div>
+| ![data/cspnet_imagenet_ablation.png](data/cspnet_imagenet_ablation.png) |
+|:-----------------------------------------------------------------------:|
+|                  Ablation study of CSPNet on ImageNet.                  |
+|                           <img "width="500"/>                           |
 
 - PeleeNet is used as baseline.
 - Different partial ratios γ and the different feature fusion strategies are
@@ -161,16 +168,13 @@ problem, **the Maxout technique is incorporated to compress the feature maps**.
 >
 > If the partial ratio is adjusted to γ = 0.25, the accuracy is improved by
 > 0.8% and at the same time 3% computation is cut down.
-</details>
 
-<br>
-<details open>
-<summary><b style="font-size:16px">EFM on MS-COCO</b></summary>
+### EFM on MS-COCO
 
-<div align="center">
-	<img src="data/cspnet_coco_ablation.png" width="500">
-	<p>Ablation study of EFM on MS COCO.</p>
-</div>
+| ![data/cspnet_coco_ablation.png](data/cspnet_coco_ablation.png) |
+|:---------------------------------------------------------------:|
+|                Ablation study of EFM on MS COCO.                |
+|                       <img "width="500"/>                       |
 
 - CSPPeleeNet is used as backbone.
 - GIoU, SPP (in SPPNet), and SAM (in CBAM) are also applied to EFM for study.
@@ -182,17 +186,14 @@ problem, **the Maxout technique is incorporated to compress the feature maps**.
 - In addition, CSPPeleeNet with **Swish activation is not considered** as for
   consideration of hardware design acceleration.
 
-</details>
-
 ## Results
 
-<details open>
-<summary><b style="font-size:16px">ImageNet Image Classification</b></summary>
+### ImageNet Image Classification
 
-<div align="center">
-	<img src="data/cspnet_imagenet_sota.png" width="500">
-	<p>Compare with state-of-the-art methods on ImageNet.</p>
-</div>
+| ![data/cspnet_imagenet_sota.png](data/cspnet_imagenet_sota.png) |
+|:---------------------------------------------------------------:|
+|       Compare with state-of-the-art methods on ImageNet.        |
+|                       <img "width="500"/>                       |
 
 There are a lot of findings here for each CSPNet model.
 
@@ -202,16 +203,13 @@ upgraded.
 
 CSPResNeXt-50 all achieve the best result. As to the 10-crop test,
 CSPResNeXt-50 also outperforms Res2Net-50 and Res2NeXt-50.
-</details>
 
-<br>
-<details open>
-<summary><b style="font-size:16px"> MS-COCO Object Detection</b></summary>
+### MS-COCO Object Detection
 
-<div align="center">
-	<img src="data/cspnet_coco_sota.png" width="800">
-	<p>Compare with state-of-the-art methods on MS-COCO Object Detection</p>
-</div>
+|      ![data/cspnet_coco_sota.png](data/cspnet_coco_sota.png)       |
+|:------------------------------------------------------------------:|
+| Compare with state-of-the-art methods on MS-COCO Object Detection. |
+|                        <img "width="800"/>                         |
 
 If compared to object detectors running at **30~100 fps, CSPResNeXt50 with
 PANet (SPP) achieves the best performance** in AP, AP50 and AP75. They receive,
@@ -232,23 +230,18 @@ ThunderNet with SNet49.
 
 If compared to ThunderNet146, CSPPeleeNet Reference with PRN (3l) increases
 the frame rate by 19 fps while maintaining the same level of AP50.
-</details>
 
-<br>
-<details open>
-<summary><b style="font-size:16px">Inference Rate</b></summary>
+### Inference Rate
 
-<div align="center">
-	<img src="data/cspnet_inference_rate.png" width="500">
-	<p>Inference rate on mobile GPU (mGPU) and CPU real-time object detectors 
-    (in fps).</p>
-</div>
+|        ![data/cspnet_inference_rate.png](data/cspnet_inference_rate.png)         |
+|:--------------------------------------------------------------------------------:|
+| Inference rate on mobile GPU (mGPU) and CPU real-time object detectors (in fps). |
+|                               <img "width="500"/>                                |
 
 The above experiments are based on NVIDIA Jetson TX2 and Intel Core i9–9900K
 with OpenCV DNN module. No model compression or quantization is applied.
 Similarly, **with CSPNet applied**, it can achieve **high fps** and **high
 AP50**.
-</details>
 
 ## Citation
 
@@ -261,5 +254,3 @@ AP50**.
   year		= {2020}
 }
 ```
-
-</div>

@@ -9,6 +9,7 @@ has_toc     : false
 permalink   : /machine_learning/model_learning/decaug
 ---
 
+# DecAug
 
 <details open markdown="block">
   <summary>Table of contents</summary>

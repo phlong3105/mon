@@ -255,6 +255,7 @@ detect_configs = {
     },
     "yolov4-p7_chalearnltdmonth_1536": {
         "weights"     : [
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_384",    "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_3",  "weights", "best.pt"),
             # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
             # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
