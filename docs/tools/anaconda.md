@@ -1,7 +1,6 @@
 ---
 layout      : default
 title       : Anaconda
-nav_order   : 1
 parent		: Tools
 has_children: false
 has_toc     : false

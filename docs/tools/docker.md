@@ -1,7 +1,6 @@
 ---
 layout      : default
 title       : Docker
-nav_order   : 2
 parent		: Tools
 has_children: false
 has_toc     : false
@@ -74,3 +73,5 @@ sudo systemctl restart docker
 # At this point, a working setup can be tested by running a base CUDA container:
 sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 ```
+
+## Create Docker Container

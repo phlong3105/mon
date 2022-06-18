@@ -1,12 +1,27 @@
-<div align="center">
-<img src="data/chalearn_ltd.gif" width="1000">
+---
+layout      : default
+title       : ChaLearn22 LTD
+parent        : ChaLearn
+grand_parent: Challenges
+has_children: false
+has_toc     : false
+permalink   : /challenges/chalearn/chalearn22_ltd
+---
 
-2022 Seasons in Drift Challenge at ECCV
-=============================
-<a href="https://chalearnlap.cvc.uab.cat/challenge/51/description/"><img src="../../data/badge/website.svg"></a>
-</div>
+![data/chalearn_ltd.gif](data/chalearn_ltd.gif)
 
-<div align="justify">
+# 2022 Seasons in Drift Challenge at ECCV
+
+[Website](https://chalearnlap.cvc.uab.cat/challenge/51/description/){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 The challenge will use an extension of the LTD Dataset [1] which consists of
 thermal footage that spans multiple seasons. For deployment and long-term use of
@@ -18,8 +33,6 @@ limitations of existing methods. To provide a direction of research for the
 future.
 
 ## Important Dates
-
-<details><summary>Details:</summary>
 
 - **04/25/2022 Start of challenge**
 	- Release of training- and validation- data (with and without ground truth
@@ -69,11 +82,7 @@ independently of their rank position.
 - Decision notification: – July 10th, 2022
 - Camera ready: – July 15th, 2022
 
-</details>
-
-## Contest Details
-
-<details><summary><b style="font-size:17px">Data:</b></summary>
+## Data
 
 The LTD dataset used in the Seasons in Drift Challenge at ECCV'22 is an
 extension of an existing concept drift dataset and spans 188 days in the period
@@ -85,10 +94,9 @@ harborfront of Aalborg, Denmark. In this dataset depicts the drastic changes of
 appearance of the objects of interest as well as the scene over time in a static
 surveillance context to develop robust algorithms for real-world deployment.
 
-<div align="center">
-	<img src="data/chalearn22_ltd_camera_setup.png" width="300">
-	<p>Camera setup</p>
-</div>
+| ![data/chalearn22_ltd_camera_setup.png](data/chalearn22_ltd_camera_setup.png) |
+|:-----------------------------------------------------------------------------:|
+|                                 Camera Setup.                                 |
 
 ```text
 ######### Object Size Grouping Scheme #########
@@ -133,17 +141,14 @@ vehicle       : 550696
 ###############################################
 ```
 
-<div align="center">
-	<img src="data/chalearn22_ltd_class_histogram.png" width="350">
-	<img src="data/chalearn22_ltd_object_size_cluster_bicycle.png" width="350">
-	<img src="data/chalearn22_ltd_object_size_cluster_human.png" width="350">
-	<img src="data/chalearn22_ltd_object_size_cluster_motorcycle.png" width="350">
-	<img src="data/chalearn22_ltd_object_size_cluster_vehicle.png" width="350">
-</div>
+|                ![data/chalearn22_ltd_class_histogram.png](data/chalearn22_ltd_class_histogram.png)                |
+|:-----------------------------------------------------------------------------------------------------------------:|
+|    ![data/chalearn22_ltd_object_size_cluster_bicycle.png](data/chalearn22_ltd_object_size_cluster_bicycle.png)    |
+|      ![data/chalearn22_ltd_object_size_cluster_human.png](data/chalearn22_ltd_object_size_cluster_human.png)      |
+| ![data/chalearn22_ltd_object_size_cluster_motorcycle.png](data/chalearn22_ltd_object_size_cluster_motorcycle.png) |
+|    ![data/chalearn22_ltd_object_size_cluster_vehicle.png](data/chalearn22_ltd_object_size_cluster_vehicle.png)    |
 
-</details>
-
-<details><summary><b style="font-size:17px">Tasks:</b></summary>
+## Tasks
 
 This challenge is split into **3 different tracks** associated with thermal
 object detection. Each track will have the same evaluation criteria/data but
@@ -151,18 +156,89 @@ will vary with both the amount of data as well as the time span of the data. The
 training data is chosen by selecting the coldest day, and surrounding data as
 cold environments introduce the least amount of concept drift. Each track aims
 at evaluating how robust a given detection method is to concept drift, by
-training on limited data from a specific time period (day, week, month in
+training on limited data from a specific time period (**day, week, month** in
 February) and evaluation performance across time, by validating and testing
 performance on months of unseen data (Jan., May., Apr., May., Jun., Jul., Aug.
 and Sep.).
 
-</details>
+* Track 1: Detection at day
+  level ([competition link](https://codalab.lisn.upsaclay.fr/competitions/4272)):
+  Train on a predefined and single day data and evaluate concept drift across
+  time. The day is the **13th of February 2020** as it is the coldest day in the
+  recorded data, due to the relative thermal appearance of objects being the
+  least varied in colder environments this is our starting point.
 
-<details><summary><b style="font-size:17px">Submission Format:</b></summary>
+* Track 2: Detection at week
+  level ([competition link](https://codalab.lisn.upsaclay.fr/competitions/4273)):
+  Train on a predefined and single week data and evaluate concept drift across
+  time. The week selected is the week of the **13th – 20th of February 2020** (
+  i.e. expanding from our starting point)
 
-</details>
+* Track 3: Detection at month
+  level ([competition link](https://codalab.lisn.upsaclay.fr/competitions/4276)):
+  Train on a predefined and single month data and evaluate concept drift across
+  time. And the selected month is the **entire month of February**.
 
-<details><summary><b style="font-size:17px">Evaluation:</b></summary>
+The competition will be run on CodaLab platform. Register on CodaLab in the
+following links to get access to the decryption keys for
+training/validation/test data (according to our schedule), and submit
+predictions during the development and test phase of the challenge. Pick a
+track (or all tracks) to follow and train on the respective training splits.
+Depending on the track chosen the training data will vary, however the
+validation and testing data will remain the same across all challenges.
+
+By submitting a ".pkl" file to the codalab challenge following the format
+provided in the starting kit and complying with the challenge rules and the
+submission will be listed on the leaderboard and ranked.
+
+## Phases
+
+Each track will be composed of two phases, i.e., development and test phase. At
+the development phase, public train data will be released and participants will
+need to submit their predictions with respect to a validation set. At the test (
+final) phase, participants will need to submit their results with respect to the
+test data, which will be released just a few days before the end of the
+challenge. That is, in the initial development phase only data from the month of
+February will have annotations, and the images for validation of the other month
+will be available. As we progress into the test phase, annotations will become
+available together with the test images for the final submission.
+
+Participants will be ranked, at the end of the challenge, using the test data.
+It is important to note that this competition involves the submission of
+results (and not code). Therefore, participants will be required to share their
+codes and trained models after the end of the challenge (with detailed
+instructions) so that the organizers can reproduce the results submitted at the
+test phase, in a "code verification stage". At the end of the challenge, top
+ranked methods that pass the code verification stage will be considered as valid
+submissions to compete for any prize that may be offered.
+
+## Submission
+
+To submit your predicted results (on each of the phases), you first have to
+compress your "predictions.pkl" file (please, keep the filename as it is) as "
+the_filename_you_want.zip". To avoid any incompatibility with different python
+versions, please save your pickle file using protocol = 4. Then,
+
+* sign in on Codalab -> go to our challenge webpage (and associated track) on
+  codalab -> go on the "Participate" tab -> "Submit / view results" -> "Submit"
+  -> then select your "the_filename_you_want.zip" file and -> submit.
+
+* **Warning**: the last step ("submit") may take some minutes (e.g., >10min)
+  with status "Running" due to the amount of computation and availble Codalab
+  resources (just wait). If everything goes fine, you will see the obtained
+  results on the leaderboard ("Results" tab).
+
+* Note, Codalab will keep on the leaderboard the last valid submission. This
+  helps participants to receive real-time feedback on the submitted files.
+  Participants are responsible to upload the file they believe will rank them in
+  a better position as a last and valid submission.
+
+**Warning**: the maximum number of submissions per participant at the test stage
+will be set to 3. Participants are not allowed to create multiple accounts to
+make additional submissions. The organizers may disqualify suspicious
+submissions that do not follow this rule.
+
+## Evaluation
 
 We follow the COCO evaluation scheme for mAP. The primary metric is, mAP across
 10 different IoU thresholds (ranging from 0.5 to .95 at 0.05 increments). This
@@ -170,19 +246,48 @@ is calculated for each month in the validation/test set and the model is then
 ranked based on a weighted average of each month (more distant months having a
 larger weight as more concept drift is present). The evaluation is performed
 leveraging the official COCO evaluation tools
-</details>
 
-## Results
+The baseline is a YOLOv5 with the default configuration from the Ultralytics
+repository, including augmentations. In depth logs and examples for the baseline
+can be found in the Weights and Biases repository. The baseline is trained with
+a batch size of 64 for 300 epochs, with an input image size of 384x288 and the
+best performing model is chosen. For the dev phase the performance is validated
+on the training set. For the Test phase new baseline models will be submitted (
+validated on the validation set). Naturally, the labels are converted to the
+normalized yolo format ([cls] [cx] [cy] [w] [h]) for both training and
+evaluation. For submission they are converted back to
+the ([cls] [tl_x] [tl_y] [br_x] [br_y]) coordinates. The models were all trained
+on the same machine with 2x Nvidia RTX 3090 GPUs, all training is also conducted
+as multi GPU training using the pytorch distributed learning module.
 
-<div align="center">
-	<img src="data/aic21_track1_round_01.png" width="800">
-	<p>Leaderboard of the 1st round.</p>
-</div>
+## Rules
 
-## Publications
+According to the Terms and Conditions of the Challenge,
 
-| Status | Method | Team ID | Rank | Architecture | Date | Publication |
-|:------:|--------|:-------:|:----:|--------------|------|-------------|
-|        |        |         |      |              |      |             |
+* "the maximum number of submissions per participant at the test stage will be
+  set to 3. Participants are not allowed to create multiple accounts to make
+  additional submissions. The organizers may disqualify suspicious submissions
+  that do not follow this rule."
 
-</div>
+* "in order to be eligible for prizes, top ranked participants’ score must
+  improve the baseline performance provided by the challenge organizers."
+
+* "the performances on test data will be verified after the end of the challenge
+  during a code verification stage. Only submissions that pass the code
+  verification will be considered to be in the final list of winning methods;"
+
+* "to be part of the final ranking the participants will be asked to fill out a
+  survey (fact sheet) where a detailed and technical information about the
+  developed approach is provided."
+
+## Methods
+
+### Track 3: Month
+
+| Status | Method                                                                                 |   Team ID    | Rank | Architecture | Date | Publication     |
+|:------:|----------------------------------------------------------------------------------------|:------------:|:----:|--------------|------|-----------------|
+|        | [WeightedConf](https://phlong3105.github.io/one/vision/object_detection/weighted_conf) | longpham3105 |  1   | Deep         |      | ECCVW&nbsp;2022 |
+
+| ![data/chalearn22_ltd_month_development_results.png](data/chalearn22_ltd_month_development_results.png) |
+|:-------------------------------------------------------------------------------------------------------:|
+|                                        Development phase results                                        |

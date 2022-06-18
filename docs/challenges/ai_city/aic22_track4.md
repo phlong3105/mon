@@ -1,12 +1,27 @@
-<div align="center">
-<img src="data/aic22_track4.gif" width="1000">
+---
+layout      : default
+title       : AIC22 Track 4
+parent	    : AI City Challenge
+grand_parent: Challenges
+has_children: false
+has_toc     : false
+permalink   : /challenges/aic/aic22_track4
+---
 
-AIC22 Track 4: Multi-Class Product Counting & Recognition for Automated Retail Checkout
-=============================
-<a href="https://www.aicitychallenge.org/2022-challenge-tracks/"><img src="../../data/badge/website.svg"></a>
-</div>
+![data/aic22_track4.gif](data/aic22_track4.gif)
 
-<div align="justify">
+# AIC22 Track 4: Multi-Class Product Counting & Recognition for Automated Retail Checkout
+
+[Website](https://www.aicitychallenge.org/2022-challenge-tracks){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 A growing application of AI and computer vision is in the retail industry. Of
 the various problems that can be addressed, this track focuses on accurate and
@@ -28,8 +43,6 @@ team. The team with the highest combined efficiency and effectiveness score will
 be declared the winner of this track.
 
 ## Important Dates
-
-<details><summary>Details:</summary>
 
 - **Data sets shared with participants**: 02/27/2022
 
@@ -58,18 +71,7 @@ be declared the winner of this track.
 	  validation before decision of awardees. The performance on the leaderboard
 	  has to be reproducible without the use of external data._
 
-</details>
-
-## Contest Details
-
-A growing application of AI and computer vision is in the retail industry. Of
-the various problems that can be addressed, this track focuses on accurate and
-automatic check-out in a retail store. As the first version of this new track,
-**participating teams will identify/classify products when a customer is hand
-holding items in front of the checkout counter**. Products may be occluded or
-very similar to each other.
-
-<details><summary><b style="font-size:17px">Data:</b></summary>
+## Data 
 
 In test scenario, **the camera is mounted above the checkout counter and facing
 straight down while a customer is pretending to perform a checkout action by
@@ -100,9 +102,8 @@ The labeling format for synthetic data is “.jpg”, e.g., for the file
 We also provide segmentation labels for these images. For example,
 “00001_697_seg.jpg” is the segmentation label for image “00001_697.jpg”. The
 white area denotes the object area while the black shows the background.
-</details>
 
-<details><summary><b style="font-size:17px">Tasks:</b></summary>
+## Tasks
 
 Teams will be provided with the training set (with labels) and test set A (
 without labels). Test set B will be reserved for later testing.
@@ -130,9 +131,8 @@ validation**. The winning teams and runners-up are required to submit their
 training and testing codes for verification after the challenge submission
 deadline in order to ensure that no external data was used for training and the
 tasks were performed by algorithms and not humans.
-</details>
 
-<details><summary><b style="font-size:17px">Submission Format:</b></summary>
+## Submission
 
 To be ranked on the public leader board of test set A, one text file should be
 submitted to the online evaluation system containing, on each line, details of
@@ -153,9 +153,7 @@ Where:
   within the region of interest, i.e., over the white tray. Each object should
   only be identified once while it passes through the region of interest.
 
-</details>
-
-<details><summary><b style="font-size:17px">Evaluation:</b></summary>
+## Evaluation
 
 Evaluation for track 4 will be based on model identification performance,
 measured by the **F1-score**. For the purpose of computing the F1-score, a
@@ -165,19 +163,14 @@ correctly determined, and the object was identified within the time that the
 object was over the white tray. A false-positive (FP) is an identified object
 that is not a TP identification. Finally, a false-negative (FN) identification
 is a ground-truth object that was not correctly identified.
-</details>
 
-## Results
-
-<div align="center">
-	<img src="data/aic22_track4_round_01.png" width="800">
-	<p>Leaderboard of the 1st round.</p>
-</div>
-
-## Publications
+## Methods
 
 | Status | Method | Team ID | Rank | Architecture | Date | Publication |
 |:------:|--------|:-------:|:----:|--------------|------|-------------|
 |        |        |         |      |              |      |             |
 
-</div>
+
+| ![data/aic22_track4_round_01.png](data/aic22_track4_round_01.png) |
+|:-----------------------------------------------------------------:|
+|                   Leaderboard of the 1st round.                   |

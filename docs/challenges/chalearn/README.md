@@ -1,12 +1,26 @@
-<div align="center">
-<img src="data/chalearn.gif" width="1000">
+---
+layout      : default
+title       : ChaLearn
+parent		: Challenges
+has_children: true
+has_toc     : false
+permalink   : /challenges/chalearn
+---
 
-ChaLearn Looking at People
-=============================
-<a href="https://chalearnlap.cvc.uab.cat/"><img src="../../data/badge/website.svg"></a>
-</div>
+![data/chalearn.gif](data/chalearn.gif)
 
-<div align="justify">
+# ChaLearn Looking at People
+
+[Website](https://chalearnlap.cvc.uab.cat){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 Looking at People (LAP) is a challenging area of research that **deals with the
 problem of recognizing people in images, their posture, performing
@@ -26,8 +40,6 @@ artificial assistant and coaching for active aging, etc.
 
 ### [ChaLearn22](https://chalearnlap.cvc.uab.cat/)
 
-|                                                       <img width=150/>                                                        | <img width=150/> | <img width=150/> |
-|:-----------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Track 1](data/chalearn_small.gif)](chalearn22_ltd.md) <br> [**Seasons in Drift<br> Challenge at ECCV**](chalearn22_ltd.md) |                  |                  |
-
-</div>
+|                                                                                                         <img width=150/>                                                                                                          | <img width=150/> | <img width=150/> |
+|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
+| [![Track 1](data/chalearn_small.gif)](https://phlong3105.github.io/one/challenges/chalearn/chalearn22_ltd) <br> [**Seasons in Drift<br> Challenge at ECCV**](https://phlong3105.github.io/one/challenges/chalearn/chalearn22_ltd) |                  |                  |

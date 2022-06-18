@@ -1,12 +1,26 @@
-<div align="center">
-<img src="data/ai_city.gif" width="1000">
+---
+layout      : default
+title       : AI City Challenge
+parent		: Challenges
+has_children: true
+has_toc     : false
+permalink   : /challenges/aic
+---
 
-AI City Challenge
-=============================
-<a href="https://www.aicitychallenge.org"><img src="../../data/badge/website.svg"></a>
-</div>
+![data/ai_city.gif](data/ai_city.gif)
 
-<div align="justify">
+# AI City Challenge
+
+[Website](https://www.aicitychallenge.org){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 Transportation is one of the largest segments that can benefit from actionable 
 insights derived from data captured by sensors. Between traffic, signaling
@@ -23,16 +37,13 @@ cloud, which will accelerate the development and deployment of these models.
 
 ### [AIC21](https://www.aicitychallenge.org/2021-ai-city/)
 
-|                                                   <img width=150/>                                                    |                                               <img width=150/>                                                |                                         <img width=150/>                                          |
-|:---------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------:|
-| [![Track 1](data/aic21_track1_small.gif)](aic21_track1.md) <br> [**Track 1:<br> Vehicle Counting**](aic21_track1.md)  | [![Track 2](../../data/photo.png)](aic21_track2.md) <br> [**Track 2:<br> Reidentification**](aic21_track2.md) | [![Track 3](../../data/photo.png)](aic21_track3.md) <br> [**Track 3:<br> MTMC**](aic21_track3.md) |
-|    [![Track 4](../../data/photo.png)](aic21_track4.md) <br> [**Track 4:<br> Anomaly Detection**](aic21_track4.md)     |   [![Track 5](../../data/photo.png)](aic21_track5.md) <br> [**Track 5:<br> NL Tracking**](aic21_track5.md)    |                                                                                                   |
+|                                                                                                <img width=150/>                                                                                                | <img width=150/> | <img width=150/> |
+|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
+| [![Track 1](data/aic21_track1_small.gif)](https://phlong3105.github.io/one/challenges/aic/aic21_track1) <br> [**Track 1:<br> Vehicle Counting**](https://phlong3105.github.io/one/challenges/aic/aic21_track1) |                  |                  |
 
 ### [AIC22](https://www.aicitychallenge.org/)
 
-|                                                  <img width=150/>                                                   |                                             <img width=150/>                                              |                                              <img width=150/>                                               |
-|:-------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------:|
-|          [![Track 1](../../data/photo.png)](aic22_track1.md) <br> [**Track 1:<br> MTMC**](aic22_track1.md)          | [![Track 2](../../data/photo.png)](aic22_track2.md) <br> [**Track 2:<br> NL Retrieval**](aic22_track2.md) | [![Track 3](../../data/photo.png)](aic22_track4.md) <br> [**Track 3:<br> Driving Action**](aic22_track3.md) |
-| [![Track 4](data/aic22_track4_small.gif)](aic22_track4.md) <br> [**Track 4:<br> Retail Checkout**](aic22_track4.md) |
-
-</div>
+|                                                                                               <img width=150/>                                                                                                |                                                                                          <img width=150/>                                                                                           |                                                                                           <img width=150/>                                                                                            |
+|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|          [![Track 1](../../data/photo.png)](https://phlong3105.github.io/one/challenges/aic/aic22_track1) <br> [**Track 1:<br> MTMC**](https://phlong3105.github.io/one/challenges/aic/aic22_track1)          | [![Track 2](../../data/photo.png)](https://phlong3105.github.io/one/challenges/aic/aic22_track2) <br> [**Track 2:<br> NL Retrieval**](https://phlong3105.github.io/one/challenges/aic/aic22_track2) | [![Track 3](../../data/photo.png)](https://phlong3105.github.io/one/challenges/aic/aic22_track3) <br> [**Track 3:<br> Driving Action**](https://phlong3105.github.io/one/challenges/aic/aic22_track3) |
+| [![Track 4](data/aic22_track4_small.gif)](https://phlong3105.github.io/one/challenges/aic/aic22_track4) <br> [**Track 4:<br> Retail Checkout**](https://phlong3105.github.io/one/challenges/aic/aic22_track4) |

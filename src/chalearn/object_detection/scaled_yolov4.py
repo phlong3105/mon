@@ -15,6 +15,7 @@ import platform
 import time
 from argparse import Namespace
 from pathlib import Path
+from typing import Any
 from typing import Optional
 from typing import Union
 
@@ -352,6 +353,31 @@ detect_configs = {
     }
 }
 
+conf_weights = {
+    "single_0.5" : 0.5,
+    "single_0.4" : 0.4,
+    "multiple_01": [0.53, 0.23, 0.23, 0.53],
+    "month_01"   : {
+        "jan": [0.55, 0.30, 0.30, 0.55],
+        "mar": [0.55, 0.30, 0.30, 0.55],
+        "apr": [0.53, 0.25, 0.25, 0.53],
+        "may": [0.53, 0.23, 0.23, 0.53],
+        "jun": [0.53, 0.23, 0.23, 0.53],
+        "jul": [0.53, 0.23, 0.23, 0.53],
+        "aug": [0.53, 0.23, 0.23, 0.53],
+        "sep": [0.50, 0.20, 0.20, 0.50],
+    },
+}
+"""
+                     x
+                 x       x
+             x               x
+         x                       x
+     x                               x
+ x                                        x
+sep oct nov dec jan feb mar apr jun july aug
+"""
+
 
 # MARK: - Functional
 
@@ -405,16 +431,16 @@ def run_detect(args: Namespace):
 
 def create_pkl_from_txts(
     output_path: str = os.path.join("inference", "output"),
-    conf_thres : Union[float, list[float], tuple[float]] = 0.5,
+    conf_thres : Any = 0.5,
 ):
     """Merge YOLO results from txt files to a single .pkl file.
     
     Args:
         output_path (str):
             The output path for .pkl file.
-        conf_thres (float, list[float], tuple[float]):
-            Confidence threshold. Can be a scalar value or a list/tuple of
-            values for each class.
+        conf_thres (any):
+            Confidence threshold. Can be a string, scalar value or a
+            list/tuple/dict of values for each class.
     """
     predictions: dict = load_file(
         path=os.path.join(
@@ -427,11 +453,22 @@ def create_pkl_from_txts(
             d_dict["boxes"]  = []
             d_dict["labels"] = []
     
+    if isinstance(conf_thres, str):
+        if conf_thres not in conf_weights:
+            raise ValueError(f"`conf_thres` must be one of: {conf_weights.keys()}. "
+                             f"But got: {conf_thres}.")
+        conf_thres = conf_weights[conf_thres]
     if isinstance(conf_thres, (list, tuple)):
         if len(conf_thres) != 4:
             raise RuntimeError(
                 f"Length of `conf_thres` and number of classes must be the same. "
                 f"But got: {len(conf_thres)} != 4"
+            )
+    elif isinstance(conf_thres, dict):
+        if len(conf_thres.keys()) != 8:
+            raise RuntimeError(
+                f"Length of `conf_thres` must be 8. "
+                f"But got: {len(conf_thres.keys())} != 8"
             )
     else:
         conf_thres = [conf_thres for _ in range(4)]
@@ -447,6 +484,10 @@ def create_pkl_from_txts(
             date         = os.path.basename(Path(file).parents[1])
             month        = os.path.basename(Path(file).parents[3]).capitalize()
             day          = f"{date}_{clip}_{frame_number}"
+            if isinstance(conf_thres, dict):
+                class_conf_thres = conf_thres[month]
+            else:
+                class_conf_thres = conf_thres
             if os.path.exists(file):
                 with open(file, "r") as d:
                     reader = csv.reader(d, delimiter=" ")
@@ -457,7 +498,7 @@ def create_pkl_from_txts(
                         x2   = float(row[3])
                         y2   = float(row[4])
                         conf = float(row[5])
-                        if conf >= conf_thres[cls]:
+                        if conf >= class_conf_thres[cls]:
                             predictions[month][day]["boxes"].append([x1, y1, x2, y2])
                             predictions[month][day]["labels"].append(int(cls))
                             

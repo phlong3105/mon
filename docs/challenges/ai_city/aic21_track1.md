@@ -1,12 +1,27 @@
-<div align="center">
-<img src="data/aic21_track1.gif" width="1000">
+---
+layout      : default
+title       : AIC21 Track 1
+parent	    : AI City Challenges
+grand_parent: Challenges
+has_children: false
+has_toc     : false
+permalink   : /challenges/aic/aic21_track1
+---
 
-AIC21 Track 1: Multi-Class Multi-Movement Vehicle Counting Using IoT Devices
-=============================
-<a href="https://www.aicitychallenge.org/2021-challenge-tracks/"><img src="../../data/badge/website.svg"></a>
-</div>
+![data/aic21_track1.gif](data/aic21_track1.gif)
 
-<div align="justify">
+# AIC21 Track 1: Multi-Class Multi-Movement Vehicle Counting Using IoT Devices
+
+[Website](https://www.aicitychallenge.org/2021-challenge-tracks){: .btn .fs-3 .mb-4 .mb-md-0 }
+
+<details open markdown="block">
+  <summary>Table of contents</summary>
+  {: .text-delta }
+  1. TOC
+  {:toc}
+</details>
+
+---
 
 Participating teams will count four-wheel vehicles and freight trucks that
 follow pre-defined movements from multiple camera scenes. For example, teams
@@ -26,8 +41,6 @@ combined efficiency and effectiveness score will be declared the winner of this
 track.
 
 ## Important Dates
-
-<details><summary>Details:</summary>
 
 - **Challenge kick-off**: 01/12/2021
 
@@ -68,11 +81,7 @@ track.
 - **Presentation of papers and announcement of awards**: 06/25/2021 (02:00 PM,
   Pacific Time)
 
-</details>
-
-## Contest Details
-
-<details><summary><b style="font-size:17px">Data:</b></summary>
+## Data
 
 The data set contains 31 video clips (about 9 hours in total) captured from 20
 unique camera views (some cameras provide multiple video clips to cover
@@ -89,9 +98,8 @@ The 9 hours of video in track 1 are split into two data sets A and B. Data set
 A (5 hours in total) along with all the corresponding instruction documents and
 a small subset of ground truth labels (for demonstration purpose) are made
 available to participating teams. Data set B will be reserved for later testing.
-</details>
 
-<details><summary><b style="font-size:17px">Tasks:</b></summary>
+## Tasks
 
 A crucial tool in signal timing planning is capturing accurate movement- and
 class-specific vehicle counts. To be useful in online intelligent transportation
@@ -119,9 +127,8 @@ and start producing counts output within 15 seconds from the start of its
 execution. At any given time $t$, assuming the program execution start as $t_0$, 
 any output for video frames outside the range $[\max(t_0, t-15s), t]$ will be 
 ignored in the online evaluation.
-</details>
 
-<details><summary><b style="font-size:17px">Submission Format:</b></summary>
+## Submission
 
 To be ranked on the public leader board of data set A, one text file should be
 submitted to the online evaluation system containing, on each line, details of
@@ -148,9 +155,8 @@ Where:
   corresponding instruction document of that video.
 - `<vehicle_class_id>` is the vehicle classic numeric identifier. Only two
   values are accepted {1, 2} where 1 stands for “car” and 2 represents “truck”.
-</details>
 
-<details><summary><b style="font-size:17px">Evaluation:</b></summary>
+## Evaluation
 
 The Track 1 evaluation score ($S1$) is a weighted combination between the 
 Track 1 efficiency score ($S1_{efficiency}$) and the Track 1 effectiveness 
@@ -198,19 +204,14 @@ the exact same 20 cameras as in the Dataset A and follow the exact same naming
 conventions. The submitted program should be able to load the configs for each
 camera (ROIs, MOIs, etc) based on the video names thus it can be directly
 applied on Dataset B.
-</details>
 
-## Results
-
-<div align="center">
-	<img src="data/aic21_track1_round_01.png" width="800">
-	<p>Leaderboard of the 1st round.</p>
-</div>
-
-## Publications
+## Methods
 
 | Status | Method | Team ID | Rank | Architecture | Date | Publication |
 |:------:|--------|:-------:|:----:|--------------|------|-------------|
 |        |        |         |      |              |      |             |
 
-</div>
+
+| ![data/aic21_track1_round_01.png](data/aic21_track1_round_01.png) |
+|:-----------------------------------------------------------------:|
+|                   Leaderboard of the 1st round.                   |
