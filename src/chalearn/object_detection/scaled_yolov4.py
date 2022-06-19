@@ -228,7 +228,7 @@ train_configs = {
 
 test_configs = {}
 
-detect_configs = {
+detect_val_configs  = {
     "yolov4-p7_chalearnltdmonth_1920": {
         "weights"     : [
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
@@ -353,6 +353,132 @@ detect_configs = {
     }
 }
 
+detect_test_configs = {
+    "yolov4-p7_chalearnltdmonth_1920": {
+        "weights"     : [
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
+        ],
+        "source"      : os.path.join(data_dir, "chalearn", "ltd", "test"),
+        "output"      : os.path.join("inference", "output"),
+        "img_size"    : 1920,
+        "batch_size"  : 2,
+        "conf_thres"  : 0.01,
+        "iou_thres"   : 0.5,
+        "device"      : "0",
+        "view_img"    : False,
+        "save_img"    : False,
+        "save_txt"    : True,
+        "classes"     : None,
+        "agnostic_nms": True,
+        "augment"     : True,
+        "update"      : False,
+        "verbose"     : False,
+        "recreate"    : False,
+    },
+    "yolov4-p7_chalearnltdmonth_1536": {
+        "weights"     : [
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_384",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_3",  "weights", "best.pt"),
+            # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1280",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
+            # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
+        ],
+        "source"      : os.path.join(data_dir, "chalearn", "ltd", "test"),
+        "output"      : os.path.join("inference", "output"),
+        "img_size"    : 1536,
+        "batch_size"  : 2,
+        "conf_thres"  : 0.01,
+        "iou_thres"   : 0.5,
+        "device"      : "0",
+        "view_img"    : False,
+        "save_img"    : False,
+        "save_txt"    : True,
+        "classes"     : None,
+        "agnostic_nms": True,
+        "augment"     : True,
+        "update"      : False,
+        "verbose"     : False,
+        "recreate"    : False,
+    },
+    "yolov4-p7_chalearnltdmonth_1280": {
+        "weights"     : [
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
+        ],
+        "source"      : os.path.join(data_dir, "chalearn", "ltd", "test"),
+        "output"      : os.path.join("inference", "output"),
+        "img_size"    : 1280,
+        "batch_size"  : 2,
+        "conf_thres"  : 0.01,
+        "iou_thres"   : 0.5,
+        "device"      : "0",
+        "view_img"    : False,
+        "save_img"    : False,
+        "save_txt"    : True,
+        "classes"     : None,
+        "agnostic_nms": True,
+        "augment"     : True,
+        "update"      : False,
+        "verbose"     : False,
+        "recreate"    : False,
+    },
+    "yolov4-p7_chalearnltdmonth_896" : {
+        "weights"     : [
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
+        ],
+        "source"      : os.path.join(data_dir, "chalearn", "ltd", "test"),
+        "output"      : os.path.join("inference", "output"),
+        "img_size"    : 896,
+        "batch_size"  : 2,
+        "conf_thres"  : 0.01,
+        "iou_thres"   : 0.5,
+        "device"      : "0",
+        "view_img"    : False,
+        "save_img"    : False,
+        "save_txt"    : True,
+        "classes"     : None,
+        "agnostic_nms": True,
+        "augment"     : True,
+        "update"      : False,
+        "verbose"     : False,
+        "recreate"    : False,
+    },
+    "yolov4-p7_chalearnltdmonth_384" : {
+        "weights"     : os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536", "weights", "best.pt"),
+        "source"      : os.path.join(data_dir, "chalearn", "ltd", "test"),
+        "output"      : os.path.join("inference", "output"),
+        "img_size"    : 384,
+        "batch_size"  : 2,
+        "conf_thres"  : 0.35,
+        "iou_thres"   : 0.5,
+        "device"      : "0",
+        "view_img"    : False,
+        "save_img"    : False,
+        "save_txt"    : False,
+        "classes"     : None,
+        "agnostic_nms": True,
+        "augment"     : True,
+        "update"      : False,
+        "verbose"     : False,
+        "recreate"    : False,
+    }
+}
+
+
 conf_weights = {
     "single_0.5" : 0.5,
     "single_0.4" : 0.4,
@@ -412,8 +538,8 @@ def run_test(args: Namespace):
     
 
 def run_detect(args: Namespace):
-    if args.pre_cfg in detect_configs:
-        pre_args = detect_configs[args.pre_cfg]
+    if args.pre_cfg in detect_test_configs:
+        pre_args = detect_test_configs[args.pre_cfg]
         new_args = vars(args) | pre_args
         args     = Namespace(**new_args)
         
@@ -449,9 +575,10 @@ def create_pkl_from_txts(
         )
     )
     for m, m_dict in predictions.items():
-        for d, d_dict in m_dict.items():
-            d_dict["boxes"]  = []
-            d_dict["labels"] = []
+        m_dict = {}
+        # for d, d_dict in m_dict.items():
+        #     d_dict["boxes"]  = []
+        #    d_dict["labels"] = []
     
     if isinstance(conf_thres, str):
         if conf_thres not in conf_weights:
@@ -734,8 +861,8 @@ class Detect:
                             
                             # Write results
                             for *xyxy, conf, cls in det:
-                                self.predictions[m][dci]["boxes"].append([int(x) for x in xyxy])
-                                self.predictions[m][dci]["labels"].append(int(cls))
+                                # self.predictions[m][dci]["boxes"].append([int(x) for x in xyxy])
+                                # self.predictions[m][dci]["labels"].append(int(cls))
 
                                 if self.save_txt:  # Write to file
                                     create_dirs(paths=[str(Path(txt_path).parent)])
