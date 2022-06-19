@@ -570,8 +570,7 @@ def create_pkl_from_txts(
     """
     predictions: dict = load_file(
         path=os.path.join(
-            data_dir, "chalearn", "ltd", "toolkit",
-            "sample_val_predictions.pkl"
+            data_dir, "chalearn", "ltd", "toolkit", "sample_val_predictions.pkl"
         )
     )
     for m, m_dict in predictions.items():
