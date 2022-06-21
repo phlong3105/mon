@@ -45,7 +45,7 @@ image detection, and these concepts are synonymous.
 
 | Status | Method                                      | Architecture | Stage           | Anchor             | Date       | Publication    |
 |:------:|---------------------------------------------|--------------|-----------------|--------------------|------------|----------------|
-|   🔄   | [**YOLOR**](yolor.md)                       | Deep         | One&#8209;stage | Anchor&#8209;based | 2021/05/10 | arXiv          |
-|   ✅    | [**Scaled&#8209;YOLOv4**](scaled_yolov4.md) | Deep         | One&#8209;stage | Anchor&#8209;based | 2021/06/25 | CVPR&nbsp;2021 |
-|   🔄   | [**YOLOX**](yolox.md)                       | Deep         | One&#8209;stage | Anchor&#8209;free  | 2021/08/06 | arXiv          |
-|   ✅    | [**YOLOv5**](yolov5.md)                     | Deep         | One&#8209;stage | Anchor&#8209;based |            |                |
+|   🔄   | [**YOLOR**](yolor.md)                       | CNN          | One&#8209;stage | Anchor&#8209;based | 2021/05/10 | arXiv          |
+|   ✅    | [**Scaled&#8209;YOLOv4**](scaled_yolov4.md) | CNN          | One&#8209;stage | Anchor&#8209;based | 2021/06/25 | CVPR&nbsp;2021 |
+|   🔄   | [**YOLOX**](yolox.md)                       | CNN          | One&#8209;stage | Anchor&#8209;free  | 2021/08/06 | arXiv          |
+|   ✅    | [**YOLOv5**](yolov5.md)                     | CNN          | One&#8209;stage | Anchor&#8209;based |            |                |

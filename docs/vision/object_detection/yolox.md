@@ -8,8 +8,6 @@ has_toc     : false
 permalink   : /vision/object_detection/yolox
 ---
 
-![data/yolor.png](data/yolor.png)
-
 # YOLOX: Exceeding YOLO Series in 2021
 
 Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun

@@ -8,8 +8,6 @@ has_toc     : false
 permalink   : /vision/object_detection/yolov5
 ---
 
-![data/yolov5.png](data/yolor.png)
-
 # YOLOv5: v6.1 - TensorRT, TensorFlow Edge TPU and OpenVINO Export and Inference
 
 Chien-Yao Wang, I-Hau Yeh, and Hong-Yuan Mark Liao

@@ -179,8 +179,18 @@ involves choosing a number of components and hyperparameters.
     complete passes through the training dataset after which the training
     process is terminated.
 
+## Learning Types
+
+| Type                                                                    | Description                                                                                                                                          |
+|-------------------------------------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| [**N&#8209;Shot&nbsp;Learning&nbsp;(NSL)**]()                           | N-Shot Learning is seen as a more broad concept than all the others. It means that Few-Shot, One-Shot, and Zero-Shot Learning are sub-fields of NSL. |
+| [**Zero&#8209;Shot&nbsp;Learning&nbsp;(ZSL)**]()                        | The goal of Zero-Shot Learning is to predict unseen classes without any training examples.                                                           |
+| [**One&#8209;Shot&nbsp;Learning&nbsp;(OSL)**]()                         | One-Shot predicts unseen classes with only a single sample of each class.                                                                            |
+| [**Few&#8209;Shot&nbsp;Learning&nbsp;(FSL)**]()                         | Few-Shot predicts unseen classes with two to five samples per class, making it just a more flexible version of OSL.                                  | 
+| [**Out&#8209;of&#8209;Distribution&nbsp;(OoD) Generalization**](ood.md) |                                                                                                                                                      |
+
 ## Methods
 
-| Status | Method                  | Technique                                              | Date       | Publication |
-|:------:|-------------------------|--------------------------------------------------------|------------|-------------|
-|   📑   | [**DecAug**](decaug.md) | [**Out-of-Distribution (OoD) Generalization**](ood.md) | 2021/05/10 | arXiv       |
+| Status | Method                  | Technique                                                                    | Date       | Publication |
+|:------:|-------------------------|------------------------------------------------------------------------------|------------|-------------|
+|   📑   | [**DecAug**](decaug.md) | [**Out&#8209;of&#8209;Distribution&nbsp;(OoD)&nbsp;Generalization**](ood.md) | 2021/05/10 | arXiv       |
