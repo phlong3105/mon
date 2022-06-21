@@ -260,16 +260,16 @@ detect_val_configs  = {
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_3",  "weights", "best.pt"),
             # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896_2",  "weights", "best.pt"),
             # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_896",    "weights", "best.pt"),
-            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1280",   "weights", "best.pt"),
+            os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1280_2",   "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536_2", "weights", "best.pt"),
             # os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1536",   "weights", "best.pt"),
             os.path.join(pretrained_dir, "scaled_yolov4", "exp0_yolov4-p7_chalearnltdmonth_1920",   "weights", "best.pt")
         ],
         "source"      : os.path.join(data_dir, "chalearn", "ltd", "val"),
-        "output"      : os.path.join("inference", "output"),
+        "output"      : os.path.join("inference", "output_02"),
         "img_size"    : 1536,
         "batch_size"  : 2,
-        "conf_thres"  : 0.01,
+        "conf_thres"  : 0.1,
         "iou_thres"   : 0.5,
         "device"      : "0",
         "view_img"    : False,
@@ -294,7 +294,7 @@ detect_val_configs  = {
         "output"      : os.path.join("inference", "output"),
         "img_size"    : 1280,
         "batch_size"  : 2,
-        "conf_thres"  : 0.01,
+        "conf_thres"  : 0.1,
         "iou_thres"   : 0.5,
         "device"      : "0",
         "view_img"    : False,
@@ -568,17 +568,19 @@ def create_pkl_from_txts(
             Confidence threshold. Can be a string, scalar value or a
             list/tuple/dict of values for each class.
     """
+    total_images = len(glob.glob(os.path.join(data_dir, "chalearn", "ltd", "test", "**", "*.jpg"), recursive=True))
+    print(f"Total test images: {total_images}")
+    
     predictions: dict = load_file(
         path=os.path.join(
-            data_dir, "chalearn", "ltd", "toolkit", "sample_val_predictions.pkl"
+            data_dir, "chalearn", "ltd", "toolkit", "sample_test_predictions.pkl"
         )
     )
     for m, m_dict in predictions.items():
-        m_dict = {}
-        # for d, d_dict in m_dict.items():
-        #     d_dict["boxes"]  = []
-        #    d_dict["labels"] = []
-    
+        for d, d_dict in m_dict.items():
+            d_dict["boxes"]  = []
+            d_dict["labels"] = []
+
     if isinstance(conf_thres, str):
         if conf_thres not in conf_weights:
             raise ValueError(f"`conf_thres` must be one of: {conf_weights.keys()}. "
@@ -598,7 +600,8 @@ def create_pkl_from_txts(
             )
     else:
         conf_thres = [conf_thres for _ in range(4)]
-        
+    print(conf_thres)
+    
     with progress_bar() as pbar:
         for file in pbar.track(
             description="Merging...",
@@ -610,6 +613,8 @@ def create_pkl_from_txts(
             date         = os.path.basename(Path(file).parents[1])
             month        = os.path.basename(Path(file).parents[3]).capitalize()
             day          = f"{date}_{clip}_{frame_number}"
+            if day not in predictions[month]:
+                predictions[month][day] = {"boxes": [], "labels": []}
             if isinstance(conf_thres, dict):
                 class_conf_thres = conf_thres[month]
             else:
@@ -627,7 +632,12 @@ def create_pkl_from_txts(
                         if conf >= class_conf_thres[cls]:
                             predictions[month][day]["boxes"].append([x1, y1, x2, y2])
                             predictions[month][day]["labels"].append(int(cls))
-                            
+    
+    total_items = 0
+    for m, m_dict in predictions.items():
+        total_items += len(m_dict.items())
+    print(f"Total prediction items: {total_items}")
+    
     # Write final pickle file
     f = open(os.path.join(output_path, f"predictions.pkl"), "wb")
     pickle.dump(predictions, f, protocol=4)

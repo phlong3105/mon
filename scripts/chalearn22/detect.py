@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("--run-async",    default=False,                               action="store_true", help="Detect in asynchronous mode.")
     parser.add_argument("--weights",      default=os.path.join(pretrained_dir, "scaled_yolov4", "yolov4_p7_coco.pt"), nargs="+", type=str, help="model.pt path(s)")
     parser.add_argument("--source",       default=os.path.join("inference", "output"), type=str,   help="source")  # file/folder, 0 for webcam
-    parser.add_argument("--output",       default=os.path.join("inference", "output"), type=str,   help="output folder")  # output folder
+    parser.add_argument("--output",       default=os.path.join("inference", "output_02"), type=str,   help="output folder")  # output folder
     parser.add_argument("--img-size",     default=1536,                                type=int,   help="inference size (pixels)")
     parser.add_argument("--conf-thres",   default=0.4,                                 type=float, help="object confidence threshold")
     parser.add_argument("--iou-thres",    default=0.5,                                 type=float, help="IOU threshold for NMS")

@@ -84,7 +84,6 @@ only 30 minutes for training.
 | ![data/zero_dce_results_01.png](data/zero_dce_results_01.png) |
 |:-------------------------------------------------------------:|
 
-
 ### 2. Visual Face Detection Results Before and After Enhanced by Zero-DCE
 
 | ![data/zero_dce_results_02.png](data/zero_dce_results_02.png) |
@@ -92,13 +91,13 @@ only 30 minutes for training.
 
 ### 3. Real Low-light Video with Variational Illumination Enanced by Zero-DCE
 
-| ![data/zero_dce_results_03.png](data/zero_dce_results_03.png) |
-|:-------------------------------------------------------------:|
+| ![data/zero_dce_results_03.png](data/zero_dce_results_03.gif) |
+|:------------------------------------------------------------:|
 
 ### 4. Self-training (taking first 100 frames as training data) for Low-light Video Enhancement
 
-| ![data/zero_dce_results_04.png](data/zero_dce_results_04.png) |
-|:-------------------------------------------------------------:|
+| ![data/zero_dce_results_04.png](data/zero_dce_results_04.gif) |
+|:----------------------------------------------------------:|
 
 ## Citation
 
