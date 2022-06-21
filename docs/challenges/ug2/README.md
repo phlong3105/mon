@@ -26,6 +26,6 @@ permalink   : /challenges/ug2
 
 ### [UG2+22](http://www.ug2challenge.org/)
 
-|                                                                                                    <img width=150/>                                                                                                    | <img width=150/> | <img width=150/> |
-|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Track 1](data/chalearn_small.gif)](https://phlong3105.github.io/one/challenges/ug2/ug2+22_track1) <br> [**Seasons in Drift<br> Challenge at ECCV**](https://phlong3105.github.io/one/challenges/ug2+/ug2+22_track1) |                  |                  |
+|                                                                             <img width=150/>                                                                             | <img width=150/> | <img width=150/> |
+|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
+| [![Track 1](data/chalearn_small.gif)](https://phlong3105.github.io/one/challenges/ug2/ug2+22_track1) <br> [**Seasons in Drift<br> Challenge at ECCV**](ug2+22_track1.md) |                  |                  |

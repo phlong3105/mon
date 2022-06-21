@@ -40,6 +40,6 @@ artificial assistant and coaching for active aging, etc.
 
 ### [ChaLearn22](https://chalearnlap.cvc.uab.cat/)
 
-|                                                                                                         <img width=150/>                                                                                                          | <img width=150/> | <img width=150/> |
-|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
-| [![Track 1](data/chalearn_small.gif)](https://phlong3105.github.io/one/challenges/chalearn/chalearn22_ltd) <br> [**Seasons in Drift<br> Challenge at ECCV**](https://phlong3105.github.io/one/challenges/chalearn/chalearn22_ltd) |                  |                  |
+|                                                                                <img width=150/>                                                                                 | <img width=150/> | <img width=150/> |
+|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------:|:----------------:|
+| [![Track 1](data/chalearn_small.gif)](https://phlong3105.github.io/one/challenges/chalearn/chalearn22_ltd) <br> [**Seasons in Drift<br> Challenge at ECCV**](chalearn22_ltd.md) |                  |                  |
