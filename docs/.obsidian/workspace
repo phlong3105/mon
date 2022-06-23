@@ -1,0 +1,167 @@
+{
+  "main": {
+    "id": "81369804a00b5cea",
+    "type": "split",
+    "children": [
+      {
+        "id": "7c0c555d35ed1ff7",
+        "type": "leaf",
+        "state": {
+          "type": "localgraph",
+          "state": {
+            "file": "image_processing/README.md",
+            "options": {
+              "collapse-filter": true,
+              "search": "",
+              "localJumps": 1,
+              "localBacklinks": true,
+              "localForelinks": true,
+              "localInterlinks": false,
+              "showTags": false,
+              "showAttachments": false,
+              "hideUnresolved": false,
+              "collapse-color-groups": true,
+              "colorGroups": [],
+              "collapse-display": true,
+              "showArrow": false,
+              "textFadeMultiplier": 0,
+              "nodeSizeMultiplier": 1,
+              "lineSizeMultiplier": 1,
+              "collapse-forces": true,
+              "centerStrength": 0.518713248970312,
+              "repelStrength": 10,
+              "linkStrength": 1,
+              "linkDistance": 250,
+              "scale": 1,
+              "close": false
+            }
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "5ee75b0a27ae5d71",
+    "type": "split",
+    "children": [
+      {
+        "id": "1330199e8c267224",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f811ea6c6ce4033d",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "24447d8126b2642a",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "828d68251c84dcf0",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 261
+  },
+  "right": {
+    "id": "39969f05599f747c",
+    "type": "split",
+    "children": [
+      {
+        "id": "1221fbe3159ac1db",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "04a7f1d1049042b4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "image_processing/README.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "9dca3bb6e25c181b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "image_processing/README.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "3add0d269cb6863a",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "b56016d8336db540",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "image_processing/README.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "7c0c555d35ed1ff7",
+  "lastOpenFiles": [
+    "image_processing/README.md",
+    "challenges/README.md",
+    "challenges/ai_city/README.md",
+    "tools/README.md",
+    "tools/swift.md",
+    "README.md",
+    "index.md",
+    "vision/image_enhancement/hinet.md",
+    "vision/image_enhancement/zero_dce.md",
+    "vision/image_enhancement/low_light.md"
+  ]
+}
