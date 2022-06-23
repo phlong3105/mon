@@ -12,6 +12,8 @@
       <excludeFolder url="file://$MODULE_DIR$/pretrained" />
       <excludeFolder url="file://$MODULE_DIR$/third_party" />
       <excludeFolder url="file://$MODULE_DIR$/src/one.egg-info" />
+      <excludeFolder url="file://$MODULE_DIR$/docs/.sync" />
+      <excludeFolder url="file://$MODULE_DIR$/docs/.idea" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (one)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

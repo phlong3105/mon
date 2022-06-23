@@ -1,10 +1,12 @@
 ---
-layout      : default
-title       : Python
-parent		: Tools
+layout: default
+title: Python
+parent: Tools
 has_children: false
-has_toc     : false
-permalink   : /tools/python
+has_toc: false
+permalink: /tools/python
+banner: /data/python.png
+banner_y: 0.450
 ---
 
 # Python
@@ -25,5 +27,5 @@ permalink   : /tools/python
 ## Roadmap
 
 | ![data/python_roadmap.png](data/python_roadmap.png) |
-|:---------------------------------------------------:|
-|               Python Learning Roadmap               |
+|:----------------------------------------------------------:|
+|                               Python Learning Roadmap                      |

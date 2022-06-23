@@ -1,10 +1,10 @@
 ---
-layout      : default
-title       : Docker
-parent		: Tools
+layout: default
+title: Docker
+parent: Tools
 has_children: false
-has_toc     : false
-permalink   : /tools/docker
+has_toc: false
+permalink: /tools/docker
 ---
 
 # Docker
@@ -54,8 +54,8 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 ### NVIDIA Docker
 
 | ![nvidia_docker.png](data/nvidia_docker.png) |
-|:--------------------------------------------:|
-|        *Fig 1. NVIDIA docker stack.*         |
+|:----------------------------------------------:|
+|        *Fig 1. NVIDIA docker stack.*.        | 
 
 ```shell
 # Setup the stable repository and the GPG key
