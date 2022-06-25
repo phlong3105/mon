@@ -41,6 +41,7 @@ exclude     : [
   "pretrained/",
   "docs/tests/",
   "install/",
+  "note/",
   "src/",
   "tools/",
 ]
