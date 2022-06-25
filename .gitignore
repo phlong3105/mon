@@ -14,7 +14,5 @@ __pycache__/
 /.jekyll-cache/
 /.sync/
 /data/
-/docs/.sync/
-/docs/.idea/
 /pretrained/
 /third_party/
