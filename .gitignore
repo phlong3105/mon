@@ -16,6 +16,6 @@ __pycache__/
 /data/
 /docs/.sync/
 /docs/.idea/
-/pretrained/
+pretrained/
 /scripts/chalearn22/inference/
 /third_party/
