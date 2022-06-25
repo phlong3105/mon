@@ -1,12 +1,11 @@
 {
   "legacyEditor": false,
-  "livePreview": true,
-  "pdfExportSettings": {
-    "pageSize": "Letter",
-    "landscape": false,
-    "margin": "0",
-    "downscalePercent": 100
-  },
+  "livePreview": false,
+  "showFrontmatter": true,
   "showLineNumber": true,
-  "showUnsupportedFiles": true
+  "spellcheck": true,
+  "alwaysUpdateLinks": true,
+  "showUnsupportedFiles": true,
+  "lineWrap": true,
+  "promptDelete": false
 }

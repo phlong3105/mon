@@ -22,8 +22,7 @@ permalink: /tools/docker
 
 ### Docker
 
-1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including
-   images, containers, volumes, and networks, are preserved:
+1. Uninstall (old) Docker engine. The contents of `/var/lib/docker/`, including images, containers, volumes, and networks, are preserved:
 
 ```shell
 sudo apt-get remove docker docker-engine docker.io containerd runc
@@ -54,7 +53,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 ### NVIDIA Docker
 
 | ![nvidia_docker.png](data/nvidia_docker.png) |
-|:----------------------------------------------:|
+|:--------------------------------------------:|
 |        *Fig 1. NVIDIA docker stack.*.        | 
 
 ```shell

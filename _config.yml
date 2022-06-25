@@ -88,7 +88,7 @@ heading_anchors: true
 aux_links:
   "One on GitHub":
     - "//github.com/phlong3105/one"
-  "Home":
+  "Homepage":
     - "//phlong.net"
 
 # Makes Aux links open in a new tab. Default is false

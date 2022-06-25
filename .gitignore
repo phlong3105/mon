@@ -14,8 +14,8 @@ __pycache__/
 /.jekyll-cache/
 /.sync/
 /data/
+/docs/.sync/
+/docs/.idea/
 /pretrained/
 /scripts/chalearn22/inference/
 /third_party/
-/docs/.sync/
-/docs/.idea/

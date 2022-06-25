@@ -5,7 +5,7 @@ parent: Tools
 has_children: false
 has_toc: false
 permalink: /tools/python
-banner: /data/python.png
+banner: "/data/python.png"
 banner_y: 0.450
 ---
 

@@ -1,6 +1,6 @@
 ---
-layout   : default
-title    : Home
+layout: default
+title: Home
 nav_order: 1
 permalink: /
 ---
@@ -21,6 +21,7 @@ permalink: /
 
 ## Getting Started
 ### Prerequisite
+
 |            | Requirement                                                                                                                                                                                                                                          |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **OS**     | [**Ubuntu 20.04 / 22.04**](https://ubuntu.com/download/desktop) (fully supports), `Windows 10` and `MacOS` (partially supports)                                                                                                                      |
@@ -64,19 +65,26 @@ cd ..
 pip install --upgrade -e .
 ```
 
-## Knowledge Base
+## Research
+
 | Topic                                                    | Description                                               |
 | -------------------------------------------------------- | --------------------------------------------------------- |
 | [Machine Learning](machine_learning/machine_learning.md) | Machine learning theory, techniques, and other stuffs     | 
 | [Deep Learning](deep_learning/deep_learning.md)          | Deep learning architecture and techniques                 |
 | [Image Processing](image_processing/image_processing.md) | Image processing tasks but also known as low-level vision |
 | [Vision](vision/vision.md)                               | Vision tasks                                              |
-| [Tools](tools/tools.md)                                  | A list of useful tools that are every useful              |
 
 ## Projects
-| Topic                                  | Description                                |
-| -------------------------------------- | ------------------------------------------ |
-| [Challenges](challenges/challenges.md) | List of challenges that we participated in | 
+
+| Topic                                  | Description                                      |
+| -------------------------------------- | ------------------------------------------------ |
+| [Challenges](challenges/challenges.md) | List of challenges that our team participated in | 
+
+## Tools
+
+| Topic                   | Description                                  |
+| ----------------------- | -------------------------------------------- |
+| [Tools](tools/tools.md) | A list of useful tools that are every useful |
 
 ## Cite
 If you find our work useful, please cite the following:

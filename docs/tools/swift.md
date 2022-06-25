@@ -5,6 +5,7 @@ parent: Tools
 has_children: false
 has_toc: false
 permalink: /tools/swift
+banner: "/data/swift.png"
 ---
 
 # Swift

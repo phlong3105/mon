@@ -1,40 +1,18 @@
 {
   "main": {
-    "id": "81369804a00b5cea",
+    "id": "c671be8230e1a830",
     "type": "split",
     "children": [
       {
-        "id": "7c0c555d35ed1ff7",
+        "id": "7f497030ced96594",
         "type": "leaf",
         "state": {
-          "type": "localgraph",
+          "type": "markdown",
           "state": {
-            "file": "image_processing/README.md",
-            "options": {
-              "collapse-filter": true,
-              "search": "",
-              "localJumps": 1,
-              "localBacklinks": true,
-              "localForelinks": true,
-              "localInterlinks": false,
-              "showTags": false,
-              "showAttachments": false,
-              "hideUnresolved": false,
-              "collapse-color-groups": true,
-              "colorGroups": [],
-              "collapse-display": true,
-              "showArrow": false,
-              "textFadeMultiplier": 0,
-              "nodeSizeMultiplier": 1,
-              "lineSizeMultiplier": 1,
-              "collapse-forces": true,
-              "centerStrength": 0.518713248970312,
-              "repelStrength": 10,
-              "linkStrength": 1,
-              "linkDistance": 250,
-              "scale": 1,
-              "close": false
-            }
+            "file": "vision/zero_dce.md",
+            "mode": "preview",
+            "backlinks": true,
+            "source": true
           }
         }
       }
@@ -42,15 +20,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "5ee75b0a27ae5d71",
+    "id": "7f7cbde4ed869167",
     "type": "split",
     "children": [
       {
-        "id": "1330199e8c267224",
+        "id": "025499a655891b02",
         "type": "tabs",
         "children": [
           {
-            "id": "f811ea6c6ce4033d",
+            "id": "364f12c1166e8887",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -58,7 +36,7 @@
             }
           },
           {
-            "id": "24447d8126b2642a",
+            "id": "e4c8d1e621940af8",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -73,7 +51,7 @@
             }
           },
           {
-            "id": "828d68251c84dcf0",
+            "id": "8f7d09eaf402d801",
             "type": "leaf",
             "state": {
               "type": "starred",
@@ -84,23 +62,31 @@
       }
     ],
     "direction": "horizontal",
-    "width": 261
+    "width": 214
   },
   "right": {
-    "id": "39969f05599f747c",
+    "id": "48b1528313b3f988",
     "type": "split",
     "children": [
       {
-        "id": "1221fbe3159ac1db",
+        "id": "56cfe9713dd61f44",
         "type": "tabs",
         "children": [
           {
-            "id": "04a7f1d1049042b4",
+            "id": "3eec7b6bc84c6d87",
+            "type": "leaf",
+            "state": {
+              "type": "calendar",
+              "state": {}
+            }
+          },
+          {
+            "id": "145d7b1017f9a6d5",
             "type": "leaf",
             "state": {
               "type": "backlink",
               "state": {
-                "file": "image_processing/README.md",
+                "file": "vision/zero_dce.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -112,35 +98,25 @@
             }
           },
           {
-            "id": "9dca3bb6e25c181b",
+            "id": "0240b77c81b50fb3",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "image_processing/README.md",
+                "file": "vision/zero_dce.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
             }
           },
           {
-            "id": "3add0d269cb6863a",
+            "id": "a43a41ced14dc584",
             "type": "leaf",
             "state": {
               "type": "tag",
               "state": {
                 "sortOrder": "frequency",
                 "useHierarchy": true
-              }
-            }
-          },
-          {
-            "id": "b56016d8336db540",
-            "type": "leaf",
-            "state": {
-              "type": "outline",
-              "state": {
-                "file": "image_processing/README.md"
               }
             }
           }
@@ -151,17 +127,15 @@
     "width": 300,
     "collapsed": true
   },
-  "active": "7c0c555d35ed1ff7",
+  "active": "7f497030ced96594",
   "lastOpenFiles": [
-    "image_processing/README.md",
-    "challenges/README.md",
-    "challenges/ai_city/README.md",
-    "tools/README.md",
-    "tools/swift.md",
-    "README.md",
+    "vision/zero_dce.md",
     "index.md",
-    "vision/image_enhancement/hinet.md",
-    "vision/image_enhancement/zero_dce.md",
-    "vision/image_enhancement/low_light.md"
+    "README.md",
+    "tools/tools.md",
+    "vision/low_light_enhancement.md",
+    "machine_learning/zero_shot.md",
+    "vision/image_enhancement.md",
+    "vision/vision.md"
   ]
 }

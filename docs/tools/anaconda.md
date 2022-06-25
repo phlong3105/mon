@@ -3,12 +3,13 @@ layout: default
 title: Anaconda
 parent: Tools
 has_children: false
-has_toc: false
+has_toc : false
 permalink: /tools/anaconda
 banner: "data/anaconda.png"
 ---
 
 # Anaconda
+
 [Conda Cheatsheet](data/conda_cheatsheet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
 [PIP Cheatsheet](data/pip_cheatsheet.pdf){: .btn .fs-3 .mb-4 .mb-md-0 }
 
@@ -24,14 +25,16 @@ banner: "data/anaconda.png"
 ## Installation
 
 ### Ubuntu and macOS
-If the path is not automatically add to the `.bashrc` file. So in this case,
-we can manually add it as follows:
+
+If the path is not automatically add to the `.bashrc` file. So in this case, we can manually add it as follows:
+
 ```shell
 sudo nano ~/.basrc         # Ubuntu
 sudo nano ~/.bash_profile  # MacOS
 ```
 
 Paste the following text at the end of the file:
+
 ```shell
 # >>> conda init >>>
 # !! Contents within this block are managed by 'conda init' !!
@@ -51,5 +54,5 @@ unset __conda_setup
 ```
 
 ### Windows
-Make sure to add the path to `anaconda3/bin` and `anaconda3/lib` in `PATH`
-environment.
+
+Make sure to add the path to `anaconda3/bin` and `anaconda3/lib` in `PATH` environment.

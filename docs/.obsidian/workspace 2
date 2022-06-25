@@ -1,0 +1,152 @@
+{
+  "main": {
+    "id": "c5b8786212f0bc53",
+    "type": "split",
+    "children": [
+      {
+        "id": "187bcd1672b7f32a",
+        "type": "leaf",
+        "state": {
+          "type": "markdown",
+          "state": {
+            "file": "vision/image_enhancement.md",
+            "mode": "source",
+            "source": true
+          }
+        }
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3486a07cf53f1def",
+    "type": "split",
+    "children": [
+      {
+        "id": "c4c15f017d23786e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "79c44ffd275bd0bb",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {}
+            }
+          },
+          {
+            "id": "f5433fb09a8b9d49",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "a8a562ec8ec4ad9b",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 194
+  },
+  "right": {
+    "id": "bbe6841d279e88fd",
+    "type": "split",
+    "children": [
+      {
+        "id": "73294ae94a3edf1c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "481d7eba5bf5e3c2",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "vision/image_enhancement.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "483811aae6c83fe8",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "94804273cac8d849",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "vision/image_enhancement.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "5f3903d28f095ff4",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "vision/image_enhancement.md"
+              }
+            }
+          },
+          {
+            "id": "68db0260ffea2f35",
+            "type": "leaf",
+            "state": {
+              "type": "calendar",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "active": "187bcd1672b7f32a",
+  "lastOpenFiles": [
+    "vision/image_enhancement.md",
+    "vision/object_detection.md",
+    "machine_learning/machine_learning.md",
+    "machine_learning/zero_shot.md",
+    "index.md",
+    "vision/vision.md",
+    "vision/scaled_yolov4.md",
+    "vision/low_light.md",
+    "tools/tools.md",
+    "tools/swift.md"
+  ]
+}
