@@ -69,7 +69,7 @@ Inspired by the curves adjustment used in photo editing software, we attempt to 
 
 #### Basic Quadratic Curve
 
-$$LE\big(I(x);\alpha \big) = I(x) + \alpha I(x)\big(1 - I(x)\big), (1)$$ where x denotes pixel coordinates, $LE\big(I(x);\alpha \big)$ is the enhanced version of the given input $I(x)$, $\alpha \in [-1, 1]$ is the trainable curve parameter, which adjusts the magnitude of LE-curve and also controls the exposure level. Each pixel is normalized to $[0, 1]$ and all operations are pixel-wise.
+$$LE\big(I(x);\alpha \big) = I(x) + \alpha I(x)\big(1 - I(x)\big), \quad (1)$$ where x denotes pixel coordinates, $LE\big(I(x);\alpha \big)$ is the enhanced version of the given input $I(x)$, $\alpha \in [-1, 1]$ is the trainable curve parameter, which adjusts the magnitude of LE-curve and also controls the exposure level. Each pixel is normalized to $[0, 1]$ and all operations are pixel-wise.
 
 We separately apply the LE-curve to three RGB channels instead of solely on the illumination channel. The three-channel adjustment can better preserve the inherent color and reduce the risk of over-saturation.
 
@@ -79,7 +79,7 @@ The LE-curve enables us to increase or decrease the dynamic range of an input im
 
 The LE-curve defined in Eq. (1) can be applied iteratively to enable more versatile adjustment to cope with challenging low-light conditions.
 
-$$LE_{n}(x) = LE_{n-1}(x) + \alpha_{n}LE_{n-1}(x)\big(1 - LE_{n-1}(x)\big), (2)$$ where $n$ is the number of iteration, which controls the curvature. In this paper, we set the value of $n$ to 8, which can deal with most cases satisfactory. Eq. (2) can be degraded to Eq. (1) when $n$ is equal to 1.
+$$LE_{n}(x) = LE_{n-1}(x) + \alpha_{n}LE_{n-1}(x)\big(1 - LE_{n-1}(x)\big), \quad (2)$$ where $n$ is the number of iteration, which controls the curvature. In this paper, we set the value of $n$ to 8, which can deal with most cases satisfactory. Eq. (2) can be degraded to Eq. (1) when $n$ is equal to 1.
 
 #### Pixel-Wise Curve
 
@@ -87,7 +87,7 @@ The [higher-order curve](#higher-order-curve) can adjust an image within a wider
 
 We need to reformulate $\alpha$ as a pixel-wise parameter, i.e., each pixel of the given input image has a corresponding curve with the best-fitting $\alpha$ to adjust its dynamic range.
 
-$$LE_{n}(x) = LE_{n-1}(x) + \mathcal{A}(x)LE_{n-1}(x) \big(1 - LE_{n-1}(x) \big), (3)$$ where $\mathcal{A}$ is a parameter map with the same size as the given image.
+$$LE_{n}(x) = LE_{n-1}(x) + \mathcal{A}(x)LE_{n-1}(x) \big(1 - LE_{n-1}(x) \big), \quad (3)$$ where $\mathcal{A}$ is a parameter map with the same size as the given image.
 
 Here, we assume that the pixels in a local region have the same intensity (also the same adjustment curves), and thus the neighboring pixels in the output result still preserve the monotonous relations. In this way, the pixel-wise higher-order curves also comply with three objects.
 
@@ -96,25 +96,40 @@ Here, we assume that the pixels in a local region have the same intensity (also 
 
 ### Non-Reference Loss Function
 
-Four differentiable non-reference losses are adopted. The total loss can be expressed as: $$L_{total} = L_{spa} + L_{exp} + W_{col}L_{col} + W_{tv\mathcal{A}}L_{tv\mathcal{A}},$$ where $W_{col}$ and $W_{tv\mathcal{A}}$ are the weights of the losses.
+Four differentiable non-reference losses are adopted. The total loss can be expressed as: $$L_{total} = L_{spa} + L_{exp} + W_{col}L_{col} + W_{tv_\mathcal{A}}L_{tv\mathcal{A}},$$ where $W_{col}$ and $W_{tv\mathcal{A}}$ are the weights of the losses.
 
 #### Spatial Consistency Loss
 
 The spatial consistency loss $L_{spa}$ encourages spatial coherence of the enhanced image through preserving the different of neighboring regions between the input image and its enhanced version:
 
-$$L_{spa} = \frac{1}{K} \sum_{i=1}^{K} \sum_{j \in \Omega(i)} \big(|(Y_i - Y_j)| - |(I_i - I_j)|\big)^2, (4)$$ where $K$ is the number of local region, and $\Omega(i)$ is the four neighboring regions (top, down, left, right) centered at the region $i$. We denote $Y$ and $I$ as the average intensity value of the local region in the enhanced version and input image, respectively. We empirically set the size of the local region to $4 \times 4$. This loss is stable given other region sizes.
+$$L_{spa} = \frac{1}{K} \sum_{i=1}^{K} \sum_{j \in \Omega(i)} \big(|(Y_i - Y_j)| - |(I_i - I_j)|\big)^2, \quad (4)$$ where $K$ is the number of local region, and $\Omega(i)$ is the four neighboring regions (top, down, left, right) centered at the region $i$. We denote $Y$ and $I$ as the average intensity value of the local region in the enhanced version and input image, respectively. We empirically set the size of the local region to $4 \times 4$. This loss is stable given other region sizes.
 
 #### Exposure Control Loss
 
 The exposure control loss $L_{exp}$ restrain under-/over-exposed regions. $L_{exp}$ measures the distance between the average intensity value of a local region to the well-exposedness level $E$. 
 
-$$L_{exp} = \frac{1}{M} \sum_{k=1}^{M} |Y_k -E|, (5)$$ where $M$ is the number of nonoverlapping local regions of size $16 \times 16$. $Y$ is the average intensity value of a local region in the enhanced image. We set $E$ as the gray level in the RGB color space. We set $E$ to $0.6$ in our experiments although we do not find much performance difference by setting $E$ within $[0.4, 0.7]$. 
+$$L_{exp} = \frac{1}{M} \sum_{k=1}^{M} |Y_k -E|, \quad (5)$$ where $M$ is the number of nonoverlapping local regions of size $16 \times 16$. $Y$ is the average intensity value of a local region in the enhanced image. We set $E$ as the gray level in the RGB color space. We set $E$ to $0.6$ in our experiments although we do not find much performance difference by setting $E$ within $[0.4, 0.7]$. 
 
 #### Color Constancy Loss
 
 For **Gray-World color constancy hypothesis** that color in each sensor channel averages to gray over the entire image. The color constancy loss $L_{col}$ corrects the potential color deviations in the enhanced image and also builds the relations among three adjusted channels.
 
-$$L_{col} = \sum_{}(J^p - J^q)^2, \epsilon = \{(R,G), (R,B), (G,B)\}, (6)$$ where $J^p$ denotes the average intensity value of $p$ channel in the enhanced image, $(p,q)$ represents a pair of channels.
+$$L_{col} = \sum_{\forall(p,q) \in \varepsilon}(J^p - J^q)^2, \varepsilon = \{(R,G), (R,B), (G,B)\}, \quad (6)$$ where $J^p$ denotes the average intensity value of $p$ channel in the enhanced image, $(p,q)$ represents a pair of channels.
+
+#### Illumination Smoothness Loss
+
+To preserve the monotonicity relations between neighboring pixels, we add an illumination smoothness loss $L_{tv_{\mathcal{A}}}$ to each curve parameter map $\mathcal{A}$.
+
+$$L_{tv_{\mathcal{A}}} = \frac{1}{N} \sum^{N}_{n=1} \sum_{c \in \xi} \big( |\nabla_x \mathcal{A}^c_n| + |\nabla_y \mathcal{A}^c_n| \big)^2, \xi={R,G,B}, \quad (7)$$ where $N$ is the number of iteration, $\nabla_x$ and $\nabla_y$ represent the horizontal and vertical gradient operations.
+
+## Experiments
+
+### Implementation
+
+**Training set:** 
+* To bring the capability of wide dynamic range adjustment into full play, we incorporate both low-light and over-exposed images into our training set.
+* Randomly split 3,022 images of different exposure levels in the the Part1 of SICE dataset to train the proposed DCE-Net (2,422 images for training and the rest for validation). The dataset is also used as a part of the training data in EnlightenGAN.
+
 
 ## Ablation Studies
 
