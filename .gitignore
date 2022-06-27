@@ -16,3 +16,4 @@ __pycache__/
 /data/
 /pretrained/
 /third_party/
+/note/.sync/
