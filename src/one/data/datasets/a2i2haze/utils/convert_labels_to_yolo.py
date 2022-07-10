@@ -32,9 +32,7 @@ with progress_bar() as pbar:
 		image      = np.ascontiguousarray(image, dtype=np.uint8)
 		h, w, c    = image.shape
 		
-		yolo_file = file.replace(
-			"labels", "labels_yolo"
-		)
+		yolo_file = file.replace("labels", "labels_yolo")
 		
 		with open(file) as f:
 			lines = []
