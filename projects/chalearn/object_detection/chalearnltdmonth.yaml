@@ -1,0 +1,14 @@
+# Train and val datasets (image directory or *.txt file with image paths)
+path : ../../../data
+train: chalearn/ltd/extra/month/train/images
+val  : chalearn/ltd/extra/month/val/images
+test : chalearn/ltd/extra/month/val/images
+
+# number of classes
+nc   : 4
+names: [
+      "human",
+      "bicycle",
+      "motorcycle",
+      "vehicle"
+]

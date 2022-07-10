@@ -9,10 +9,10 @@ from __future__ import annotations
 import pytorch_lightning as pl
 import torch
 from pytorch_lightning.accelerators import GPUAccelerator
-from pytorch_lightning.accelerators import HPUAccelerator
+# from pytorch_lightning.accelerators import HPUAccelerator
 from pytorch_lightning.accelerators import IPUAccelerator
 from pytorch_lightning.accelerators import TPUAccelerator
-from pytorch_lightning.utilities import _HPU_AVAILABLE
+# from pytorch_lightning.utilities import _HPU_AVAILABLE
 from pytorch_lightning.utilities import _IPU_AVAILABLE
 from pytorch_lightning.utilities import _TPU_AVAILABLE
 
@@ -51,8 +51,8 @@ class Trainer(pl.Trainer):
         num_ipus = self.num_devices if isinstance(self.accelerator, IPUAccelerator) else 0
         console.log(f"IPU available: {_IPU_AVAILABLE}, using: {num_ipus} IPUs")
     
-        num_hpus = self.num_devices if isinstance(self.accelerator, HPUAccelerator) else 0
-        console.log(f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs")
+        # num_hpus = self.num_devices if isinstance(self.accelerator, HPUAccelerator) else 0
+        # console.log(f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs")
     
         if torch.cuda.is_available() and not isinstance(self.accelerator, GPUAccelerator):
             console.log(
@@ -71,9 +71,11 @@ class Trainer(pl.Trainer):
                 "IPU available but not used. Set `accelerator` and `devices` using"
                 f" `Trainer(accelerator='ipu', devices={IPUAccelerator.auto_device_count()})`."
             )
-    
+            
+        """
         if _HPU_AVAILABLE and not isinstance(self.accelerator, HPUAccelerator):
             console.log(
                 "HPU available but not used. Set `accelerator` and `devices` using"
                 f" `Trainer(accelerator='hpu', devices={HPUAccelerator.auto_device_count()})`."
             )
+        """
