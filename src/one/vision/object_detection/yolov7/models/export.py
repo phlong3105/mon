@@ -2,7 +2,7 @@ import argparse
 import sys
 import time
 
-sys.path.append('./')  # to run '$ python *.py' files in subdirectories
+sys.path.append("./")  # to run '$ python *.py' files in subdirectories
 
 import torch
 import torch.nn as nn

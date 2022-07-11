@@ -1,4 +1,8 @@
-# Model validation metrics
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Model validation metrics
+"""
 
 from pathlib import Path
 
@@ -15,33 +19,37 @@ def fitness(x):
     return (x[:, :4] * w).sum(1)
 
 
-def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names=()):
-    """ Compute the average precision, given the recall and precision curves.
+def ap_per_class(
+    tp, conf, pred_cls, target_cls, plot: bool = False, save_dir: str = '.', names=()
+):
+    """Compute the average precision, given the recall and precision curves.
     Source: https://github.com/rafaelpadilla/Object-Detection-Metrics.
-    # Arguments
+    
+    Args:
         tp:  True positives (nparray, nx1 or nx10).
         conf:  Objectness value from 0-1 (nparray).
         pred_cls:  Predicted object classes (nparray).
         target_cls:  True object classes (nparray).
         plot:  Plot precision-recall curve at mAP@0.5
         save_dir:  Plot save directory
-    # Returns
+        
+    Returns:
         The average precision as computed in py-faster-rcnn.
     """
 
     # Sort by objectness
-    i = np.argsort(-conf)
+    i                  = np.argsort(-conf)
     tp, conf, pred_cls = tp[i], conf[i], pred_cls[i]
 
     # Find unique classes
     unique_classes = np.unique(target_cls)
-    nc = unique_classes.shape[0]  # number of classes, number of detections
+    nc             = unique_classes.shape[0]  # number of classes, number of detections
 
     # Create Precision-Recall curve and compute AP for each class
-    px, py = np.linspace(0, 1, 1000), []  # for plotting
+    px, py   = np.linspace(0, 1, 1000), []  # for plotting
     ap, p, r = np.zeros((nc, tp.shape[1])), np.zeros((nc, 1000)), np.zeros((nc, 1000))
     for ci, c in enumerate(unique_classes):
-        i = pred_cls == c
+        i   = pred_cls == c
         n_l = (target_cls == c).sum()  # number of labels
         n_p = i.sum()  # number of predictions
 
@@ -54,11 +62,11 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
 
             # Recall
             recall = tpc / (n_l + 1e-16)  # recall curve
-            r[ci] = np.interp(-px, -conf[i], recall[:, 0], left=0)  # negative x, xp because xp decreases
+            r[ci]  = np.interp(-px, -conf[i], recall[:, 0], left=0)  # negative x, xp because xp decreases
 
             # Precision
             precision = tpc / (tpc + fpc)  # precision curve
-            p[ci] = np.interp(-px, -conf[i], precision[:, 0], left=1)  # p at pr_score
+            p[ci]     = np.interp(-px, -conf[i], precision[:, 0], left=1)  # p at pr_score
 
             # AP from recall-precision curve
             for j in range(tp.shape[1]):
@@ -69,21 +77,23 @@ def ap_per_class(tp, conf, pred_cls, target_cls, plot=False, save_dir='.', names
     # Compute F1 (harmonic mean of precision and recall)
     f1 = 2 * p * r / (p + r + 1e-16)
     if plot:
-        plot_pr_curve(px, py, ap, Path(save_dir) / 'PR_curve.png', names)
-        plot_mc_curve(px, f1, Path(save_dir) / 'F1_curve.png', names, ylabel='F1')
-        plot_mc_curve(px, p, Path(save_dir) / 'P_curve.png', names, ylabel='Precision')
-        plot_mc_curve(px, r, Path(save_dir) / 'R_curve.png', names, ylabel='Recall')
+        plot_pr_curve(px, py, ap, Path(save_dir) / "PR_curve.png", names)
+        plot_mc_curve(px, f1,     Path(save_dir) / "F1_curve.png", names, ylabel="F1")
+        plot_mc_curve(px, p,      Path(save_dir) / "P_curve.png",  names, ylabel="Precision")
+        plot_mc_curve(px, r,      Path(save_dir) / "R_curve.png",  names, ylabel="Recall")
 
     i = f1.mean(0).argmax()  # max F1 index
-    return p[:, i], r[:, i], ap, f1[:, i], unique_classes.astype('int32')
+    return p[:, i], r[:, i], ap, f1[:, i], unique_classes.astype("int32")
 
 
 def compute_ap(recall, precision):
     """ Compute the average precision, given the recall and precision curves
-    # Arguments
+    
+    Args:
         recall:    The recall curve (list)
         precision: The precision curve (list)
-    # Returns
+        
+    Returns:
         Average precision, precision curve, recall curve
     """
 
@@ -95,12 +105,12 @@ def compute_ap(recall, precision):
     mpre = np.flip(np.maximum.accumulate(np.flip(mpre)))
 
     # Integrate area under curve
-    method = 'interp'  # methods: 'continuous', 'interp'
-    if method == 'interp':
-        x = np.linspace(0, 1, 101)  # 101-point interp (COCO)
+    method = "interp"  # methods: "continuous", "interp"
+    if method == "interp":
+        x  = np.linspace(0, 1, 101)  # 101-point interp (COCO)
         ap = np.trapz(np.interp(x, mrec, mpre), x)  # integrate
-    else:  # 'continuous'
-        i = np.where(mrec[1:] != mrec[:-1])[0]  # points where x axis (recall) changes
+    else:  # "continuous"
+        i  = np.where(mrec[1:] != mrec[:-1])[0]  # points where x axis (recall) changes
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])  # area under curve
 
     return ap, mpre, mrec
@@ -108,26 +118,28 @@ def compute_ap(recall, precision):
 
 class ConfusionMatrix:
     # Updated version of https://github.com/kaanakan/object_detection_confusion_matrix
-    def __init__(self, nc, conf=0.25, iou_thres=0.45):
-        self.matrix = np.zeros((nc + 1, nc + 1))
-        self.nc = nc  # number of classes
-        self.conf = conf
+    
+    def __init__(self, nc: int, conf: float = 0.25, iou_thres: float = 0.45):
+        self.matrix    = np.zeros((nc + 1, nc + 1))
+        self.nc        = nc  # number of classes
+        self.conf      = conf
         self.iou_thres = iou_thres
 
     def process_batch(self, detections, labels):
-        """
-        Return intersection-over-union (Jaccard index) of boxes.
+        """Return intersection-over-union (Jaccard index) of boxes.
         Both sets of boxes are expected to be in (x1, y1, x2, y2) format.
-        Arguments:
+        
+        Args:
             detections (Array[N, 6]), x1, y1, x2, y2, conf, class
             labels (Array[M, 5]), class, x1, y1, x2, y2
+            
         Returns:
             None, updates confusion matrix accordingly
         """
-        detections = detections[detections[:, 4] > self.conf]
-        gt_classes = labels[:, 0].int()
+        detections        = detections[detections[:, 4] > self.conf]
+        gt_classes        = labels[:, 0].int()
         detection_classes = detections[:, 5].int()
-        iou = general.box_iou(labels[:, 1:], detections[:, :4])
+        iou               = general.box_iou(labels[:, 1:], detections[:, :4])
 
         x = torch.where(iou > self.iou_thres)
         if x[0].shape[0]:
@@ -140,7 +152,7 @@ class ConfusionMatrix:
         else:
             matches = np.zeros((0, 3))
 
-        n = matches.shape[0] > 0
+        n         = matches.shape[0] > 0
         m0, m1, _ = matches.transpose().astype(np.int16)
         for i, gc in enumerate(gt_classes):
             j = m0 == i
@@ -157,7 +169,7 @@ class ConfusionMatrix:
     def matrix(self):
         return self.matrix
 
-    def plot(self, save_dir='', names=()):
+    def plot(self, save_dir: str = "", names=()):
         try:
             import seaborn as sn
 
@@ -167,54 +179,67 @@ class ConfusionMatrix:
             fig = plt.figure(figsize=(12, 9), tight_layout=True)
             sn.set(font_scale=1.0 if self.nc < 50 else 0.8)  # for label size
             labels = (0 < len(names) < 99) and len(names) == self.nc  # apply names to ticklabels
-            sn.heatmap(array, annot=self.nc < 30, annot_kws={"size": 8}, cmap='Blues', fmt='.2f', square=True,
-                       xticklabels=names + ['background FP'] if labels else "auto",
-                       yticklabels=names + ['background FN'] if labels else "auto").set_facecolor((1, 1, 1))
-            fig.axes[0].set_xlabel('True')
-            fig.axes[0].set_ylabel('Predicted')
-            fig.savefig(Path(save_dir) / 'confusion_matrix.png', dpi=250)
+            sn.heatmap(
+                array,
+                annot       = self.nc < 30,
+                annot_kws   = {"size": 8},
+                cmap        = "Blues",
+                fmt         = ".2f",
+                square      = True,
+                xticklabels = names + ["background FP"] if labels else "auto",
+                yticklabels = names + ["background FN"] if labels else "auto"
+            ).set_facecolor((1, 1, 1))
+            fig.axes[0].set_xlabel("True")
+            fig.axes[0].set_ylabel("Predicted")
+            fig.savefig(Path(save_dir) / "confusion_matrix.png", dpi=250)
         except Exception as e:
             pass
 
     def print(self):
         for i in range(self.nc + 1):
-            print(' '.join(map(str, self.matrix[i])))
+            print(" ".join(map(str, self.matrix[i])))
 
 
 # Plots ----------------------------------------------------------------------------------------------------------------
 
-def plot_pr_curve(px, py, ap, save_dir='pr_curve.png', names=()):
+def plot_pr_curve(px, py, ap, save_dir: str = "pr_curve.png", names=()):
     # Precision-recall curve
     fig, ax = plt.subplots(1, 1, figsize=(9, 6), tight_layout=True)
-    py = np.stack(py, axis=1)
+    py      = np.stack(py, axis=1)
 
     if 0 < len(names) < 21:  # display per-class legend if < 21 classes
         for i, y in enumerate(py.T):
-            ax.plot(px, y, linewidth=1, label=f'{names[i]} {ap[i, 0]:.3f}')  # plot(recall, precision)
+            ax.plot(px, y, linewidth=1, label=f"{names[i]} {ap[i, 0]:.3f}")  # plot(recall, precision)
     else:
-        ax.plot(px, py, linewidth=1, color='grey')  # plot(recall, precision)
+        ax.plot(px, py, linewidth=1, color="grey")  # plot(recall, precision)
 
-    ax.plot(px, py.mean(1), linewidth=3, color='blue', label='all classes %.3f mAP@0.5' % ap[:, 0].mean())
-    ax.set_xlabel('Recall')
-    ax.set_ylabel('Precision')
+    ax.plot(px, py.mean(1), linewidth=3, color="blue", label="all classes %.3f mAP@0.5" % ap[:, 0].mean())
+    ax.set_xlabel("Recall")
+    ax.set_ylabel("Precision")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
     fig.savefig(Path(save_dir), dpi=250)
 
 
-def plot_mc_curve(px, py, save_dir='mc_curve.png', names=(), xlabel='Confidence', ylabel='Metric'):
+def plot_mc_curve(
+    px, py,
+    save_dir: str = "mc_curve.png",
+    names         = (),
+    xlabel  : str = "Confidence",
+    ylabel  : str = "Metric"
+):
     # Metric-confidence curve
     fig, ax = plt.subplots(1, 1, figsize=(9, 6), tight_layout=True)
 
     if 0 < len(names) < 21:  # display per-class legend if < 21 classes
         for i, y in enumerate(py):
-            ax.plot(px, y, linewidth=1, label=f'{names[i]}')  # plot(confidence, metric)
+            ax.plot(px, y, linewidth=1, label=f"{names[i]}")  # plot(confidence, metric)
     else:
-        ax.plot(px, py.T, linewidth=1, color='grey')  # plot(confidence, metric)
+        ax.plot(px, py.T, linewidth=1, color="grey")  # plot(confidence, metric)
 
     y = py.mean(0)
-    ax.plot(px, y, linewidth=3, color='blue', label=f'all classes {y.max():.2f} at {px[y.argmax()]:.3f}')
+    ax.plot(px, y, linewidth=3, color="blue", label=f"all classes {y.max():.2f} at {px[y.argmax()]:.3f}")
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_xlim(0, 1)

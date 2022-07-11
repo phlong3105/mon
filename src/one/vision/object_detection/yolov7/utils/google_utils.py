@@ -1,63 +1,68 @@
-# Google utils: https://cloud.google.com/storage/docs/reference/libraries
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Google utils: https://cloud.google.com/storage/docs/reference/libraries
+"""
 
 import os
 import platform
 import subprocess
 import time
 from pathlib import Path
+from typing import Union
 
 import requests
 import torch
 
 
-def gsutil_getsize(url=''):
+def gsutil_getsize(url: str = ""):
     # gs://bucket/file size https://cloud.google.com/storage/docs/gsutil/commands/du
-    s = subprocess.check_output(f'gsutil du {url}', shell=True).decode('utf-8')
-    return eval(s.split(' ')[0]) if len(s) else 0  # bytes
+    s = subprocess.check_output(f"gsutil du {url}", shell=True).decode("utf-8")
+    return eval(s.split(" ")[0]) if len(s) else 0  # bytes
 
 
-def attempt_download(file, repo='WongKinYiu/yolov7'):
-    # Attempt file download if does not exist
-    file = Path(str(file).strip().replace("'", '').lower())
+def attempt_download(file: Union[str, Path], repo: str = "WongKinYiu/yolov7"):
+    # Attempt file download if it does not exist
+    file = Path(str(file).strip().replace("'", "").lower())
 
     if not file.exists():
         try:
-            response = requests.get(f'https://api.github.com/repos/{repo}/releases/latest').json()  # github api
-            assets = [x['name'] for x in response['assets']]  # release assets
-            tag = response['tag_name']  # i.e. 'v1.0'
+            response = requests.get(f"https://api.github.com/repos/{repo}/releases/latest").json()  # github api
+            assets   = [x["name"] for x in response["assets"]]  # release assets
+            tag      = response["tag_name"]  # i.e. "v1.0"
         except:  # fallback plan
-            assets = ['yolov7.pt']
-            tag = subprocess.check_output('git tag', shell=True).decode().split()[-1]
+            assets = ["yolov7.pt"]
+            tag    = subprocess.check_output("git tag", shell=True).decode().split()[-1]
 
         name = file.name
         if name in assets:
-            msg = f'{file} missing, try downloading from https://github.com/{repo}/releases/'
+            msg = f"{file} missing, try downloading from https://github.com/{repo}/releases/"
             redundant = False  # second download option
             try:  # GitHub
-                url = f'https://github.com/{repo}/releases/download/{tag}/{name}'
-                print(f'Downloading {url} to {file}...')
+                url = f"https://github.com/{repo}/releases/download/{tag}/{name}"
+                print(f"Downloading {url} to {file}...")
                 torch.hub.download_url_to_file(url, file)
                 assert file.exists() and file.stat().st_size > 1E6  # check
             except Exception as e:  # GCP
-                print(f'Download error: {e}')
-                assert redundant, 'No secondary mirror'
-                url = f'https://storage.googleapis.com/{repo}/ckpt/{name}'
-                print(f'Downloading {url} to {file}...')
-                os.system(f'curl -L {url} -o {file}')  # torch.hub.download_url_to_file(url, weights)
+                print(f"Download error: {e}")
+                assert redundant, "No secondary mirror"
+                url = f"https://storage.googleapis.com/{repo}/ckpt/{name}"
+                print(f"Downloading {url} to {file}...")
+                os.system(f"curl -L {url} -o {file}")  # torch.hub.download_url_to_file(url, weights)
             finally:
                 if not file.exists() or file.stat().st_size < 1E6:  # check
                     file.unlink(missing_ok=True)  # remove partial downloads
-                    print(f'ERROR: Download failure: {msg}')
-                print('')
+                    print(f"ERROR: Download failure: {msg}")
+                print("")
                 return
 
 
-def gdrive_download(id='', file='tmp.zip'):
+def gdrive_download(id: str = "", file: str = "tmp.zip"):
     # Downloads a file from Google Drive. from yolov7.utils.google_utils import *; gdrive_download()
-    t = time.time()
-    file = Path(file)
-    cookie = Path('cookie')  # gdrive cookie
-    print(f'Downloading https://drive.google.com/uc?export=download&id={id} as {file}... ', end='')
+    t      = time.time()
+    file   = Path(file)
+    cookie = Path("cookie")  # gdrive cookie
+    print(f"Downloading https://drive.google.com/uc?export=download&id={id} as {file}... ", end="")
     file.unlink(missing_ok=True)  # remove existing file
     cookie.unlink(missing_ok=True)  # remove existing cookie
 
@@ -74,20 +79,20 @@ def gdrive_download(id='', file='tmp.zip'):
     # Error check
     if r != 0:
         file.unlink(missing_ok=True)  # remove partial
-        print('Download error ')  # raise Exception('Download error')
+        print("Download error ")  # raise Exception("Download error")
         return r
 
     # Unzip if archive
-    if file.suffix == '.zip':
-        print('unzipping... ', end='')
-        os.system(f'unzip -q {file}')  # unzip
+    if file.suffix == ".zip":
+        print("unzipping... ", end='')
+        os.system(f"unzip -q {file}")  # unzip
         file.unlink()  # remove zip to free space
 
-    print(f'Done ({time.time() - t:.1f}s)')
+    print(f"Done ({time.time() - t:.1f}s)")
     return r
 
 
-def get_token(cookie="./cookie"):
+def get_token(cookie: str = "./cookie"):
     with open(cookie) as f:
         for line in f:
             if "download" in line:
