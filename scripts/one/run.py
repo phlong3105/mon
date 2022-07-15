@@ -60,7 +60,7 @@ def main():
     dm.prepare_data()
 
     # Model
-    config.model.class_labels = dm.class_labels
+    config.model.classes = dm.classes
     model                     = MODELS.build_from_dict(cfg=config.model)
     
     print_dict(config, title=host.config.model_fullname)

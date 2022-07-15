@@ -12,9 +12,9 @@ from argparse import Namespace
 
 import torch
 
-import one.vision.object_detection.scaled_yolov4.detect as detect
-import one.vision.object_detection.scaled_yolov4.test as test
-import one.vision.object_detection.scaled_yolov4.train as train
+import one.vision.detection.scaled_yolov4.detect as detect
+import one.vision.detection.scaled_yolov4.test as test
+import one.vision.detection.scaled_yolov4.train as train
 from aic import data_dir
 from aic import pretrained_dir
 

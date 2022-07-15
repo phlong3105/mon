@@ -12,9 +12,9 @@ from typing import Union
 
 import numpy as np
 
-from one import box_xyxy_to_cxcywh_norm
-from one import create_dirs
-from one import load_file
+from one.imgproc import box_xyxy_to_cxcywh_norm
+from one.io import create_dirs
+from one.io import load_file
 from projects.vipriors.utils import data_dir
 
 

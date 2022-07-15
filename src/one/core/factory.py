@@ -7,8 +7,8 @@
 from __future__ import annotations
 
 import inspect
+import sys
 from copy import deepcopy
-from typing import Optional
 from typing import Union
 
 from munch import Munch
@@ -16,13 +16,6 @@ from torch import nn
 from torch.optim import Optimizer
 # noinspection PyUnresolvedReferences
 from torch.optim.lr_scheduler import _LRScheduler
-
-__all__ = [
-	"Factory",
-	"OptimizerFactory",
-	"Registry",
-	"SchedulerFactory",
-]
 
 
 # MARK: - Modules
@@ -73,9 +66,9 @@ class Registry:
 	
 	def register(
 		self,
-		name  : Optional[str] = None,
-		module: "Callable"	  = None,
-		force : bool          = False
+		name  : Union[str, None] = None,
+		module: "Callable"	     = None,
+		force : bool             = False
 	) -> callable:
 		"""Register a module.
 
@@ -99,7 +92,7 @@ class Registry:
 			# >>> backbones.register(ResNet)
 
 		Args:
-			name (str, optional):
+			name (str, None):
 				Module name to be registered. If not specified, the class
 				name will be used.
 			module (type):
@@ -108,8 +101,9 @@ class Registry:
 				Whether to override an existing class with the same name.
 		"""
 		if not (name is None or isinstance(name, str)):
-			raise TypeError(f"`name` must be `None` or `str`. "
-			                f"But got: {type(name)}.")
+			raise TypeError(
+				f"`name` must be `None` or `str`. But got: {type(name)}."
+			)
 		
 		# NOTE: Use it as a normal method: x.register(module=SomeClass)
 		if module is not None:
@@ -126,12 +120,14 @@ class Registry:
 	def register_module(
 		self,
 		module_class: "Callable",
-		module_name : Optional[str] = None,
-		force	    : bool 			= False
+		module_name : Union[str, None] = None,
+		force	    : bool 			   = False
 	):
 		if not inspect.isclass(module_class):
-			raise TypeError(f"`module_class` must be a class type. "
-			                f"But got: {type(module_class)}.")
+			raise TypeError(
+				f"`module_class` must be a class type. "
+				f"But got: {type(module_class)}."
+			)
 		
 		if module_name is None:
 			module_name = module_class.__name__.lower()
@@ -182,11 +178,11 @@ class Factory(Registry):
 				Class's name.
 			
 		Returns:
-			instance (object, optional):
+			instance (object, None):
 				Class' instance.
 		"""
 		if name not in self.registry:
-			raise ValueError(f"{name} does not exist in the registry.")
+			raise ValueError(f"`{name}` does not exist in the registry.")
 		
 		instance = self.registry[name](*args, **kwargs)
 		if not hasattr(instance, "name"):
@@ -194,27 +190,25 @@ class Factory(Registry):
 		return instance
 	
 	def build_from_dict(
-		self,
-		cfg: Optional[Union[dict, Munch]],
-		**kwargs
-	) -> Optional[object]:
+		self, cfg: Union[dict, Munch, None], **kwargs
+	) -> Union[object, None]:
 		"""Factory command to create a class' instance with arguments given in
 		`cfgs`.
 		
 		Args:
-			cfg (dict, Munch):
+			cfg (dict, Munch, None):
 				Class's arguments.
 		
 		Returns:
-			instance (object, optional):
+			instance (object, None):
 				Class's instance.
 		"""
 		if cfg is None:
 			return None
 		if not isinstance(cfg, (dict, Munch)):
-			raise TypeError("`cfg` must be a dict.")
+			raise TypeError(f"`cfg` must be a `dict`.")
 		if "name" not in cfg:
-			raise ValueError("`cfg` dict must contain the key `name`.")
+			raise ValueError(f"`cfg` dict must contain the key `name`.")
 		
 		cfg_  = deepcopy(cfg)
 		name  = cfg_.pop("name")
@@ -223,27 +217,27 @@ class Factory(Registry):
 	
 	def build_from_dictlist(
 		self,
-		cfgs: Optional[list[Union[dict, Munch]]],
+		cfgs: Union[list[Union[dict, Munch]], None],
 		**kwargs
-	) -> Optional[list[object]]:
+	) -> Union[list[object], None]:
 		"""Factory command to create classes' instances with arguments given in
 		`cfgs`.
 
 		Args:
-			cfgs (list[dict, Munch], optional):
+			cfgs (list[dict, Munch], None):
 				List of classes' arguments.
 
 		Returns:
-			instances (list[object], optional):
+			instances (list[object], None):
 				Classes' instances.
 		"""
-		from one.core.collection import is_list_of
+		from .collection import is_list_of
 		
 		if cfgs is None:
 			return None
-		if (not is_list_of(cfgs, item_type=dict) and
-			not is_list_of(cfgs, item_type=Munch)):
-			raise ValueError("`cfgs` must be a `list[dict]`.")
+		if not (is_list_of(cfgs, item_type=dict) or
+		        is_list_of(cfgs, item_type=Munch)):
+			raise TypeError(f"`cfgs` must be a `list[dict]`.")
 		
 		cfgs_     = deepcopy(cfgs)
 		instances = []
@@ -265,7 +259,7 @@ class OptimizerFactory(Registry):
 		net : nn.Module,
 		name: str,
 		*args, **kwargs
-	) -> Optional[Optimizer]:
+	) -> Union[Optimizer, None]:
 		"""Factory command to create an optimizer with arguments given in
 		`kwargs`.
 		
@@ -276,7 +270,7 @@ class OptimizerFactory(Registry):
 				Optimizer's name.
 		
 		Returns:
-			optimizer (Optimizer, optional):
+			optimizer (Optimizer, None):
 				Optimizer.
 		"""
 		if name not in self.registry:
@@ -287,28 +281,28 @@ class OptimizerFactory(Registry):
 	def build_from_dict(
 		self,
 		net: nn.Module,
-		cfg: Optional[Union[dict, Munch]],
+		cfg: Union[Union[dict, Munch], None],
 		**kwargs
-	) -> Optional[Optimizer]:
+	) -> Union[Optimizer, None]:
 		"""Factory command to create an optimizer with arguments given in
 		`cfgs`.
 
 		Args:
 			net (nn.Module):
 				Neural network module.
-			cfg (dict, Munch, optional):
+			cfg (dict, Munch, None):
 				Optimizer's arguments.
 
 		Returns:
-			optimizer (Optimizer, optional):
+			optimizer (Optimizer, None):
 				Optimizer.
 		"""
 		if cfg is None:
 			return None
 		if not isinstance(cfg, (dict, Munch)):
-			raise TypeError("`cfg` must be a dict.")
+			raise TypeError(f"`cfg` must be a `dict`.")
 		if "name" not in cfg:
-			raise ValueError("`cfg` dict must contain the key `name`.")
+			raise ValueError(f"`cfg` dict must contain the key `name`.")
 		
 		cfg_  = deepcopy(cfg)
 		name  = cfg_.pop("name")
@@ -318,28 +312,28 @@ class OptimizerFactory(Registry):
 	def build_from_dictlist(
 		self,
 		net : nn.Module,
-		cfgs: Optional[list[Union[dict, Munch]]],
+		cfgs: Union[list[Union[dict, Munch]], None],
 		**kwargs
-	) -> Optional[list[Optimizer]]:
+	) -> Union[list[Optimizer], None]:
 		"""Factory command to create optimizers with arguments given in `cfgs`.
 
 		Args:
 			net (nn.Module):
 				List of neural network modules.
-			cfgs (list[dict, Munch], optional):
+			cfgs (list[dict, Munch], None):
 				List of optimizers' arguments.
 
 		Returns:
-			optimizers (list[Optimizer], optional):
+			optimizers (list[Optimizer], None):
 				Optimizers.
 		"""
 		from one.core.collection import is_list_of
 		
 		if cfgs is None:
 			return None
-		if (not is_list_of(cfgs, item_type=dict) or
-			not is_list_of(cfgs, item_type=Munch)):
-			raise TypeError("`cfgs` must be a `list[dict]`.")
+		if not (is_list_of(cfgs, item_type=dict) or
+		        is_list_of(cfgs, item_type=Munch)):
+			raise TypeError(f"`cfgs` must be a `list[dict]`.")
 		
 		cfgs_      = deepcopy(cfgs)
 		optimizers = []
@@ -353,9 +347,9 @@ class OptimizerFactory(Registry):
 	def build_from_list(
 		self,
 		nets: list[nn.Module],
-		cfgs: Optional[list[Union[dict, Munch]]],
+		cfgs: Union[list[Union[dict, Munch]], None],
 		**kwargs
-	) -> Optional[list[Optimizer]]:
+	) -> Union[list[Optimizer], None]:
 		"""Factory command to create optimizers with arguments given in `cfgs`.
 
 		Args:
@@ -365,22 +359,25 @@ class OptimizerFactory(Registry):
 				List of optimizers' arguments.
 
 		Returns:
-			optimizers (list[Optimizer], optional):
+			optimizers (list[Optimizer], None):
 				Optimizers.
 		"""
 		from one.core.collection import is_list_of
 		
 		if cfgs is None:
 			return None
-		if (not is_list_of(cfgs, item_type=dict) or
-			not is_list_of(cfgs, item_type=Munch)):
-			raise TypeError(f"`cfgs` must be a `list[dict]`. But got: {cfgs}.")
+		if not (is_list_of(cfgs, item_type=dict) or
+		        is_list_of(cfgs, item_type=Munch)):
+			raise TypeError(f"`cfgs` must be a `list[dict]`.")
 		if not is_list_of(nets, item_type=dict):
-			raise TypeError(f"`nets` must be a `list[nn.Module]`. "
-			                f"But got: {nets}")
+			raise TypeError(
+				f"`nets` must be a `list[nn.Module]`. But got: {nets}."
+			)
 		if len(nets) != len(cfgs):
-			raise ValueError(f"`nets` and `cfgs` must have the same length. "
-			                 f" But got: {len(nets)} != {len(cfgs)}.")
+			raise ValueError(
+				f"`nets` and `cfgs` must have the same length. "
+				f" But got: {len(nets)} != {len(cfgs)}."
+			)
 		
 		cfgs_      = deepcopy(cfgs)
 		optimizers = []
@@ -400,20 +397,20 @@ class SchedulerFactory(Registry):
 	def build(
 		self,
 		optimizer: Optimizer,
-		name     : Optional[str],
+		name     : Union[str, None],
 		*args, **kwargs
-	) -> Optional[_LRScheduler]:
+	) -> Union[_LRScheduler, None]:
 		"""Factory command to create a scheduler with arguments given in
 		`kwargs`.
 		
 		Args:
 			optimizer (Optimizer):
 				Optimizer.
-			name (str, optional):
+			name (str, None):
 				Scheduler's name.
 		
 		Returns:
-			scheduler (_LRScheduler, optional):
+			scheduler (_LRScheduler, None):
 				Scheduler.
 		"""
 		if name is None:
@@ -432,7 +429,8 @@ class SchedulerFactory(Registry):
 				else:
 					after_scheduler = None
 			return self.registry[name](
-				optimizer=optimizer, after_scheduler=after_scheduler,
+				optimizer       = optimizer,
+				after_scheduler = after_scheduler,
 				*args, **kwargs
 			)
 		
@@ -441,27 +439,27 @@ class SchedulerFactory(Registry):
 	def build_from_dict(
 		self,
 		optimizer: Optimizer,
-		cfg      : Optional[Union[dict, Munch]],
+		cfg      : Union[Union[dict, Munch], None],
 		**kwargs
-	) -> Optional[_LRScheduler]:
+	) -> Union[_LRScheduler, None]:
 		"""Factory command to create a scheduler with arguments given in `cfg`.
 
 		Args:
 			optimizer (Optimizer):
 				Optimizer.
-			cfg (dict, Munch, optional):
+			cfg (dict, Munch, None):
 				Scheduler's arguments.
 
 		Returns:
-			scheduler (_LRScheduler, optional):
+			scheduler (_LRScheduler, None):
 				Scheduler.
 		"""
 		if cfg is None:
 			return None
 		if not isinstance(cfg, (dict, Munch)):
-			raise TypeError(f"`cfg` must be a `dict`. But got: {type(cfg)}.")
+			raise TypeError(f"`cfg` must be a `dict`.")
 		if "name" not in cfg:
-			raise KeyError("`cfg` dict must contain the key `name`.")
+			raise ValueError(f"`cfg` dict must contain the key `name`.")
 		
 		cfg_  = deepcopy(cfg)
 		name  = cfg_.pop("name")
@@ -471,29 +469,28 @@ class SchedulerFactory(Registry):
 	def build_from_dictlist(
 		self,
 		optimizer: Optimizer,
-		cfgs     : Optional[list[Union[dict, Munch]]],
+		cfgs     : Union[list[Union[dict, Munch]], None],
 		**kwargs
-	) -> Optional[list[_LRScheduler]]:
+	) -> Union[list[_LRScheduler], None]:
 		"""Factory command to create schedulers with arguments given in `cfgs`.
 
 		Args:
 			optimizer (Optimizer):
 				Optimizer.
-			cfgs (list[dict, Munch], optional):
+			cfgs (list[dict, Munch], None):
 				List of schedulers' arguments.
 
 		Returns:
-			schedulers (list[Optimizer], optional):
+			schedulers (list[Optimizer], None):
 				Schedulers.
 		"""
 		from one.core.collection import is_list_of
 		
 		if cfgs is None:
 			return None
-		if (not is_list_of(cfgs, item_type=dict) or
-			not is_list_of(cfgs, item_type=Munch)):
-			raise TypeError(f"`cfgs` must be a `list[dict]`. "
-			                f"But got: {type(cfgs)}.")
+		if not (is_list_of(cfgs, item_type=dict) or
+		        is_list_of(cfgs, item_type=Munch)):
+			raise TypeError(f"`cfgs` must be a `list[dict]`.")
 		
 		cfgs_      = deepcopy(cfgs)
 		schedulers = []
@@ -507,33 +504,36 @@ class SchedulerFactory(Registry):
 	def build_from_list(
 		self,
 		optimizers: list[Optimizer],
-		cfgs      : Optional[list[list[Union[dict, Munch]]]],
+		cfgs      : Union[list[list[Union[dict, Munch]]], None],
 		**kwargs
-	) -> Optional[list[_LRScheduler]]:
+	) -> Union[list[_LRScheduler], None]:
 		"""Factory command to create schedulers with arguments given in `cfgs`.
 
 		Args:
 			optimizers (list[Optimizer]):
 				List of optimizers.
-			cfgs (list[list[dict, Munch]], optional):
+			cfgs (list[list[dict, Munch]], None):
 				2D-list of schedulers' arguments.
 
 		Returns:
-			schedulers (list[Optimizer], optional):
+			schedulers (list[Optimizer], None):
 				Schedulers.
 		"""
 		from one.core.collection import is_list_of
 		
 		if cfgs is None:
 			return None
-		if (not is_list_of(cfgs, item_type=list) or
-			not all(is_list_of(cfg, item_type=dict) for cfg in cfgs)):
-			raise TypeError(f"`cfgs` must be a 2D `list[dict]`. "
-			                f"But got: {type(cfgs)}.")
+		if not (is_list_of(cfgs, item_type=list) or
+		        all(is_list_of(cfg, item_type=dict) for cfg in cfgs)):
+			raise TypeError(
+				f"`cfgs` must be a 2D `list[dict]`. But got: {type(cfgs)}."
+			)
 		if len(optimizers) != len(cfgs):
-			raise ValueError(f"`optimizers` and `cfgs` must have the same length."
-			                 f" But got: {len(optimizers)} != {len(cfgs)}.")
-		
+			raise ValueError(
+				f"`optimizers` and `cfgs` must have the same length. "
+				f"But got: {len(optimizers)} != {len(cfgs)}."
+			)
+			
 		cfgs_      = deepcopy(cfgs)
 		schedulers = []
 		for optimizer, cfgs in zip(optimizers, cfgs_):
@@ -545,3 +545,13 @@ class SchedulerFactory(Registry):
 				)
 		
 		return schedulers if len(schedulers) > 0 else None
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]

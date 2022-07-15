@@ -6,22 +6,14 @@
 
 from __future__ import annotations
 
+import inspect
 from time import time
-from typing import Optional
 
 import torch
 from pynvml import *
 from torch import Tensor
 
 from one.core.globals import MemoryUnit
-
-__all__ = [
-    "extract_device_dtype",
-    "get_gpu_memory",
-    "select_device",
-    "select_device_old",
-    "time_synchronized",
-]
 
 
 # MARK: - Functional
@@ -47,11 +39,13 @@ def extract_device_dtype(tensor_list: list) -> tuple[torch.device, torch.dtype]:
             if device is None and dtype is None:
                 device = _device
                 dtype  = _dtype
-            elif device != _device or dtype != _dtype:
+            
+            if device != _device or dtype != _dtype:
                 raise ValueError(
                     f"Passed values must be in the same `device` and `dtype`. "
                     f"But got: ({device}, {dtype}) and ({_device}, {_dtype})."
                 )
+                
     if device is None:
         # TODO: update this when having torch.get_default_device()
         device = torch.device("cpu")
@@ -83,19 +77,20 @@ def get_gpu_memory(
 
 
 def select_device(
-    model_name: str           = "",
-    device    : Optional[str] = "",
-    batch_size: Optional[int] = None
+    model_name: str              = "",
+    device    : Union[str, None] = "",
+    batch_size: Union[int, None] = None
 ) -> torch.device:
     """Select the device to runners the model.
     
     Args:
         model_name (str):
-            Name of the model.
-        device (str, optional):
+            Name of the model. Default: "".
+        device (str, None):
             Name of device for running. Can be: 'cpu' or '0' or '0,1,2,3'.
-        batch_size (int, optional):
-            Number of samples in one forward & backward pass.
+            Default: "".
+        batch_size (int, None):
+            Number of samples in one forward & backward pass. Default: `None`.
 
     Returns:
         device (torch.device):
@@ -110,15 +105,19 @@ def select_device(
     if device and not cpu_request:  # If device requested other than `cpu`
         os.environ["CUDA_VISIBLE_DEVICES"] = device  # set environment variable
         if not torch.cuda.is_available():  # Check availability
-            raise ValueError(f"CUDA unavailable, invalid device {device} requested")
-
+            raise RuntimeError(f"CUDA unavailable, invalid device {device} requested.")
+            
     cuda = False if cpu_request else torch.cuda.is_available()
     if cuda:
         bytes_to_mb = 1024 ** 2  # bytes to MB
         num_gpus    = torch.cuda.device_count()
         if num_gpus > 1 and batch_size:  # check that batch_size is compatible with device_count
             if batch_size % num_gpus != 0:
-                raise ValueError(f"batch-size {batch_size} not multiple of GPU count {num_gpus}")
+                raise ValueError(
+                    f"`batch-size` must be a multiple of GPU count {num_gpus}. "
+                    f"But got: {batch_size} % {num_gpus} != 0."
+                )
+        
         x = [torch.cuda.get_device_properties(i) for i in range(num_gpus)]
         s = "Using CUDA "
         for i in range(0, num_gpus):
@@ -136,19 +135,19 @@ def select_device(
 
 
 def select_device_old(
-    model_name: str           = "",
-    device    : Optional[str] = "",
-    batch_size: Optional[int] = None
+    model_name: str              = "",
+    device    : Union[str, None] = "",
+    batch_size: Union[int, None] = None
 ) -> torch.device:
     """Select the device to runners the model.
     
     Args:
         model_name (str):
-            Name of the model.
-        device (str, optional):
-            Name of device for running.
-        batch_size (int, optional):
-            Number of samples in one forward & backward pass.
+            Name of the model. Default: "".
+        device (str, None):
+            Name of device for running. Default: "".
+        batch_size (int, None):
+            Number of samples in one forward & backward pass. Default: `None`.
 
     Returns:
         device (torch.device):
@@ -174,8 +173,8 @@ def select_device_old(
         # Non-cpu device requested
         os.environ["CUDA_VISIBLE_DEVICES"] = device
         # Check availability
-        if not torch.cuda.is_available():
-            raise ValueError(f"CUDA unavailable, invalid device {device} requested.")
+        if not torch.cuda.is_available():  # Check availability
+            raise RuntimeError(f"CUDA unavailable, invalid device {device} requested.")
     
     cuda = not cpu and torch.cuda.is_available()
     
@@ -185,7 +184,10 @@ def select_device_old(
         # Check that batch_size is compatible with device_count
         if n > 1 and batch_size:
             if batch_size % n != 0:
-                raise ValueError(f"batch-size {batch_size} not multiple of GPU count {n}.")
+                raise ValueError(
+                    f"`batch-size` must be a multiple of GPU count {n}. "
+                    f"But got: {batch_size} % {n} != 0."
+                )
         space = " " * len(s)
         
         for i, d in enumerate(device.split(",") if device else range(n)):
@@ -201,3 +203,13 @@ def select_device_old(
 def time_synchronized():
     torch.cuda.synchronize() if torch.cuda.is_available() else None
     return time.time()
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]

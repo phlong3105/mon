@@ -6,24 +6,16 @@
 
 from __future__ import annotations
 
+import inspect
 import os
+import sys
 from shutil import copyfile
 from typing import Union
 
 from munch import Munch
 
-from one.io import create_dirs
-from one.io import load_file
-
-__all__ = [
-    "content_root_dir",
-    "copy_config_file",
-    "data_dir",
-    "load_config",
-    "pretrained_dir",
-    "source_root_dir",
-]
-
+from one.core import create_dirs
+from one.core import load_file
 
 # MARK: - Directories
 
@@ -51,15 +43,18 @@ def load_config(config: Union[str, dict, Munch]) -> Munch:
 			config dict.
 	"""
     # NOTE: Load dictionary from file and convert to namespace using Munch
+    if not isinstance(config, (dict, Munch, str)):
+        raise TypeError(
+            f"`config` must be a `dict` or a path to config file. "
+            f"But got: {config}."
+        )
     if isinstance(config, str):
         config_dict = load_file(path=config)
-    elif isinstance(config, (dict, Munch)):
-        config_dict = config
     else:
-        raise ValueError(f"`config` must be a `dict` or a path to config file. "
-                         f"But got: {config}.")
+        config_dict = config
+  
     if config_dict is None:
-        raise ValueError(f"No configuration is found at: {config}.")
+        raise IOError(f"No configuration is found at: {config}.")
    
     config = Munch.fromDict(config_dict)
     return config
@@ -69,3 +64,13 @@ def copy_config_file(config_file: str, dst: str):
     """Copy `config_file` to `dst` dir."""
     create_dirs(paths=[dst])
     copyfile(config_file, os.path.join(dst, os.path.basename(config_file)))
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]

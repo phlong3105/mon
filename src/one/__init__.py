@@ -25,14 +25,14 @@
 
 from __future__ import annotations
 
+"""
 from .core import *
 from .data import *
-from .imgproc import *
-from .io import *
 from .math import *
 from .nn import *
 from .utils import *
 from .vision import *
+"""
 
 __author__  = "Long H. Pham"
-__version__ = "1.0.4"
+__version__ = "1.1.0"

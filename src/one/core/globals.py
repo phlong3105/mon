@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A global namespace to store all constants, enums, and typing.
+"""Store all constants, enums, and typing.
 """
 
 from __future__ import annotations
 
 import functools
+import inspect
+import sys
 import types
 from enum import Enum
 from typing import Any
-from typing import Optional
 from typing import Sequence
 from typing import TypeVar
 from typing import Union
@@ -28,6 +29,7 @@ from torchmetrics import Metric
 from one.core.factory import Factory
 from one.core.factory import OptimizerFactory
 from one.core.factory import SchedulerFactory
+
 
 # MARK: - Typing
 # NOTE: Base
@@ -130,7 +132,7 @@ Weights                = Union[Tensor,
                                ListOrTupleAnyT[float],
                                ListOrTupleAnyT[int]]
 
-ForwardOutput          = tuple[TensorsOrArrays, Optional[TensorsOrArrays]]
+ForwardOutput          = tuple[TensorsOrArrays, Union[TensorsOrArrays, None]]
 StepOutput             = Union[TensorsOrArrays, dict]
 EpochOutput            = list[StepOutput]
 EvalOutput             = list[dict]
@@ -138,6 +140,94 @@ PredictOutput          = Union[list[Any], list[list[Any]]]
 
 
 # MARK: - Enums
+
+class BBoxFormat(Enum):
+    CXCYAR      = "cxcyar"
+    CXCYRH      = "cxcyrh"
+    CXCYWH      = "cxcywh"
+    CXCYWH_NORM = "cxcywh_norm"
+    XYXY        = "xyxy"
+    XYWH        = "xywh"
+    
+    @classmethod
+    @property
+    def str_mapping(cls) -> dict:
+        return {
+            "cxcyar"     : BBoxFormat.CXCYAR,
+            "cxcyrh"     : BBoxFormat.CXCYRH,
+            "cxcywh"     : BBoxFormat.CXCYWH,
+            "cxcywh_norm": BBoxFormat.CXCYWH_NORM,
+            "xyxy"       : BBoxFormat.XYXY,
+            "xywh"       : BBoxFormat.XYWH,
+        }
+
+    @classmethod
+    @property
+    def int_mapping(cls) -> dict:
+        return {
+            0: BBoxFormat.CXCYAR,     
+            1: BBoxFormat.CXCYRH,     
+            2: BBoxFormat.CXCYWH,     
+            3: BBoxFormat.CXCYWH_NORM,
+            4: BBoxFormat.XYXY,       
+            5: BBoxFormat.XYWH,       
+        }
+    
+    @staticmethod
+    def from_str(value: str) -> BBoxFormat:
+        value = value.lower()
+        assert value in BBoxFormat.str_mapping, \
+            f"`value` must be one of: {BBoxFormat.str_mapping.keys()}. " \
+            f"But got: {value}."
+        return BBoxFormat.str_mapping[value]
+    
+    @staticmethod
+    def from_int(value: int) -> BBoxFormat:
+        assert value in BBoxFormat.int_mapping, \
+            f"`value` must be one of: {BBoxFormat.int_mapping.keys()}. " \
+            f"But got: {value}."
+        return BBoxFormat.int_mapping[value]
+
+    @staticmethod
+    def from_value(value: Union[str, int]) -> BBoxFormat:
+        if isinstance(value, int):
+            return BBoxFormat.from_int(value)
+        else:
+            return BBoxFormat.from_str(value)
+    
+    @staticmethod
+    def keys():
+        return [b for b in BBoxFormat]
+    
+    @staticmethod
+    def values() -> list[str]:
+        return [b.value for b in BBoxFormat]
+    
+
+class CFA(Enum):
+    """Define the configuration of the color filter array.
+
+    So far only bayer images is supported and the enum sets the pixel order for
+    bayer. Note that this can change due to things like rotations and cropping
+    of images. Take care if including the translations in pipeline. This
+    implementations is optimized to be reasonably fast, look better than simple
+    nearest neighbour. On top of this care is taken to make it reversible going
+    raw -> rgb -> raw. the raw samples remain intact during conversion and only
+    unknown samples are interpolated.
+
+    Names are based on the OpenCV convention where the BG indicates pixel
+    1,1 (counting from 0,0) is blue and its neighbour to the right is green.
+    In that case the top left pixel is red. Other options are GB, RG and GR
+
+    Reference:
+        https://en.wikipedia.org/wiki/Color_filter_array
+    """
+
+    BG = 0
+    GB = 1
+    RG = 2
+    GR = 3
+
 
 class DistanceMetric(Enum):
     BRAYCURTIS         = "braycurtis"
@@ -225,16 +315,16 @@ class DistanceMetric(Enum):
     @staticmethod
     def from_str(value: str) -> DistanceMetric:
         value = value.lower()
-        if value not in DistanceMetric.str_mapping:
-            raise ValueError(f"`value` must be one of: {DistanceMetric.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in DistanceMetric.str_mapping, \
+            f"`value` must be one of: {DistanceMetric.str_mapping.keys()}. " \
+            f"But got: {value}."
         return DistanceMetric.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> DistanceMetric:
-        if value not in DistanceMetric.int_mapping:
-            raise ValueError(f"`value` must be one of: {DistanceMetric.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in DistanceMetric.int_mapping, \
+            f"`value` must be one of: {DistanceMetric.int_mapping.keys()}. " \
+            f"But got: {value}."
         return DistanceMetric.int_mapping[value]
 
     @staticmethod
@@ -294,16 +384,16 @@ class ImageFormat(Enum):
     @staticmethod
     def from_str(value: str) -> ImageFormat:
         value = value.lower()
-        if value not in ImageFormat.str_mapping:
-            raise ValueError(f"`value` must be one of: {ImageFormat.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in ImageFormat.str_mapping, \
+            f"`value` must be one of: {ImageFormat.str_mapping.keys()}. " \
+            f"But got: {value}."
         return ImageFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ImageFormat:
-        if value not in ImageFormat.int_mapping:
-            raise ValueError(f"`value` must be one of: {ImageFormat.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in ImageFormat.int_mapping, \
+            f"`value` must be one of: {ImageFormat.int_mapping.keys()}. " \
+            f"But got: {value}."
         return ImageFormat.int_mapping[value]
 
     @staticmethod
@@ -404,16 +494,16 @@ class InterpolationMode(Enum):
     @staticmethod
     def from_str(value: str) -> InterpolationMode:
         value = value.lower()
-        if value not in InterpolationMode.str_mapping:
-            raise ValueError(f"`value` must be one of: {InterpolationMode.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in InterpolationMode.str_mapping, \
+            f"`value` must be one of: {InterpolationMode.str_mapping.keys()}. " \
+            f"But got: {value}."
         return InterpolationMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> InterpolationMode:
-        if value not in InterpolationMode.int_mapping:
-            raise ValueError(f"`value` must be one of: {InterpolationMode.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in InterpolationMode.int_mapping, \
+            f"`value` must be one of: {InterpolationMode.int_mapping.keys()}. " \
+            f"But got: {value}."
         return InterpolationMode.int_mapping[value]
 
     @staticmethod
@@ -479,16 +569,16 @@ class MemoryUnit(Enum):
     @staticmethod
     def from_str(value: str) -> MemoryUnit:
         value = value.lower()
-        if value not in MemoryUnit.str_mapping:
-            raise ValueError(f"`value` must be one of: {MemoryUnit.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in MemoryUnit.str_mapping, \
+            f"`value` must be one of: {MemoryUnit.str_mapping.keys()}. " \
+            f"But got: {value}."
         return MemoryUnit.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> MemoryUnit:
-        if value not in MemoryUnit.int_mapping:
-            raise ValueError(f"`value` must be one of: {MemoryUnit.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value not in MemoryUnit.int_mapping, \
+            f"`value` must be one of: {MemoryUnit.int_mapping.keys()}. " \
+            f"But got: {value}."
         return MemoryUnit.int_mapping[value]
     
     @staticmethod
@@ -534,16 +624,16 @@ class ModelState(Enum):
 
     @staticmethod
     def from_str(value: str) -> ModelState:
-        if value not in ModelState.str_mapping:
-            raise ValueError(f"`value` must be one of: {ModelState.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value not in ModelState.str_mapping, \
+            f"`value` must be one of: {ModelState.str_mapping.keys()}. " \
+            f"But got: {value}."
         return ModelState.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ModelState:
-        if value not in ModelState.int_mapping:
-            raise ValueError(f"`value` must be one of: {ModelState.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in ModelState.int_mapping, \
+            f"`value` must be one of: {ModelState.int_mapping.keys()}. " \
+            f"But got: {value}."
         return ModelState.int_mapping[value]
 
     @staticmethod
@@ -621,16 +711,16 @@ class PaddingMode(Enum):
 
     @staticmethod
     def from_str(value: str) -> PaddingMode:
-        if value not in PaddingMode.str_mapping:
-            raise ValueError(f"`value` must be one of: {PaddingMode.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in PaddingMode.str_mapping, \
+            f"`value` must be one of: {PaddingMode.str_mapping.keys()}. " \
+            f"But got: {value}."
         return PaddingMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> PaddingMode:
-        if value not in PaddingMode.int_mapping:
-            raise ValueError(f"`value` must be one of: {PaddingMode.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in PaddingMode.int_mapping, \
+            f"`value` must be one of: {PaddingMode.int_mapping.keys()}. " \
+            f"But got: {value}."
         return PaddingMode.int_mapping[value]
 
     @staticmethod
@@ -690,16 +780,16 @@ class VideoFormat(Enum):
     @staticmethod
     def from_str(value: str) -> VideoFormat:
         value = value.lower()
-        if value not in VideoFormat.str_mapping:
-            raise ValueError(f"`value` must be one of: {VideoFormat.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in VideoFormat.str_mapping, \
+            f"`value` must be one of: {VideoFormat.str_mapping.keys()}. " \
+            f"But got: {value}."
         return VideoFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VideoFormat:
-        if value not in VideoFormat.int_mapping:
-            raise ValueError(f"`value` must be one of: {VideoFormat.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in VideoFormat.int_mapping, \
+            f"`value` must be one of: {VideoFormat.int_mapping.keys()}. " \
+            f"But got: {value}."
         return VideoFormat.int_mapping[value]
 
     @staticmethod
@@ -746,16 +836,16 @@ class VisionBackend(Enum):
     
     @staticmethod
     def from_str(value: str) -> VisionBackend:
-        if value not in VisionBackend.str_mapping:
-            raise ValueError(f"`value` must be one of: {VisionBackend.str_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in VisionBackend.str_mapping, \
+            f"`value` must be one of: {VisionBackend.str_mapping.keys()}. " \
+            f"But got: {value}."
         return VisionBackend.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VisionBackend:
-        if value not in VisionBackend.int_mapping:
-            raise ValueError(f"`value` must be one of: {VisionBackend.int_mapping.keys()}. "
-                             f"But got: {value}.")
+        assert value in VisionBackend.int_mapping, \
+            f"`value` must be one of: {VisionBackend.int_mapping.keys()}. " \
+            f"But got: {value}."
         return VisionBackend.int_mapping[value]
 
     @staticmethod
@@ -830,3 +920,13 @@ IMAGENET_DPN_STD        = tuple([1 / (.0167 * 255)] * 3)
 
 PI             = torch.tensor(3.14159265358979323846)
 VISION_BACKEND = VisionBackend.PIL
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]

@@ -542,7 +542,7 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         yc, xc        = shape[0], shape[1]  # Mosaic center x, y
         mosaic_border = [-yc // 2, -xc // 2]
         # 3 additional input indices
-        indices = [index] + 		  [int(torch.randint(len(self.data) - 1, (1,))) for _ in range(3)]
+        indices = [index] + [int(torch.randint(len(self.data) - 1, (1,))) for _ in range(3)]
         
         # NOTE: Create mosaic input and target input
         for i, index in enumerate(indices):

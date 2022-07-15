@@ -159,7 +159,7 @@ class PascalLabelHandler(BaseLabelHandler):
 			bndbox    = l.get("bndbox")
 			box_xyxy  = np.array([int(bndbox["xmin"]),
 								  int(bndbox["ymin"]),
-								  int(bndbox["xmax"]),
+								  int(bndbox["ymin"]),
 								  int(bndbox["ymax"])], np.float32)
 			box_cxcywh_norm = box_xyxy_to_cxcywh_norm(box_xyxy, height0, width0)
 			_objects.append(

@@ -25,27 +25,27 @@ import torch.backends.cudnn as cudnn
 from numpy import random
 from tqdm import tqdm
 
-import one.vision.object_detection.scaled_yolov4.test as test
-import one.vision.object_detection.scaled_yolov4.train as train
+import one.vision.detection.scaled_yolov4.test as test
+import one.vision.detection.scaled_yolov4.train as train
 from chalearn import data_dir
 from chalearn import pretrained_dir
 from one import console
 from one import create_dirs
 from one import load_file
 from one import progress_bar
-from one.vision.object_detection.scaled_yolov4 import apply_classifier
-from one.vision.object_detection.scaled_yolov4 import attempt_load
-from one.vision.object_detection.scaled_yolov4 import check_img_size
-from one.vision.object_detection.scaled_yolov4 import load_classifier
-from one.vision.object_detection.scaled_yolov4 import LoadImages
-from one.vision.object_detection.scaled_yolov4 import LoadStreams
-from one.vision.object_detection.scaled_yolov4 import non_max_suppression
-from one.vision.object_detection.scaled_yolov4 import plot_one_box
-from one.vision.object_detection.scaled_yolov4 import scale_coords
-from one.vision.object_detection.scaled_yolov4 import select_device
-from one.vision.object_detection.scaled_yolov4 import strip_optimizer
-from one.vision.object_detection.scaled_yolov4 import time_synchronized
-from one.vision.object_detection.scaled_yolov4 import xyxy2xywh
+from one.vision.detection.scaled_yolov4 import apply_classifier
+from one.vision.detection.scaled_yolov4 import attempt_load
+from one.vision.detection.scaled_yolov4 import check_img_size
+from one.vision.detection.scaled_yolov4 import load_classifier
+from one.vision.detection.scaled_yolov4 import LoadImages
+from one.vision.detection.scaled_yolov4 import LoadStreams
+from one.vision.detection.scaled_yolov4 import non_max_suppression
+from one.vision.detection.scaled_yolov4 import plot_one_box
+from one.vision.detection.scaled_yolov4 import scale_coords
+from one.vision.detection.scaled_yolov4 import select_device
+from one.vision.detection.scaled_yolov4 import strip_optimizer
+from one.vision.detection.scaled_yolov4 import time_synchronized
+from one.vision.detection.scaled_yolov4 import xyxy2xywh
 
 __all__ = [
     "run_detect",

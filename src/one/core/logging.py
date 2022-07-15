@@ -6,15 +6,12 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
-from typing import Optional
+import sys
+from typing import Union
 
 from rich.logging import RichHandler
-
-__all__ = [
-    "logger",
-    "get_logger",
-]
 
 field_style = {
     "asctime"  : {"color": "green"},
@@ -44,12 +41,12 @@ logger.setLevel(logging.INFO)
 
 # MARK: - Functional
 
-def get_logger(log_file: Optional[str] = None):
+def get_logger(log_file: Union[str, None] = None):
     """Create logger object.
     
     Args:
-        log_file (str, optional):
-            Provide the log file to save logging info.
+        log_file (str, None):
+            Provide the log file to save logging info. Default: `None`.
     """
     # NOTE: File Logging
     if log_file:
@@ -61,3 +58,13 @@ def get_logger(log_file: Optional[str] = None):
         logger.addHandler(file)
 
     return logger
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]

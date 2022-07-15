@@ -7,11 +7,12 @@
 from __future__ import annotations
 
 import collections
+import inspect
 import itertools
+import sys
 from collections import abc
 from collections import OrderedDict
 from typing import Iterable
-from typing import Optional
 from typing import Sequence
 from typing import Union
 
@@ -19,28 +20,6 @@ from multipledispatch import dispatch
 
 from one.core.globals import Int2Or3T
 from one.core.globals import Int2T
-
-__all__ = [
-    "concat_lists",
-    "copy_attr",
-    "intersect_dicts",
-    "intersect_ordered_dicts",
-    "is_dict_of",
-    "is_list_of",
-    "is_seq_of",
-    "is_tuple_of",
-    "slice_list",
-    "to_1tuple",
-    "to_2tuple",
-    "to_3tuple",
-    "to_4tuple",
-    "to_iter",
-    "to_list",
-    "to_ntuple",
-    "to_size",
-    "to_tuple",
-    "unique",
-]
 
 
 # MARK: - Functional
@@ -124,7 +103,7 @@ def intersect_ordered_dicts(
 def is_seq_of(
     s        : Sequence,
     item_type: type,
-    seq_type : Optional[type] = None
+    seq_type : Union[type, None] = None
 ) -> bool:
     """Check whether `s` is a sequence of some type.
     
@@ -133,8 +112,8 @@ def is_seq_of(
             Sequence to be checked.
         item_type (type):
             Expected type of sequence items.
-        seq_type (type, optional):
-            Expected sequence type.
+        seq_type (type, None):
+            Expected sequence type. Default: `None`.
     
     Return:
         (bool):
@@ -143,8 +122,9 @@ def is_seq_of(
     """
     if seq_type is None:
         seq_type = abc.Sequence
-    elif not isinstance(seq_type, type):
+    if not isinstance(seq_type, type):
         raise TypeError(f"`seq_type` must be a valid type. But got: {seq_type}.")
+    
     if not isinstance(s, seq_type):
         return False
     for item in s:
@@ -168,8 +148,8 @@ def is_dict_of(d: dict, item_type: type) -> bool:
             Else `False`.
     """
     if not isinstance(item_type, type):
-        raise TypeError(f"`item_type` must be a valid type. "
-                        f"But got: {item_type}.")
+        raise TypeError(f"`item_type` must be a valid type. But got: {item_type}.")
+
     return all(isinstance(v, item_type) for k, v in d.items())
 
 
@@ -223,14 +203,15 @@ def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
     """
     if isinstance(lens, int):
         if len(l) % lens != 0:
-            raise ValueError(f"Length of `l` must be divisible by `lens`."
-                             f" But got: {len(l)} % {lens} != 0.")
+            raise ValueError(f"Length of `l` must be divisible by `lens`. "
+                             f"But got: {len(l)} % {lens} != 0.")
         lens = [lens] * int(len(l) / lens)
+    
     if not isinstance(lens, list):
-        raise TypeError(f"`indices` must be an `int` or `list[int]`."
-                        f" But got: {type(lens)}")
-    elif sum(lens) != len(l):
-        raise ValueError(f"Sum of `lens` and length of `l` must be the same."
+        raise TypeError(f"`indices` must be an `int` or `list[int]`. "
+                        f"But got: {type(lens)}.")
+    if sum(lens) != len(l):
+        raise ValueError(f"Sum of `lens` and length of `l` must be the same. "
                          f"But got: {sum(lens)} != {len(l)}.")
     
     out_list = []
@@ -244,7 +225,7 @@ def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
 def to_iter(
     inputs     : Iterable,
     item_type  : type,
-    return_type: Optional[type] = None
+    return_type: Union[type, None] = None
 ):
     """Cast items of an iterable object into some type.
     
@@ -253,9 +234,9 @@ def to_iter(
             Iterable object.
         item_type (type):
             Item type.
-        return_type (type, optional):
+        return_type (type, None):
             If specified, the iterable object will be converted to this type,
-            otherwise an iterator.
+            otherwise an iterator. Default: `None`.
             
     Returns:
         Iterable object of type `return_type` containing items of type
@@ -263,10 +244,10 @@ def to_iter(
     """
     if not isinstance(inputs, abc.Iterable):
         raise TypeError(f"`inputs` must be an iterable object. "
-                        f"But got: {type(inputs)}")
+                        f"But got: {type(inputs)}.")
     if not isinstance(item_type, type):
         raise TypeError(f"`item_type` must be a valid type. "
-                        f"But got {type(item_type)}")
+                        f"But got {type(item_type)}.")
 
     out_iterable = map(item_type, inputs)
     if return_type is None:
@@ -375,3 +356,13 @@ to_3tuple = to_ntuple(3)
 to_4tuple = to_ntuple(4)
 to_5tuple = to_ntuple(5)
 to_6tuple = to_ntuple(6)
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]
