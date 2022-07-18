@@ -176,24 +176,35 @@ class BBoxFormat(Enum):
     @staticmethod
     def from_str(value: str) -> BBoxFormat:
         value = value.lower()
-        assert value in BBoxFormat.str_mapping, \
-            f"`value` must be one of: {BBoxFormat.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in BBoxFormat.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {BBoxFormat.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return BBoxFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> BBoxFormat:
-        assert value in BBoxFormat.int_mapping, \
-            f"`value` must be one of: {BBoxFormat.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in BBoxFormat.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {BBoxFormat.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return BBoxFormat.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> BBoxFormat:
-        if isinstance(value, int):
+    def from_value(value: Union[BBoxFormat, str, int]) -> BBoxFormat:
+        if isinstance(value, BBoxFormat):
+            return value
+        elif isinstance(value, str):
+            return BBoxFormat.from_int(value)
+        elif isinstance(value, int):
             return BBoxFormat.from_int(value)
         else:
-            return BBoxFormat.from_str(value)
+            raise TypeError(
+                f"`value` must be `BBoxFormat`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
     
     @staticmethod
     def keys():
@@ -315,24 +326,35 @@ class DistanceMetric(Enum):
     @staticmethod
     def from_str(value: str) -> DistanceMetric:
         value = value.lower()
-        assert value in DistanceMetric.str_mapping, \
-            f"`value` must be one of: {DistanceMetric.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in DistanceMetric.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {DistanceMetric.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return DistanceMetric.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> DistanceMetric:
-        assert value in DistanceMetric.int_mapping, \
-            f"`value` must be one of: {DistanceMetric.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in DistanceMetric.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {DistanceMetric.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return DistanceMetric.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> DistanceMetric:
-        if isinstance(value, int):
+    def from_value(value: Union[DistanceMetric, str, int]) -> DistanceMetric:
+        if isinstance(value, DistanceMetric):
+            return value
+        if isinstance(value, str):
+            return DistanceMetric.from_str(value)
+        elif isinstance(value, int):
             return DistanceMetric.from_int(value)
         else:
-            return DistanceMetric.from_str(value)
+            raise TypeError(
+                f"`value` must be `BBoxFormat`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
         
     @staticmethod
     def keys():
@@ -384,24 +406,35 @@ class ImageFormat(Enum):
     @staticmethod
     def from_str(value: str) -> ImageFormat:
         value = value.lower()
-        assert value in ImageFormat.str_mapping, \
-            f"`value` must be one of: {ImageFormat.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in ImageFormat.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {ImageFormat.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return ImageFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ImageFormat:
-        assert value in ImageFormat.int_mapping, \
-            f"`value` must be one of: {ImageFormat.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in ImageFormat.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {ImageFormat.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return ImageFormat.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> ImageFormat:
-        if isinstance(value, int):
+    def from_value(value: Union[ImageFormat, str, int]) -> ImageFormat:
+        if isinstance(value, ImageFormat):
+            return value
+        if isinstance(value, str):
+            return ImageFormat.from_str(value)
+        elif isinstance(value, int):
             return ImageFormat.from_int(value)
         else:
-            return ImageFormat.from_str(value)
+            raise TypeError(
+                f"`value` must be `ImageFormat`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
     
     @staticmethod
     def keys():
@@ -494,24 +527,37 @@ class InterpolationMode(Enum):
     @staticmethod
     def from_str(value: str) -> InterpolationMode:
         value = value.lower()
-        assert value in InterpolationMode.str_mapping, \
-            f"`value` must be one of: {InterpolationMode.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in InterpolationMode.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {InterpolationMode.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return InterpolationMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> InterpolationMode:
-        assert value in InterpolationMode.int_mapping, \
-            f"`value` must be one of: {InterpolationMode.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in InterpolationMode.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {InterpolationMode.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return InterpolationMode.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> InterpolationMode:
-        if isinstance(value, int):
+    def from_value(
+        value: Union[InterpolationMode, str, int]
+    ) -> InterpolationMode:
+        if isinstance(value, InterpolationMode):
+            return value
+        if isinstance(value, str):
+            return InterpolationMode.from_str(value)
+        elif isinstance(value, int):
             return InterpolationMode.from_int(value)
         else:
-            return InterpolationMode.from_str(value)
+            raise TypeError(
+                f"`value` must be `InterpolationMode`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
         
     @staticmethod
     def keys():
@@ -569,24 +615,35 @@ class MemoryUnit(Enum):
     @staticmethod
     def from_str(value: str) -> MemoryUnit:
         value = value.lower()
-        assert value in MemoryUnit.str_mapping, \
-            f"`value` must be one of: {MemoryUnit.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in MemoryUnit.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {MemoryUnit.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return MemoryUnit.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> MemoryUnit:
-        assert value not in MemoryUnit.int_mapping, \
-            f"`value` must be one of: {MemoryUnit.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in MemoryUnit.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {MemoryUnit.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return MemoryUnit.int_mapping[value]
     
     @staticmethod
-    def from_value(value: Union[str, int]) -> MemoryUnit:
-        if isinstance(value, int):
+    def from_value(value: Union[MemoryUnit, str, int]) -> MemoryUnit:
+        if isinstance(value, MemoryUnit):
+            return value
+        if isinstance(value, str):
+            return MemoryUnit.from_str(value)
+        elif isinstance(value, int):
             return MemoryUnit.from_int(value)
         else:
-            return MemoryUnit.from_str(value)
+            raise TypeError(
+                f"`value` must be `MemoryUnit`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
     
     @staticmethod
     def keys():
@@ -624,24 +681,35 @@ class ModelState(Enum):
 
     @staticmethod
     def from_str(value: str) -> ModelState:
-        assert value not in ModelState.str_mapping, \
-            f"`value` must be one of: {ModelState.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in ModelState.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {ModelState.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return ModelState.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ModelState:
-        assert value in ModelState.int_mapping, \
-            f"`value` must be one of: {ModelState.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in ModelState.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {ModelState.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return ModelState.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> ModelState:
-        if isinstance(value, int):
+    def from_value(value: Union[ModelState, str, int]) -> ModelState:
+        if isinstance(value, ModelState):
+            return value
+        if isinstance(value, str):
+            return ModelState.from_str(value)
+        elif isinstance(value, int):
             return ModelState.from_int(value)
         else:
-            return ModelState.from_str(value)
+            raise TypeError(
+                f"`value` must be `ModelState`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
     
     @staticmethod
     def values() -> list[str]:
@@ -711,24 +779,35 @@ class PaddingMode(Enum):
 
     @staticmethod
     def from_str(value: str) -> PaddingMode:
-        assert value in PaddingMode.str_mapping, \
-            f"`value` must be one of: {PaddingMode.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in PaddingMode.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {PaddingMode.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return PaddingMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> PaddingMode:
-        assert value in PaddingMode.int_mapping, \
-            f"`value` must be one of: {PaddingMode.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in PaddingMode.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {PaddingMode.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return PaddingMode.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> PaddingMode:
-        if isinstance(value, int):
+    def from_value(value: Union[PaddingMode, str, int]) -> PaddingMode:
+        if isinstance(value, PaddingMode):
+            return value
+        if isinstance(value, str):
+            return PaddingMode.from_str(value)
+        elif isinstance(value, int):
             return PaddingMode.from_int(value)
         else:
-            return PaddingMode.from_str(value)
+            raise TypeError(
+                f"`value` must be `PaddingMode`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
         
     @staticmethod
     def keys():
@@ -780,24 +859,35 @@ class VideoFormat(Enum):
     @staticmethod
     def from_str(value: str) -> VideoFormat:
         value = value.lower()
-        assert value in VideoFormat.str_mapping, \
-            f"`value` must be one of: {VideoFormat.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in VideoFormat.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {VideoFormat.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return VideoFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VideoFormat:
-        assert value in VideoFormat.int_mapping, \
-            f"`value` must be one of: {VideoFormat.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in VideoFormat.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {VideoFormat.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return VideoFormat.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> VideoFormat:
-        if isinstance(value, int):
+    def from_value(value: Union[VideoFormat, str, int]) -> VideoFormat:
+        if isinstance(value, VideoFormat):
+            return value
+        if isinstance(value, str):
+            return VideoFormat.from_str(value)
+        elif isinstance(value, int):
             return VideoFormat.from_int(value)
         else:
-            return VideoFormat.from_str(value)
+            raise TypeError(
+                f"`value` must be `VideoFormat`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
     
     @staticmethod
     def keys():
@@ -836,24 +926,35 @@ class VisionBackend(Enum):
     
     @staticmethod
     def from_str(value: str) -> VisionBackend:
-        assert value in VisionBackend.str_mapping, \
-            f"`value` must be one of: {VisionBackend.str_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in VisionBackend.str_mapping:
+            raise ValueError(
+                f"`value` must be one of: {VisionBackend.str_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return VisionBackend.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VisionBackend:
-        assert value in VisionBackend.int_mapping, \
-            f"`value` must be one of: {VisionBackend.int_mapping.keys()}. " \
-            f"But got: {value}."
+        if value not in VisionBackend.int_mapping:
+            raise ValueError(
+                f"`value` must be one of: {VisionBackend.int_mapping.keys()}. "
+                f"But got: {value}."
+            )
         return VisionBackend.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[str, int]) -> VisionBackend:
-        if isinstance(value, int):
+    def from_value(value: Union[VisionBackend, str, int]) -> VisionBackend:
+        if isinstance(value, VisionBackend):
+            return value
+        elif isinstance(value, int):
             return VisionBackend.from_int(value)
-        else:
+        elif isinstance(value, str):
             return VisionBackend.from_str(value)
+        else:
+            raise TypeError(
+                f"`value` must be `VisionBackend`, `str`, or `int`. "
+                f"But got: {type(value)}."
+            )
     
     @staticmethod
     def keys():

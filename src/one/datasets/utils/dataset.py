@@ -47,7 +47,6 @@ from pathlib import Path
 from typing import Any
 from typing import Union
 
-import numpy as np
 import torch
 import torch.utils.data as data
 from torch import Tensor
@@ -66,6 +65,7 @@ from one.datasets.utils import BBox
 from one.datasets.utils import ClassLabel
 from one.datasets.utils import Image
 from one.datasets.utils import VOCLabel
+from one.vision.transformation import ComposeScript
 
 
 # MARK: - Base
@@ -81,13 +81,13 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         verbose (bool):
@@ -101,16 +101,23 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        transform       : Union[Callable, None] = None,
-        target_transform: Union[Callable, None] = None,
-        transforms      : Union[Callable, None] = None,
-        verbose         : bool                  = True,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
-        self.root             = root
-        self.split            = split
-        self.shape            = shape
-        self.verbose          = verbose
+        self.root    = root
+        self.split   = split
+        self.shape   = shape
+        self.verbose = verbose
+        
+        if isinstance(transform, (list, dict)):
+            transform = ComposeScript(transform)
+        if isinstance(target_transform, (list, dict)):
+            target_transform = ComposeScript(target_transform)
+        if isinstance(transforms, (list, dict)):
+            transforms = ComposeScript(transforms)
         self.transform        = transform
         self.target_transform = target_transform
         self.transforms       = transforms
@@ -189,10 +196,10 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -214,12 +221,12 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         root        : str,
         split       : str,
         shape       : Int3T,
-        transform   : Union[Callable, None]     = None,
-        transforms  : Union[Callable, None]     = None,
-        cache_data  : bool                      = False,
-        cache_images: bool                      = False,
-        backend     : Union[VisionBackend, str] = VISION_BACKEND,
-        verbose     : bool                      = True,
+        transform   : Union[Callable, list, dict, None] = None,
+        transforms  : Union[Callable, list, dict, None] = None,
+        cache_data  : bool                              = False,
+        cache_images: bool                              = False,
+        backend     : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose     : bool                              = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -259,7 +266,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
 				Index.
 
 		Returns:
-			input (Tensor):
+			input (Tensor[1, C, H, W]):
 				Sample, optionally transformed by the respective transforms.
 			meta (dict):
 			    Meta data of image.
@@ -306,7 +313,10 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         """
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.images)),  description=f"[red]Caching {self.split} images"):
+            for i in pbar.track(
+                range(len(self.images)),
+                description=f"[red]Caching {self.split} images"
+            ):
                 gb += self.images[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of images have been cached" % (gb / 1E9))
             
@@ -318,14 +328,12 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
         """
         input, meta = zip(*batch)  # Transposed
-
         if all(i.ndim == 3 for i in input):
             input = torch.stack(input, 0)
         elif all(i.ndim == 4 for i in input):
             input = torch.cat(input, 0)
         else:
-            raise ValueError(f"Each `input.ndim` must be 3 or 4.")
-            
+            raise ValueError(f"Require 3 <= `input.ndim` <= 4.")
         return input, meta
 
 
@@ -346,10 +354,10 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -371,12 +379,12 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         root        : str,
         split       : str,
         shape       : Int3T,
-        transform   : Union[Callable, None]     = None,
-        transforms  : Union[Callable, None]     = None,
-        cache_data  : bool                      = False,
-        cache_images: bool                      = False,
-        backend     : Union[VisionBackend, str] = VISION_BACKEND,
-        verbose     : bool                      = True,
+        transform   : Union[Callable, list, dict, None] = None,
+        transforms  : Union[Callable, list, dict, None] = None,
+        cache_data  : bool                              = False,
+        cache_images: bool                              = False,
+        backend     : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose     : bool                              = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -433,13 +441,13 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -461,14 +469,14 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_data      : bool                         = False,
-        cache_images    : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_data      : bool                              = False,
+        cache_images    : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -521,7 +529,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
 				Index.
 
 		Returns:
-			input (Tensor):
+			input (Tensor[1, C, H, W]):
 				Input sample, optionally transformed by the respective transforms.
 			target (Any):
 			    Target, depended on label type.
@@ -594,13 +602,13 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -622,14 +630,14 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_data      : bool                         = False,
-        cache_images    : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_data      : bool                              = False,
+        cache_images    : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         self.labels: list[int] = []
@@ -656,7 +664,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
 				Index.
 
 		Returns:
-			input (Tensor):
+			input (Tensor[1, C, H, W]):
 				Input sample, optionally transformed by the respective
 				transforms.
 			target (int):
@@ -685,7 +693,10 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         """
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.images)), description=f"[red]Caching {self.split} images"):
+            for i in pbar.track(
+                range(len(self.images)),
+                description=f"[red]Caching {self.split} images"
+            ):
                 gb += self.images[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of images have been cached" % (gb / 1E9))
 
@@ -730,13 +741,13 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -758,14 +769,14 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_images    : bool                         = False,
-        cache_data      : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_images    : bool                              = False,
+        cache_data      : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         self.labels: list[list[BBox]] = []
@@ -792,9 +803,9 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
 				Index.
 
 		Returns:
-			input (Tensor):
+			input (Tensor[1, C, H, W]):
 				Input sample, optionally transformed by the respective transforms.
-			target (Tensor):
+			target (Tensor[N, 7]):
 			    Bounding boxes.
 			meta (Image):
 			    Meta data of image.
@@ -802,7 +813,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         item   = self.images[index]
         input  = item.image if item.image is not None else item.load()
         target = self.labels[index]
-        target = np.array([b.label for b in target], dtype=np.float32)
+        target = torch.stack([b.label for b in target])
         meta   = item.meta
 
         if self.transform is not None:
@@ -821,7 +832,10 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         """
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.images)), description=f"[red]Caching {self.split} images"):
+            for i in pbar.track(
+                range(len(self.images)),
+                description=f"[red]Caching {self.split} images"
+            ):
                 gb += self.images[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of images have been cached" % (gb / 1E9))
            
@@ -833,17 +847,16 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
         """
         input, target, meta = zip(*batch)  # Transposed
-
         if all(i.ndim == 3 for i in input):
             input  = torch.stack(input,  0)
         elif all(i.ndim == 4 for i in input):
             input  = torch.cat(input,  0)
         else:
-            raise ValueError(f"Each `input.ndim` and `target.ndim` must be 3 or 4.")
-        
+            raise ValueError(
+                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+            )
         for i, l in enumerate(target):
             l[:, 0] = i  # add target image index for build_targets()
-            
         return input, target, meta
 
     
@@ -865,13 +878,13 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -893,14 +906,14 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_images    : bool                         = False,
-        cache_data      : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_images    : bool                              = False,
+        cache_data      : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -946,13 +959,13 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -974,15 +987,14 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_images    : bool                         = False,
-        cache_data      : bool                         = False,
-        
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_images    : bool                              = False,
+        cache_data      : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1013,8 +1025,15 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         
         labels: list[VOCLabel] = []
         with progress_bar() as pbar:
-            for f in pbar.track(files, description=f"[red]Listing {self.split} labels"):
-                labels.append(VOCLabel.create_from_file(path=f, class_labels=self.class_labels))
+            for f in pbar.track(
+                files, description=f"[red]Listing {self.split} labels"
+            ):
+                labels.append(
+                    VOCLabel.create_from_file(
+                        path         = f,
+                        class_labels = self.class_labels
+                    )
+                )
         
         self.labels = labels
         
@@ -1037,13 +1056,13 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -1065,14 +1084,14 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_data      : bool                         = False,
-        cache_images    : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_data      : bool                              = False,
+        cache_images    : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         self.labels: list[Image] = []
@@ -1099,10 +1118,12 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
 				Index.
 
 		Returns:
-			input (Tensor):
-				Input sample, optionally transformed by the respective transforms.
-			target (Tensor):
-			    Enhance image.
+			input (Tensor[1, C, H, W]):
+				Input sample, optionally transformed by the respective
+				transforms.
+			target (Tensor[1, C, H, W]):
+			    Enhance image, optionally transformed by the respective
+			    transforms.
 			meta (Image):
 			    Meta data of image.
 		"""
@@ -1128,13 +1149,19 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         """
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.images)), description=f"[red]Caching {self.split} images"):
+            for i in pbar.track(
+                range(len(self.images)),
+                description=f"[red]Caching {self.split} images"
+            ):
                 gb += self.images[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of images have been cached" % (gb / 1E9))
         
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.labels)), description=f"[red]Caching {self.split} labels"):
+            for i in pbar.track(
+                range(len(self.labels)),
+                description=f"[red]Caching {self.split} labels"
+            ):
                 gb += self.labels[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of labels have been cached" % (gb / 1E9))
     
@@ -1146,7 +1173,6 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
         """
         input, target, meta = zip(*batch)  # Transposed
-
         if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
             input  = torch.stack(input,  0)
             target = torch.stack(target, 0)
@@ -1154,8 +1180,9 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             input  = torch.cat(input,  0)
             target = torch.cat(target, 0)
         else:
-            raise ValueError(f"Each `input.ndim` and `target.ndim` must be 3 or 4.")
-            
+            raise ValueError(
+                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+            )
         return input, target, meta
     
 
@@ -1172,13 +1199,13 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         cache_data (bool):
@@ -1200,14 +1227,14 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : str,
         split           : str,
         shape           : Int3T,
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_data      : bool                         = False,
-        cache_images    : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        class_labels    : Union[ClassLabel, str, Path]      = None,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        cache_data      : bool                              = False,
+        cache_images    : bool                              = False,
+        backend         : Union[VisionBackend, str]         = VISION_BACKEND,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         self.labels: list[Image] = []
@@ -1234,10 +1261,12 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
 				Index.
 
 		Returns:
-			input (Tensor):
-				Input sample, optionally transformed by the respective transforms.
-			target (Tensor):
-			    Semantic segmentation mask.
+			input (Tensor[1, C, H, W]):
+				Input sample, optionally transformed by the respective
+				transforms.
+			target (Tensor[1, C or 1, H, W]):
+			    Semantic segmentation mask, optionally transformed by the
+			    respective transforms.
 			meta (Image):
 			    Meta data of image.
 		"""
@@ -1263,13 +1292,19 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         """
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.images)), description=f"[red]Caching {self.split} images"):
+            for i in pbar.track(
+                range(len(self.images)),
+                description=f"[red]Caching {self.split} images"
+            ):
                 gb += self.images[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of images have been cached" % (gb / 1E9))
         
         gb = 0  # Gigabytes of cached images
         with download_bar() as pbar:
-            for i in pbar.track(range(len(self.labels)), description=f"[red]Caching {self.split} labels"):
+            for i in pbar.track(
+                range(len(self.labels)),
+                description=f"[red]Caching {self.split} labels"
+            ):
                 gb += self.labels[i].load(keep_in_memory=True).nbytes
         console.log(f"%.1fGB of labels have been cached" % (gb / 1E9))
     
@@ -1281,7 +1316,6 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
         """
         input, target, meta = zip(*batch)  # Transposed
-
         if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
             input  = torch.stack(input,  0)
             target = torch.stack(target, 0)
@@ -1289,8 +1323,9 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
             input  = torch.cat(input,  0)
             target = torch.cat(target, 0)
         else:
-            raise ValueError(f"Each `input.ndim` and `target.ndim` must be 3 or 4.")
-            
+            raise ValueError(
+                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+            )
         return input, target, meta
 
 

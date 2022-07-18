@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import inspect
 import sys
+from typing import Any
 
 import numpy as np
 import torch
@@ -23,50 +24,80 @@ from one.core.version import torch_version_geq
 # MARK: - Functional
 
 def _to_3d(input: Tensor) -> Tensor:
-    """Convert the tensor or array to 3D shape [C, H, W] or [H, W, C]."""
+    """Convert Tensor to 3D shape [C, H, W].
+    
+    Args:
+        input (Tensor):
+            Tensor of arbitrary dimensions.
+            
+    Returns:
+        input (Tensor):
+            Tensor of shape [1, H, W] or [C, H, W].
+    """
     if not isinstance(input, Tensor):
         raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
-    if not 2 <= input.ndim <= 4:
-        raise ValueError(f"Require 2 <= `input.ndim` <= 4. But got: {input.ndim}.")
-    
+   
     if input.ndim == 2:  # [H, W] -> [1, H, W]
         input = input.unsqueeze(dim=0)
-    if input.ndim == 3:  # [C, H, W]
-        input = input.unsqueeze(dim=0)
-    if input.ndim == 4 and input.shape[0] == 1:  # [1, C, H, W] -> [C, H, W]
+    elif input.ndim == 3:  # [C, H, W]
+        pass
+    elif input.ndim == 4 and input.shape[0] == 1:  # [1, C, H, W] -> [C, H, W]
         input = input.squeeze(dim=0)
+    else:
+        raise ValueError(
+            f"Require 2 <= `input.ndim` <= 4. But got: {input.ndim}."
+        )
     return input
 
 
 def _to_4d(input: Tensor) -> Tensor:
-    """Convert the tensor or array to 4D shape [B, C, H, W] or [B, H, W, C]."""
+    """Convert Tensor to 4D shape [B, C, H, W].
+    
+    Args:
+        input (Tensor):
+            Tensor of arbitrary dimensions.
+            
+    Returns:
+        input (Tensor):
+            Tensor of shape [1, C, H, W] or [B, C, H, W].
+    """
     if not isinstance(input, Tensor):
         raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
-    if not 2 <= input.ndim <= 4:
-        raise ValueError(f"Require 2 <= `input.ndim` <= 5. But got: {input.ndim}.")
-
-    if input.ndim == 2:  # [H, W] -> [1, H, W]
+   
+    if input.ndim == 2:  # [H, W] -> [1, 1, H, W]
         input = input.unsqueeze(dim=0)
-    if input.ndim == 3:  # [C, H, W] -> [1, C, H, W]
         input = input.unsqueeze(dim=0)
-    if input.ndim == 4:  # [B, C, H, W]
+    elif input.ndim == 3:  # [C, H, W] -> [1, C, H, W]
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 4:  # [B, C, H, W]
         pass
-    if input.ndim == 5 and input.shape[0] == 1:
+    elif input.ndim == 5 and input.shape[0] == 1:
         input = input.squeeze(dim=0)
+    else:
+        raise ValueError(f"Require 2 <= `input.ndim` <= 5. But got: {input.ndim}.")
     return input
 
 
 def _to_5d(input: Tensor) -> Tensor:
-    """Convert the tensor or array to 5D shape [*, B, C, H, W] or [*, B, H, W, C].
+    """Convert Tensor to 5D shape [*, B, C, H, W].
+    
+    Args:
+        input (Tensor):
+            Tensor of arbitrary dimensions.
+            
+    Returns:
+        input (Tensor):
+            Tensor of shape [1, B, C, H, W] or [*, B, C, H, W].
     """
     if not isinstance(input, Tensor):
         raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
-    if not 2 <= input.ndim <= 4:
-        raise ValueError(f"Require 2 <= `input.ndim` <= 6. But got: {input.ndim}.")
-
-    if input.ndim == 2:  # [H, W] -> [1, H, W]
+    
+    if input.ndim == 2:  # [H, W] -> [1, 1, 1, H, W]
         input = input.unsqueeze(dim=0)
-    if input.ndim == 3:  # [C, H, W] -> [1, C, H, W]
+        input = input.unsqueeze(dim=0)
+        input = input.unsqueeze(dim=0)
+    if input.ndim == 3:  # [C, H, W] -> [1, 1, C, H, W]
+        input = input.unsqueeze(dim=0)
         input = input.unsqueeze(dim=0)
     if input.ndim == 4:  # [B, C, H, W] -> [1, B, C, H, W]
         input = input.unsqueeze(dim=0)
@@ -74,11 +105,13 @@ def _to_5d(input: Tensor) -> Tensor:
         pass
     if input.ndim == 6 and input.shape[0] == 1:
         input = input.squeeze(dim=0)
+    else:
+        raise ValueError(f"Require 2 <= `input.ndim` <= 6. But got: {input.ndim}.")
     return input
 
 
 def eye_like(n: int, input: Tensor) -> Tensor:
-    r"""Return a 2-D image with ones on the diagonal and zeros elsewhere with
+    """Return a 2-D image with ones on the diagonal and zeros elsewhere with
     the same batch size as the input.
 
     Args:
@@ -89,7 +122,7 @@ def eye_like(n: int, input: Tensor) -> Tensor:
             The expected shape is [B, *].
 
     Returns:
-        (Tensor):
+        identity (Tensor):
             The identity matrix with the same batch size as the input [B, N, N].
 
     """
@@ -135,7 +168,7 @@ def inverse_cast(input: Tensor) -> Tensor:
 
 
 def safe_solve_with_mask(B: Tensor, A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
-    r"""Helper function, which avoids crashing because of singular matrix input
+    """Helper function, which avoids crashing because of singular matrix input
     and outputs the mask of valid solution.
     """
     if not torch_version_geq(1, 10):
@@ -218,8 +251,17 @@ def svd_cast(input: Tensor) -> tuple[Tensor, Tensor, Tensor]:
     return out1.to(input.dtype), out2.to(input.dtype), out3.to(input.dtype)
 
 
-def to_3d_tensor_list(input) -> list[Tensor]:
-    """Convert to a list of 3D tensors."""
+def to_3d_tensor_list(input: Any) -> list[Tensor]:
+    """Convert to a list of 3D Tensors.
+   
+    Args:
+        input (Any):
+            Input of arbitrary type.
+            
+    Returns:
+        input (list[Tensor]):
+            List of 3D Tensors of shape [C, H, W].
+    """
     if isinstance(input, dict):
         input = list(input.values())
     if isinstance(input, tuple):
@@ -243,12 +285,16 @@ def to_3d_tensor_list(input) -> list[Tensor]:
     raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
 
 
-def to_4d_tensor(input) -> Tensor:
-    """Convert to a 4D tensor. The output will be:
-        - Single 3D tensor will be expanded to a 4D tensor.
-        - Single 4D tensor will remain the same.
-        - Sequence of 3D tensors will be stacked into a 4D tensor.
-        - Sequence of 4D tensors will remain the same.
+def to_4d_tensor(input: Any) -> Tensor:
+    """Convert to a 4D Tensor.
+   
+    Args:
+        input (Any):
+            Input of arbitrary type.
+            
+    Returns:
+        input (Tensor):
+            A 4D Tensor of shape [B, C, H, W].
     """
     if isinstance(input, dict):
         input = list(input.values())
@@ -271,7 +317,16 @@ def to_4d_tensor(input) -> Tensor:
     
 
 def to_4d_tensor_list(input) -> list[Tensor]:
-    """Convert to a list of 4D tensors."""
+    """Convert to a list of 4D Tensors.
+   
+    Args:
+        input (Any):
+            Input of arbitrary type.
+            
+    Returns:
+        input (list[Tensor]):
+            List of 4D Tensors of shape [B, C, H, W].
+    """
     if isinstance(input, dict):
         input = list(input.values())
     if isinstance(input, tuple):
@@ -300,7 +355,16 @@ def to_4d_tensor_list(input) -> list[Tensor]:
 
 
 def to_5d_tensor(input) -> Tensor:
-    """Convert to a 5D tensor."""
+    """Convert to a 5D Tensor.
+   
+    Args:
+        input (Any):
+            Input of arbitrary type.
+            
+    Returns:
+        input (Tensor):
+            5D Tensor of shape [*, B, C, H, W].
+    """
     if isinstance(input, dict):
         input = list(input.values())
     if isinstance(input, tuple):
@@ -325,6 +389,14 @@ def to_5d_tensor(input) -> Tensor:
 def upcast(input: Tensor) -> Tensor:
     """Protects from numerical overflows in multiplications by upcasting to
     the equivalent higher type.
+    
+    Args:
+        input (Tensor):
+            Tensor of arbitrary type.
+    
+    Returns:
+        input (Tensor):
+            Tensor of higher type.
     """
     if not isinstance(input, Tensor):
         raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
@@ -336,7 +408,7 @@ def upcast(input: Tensor) -> Tensor:
     
 
 def vec_like(n: int, input: Tensor):
-    r"""Return a 2-D image with a vector containing zeros with the same batch
+    """Return a 2D image with a vector containing zeros with the same batch
     size as the input.
 
     Args:

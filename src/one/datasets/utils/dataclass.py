@@ -15,23 +15,26 @@ from typing import Union
 
 import cv2
 import numpy as np
+import torch
 from joblib import delayed
 from joblib import Parallel
+from matplotlib import pyplot as plt
 from munch import Munch
+from torch import Tensor
 
 from one.core import BBoxFormat
 from one.core import console
-from one.core import get_image_shape
 from one.core import is_image_file
 from one.core import is_json_file
 from one.core import is_xml_file
 from one.core import load_file
 from one.core import print_table
-from one.core import TensorOrArray
 from one.core import VISION_BACKEND
 from one.core import VisionBackend
 from one.vision.acquisition import read_image
 from one.vision.shape import box_xyxy_to_cxcywh_norm
+from one.vision.transformation import get_image_shape
+from one.vision.transformation import to_tensor
 
 
 # MARK: - Functional
@@ -95,21 +98,21 @@ class BBox:
         return all(i <= 1.0 for i in [self.b1, self.b2, self.b3, self.b4])
     
     @property
-    def label(self) -> np.ndarray:
-        """Return bounding box label as [x1, y1, x2, y2] format.
+    def label(self) -> Tensor:
+        """Return bounding box label.
 
         Returns:
-            box_label (np.ndarray):
+            box_label (Tensor):
                 <image_id>, <class_id>, <x1>, <y1>, <x2>, <y2>, <confidence>
         """
-        return np.array(
+        return torch.Tensor(
             [
                 self.image_id,
                 self.class_id,
                 self.b1, self.b2, self.b3, self.b4,
                 self.confidence
             ],
-            dtype=np.float32
+            dtype=torch.float32
         )
 
 
@@ -164,7 +167,7 @@ class ClassLabel:
         """Return the list of all classes."""
         return self._classes
 
-    def color_legend(self, height: Union[int, None] = None) -> np.ndarray:
+    def color_legend(self, height: Union[int, None] = None) -> Tensor:
         """Return a color legend using OpenCV drawing functions.
 
         References:
@@ -175,7 +178,7 @@ class ClassLabel:
                 Height of the color legend image. Defaults: `None`.
 
         Returns:
-            legend (np.ndarray):
+            legend (Tensor):
                 Color legend image.
         """
         num_classes = len(self.classes)
@@ -202,7 +205,7 @@ class ClassLabel:
                 color     = color,
                 thickness = -1
             )
-        return legend
+        return to_tensor(image=legend)
         
     def colors(
         self,
@@ -216,9 +219,11 @@ class ClassLabel:
             key (str):
                 Label's key to search from `labels`. Default: `id`.
             exclude_negative_key (bool):
-                If `True` only count class's label with key >= 0. Default: `True`.
+                If `True` only count class's label with key >= 0.
+                Default: `True`.
             exclude_max_key (bool):
-                If `True` only count class's label with key < 255. Default: `True`.
+                If `True` only count class's label with key < 255.
+                Default: `True`.
         """
         labels_colors = []
         for label in self.classes:
@@ -420,9 +425,10 @@ class ClassLabel:
                 Height of the color legend image. Default: `None`.
         """
         color_legend = self.color_legend(height=height)
-        cv2.imshow(winname="Color Legend", mat=color_legend)
-        cv2.waitKey(1)
-    
+        plt.imshow(color_legend.permute(1, 2, 0))
+        plt.title("Color Legend")
+        plt.show()
+        
     # MARK: Print
     
     def print(self):
@@ -449,11 +455,9 @@ class Image:
             Image name with extension. Default: `None`.
         path (str, Path, None):
             Image path. Default: `None`.
-        image (TensorOrArray, None):
+        image (Tensor, None):
             3d array[H, W, C] or Tensor[C, H, W] representing an image.
             Default: `None`.
-        shape (Int3T, None):
-            Image's original shape [H, W, C].
         load_on_create (bool):
             If `True` attempt to load image into memory (may cause OOM error).
             Default: `False`.
@@ -468,13 +472,13 @@ class Image:
     
     def __init__(
         self,
-        id            : Union[int, str]            = uuid.uuid4().int,
-        name          : Union[str, None]           = None,
-        path          : Union[str, Path, None]     = None,
-        image         : Union[TensorOrArray, None] = None,
-        load_on_create: bool                       = False,
-        keep_in_memory: bool                       = False,
-        backend       : Union[VisionBackend, str]  = VISION_BACKEND,
+        id            : Union[int, str]           = uuid.uuid4().int,
+        name          : Union[str, None]          = None,
+        path          : Union[str, Path, None]    = None,
+        image         : Union[Tensor, None]       = None,
+        load_on_create: bool                      = False,
+        keep_in_memory: bool                      = False,
+        backend       : Union[VisionBackend, str] = VISION_BACKEND,
     ):
         self.id             = id
         self.image          = None
@@ -504,7 +508,7 @@ class Image:
         self,
         path          : Union[str, Path, None] = None,
         keep_in_memory: bool                   = False,
-    ) -> np.ndarray:
+    ) -> Tensor:
         """Load image into memory.
         
         Args:
@@ -515,8 +519,8 @@ class Image:
                 error). Default: `False`.
             
         Returns:
-            image (np.ndarray):
-                Return image to caller.
+            image (Tensor[1, C, H, W]):
+                Return image Tensor to caller.
         """
         self.keep_in_memory = keep_in_memory
         
@@ -569,7 +573,7 @@ class VOCBBox(BBox):
             An object is marked as difficult when the object is considered
             difficult to recognize. If the object is difficult to recognize
             then we set difficult to 1 else set it to 0.
-        bndbox (dict):
+        bndbox (Tensor, list, tuple):
             Axis-aligned rectangle specifying the extent of the object visible
             in the image.
         pose (str):
@@ -584,7 +588,7 @@ class VOCBBox(BBox):
         name     : str,
         truncated: int,
         difficult: int,
-        bndbox   : Union[np.ndarray, list],
+        bndbox   : Union[Tensor, list, tuple],
         pose     : str = "Unspecified",
         *args, **kwargs
     ):
@@ -695,13 +699,12 @@ class VOCLabel:
         if not all(isinstance(o, dict) for o in object):
             raise TypeError(f"All elements of `object` must be a `dict`.")
             
-
         for i, o in enumerate(object):
             bndbox   = o.get("bndbox")
-            box_xyxy = np.array([
+            box_xyxy = torch.FloatTensor([
                 int(bndbox["xmin"]), int(bndbox["ymin"]),
                 int(bndbox["ymin"]), int(bndbox["ymax"])
-            ], np.float32)
+            ])
             o["bndbox"] = box_xyxy_to_cxcywh_norm(box_xyxy, self.height, self.width)
             o["format"] = BBoxFormat.CXCYWH_NORM
         self.bboxes = [VOCBBox(*b) for b in object]

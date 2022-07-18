@@ -19,37 +19,41 @@ from typing import Union
 import cv2
 import ffmpeg
 import numpy as np
+import torch
+from torch import Tensor
 
-from one.core import Arrays
 from one.core import create_dirs
+from one.core import error_console
 from one.core import Int2Or3T
 from one.core import is_image_file
 from one.core import is_video_file
 from one.core import is_video_stream
-from one.core import to_4d_array
-from one.core import to_channel_last
+from one.core import Tensors
 from one.core import to_size
+from one.vision.transformation import to_channel_last
+from one.vision.transformation import to_image
+from one.vision.transformation import to_tensor
 
 
 # MARK: - Functional
 
-def ffmpeg_read_frame(process, width: int, height: int) -> np.ndarray:
-	"""Read raw bytes from ffmpeg and return a `np.ndarray`.
+def ffmpeg_read_frame(process, height: int, width: int) -> Tensor:
+	"""Read raw bytes from video stream using ffmpeg and return a Tensor.
 	
 	Arguments:
 		process:
 			Subprocess that manages ffmpeg.
-		width (int):
-			Frame width.
 		height (int):
 			Frame height.
-	
+		width (int):
+			Frame width.
+		
 	Returns:
-		frame (np.ndarray):
-			`np.ndarray` image in [H, W, C] format.
+		frame (Tensor[1, C, H, W]):
+			Tensor frame/image.
 	"""
 	# Note: RGB24 == 3 bytes per pixel.
-	frame_size = width * height * 3
+	frame_size = height * width * 3
 	in_bytes   = process.stdout.read(frame_size)
 	if len(in_bytes) == 0:
 		frame = None
@@ -60,25 +64,29 @@ def ffmpeg_read_frame(process, width: int, height: int) -> np.ndarray:
 			np
 				.frombuffer(in_bytes, np.uint8)
 				.reshape([height, width, 3])
-		)
+		)  # Numpy
+		frame = to_tensor(image=frame, keep_dims=False)
 	return frame
 
 
-def ffmpeg_write_frame(process, frame: Union[np.ndarray, None]):
-	"""Write `np.ndarray` to video file using ffmpeg.
+def ffmpeg_write_frame(process, frame: Union[Tensor, None]):
+	"""Write a `Tensor[1, C, H, W]` to video file using ffmpeg.
 
 	Arguments:
 		process:
 			Subprocess that manages ffmpeg.
-		frame (np.ndarray):
-			`np.ndarray` image in [H, W, C] format.
+		frame (Tensor[1, C, H, W]):
+			`Tensor` frame/image.
 	"""
-	if frame is not None:
+	if isinstance(frame, Tensor):
+		frame = to_image(input=frame, keep_dims=False, denormalize=True)
 		process.stdin.write(
 			frame
 				.astype(np.uint8)
 				.tobytes()
 		)
+	else:
+		error_console(f"`frame` must be `Tensor`. But got: {type(frame)}.")
 
 
 # MARK: - Modules
@@ -86,16 +94,14 @@ def ffmpeg_write_frame(process, frame: Union[np.ndarray, None]):
 class BaseVideoLoader(metaclass=ABCMeta):
 	"""A baseclass/interface for all VideoLoader classes.
 	
-	Attributes:
+	Args:
 		data (str):
 			Data source. Can be a path to an image file, a directory, a video,
 			or a stream. It can also be a pathname pattern to images.
 		batch_size (int):
-			Number of samples in one forward & backward pass.
+			Number of samples in one forward & backward pass. Default: `1`.
 		verbose (bool):
 			Verbosity mode of video loader backend. Default: `False`.
-		index (int, None):
-			Current frame index.
 	"""
 	
 	# MARK: Magic Functions
@@ -105,7 +111,7 @@ class BaseVideoLoader(metaclass=ABCMeta):
 		data      : str,
 		batch_size: int = 1,
 		verbose   : bool = False,
-		**kwargs
+		*args, **kwargs
 	):
 		super().__init__()
 		self.data       = data
@@ -118,11 +124,7 @@ class BaseVideoLoader(metaclass=ABCMeta):
 			>0: if the offline video.
 			-1: if the online video.
 		"""
-		return self.frame_count  # number of frame, [>0 : video, -1 : online_stream]
-	
-	def batch_len(self) -> int:
-		"""Return the total batches calculated from `batch_size`."""
-		return int(self.__len__() / self.batch_size)
+		return self.frame_count
 	
 	def __iter__(self):
 		"""Returns an iterator starting at index 0."""
@@ -130,12 +132,12 @@ class BaseVideoLoader(metaclass=ABCMeta):
 		return self
 	
 	@abstractmethod
-	def __next__(self):
+	def __next__(self) -> tuple[Tensor, list, list, list]:
 		"""Load next batch of images.
 		
 		Returns:
-			images (np.ndarray):
-				List of `np.ndarray` images in [H, W, C] format.
+			images (Tensor[B, C, H, W]):
+				Images tensor.
 			indexes (list):
 				List of image indexes.
 			files (list):
@@ -150,33 +152,9 @@ class BaseVideoLoader(metaclass=ABCMeta):
 
 	# MARK: Properties
 	
-	@property
-	def is_stream(self) -> bool:
-		"""Return `True` if it is a video stream, i.e, unknown `frame_count`."""
-		return self.frame_count == -1
-	
-	@property
-	@abstractmethod
-	def frame_width(self) -> int:
-		"""Return width of the frames in the video stream."""
-		pass
-	
-	@property
-	@abstractmethod
-	def frame_height(self) -> int:
-		"""Return height of the frames in the video stream."""
-		pass
-	
-	@property
-	def shape(self) -> Int2Or3T:
-		"""Return shape of the frames in the video stream in [H, W, C] format."""
-		return self.frame_height, self.frame_width, 3
-	
-	@property
-	@abstractmethod
-	def fps(self) -> int:
-		"""Return frame rate."""
-		pass
+	def batch_len(self) -> int:
+		"""Return the total batches calculated from `batch_size`."""
+		return int(self.__len__() / self.batch_size)
 	
 	@property
 	@abstractmethod
@@ -186,14 +164,44 @@ class BaseVideoLoader(metaclass=ABCMeta):
 	
 	@property
 	@abstractmethod
+	def fps(self) -> int:
+		"""Return frame rate."""
+		pass
+	
+	@property
+	@abstractmethod
 	def frame_count(self) -> int:
 		"""Return number of frames in the video file."""
 		pass
 
+	@property
+	@abstractmethod
+	def frame_height(self) -> int:
+		"""Return height of the frames in the video stream."""
+		pass
+	
+	@property
+	@abstractmethod
+	def frame_width(self) -> int:
+		"""Return width of the frames in the video stream."""
+		pass
+	
+	@property
+	def is_stream(self) -> bool:
+		"""Return `True` if it is a video stream, i.e, unknown `frame_count`.
+		"""
+		return self.frame_count == -1
+	
+	@property
+	def shape(self) -> Int2Or3T:
+		"""Return shape of the frames in the video stream in [C, H, W] format.
+		"""
+		return self.frame_height, self.frame_width
+	
 	# MARK: Configure
 	
 	@abstractmethod
-	def init_input(self):
+	def init(self):
 		"""Initialize input."""
 		pass
 	
@@ -211,21 +219,20 @@ class BaseVideoLoader(metaclass=ABCMeta):
 class BaseVideoWriter(metaclass=ABCMeta):
 	"""A baseclass/interface for all VideoWriter classes.
 	
-	Attributes:
+	Args:
 		dst (str):
 			Output video file or a directory.
-		shape (Int3T):
-			Output size as [H, W, C]. This is also used to reshape the input.
-		frame_rate (int):
-			Frame rate of the video.
+		shape (Int2Or3T):
+			Output size as [C, H, W]. This is also used to reshape the input.
+			Default: `(3, 480, 640)`.
+		frame_rate (float):
+			Frame rate of the video. Default: `10`.
 		save_image (bool):
-			Should write individual image?
+			Should write individual image? Default: `False`.
 		save_video (bool):
-			Should write video?
+			Should write video? Default: `True`.
 		verbose (bool):
 			Verbosity mode of video writer backend. Default: `False`.
-		index (int):
-			Current index.
 	"""
 	
 	# MARK: Magic Functions
@@ -233,11 +240,12 @@ class BaseVideoWriter(metaclass=ABCMeta):
 	def __init__(
 		self,
 		dst		  : str,
-		shape     : Int2Or3T = (480, 640, 3),
+		shape     : Int2Or3T = (3, 480, 640),
 		frame_rate: float    = 10,
 		save_image: bool     = False,
 		save_video: bool     = True,
 		verbose   : bool     = False,
+		*args, **kwargs
 	):
 		super().__init__()
 		self.dst		= dst
@@ -249,7 +257,7 @@ class BaseVideoWriter(metaclass=ABCMeta):
 		self.verbose    = verbose
 		self.index		= 0
 	
-	def __len__(self):
+	def __len__(self) -> int:
 		"""Return the number of already written frames."""
 		return self.index
 	
@@ -260,7 +268,7 @@ class BaseVideoWriter(metaclass=ABCMeta):
 	# MARK: Configure
 	
 	@abstractmethod
-	def init_output(self):
+	def init(self):
 		"""Initialize output."""
 		pass
 	
@@ -272,11 +280,11 @@ class BaseVideoWriter(metaclass=ABCMeta):
 	# MARK: Write
 	
 	@abstractmethod
-	def write(self, image: np.ndarray, image_file: Union[str, None] = None):
+	def write(self, image: Tensor, image_file: Union[str, None] = None):
 		"""Add a frame to writing video.
 
 		Args:
-			image (np.ndarray):
+			image (Tensor):
 				Image.
 			image_file (str, None):
 				Image file. Default: `None`.
@@ -284,12 +292,14 @@ class BaseVideoWriter(metaclass=ABCMeta):
 		pass
 	
 	@abstractmethod
-	def write_batch(self, images: Arrays, image_files: Union[list[str], None] = None):
+	def write_batch(
+		self, images: Tensors, image_files: Union[list[str], None] = None
+	):
 		"""Add batch of frames to video.
 
 		Args:
-			images (Arrays):
-				Images.
+			images (Tensors):
+				List of images.
 			image_files (list[str], None):
 				Image files. Default: `None`.
 		"""
@@ -300,23 +310,20 @@ class CVVideoLoader(BaseVideoLoader):
 	"""Loads frame(s) from a filepath, a pathname pattern, a directory, a video,
 	or a stream using OpenCV.
 
-	Attributes:
+	Args:
 		data (str):
 			Data source. Can be a path to an image file, a directory, a video,
 			or a stream. It can also be a pathname pattern to images.
 		batch_size (int):
-			Number of samples in one forward & backward pass.
+			Number of samples in one forward & backward pass. Default: `1`.
 		api_preference (int):
 			Preferred Capture API backends to use. Can be used to enforce a
 			specific reader implementation. Two most used options are:
 			[cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900].
 			See more: https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base.html#ggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
+			Default: `cv2.CAP_FFMPEG`.
 		verbose (bool):
 			Verbosity mode of video loader backend. Default: `False`.
-		video_capture (VideoCapture, list):
-			`VideoCapture` object from OpenCV.
-		index (int, None):
-			Current frame index.
 	"""
 	
 	# MARK: Magic Functions
@@ -324,22 +331,27 @@ class CVVideoLoader(BaseVideoLoader):
 	def __init__(
 		self,
 		data          : str,
-		batch_size    : int = 1,
-		api_preference: int = cv2.CAP_FFMPEG,
+		batch_size    : int  = 1,
+		api_preference: int  = cv2.CAP_FFMPEG,
 		verbose       : bool = False,
-		**kwargs
+		*args, **kwargs
 	):
-		super().__init__(data=data, batch_size=batch_size, verbose=verbose)
+		super().__init__(
+			data       = data,
+			batch_size = batch_size,
+			verbose    = verbose,
+			*args, **kwargs
+		)
 		self.api_preference = api_preference
 		self.video_capture  = None
-		self.init_input()
+		self.init()
 		
-	def __next__(self):
+	def __next__(self) -> tuple[Tensor, list, list, list]:
 		"""Load next batch of images.
 		
 		Returns:
-			images (np.ndarray):
-				List of `np.ndarray` images in [H, W, C] format.
+			images (Tensor[B, C, H, W]):
+				Image Tensor.
 			indexes (list):
 				List of image indexes.
 			files (list):
@@ -368,10 +380,14 @@ class CVVideoLoader(BaseVideoLoader):
 					file     = self.video_capture[self.index]
 					rel_path = file.replace(self.data, "")
 				else:
-					raise RuntimeError(f"`video_capture` has not been initialized.")
+					raise RuntimeError(
+						f"`video_capture` has not been initialized."
+					)
 				
-				if image is not None:
-					image = image[:, :, ::-1]  # BGR to RGB
+				if image is None:
+					continue
+				image = image[:, :, ::-1]  # BGR to RGB
+				image = to_tensor(image=image, keep_dims=False)
 				
 				images.append(image)
 				indexes.append(self.index)
@@ -380,44 +396,28 @@ class CVVideoLoader(BaseVideoLoader):
 				
 				self.index += 1
 			
-			return np.array(images), indexes, files, rel_paths
+			# return np.array(images), indexes, files, rel_paths
+			return torch.stack(images), indexes, files, rel_paths
 
 	# MARK: Properties
 	
 	@property
-	def pos_msec(self) -> int:  # Flag=0
-		"""Return current position of the video file in milliseconds."""
-		return int(self.video_capture.get(cv2.CAP_PROP_POS_MSEC))
-	
-	@property
-	def pos_frames(self) -> int:  # Flag=1
-		"""Return 0-based index of the frame to be decoded/captured next."""
-		return int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES))
-	
-	@property
-	def pos_avi_ratio(self) -> int:  # Flag=2
-		"""Return relative position of the video file: 0=start of the film, 1=end of the film."""
-		return int(self.video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO))
-	
-	@property
-	def frame_width(self) -> int:  # Flag=3
-		"""Return width of the frames in the video stream."""
-		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
-	
-	@property
-	def frame_height(self) -> int:  # Flag=4
-		"""Return height of the frames in the video stream."""
-		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-	
-	@property
-	def fps(self) -> int:  # Flag=5
-		"""Return frame rate."""
-		return int(self.video_capture.get(cv2.CAP_PROP_FPS))
+	def format(self):  # Flag=8
+		"""Return format of the Mat objects (see Mat::type()) returned
+		by VideoCapture::retrieve().
+		Set value -1 to fetch undecoded RAW video streams (as Mat 8UC1).
+		"""
+		return self.video_capture.get(cv2.CAP_PROP_FORMAT)
 	
 	@property
 	def fourcc(self) -> str:  # Flag=6
 		"""Return 4-character code of codec."""
 		return str(self.video_capture.get(cv2.CAP_PROP_FOURCC))
+	
+	@property
+	def fps(self) -> int:  # Flag=5
+		"""Return frame rate."""
+		return int(self.video_capture.get(cv2.CAP_PROP_FPS))
 	
 	@property
 	def frame_count(self) -> int:  # Flag=7
@@ -430,30 +430,57 @@ class CVVideoLoader(BaseVideoLoader):
 			return -1
 	
 	@property
-	def format(self):  # Flag=8
-		"""Return format of the Mat objects (see Mat::type()) returned by VideoCapture::retrieve().
-		Set value -1 to fetch undecoded RAW video streams (as Mat 8UC1).
-		"""
-		return self.video_capture.get(cv2.CAP_PROP_FORMAT)
+	def frame_height(self) -> int:  # Flag=4
+		"""Return height of the frames in the video stream."""
+		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+	
+	@property
+	def frame_width(self) -> int:  # Flag=3
+		"""Return width of the frames in the video stream."""
+		return int(self.video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
 	
 	@property
 	def mode(self):  # Flag=10
-		"""Return backend-specific value indicating the current capture mode."""
+		"""Return backend-specific value indicating the current capture mode.
+		"""
 		return self.video_capture.get(cv2.CAP_PROP_MODE)
+	
+	@property
+	def pos_avi_ratio(self) -> int:  # Flag=2
+		"""Return relative position of the video file:
+		0=start of the film, 1=end of the film.
+		"""
+		return int(self.video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO))
+	
+	@property
+	def pos_msec(self) -> int:  # Flag=0
+		"""Return current position of the video file in milliseconds."""
+		return int(self.video_capture.get(cv2.CAP_PROP_POS_MSEC))
+	
+	@property
+	def pos_frames(self) -> int:  # Flag=1
+		"""Return 0-based index of the frame to be decoded/captured next."""
+		return int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES))
 	
 	# MARK: Configure
 	
-	def init_input(self):
+	def init(self):
 		"""Initialize `video_capture` object."""
 		if is_video_file(self.data) or is_video_stream(self.data):
 			self.video_capture = cv2.VideoCapture(self.data, self.api_preference)
-			self.video_capture.set(cv2.CAP_PROP_BUFFERSIZE, self.batch_size)  # set buffer (batch) size
+			self.video_capture.set(cv2.CAP_PROP_BUFFERSIZE, self.batch_size)  # Set buffer (batch) size
 		elif is_image_file(self.data):
 			self.video_capture = [self.data]
 		elif os.path.isdir(self.data):
-			self.video_capture = [img for img in glob.glob(os.path.join(self.data, "**/*"), recursive=True) if is_image_file(img)]
+			self.video_capture = [
+				i for i
+				in glob.glob(os.path.join(self.data, "**/*"), recursive=True)
+				if is_image_file(i)
+			]
 		elif isinstance(self.data, str):
-			self.video_capture = [img for img in glob.glob(self.data) if is_image_file(img)]
+			self.video_capture = [
+				i for i in glob.glob(self.data) if is_image_file(i)
+			]
 		else:
 			raise IOError(f"Do not support data of type: {self.data}.")
 	
@@ -477,32 +504,31 @@ class CVVideoLoader(BaseVideoLoader):
 	
 	def close(self):
 		"""Stop and release the current `video_capture` object."""
-		if isinstance(self.video_capture, cv2.VideoCapture) and self.video_capture:
+		if isinstance(self.video_capture, cv2.VideoCapture) \
+			and self.video_capture:
 			self.video_capture.release()
 			
 
 class CVVideoWriter(BaseVideoWriter):
 	"""Saves frames to individual image files or appends all to a video file.
 
-	Attributes:
+	Args:
 		dst (str):
 			Output video file or a directory.
-		video_writer (VideoWriter):
-			`VideoWriter` object from OpenCV.
-		shape (Int3T):
-			Output size as [H, W, C]. This is also used to reshape the input.
+		shape (Int2Or3T):
+			Output size as [C, H, W]. This is also used to reshape the input.
+			Default: `(3, 480, 640)`.
 		frame_rate (int):
-			Frame rate of the video.
+			Frame rate of the video. Default: `10`.
 		fourcc (str):
 			Video codec. One of: ["mp4v", "xvid", "mjpg", "wmv"].
+			Default: `mp4v`.
 		save_image (bool):
-			Should write individual image?
+			Should write individual image? Default: `False`.
 		save_video (bool):
-			Should write video?
+			Should write video? Default: `True`.
 		verbose (bool):
 			Verbosity mode of video writer backend. Default: `False`.
-		index (int):
-			Current index.
 	"""
 	
 	# MARK: Magic Functions
@@ -510,7 +536,7 @@ class CVVideoWriter(BaseVideoWriter):
 	def __init__(
 		self,
 		dst		  : str,
-		shape     : Int2Or3T = (480, 640, 3),
+		shape     : Int2Or3T = (3, 480, 640),
 		frame_rate: float    = 10,
 		fourcc    : str      = "mp4v",
 		save_image: bool     = False,
@@ -528,11 +554,11 @@ class CVVideoWriter(BaseVideoWriter):
 		self.fourcc       = fourcc
 		self.video_writer = None
 		if self.save_video:
-			self.init_output()
+			self.init()
 
 	# MARK: Configure
 
-	def init_output(self):
+	def init(self):
 		"""Initialize output."""
 		if os.path.isdir(self.dst):
 			parent_dir = self.dst
@@ -549,7 +575,9 @@ class CVVideoWriter(BaseVideoWriter):
 		)
 
 		if self.video_writer is None:
-			raise FileNotFoundError(f"Cannot create video file at: {video_file}.")
+			raise FileNotFoundError(
+				f"Cannot create video file at: {video_file}."
+			)
 
 	def close(self):
 		"""Close the `video_writer`."""
@@ -558,20 +586,21 @@ class CVVideoWriter(BaseVideoWriter):
 
 	# MARK: Write
 
-	def write(self, image: np.ndarray, image_file: Union[str, None] = None):
+	def write(self, image: Tensor, image_file: Union[str, None] = None):
 		"""Add a frame to writing video.
 
 		Args:
-			image (np.ndarray):
+			image (Tensor):
 				Image.
 			image_file (str, None):
 				Image file. Default: `None`.
 		"""
-		image = to_channel_last(image)
-
+		image = to_image(input=image, keep_dims=False, denormalize=True)
+		
 		if self.save_image:
 			if image_file is not None:
-				image_file = (image_file[1:] if image_file.startswith("\\") else image_file)
+				image_file = (image_file[1:] if image_file.startswith("\\")
+				              else image_file)
 				image_name = os.path.splitext(image_file)[0]
 			else:
 				image_name = f"{self.index}"
@@ -584,17 +613,17 @@ class CVVideoWriter(BaseVideoWriter):
 
 		self.index += 1
 
-	def write_batch(self, images: Arrays, image_files: Union[list[str], None] = None):
+	def write_batch(
+		self, images: Tensors, image_files: Union[list[str], None] = None
+	):
 		"""Add batch of frames to video.
 
 		Args:
-			images (Arrays):
+			images (Tensors):
 				Images.
 			image_files (list[str], None):
 				Image files. Default: `None`.
 		"""
-		images = to_4d_array(images)
-		
 		if image_files is None:
 			image_files = [None for _ in range(len(images))]
 
@@ -606,23 +635,14 @@ class FFmpegVideoLoader(BaseVideoLoader):
 	"""Loads frame(s) from a filepath, a pathname pattern, a directory, a video,
 	or a stream using FFmpeg.
 	
-	Attributes:
+	Args:
 		data (str):
 			Data source. Can be a path to an image file, pathname pattern to 
 			image files, a directory, a video, or a stream.
 		batch_size (int):
-			Number of samples in one forward & backward pass.
+			Number of samples in one forward & backward pass. Default: `1`.
 		verbose (bool):
 			Verbosity mode of video loader backend. Default: `False`.
-		ffmpeg_cmd:
-			Command to run ffmpeg.
-		ffmpeg_process (subprocess.Popen):
-			Subprocess that manages ffmpeg.
-		video_info (dict):
-			Video information extracted from ffprobe.
-			See more: https://trac.ffmpeg.org/wiki/FFprobeTips
-		index (int, None):
-			Current frame index.
 		kwargs:
 			Any supplied kwargs are passed to ffmpeg verbatim.
 		
@@ -637,27 +657,32 @@ class FFmpegVideoLoader(BaseVideoLoader):
 		data      : str,
 		batch_size: int  = 1,
 		verbose   : bool = False,
-		**kwargs
+		*args, **kwargs
 	):
-		super().__init__(data=data, batch_size=batch_size, verbose=verbose)
+		super().__init__(
+			data       = data,
+			batch_size = batch_size,
+			verbose    = verbose,
+			*args, **kwargs
+		)
 		self.ffmpeg_cmd     = None
 		self.ffmpeg_process = None
 		self.ffmpeg_kwargs  = kwargs
 		self.video_info     = None
-		self.init_input()
+		self.init()
 	
-	def __next__(self):
+	def __next__(self) -> tuple[Tensor, list, list, list]:
 		"""Load next batch of images.
 	
 		Returns:
-			images (np.ndarray):
-				List of `np.ndarray` images in [H, W, C] format.
+			images (Tensor[B, C, H, W]):
+				Image Tensor.
 			indexes (list):
 				List of image indexes.
 			files (list):
 				List of image files.
 			rel_paths (list):
-				List of images" relative paths corresponding to data.
+				List of images' relative paths corresponding to data.
 		"""
 		if not self.is_stream and self.index >= self.frame_count:
 			self.close()
@@ -680,7 +705,9 @@ class FFmpegVideoLoader(BaseVideoLoader):
 					)  # Already in RGB
 					rel_path = os.path.basename(self.data)
 				else:
-					raise RuntimeError(f"`video_capture` has not been initialized.")
+					raise RuntimeError(
+						f"`video_capture` has not been initialized."
+					)
 				
 				images.append(image)
 				indexes.append(self.index)
@@ -689,10 +716,29 @@ class FFmpegVideoLoader(BaseVideoLoader):
 				
 				self.index += 1
 			
-			return np.array(images), indexes, files, rel_paths
+			# return np.array(images), indexes, files, rel_paths
+			return torch.stack(images), indexes, files, rel_paths
 		
 	# MARK: Properties
 
+	@property
+	def fourcc(self) -> str:
+		"""Return 4-character code of codec."""
+		return self.video_info["codec_name"]
+	
+	@property
+	def fps(self) -> int:
+		"""Return frame rate."""
+		return int(self.video_info["avg_frame_rate"].split("/")[0])
+	
+	@property
+	def frame_count(self) -> int:
+		"""Return number of frames in the video file."""
+		if is_video_file(self.data):
+			return int(self.video_info["nb_frames"])
+		else:
+			return -1
+	
 	@property
 	def frame_width(self) -> int:
 		"""Return width of the frames in the video stream."""
@@ -703,30 +749,14 @@ class FFmpegVideoLoader(BaseVideoLoader):
 		"""Return height of the frames in the video stream."""
 		return int(self.video_info["height"])
 	
-	@property
-	def fps(self) -> int:
-		"""Return frame rate."""
-		return int(self.video_info["avg_frame_rate"].split("/")[0])
-	
-	@property
-	def fourcc(self) -> str:
-		"""Return 4-character code of codec."""
-		return self.video_info["codec_name"]
-	
-	@property
-	def frame_count(self) -> int:
-		"""Return number of frames in the video file."""
-		if is_video_file(self.data):
-			return int(self.video_info["nb_frames"])
-		else:
-			return -1
-	
 	# MARK: Configure
 	
-	def init_input(self):
+	def init(self):
 		"""Initialize ffmpeg cmd."""
 		probe           = ffmpeg.probe(self.data, **self.ffmpeg_kwargs)
-		self.video_info = next(s for s in probe["streams"] if s["codec_type"] == "video")
+		self.video_info = next(
+			s for s in probe["streams"] if s["codec_type"] == "video"
+		)
 		if self.verbose:
 			self.ffmpeg_cmd = (
 				ffmpeg
@@ -767,19 +797,20 @@ class FFmpegVideoLoader(BaseVideoLoader):
 class FFmpegVideoWriter(BaseVideoWriter):
 	"""Saves frames to individual image files or appends all to a video file.
 
-	Attributes:
+	Args:
 		dst (str):
 			Output video file or a directory.
 		shape (Int3T):
-			Output size as [H, W, C]. This is also used to reshape the input.
+			Output size as [C, H, W]. This is also used to reshape the input.
+			Default: `(3, 480, 640)`.
 		frame_rate (int):
-			Frame rate of the video.
+			Frame rate of the video. Default: `10`.
 		pix_fmt (str):
-			Video codec. One of: ["mp4v", "xvid", "mjpg", "wmv"].
+			Video codec. Default: `yuv420p`.
 		save_image (bool):
-			Should write individual image?
+			Should write individual image? Default: `False`.
 		save_video (bool):
-			Should write video?
+			Should write video? Default: `True`.
 		verbose (bool):
 			Verbosity mode of video loader backend. Default: `False`.
 		ffmpeg_process (subprocess.Popen):
@@ -795,13 +826,13 @@ class FFmpegVideoWriter(BaseVideoWriter):
 	def __init__(
 		self,
 		dst		  : str,
-		shape     : Int2Or3T = (480, 640, 3),
+		shape     : Int2Or3T = (3, 480, 640),
 		frame_rate: float    = 10,
 		pix_fmt   : str      = "yuv420p",
 		save_image: bool     = False,
 		save_video: bool     = True,
 		verbose   : bool     = False,
-		**kwargs
+		*args, **kwargs
 	):
 		super().__init__(
 			dst        = dst,
@@ -810,16 +841,17 @@ class FFmpegVideoWriter(BaseVideoWriter):
 			save_image = save_image,
 			save_video = save_video,
 			verbose    = verbose,
+			*args, **kwargs
 		)
 		self.pix_fmt        = pix_fmt
 		self.ffmpeg_process = None
 		self.ffmpeg_kwargs  = kwargs
 		if self.save_video:
-			self.init_output()
+			self.init()
 
 	# MARK: Configure
 
-	def init_output(self):
+	def init(self):
 		"""Initialize output."""
 		if os.path.isdir(self.dst):
 			parent_dir = self.dst
@@ -858,11 +890,11 @@ class FFmpegVideoWriter(BaseVideoWriter):
 	
 	# MARK: Write
 
-	def write(self, image: np.ndarray, image_file: Union[str, None] = None):
+	def write(self, image: Tensor, image_file: Union[str, None] = None):
 		"""Add a frame to writing video.
 
 		Args:
-			image (np.ndarray):
+			image (Tensor[C, H, W]):
 				Image.
 			image_file (str, None):
 				Image file. Default: `None`.
@@ -885,17 +917,17 @@ class FFmpegVideoWriter(BaseVideoWriter):
 
 		self.index += 1
 
-	def write_batch(self, images: Arrays, image_files: Union[list[str], None] = None):
+	def write_batch(
+		self, images: Tensors, image_files: Union[list[str], None] = None
+	):
 		"""Add batch of frames to video.
 
 		Args:
-			images (Arrays):
+			images (Tensors):
 				Images.
 			image_files (list[str], None):
 				Image files. Default: `None`.
 		"""
-		images = to_4d_array(images)
-		
 		if image_files is None:
 			image_files = [None for _ in range(len(images))]
 

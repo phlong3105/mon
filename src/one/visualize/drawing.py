@@ -16,9 +16,9 @@ import torch
 from multipledispatch import dispatch
 from torch import Tensor
 
-from one.core import denormalize_naive
-from one.core import to_channel_last
 from one.core import error_console
+from one.vision.transformation import denormalize_naive
+from one.vision.transformation import to_channel_last
 
 
 # MARK: - Functional

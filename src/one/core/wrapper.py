@@ -25,8 +25,7 @@ from one.core.tensor import to_4d_tensor
 # MARK: - Functional
 
 def batch_image_processing(func: Callable):
-	"""Mostly used in cv2 related functions where it only accepts single image
-	as input.
+	"""Process batch of images.
 	"""
 	
 	@functools.wraps(func)
@@ -47,7 +46,7 @@ def batch_image_processing(func: Callable):
 		elif isinstance(image, np.ndarray):
 			img = image.copy()
 			img = to_4d_array(img)
- 
+   
 		img = [func(i, *args, **kwargs) for i in img]
 		
 		if isinstance(image, Tensor):
@@ -65,8 +64,7 @@ def batch_image_processing(func: Callable):
 
 
 def channel_last_processing(func: Callable):
-	"""Mostly used in cv2 related functions where input image is in channel last
-	format.
+	"""Process channel last images.
 	"""
 	
 	@functools.wraps(func)

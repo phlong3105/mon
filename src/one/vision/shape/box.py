@@ -75,7 +75,7 @@ def _affine_tensor_box(
         https://www.thepythoncode.com/article/image-transformations-using-opencv-in-python
     
     Args:
-        box (Tensor[B, 4]):
+        box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size (Int2Or3T[H, W]):
@@ -100,7 +100,7 @@ def _affine_tensor_box(
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
             
     Returns:
-        box (Tensor[B, 4]):
+        box (Tensor[N, 4]):
             Transformed box.
     """
     if not isinstance(angle, (int, float)):

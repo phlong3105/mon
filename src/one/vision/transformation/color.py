@@ -12,218 +12,114 @@ import sys
 from typing import cast
 from typing import Union
 
-import cv2
 import numpy as np
 import torch
-from multipledispatch import dispatch
-from torch import nn
-from torch import Tensor
 from torch.nn import functional as F
 
-from one.core import batch_image_processing
 from one.core import CFA
-from one.core import channel_last_processing
-from one.core import get_num_channels
 from one.core import ListOrTuple2T
-from one.core import TensorOrArray
-from one.core import to_channel_first
+from one.core import Tensor
 from one.core import TRANSFORMS
+from one.vision.transformation import Transform
+from one.vision.transformation.spatial import get_num_channels
+from one.vision.transformation.spatial import to_channel_first
 
 
 # MARK: - Functional
 
-@dispatch(Tensor)
 def bgr_to_grayscale(image: Tensor) -> Tensor:
-    """Convert a BGR image to grayscale. Image data is assumed to be in the
+    """Convert BGR image to grayscale. Image data is assumed to be in the
     range of [0.0, 1.0]. First flips to RGB, then converts.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR image to be converted to grayscale.
 
     Returns:
-        grayscale (TensorTensor[B, 1, H, W]):
+        grayscale (Tensor[..., 1, H, W]):
             Grayscale version of the image.
     """
     return rgb_to_grayscale(bgr_to_rgb(image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_grayscale(image: np.ndarray) -> np.ndarray:
-    """Convert a BGR image to grayscale. Image data is assumed to be in the
-    range of [0.0, 1.0]. First flips to RGB, then converts.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR image to be converted to grayscale.
-
-    Returns:
-        grayscale (np.ndarray[B, 1, H, W]):
-            Grayscale version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-
-@dispatch(Tensor, float)
 def bgr_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
-    """Convert an image from BGR to HSV. Image data is assumed to be in the
-    range of [0.0, 1.0].
+    """Convert BGR image to HSV. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to HSV.
         eps (float):
             Scalar to enforce numerical stability. Default: `1e-8`.
 
     Returns:
-        hsv (Tensor[B, 3, H, W]):
+        hsv (Tensor[..., 3, H, W]):
             HSV version of the image. H channel values are in the range
             [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
-    return rgb_to_hsv(bgr_to_rgb(image))
+    return rgb_to_hsv(bgr_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_hsv(image: np.ndarray) -> np.ndarray:
-    """Convert an image from HSV to BGR. FH channel values are assumed to be
-    in the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to HSV.
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            HSV version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-
-
-@dispatch(Tensor)
 def bgr_to_lab(image: Tensor) -> Tensor:
     """Convert BGR image to Lab. Image data is assumed to be in the range
     of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to Lab.
 
     Returns:
-        lab (Tensor[B, 3, H, W]):
+        lab (Tensor[..., 3, H, W]):
             Lab version of the image. L channel values are in the range
             [0, 100]. a and b are in the range [-127, 127].
     """
-    return rgb_to_lab(bgr_to_rgb(image))
+    return rgb_to_lab(image=bgr_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_lab(image: np.ndarray) -> np.ndarray:
-    """Convert BGR image to Lab. Image data is assumed to be in the range
-    of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to Lab.
-
-    Returns:
-        lab (np.ndarray[B, 3, H, W]):
-            Lab version of the image. L channel values are in the range
-            [0, 100]. a and b are in the range [-127, 127].
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
-
-
-@dispatch(Tensor, float)
 def bgr_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
-    """Convert an BGR image to Luv. Image data is assumed to be in the
+    """Convert BGR image to Luv. Image data is assumed to be in the
     range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
     Observer 2.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to Luv.
         eps (float):
-            For numerically stability when dividing.
+            For numerically stability when dividing. Default: `1e-12`.
 
     Returns:
-        luv (Tensor[B, 3, H, W]):
+        luv (Tensor[..., 3, H, W]):
             Luv version of the image.
     """
-    return rgb_to_luv(bgr_to_rgb(image), eps)
+    return rgb_to_luv(image=bgr_to_rgb(image=image), eps=eps)
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, float)
-def bgr_to_luv(image: np.ndarray, eps: float = 1e-12) -> np.ndarray:
-    """Convert an BGR image to Luv. Image data is assumed to be in the
-    range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
-    Observer 2.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to Luv.
-        eps (float):
-            For numerically stability when dividing.
-
-    Returns:
-        luv (np.ndarray[B, 3, H, W]):
-            Luv version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2LUV)
-
-
-@dispatch(Tensor)
 def bgr_to_rgb(image: Tensor) -> Tensor:
-    """Convert a BGR image to RGB.
+    """Convert BGR image to RGB.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to BGR.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     # Flip image channels
     return image.flip(-3)
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert a BGR image to RGB.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to BGR.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-
-@dispatch(Tensor, (float, Tensor))
 def bgr_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
-    """Convert an image from BGR to RGBA.
+    """Convert BGR image to RGBA.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to RGBA.
-        alpha_val (float, Tensor[B, 1, H, W]):
+        alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
 
     Returns:
-        rgba (Tensor[B, 4, H, W]):
+        rgba (Tensor[..., 4, H, W]):
             RGBA version of the image.
 
     Notes:
@@ -236,144 +132,63 @@ def bgr_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
         )
   
     # Convert first to RGB, then add alpha channel
-    rgba = rgb_to_rgba(bgr_to_rgb(image), alpha_val)
+    rgba = rgb_to_rgba(image=bgr_to_rgb(image=image), alpha_val=alpha_val)
     return rgba
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, (float, np.ndarray))
-def bgr_to_rgba(
-    image    : np.ndarray,
-    alpha_val: Union[float, np.ndarray]
-) -> np.ndarray:
-    """Convert an image from BGR to RGBA.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to RGBA.
-        alpha_val (float, np.ndarray[B, 1, H, W]):
-            A float number or tensor for the alpha value.
-
-    Returns:
-        rgba (np.ndarray[B, 4, H, W]):
-            RGBA version of the image.
-
-    Notes:
-        Current functionality is NOT supported by Torchscript.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGBA)
-
-
-@dispatch(Tensor)
 def bgr_to_xyz(image: Tensor) -> Tensor:
-    """Convert an BGR image to XYZ.
+    """Convert BGR image to XYZ.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to XYZ.
 
     Returns:
-        xyz (Tensor[B, 3, H, W]):
+        xyz (Tensor[..., 3, H, W]):
             XYZ version of the image.
     """
-    return bgr_to_xyz(bgr_to_rgb(image))
+    return bgr_to_xyz(image=bgr_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_xyz(image: np.ndarray) -> np.ndarray:
-    """Convert an BGR image to XYZ.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to XYZ.
-
-    Returns:
-        xyz (np.ndarray[B, 3, H, W]):
-            XYZ version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2XYZ)
-
-
-@dispatch(Tensor)
 def bgr_to_ycrcb(image: Tensor) -> Tensor:
-    """Convert an RGB image to YCrCb.
+    """Convert RGB image to YCrCb.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to YCrCb.
 
     Returns:
-        ycrcb (Tensor[B, 3, H, W]):
+        ycrcb (Tensor[..., 3, H, W]):
             YCrCb version of the image.
     """
-    return rgb_to_ycrcb(bgr_to_rgb(image))
+    return rgb_to_ycrcb(image=bgr_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_ycrcb(image: np.ndarray) -> np.ndarray:
-    """Convert an RGB image to YCbCr.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to YCbCr.
-
-    Returns:
-        ycbcr (np.ndarray[B, 3, H, W]):
-            YCbCr version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2YCrCb)
-
-
-@dispatch(Tensor)
 def bgr_to_yuv(image: Tensor) -> Tensor:
-    """Convert an BGR image to YUV. Image data is assumed to be in the
-    range of [0.0, 1.0].
+    """Convert BGR image to YUV. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             BGR Image to be converted to YUV.
 
     Returns:
-        yuv (Tensor[B, 3, H, W]):
+        yuv (Tensor[..., 3, H, W]):
             YUV version of the image.
     """
-    return rgb_to_yuv( bgr_to_rgb(image))
+    return rgb_to_yuv(image=bgr_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def bgr_to_yuv(image: np.ndarray) -> np.ndarray:
-    """Convert an BGR image to YUV. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            BGR Image to be converted to YUV.
-
-    Returns:
-        yuv (np.ndarray[B, 3, H, W]):
-            YUV version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-
-
-@dispatch(Tensor)
 def grayscale_to_rgb(image: Tensor) -> Tensor:
-    """Convert a grayscale image to RGB version of image. Image data is
-    assumed to be in the range of [0.0, 1.0].
+    """Convert grayscale image to RGB version of image. Image data is assumed
+    to be in the range of [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 1, H, W]):
+        image (Tensor[..., 1, H, W]):
             Grayscale image to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     rgb = torch.cat([image, image, image], dim=-3)
@@ -385,35 +200,16 @@ def grayscale_to_rgb(image: Tensor) -> Tensor:
     return rgb
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def grayscale_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert a grayscale image to RGB version of image. Image data is
-    assumed to be in the range of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 1, H, W]):
-            Grayscale image to be converted to RGB.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-
-
-@dispatch(Tensor)
 def hls_to_rgb(image: Tensor) -> Tensor:
-    """Convert a HLS image to RGB. Image data is assumed to be in the range
-    of [0.0, 1.0].
+    """Convert HLS image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             HLS image to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     if not torch.jit.is_scripting():
@@ -442,69 +238,31 @@ def hls_to_rgb(image: Tensor) -> Tensor:
     return torch.addcmul(l, a, mink.clamp_(min=-1.0, max=1.0), value=-1)
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def hls_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert a HLS image to RGB. Image data is assumed to be in the range
-    of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            HLS image to be converted to RGB.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_HLS2RGB)
-
-
-@dispatch(Tensor)
 def hsv_to_bgr(image: Tensor) -> Tensor:
-    """Convert an image from HSV to BGR. FH channel values are assumed to be
-    in the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
+    """Convert HSV image to BGR. FH channel values are assumed to be in the
+    range [0.0 2pi]. S and V are in the range [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             HSV Image to be converted to HSV.
 
     Returns:
-        bgr (Tensor[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    return rgb_to_bgr(hsv_to_rgb(image))
+    return rgb_to_bgr(image=hsv_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def hsv_to_bgr(image: np.ndarray) -> np.ndarray:
-    """Convert an image from HSV to BGR. FH channel values are assumed to be
-    in the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            HSV Image to be converted to HSV.
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
-
-
-@dispatch(Tensor)
 def hsv_to_rgb(image: Tensor) -> Tensor:
-    """Convert an image from HSV to RGB. FH channel values are assumed to be
-    in the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
+    """Convert HSV image to RGB. H channel values are assumed to be in the
+    range [0.0 2pi]. S and V are in the range [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             HSV Image to be converted to HSV.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     h   = image[..., 0, :, :] / (2 * math.pi)
@@ -528,27 +286,9 @@ def hsv_to_rgb(image: Tensor) -> Tensor:
     return out
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def hsv_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert an image from HSV to RGB. FH channel values are assumed to be
-    in the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            HSV Image to be converted to HSV.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_HSV2RGB)
-
-
 def _integer_to_color(image: np.ndarray, colors: list) -> np.ndarray:
-    """Convert the integer-encoded image to color image. Fill an image with
-    labels' colors.
+    """Convert integer-encoded image to color image. Fill an image with labels'
+    colors.
 
     Args:
         image (np.ndarray):
@@ -583,7 +323,6 @@ def _integer_to_color(image: np.ndarray, colors: list) -> np.ndarray:
     return rgb
 
 
-@dispatch(Tensor, list)
 def integer_to_color(image: Tensor, colors: list) -> Tensor:
     mask_np = image.numpy()
     mask_np = integer_to_color(mask_np, colors)
@@ -591,79 +330,42 @@ def integer_to_color(image: Tensor, colors: list) -> Tensor:
     return color
 
 
-@dispatch(np.ndarray, list)
-def integer_to_color(image: np.ndarray, colors: list) -> np.ndarray:
-    # [C, H, W]
-    if image.ndim == 3:
-        return _integer_to_color(image, colors)
-    
-    # [B, C, H, W]
-    if image.ndim == 4:
-        colors = [_integer_to_color(i, colors) for i in image]
-        colors = np.stack(colors).astype(np.uint8)
-        return colors
-    
-    raise ValueError(f"`image.ndim` must be 3 or 4. But got: {image.ndim}.")
-
-
-def is_color_image(image: TensorOrArray) -> bool:
+def is_color_image(image: Tensor) -> bool:
     """Check if the given image is color encoded."""
     if get_num_channels(image) in [3, 4]:
         return True
     return False
 
 
-@dispatch(Tensor, bool)
 def lab_to_bgr(image: Tensor, clip: bool = True) -> Tensor:
-    """Convert a Lab image to BGR.
+    """Convert Lab image to BGR.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             Lab image to be converted to BGR.
         clip (bool):
             Whether to apply clipping to insure output BGR values in range
-            [0.0 1.0].
+            [0.0 1.0]. Default: `True`.
 
     Returns:
-        bgr (Tensor[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    return rgb_to_bgr(lab_to_rgb(image))
+    return rgb_to_bgr(image=lab_to_rgb(image=image, clip=clip))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, bool)
-def lab_to_bgr(image: np.ndarray, clip: bool = True) -> np.ndarray:
-    """Convert a Lab image to RGB.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            Lab image to be converted to bgr.
-        clip (bool):
-            Whether to apply clipping to insure output bgr values in range
-            [0.0 1.0].
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
-
-
-@dispatch(Tensor, bool)
 def lab_to_rgb(image: Tensor, clip: bool = True) -> Tensor:
-    """Convert a Lab image to RGB.
+    """Convert Lab image to RGB.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             Lab image to be converted to RGB.
         clip (bool):
             Whether to apply clipping to insure output RGB values in range
-            [0.0 1.0].
+            [0.0 1.0]. Default: `True`.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     L  = image[..., 0, :, :]
@@ -703,36 +405,15 @@ def lab_to_rgb(image: Tensor, clip: bool = True) -> Tensor:
     return rgb_im
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, bool)
-def lab_to_rgb(image: np.ndarray, clip: bool = True) -> np.ndarray:
-    """Convert a Lab image to RGB.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            Lab image to be converted to RGB.
-        clip (bool):
-            Whether to apply clipping to insure output RGB values in range
-            [0.0 1.0].
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_LAB2RGB)
-
-
-@dispatch(Tensor)
 def linear_rgb_to_rgb(image: Tensor) -> Tensor:
-    """Convert a linear RGB image to sRGB. Used in colorspace conversions.
+    """Convert linear RGB image to sRGB.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             Linear RGB Image to be converted to sRGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             sRGB version of the image.
     """
     threshold = 0.0031308
@@ -744,55 +425,33 @@ def linear_rgb_to_rgb(image: Tensor) -> Tensor:
     return rgb
 
 
-@dispatch(Tensor, float)
 def luv_to_bgr(image: Tensor, eps: float = 1e-12) -> Tensor:
-    """Convert a Luv image to BGR.
+    """Convert Luv image to BGR.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             Luv image to be converted to BGR.
         eps (float):
-            For numerically stability when dividing.
+            For numerically stability when dividing. Default: `1e-12`.
 
     Returns:
-        bgr (Tensor[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    rgb = luv_to_rgb(image, eps)
-    return rgb_to_bgr(rgb)
+    return rgb_to_bgr(image=luv_to_rgb(image=image, eps=eps))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, float)
-def luv_to_bgr(image: np.ndarray, eps: float = 1e-12) -> np.ndarray:
-    """Convert a Luv image to BGR.
-
-    Args:
-        image (Tensor[B, 3, H, W]):
-            Luv image to be converted to BGR.
-        eps (float):
-            For numerically stability when dividing.
-
-    Returns:
-        bgr (Tensor[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_LUV2BGR)
-
-
-@dispatch(Tensor, float)
 def luv_to_rgb(image: Tensor, eps: float = 1e-12) -> Tensor:
-    """Convert a Luv image to RGB.
+    """Convert Luv image to RGB.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             Luv image to be converted to RGB.
         eps (float):
-            For numerically stability when dividing.
+            For numerically stability when dividing. Default: `1e-12`.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     L = image[..., 0, :, :]
@@ -824,27 +483,8 @@ def luv_to_rgb(image: Tensor, eps: float = 1e-12) -> Tensor:
     return rgb_im
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, float)
-def luv_to_rgb(image: np.ndarray, eps: float = 1e-12) -> np.ndarray:
-    """Convert a Luv image to RGB.
-
-    Args:
-        image (Tensor[B, 3, H, W]):
-            Luv image to be converted to RGB.
-        eps (float):
-            For numerically stability when dividing.
-
-    Returns:
-        rgb (Tensor[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_LUV2RGB)
-
-
 def raw_to_rgb(image: Tensor, cfa: CFA) -> Tensor:
-    """Convert a raw bayer image to RGB version of image. We are assuming a CFA
+    """Convert raw bayer image to RGB version of image. We are assuming a CFA
     with 2 green, 1 red, 1 blue. A bilinear interpolation is used for R/G and a
     fix convolution for the green pixels. To simplify calculations we expect
     the Height Width to be evenly divisible by 2.0
@@ -853,13 +493,13 @@ def raw_to_rgb(image: Tensor, cfa: CFA) -> Tensor:
     assumed to be evenly divisible by 2.0 for simplicity reasons
 
     Args:
-        image (Tensor[B, 1 , H, W]):
+        image (Tensor[..., 1 , H, W]):
             Raw image to be converted to RGB.
         cfa (CFA):
             Configuration of the color filter.
     
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
 
     Example:
@@ -869,8 +509,10 @@ def raw_to_rgb(image: Tensor, cfa: CFA) -> Tensor:
     if (len(image.shape) < 2
         or image.shape[-2] % 2 == 1
         or image.shape[-1] % 2 == 1):
-        raise ValueError(f"image H, W must be evenly divisible by 2. "
-                         f"But got: {image.shape}")
+        raise ValueError(
+            f"image H, W must be evenly divisible by 2. "
+            f"But got: {image.shape}."
+        )
 
     imagesize = image.size()
     image     = image.view(-1, 1, image.shape[-2], image.shape[-1])
@@ -987,36 +629,35 @@ def raw_to_rgb(image: Tensor, cfa: CFA) -> Tensor:
     return rgb
 
 
-def rgb_to_bgr(image: TensorOrArray) -> TensorOrArray:
-    """Convert an RGB image to BGR.
+def rgb_to_bgr(image: Tensor) -> Tensor:
+    """Convert RGB image to BGR.
 
     Args:
-        image (TensorOrArray[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to BGR.
 
     Returns:
-        bgr (TensorOrArray[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    return bgr_to_rgb(image)
+    return image.flip(-3)
 
 
-@dispatch(Tensor, list)
 def rgb_to_grayscale(
-    image: Tensor, rgb_weights: list[float] = [0.299, 0.587, 0.114]
+    image: Tensor, rgb_weights: list[float] = (0.299, 0.587, 0.114)
 ) -> Tensor:
-    """Convert an RGB image to grayscale version of image. Image data is
-    assumed to be in the range of [0.0, 1.0].
+    """Convert RGB image to grayscale version of image. Image data is assumed
+    to be in the range of [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB image to be converted to grayscale.
         rgb_weights (list[float]):
             Weights that will be applied on each channel (RGB). Sum of the
-            weights should add up to one.
+            weights should add up to one. Default: `(0.299, 0.587, 0.114)`.
     
     Returns:
-        grayscale (Tensor[B, 1, H, W]):
+        grayscale (Tensor[..., 1, H, W]):
             Grayscale version of the image.
     """
     rgb_weights = torch.FloatTensor(rgb_weights)
@@ -1026,7 +667,7 @@ def rgb_to_grayscale(
         )
     if rgb_weights.shape[-1] != 3:
         raise ValueError(
-            f"`rgb_weights` must have a shape of [*, 3]. "
+            f"`rgb_weights` must have a shape of [..., 3]. "
             f"But got: {rgb_weights.shape}."
         )
     
@@ -1044,42 +685,18 @@ def rgb_to_grayscale(
     return w_r * r + w_g * g + w_b * b
 
 
-@dispatch(np.ndarray, list)
-def rgb_to_grayscale(
-    image: np.ndarray, rgb_weights: list[float] = [0.299, 0.587, 0.114]
-) -> np.ndarray:
-    """Convert an RGB image to grayscale version of image. Image data is
-    assumed to be in the range of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB image to be converted to grayscale.
-        rgb_weights (list[float]):
-            Weights that will be applied on each channel (RGB). Sum of the
-            weights should add up to one.
-
-    Returns:
-        grayscale (np.ndarray[B, 1, H, W]):
-            Grayscale version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
-
-@dispatch(Tensor, float)
 def rgb_to_hls(image: Tensor, eps: float = 1e-8) -> Tensor:
-    """Convert a RGB image to HLS. Image data is assumed to be in the range
-    of [0.0, 1.0].
-
-    NOTE: this method cannot be compiled with JIT in pytohrch < 1.7.0
+    """Convert RGB image to HLS. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB image to be converted to HLS.
         eps (float):
-            Epsilon value to avoid div by zero.
+            Epsilon value to avoid div by zero. Default: `1e-8`.
 
     Returns:
-        hls (Tensor[B, 3, H, W]):
+        hls (Tensor[..., 3, H, W]):
             HLS version of the image.
     """
     if not torch.jit.is_scripting():
@@ -1147,39 +764,18 @@ def rgb_to_hls(image: Tensor, eps: float = 1e-8) -> Tensor:
     return image_hls
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, float)
-def rgb_to_hls(image: np.ndarray, eps: float = 1e-8) -> np.ndarray:
-    """Convert a RGB image to HLS. Image data is assumed to be in the range
-    of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB image to be converted to HLS.
-        eps (float):
-            Epsilon value to avoid div by zero.
-
-    Returns:
-        hls (np.ndarray[B, 3, H, W]):
-            HLS version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-
-
-@dispatch(Tensor, float)
 def rgb_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
-    """Convert an image from RGB to HSV. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
+    """Convert image from RGB to HSV. Image data is assumed to be in the range
+    of [0.0, 1.0].
+    
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to HSV.
         eps (float):
-            Scalar to enforce numerical stability.
+            Scalar to enforce numerical stability. Default: `1e-8`.
 
     Returns:
-        hsv (Tensor[B, 3, H, W]):
+        hsv (Tensor[..., 3, H, W]):
             HSV version of the image. H channel values are in the range
             [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
@@ -1206,35 +802,16 @@ def rgb_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
     return hsv
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgb_to_hsv(image: np.ndarray) -> np.ndarray:
-    """Convert an image from HSV to RGB. FH channel values are assumed to be
-    in the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to HSV.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            HSV version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-
-
-@dispatch(Tensor)
 def rgb_to_lab(image: Tensor) -> Tensor:
     """Convert RGB image to Lab. Image data is assumed to be in the range
     of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to Lab.
 
     Returns:
-        lab (Tensor[B, 3, H, W]):
+        lab (Tensor[..., 3, H, W]):
             Lab version of the image. L channel values are in the range
             [0, 100]. a and b are in the range [-127, 127].
     """
@@ -1265,35 +842,15 @@ def rgb_to_lab(image: Tensor) -> Tensor:
     return lab
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgb_to_lab(image: np.ndarray) -> np.ndarray:
-    """Convert RGB image to Lab. Image data is assumed to be in the range
-    of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to Lab.
-
-    Returns:
-        lab (np.ndarray[B, 3, H, W]):
-            Lab version of the image. L channel values are in the range
-            [0, 100]. a and b are in the range [-127, 127].
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2Lab)
-
-
-@dispatch(Tensor)
 def rgb_to_linear_rgb(image: Tensor) -> Tensor:
-    """Convert an sRGB image to linear RGB. Used in colorspace conversions.
+    """Convert sRGB image to linear RGB. Used in colorspace conversions.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             sRGB Image to be converted to linear RGB.
 
     Returns:
-        linear_rgb (Tensor[B, 3, H, W]):
+        linear_rgb (Tensor[..., 3, H, W]):
             linear RGB version of the image.
     """
     lin_rgb = torch.where(
@@ -1304,20 +861,18 @@ def rgb_to_linear_rgb(image: Tensor) -> Tensor:
     return lin_rgb
 
 
-@dispatch(Tensor, float)
 def rgb_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
-    """Convert an RGB image to Luv. Image data is assumed to be in the
-    range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
-    Observer 2.
+    """Convert RGB image to Luv. Image data is assumed to be in the range of
+    [0.0, 1.0]. Luv color is computed using the D65 illuminant and Observer 2.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to Luv.
         eps (float):
             For numerically stability when dividing.
 
     Returns:
-        luv (Tensor[B, 3, H, W]):
+        luv (Tensor[..., 3, H, W]):
             Luv version of the image.
     """
     # Convert from sRGB to Linear RGB
@@ -1350,40 +905,19 @@ def rgb_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
     return luv
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, float)
-def rgb_to_luv(image: np.ndarray, eps: float = 1e-12) -> np.ndarray:
-    """Convert an RGB image to Luv. Image data is assumed to be in the
-    range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
-    Observer 2.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to Luv.
-        eps (float):
-            For numerically stability when dividing.
-
-    Returns:
-        luv (np.ndarray[B, 3, H, W]):
-            Luv version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
-
-
 def rgb_to_raw(image: Tensor, cfa: CFA) -> Tensor:
-    """Convert a RGB image to RAW version of image with the specified color
+    """Convert RGB image to RAW version of image with the specified color
     filter array. Image data is assumed to be in the range of [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB image to be converted to bayer raw.
         cfa (CFA):
             Which color filter array do we want the output to mimic.
             I.e. which pixels are red/green/blue.
 
     Returns:
-        raw (Tensor[B, 1, H, W]):
+        raw (Tensor[..., 1, H, W]):
             raw version of the image.
 
     Example:
@@ -1411,26 +945,27 @@ def rgb_to_raw(image: Tensor, cfa: CFA) -> Tensor:
     return output
 
 
-@dispatch(Tensor, (float, Tensor))
 def rgb_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
-    """Convert an image from RGB to RGBA.
+    """Convert image from RGB to RGBA.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to RGBA.
-        alpha_val (float, Tensor[B, 1, H, W]):
+        alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
 
     Returns:
-        rgba (Tensor[B, 4, H, W]):
+        rgba (Tensor[..., 4, H, W]):
             RGBA version of the image
 
     Notes:
         Current functionality is NOT supported by Torchscript.
     """
     if not isinstance(alpha_val, (float, Tensor)):
-        raise TypeError(f"`alpha_val` must be `float` or `Tensor`. "
-                        f"But got: {type(alpha_val)}.")
+        raise TypeError(
+            f"`alpha_val` must be `float` or `Tensor`. "
+            f"But got: {type(alpha_val)}."
+        )
   
     # Add one channel
     r, g, b = torch.chunk(image, image.shape[-3], dim=-3)
@@ -1443,38 +978,15 @@ def rgb_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
     return rgba
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray, (float, np.ndarray))
-def rgb_to_rgba(image: np.ndarray, alpha_val: Union[float, np.ndarray]) -> np.ndarray:
-    """Convert an image from RGB to RGBA.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to RGBA.
-        alpha_val (float, np.ndarray[B, 1, H, W]):
-            A float number or tensor for the alpha value.
-
-    Returns:
-        rgba (np.ndarray[B, 4, H, W]):
-            RGBA version of the image
-
-    Notes:
-        Current functionality is NOT supported by Torchscript.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2RGBA)
-
-
-@dispatch(Tensor)
 def rgb_to_xyz(image: Tensor) -> Tensor:
-    """Convert an RGB image to XYZ.
+    """Convert RGB image to XYZ.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to XYZ.
 
     Returns:
-        xyz (Tensor[B, 3, H, W]):
+        xyz (Tensor[..., 3, H, W]):
             XYZ version of the image.
     """
     r   = image[..., 0, :, :]
@@ -1489,33 +1001,15 @@ def rgb_to_xyz(image: Tensor) -> Tensor:
     return xyz
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgb_to_xyz(image: np.ndarray) -> np.ndarray:
-    """Convert an RGB image to XYZ.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to XYZ.
-
-    Returns:
-        xyz (np.ndarray[B, 3, H, W]):
-            XYZ version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2XYZ)
-
-
-@dispatch(Tensor)
 def rgb_to_ycrcb(image: Tensor) -> Tensor:
-    """Convert an RGB image to YCrCb.
+    """Convert RGB image to YCrCb.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to YCrCb.
 
     Returns:
-        ycrcb (Tensor[B, 3, H, W]):
+        ycrcb (Tensor[..., 3, H, W]):
             YCrCb version of the image.
     """
     r = image[..., 0, :, :]
@@ -1531,34 +1025,16 @@ def rgb_to_ycrcb(image: Tensor) -> Tensor:
     return ycrcb
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgb_to_ycrcb(image: np.ndarray) -> np.ndarray:
-    """Convert an RGB image to YCbCr.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to YCbCr.
-
-    Returns:
-        ycbcr (np.ndarray[B, 3, H, W]):
-            YCbCr version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
-
-
-@dispatch(Tensor)
 def rgb_to_yuv(image: Tensor) -> Tensor:
-    """Convert an RGB image to YUV. Image data is assumed to be in the
-    range of [0.0, 1.0].
+    """Convert RGB image to YUV. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to YUV.
 
     Returns:
-        yuv (Tensor[B, 3, H, W]):
+        yuv (Tensor[..., 3, H, W]):
             YUV version of the image.
     """
     r   = image[..., 0, :, :]
@@ -1573,42 +1049,24 @@ def rgb_to_yuv(image: Tensor) -> Tensor:
     return yuv
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgb_to_yuv(image: np.ndarray) -> np.ndarray:
-    """Convert an RGB image to YUV. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            RGB Image to be converted to YUV.
-
-    Returns:
-        yuv (np.ndarray[B, 3, H, W]):
-            YUV version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
-
-
 def rgb_to_yuv420(image: Tensor) -> ListOrTuple2T[Tensor]:
-    """Convert an RGB image to YUV 420 (subsampled). Image data is assumed
+    """Convert RGB image to YUV 420 (sub-sampled). Image data is assumed
     to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
     divisible by 2 horizontal and vertical. This function will output chroma
-    siting [0.5, 0.5]
+    siting [0.5, 0.5].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to YUV.
 
     Returns:
-        A Tensor containing the Y plane with shape [*, 1, H, W]
-        A Tensor containing the UV planes with shape [*, 2, H/2, W/2]
+        A Tensor containing the Y plane with shape [..., 1, H, W]
+        A Tensor containing the UV planes with shape [..., 2, H/2, W/2]
     """
     if not isinstance(image, Tensor):
         raise TypeError(f"`image` must be a `Tensor`. But got: {type(image)}.")
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"`image` must have a shape of [*, 3, H, W]. "
+        raise ValueError(f"`image` must have a shape of [..., 3, H, W]. "
                          f"But got: {image.shape}.")
     if (len(image.shape) < 2 or
         image.shape[-2] % 2 == 1 or
@@ -1624,22 +1082,22 @@ def rgb_to_yuv420(image: Tensor) -> ListOrTuple2T[Tensor]:
 
 
 def rgb_to_yuv422(image: Tensor) -> ListOrTuple2T[Tensor]:
-    """Convert an RGB image to YUV 422 (subsampled). Image data is assumed
+    """Convert RGB image to YUV 422 (sub-sampled). Image data is assumed
     to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
-    divisible by 2 vertical. This function will output chroma siting (0.5)
+    divisible by 2 vertical. This function will output chroma siting (0.5).
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             RGB Image to be converted to YUV.
 
     Returns:
-       A Tensor containing the Y plane with shape [*, 1, H, W].
-       A Tensor containing the UV planes with shape [*, 2, H, W/2].
+       A Tensor containing the Y plane with shape [..., 1, H, W].
+       A Tensor containing the UV planes with shape [..., 2, H, W/2].
     """
     if not isinstance(image, Tensor):
         raise TypeError(f"`image` must be a Tensor. But got: {type(image)}.")
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"`image` must have a shape of [*, 3, H, W]. "
+        raise ValueError(f"`image` must have a shape of [..., 3, H, W]. "
                          f"But got: {image.shape}.")
     if (len(image.shape) < 2 or
         image.shape[-2] % 2 == 1 or
@@ -1654,55 +1112,38 @@ def rgb_to_yuv422(image: Tensor) -> ListOrTuple2T[Tensor]:
     )
 
 
-@dispatch(Tensor)
 def rgba_to_bgr(image: Tensor) -> Tensor:
-    """Convert an image from RGBA to BGR.
+    """Convert RGBA image to BGR.
 
     Args:
-        image (Tensor[B, 4, H, W]):
+        image (Tensor[..., 4, H, W]):
             RGBA Image to be converted to BGR.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     if not isinstance(image, Tensor):
         raise TypeError(f"`image` must be a `Tensor`. But got: {type(image)}")
     if image.ndim < 3 or image.shape[-3] != 4:
-        raise ValueError(f"`image` must have a shape of [*, 4, H, W]. "
-                         f"But got: {image.shape}")
+        raise ValueError(
+            f"`image` must have a shape of [..., 4, H, W]. "
+            f"But got: {image.shape}"
+        )
 
     # Convert to RGB first, then to BGR
-    return rgb_to_bgr(rgba_to_rgb(image))
+    return rgb_to_bgr(image=rgba_to_rgb(image=image))
     
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgba_to_bgr(image: np.ndarray) -> np.ndarray:
-    """Convert an image from RGBA to BGR.
-
-    Args:
-        image (np.ndarray[B, 4, H, W]):
-            RGBA Image to be converted to BGR.
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
-
-
-@dispatch(Tensor)
 def rgba_to_rgb(image: Tensor) -> Tensor:
-    """Convert an image from RGBA to RGB.
+    """Convert RGBA image to RGB.
 
     Args:
-        image (Tensor[B, 4, H, W]):
+        image (Tensor[..., 4, H, W]):
             RGBA Image to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     # Unpack channels
@@ -1718,146 +1159,67 @@ def rgba_to_rgb(image: Tensor) -> Tensor:
     return rgb
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def rgba_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert an image from RGBA to RGB.
-
-    Args:
-        image (np.ndarray[B, 4, H, W]):
-            RGBA Image to be converted to RGB.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
-
-
-@dispatch(Tensor)
 def xyz_to_bgr(image: Tensor) -> Tensor:
-    """Convert a XYZ image to BGR.
+    """Convert XYZ image to BGR.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             XYZ Image to be converted to RGB.
 
     Returns:
-        bgr (Tensor[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    return rgb_to_bgr(xyz_to_rgb(image))
+    return rgb_to_bgr(image=xyz_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def xyz_to_bgr(image: np.ndarray) -> np.ndarray:
-    """Convert a XYZ image to BGR.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            XYZ Image to be converted to BGR.
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_XYZ2BGR)
-
-
-@dispatch(Tensor)
 def xyz_to_rgb(image: Tensor) -> Tensor:
-    """Convert a XYZ image to RGB.
+    """Convert XYZ image to RGB.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             XYZ Image to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     x = image[..., 0, :, :]
     y = image[..., 1, :, :]
     z = image[..., 2, :, :]
 
-    r = ( 3.2404813432005266 * x +
-         -1.5371515162713185 * y +
-         -0.4985363261688878 * z)
-    g = (-0.9692549499965682 * x +
-          1.8759900014898907 * y +
-          0.0415559265582928 * z)
-    b = ( 0.0556466391351772 * x +
-         -0.2040413383665112 * y +
-          1.0573110696453443 * z)
+    r = ( 3.2404813432005266 * x + -1.5371515162713185 * y + -0.4985363261688878 * z)
+    g = (-0.9692549499965682 * x +  1.8759900014898907 * y +  0.0415559265582928 * z)
+    b = ( 0.0556466391351772 * x + -0.2040413383665112 * y +  1.0573110696453443 * z)
     rgb = torch.stack([r, g, b], dim=-3)
     return rgb
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def xyz_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert a XYZ image to RGB.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            XYZ Image to be converted to RGB.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_XYZ2RGB)
-
-
-@dispatch(Tensor)
 def ycrcb_to_bgr(image: Tensor) -> Tensor:
-    """Convert an YCrCb image to BGR. Image data is assumed to be in the
-    range of [0.0, 1.0].
+    """Convert YCrCb image to BGR. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             YCrCb Image to be converted to RGB.
 
     Returns:
-        bgr (Tensor[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    return rgb_to_bgr(ycrcb_to_rgb(image))
+    return rgb_to_bgr(image=ycrcb_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def ycrcb_to_bgr(image: np.ndarray) -> np.ndarray:
-    """Convert an YCrCb image to BGR. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            YCrCb Image to be converted to RGB.
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_YCrCb2BGR)
-
-
-@dispatch(Tensor)
 def ycrcb_to_rgb(image: Tensor) -> Tensor:
-    """Convert an YCrCb image to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0].
+    """Convert YCrCb image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             YCrCb Image to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     y  = image[..., 0, :, :]
@@ -1876,61 +1238,55 @@ def ycrcb_to_rgb(image: Tensor) -> Tensor:
     return rgb
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def ycrcb_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert an YCrCb image to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            YCrCb Image to be converted to RGB.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_YCrCb2RGB)
-
-
 def yuv420_to_rgb(image_y: Tensor, image_uv: Tensor) -> Tensor:
-    """Convert an YUV420 image to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input need to be
-    padded to be evenly divisible by 2 horizontal and vertical. This function
-    assumed chroma siting is [0.5, 0.5]
+    """Convert YUV420 image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input need to be padded to
+    be evenly divisible by 2 horizontal and vertical. This function assumed
+    chroma siting is [0.5, 0.5]
 
     Args:
-        image_y (Tensor[B, 1, H, W]):
+        image_y (Tensor[..., 1, H, W]):
             Y (luma) Image plane to be converted to RGB.
-        image_uv (Tensor[B, 2, H/2, W/2]):
+        image_uv (Tensor[..., 2, H/2, W/2]):
             UV (chroma) Image planes to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     if not isinstance(image_y, Tensor):
-        raise TypeError(f"`image` must be a `Tensor`. But got: {type(image_y)}.")
+        raise TypeError(
+            f"`image` must be a `Tensor`. But got: {type(image_y)}."
+        )
     if not isinstance(image_uv, Tensor):
-        raise TypeError(f"`image` must be a `Tensor`. But got: {type(image_uv)}.")
+        raise TypeError(
+            f"`image` must be a `Tensor`. But got: {type(image_uv)}."
+        )
     if len(image_y.shape) < 3 or image_y.shape[-3] != 1:
-        raise ValueError(f"`image_y` must have a shape of [*, 1, H, W]. "
-                         f"But got: {image_y.shape}.")
+        raise ValueError(
+            f"`image_y` must have a shape of [..., 1, H, W]. "
+            f"But got: {image_y.shape}."
+        )
     if len(image_uv.shape) < 3 or image_uv.shape[-3] != 2:
-        raise ValueError(f"`image_uv` must have a shape of [*, 2, H/2, W/2]. "
-                         f"But got: {image_uv.shape}.")
+        raise ValueError(
+            f"`image_uv` must have a shape of [..., 2, H/2, W/2]. "
+            f"But got: {image_uv.shape}."
+        )
     if (len(image_y.shape) < 2 or
         image_y.shape[-2] % 2 == 1 or
         image_y.shape[-1] % 2 == 1):
-        raise ValueError(f"`image_y` H, W must be evenly divisible by 2. "
-                         f"But got: {image_y.shape}.")
+        raise ValueError(
+            f"`image_y` H, W must be evenly divisible by 2. "
+            f"But got: {image_y.shape}."
+        )
     if (len(image_uv.shape) < 2 or
         len(image_y.shape) < 2 or
         image_y.shape[-2] / image_uv.shape[-2] != 2 or
         image_y.shape[-1] / image_uv.shape[-1] != 2):
-        raise ValueError(f"`image_uv` H, W must be half the size of the luma "
-                         f"plane. But got: {image_y.shape} and {image_uv.shape}.")
+        raise ValueError(
+            f"`image_uv` H, W must be half the size of the luma "
+            f"plane. But got: {image_y.shape} and {image_uv.shape}."
+        )
 
     # First upsample
     yuv444image = torch.cat([
@@ -1941,41 +1297,53 @@ def yuv420_to_rgb(image_y: Tensor, image_uv: Tensor) -> Tensor:
 
 
 def yuv422_to_rgb(image_y: Tensor, image_uv: Tensor) -> Tensor:
-    """Convert an YUV422 image to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input need to be
-    padded to be evenly divisible by 2 vertical. This function assumed chroma
-    siting is (0.5)
+    """Convert YUV422 image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input need to be padded to
+    be evenly divisible by 2 vertical. This function assumed chroma siting is
+    (0.5).
 
     Args:
-        image_y (Tensor[B, 1, H, W]):
+        image_y (Tensor[..., 1, H, W]):
             Y (luma) Image plane to be converted to RGB.
-        image_uv (Tensor[B, 2, H/2, W/2]):
+        image_uv (Tensor[..., 2, H/2, W/2]):
             UV (luma) Image planes to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     if not isinstance(image_y, Tensor):
-        raise TypeError(f"`image_y` must be a `Tensor`. But got: {type(image_y)}.")
+        raise TypeError(
+            f"`image_y` must be a `Tensor`. But got: {type(image_y)}."
+        )
     if not isinstance(image_uv, Tensor):
-        raise TypeError(f"`image_y` must be `Tensor`. But got: {type(image_uv)}.")
+        raise TypeError(
+            f"`image_y` must be `Tensor`. But got: {type(image_uv)}."
+        )
     if len(image_y.shape) < 3 or image_y.shape[-3] != 1:
-        raise ValueError(f"`image_y` must have a shape of [*, 1, H, W]. "
-                         f"But got: {image_y.shape}.")
+        raise ValueError(
+            f"`image_y` must have a shape of [..., 1, H, W]. "
+            f"But got: {image_y.shape}."
+        )
     if len(image_uv.shape) < 3 or image_uv.shape[-3] != 2:
-        raise ValueError(f"`image_uv` must have a shape of [*, 2, H, W/2]. "
-                         f"But got: {image_uv.shape}.")
+        raise ValueError(
+            f"`image_uv` must have a shape of [..., 2, H, W/2]. "
+            f"But got: {image_uv.shape}."
+        )
     if (len(image_y.shape) < 2 or
         image_y.shape[-2] % 2 == 1 or
         image_y.shape[-1] % 2 == 1):
-        raise ValueError(f"`image_y` H, W must be evenly divisible by 2. "
-                         f"But got: {image_y.shape}.")
+        raise ValueError(
+            f"`image_y` H, W must be evenly divisible by 2. "
+            f"But got: {image_y.shape}."
+        )
     if (len(image_uv.shape) < 2 or
         len(image_y.shape) < 2 or
         image_y.shape[-1] / image_uv.shape[-1] != 2):
-        raise ValueError(f"`image_uv` W must be half the size of the luma "
-                         f"plane. But got: {image_y.shape} and {image_uv.shape}")
+        raise ValueError(
+            f"`image_uv` W must be half the size of the luma "
+            f"plane. But got: {image_y.shape} and {image_uv.shape}"
+        )
 
     # First upsample
     yuv444image = torch.cat([
@@ -1985,51 +1353,31 @@ def yuv422_to_rgb(image_y: Tensor, image_uv: Tensor) -> Tensor:
     return yuv_to_rgb(yuv444image)
 
 
-@dispatch(Tensor)
 def yuv_to_bgr(image: Tensor) -> Tensor:
-    """Convert an YUV image to RGB. Image data is assumed to be in the range of
+    """Convert YUV image to RGB. Image data is assumed to be in the range of
     [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             YUV Image to be converted to BGR.
 
     Returns:
-        bgr (Tensor[B, 3, H, W]):
+        bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
-    return rgb_to_bgr(yuv_to_rgb(image))
+    return rgb_to_bgr(image=yuv_to_rgb(image=image))
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def yuv_to_bgr(image: np.ndarray) -> np.ndarray:
-    """Convert an YUV image to BGR. Image data is assumed to be in the range of
-    [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            YUV Image to be converted to BGR.
-
-    Returns:
-        bgr (np.ndarray[B, 3, H, W]):
-            BGR version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_YUV2BGR)
-
-
-@dispatch(Tensor)
 def yuv_to_rgb(image: Tensor) -> Tensor:
-    """Convert an YUV image to RGB. Image data is assumed to be in the range of
+    """Convert YUV image to RGB. Image data is assumed to be in the range of
     [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
 
     Args:
-        image (Tensor[B, 3, H, W]):
+        image (Tensor[..., 3, H, W]):
             YUV Image to be converted to RGB.
 
     Returns:
-        rgb (Tensor[B, 3, H, W]):
+        rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
     y   = image[..., 0, :, :]
@@ -2044,46 +1392,30 @@ def yuv_to_rgb(image: Tensor) -> Tensor:
     return rgb
 
 
-@batch_image_processing
-@channel_last_processing
-@dispatch(np.ndarray)
-def yuv_to_rgb(image: np.ndarray) -> np.ndarray:
-    """Convert an YUV image to RGB. Image data is assumed to be in the range of
-    [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
-
-    Args:
-        image (np.ndarray[B, 3, H, W]):
-            YUV Image to be converted to RGB.
-
-    Returns:
-        rgb (np.ndarray[B, 3, H, W]):
-            RGB version of the image.
-    """
-    return cv2.cvtColor(image, cv2.COLOR_YUV2RGB)
-
-
 # MARK: - Modules
 
 @TRANSFORMS.register(name="bgr_to_grayscale")
-class BgrToGrayscale(nn.Module):
-    """Module to convert a BGR image to grayscale version of image. Image
-    data is assumed to be in the range of [0.0, 1.0]. First flips to RGB, then
-    converts.
-
-    Reference:
-        https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
+class BgrToGrayscale(Transform):
+    """Convert BGR image to grayscale. Image data is assumed to be in the
+    range of [0.0, 1.0]. First flips to RGB, then converts.
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_grayscale(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_grayscale(image=input), \
+               bgr_to_grayscale(image=target) if target is not None else None
 
 
 @TRANSFORMS.register(name="bgr_to_hsv")
-class BgrToHsv(nn.Module):
-    """Convert an image from BGR to HSV. Image data is assumed to be in the
-    range of [0.0, 1.0].
+class BgrToHsv(Transform):
+    """Convert BGR image to HSV. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
         eps (float):
@@ -2095,355 +1427,449 @@ class BgrToHsv(nn.Module):
     def __init__(self, eps: float = 1e-8):
         super().__init__()
         self.eps = eps
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_hsv(image, self.eps)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_hsv(image=input,  eps=self.eps), \
+               bgr_to_hsv(image=target, eps=self.eps) \
+                   if target is not None else None
 
 
 @TRANSFORMS.register(name="bgr_to_lab")
-class BgrToLab(nn.Module):
-    """Convert an image from BGR to Lab. Image data is assumed to be in the
-    range of [0.0 1.0]. Lab color is computed using the D65 illuminant and
-    Observer 2.
- 
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] https://github.com/torch/image/blob/dc061b98fb7e946e00034a5fc73e883a299edc7f/generic/image.c#L1467
+class BgrToLab(Transform):
+    """Convert BGR image to Lab. Image data is assumed to be in the range
+    of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_lab(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_lab(image=input), \
+               bgr_to_lab(image=target) if target is not None else None
+  
 
 @TRANSFORMS.register(name="bgr_to_luv")
-class BgrToLuv(nn.Module):
-    """Convert an image from BGR to Luv. Image data is assumed to be in the
+class BgrToLuv(Transform):
+    """Convert BGR image to Luv. Image data is assumed to be in the
     range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
     Observer 2.
-
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] http://www.poynton.com/ColorFAQ.html
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_luv(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_luv(image=input), \
+               bgr_to_luv(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="bgr_to_rgb")
-class BgrToRgb(nn.Module):
-    """Convert image from BGR to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0].
+class BgrToRgb(Transform):
+    """Convert BGR image to RGB.
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_rgb(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_rgb(image=input), \
+               bgr_to_rgb(image=target) if target is not None else None
 
 
 @TRANSFORMS.register(name="bgr_to_rgba")
-class BgrToRgba(nn.Module):
-    """Convert an image from BGR to RGBA. Add an alpha channel to existing RGB
-    image.
+class BgrToRgba(Transform):
+    """Convert BGR image to RGBA.
 
     Args:
-        alpha_val (float, TensorOrArray[B, 1, H, W]):
+        alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
- 
-    Notes:
-        Current functionality is NOT supported by Torchscript.
     """
 
     # MARK: Magic Functions
     
-    def __init__(self, alpha_val: Union[float, TensorOrArray]):
+    def __init__(self, alpha_val: Union[float, Tensor]):
         super().__init__()
         self.alpha_val = alpha_val
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_rgba(image, self.alpha_val)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_rgba(image=input,  alpha_val=self.alpha_val), \
+               rgb_to_rgba(image=target, alpha_val=self.alpha_val) \
+                   if target is not None else None
+    
 
 @TRANSFORMS.register(name="bgr_to_xyz")
-class BgrToXyz(nn.Module):
-    """Convert an image from BGR to XYZ. Image data is assumed to be in the
-    range of [0.0, 1.0].
+class BgrToXyz(Transform):
+    """Convert BGR image to XYZ."""
 
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-    """
-    
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_xyz(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_xyz(image=input), \
+               bgr_to_xyz(image=target) if target is not None else None
 
 
 @TRANSFORMS.register(name="bgr_to_ycrcb")
-class BgrToYcrcb(nn.Module):
-    """Convert an image from BGR to YCbCr. Image data is assumed to be in
-    the range of [0.0, 1.0].
-    """
+class BgrToYcrcb(Transform):
+    """Convert RGB image to YCrCb."""
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_ycrcb(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_ycrcb(image=input), \
+               bgr_to_ycrcb(image=target) if target is not None else None
     
 
 @TRANSFORMS.register(name="bgr_to_yuv")
-class BgrToYuv(nn.Module):
-    """Convert an image from BGR to YUV. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Reference:
-        [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
+class BgrToYuv(Transform):
+    """Convert BGR image to YUV. Image data is assumed to be in the range of
+    [0.0, 1.0].
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return bgr_to_yuv(image)
-    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return bgr_to_yuv(image=input), \
+               bgr_to_yuv(image=target) if target is not None else None
+       
 
 @TRANSFORMS.register(name="grayscale_to_rgb")
-class GrayscaleToRgb(nn.Module):
-    """Module to convert a grayscale image to RGB version of image. Image
-    data is assumed to be in the range of [0.0, 1.0].
-
-    Reference:
-        https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
+class GrayscaleToRgb(Transform):
+    """Convert grayscale image to RGB version of image. Image data is assumed
+    to be in the range of [0.0, 1.0].
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return grayscale_to_rgb(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return grayscale_to_rgb(image=input), \
+               grayscale_to_rgb(image=target) if target is not None else None
+   
 
 @TRANSFORMS.register(name="hls_to_rgb")
-class HlsToRgb(nn.Module):
-    """Convert an image from HLS to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Reference:
-        https://en.wikipedia.org/wiki/HSL_and_HSV
+class HlsToRgb(Transform):
+    """Convert HLS image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0].
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return hls_to_rgb(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return hls_to_rgb(image=input), \
+               hls_to_rgb(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="hsv_to_bgr")
-class HsvToBgr(nn.Module):
-    """Convert an image from HSV to BGR. H channel values are assumed to be in
+class HsvToBgr(Transform):
+    """Convert HSV image to BGR. FH channel values are assumed to be in
     the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return hsv_to_bgr(image)
-
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return hsv_to_bgr(image=input), \
+               hsv_to_bgr(image=target) if target is not None else None
+    
+    
 @TRANSFORMS.register(name="hsv_to_rgb")
-class HsvToRgb(nn.Module):
-    """Convert an image from HSV to RGB. H channel values are assumed to be in
-    the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
+class HsvToRgb(Transform):
+    """Convert HSV image to RGB. H channel values are assumed to be in the
+    range [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return hsv_to_rgb(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return hsv_to_rgb(image=input), \
+               hsv_to_rgb(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="lab_to_bgr")
-class LabToBgr(nn.Module):
-    """Convert an image from Lab to BGR.
-
-    References:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] https://github.com/torch/image/blob/dc061b98fb7e946e00034a5fc73e883a299edc7f/generic/image.c#L1518
-    """
-    
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray, clip: bool = True) -> TensorOrArray:
-        return lab_to_bgr(image, clip)
-
-
-@TRANSFORMS.register(name="lab_to_rgb")
-class LabToRgb(nn.Module):
-    """Convert an image from Lab to RGB.
- 
-    References:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] https://github.com/torch/image/blob/dc061b98fb7e946e00034a5fc73e883a299edc7f/generic/image.c#L1518
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray, clip: bool = True) -> TensorOrArray:
-        return lab_to_rgb(image, clip)
-
-
-@TRANSFORMS.register(name="linear_rgb_to_rgb")
-class LinearRgbToRgb(nn.Module):
-    """Convert a linear RGB image to sRGB. Applies gamma correction to linear
-    RGB values, at the end of colorspace conversions, to get sRGB.
-   
-    References:
-        [1] https://stackoverflow.com/questions/35952564/convert-rgb-to-srgb
-        [2] https://www.cambridgeincolour.com/tutorials/gamma-correction.htm
-        [3] https://en.wikipedia.org/wiki/SRGB
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return linear_rgb_to_rgb(image)
-
-
-@TRANSFORMS.register(name="luv_to_bgr")
-class LuvToBgr(nn.Module):
-    """Convert an image from Luv to BGR.
-
-    References:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] http://www.poynton.com/ColorFAQ.html
-    """
-    
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return luv_to_bgr(image)
-
-
-@TRANSFORMS.register(name="luv_to_rgb")
-class LuvToRgb(nn.Module):
-    """Convert an image from Luv to RGB.
-
-    References:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] http://www.poynton.com/ColorFAQ.html
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return luv_to_rgb(image)
-
-
-@TRANSFORMS.register(name="raw_to_rgb")
-class RawToRgb(nn.Module):
-    """Module to convert a bayer raw image to RGB version of image. Image
-    data is assumed to be in the range of [0.0, 1.0].
-
-    Example:
-        >>> rawinput = torch.rand(2, 1, 4, 6)
-        >>> rgb      = RawToRgb(CFA.RG)
-        >>> output   = rgb(rawinput)  # 2x3x4x5
-    """
-
-    def __init__(self, cfa: CFA):
-        super().__init__()
-        self.cfa = cfa
-
-    def forward(self, image: Tensor) -> Tensor:
-        return raw_to_rgb(image, cfa=self.cfa)
-
-
-@TRANSFORMS.register(name="rgba_to_bgr")
-class RgbaToBgr(nn.Module):
-    """Convert an image from RGBA to BGR. Remove an alpha channel from BGR
-    image.
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgba_to_bgr(image)
-
-
-@TRANSFORMS.register(name="rgba_to_rgb")
-class RgbaToRgb(nn.Module):
-    """Convert an image from RGBA to RGB. Remove an alpha channel from RGB
-    image.
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgba_to_rgb(image)
-
-
-@TRANSFORMS.register(name="rgb_to_bgr")
-class RgbToBgr(nn.Module):
-    """Convert an image from RGB to BGR. Image data is assumed to be in the
-    range of [0.0, 1.0].
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_bgr(image)
-
-
-@TRANSFORMS.register(name="rgb_to_grayscale")
-class RgbToGrayscale(nn.Module):
-    """Module to convert a RGB image to grayscale version of image. Image
-    data is assumed to be in the range of [0.0, 1.0].
-
-    Reference:
-        https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
+class LabToBgr(Transform):
+    """Convert integer-encoded image to color image. Fill an image with labels'
+    colors.
     """
 
     # MARK: Magic Functions
     
-    def __init__(self, rgb_weights: list[float] = [0.299, 0.587, 0.114]):
+    def __init__(self, clip: bool = True):
+        super().__init__()
+        self.clip = clip
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return lab_to_bgr(image=input,  clip=self.clip), \
+               lab_to_bgr(image=target, clip=self.clip) \
+                   if target is not None else None
+
+
+@TRANSFORMS.register(name="lab_to_rgb")
+class LabToRgb(Transform):
+    """Convert Lab image to BGR."""
+    
+    # MARK: Magic Functions
+    
+    def __init__(self, clip: bool = True):
+        super().__init__()
+        self.clip = clip
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return lab_to_rgb(image=input,  clip=self.clip), \
+               lab_to_rgb(image=target, clip=self.clip) \
+                   if target is not None else None
+    
+    
+@TRANSFORMS.register(name="linear_rgb_to_rgb")
+class LinearRgbToRgb(Transform):
+    """Convert linear RGB image to sRGB."""
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return linear_rgb_to_rgb(image=input), \
+               linear_rgb_to_rgb(image=target) if target is not None else None
+    
+
+@TRANSFORMS.register(name="luv_to_bgr")
+class LuvToBgr(Transform):
+    """Convert Luv image to BGR."""
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return luv_to_bgr(image=input), \
+               luv_to_bgr(image=target) if target is not None else None
+    
+
+@TRANSFORMS.register(name="luv_to_rgb")
+class LuvToRgb(Transform):
+    """Convert Luv image to RGB."""
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return luv_to_rgb(image=input), \
+               luv_to_rgb(image=target) if target is not None else None
+    
+
+@TRANSFORMS.register(name="raw_to_rgb")
+class RawToRgb(Transform):
+    """Convert raw bayer image to RGB version of image. We are assuming a CFA
+    with 2 green, 1 red, 1 blue. A bilinear interpolation is used for R/G and a
+    fix convolution for the green pixels. To simplify calculations we expect
+    the Height Width to be evenly divisible by 2.0.
+    
+    Image data is assumed to be in the range of [0.0, 1.0]. Image H/W is
+    assumed to be evenly divisible by 2.0 for simplicity reasons.
+    """
+
+    # MARK: Magic Functions
+    
+    def __init__(self, cfa: CFA):
+        super().__init__()
+        self.cfa = cfa
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return raw_to_rgb(image=input,  cfa=self.cfa), \
+               raw_to_rgb(image=target, cfa=self.cfa) \
+                   if target is not None else None
+
+
+@TRANSFORMS.register(name="rgba_to_bgr")
+class RgbaToBgr(Transform):
+    """Convert RGBA image to BGR."""
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgba_to_bgr(image=input), \
+               rgba_to_bgr(image=target) if target is not None else None
+
+
+@TRANSFORMS.register(name="rgba_to_rgb")
+class RgbaToRgb(Transform):
+    """Convert RGBA image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0].
+    """
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgba_to_rgb(image=input), \
+               rgba_to_rgb(image=target) if target is not None else None
+    
+
+@TRANSFORMS.register(name="rgb_to_bgr")
+class RgbToBgr(Transform):
+    """Convert RGB image to BGR. Image data is assumed to be in the range of
+    [0.0, 1.0].
+    """
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_bgr(image=input), \
+               rgb_to_bgr(image=target) if target is not None else None
+    
+
+@TRANSFORMS.register(name="rgb_to_grayscale")
+class RgbToGrayscale(Transform):
+    """Convert RGB image to grayscale version of image. Image data is assumed
+    to be in the range of [0.0, 1.0].
+    """
+
+    # MARK: Magic Functions
+    
+    def __init__(self, rgb_weights: list[float] = (0.299, 0.587, 0.114)):
         super().__init__()
         self.rgb_weights = rgb_weights
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_grayscale(image, rgb_weights=self.rgb_weights)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_grayscale(image=input,  rgb_weights=self.rgb_weights), \
+               rgb_to_grayscale(image=target, rgb_weights=self.rgb_weights) \
+                   if target is not None else None
 
 
 @TRANSFORMS.register(name="rgb_to_hls")
-class RgbToHls(nn.Module):
-    """Convert an image from RGB to HLS. Image data is assumed to be in the
-    range of [0.0, 1.0].
+class RgbToHls(Transform):
+    """Convert RGB image to HLS. Image data is assumed to be in the range of
+    [0.0, 1.0].
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_hls(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_hls(image=input), \
+               rgb_to_hls(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="rgb_to_hsv")
-class RgbToHsv(nn.Module):
-    """Convert an image from RGB to HSV. Image data is assumed to be in the
-    range of [0.0, 1.0].
+class RgbToHsv(Transform):
+    """Convert RGB image to HSV. Image data is assumed to be in the range of
+    [0.0, 1.0].
 
     Args:
         eps (float):
@@ -2458,284 +1884,315 @@ class RgbToHsv(nn.Module):
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_hsv(image, self.eps)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_hsv(image=input,  eps=self.eps), \
+               rgb_to_hsv(image=target, eps=self.eps) \
+                   if target is not None else None
+    
 
 @TRANSFORMS.register(name="rgb_to_lab")
-class RgbToLab(nn.Module):
-    """Convert an image from RGB to Lab. Image data is assumed to be in the
-    range of [0.0 1.0]. Lab color is computed using the D65 illuminant and
-    Observer 2.
-
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] https://github.com/torch/image/blob
-        /dc061b98fb7e946e00034a5fc73e883a299edc7f/generic/image.c#L1467
+class RgbToLab(Transform):
+    """Convert RGB image to Lab. Image data is assumed to be in the range
+    of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_lab(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_lab(image=input), \
+               rgb_to_lab(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="rgb_to_linear_rgb")
-class RgbToLinearRgb(nn.Module):
-    """Convert an image from sRGB to linear RGB. Reverses the gamma correction
-    of sRGB to get linear RGB values for colorspace conversions. Image data
-    is assumed to be in the range of [0.0, 1.0].
- 
-    References:
-        [1] https://stackoverflow.com/questions/35952564/convert-rgb-to-srgb
-        [2] https://www.cambridgeincolour.com/tutorials/gamma-correction.htm
-        [3] https://en.wikipedia.org/wiki/SRGB
-    """
+class RgbToLinearRgb(Transform):
+    """Convert sRGB image to linear RGB."""
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_linear_rgb(image)
-
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_linear_rgb(image=input), \
+               rgb_to_linear_rgb(image=target) if target is not None else None
+    
+    
 @TRANSFORMS.register(name="rgb_to_luv")
-class RgbToLuv(nn.Module):
-    """Convert an image from RGB to Luv. Image data is assumed to be in the
-    range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
-    Observer 2.
-
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-        [2] https://www.easyrgb.com/en/math.php
-        [3] http://www.poynton.com/ColorFAQ.html
+class RgbToLuv(Transform):
+    """Convert RGB image to Luv. Image data is assumed to be in the range of
+    [0.0, 1.0]. Luv color is computed using the D65 illuminant and Observer 2.
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_luv(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_luv(image=input), \
+               rgb_to_luv(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="rgb_to_raw")
-class RgbToRaw(nn.Module):
-    """Module to convert an RGB image to bayer raw version of image. Image
-    data is assumed to be in the range of [0.0, 1.0].
-
-    Reference:
-        https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-
-    Example:
-        >>> rgbinput = torch.rand(2, 3, 4, 6)
-        >>> raw      = RgbToRaw(CFA.GB)
-        >>> output   = raw(rgbinput)  # [2, 1, 4, 6]
-    """
-
-    def __init__(self, cfa: CFA):
-        super().__init__()
-        self.cfa = cfa
-
-    def forward(self, image: Tensor) -> Tensor:
-        return rgb_to_raw(image, cfa=self.cfa)
-
-
-@TRANSFORMS.register(name="rgb_to_rgba")
-class RgbToRgba(nn.Module):
-    """Convert an image from RGB to RGBA. Add an alpha channel to existing RGB
-    image.
-
-    Args:
-        alpha_val (float, TensorOrArray[B, 1, H, W]):
-            A float number or tensor for the alpha value.
- 
-    Notes:
-        Current functionality is NOT supported by Torchscript.
+class RgbToRaw(Transform):
+    """Convert RGB image to RAW version of image with the specified color
+    filter array. Image data is assumed to be in the range of [0.0, 1.0].
     """
 
     # MARK: Magic Functions
     
-    def __init__(self, alpha_val: Union[float, TensorOrArray]) -> None:
+    def __init__(self, cfa: CFA):
+        super().__init__()
+        self.cfa = cfa
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_raw(image=input,  cfa=self.cfa), \
+               rgb_to_raw(image=target, cfa=self.cfa) \
+                   if target is not None else None
+    
+
+@TRANSFORMS.register(name="rgb_to_rgba")
+class RgbToRgba(Transform):
+    """Convert RGB image to RGBA.
+
+    Args:
+        alpha_val (float, Tensor[..., 1, H, W]):
+            A float number or tensor for the alpha value.
+    """
+
+    # MARK: Magic Functions
+    
+    def __init__(self, alpha_val: Union[float, Tensor]):
         super().__init__()
         self.alpha_val = alpha_val
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_rgba(image, self.alpha_val)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_rgba(image=input,  alpha_val=self.alpha_val), \
+               rgb_to_rgba(image=target, alpha_val=self.alpha_val) \
+                   if target is not None else None
 
 
 @TRANSFORMS.register(name="rgb_to_xyz")
-class RgbToXyz(nn.Module):
-    """Convert an image from RGB to XYZ. Image data is assumed to be in the
-    range of [0.0, 1.0].
- 
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
+class RgbToXyz(Transform):
+    """Convert RGB image to XYZ.
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_xyz(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_xyz(image=input), \
+               rgb_to_xyz(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="rgb_to_ycrcb")
-class RgbToYcrcb(nn.Module):
-    """Convert an image from RGB to YCbCr. Image data is assumed to be in
-    the range of [0.0, 1.0].
+class RgbToYcrcb(Transform):
+    """Convert RGB image to YCrCb.
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_ycrcb(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_ycrcb(image=input), \
+               rgb_to_ycrcb(image=target) if target is not None else None
+    
    
 @TRANSFORMS.register(name="rgb_to_yuv")
-class RgbToYuv(nn.Module):
-    """Convert an image from RGB to YUV. Image data is assumed to be in the
-    range of [0.0, 1.0].
-
-    Reference:
-        [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
+class RgbToYuv(Transform):
+    """Convert RGB image to YUV. Image data is assumed to be in the range of
+    [0.0, 1.0].
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return rgb_to_yuv(image)
-
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_yuv(image=input), \
+               rgb_to_yuv(image=target) if target is not None else None
+        
+        
 @TRANSFORMS.register(name="rgb_to_yuv420")
-class RgbToYuv420(nn.Module):
-    """Convert an image from RGB to YUV420. Image data is assumed to be in
-    the range of [0.0, 1.0]. Width and Height evenly divisible by 2.
-
-    Reference:
-        [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
+class RgbToYuv420(Transform):
+    """Convert RGB image to YUV 420 (sub-sampled). Image data is assumed
+    to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
+    divisible by 2 horizontal and vertical. This function will output chroma
+    siting [0.5, 0.5].
     """
 
     # MARK: Forward Pass
     
-    def forward(self, yuv_input: Tensor) -> ListOrTuple2T[Tensor]:
-        return rgb_to_yuv420(yuv_input)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_yuv420(image=input), \
+               rgb_to_yuv420(image=target) if target is not None else None
+     
 
 @TRANSFORMS.register(name="rgb_to_yuv422")
-class RgbToYuv422(nn.Module):
-    """Convert an image from RGB to YUV422. Image data is assumed to be in
-    the range of [0.0, 1.0]. Width evenly disvisible by 2.
- 
-    Reference:
-        [1] https://es.wikipedia.org/wiki/YUV#RGB_a_Y'UV
+class RgbToYuv422(Transform):
+    """Convert RGB image to YUV 422 (sub-sampled). Image data is assumed
+    to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
+    divisible by 2 vertical. This function will output chroma siting (0.5).
     """
 
     # MARK: Forward Pass
     
-    def forward(self, yuv_input: Tensor) -> ListOrTuple2T[Tensor]:
-        return rgb_to_yuv422(yuv_input)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return rgb_to_yuv422(image=input), \
+               rgb_to_yuv422(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="xyz_to_bgr")
-class XyzToBgr(nn.Module):
-    """Converts an image from XYZ to BGR.
+class XyzToBgr(Transform):
+    """Convert XYZ image to BGR."""
 
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-    """
-    
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return xyz_to_bgr(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return xyz_to_bgr(image=input), \
+               xyz_to_bgr(image=target) if target is not None else None
 
 
 @TRANSFORMS.register(name="xyz_to_rgb")
-class XyzToRgb(nn.Module):
-    """Converts an image from XYZ to RGB.
- 
-    Reference:
-        [1] https://docs.opencv.org/4.0.1/de/d25/imgproc_color_conversions.html
-    """
+class XyzToRgb(Transform):
+    """Convert XYZ image to RGB."""
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return xyz_to_rgb(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return xyz_to_rgb(image=input), \
+               xyz_to_rgb(image=target) if target is not None else None
 
 
 @TRANSFORMS.register(name="ycrcb_to_bgr")
-class YcrcbToBgr(nn.Module):
-    """Convert an image from YCbCr to BGR. Image data is assumed to be in
-    the range of [0.0, 1.0].
+class YcrcbToBgr(Transform):
+    """Convert YCbCr image to BGR. Image data is assumed to be in the range of
+    [0.0, 1.0].
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return ycrcb_to_bgr(image)
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return ycrcb_to_bgr(image=input), \
+               ycrcb_to_bgr(image=target) if target is not None else None
+    
 
 @TRANSFORMS.register(name="ycrcb_to_rgb")
-class YcrcbToRgb(nn.Module):
-    """Convert an image from YCbCr to RGB. Image data is assumed to be in
-    the range of [0.0, 1.0].
+class YcrcbToRgb(Transform):
+    """Convert YCbCr to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0].
     """
 
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return ycrcb_to_rgb(image)
-
-
-@TRANSFORMS.register(name="yuv420_to_rgb")
-class Yuv420ToRgb(nn.Module):
-    """Convert an image from YUV to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Width and Height
-    evenly divisible by 2.
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, input_y: Tensor, input_uv: Tensor) -> Tensor:  # skipcq: PYL-R0201
-        return yuv420_to_rgb(input_y, input_uv)
-
-
-@TRANSFORMS.register(name="yuv422_to_rgb")
-class Yuv422ToRgb(nn.Module):
-    """Convert an image from YUV to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Width evenly
-    divisible by 2.
-    """
-
-    # MARK: Forward Pass
-    
-    def forward(self, input_y: Tensor, input_uv: Tensor) -> Tensor:
-        return yuv422_to_rgb(input_y, input_uv)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return ycrcb_to_rgb(image=input), \
+               ycrcb_to_rgb(image=target) if target is not None else None
 
 
 @TRANSFORMS.register(name="yuv_to_bgr")
-class YuvToBgr(nn.Module):
-    """Convert an image from YUV to Bgr. Image data is assumed to be in the
-    range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
+class YuvToBgr(Transform):
+    """Convert YUV image to Bgr. Image data is assumed to be in the range of
+    [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
     """
-    
+
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return yuv_to_bgr(image)
-
-
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return yuv_to_bgr(image=input), \
+               yuv_to_bgr(image=target) if target is not None else None
+    
+    
 @TRANSFORMS.register(name="yuv_to_rgb")
-class YuvToRgb(nn.Module):
-    """Convert an image from YUV to RGB. Image data is assumed to be in the
-    range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
+class YuvToRgb(Transform):
+    """Convert YUV image to RGB. Image data is assumed to be in the range of
+    [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
     """
-
+    
     # MARK: Forward Pass
     
-    def forward(self, image: TensorOrArray) -> TensorOrArray:
-        return yuv_to_rgb(image)
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return yuv_to_rgb(image=input), \
+               yuv_to_rgb(image=target) if target is not None else None
 
 
 # Tricks to speed up a little the conversions by presetting small tensors

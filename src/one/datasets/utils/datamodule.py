@@ -11,7 +11,6 @@ import sys
 from abc import ABCMeta
 from abc import abstractmethod
 from typing import Callable
-from typing import Optional
 from typing import Union
 
 import pytorch_lightning as pl
@@ -38,13 +37,13 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
             Dataset's name.
         shape (Int3T):
             Image shape as [H, W, C], [H, W], or [S, S].
-        transform (Callable, None):
+        transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
             transformed version. E.g, `transforms.RandomCrop`.
-        target_transform (Callable, None):
+        target_transform (Callable, list, dict, None):
             Functions/transforms that takes in a target and returns a
             transformed version.
-        transforms (Callable, None):
+        transforms (Callable, list, dict, None):
             Functions/transforms that takes in an input and a target and
             returns the transformed versions of both.
         batch_size (int):
@@ -69,14 +68,14 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         root            : str,
         name            : str,
         shape           : Int3T,
-        transform       : Union[Callable, None] = None,
-        target_transform: Union[Callable, None] = None,
-        transforms      : Union[Callable, None] = None,
-        batch_size      : int                   = 1,
-        devices         : Devices               = 0,
-        shuffle         : bool                  = True,
-        collate_fn      : Union[Callable, None] = None,
-        verbose         : bool                  = True,
+        transform       : Union[Callable, list, dict, None] = None,
+        target_transform: Union[Callable, list, dict, None] = None,
+        transforms      : Union[Callable, list, dict, None] = None,
+        batch_size      : int                               = 1,
+        devices         : Devices                           = 0,
+        shuffle         : bool                              = True,
+        collate_fn      : Union[Callable, None]             = None,
+        verbose         : bool                              = True,
         *args, **kwargs
     ):
         super().__init__()
@@ -206,7 +205,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def setup(self, phase: Optional["ModelState"] = None):
+    def setup(self, phase: Union["ModelState", None] = None):
         """There are also data operations you might want to perform on every
         GPU.
 
@@ -222,6 +221,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
             phase (ModelState, None):
                 Stage to use: [None, ModelState.TRAINING, ModelState.TESTING].
                 Set to `None` to setup all train, val, and test data.
+                Default: `None`.
         """
         pass
 
