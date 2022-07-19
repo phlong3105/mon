@@ -43,10 +43,10 @@ from typing import Union
 
 import validators
 
-from one.core.collection import unique
 from one.core.rich import console
 from one.core.types import ImageFormat
 from one.core.types import ScalarListOrTupleAnyT
+from one.core.types import unique
 from one.core.types import VideoFormat
 
 

@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Define all enums, constants, custom types, and assertion.
+"""Define all enums, constants, custom types, assertion, and conversion.
 """
 
 from __future__ import annotations
 
+import collections
 import functools
 import inspect
+import itertools
 import sys
 import types
+from collections import abc
+from collections import OrderedDict
+from copy import copy
 from enum import Enum
 from typing import Any
 from typing import Collection
@@ -21,7 +26,9 @@ from typing import Union
 import cv2
 import numpy as np
 import torch
+from multipledispatch import dispatch
 from munch import Munch
+from ordered_enum import OrderedEnum
 from torch import nn
 from torch import Tensor
 from torch.nn.modules.loss import _Loss
@@ -31,6 +38,63 @@ from torchmetrics import Metric
 
 
 # MARK: - Enums
+
+class AppleRGB(OrderedEnum):
+    """Define 12 Apple colors."""
+    GRAY   = (128, 128, 128)
+    RED    = (255, 59 , 48 )
+    GREEN  = ( 52, 199, 89 )
+    BLUE   = (  0, 122, 255)
+    ORANGE = (255, 149, 5  )
+    YELLOW = (255, 204, 0  )
+    BROWN  = (162, 132, 94 )
+    PINK   = (255, 45 , 85 )
+    PURPLE = ( 88, 86 , 214)
+    TEAL   = ( 90, 200, 250)
+    INDIGO = ( 85, 190, 240)
+    BLACK  = (  0, 0  , 0  )
+    WHITE  = (255, 255, 255)
+    
+    @staticmethod
+    def values():
+        """Return the list of all values.
+
+        Returns:
+            (list):
+                List of all color tuple.
+        """
+        return [e.value for e in AppleRGB]
+
+
+class BasicRGB(OrderedEnum):
+    """Define 12 basic colors."""
+    BLACK   = (0  , 0  , 0  )
+    WHITE   = (255, 255, 255)
+    RED     = (255, 0  , 0  )
+    LIME    = (0  , 255, 0  )
+    BLUE    = (0  , 0  , 255)
+    YELLOW  = (255, 255, 0  )
+    CYAN    = (0  , 255, 255)
+    MAGENTA = (255, 0  , 255)
+    SILVER  = (192, 192, 192)
+    GRAY    = (128, 128, 128)
+    MAROON  = (128, 0  , 0  )
+    OLIVE   = (128, 128, 0  )
+    GREEN   = (0  , 128, 0  )
+    PURPLE  = (128, 0  , 128)
+    TEAL    = (0  , 128, 128)
+    NAVY    = (0  , 0  , 128)
+    
+    @staticmethod
+    def values():
+        """Return the list of all values.
+        
+        Returns:
+            (list):
+                List of all color tuple.
+        """
+        return [e.value for e in BasicRGB]
+
 
 class BBoxFormat(Enum):
     CXCYAR      = "cxcyar"
@@ -648,6 +712,159 @@ class PaddingMode(Enum):
         return [e.value for e in PaddingMode]
 
 
+class RGB(OrderedEnum):
+    """Define 138 colors."""
+    MAROON                  = (128, 0  , 0  )
+    DARK_RED                = (139, 0  , 0  )
+    BROWN                   = (165, 42 , 42 )
+    FIREBRICK               = (178, 34 , 34 )
+    CRIMSON                 = (220, 20 , 60 )
+    RED                     = (255, 0  , 0  )
+    TOMATO                  = (255, 99 , 71 )
+    CORAL                   = (255, 127, 80 )
+    INDIAN_RED              = (205, 92 , 92 )
+    LIGHT_CORAL             = (240, 128, 128)
+    DARK_SALMON             = (233, 150, 122)
+    SALMON                  = (250, 128, 114)
+    LIGHT_SALMON            = (255, 160, 122)
+    ORANGE_RED              = (255, 69 , 0  )
+    DARK_ORANGE             = (255, 140, 0  )
+    ORANGE                  = (255, 165, 0  )
+    GOLD                    = (255, 215, 0  )
+    DARK_GOLDEN_ROD         = (184, 134, 11 )
+    GOLDEN_ROD              = (218, 165, 32 )
+    PALE_GOLDEN_ROD         = (238, 232, 170)
+    DARK_KHAKI              = (189, 183, 107)
+    KHAKI                   = (240, 230, 140)
+    OLIVE                   = (128, 128, 0  )
+    YELLOW                  = (255, 255, 0  )
+    YELLOW_GREEN            = (154, 205, 50 )
+    DARK_OLIVE_GREEN        = (85 , 107, 47 )
+    OLIVE_DRAB              = (107, 142, 35 )
+    LAWN_GREEN              = (124, 252, 0  )
+    CHART_REUSE             = (127, 255, 0  )
+    GREEN_YELLOW            = (173, 255, 47 )
+    DARK_GREEN              = (0  , 100, 0  )
+    GREEN                   = (0  , 128, 0  )
+    FOREST_GREEN            = (34 , 139, 34 )
+    LIME                    = (0  , 255, 0  )
+    LIME_GREEN              = (50 , 205, 50 )
+    LIGHT_GREEN             = (144, 238, 144)
+    PALE_GREEN              = (152, 251, 152)
+    DARK_SEA_GREEN          = (143, 188, 143)
+    MEDIUM_SPRING_GREEN     = (0  , 250, 154)
+    SPRING_GREEN            = (0  , 255, 127)
+    SEA_GREEN               = (46 , 139, 87 )
+    MEDIUM_AQUA_MARINE      = (102, 205, 170)
+    MEDIUM_SEA_GREEN        = (60 , 179, 113)
+    LIGHT_SEA_GREEN         = (32 , 178, 170)
+    DARK_SLATE_GRAY         = (47 , 79 , 79 )
+    TEAL                    = (0  , 128, 128)
+    DARK_CYAN               = (0  , 139, 139)
+    AQUA                    = (0  , 255, 255)
+    CYAN                    = (0  , 255, 255)
+    LIGHT_CYAN              = (224, 255, 255)
+    DARK_TURQUOISE          = (0  , 206, 209)
+    TURQUOISE               = (64 , 224, 208)
+    MEDIUM_TURQUOISE        = (72 , 209, 204)
+    PALE_TURQUOISE          = (175, 238, 238)
+    AQUA_MARINE             = (127, 255, 212)
+    POWDER_BLUE             = (176, 224, 230)
+    CADET_BLUE              = (95 , 158, 160)
+    STEEL_BLUE              = (70 , 130, 180)
+    CORN_FLOWER_BLUE        = (100, 149, 237)
+    DEEP_SKY_BLUE           = (0  , 191, 255)
+    DODGER_BLUE             = (30 , 144, 255)
+    LIGHT_BLUE              = (173, 216, 230)
+    SKY_BLUE                = (135, 206, 235)
+    LIGHT_SKY_BLUE          = (135, 206, 250)
+    MIDNIGHT_BLUE           = (25 , 25 , 112)
+    NAVY                    = (0  , 0  , 128)
+    DARK_BLUE               = (0  , 0  , 139)
+    MEDIUM_BLUE             = (0  , 0  , 205)
+    BLUE                    = (0  , 0  , 255)
+    ROYAL_BLUE              = (65 , 105, 225)
+    BLUE_VIOLET             = (138, 43 , 226)
+    INDIGO                  = (75 , 0  , 130)
+    DARK_SLATE_BLUE         = (72 , 61 , 139)
+    SLATE_BLUE              = (106, 90 , 205)
+    MEDIUM_SLATE_BLUE       = (123, 104, 238)
+    MEDIUM_PURPLE           = (147, 112, 219)
+    DARK_MAGENTA            = (139, 0  , 139)
+    DARK_VIOLET             = (148, 0  , 211)
+    DARK_ORCHID             = (153, 50 , 204)
+    MEDIUM_ORCHID           = (186, 85 , 211)
+    PURPLE                  = (128, 0  , 128)
+    THISTLE                 = (216, 191, 216)
+    PLUM                    = (221, 160, 221)
+    VIOLET                  = (238, 130, 238)
+    MAGENTA                 = (255, 0  , 255)
+    ORCHID                  = (218, 112, 214)
+    MEDIUM_VIOLET_RED       = (199, 21 , 133)
+    PALE_VIOLET_RED         = (219, 112, 147)
+    DEEP_PINK               = (255, 20 , 147)
+    HOT_PINK                = (255, 105, 180)
+    LIGHT_PINK              = (255, 182, 193)
+    PINK                    = (255, 192, 203)
+    ANTIQUE_WHITE           = (250, 235, 215)
+    BEIGE                   = (245, 245, 220)
+    BISQUE                  = (255, 228, 196)
+    BLANCHED_ALMOND         = (255, 235, 205)
+    WHEAT                   = (245, 222, 179)
+    CORN_SILK               = (255, 248, 220)
+    LEMON_CHIFFON           = (255, 250, 205)
+    LIGHT_GOLDEN_ROD_YELLOW = (250, 250, 210)
+    LIGHT_YELLOW            = (255, 255, 224)
+    SADDLE_BROWN            = (139, 69 , 19 )
+    SIENNA                  = (160, 82 , 45 )
+    CHOCOLATE               = (210, 105, 30 )
+    PERU                    = (205, 133, 63 )
+    SANDY_BROWN             = (244, 164, 96 )
+    BURLY_WOOD              = (222, 184, 135)
+    TAN                     = (210, 180, 140)
+    ROSY_BROWN              = (188, 143, 143)
+    MOCCASIN                = (255, 228, 181)
+    NAVAJO_WHITE            = (255, 222, 173)
+    PEACH_PUFF              = (255, 218, 185)
+    MISTY_ROSE              = (255, 228, 225)
+    LAVENDER_BLUSH          = (255, 240, 245)
+    LINEN                   = (250, 240, 230)
+    OLD_LACE                = (253, 245, 230)
+    PAPAYA_WHIP             = (255, 239, 213)
+    SEA_SHELL               = (255, 245, 238)
+    MINT_CREAM              = (245, 255, 250)
+    SLATE_GRAY              = (112, 128, 144)
+    LIGHT_SLATE_GRAY        = (119, 136, 153)
+    LIGHT_STEEL_BLUE        = (176, 196, 222)
+    LAVENDER                = (230, 230, 250)
+    FLORAL_WHITE            = (255, 250, 240)
+    ALICE_BLUE              = (240, 248, 255)
+    GHOST_WHITE             = (248, 248, 255)
+    HONEYDEW                = (240, 255, 240)
+    IVORY                   = (255, 255, 240)
+    AZURE                   = (240, 255, 255)
+    SNOW                    = (255, 250, 250)
+    BLACK                   = (0  , 0  , 0  )
+    DIM_GRAY                = (105, 105, 105)
+    GRAY                    = (128, 128, 128)
+    DARK_GRAY               = (169, 169, 169)
+    SILVER                  = (192, 192, 192)
+    LIGHT_GRAY              = (211, 211, 211)
+    GAINSBORO               = (220, 220, 220)
+    WHITE_SMOKE             = (245, 245, 245)
+    WHITE                   = (255, 255, 255)
+    
+    @staticmethod
+    def values():
+        """Return the list of all values.
+
+        Returns:
+            (list):
+                List of all color tuple.
+        """
+        return [e.value for e in RGB]
+    
+
 class VideoFormat(Enum):
     AVI  = "avi"
     M4V  = "m4v"
@@ -786,7 +1003,7 @@ IMAGENET_DEFAULT_STD    = (0.229, 0.224, 0.225)
 IMAGENET_INCEPTION_MEAN = (0.5, 0.5, 0.5)
 IMAGENET_INCEPTION_STD  = (0.5, 0.5, 0.5)
 IMAGENET_DPN_MEAN       = (124 / 255, 117 / 255, 104 / 255)
-IMAGENET_DPN_STD        = tuple([1 / (.0167 * 255)] * 3)
+IMAGENET_DPN_STD        = tuple([1 / (0.0167 * 255)] * 3)
 
 PI                      = torch.tensor(3.14159265358979323846)
 VISION_BACKEND          = VisionBackend.PIL
@@ -1248,6 +1465,257 @@ assert_tuple                   = is_tuple
 assert_tuple_of                = is_tuple_of
 assert_valid_type              = is_valid_type
 assert_value_in_collection     = is_value_in_collection
+
+
+# MARK: - Conversion and Parsing
+
+def concat_lists(ll: list[list], inplace: bool = False) -> list:
+    """Concatenate a list of list into a single list.
+    
+    Args:
+        ll (list[list]):
+            A list of list.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        (list):
+            Concatenated list.
+    """
+    if not inplace:
+        ll = ll.copy()
+    return list(itertools.chain(*ll))
+
+
+def copy_attr(a, b, include=(), exclude=()):
+    """Copy attributes from b to a, options to only include [...] and to
+    exclude [...].
+    """
+    for k, v in b.__dict__.items():
+        if (len(include) and k not in include) or \
+            k.startswith("_") or k in exclude:
+            continue
+        else:
+            setattr(a, k, v)
+
+
+def intersect_dicts(
+    da: dict, db: dict, exclude: Union[tuple, list] = ()
+) -> dict:
+    """Dictionary intersection omitting `exclude` keys, using da values.
+    
+    Args:
+        da (dict):
+            Dict a.
+        db (dict):
+            Dict b.
+        exclude (tuple, list):
+            Exclude keys.
+        
+    Returns:
+        (dict):
+            Dictionary intersection.
+    """
+    return {
+        k: v for k, v in da.items()
+        if k in db and not any(x in k for x in exclude) and v.shape == db[k].shape
+    }
+
+
+def intersect_ordered_dicts(
+    da: OrderedDict, db: OrderedDict, exclude: Union[tuple, list] = ()
+) -> OrderedDict:
+    """Dictionary intersection omitting `exclude` keys, using da values.
+    
+    Args:
+        da (dict):
+            Dict a.
+        db (dict):
+            Dict b.
+        exclude (tuple, list):
+            Exclude keys.
+        
+    Returns:
+        (dict):
+            Dictionary intersection.
+    """
+    return OrderedDict(
+        (k, v) for k, v in da.items()
+        if (k in db and not any(x in k for x in exclude) and v.shape == db[k].shape)
+    )
+
+
+def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
+    """Slice a list into several sub-lists of various lengths.
+    
+    Args:
+        l (list):
+            List to be sliced.
+        lens (int, list[int]):
+            Expected length of each output sub-list. If `int`, split to equal
+            length. If `list[int]`, split each sub-list to dedicated length.
+    
+    Returns:
+        out_list (list):
+            A list of sliced lists.
+    """
+    if isinstance(lens, int):
+        assert_number_divisible_to(len(l), lens)
+        lens = [lens] * int(len(l) / lens)
+    
+    assert_list(lens)
+    assert_same_length(lens, l)
+    
+    out_list = []
+    idx      = 0
+    for i in range(len(lens)):
+        out_list.append(l[idx:idx + lens[i]])
+        idx += lens[i]
+    return out_list
+
+
+def to_iter(
+    inputs     : Iterable,
+    item_type  : type,
+    return_type: Union[type, None] = None,
+    inplace    : bool              = False,
+):
+    """Cast items of an iterable object into some type.
+    
+    Args:
+        inputs (Iterable):
+            Iterable object.
+        item_type (type):
+            Item type.
+        return_type (type, None):
+            If specified, the iterable object will be converted to this type,
+            otherwise an iterator. Default: `None`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        Iterable object of type `return_type` containing items of type
+        `item_type`.
+    """
+    assert_iterable(inputs)
+    assert_valid_type(item_type)
+    
+    if not inplace:
+        inputs = copy(inputs)
+        
+    inputs = map(item_type, inputs)
+    if return_type is None:
+        return inputs
+    else:
+        return return_type(inputs)
+
+
+def to_list(inputs: Iterable, item_type: type, inplace: bool = False) -> list:
+    """Cast items of an iterable object into a list of some type.
+
+    Args:
+        inputs (Iterable):
+            Iterable object.
+        item_type (type):
+            Item type.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        List containing items of type `item_type`.
+    """
+    return to_iter(
+        inputs=inputs, item_type=item_type, return_type=list, inplace=inplace
+    )
+
+
+def to_ntuple(n: int) -> tuple:
+    """A helper functions to cast input to n-tuple.
+    
+    Args:
+        n (int):
+        
+    """
+    def parse(x) -> tuple:
+        if isinstance(x, collections.abc.Iterable):
+            return tuple(x)
+        return tuple(itertools.repeat(x, n))
+    
+    return parse
+
+
+def to_size(size: Int2Or3T) -> Int2T:
+    """Cast size object of any format into standard [H, W].
+    
+    Args:
+        size (Int2Or3T):
+            Size object of any format.
+            
+    Returns:
+        size (Int2T):
+            Size of [H, W].
+    """
+    if isinstance(size, (list, tuple)):
+        if len(size) == 3:
+            size = size[0:2]
+        if len(size) == 1:
+            size = (size[0], size[0])
+    elif isinstance(size, (int, float)):
+        size = (size, size)
+    return tuple(size)
+
+
+def to_tuple(inputs: Iterable, item_type: type):
+    """Cast items of an iterable object into a tuple of some type.
+
+    Args:
+        inputs (Iterable):
+            Iterable object.
+        item_type (type):
+            Item type.
+    
+    Returns:
+        Tuple containing items of type `item_type`.
+    """
+    return to_iter(inputs=inputs, item_type=item_type, return_type=tuple)
+
+
+@dispatch(list)
+def unique(l: list) -> list:
+    """Return a list with only unique items.
+    
+    Args:
+        l (list):
+            List that may contain duplicate items.
+    
+    Returns:
+        l (list):
+            List containing only unique items.
+    """
+    return list(set(l))
+
+
+@dispatch(tuple)
+def unique(t: tuple) -> tuple:
+    """Return a tuple with only unique items.
+    
+    Args:
+        t (tuple):
+            List that may contain duplicate items.
+    
+    Returns:
+        t (tuple):
+            List containing only unique items.
+    """
+    return tuple(set(t))
+
+
+to_1tuple = to_ntuple(1)
+to_2tuple = to_ntuple(2)
+to_3tuple = to_ntuple(3)
+to_4tuple = to_ntuple(4)
+to_5tuple = to_ntuple(5)
+to_6tuple = to_ntuple(6)
 
 
 # MARK: - Main
