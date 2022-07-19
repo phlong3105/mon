@@ -20,6 +20,7 @@ from torch import nn
 from torch import Tensor
 from torchvision.utils import _log_api_usage_once
 
+from one.core import assert_number_in_range
 from one.core import Callable
 from one.core import TRANSFORMS
 
@@ -203,16 +204,33 @@ class ComposeScript(nn.Sequential):
     
 
 class Transform(nn.Module, metaclass=ABC):
-    """Transform module."""
+    """Transform module.
+    
+    Args:
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
+    """
 
     # MARK: Magic Functions
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, p: Union[float, None] = None, *args, **kwargs):
         super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        self.p = p
     
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
     
+    def __call__(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        if self.p is None or torch.rand(1).item() <= self.p:
+            return super.__call__(input, target, *args, **kwargs)
+        return input, target
+        
     # MARK: Forward Pass
     
     @abstractmethod

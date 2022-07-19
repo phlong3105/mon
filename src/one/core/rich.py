@@ -24,16 +24,16 @@ from rich.progress import Task
 from rich.progress import TextColumn
 from rich.progress import TimeElapsedColumn
 from rich.progress import TimeRemainingColumn
-from rich.progress import track
 from rich.progress import TransferSpeedColumn
 from rich.table import Column
 from rich.table import Table
 from rich.text import Text
 from rich.theme import Theme
 
-from one.core.collection import is_list_of
 from one.core.device import get_gpu_memory
-from one.core.globals import MemoryUnit
+from one.core.types import assert_dict
+from one.core.types import assert_list_of
+from one.core.types import MemoryUnit
 
 # MARK: - Globals
 
@@ -126,9 +126,7 @@ def print_dict(data: dict, title: str = ""):
 @dispatch(list)
 def print_table(data: list[dict]):
     """Print a list of dictionary as a table."""
-    if not is_list_of(data, dict):
-        raise TypeError(f"`data` must be a `list[dict]`. But got: {type(data)}.")
-    
+    assert_list_of(data, dict)
     table = Table(show_header=True, header_style="bold magenta")
     for k, v in data[0].items():
         table.add_column(k)
@@ -143,9 +141,7 @@ def print_table(data: list[dict]):
 @dispatch(dict)
 def print_table(data: dict):
     """Print a dictionary as a table."""
-    if not isinstance(data, dict):
-        raise TypeError(f"`data` must be a `dict`. But got: {type(data)}.")
-
+    assert_dict(data)
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Key")
     table.add_column("Value")

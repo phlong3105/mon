@@ -12,29 +12,38 @@ import itertools
 import sys
 from collections import abc
 from collections import OrderedDict
+from copy import copy
 from typing import Iterable
-from typing import Sequence
 from typing import Union
 
 from multipledispatch import dispatch
 
-from one.core.globals import Int2Or3T
-from one.core.globals import Int2T
+from one.core.types import assert_iterable
+from one.core.types import assert_list
+from one.core.types import assert_number_divisible_to
+from one.core.types import assert_same_length
+from one.core.types import assert_valid_type
+from one.core.types import Int2Or3T
+from one.core.types import Int2T
 
 
 # MARK: - Functional
 
-def concat_lists(ll: list[list]) -> list:
+def concat_lists(ll: list[list], inplace: bool = False) -> list:
     """Concatenate a list of list into a single list.
     
     Args:
         ll (list[list]):
             A list of list.
-    
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         (list):
             Concatenated list.
     """
+    if not inplace:
+        ll = ll.copy()
     return list(itertools.chain(*ll))
 
 
@@ -100,93 +109,6 @@ def intersect_ordered_dicts(
     )
 
 
-def is_seq_of(
-    s        : Sequence,
-    item_type: type,
-    seq_type : Union[type, None] = None
-) -> bool:
-    """Check whether `s` is a sequence of some type.
-    
-    Args:
-        s (Sequence):
-            Sequence to be checked.
-        item_type (type):
-            Expected type of sequence items.
-        seq_type (type, None):
-            Expected sequence type. Default: `None`.
-    
-    Return:
-        (bool):
-            `True` if `s` is a sequence of type `seq_type` containing item of
-            type `item_type`. Else `False`.
-    """
-    if seq_type is None:
-        seq_type = abc.Sequence
-    if not isinstance(seq_type, type):
-        raise TypeError(f"`seq_type` must be a valid type. But got: {seq_type}.")
-    
-    if not isinstance(s, seq_type):
-        return False
-    for item in s:
-        if not isinstance(item, item_type):
-            return False
-    return True
-
-
-def is_dict_of(d: dict, item_type: type) -> bool:
-    """Check whether `d` is a dictionary of some type.
-    
-    Args:
-        d (dict):
-            Dictionary to be checked.
-        item_type (type):
-            Expected type of items.
-    
-    Return:
-        (bool):
-            `True` if `s` is a dictionary containing item of type `item_type`.
-            Else `False`.
-    """
-    if not isinstance(item_type, type):
-        raise TypeError(f"`item_type` must be a valid type. But got: {item_type}.")
-
-    return all(isinstance(v, item_type) for k, v in d.items())
-
-
-def is_list_of(l: list, item_type: type) -> bool:
-    """Check whether `l` is a list of some type.
-    
-    Args:
-        l (list):
-            List to be checked.
-        item_type (type):
-            Expected type of items.
-    
-    Return:
-        (bool):
-            `True` if `s` is a list containing item of type `item_type`.
-            Else `False`.
-    """
-    return is_seq_of(s=l, item_type=item_type, seq_type=list)
-
-
-def is_tuple_of(t: tuple, item_type: type) -> bool:
-    """Check whether `t` is a tuple of some type.
-    
-    Args:
-        t (tuple):
-            Dictionary to be checked.
-        item_type (type):
-            Expected type of items.
-    
-    Return:
-        (bool):
-            `True` if `s` is a tuple containing item of type `item_type`.
-            Else `False`.
-    """
-    return is_seq_of(s=t, item_type=item_type, seq_type=tuple)
-
-
 def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
     """Slice a list into several sub-lists of various lengths.
     
@@ -202,17 +124,11 @@ def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
             A list of sliced lists.
     """
     if isinstance(lens, int):
-        if len(l) % lens != 0:
-            raise ValueError(f"Length of `l` must be divisible by `lens`. "
-                             f"But got: {len(l)} % {lens} != 0.")
+        assert_number_divisible_to(len(l), lens)
         lens = [lens] * int(len(l) / lens)
     
-    if not isinstance(lens, list):
-        raise TypeError(f"`indices` must be an `int` or `list[int]`. "
-                        f"But got: {type(lens)}.")
-    if sum(lens) != len(l):
-        raise ValueError(f"Sum of `lens` and length of `l` must be the same. "
-                         f"But got: {sum(lens)} != {len(l)}.")
+    assert_list(lens)
+    assert_same_length(lens, l)
     
     out_list = []
     idx      = 0
@@ -225,7 +141,8 @@ def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
 def to_iter(
     inputs     : Iterable,
     item_type  : type,
-    return_type: Union[type, None] = None
+    return_type: Union[type, None] = None,
+    inplace    : bool              = False,
 ):
     """Cast items of an iterable object into some type.
     
@@ -237,26 +154,27 @@ def to_iter(
         return_type (type, None):
             If specified, the iterable object will be converted to this type,
             otherwise an iterator. Default: `None`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         Iterable object of type `return_type` containing items of type
         `item_type`.
     """
-    if not isinstance(inputs, abc.Iterable):
-        raise TypeError(f"`inputs` must be an iterable object. "
-                        f"But got: {type(inputs)}.")
-    if not isinstance(item_type, type):
-        raise TypeError(f"`item_type` must be a valid type. "
-                        f"But got {type(item_type)}.")
-
-    out_iterable = map(item_type, inputs)
+    assert_iterable(inputs)
+    assert_valid_type(item_type)
+    
+    if not inplace:
+        inputs = copy(inputs)
+        
+    inputs = map(item_type, inputs)
     if return_type is None:
-        return out_iterable
+        return inputs
     else:
-        return return_type(out_iterable)
+        return return_type(inputs)
 
 
-def to_list(inputs: Iterable, item_type: type) -> list:
+def to_list(inputs: Iterable, item_type: type, inplace: bool = False) -> list:
     """Cast items of an iterable object into a list of some type.
 
     Args:
@@ -264,16 +182,24 @@ def to_list(inputs: Iterable, item_type: type) -> list:
             Iterable object.
         item_type (type):
             Item type.
-    
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         List containing items of type `item_type`.
     """
-    return to_iter(inputs=inputs, item_type=item_type, return_type=list)
+    return to_iter(
+        inputs=inputs, item_type=item_type, return_type=list, inplace=inplace
+    )
 
 
 def to_ntuple(n: int) -> tuple:
-    """A helper functions to cast input to n-tuple."""
+    """A helper functions to cast input to n-tuple.
     
+    Args:
+        n (int):
+        
+    """
     def parse(x) -> tuple:
         if isinstance(x, collections.abc.Iterable):
             return tuple(x)

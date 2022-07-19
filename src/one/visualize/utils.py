@@ -12,7 +12,7 @@ import torchvision
 from multipledispatch import dispatch
 from torch import Tensor
 
-from one.core.globals import TensorOrArray
+from one.core.types import TensorOrArray
 from one.vision.transformation import is_channel_first
 from one.vision.transformation import to_channel_last
 

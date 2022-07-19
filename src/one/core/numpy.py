@@ -14,7 +14,7 @@ import numpy as np
 from multipledispatch import dispatch
 from torch import Tensor
 
-from one.core.collection import is_list_of
+from one.core.types import is_list_of
 
 
 # MARK: - Functional

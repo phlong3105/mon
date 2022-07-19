@@ -6,7 +6,9 @@
 
 from __future__ import annotations
 
+from .affine import *
 from .color import *
 from .conversion import *
-from .spatial import *
-from .utils import *
+from .intensity import *
+from .misc import *
+from .transform import *

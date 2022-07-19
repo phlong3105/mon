@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implements the core/low-level data type to build other data objects.
+"""Implements the core/low-level data types and data structures.
 In here, we implement very basic functions including: creation, generation,
 casting, get basic information (i.e., size, length, ...).
 """
@@ -13,7 +13,7 @@ from .colors import *
 from .device import *
 from .factory import *
 from .file import *
-from .globals import *
+from .types import *
 from .numpy import *
 from .rich import *
 from .serialization import *

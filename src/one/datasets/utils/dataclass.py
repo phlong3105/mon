@@ -22,6 +22,8 @@ from matplotlib import pyplot as plt
 from munch import Munch
 from torch import Tensor
 
+from one.core import assert_dict_contain_key
+from one.core import assert_list_of
 from one.core import BBoxFormat
 from one.core import console
 from one.core import is_image_file
@@ -142,8 +144,7 @@ class ClassLabel:
             d (dict):
                 Dictionary containing all classes.
         """
-        if not hasattr(d, "classes"):
-            raise FileNotFoundError(f"Given `dict` must contain key `classes`.")
+        assert_dict_contain_key(d, "classes")
         classes = d["classes"]
         classes = Munch.fromDict(classes)
         return ClassLabel(classes=classes)
@@ -696,9 +697,8 @@ class VOCLabel:
             object = []
         else:
             object = [object] if not isinstance(object, dict) else object
-        if not all(isinstance(o, dict) for o in object):
-            raise TypeError(f"All elements of `object` must be a `dict`.")
-            
+        assert_list_of(object, dict)
+        
         for i, o in enumerate(object):
             bndbox   = o.get("bndbox")
             box_xyxy = torch.FloatTensor([
@@ -722,8 +722,7 @@ class VOCLabel:
             d (dict):
                 Dictionary containing VOC data.
         """
-        if not hasattr(d, "annotation"):
-            raise ValueError(f"Given `dict` must contain key `annotation`.")
+        assert_dict_contain_key(d, "annotation")
         d = d["annotation"]
         return VOCLabel(
             folder    = d.get("folder"   , ""),

@@ -17,6 +17,14 @@ from torch.optim import Optimizer
 # noinspection PyUnresolvedReferences
 from torch.optim.lr_scheduler import _LRScheduler
 
+from one.core.types import assert_class
+from one.core.types import assert_dict
+from one.core.types import assert_dict_contain_key
+from one.core.types import assert_list_of
+from one.core.types import assert_same_length
+from one.core.types import Callable
+from one.core.types import is_list_of
+
 
 # MARK: - Modules
 
@@ -57,7 +65,7 @@ class Registry:
 		"""Return the registry's dictionary."""
 		return self._registry
 	
-	def get(self, key: str) -> "Callable":
+	def get(self, key: str) -> Callable:
 		"""Get the registry record of the given `key`."""
 		if key in self._registry:
 			return self._registry[key]
@@ -67,7 +75,7 @@ class Registry:
 	def register(
 		self,
 		name  : Union[str, None] = None,
-		module: "Callable"	     = None,
+		module: Callable	     = None,
 		force : bool             = False
 	) -> callable:
 		"""Register a module.
@@ -119,15 +127,11 @@ class Registry:
 	
 	def register_module(
 		self,
-		module_class: "Callable",
+		module_class: Callable,
 		module_name : Union[str, None] = None,
 		force	    : bool 			   = False
 	):
-		if not inspect.isclass(module_class):
-			raise TypeError(
-				f"`module_class` must be a class type. "
-				f"But got: {type(module_class)}."
-			)
+		assert_class(module_class)
 		
 		if module_name is None:
 			module_name = module_class.__name__.lower()
@@ -181,9 +185,7 @@ class Factory(Registry):
 			instance (object, None):
 				Class' instance.
 		"""
-		if name not in self.registry:
-			raise ValueError(f"`{name}` does not exist in the registry.")
-		
+		assert_dict_contain_key(self.registry, name)
 		instance = self.registry[name](*args, **kwargs)
 		if not hasattr(instance, "name"):
 			instance.name = name
@@ -205,11 +207,9 @@ class Factory(Registry):
 		"""
 		if cfg is None:
 			return None
-		if not isinstance(cfg, (dict, Munch)):
-			raise TypeError(f"`cfg` must be a `dict`.")
-		if "name" not in cfg:
-			raise ValueError(f"`cfg` dict must contain the key `name`.")
-		
+		assert_dict(cfg)
+		assert_dict_contain_key(cfg, "name")
+	
 		cfg_  = deepcopy(cfg)
 		name  = cfg_.pop("name")
 		cfg_ |= kwargs
@@ -231,13 +231,9 @@ class Factory(Registry):
 			instances (list[object], None):
 				Classes' instances.
 		"""
-		from .collection import is_list_of
-		
 		if cfgs is None:
 			return None
-		if not (is_list_of(cfgs, item_type=dict) or
-		        is_list_of(cfgs, item_type=Munch)):
-			raise TypeError(f"`cfgs` must be a `list[dict]`.")
+		assert_list_of(cfgs, dict)
 		
 		cfgs_     = deepcopy(cfgs)
 		instances = []
@@ -273,9 +269,7 @@ class OptimizerFactory(Registry):
 			optimizer (Optimizer, None):
 				Optimizer.
 		"""
-		if name not in self.registry:
-			raise ValueError(f"{name} does not exist in the registry.")
-		
+		assert_dict_contain_key(self.registry, name)
 		return self.registry[name](params=net.parameters(), *args, **kwargs)
 	
 	def build_from_dict(
@@ -299,10 +293,8 @@ class OptimizerFactory(Registry):
 		"""
 		if cfg is None:
 			return None
-		if not isinstance(cfg, (dict, Munch)):
-			raise TypeError(f"`cfg` must be a `dict`.")
-		if "name" not in cfg:
-			raise ValueError(f"`cfg` dict must contain the key `name`.")
+		assert_dict(cfg)
+		assert_dict_contain_key(cfg, "name")
 		
 		cfg_  = deepcopy(cfg)
 		name  = cfg_.pop("name")
@@ -327,13 +319,9 @@ class OptimizerFactory(Registry):
 			optimizers (list[Optimizer], None):
 				Optimizers.
 		"""
-		from one.core.collection import is_list_of
-		
 		if cfgs is None:
 			return None
-		if not (is_list_of(cfgs, item_type=dict) or
-		        is_list_of(cfgs, item_type=Munch)):
-			raise TypeError(f"`cfgs` must be a `list[dict]`.")
+		assert_list_of(cfgs, dict)
 		
 		cfgs_      = deepcopy(cfgs)
 		optimizers = []
@@ -362,23 +350,12 @@ class OptimizerFactory(Registry):
 			optimizers (list[Optimizer], None):
 				Optimizers.
 		"""
-		from one.core.collection import is_list_of
-		
 		if cfgs is None:
 			return None
-		if not (is_list_of(cfgs, item_type=dict) or
-		        is_list_of(cfgs, item_type=Munch)):
-			raise TypeError(f"`cfgs` must be a `list[dict]`.")
-		if not is_list_of(nets, item_type=dict):
-			raise TypeError(
-				f"`nets` must be a `list[nn.Module]`. But got: {nets}."
-			)
-		if len(nets) != len(cfgs):
-			raise ValueError(
-				f"`nets` and `cfgs` must have the same length. "
-				f" But got: {len(nets)} != {len(cfgs)}."
-			)
-		
+		assert_list_of(cfgs, dict)
+		assert_list_of(nets, item_type=dict)
+		assert_same_length(nets, cfgs)
+	 
 		cfgs_      = deepcopy(cfgs)
 		optimizers = []
 		for net, cfg in zip(nets, cfgs_):
@@ -415,9 +392,8 @@ class SchedulerFactory(Registry):
 		"""
 		if name is None:
 			return None
-		if name not in self.registry:
-			raise ValueError(f"{name} does not exist in the registry.")
-		
+		assert_dict_contain_key(self.registry, name)
+	
 		if name in ["gradual_warmup_scheduler"]:
 			after_scheduler = kwargs.pop("after_scheduler")
 			if isinstance(after_scheduler, dict):
@@ -456,11 +432,9 @@ class SchedulerFactory(Registry):
 		"""
 		if cfg is None:
 			return None
-		if not isinstance(cfg, (dict, Munch)):
-			raise TypeError(f"`cfg` must be a `dict`.")
-		if "name" not in cfg:
-			raise ValueError(f"`cfg` dict must contain the key `name`.")
-		
+		assert_dict(cfg)
+		assert_dict_contain_key(cfg, "name")
+	
 		cfg_  = deepcopy(cfg)
 		name  = cfg_.pop("name")
 		cfg_ |= kwargs
@@ -484,13 +458,9 @@ class SchedulerFactory(Registry):
 			schedulers (list[Optimizer], None):
 				Schedulers.
 		"""
-		from one.core.collection import is_list_of
-		
 		if cfgs is None:
 			return None
-		if not (is_list_of(cfgs, item_type=dict) or
-		        is_list_of(cfgs, item_type=Munch)):
-			raise TypeError(f"`cfgs` must be a `list[dict]`.")
+		assert_list_of(cfgs, dict)
 		
 		cfgs_      = deepcopy(cfgs)
 		schedulers = []
@@ -519,8 +489,6 @@ class SchedulerFactory(Registry):
 			schedulers (list[Optimizer], None):
 				Schedulers.
 		"""
-		from one.core.collection import is_list_of
-		
 		if cfgs is None:
 			return None
 		if not (is_list_of(cfgs, item_type=list) or
@@ -528,12 +496,8 @@ class SchedulerFactory(Registry):
 			raise TypeError(
 				f"`cfgs` must be a 2D `list[dict]`. But got: {type(cfgs)}."
 			)
-		if len(optimizers) != len(cfgs):
-			raise ValueError(
-				f"`optimizers` and `cfgs` must have the same length. "
-				f"But got: {len(optimizers)} != {len(cfgs)}."
-			)
-			
+		assert_same_length(optimizers, cfgs)
+		
 		cfgs_      = deepcopy(cfgs)
 		schedulers = []
 		for optimizer, cfgs in zip(optimizers, cfgs_):
@@ -545,6 +509,50 @@ class SchedulerFactory(Registry):
 				)
 		
 		return schedulers if len(schedulers) > 0 else None
+
+
+# MARK: - Factories
+# NOTE: NN Layers
+ACT_LAYERS           = Factory(name="act_layers")
+ATTN_LAYERS          = Factory(name="attn_layers")
+ATTN_POOL_LAYERS     = Factory(name="attn_pool_layers")
+BOTTLENECK_LAYERS    = Factory(name="bottleneck_layers")
+CONV_LAYERS          = Factory(name="conv_layers")
+CONV_ACT_LAYERS      = Factory(name="conv_act_layers")
+CONV_NORM_ACT_LAYERS = Factory(name="conv_norm_act_layers")
+DROP_LAYERS          = Factory(name="drop_layers")
+EMBED_LAYERS         = Factory(name="embed_layers")
+HEADS 	             = Factory(name="heads")
+LINEAR_LAYERS        = Factory(name="linear_layers")
+MLP_LAYERS           = Factory(name="mlp_layers")
+NORM_LAYERS          = Factory(name="norm_layers")
+NORM_ACT_LAYERS      = Factory(name="norm_act_layers")
+PADDING_LAYERS       = Factory(name="padding_layers")
+PLUGIN_LAYERS        = Factory(name="plugin_layers")
+POOL_LAYERS          = Factory(name="pool_layers")
+RESIDUAL_BLOCKS      = Factory(name="residual_blocks")
+SAMPLING_LAYERS      = Factory(name="sampling_layers")
+# NOTE: Models
+BACKBONES            = Factory(name="backbones")
+CALLBACKS            = Factory(name="callbacks")
+LOGGERS              = Factory(name="loggers")
+LOSSES               = Factory(name="losses")
+METRICS              = Factory(name="metrics")
+MODELS               = Factory(name="models")
+MODULE_WRAPPERS      = Factory(name="module_wrappers")
+NECKS 	             = Factory(name="necks")
+OPTIMIZERS           = OptimizerFactory(name="optimizers")
+SCHEDULERS           = SchedulerFactory(name="schedulers")
+# NOTE: Misc
+AUGMENTS             = Factory(name="augments")
+DATAMODULES          = Factory(name="datamodules")
+DATASETS             = Factory(name="datasets")
+DISTANCES            = Factory(name="distance_functions")
+DISTANCE_FUNCS       = Factory(name="distance_functions")
+FILE_HANDLERS        = Factory(name="file_handler")
+LABEL_HANDLERS       = Factory(name="label_handlers")
+MOTIONS              = Factory(name="motions")
+TRANSFORMS           = Factory(name="transforms")
 
 
 # MARK: - Main

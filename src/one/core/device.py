@@ -13,7 +13,8 @@ import torch
 from pynvml import *
 from torch import Tensor
 
-from one.core.globals import MemoryUnit
+from one.core.types import assert_number_divisible_to
+from one.core.types import MemoryUnit
 
 
 # MARK: - Functional
@@ -105,7 +106,9 @@ def select_device(
     if device and not cpu_request:  # If device requested other than `cpu`
         os.environ["CUDA_VISIBLE_DEVICES"] = device  # set environment variable
         if not torch.cuda.is_available():  # Check availability
-            raise RuntimeError(f"CUDA unavailable, invalid device {device} requested.")
+            raise RuntimeError(
+                f"CUDA unavailable, invalid device {device} requested."
+            )
             
     cuda = False if cpu_request else torch.cuda.is_available()
     if cuda:
@@ -174,7 +177,9 @@ def select_device_old(
         os.environ["CUDA_VISIBLE_DEVICES"] = device
         # Check availability
         if not torch.cuda.is_available():  # Check availability
-            raise RuntimeError(f"CUDA unavailable, invalid device {device} requested.")
+            raise RuntimeError(
+                f"CUDA unavailable, invalid device {device} requested."
+            )
     
     cuda = not cpu and torch.cuda.is_available()
     
@@ -183,11 +188,7 @@ def select_device_old(
 
         # Check that batch_size is compatible with device_count
         if n > 1 and batch_size:
-            if batch_size % n != 0:
-                raise ValueError(
-                    f"`batch-size` must be a multiple of GPU count {n}. "
-                    f"But got: {batch_size} % {n} != 0."
-                )
+            assert_number_divisible_to(batch_size, n)
         space = " " * len(s)
         
         for i, d in enumerate(device.split(",") if device else range(n)):

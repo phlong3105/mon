@@ -13,13 +13,10 @@ import sys
 import numpy as np
 from torch import Tensor
 
-from one.core.globals import Callable
-from one.core.globals import TensorOrArray
-from one.core.image import is_channel_first
-from one.core.image import to_channel_first
-from one.core.image import to_channel_last
 from one.core.numpy import to_4d_array
 from one.core.tensor import to_4d_tensor
+from one.core.types import Callable
+from one.core.types import TensorOrArray
 
 
 # MARK: - Functional
@@ -70,6 +67,7 @@ def channel_last_processing(func: Callable):
 	@functools.wraps(func)
 	def wrapper(image: TensorOrArray, *args, **kwargs) -> TensorOrArray:
 		img           = image.copy()
+		from one.vision.transformation import is_channel_first
 		channel_first = is_channel_first(img)
 		
 		if not isinstance(image, (Tensor, np.ndarray)):
@@ -79,11 +77,13 @@ def channel_last_processing(func: Callable):
 			)
 		
 		if channel_first:
+			from one.vision.transformation import to_channel_last
 			img = to_channel_last(img)
 
 		img = func(img, *args, **kwargs)
 		
 		if channel_first:
+			from one.vision.transformation import to_channel_first
 			img = to_channel_first(img)
 		
 		return img

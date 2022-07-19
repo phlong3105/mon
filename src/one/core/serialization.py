@@ -21,8 +21,10 @@ import numpy as np
 import xmltodict
 import yaml
 
-from one.core.globals import FILE_HANDLERS
-from one.core.globals import ScalarListOrTupleAnyT
+from one.core.types import assert_dict
+from one.core.types import assert_dict_contain_key
+from one.core.types import FILE_HANDLERS
+from one.core.types import ScalarListOrTupleAnyT
 
 try:
     from yaml import CLoader as FullLoader, CDumper as Dumper
@@ -64,12 +66,8 @@ def dump_file(
             file_format = path.split(".")[-1]
         elif path is None:
             raise ValueError("`file_format` must be specified since file is `None`.")
-    
-    if file_format not in FILE_HANDLERS:
-        raise ValueError(
-            f"`file_format` must be one of {FILE_HANDLERS}. "
-            f"But got: {file_format}."
-        )
+
+    assert_dict_contain_key(FILE_HANDLERS, file_format)
     
     handler = FILE_HANDLERS.build(name=file_format)
     if path is None:
@@ -106,11 +104,8 @@ def load_file(
         path = str(path)
     if file_format is None and isinstance(path, str):
         file_format = path.split(".")[-1]
-    if file_format not in FILE_HANDLERS:
-        raise ValueError(
-            f"`file_format` must be one of {FILE_HANDLERS}. "
-            f"But got: {file_format}."
-        )
+    
+    assert_dict_contain_key(FILE_HANDLERS, file_format)
 
     handler = FILE_HANDLERS.build(name=file_format)
     if isinstance(path, str):
@@ -326,9 +321,7 @@ class XmlHandler(BaseFileHandler):
             path (str, TextIO):
                 Filepath or a file-like object.
         """
-        if not isinstance(obj, dict):
-            raise TypeError(f"`obj` must be a `dict`. But got: {type(obj)}.")
-        
+        assert_dict(obj)
         with open(path, "w") as path:
             path.write(xmltodict.unparse(obj, pretty=True))
         
@@ -343,9 +336,7 @@ class XmlHandler(BaseFileHandler):
             (str):
                 Content from the file.
         """
-        if not isinstance(obj, dict):
-            raise TypeError(f"`obj` must be a `dict`. But got: {type(obj)}.")
-        
+        assert_dict(obj)
         return xmltodict.unparse(obj, pretty=True)
 
 

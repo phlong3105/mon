@@ -16,13 +16,15 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
+from one.core import assert_tensor
+from one.core import assert_tensor_of_channels
 from one.core import CFA
 from one.core import ListOrTuple2T
 from one.core import Tensor
 from one.core import TRANSFORMS
-from one.vision.transformation import Transform
-from one.vision.transformation.spatial import get_num_channels
-from one.vision.transformation.spatial import to_channel_first
+from one.vision.transformation.misc import get_num_channels
+from one.vision.transformation.misc import to_channel_first
+from one.vision.transformation.transform import Transform
 
 
 # MARK: - Functional
@@ -33,13 +35,15 @@ def bgr_to_grayscale(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR image to be converted to grayscale.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         grayscale (Tensor[..., 1, H, W]):
             Grayscale version of the image.
     """
-    return rgb_to_grayscale(bgr_to_rgb(image))
+    assert_tensor_of_channels(image, 3)
+    return rgb_to_grayscale(image=bgr_to_rgb(image=image))
 
 
 def bgr_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
@@ -48,7 +52,8 @@ def bgr_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to HSV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             Scalar to enforce numerical stability. Default: `1e-8`.
 
@@ -57,7 +62,8 @@ def bgr_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
             HSV version of the image. H channel values are in the range
             [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
-    return rgb_to_hsv(bgr_to_rgb(image=image))
+    assert_tensor_of_channels(image, 3)
+    return rgb_to_hsv(image=bgr_to_rgb(image=image))
 
 
 def bgr_to_lab(image: Tensor) -> Tensor:
@@ -66,13 +72,15 @@ def bgr_to_lab(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to Lab.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         lab (Tensor[..., 3, H, W]):
             Lab version of the image. L channel values are in the range
             [0, 100]. a and b are in the range [-127, 127].
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_lab(image=bgr_to_rgb(image=image))
 
 
@@ -83,7 +91,8 @@ def bgr_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to Luv.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             For numerically stability when dividing. Default: `1e-12`.
 
@@ -91,6 +100,7 @@ def bgr_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
         luv (Tensor[..., 3, H, W]):
             Luv version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_luv(image=bgr_to_rgb(image=image), eps=eps)
 
 
@@ -99,13 +109,14 @@ def bgr_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to BGR.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
-    # Flip image channels
+    assert_tensor_of_channels(image, 3)
     return image.flip(-3)
 
 
@@ -114,7 +125,8 @@ def bgr_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to RGBA.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
 
@@ -125,6 +137,7 @@ def bgr_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
     Notes:
         Current functionality is NOT supported by Torchscript.
     """
+    assert_tensor_of_channels(image, 3)
     if not isinstance(alpha_val, (float, Tensor)):
         raise TypeError(
             f"`alpha_val` must be a `float` or `Tensor`. "
@@ -141,12 +154,14 @@ def bgr_to_xyz(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to XYZ.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         xyz (Tensor[..., 3, H, W]):
             XYZ version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return bgr_to_xyz(image=bgr_to_rgb(image=image))
 
 
@@ -155,12 +170,14 @@ def bgr_to_ycrcb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to YCrCb.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         ycrcb (Tensor[..., 3, H, W]):
             YCrCb version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_ycrcb(image=bgr_to_rgb(image=image))
 
 
@@ -170,12 +187,14 @@ def bgr_to_yuv(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            BGR Image to be converted to YUV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         yuv (Tensor[..., 3, H, W]):
             YUV version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_yuv(image=bgr_to_rgb(image=image))
 
 
@@ -185,12 +204,14 @@ def grayscale_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 1, H, W]):
-            Grayscale image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 1)
     rgb = torch.cat([image, image, image], dim=-3)
 
     # NOTE: we should find a better way to raise this kind of warnings
@@ -206,7 +227,8 @@ def hls_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            HLS image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
@@ -221,17 +243,17 @@ def hls_to_rgb(image: Tensor) -> Tensor:
     else:
         _HLS2RGB = torch.tensor([[[0.0]], [[8.0]], [[4.0]]], device=image.device, dtype=image.dtype)  # [3, 1, 1]
 
-    im = image.unsqueeze(-4)
-    h  = torch.select(im, -3, 0)
-    l  = torch.select(im, -3, 1)
-    s  = torch.select(im, -3, 2)
-    h *= 6 / math.pi  # h * 360 / (2 * math.pi) / 30
-    a  = s * torch.min(l, 1.0 - l)
+    im  = image.unsqueeze(-4)
+    h   = torch.select(im, -3, 0)
+    l   = torch.select(im, -3, 1)
+    s   = torch.select(im, -3, 2)
+    h  *= 6 / math.pi  # h * 360 / (2 * math.pi) / 30
+    a   = s * torch.min(l, 1.0 - l)
 
     # kr = (0 + h) % 12
     # kg = (8 + h) % 12
     # kb = (4 + h) % 12
-    k = (h + _HLS2RGB) % 12
+    k    = (h + _HLS2RGB) % 12
 
     # ll - a * max(min(min(k - 3.0, 9.0 - k), 1), -1)
     mink = torch.min(k - 3.0, 9.0 - k)
@@ -244,12 +266,14 @@ def hsv_to_bgr(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            HSV Image to be converted to HSV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_bgr(image=hsv_to_rgb(image=image))
 
 
@@ -259,7 +283,8 @@ def hsv_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            HSV Image to be converted to HSV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
@@ -279,11 +304,11 @@ def hsv_to_rgb(image: Tensor) -> Tensor:
     hi      = hi.long()
     indices = torch.stack([hi, hi + 6, hi + 12], dim=-3)
     
-    out = torch.stack((
+    rgb = torch.stack((
         v, q, p, p, t, v, t, v, v, q, p, p, p, p, t, v, v, q
     ), dim=-3)
-    out = torch.gather(out, -3, indices)
-    return out
+    rgb = torch.gather(rgb, -3, indices)
+    return rgb
 
 
 def _integer_to_color(image: np.ndarray, colors: list) -> np.ndarray:
@@ -342,7 +367,8 @@ def lab_to_bgr(image: Tensor, clip: bool = True) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            Lab image to be converted to BGR.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         clip (bool):
             Whether to apply clipping to insure output BGR values in range
             [0.0 1.0]. Default: `True`.
@@ -351,6 +377,7 @@ def lab_to_bgr(image: Tensor, clip: bool = True) -> Tensor:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_bgr(image=lab_to_rgb(image=image, clip=clip))
 
 
@@ -359,7 +386,8 @@ def lab_to_rgb(image: Tensor, clip: bool = True) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            Lab image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         clip (bool):
             Whether to apply clipping to insure output RGB values in range
             [0.0 1.0]. Default: `True`.
@@ -368,6 +396,7 @@ def lab_to_rgb(image: Tensor, clip: bool = True) -> Tensor:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     L  = image[..., 0, :, :]
     a  = image[..., 1, :, :]
     _b = image[..., 2, :, :]
@@ -410,12 +439,14 @@ def linear_rgb_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            Linear RGB Image to be converted to sRGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             sRGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     threshold = 0.0031308
     rgb       = torch.where(
         image > threshold,
@@ -430,7 +461,8 @@ def luv_to_bgr(image: Tensor, eps: float = 1e-12) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            Luv image to be converted to BGR.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             For numerically stability when dividing. Default: `1e-12`.
 
@@ -438,6 +470,7 @@ def luv_to_bgr(image: Tensor, eps: float = 1e-12) -> Tensor:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_bgr(image=luv_to_rgb(image=image, eps=eps))
 
 
@@ -446,7 +479,8 @@ def luv_to_rgb(image: Tensor, eps: float = 1e-12) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            Luv image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             For numerically stability when dividing. Default: `1e-12`.
 
@@ -454,6 +488,7 @@ def luv_to_rgb(image: Tensor, eps: float = 1e-12) -> Tensor:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     L = image[..., 0, :, :]
     u = image[..., 1, :, :]
     v = image[..., 2, :, :]
@@ -494,7 +529,8 @@ def raw_to_rgb(image: Tensor, cfa: CFA) -> Tensor:
 
     Args:
         image (Tensor[..., 1 , H, W]):
-            Raw image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         cfa (CFA):
             Configuration of the color filter.
     
@@ -506,6 +542,7 @@ def raw_to_rgb(image: Tensor, cfa: CFA) -> Tensor:
         >>> rawinput = torch.randn(2, 1, 4, 6)
         >>> rgb      = raw_to_rgb(rawinput, CFA.RG) # [2, 3, 4, 6]
     """
+    assert_tensor_of_channels(image, 1)
     if (len(image.shape) < 2
         or image.shape[-2] % 2 == 1
         or image.shape[-1] % 2 == 1):
@@ -634,12 +671,14 @@ def rgb_to_bgr(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to BGR.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return image.flip(-3)
 
 
@@ -651,7 +690,8 @@ def rgb_to_grayscale(
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB image to be converted to grayscale.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         rgb_weights (list[float]):
             Weights that will be applied on each channel (RGB). Sum of the
             weights should add up to one. Default: `(0.299, 0.587, 0.114)`.
@@ -660,11 +700,10 @@ def rgb_to_grayscale(
         grayscale (Tensor[..., 1, H, W]):
             Grayscale version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     rgb_weights = torch.FloatTensor(rgb_weights)
-    if not isinstance(rgb_weights, Tensor):
-        raise TypeError(
-            f"`rgb_weights` must be a `Tensor`. But got: {type(rgb_weights)}."
-        )
+    assert_tensor(rgb_weights)
     if rgb_weights.shape[-1] != 3:
         raise ValueError(
             f"`rgb_weights` must have a shape of [..., 3]. "
@@ -691,7 +730,8 @@ def rgb_to_hls(image: Tensor, eps: float = 1e-8) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB image to be converted to HLS.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             Epsilon value to avoid div by zero. Default: `1e-8`.
 
@@ -699,6 +739,8 @@ def rgb_to_hls(image: Tensor, eps: float = 1e-8) -> Tensor:
         hls (Tensor[..., 3, H, W]):
             HLS version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     if not torch.jit.is_scripting():
         # weird way to use globals compiling with JIT even in the code not used by JIT...
         # __setattr__ can be removed if pytorch version is > 1.6.0 and then use:
@@ -770,7 +812,8 @@ def rgb_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
     
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to HSV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             Scalar to enforce numerical stability. Default: `1e-8`.
 
@@ -779,6 +822,8 @@ def rgb_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
             HSV version of the image. H channel values are in the range
             [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
+    assert_tensor_of_channels(image, 3)
+    
     max_rgb, argmax_rgb = image.max(-3)
     min_rgb, argmin_rgb = image.min(-3)
     deltac              = max_rgb - min_rgb
@@ -808,13 +853,16 @@ def rgb_to_lab(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to Lab.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         lab (Tensor[..., 3, H, W]):
             Lab version of the image. L channel values are in the range
             [0, 100]. a and b are in the range [-127, 127].
     """
+    assert_tensor_of_channels(image, 3)
+    
     # Convert from sRGB to Linear RGB
     lin_rgb = rgb_to_linear_rgb(image)
     xyz_im  = rgb_to_xyz(lin_rgb)
@@ -847,12 +895,15 @@ def rgb_to_linear_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            sRGB Image to be converted to linear RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         linear_rgb (Tensor[..., 3, H, W]):
             linear RGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     lin_rgb = torch.where(
         image > 0.04045,
         torch.pow(((image + 0.055) / 1.055), 2.4),
@@ -867,7 +918,8 @@ def rgb_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to Luv.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         eps (float):
             For numerically stability when dividing.
 
@@ -875,6 +927,8 @@ def rgb_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
         luv (Tensor[..., 3, H, W]):
             Luv version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     # Convert from sRGB to Linear RGB
     lin_rgb = rgb_to_linear_rgb(image)
     
@@ -911,7 +965,8 @@ def rgb_to_raw(image: Tensor, cfa: CFA) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB image to be converted to bayer raw.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         cfa (CFA):
             Which color filter array do we want the output to mimic.
             I.e. which pixels are red/green/blue.
@@ -924,6 +979,8 @@ def rgb_to_raw(image: Tensor, cfa: CFA) -> Tensor:
         >>> rgbinput = torch.rand(2, 3, 4, 6)
         >>> raw      = rgb_to_raw(rgbinput, CFA.BG)  # [2, 1, 4, 6]
     """
+    assert_tensor_of_channels(image, 3)
+    
     # Pick the image with green pixels clone to make sure grad works
     output = image[..., 1:2, :, :].clone()
 
@@ -950,7 +1007,8 @@ def rgb_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to RGBA.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
 
@@ -961,6 +1019,8 @@ def rgb_to_rgba(image: Tensor, alpha_val: Union[float, Tensor]) -> Tensor:
     Notes:
         Current functionality is NOT supported by Torchscript.
     """
+    assert_tensor_of_channels(image, 3)
+    
     if not isinstance(alpha_val, (float, Tensor)):
         raise TypeError(
             f"`alpha_val` must be `float` or `Tensor`. "
@@ -983,12 +1043,15 @@ def rgb_to_xyz(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to XYZ.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         xyz (Tensor[..., 3, H, W]):
             XYZ version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     r   = image[..., 0, :, :]
     g   = image[..., 1, :, :]
     b   = image[..., 2, :, :]
@@ -1006,12 +1069,15 @@ def rgb_to_ycrcb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to YCrCb.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         ycrcb (Tensor[..., 3, H, W]):
             YCrCb version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     r = image[..., 0, :, :]
     g = image[..., 1, :, :]
     b = image[..., 2, :, :]
@@ -1031,12 +1097,15 @@ def rgb_to_yuv(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to YUV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         yuv (Tensor[..., 3, H, W]):
             YUV version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     r   = image[..., 0, :, :]
     g   = image[..., 1, :, :]
     b   = image[..., 2, :, :]
@@ -1057,22 +1126,26 @@ def rgb_to_yuv420(image: Tensor) -> ListOrTuple2T[Tensor]:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to YUV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         A Tensor containing the Y plane with shape [..., 1, H, W]
         A Tensor containing the UV planes with shape [..., 2, H/2, W/2]
     """
-    if not isinstance(image, Tensor):
-        raise TypeError(f"`image` must be a `Tensor`. But got: {type(image)}.")
+    assert_tensor_of_channels(image, 3)
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"`image` must have a shape of [..., 3, H, W]. "
-                         f"But got: {image.shape}.")
+        raise ValueError(
+            f"`image` must have a shape of [..., 3, H, W]. "
+            f"But got: {image.shape}."
+        )
     if (len(image.shape) < 2 or
         image.shape[-2] % 2 == 1 or
         image.shape[-1] % 2 == 1):
-        raise ValueError(f"`image` H, W must be evenly divisible by 2. "
-                         f"But got: {image.shape}.")
+        raise ValueError(
+            f"`image` H, W must be evenly divisible by 2. "
+            f"But got: {image.shape}."
+        )
 
     yuvimage = rgb_to_yuv(image)
     return (
@@ -1088,22 +1161,26 @@ def rgb_to_yuv422(image: Tensor) -> ListOrTuple2T[Tensor]:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            RGB Image to be converted to YUV.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
        A Tensor containing the Y plane with shape [..., 1, H, W].
        A Tensor containing the UV planes with shape [..., 2, H, W/2].
     """
-    if not isinstance(image, Tensor):
-        raise TypeError(f"`image` must be a Tensor. But got: {type(image)}.")
+    assert_tensor_of_channels(image, 3)
     if len(image.shape) < 3 or image.shape[-3] != 3:
-        raise ValueError(f"`image` must have a shape of [..., 3, H, W]. "
-                         f"But got: {image.shape}.")
+        raise ValueError(
+            f"`image` must have a shape of [..., 3, H, W]. "
+            f"But got: {image.shape}."
+        )
     if (len(image.shape) < 2 or
         image.shape[-2] % 2 == 1 or
         image.shape[-1] % 2 == 1):
-        raise ValueError(f"`image` H, W must be evenly divisible by 2. "
-                         f"But got: {image.shape}.")
+        raise ValueError(
+            f"`image` H, W must be evenly divisible by 2. "
+            f"But got: {image.shape}."
+        )
 
     yuvimage = rgb_to_yuv(image)
     return (
@@ -1117,20 +1194,14 @@ def rgba_to_bgr(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 4, H, W]):
-            RGBA Image to be converted to BGR.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
-    if not isinstance(image, Tensor):
-        raise TypeError(f"`image` must be a `Tensor`. But got: {type(image)}")
-    if image.ndim < 3 or image.shape[-3] != 4:
-        raise ValueError(
-            f"`image` must have a shape of [..., 4, H, W]. "
-            f"But got: {image.shape}"
-        )
-
+    assert_tensor_of_channels(image, 4)
     # Convert to RGB first, then to BGR
     return rgb_to_bgr(image=rgba_to_rgb(image=image))
     
@@ -1140,12 +1211,15 @@ def rgba_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 4, H, W]):
-            RGBA Image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 4)
+    
     # Unpack channels
     r, g, b, a = torch.chunk(image, image.shape[-3], dim=-3)
 
@@ -1164,12 +1238,14 @@ def xyz_to_bgr(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            XYZ Image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_bgr(image=xyz_to_rgb(image=image))
 
 
@@ -1178,12 +1254,14 @@ def xyz_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            XYZ Image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     x = image[..., 0, :, :]
     y = image[..., 1, :, :]
     z = image[..., 2, :, :]
@@ -1201,12 +1279,14 @@ def ycrcb_to_bgr(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            YCrCb Image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_bgr(image=ycrcb_to_rgb(image=image))
 
 
@@ -1216,12 +1296,15 @@ def ycrcb_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            YCrCb Image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     y  = image[..., 0, :, :]
     cb = image[..., 1, :, :]
     cr = image[..., 2, :, :]
@@ -1246,32 +1329,18 @@ def yuv420_to_rgb(image_y: Tensor, image_uv: Tensor) -> Tensor:
 
     Args:
         image_y (Tensor[..., 1, H, W]):
-            Y (luma) Image plane to be converted to RGB.
+            Y (luma) Image plane to be converted to RGB, where ... means it can
+            have an arbitrary number of leading dimensions.
         image_uv (Tensor[..., 2, H/2, W/2]):
-            UV (chroma) Image planes to be converted to RGB.
+            UV (chroma) Image planes to be converted to RGB, where ... means it
+            can have an arbitrary number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
-    if not isinstance(image_y, Tensor):
-        raise TypeError(
-            f"`image` must be a `Tensor`. But got: {type(image_y)}."
-        )
-    if not isinstance(image_uv, Tensor):
-        raise TypeError(
-            f"`image` must be a `Tensor`. But got: {type(image_uv)}."
-        )
-    if len(image_y.shape) < 3 or image_y.shape[-3] != 1:
-        raise ValueError(
-            f"`image_y` must have a shape of [..., 1, H, W]. "
-            f"But got: {image_y.shape}."
-        )
-    if len(image_uv.shape) < 3 or image_uv.shape[-3] != 2:
-        raise ValueError(
-            f"`image_uv` must have a shape of [..., 2, H/2, W/2]. "
-            f"But got: {image_uv.shape}."
-        )
+    assert_tensor_of_channels(image_y, 1)
+    assert_tensor_of_channels(image_uv, 2)
     if (len(image_y.shape) < 2 or
         image_y.shape[-2] % 2 == 1 or
         image_y.shape[-1] % 2 == 1):
@@ -1304,32 +1373,18 @@ def yuv422_to_rgb(image_y: Tensor, image_uv: Tensor) -> Tensor:
 
     Args:
         image_y (Tensor[..., 1, H, W]):
-            Y (luma) Image plane to be converted to RGB.
+            Y (luma) Image plane to be converted to RGB, where ... means it can
+            have an arbitrary number of leading dimensions.
         image_uv (Tensor[..., 2, H/2, W/2]):
-            UV (luma) Image planes to be converted to RGB.
+            UV (luma) Image planes to be converted to RGB, where ... means it
+            can have an arbitrary number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
-    if not isinstance(image_y, Tensor):
-        raise TypeError(
-            f"`image_y` must be a `Tensor`. But got: {type(image_y)}."
-        )
-    if not isinstance(image_uv, Tensor):
-        raise TypeError(
-            f"`image_y` must be `Tensor`. But got: {type(image_uv)}."
-        )
-    if len(image_y.shape) < 3 or image_y.shape[-3] != 1:
-        raise ValueError(
-            f"`image_y` must have a shape of [..., 1, H, W]. "
-            f"But got: {image_y.shape}."
-        )
-    if len(image_uv.shape) < 3 or image_uv.shape[-3] != 2:
-        raise ValueError(
-            f"`image_uv` must have a shape of [..., 2, H, W/2]. "
-            f"But got: {image_uv.shape}."
-        )
+    assert_tensor_of_channels(image_y, 1)
+    assert_tensor_of_channels(image_uv, 2)
     if (len(image_y.shape) < 2 or
         image_y.shape[-2] % 2 == 1 or
         image_y.shape[-1] % 2 == 1):
@@ -1359,12 +1414,14 @@ def yuv_to_bgr(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            YUV Image to be converted to BGR.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
             BGR version of the image.
     """
+    assert_tensor_of_channels(image, 3)
     return rgb_to_bgr(image=yuv_to_rgb(image=image))
 
 
@@ -1374,12 +1431,15 @@ def yuv_to_rgb(image: Tensor) -> Tensor:
 
     Args:
         image (Tensor[..., 3, H, W]):
-            YUV Image to be converted to RGB.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
             RGB version of the image.
     """
+    assert_tensor_of_channels(image, 3)
+    
     y   = image[..., 0, :, :]
     u   = image[..., 1, :, :]
     v   = image[..., 2, :, :]
@@ -1571,7 +1631,7 @@ class BgrToYuv(Transform):
     ) -> tuple[Tensor, Union[Tensor, None]]:
         return bgr_to_yuv(image=input), \
                bgr_to_yuv(image=target) if target is not None else None
-       
+
 
 @TRANSFORMS.register(name="grayscale_to_rgb")
 class GrayscaleToRgb(Transform):

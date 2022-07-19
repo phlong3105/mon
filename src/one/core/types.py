@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Store all constants, enums, and typing.
+"""Define all enums, constants, custom types, and assertion.
 """
 
 from __future__ import annotations
@@ -12,6 +12,8 @@ import sys
 import types
 from enum import Enum
 from typing import Any
+from typing import Collection
+from typing import Iterable
 from typing import Sequence
 from typing import TypeVar
 from typing import Union
@@ -19,124 +21,13 @@ from typing import Union
 import cv2
 import numpy as np
 import torch
+from munch import Munch
 from torch import nn
 from torch import Tensor
 from torch.nn.modules.loss import _Loss
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 from torchmetrics import Metric
-
-from one.core.factory import Factory
-from one.core.factory import OptimizerFactory
-from one.core.factory import SchedulerFactory
-
-
-# MARK: - Typing
-# NOTE: Base
-# Template for arguments which can be supplied as a tuple, or which can be a
-# scalar which PyTorch will internally broadcast to a tuple. Comes in several
-# variants: A tuple of unknown size, and a fixed-size tuple for 1d, 2d, or 3d
-# operations.
-T                      = TypeVar("T")
-Callable               = Union[str, type, object, types.FunctionType, functools.partial]
-ScalarOrTuple1T        = Union[T, tuple[T]]
-ScalarOrTuple2T        = Union[T, tuple[T, T]]
-ScalarOrTuple3T        = Union[T, tuple[T, T, T]]
-ScalarOrTuple4T        = Union[T, tuple[T, T, T, T]]
-ScalarOrTuple5T        = Union[T, tuple[T, T, T, T, T]]
-ScalarOrTuple6T        = Union[T, tuple[T, T, T, T, T, T]]
-ScalarOrTupleAnyT      = Union[T, tuple[T, ...]]
-ScalarListOrTuple1T    = Union[T, list[T], tuple[T]]
-ScalarListOrTuple2T    = Union[T, list[T], tuple[T, T]]
-ScalarListOrTuple3T    = Union[T, list[T], tuple[T, T, T]]
-ScalarListOrTuple4T    = Union[T, list[T], tuple[T, T, T, T]]
-ScalarListOrTuple5T    = Union[T, list[T], tuple[T, T, T, T, T]]
-ScalarListOrTuple6T    = Union[T, list[T], tuple[T, T, T, T, T, T]]
-ScalarListOrTupleAnyT  = Union[T, list[T], tuple[T, ...]]
-ScalarOrCollectionAnyT = Union[T, list[T], tuple[T, ...], dict[Any, T]]
-ListOrTupleAnyT        = Union[   list[T], tuple[T, ...]]
-ListOrTuple1T          = Union[   list[T], tuple[T]]
-ListOrTuple2T          = Union[   list[T], tuple[T, T]]
-ListOrTuple3T          = Union[   list[T], tuple[T, T, T]]
-ListOrTuple4T          = Union[   list[T], tuple[T, T, T, T]]
-ListOrTuple5T          = Union[   list[T], tuple[T, T, T, T, T]]
-ListOrTuple6T          = Union[   list[T], tuple[T, T, T, T, T, T]]
-ListOrTuple3or4T       = Union[   list[T], tuple[T, T, T], tuple[T, T, T, T]]
-# NOTE: Custom
-Array1T                = ScalarListOrTuple1T[np.ndarray]
-Array2T                = ScalarListOrTuple2T[np.ndarray]
-Array3T                = ScalarListOrTuple3T[np.ndarray]
-Array4T                = ScalarListOrTuple4T[np.ndarray]
-Array5T                = ScalarListOrTuple5T[np.ndarray]
-Array6T                = ScalarListOrTuple6T[np.ndarray]
-ArrayAnyT              = ScalarListOrTupleAnyT[np.ndarray]
-ArrayList              = list[np.ndarray]
-Arrays                 = ScalarOrCollectionAnyT[np.ndarray]
-Augment_               = Union[dict, Callable]
-Color                  = ListOrTuple3or4T[int]
-Devices                = Union[ScalarListOrTupleAnyT[int],
-                               ScalarListOrTupleAnyT[str]]
-EvalDataLoaders        = Union[DataLoader, Sequence[DataLoader]]
-Int1T                  = ScalarListOrTuple1T[int]
-Int2T                  = ScalarListOrTuple2T[int]
-Int3T                  = ScalarListOrTuple3T[int]
-Int4T                  = ScalarListOrTuple4T[int]
-Int5T                  = ScalarListOrTuple5T[int]
-Int6T                  = ScalarListOrTuple6T[int]
-IntAnyT                = ScalarListOrTupleAnyT[int]
-Int2Or3T               = Union[Int2T, Int3T]
-Float1T                = ScalarListOrTuple1T[float]
-Float2T                = ScalarListOrTuple2T[float]
-Float3T                = ScalarListOrTuple3T[float]
-Float4T                = ScalarListOrTuple4T[float]
-Float5T                = ScalarListOrTuple5T[float]
-Float6T                = ScalarListOrTuple6T[float]
-FloatAnyT              = ScalarListOrTupleAnyT[float]
-Indexes                = ScalarListOrTupleAnyT[int]
-Losses_                = Union[_Loss,  dict, list[Union[_Loss,  dict]]]
-Metrics_               = Union[Metric, dict, list[Union[Metric, dict]]]
-Number                 = Union[int, float]
-Optimizers_            = Union[Optimizer, dict, list[Union[Optimizer, dict]]]
-Padding1T              = Union[str, ScalarListOrTuple1T[int]]
-Padding2T              = Union[str, ScalarListOrTuple2T[int]]
-Padding3T              = Union[str, ScalarListOrTuple3T[int]]
-Padding4T              = Union[str, ScalarListOrTuple4T[int]]
-Padding5T              = Union[str, ScalarListOrTuple5T[int]]
-Padding6T              = Union[str, ScalarListOrTuple6T[int]]
-PaddingAnyT            = Union[str, ScalarListOrTupleAnyT[int]]
-Pretrained             = Union[bool, str, dict]
-Tasks                  = ScalarListOrTupleAnyT[str]
-Tensor1T               = ScalarListOrTuple1T[Tensor]
-Tensor2T               = ScalarListOrTuple2T[Tensor]
-Tensor3T               = ScalarListOrTuple3T[Tensor]
-Tensor4T               = ScalarListOrTuple4T[Tensor]
-Tensor5T               = ScalarListOrTuple5T[Tensor]
-Tensor6T               = ScalarListOrTuple6T[Tensor]
-TensorAnyT             = ScalarListOrTupleAnyT[Tensor]
-TensorList             = list[Tensor]
-Tensors                = ScalarOrCollectionAnyT[Tensor]
-TensorOrArray          = Union[Tensor, np.ndarray]
-TensorsOrArrays        = Union[Tensors, Arrays]
-TrainDataLoaders       = Union[
-    DataLoader,
-    Sequence[DataLoader],
-    Sequence[Sequence[DataLoader]],
-    Sequence[dict[str, DataLoader]],
-    dict[str, DataLoader],
-    dict[str, dict[str, DataLoader]],
-    dict[str, Sequence[DataLoader]],
-]
-Transform_             = Union[dict, Callable]
-Transforms_            = Union[str, nn.Sequential, Transform_, list[Transform_]]
-Weights                = Union[Tensor,
-                               ListOrTupleAnyT[float],
-                               ListOrTupleAnyT[int]]
-
-ForwardOutput          = tuple[TensorsOrArrays, Union[TensorsOrArrays, None]]
-StepOutput             = Union[TensorsOrArrays, dict]
-EpochOutput            = list[StepOutput]
-EvalOutput             = list[dict]
-PredictOutput          = Union[list[Any], list[list[Any]]]
 
 
 # MARK: - Enums
@@ -165,31 +56,22 @@ class BBoxFormat(Enum):
     @property
     def int_mapping(cls) -> dict:
         return {
-            0: BBoxFormat.CXCYAR,     
-            1: BBoxFormat.CXCYRH,     
-            2: BBoxFormat.CXCYWH,     
+            0: BBoxFormat.CXCYAR,
+            1: BBoxFormat.CXCYRH,
+            2: BBoxFormat.CXCYWH,
             3: BBoxFormat.CXCYWH_NORM,
-            4: BBoxFormat.XYXY,       
-            5: BBoxFormat.XYWH,       
+            4: BBoxFormat.XYXY,
+            5: BBoxFormat.XYWH,
         }
     
     @staticmethod
     def from_str(value: str) -> BBoxFormat:
-        value = value.lower()
-        if value not in BBoxFormat.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {BBoxFormat.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(BBoxFormat.str_mapping, value.lower())
         return BBoxFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> BBoxFormat:
-        if value not in BBoxFormat.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {BBoxFormat.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(BBoxFormat.int_mapping, value)
         return BBoxFormat.int_mapping[value]
 
     @staticmethod
@@ -197,7 +79,7 @@ class BBoxFormat(Enum):
         if isinstance(value, BBoxFormat):
             return value
         elif isinstance(value, str):
-            return BBoxFormat.from_int(value)
+            return BBoxFormat.from_str(value)
         elif isinstance(value, int):
             return BBoxFormat.from_int(value)
         else:
@@ -325,21 +207,12 @@ class DistanceMetric(Enum):
     
     @staticmethod
     def from_str(value: str) -> DistanceMetric:
-        value = value.lower()
-        if value not in DistanceMetric.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {DistanceMetric.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(DistanceMetric.str_mapping, value.lower())
         return DistanceMetric.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> DistanceMetric:
-        if value not in DistanceMetric.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {DistanceMetric.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(DistanceMetric.int_mapping, value)
         return DistanceMetric.int_mapping[value]
 
     @staticmethod
@@ -405,21 +278,12 @@ class ImageFormat(Enum):
     
     @staticmethod
     def from_str(value: str) -> ImageFormat:
-        value = value.lower()
-        if value not in ImageFormat.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {ImageFormat.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(ImageFormat.str_mapping, value.lower())
         return ImageFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ImageFormat:
-        if value not in ImageFormat.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {ImageFormat.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(ImageFormat.int_mapping, value)
         return ImageFormat.int_mapping[value]
 
     @staticmethod
@@ -526,21 +390,12 @@ class InterpolationMode(Enum):
     
     @staticmethod
     def from_str(value: str) -> InterpolationMode:
-        value = value.lower()
-        if value not in InterpolationMode.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {InterpolationMode.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(InterpolationMode.str_mapping, value.lower())
         return InterpolationMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> InterpolationMode:
-        if value not in InterpolationMode.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {InterpolationMode.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(InterpolationMode.int_mapping, value)
         return InterpolationMode.int_mapping[value]
 
     @staticmethod
@@ -614,21 +469,12 @@ class MemoryUnit(Enum):
     
     @staticmethod
     def from_str(value: str) -> MemoryUnit:
-        value = value.lower()
-        if value not in MemoryUnit.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {MemoryUnit.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(MemoryUnit.str_mapping, value.lower())
         return MemoryUnit.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> MemoryUnit:
-        if value not in MemoryUnit.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {MemoryUnit.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(MemoryUnit.int_mapping, value)
         return MemoryUnit.int_mapping[value]
     
     @staticmethod
@@ -681,20 +527,12 @@ class ModelState(Enum):
 
     @staticmethod
     def from_str(value: str) -> ModelState:
-        if value not in ModelState.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {ModelState.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(ModelState.str_mapping, value.lower())
         return ModelState.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ModelState:
-        if value not in ModelState.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {ModelState.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(ModelState.int_mapping, value)
         return ModelState.int_mapping[value]
 
     @staticmethod
@@ -779,20 +617,12 @@ class PaddingMode(Enum):
 
     @staticmethod
     def from_str(value: str) -> PaddingMode:
-        if value not in PaddingMode.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {PaddingMode.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(PaddingMode.str_mapping, value)
         return PaddingMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> PaddingMode:
-        if value not in PaddingMode.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {PaddingMode.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(PaddingMode.int_mapping, value)
         return PaddingMode.int_mapping[value]
 
     @staticmethod
@@ -846,33 +676,24 @@ class VideoFormat(Enum):
     @property
     def int_mapping(cls) -> dict:
         return {
-            0: VideoFormat.AVI, 
-            1: VideoFormat.M4V, 
-            2: VideoFormat.MKV, 
-            3: VideoFormat.MOV, 
-            4: VideoFormat.MP4, 
+            0: VideoFormat.AVI,
+            1: VideoFormat.M4V,
+            2: VideoFormat.MKV,
+            3: VideoFormat.MOV,
+            4: VideoFormat.MP4,
             5: VideoFormat.MPEG,
-            6: VideoFormat.MPG, 
-            7: VideoFormat.WMV, 
+            6: VideoFormat.MPG,
+            7: VideoFormat.WMV,
         }
     
     @staticmethod
     def from_str(value: str) -> VideoFormat:
-        value = value.lower()
-        if value not in VideoFormat.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {VideoFormat.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(VideoFormat.str_mapping, value.lower())
         return VideoFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VideoFormat:
-        if value not in VideoFormat.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {VideoFormat.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(VideoFormat.int_mapping, value)
         return VideoFormat.int_mapping[value]
 
     @staticmethod
@@ -926,20 +747,12 @@ class VisionBackend(Enum):
     
     @staticmethod
     def from_str(value: str) -> VisionBackend:
-        if value not in VisionBackend.str_mapping:
-            raise ValueError(
-                f"`value` must be one of: {VisionBackend.str_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(VisionBackend.str_mapping, value.lower())
         return VisionBackend.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VisionBackend:
-        if value not in VisionBackend.int_mapping:
-            raise ValueError(
-                f"`value` must be one of: {VisionBackend.int_mapping.keys()}. "
-                f"But got: {value}."
-            )
+        assert_dict_contain_key(VisionBackend.int_mapping, value)
         return VisionBackend.int_mapping[value]
 
     @staticmethod
@@ -965,50 +778,6 @@ class VisionBackend(Enum):
         return [e.value for e in VisionBackend]
 
 
-# MARK: - Builders
-# NOTE: NN Layers
-ACT_LAYERS           = Factory(name="act_layers")
-ATTN_LAYERS          = Factory(name="attn_layers")
-ATTN_POOL_LAYERS     = Factory(name="attn_pool_layers")
-BOTTLENECK_LAYERS    = Factory(name="bottleneck_layers")
-CONV_LAYERS          = Factory(name="conv_layers")
-CONV_ACT_LAYERS      = Factory(name="conv_act_layers")
-CONV_NORM_ACT_LAYERS = Factory(name="conv_norm_act_layers")
-DROP_LAYERS          = Factory(name="drop_layers")
-EMBED_LAYERS         = Factory(name="embed_layers")
-HEADS 	             = Factory(name="heads")
-LINEAR_LAYERS        = Factory(name="linear_layers")
-MLP_LAYERS           = Factory(name="mlp_layers")
-NORM_LAYERS          = Factory(name="norm_layers")
-NORM_ACT_LAYERS      = Factory(name="norm_act_layers")
-PADDING_LAYERS       = Factory(name="padding_layers")
-PLUGIN_LAYERS        = Factory(name="plugin_layers")
-POOL_LAYERS          = Factory(name="pool_layers")
-RESIDUAL_BLOCKS      = Factory(name="residual_blocks")
-SAMPLING_LAYERS      = Factory(name="sampling_layers")
-# NOTE: Models
-BACKBONES            = Factory(name="backbones")
-CALLBACKS            = Factory(name="callbacks")
-LOGGERS              = Factory(name="loggers")
-LOSSES               = Factory(name="losses")
-METRICS              = Factory(name="metrics")
-MODELS               = Factory(name="models")
-MODULE_WRAPPERS      = Factory(name="module_wrappers")
-NECKS 	             = Factory(name="necks")
-OPTIMIZERS           = OptimizerFactory(name="optimizers")
-SCHEDULERS           = SchedulerFactory(name="schedulers")
-# NOTE: Misc
-AUGMENTS             = Factory(name="augments")
-DATAMODULES          = Factory(name="datamodules")
-DATASETS             = Factory(name="datasets")
-DISTANCES            = Factory(name="distance_functions")
-DISTANCE_FUNCS       = Factory(name="distance_functions")
-FILE_HANDLERS        = Factory(name="file_handler")
-LABEL_HANDLERS       = Factory(name="label_handlers")
-MOTIONS              = Factory(name="motions")
-TRANSFORMS           = Factory(name="transforms")
-
-
 # MARK: - Constants
 
 DEFAULT_CROP_PCT        = 0.875
@@ -1019,8 +788,466 @@ IMAGENET_INCEPTION_STD  = (0.5, 0.5, 0.5)
 IMAGENET_DPN_MEAN       = (124 / 255, 117 / 255, 104 / 255)
 IMAGENET_DPN_STD        = tuple([1 / (.0167 * 255)] * 3)
 
-PI             = torch.tensor(3.14159265358979323846)
-VISION_BACKEND = VisionBackend.PIL
+PI                      = torch.tensor(3.14159265358979323846)
+VISION_BACKEND          = VisionBackend.PIL
+
+
+# MARK: - Typing
+
+T                      = TypeVar("T")
+Callable               = Union[str, type, object, types.FunctionType, functools.partial]
+ScalarOrTuple1T        = Union[T, tuple[T]]
+ScalarOrTuple2T        = Union[T, tuple[T, T]]
+ScalarOrTuple3T        = Union[T, tuple[T, T, T]]
+ScalarOrTuple4T        = Union[T, tuple[T, T, T, T]]
+ScalarOrTuple5T        = Union[T, tuple[T, T, T, T, T]]
+ScalarOrTuple6T        = Union[T, tuple[T, T, T, T, T, T]]
+ScalarOrTupleAnyT      = Union[T, tuple[T, ...]]
+ScalarListOrTuple1T    = Union[T, list[T], tuple[T]]
+ScalarListOrTuple2T    = Union[T, list[T], tuple[T, T]]
+ScalarListOrTuple3T    = Union[T, list[T], tuple[T, T, T]]
+ScalarListOrTuple4T    = Union[T, list[T], tuple[T, T, T, T]]
+ScalarListOrTuple5T    = Union[T, list[T], tuple[T, T, T, T, T]]
+ScalarListOrTuple6T    = Union[T, list[T], tuple[T, T, T, T, T, T]]
+ScalarListOrTupleAnyT  = Union[T, list[T], tuple[T, ...]]
+ScalarOrCollectionAnyT = Union[T, list[T], tuple[T, ...], dict[Any, T]]
+ListOrTupleAnyT        = Union[   list[T], tuple[T, ...]]
+ListOrTuple1T          = Union[   list[T], tuple[T]]
+ListOrTuple2T          = Union[   list[T], tuple[T, T]]
+ListOrTuple3T          = Union[   list[T], tuple[T, T, T]]
+ListOrTuple4T          = Union[   list[T], tuple[T, T, T, T]]
+ListOrTuple5T          = Union[   list[T], tuple[T, T, T, T, T]]
+ListOrTuple6T          = Union[   list[T], tuple[T, T, T, T, T, T]]
+ListOrTuple3or4T       = Union[   list[T], tuple[T, T, T], tuple[T, T, T, T]]
+
+Array1T                = ScalarListOrTuple1T[np.ndarray]
+Array2T                = ScalarListOrTuple2T[np.ndarray]
+Array3T                = ScalarListOrTuple3T[np.ndarray]
+Array4T                = ScalarListOrTuple4T[np.ndarray]
+Array5T                = ScalarListOrTuple5T[np.ndarray]
+Array6T                = ScalarListOrTuple6T[np.ndarray]
+ArrayAnyT              = ScalarListOrTupleAnyT[np.ndarray]
+ArrayList              = list[np.ndarray]
+Arrays                 = ScalarOrCollectionAnyT[np.ndarray]
+Augment_               = Union[dict, Callable]
+Color                  = ListOrTuple3or4T[int]
+Devices                = Union[ScalarListOrTupleAnyT[int],
+                               ScalarListOrTupleAnyT[str]]
+EvalDataLoaders        = Union[DataLoader, Sequence[DataLoader]]
+Int1T                  = ScalarListOrTuple1T[int]
+Int2T                  = ScalarListOrTuple2T[int]
+Int3T                  = ScalarListOrTuple3T[int]
+Int4T                  = ScalarListOrTuple4T[int]
+Int5T                  = ScalarListOrTuple5T[int]
+Int6T                  = ScalarListOrTuple6T[int]
+IntAnyT                = ScalarListOrTupleAnyT[int]
+Int2Or3T               = Union[Int2T, Int3T]
+Float1T                = ScalarListOrTuple1T[float]
+Float2T                = ScalarListOrTuple2T[float]
+Float3T                = ScalarListOrTuple3T[float]
+Float4T                = ScalarListOrTuple4T[float]
+Float5T                = ScalarListOrTuple5T[float]
+Float6T                = ScalarListOrTuple6T[float]
+FloatAnyT              = ScalarListOrTupleAnyT[float]
+Indexes                = ScalarListOrTupleAnyT[int]
+Losses_                = Union[_Loss,  dict, list[Union[_Loss,  dict]]]
+Metrics_               = Union[Metric, dict, list[Union[Metric, dict]]]
+Number                 = Union[int, float]
+Optimizers_            = Union[Optimizer, dict, list[Union[Optimizer, dict]]]
+Padding1T              = Union[str, ScalarListOrTuple1T[int]]
+Padding2T              = Union[str, ScalarListOrTuple2T[int]]
+Padding3T              = Union[str, ScalarListOrTuple3T[int]]
+Padding4T              = Union[str, ScalarListOrTuple4T[int]]
+Padding5T              = Union[str, ScalarListOrTuple5T[int]]
+Padding6T              = Union[str, ScalarListOrTuple6T[int]]
+PaddingAnyT            = Union[str, ScalarListOrTupleAnyT[int]]
+Pretrained             = Union[bool, str, dict]
+Tasks                  = ScalarListOrTupleAnyT[str]
+Tensor1T               = ScalarListOrTuple1T[Tensor]
+Tensor2T               = ScalarListOrTuple2T[Tensor]
+Tensor3T               = ScalarListOrTuple3T[Tensor]
+Tensor4T               = ScalarListOrTuple4T[Tensor]
+Tensor5T               = ScalarListOrTuple5T[Tensor]
+Tensor6T               = ScalarListOrTuple6T[Tensor]
+TensorAnyT             = ScalarListOrTupleAnyT[Tensor]
+TensorList             = list[Tensor]
+Tensors                = ScalarOrCollectionAnyT[Tensor]
+TensorOrArray          = Union[Tensor, np.ndarray]
+TensorsOrArrays        = Union[Tensors, Arrays]
+TrainDataLoaders       = Union[
+    DataLoader,
+    Sequence[DataLoader],
+    Sequence[Sequence[DataLoader]],
+    Sequence[dict[str, DataLoader]],
+    dict[str, DataLoader],
+    dict[str, dict[str, DataLoader]],
+    dict[str, Sequence[DataLoader]],
+]
+Transform_             = Union[dict, Callable]
+Transforms_            = Union[str, nn.Sequential, Transform_, list[Transform_]]
+Weights                = Union[Tensor,
+                               ListOrTupleAnyT[float],
+                               ListOrTupleAnyT[int]]
+
+ForwardOutput          = tuple[TensorsOrArrays, Union[TensorsOrArrays, None]]
+StepOutput             = Union[TensorsOrArrays, dict]
+EpochOutput            = list[StepOutput]
+EvalOutput             = list[dict]
+PredictOutput          = Union[list[Any], list[list[Any]]]
+
+
+# MARK: - Assertion
+
+def is_class(input: Any) -> bool:
+    if inspect.isclass(input):
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a class type. But got: {type(input)}."
+        )
+
+
+def is_collection(input: Any) -> bool:
+    if isinstance(input, Collection):
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `Collection`. But got: {type(input)}."
+        )
+        
+
+def is_dict(input: Any) -> bool:
+    if isinstance(input, (dict, Munch)):
+        return True
+    else:
+        raise TypeError(f"`input` must be a `dict`. But got: {type(input)}.")
+
+
+def is_dict_contain_key(input: Any, key: Any) -> bool:
+    assert_dict(input)
+    if key in input:
+        return True
+    else:
+        raise ValueError(f"`input` dict must contain the key `{key}`.")
+    
+    
+def is_dict_of(input: dict, item_type: type) -> bool:
+    """Check whether `input` is a dictionary of some type.
+    
+    Args:
+        input (dict):
+            Dictionary to be checked.
+        item_type (type):
+            Expected type of items.
+    
+    Return:
+        (bool):
+            `True` if `s` is a dictionary containing item of type `item_type`.
+            Else `False`.
+    """
+    assert_valid_type(item_type)
+    return all(isinstance(v, item_type) for k, v in input.items())
+
+
+def is_float(input: Any) -> bool:
+    if isinstance(input, float):
+        return True
+    else:
+        raise TypeError(f"`input` must be a `float`. But got: {type(input)}.")
+
+
+def is_iterable(input: Any) -> bool:
+    if isinstance(input, Iterable):
+        return True
+    else:
+        raise TypeError(
+            f"`inputs` must be an iterable object. But got: {type(input)}."
+        )
+    
+
+def is_list(input: Any) -> bool:
+    if isinstance(input, list):
+        return True
+    else:
+        raise TypeError(f"`input` must be a `list`. But got: {type(input)}.")
+
+
+def is_list_of(input: Any, item_type: type) -> bool:
+    """Check whether `l` is a list of some type.
+
+    Args:
+        input (list):
+            List to be checked.
+        item_type (type):
+            Expected type of items.
+
+    Return:
+        (bool):
+            `True` if `s` is a list containing item of type `item_type`.
+            Else `False`.
+    """
+    return is_sequence_of(input=input, item_type=item_type, seq_type=list)
+
+
+def is_negative_number(input: Any) -> bool:
+    assert_number(input)
+    if input < 0.0:
+        return True
+    else:
+        raise ValueError(f"`input` must be negative. But got: {input}.")
+    
+    
+def is_number(input: Any) -> bool:
+    if isinstance(input, (int, float)):
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be an `int` or `float`. But got: {type(input)}."
+        )
+
+
+def is_number_divisible_to(input: Any, k: int) -> bool:
+    assert_number(input)
+    if input % k == 0:
+        return True
+    else:
+        raise ValueError(
+            f"`input` must be divisible by `{k}`. "
+            f"But got: {input} % {k} != 0."
+        )
+
+
+def is_number_in_range(
+    input: Any, start: Union[int, float], end: Union[int, float]
+) -> bool:
+    assert_number(input)
+    if start <= input <= end:
+        return True
+    else:
+        raise ValueError(
+            f"Require {start} <= `input` <= {end}. But got: {input}."
+        )
+
+
+def is_positive_number(input: Any) -> bool:
+    assert_number(input)
+    if input >= 0.0:
+        return True
+    else:
+        raise ValueError(f"`input` must be positive. But got: {input}.")
+    
+
+def is_same_length(input1: Sequence, input2: Sequence) -> bool:
+    assert_sequence(input1)
+    assert_sequence(input2)
+    if len(input1) == len(input2):
+        return True
+    else:
+        raise ValueError(
+            f"`input1` and `input2` must have the same length. "
+            f"But got: {len(input1)} != {len(input2)}."
+        )
+
+
+def is_same_shape(input1: TensorOrArray, input2: TensorOrArray) -> bool:
+    if input1.shape == input2.shape:
+        return True
+    else:
+        raise ValueError(
+            f"`input1` and `input2` must have the same shape. "
+            f"But got: {input1.shape} != {input2.shape}."
+        )
+
+
+def is_sequence(input: Any) -> bool:
+    if isinstance(input, (list, tuple)):
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `list` or `tuple`. But got: {type(input)}."
+        )
+
+
+def is_sequence_of(
+    input    : Sequence,
+    item_type: type,
+    seq_type : Union[type, None] = None
+) -> bool:
+    """Check whether `s` is a sequence of some type.
+    
+    Args:
+        input (Sequence):
+            Sequence to be checked.
+        item_type (type):
+            Expected type of sequence items.
+        seq_type (type, None):
+            Expected sequence type. Default: `None`.
+    
+    Return:
+        (bool):
+            `True` if `s` is a sequence of type `seq_type` containing item of
+            type `item_type`. Else `False`.
+    """
+    if seq_type is None:
+        seq_type = Sequence
+    assert_valid_type(seq_type)
+    
+    if not isinstance(input, seq_type):
+        return False
+    for item in input:
+        if not isinstance(item, item_type):
+            return False
+    return True
+
+
+def is_sequence_of_length(input: Any, len: int) -> bool:
+    assert_sequence(input)
+    if len(input) == len:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a sequence of length `{len}`. "
+            f"But got: {len(input)}."
+        )
+
+
+def is_str(input: Any) -> bool:
+    if isinstance(input, str):
+        return True
+    else:
+        raise TypeError(f"`input` must be a `str`. But got: {type(input)}.")
+
+
+def is_tensor(input: Any) -> bool:
+    if isinstance(input, Tensor):
+        return True
+    else:
+        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+
+
+def is_tensor_of_atleast_ndim(input: Any, ndim: int) -> bool:
+    assert_tensor(input)
+    if input.ndim >= ndim:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `Tensor` of ndim `{ndim}`. "
+            f"But got: {input.ndim}."
+        )
+    
+
+def is_tensor_of_channels(input: Any, channels: Union[list, tuple, int]) -> bool:
+    from one.vision.transformation import get_num_channels
+    assert_tensor_of_atleast_ndim(input, 3)
+    
+    if isinstance(channels, int):
+        channels = [channels]
+    elif isinstance(channels, tuple):
+        channels = list(channels)
+    assert_list(channels)
+    
+    c = get_num_channels(input)
+    if c in channels:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `Tensor` of channels `{channels}`. "
+            f"But got: {c}."
+        )
+
+
+def is_tensor_of_ndim(input: Any, ndim: int) -> bool:
+    assert_tensor(input)
+    if input.ndim == ndim:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `Tensor` of ndim `{ndim}`. "
+            f"But got: {input.ndim}."
+        )
+    
+
+def is_tensor_of_ndim_in_range(input: Any, start: int, end: int) -> bool:
+    assert_tensor(input)
+    if start <= input.ndim <= end:
+        return True
+    else:
+        raise ValueError(
+            f"Require {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
+        )
+    
+
+def is_tuple(input: Any) -> bool:
+    if isinstance(input, tuple):
+        return True
+    else:
+        raise TypeError(f"`input` must be a `tuple`. But got: {type(input)}.")
+
+
+def is_tuple_of(input: Any, item_type: type) -> bool:
+    """Check whether `input` is a tuple of some type.
+    
+    Args:
+        input (tuple):
+            Dictionary to be checked.
+        item_type (type):
+            Expected type of items.
+    
+    Return:
+        (bool):
+            `True` if `s` is a tuple containing item of type `item_type`.
+            Else `False`.
+    """
+    return is_sequence_of(input=input, item_type=item_type, seq_type=tuple)
+
+
+def is_valid_type(input: Any) -> bool:
+    if isinstance(input, type):
+        return True
+    else:
+        raise TypeError(f"`input` must be a valid type. But got: {input}.")
+
+
+def is_value_in_collection(input: Any, collection: Any) -> bool:
+    assert_collection(collection)
+    if input in collection:
+        return True
+    else:
+        raise ValueError(
+            f"`input` must be included in `collection`. "
+            f"But got: {input} not in {collection}."
+        )
+
+
+assert_collection              = is_collection
+assert_class                   = is_class
+assert_dict                    = is_dict
+assert_dict_contain_key        = is_dict_contain_key
+assert_dict_of                 = is_dict_of
+assert_float                   = is_float
+assert_iterable                = is_iterable
+assert_list                    = is_list
+assert_list_of                 = is_list_of
+assert_negative_number         = is_negative_number
+assert_number                  = is_number
+assert_number_divisible_to     = is_number_divisible_to
+assert_number_in_range         = is_number_in_range
+assert_positive_number         = is_positive_number
+assert_same_length             = is_same_length
+assert_same_shape              = is_same_shape
+assert_sequence                = is_sequence
+assert_sequence_of             = is_sequence_of
+assert_sequence_of_length      = is_sequence_of_length
+assert_str                     = is_str
+assert_tensor                  = is_tensor
+assert_tensor_of_atleast_ndim  = is_tensor_of_atleast_ndim
+assert_tensor_of_channels      = is_tensor_of_channels
+assert_tensor_of_ndim          = is_tensor_of_ndim
+assert_tensor_of_ndim_in_range = is_tensor_of_ndim_in_range
+assert_tuple                   = is_tuple
+assert_tuple_of                = is_tuple_of
+assert_valid_type              = is_valid_type
+assert_value_in_collection     = is_value_in_collection
 
 
 # MARK: - Main

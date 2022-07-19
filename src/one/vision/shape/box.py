@@ -7,9 +7,10 @@ calculations, box metrics, ...
 
 from __future__ import annotations
 
+import inspect
 import math
 import random
-from typing import Optional
+import sys
 from typing import Union
 
 import cv2
@@ -28,34 +29,6 @@ from one.core import to_size
 from one.core import upcast
 from one.vision.shape.box_convert import box_xyxy_to_cxcywh
 
-__all__ = [
-    "affine_box",
-    "clip_box",
-    "compute_box_area",
-    "compute_box_intersection",
-    "compute_box_intersection_union",
-    "compute_box_iou",
-    "compute_box_iou_old",
-    "compute_single_box_iou",
-    "cutout_box",
-    "generate_box",
-    "get_box_center",
-    "get_box_corners",
-    "get_box_corners_points",
-    "get_enclosing_box",
-    "hflip_box",
-    "htranslate_box",
-    "is_box_candidates",
-    "nms",
-    "rotate_box",
-    "scale_box",
-    "scale_box_original",
-    "shear_box",
-    "translate_box",
-    "vflip_box",
-    "vtranslate_box",
-]
-
 
 # MARK: - Functional
 
@@ -66,7 +39,7 @@ def _affine_tensor_box(
     translate : IntAnyT,
     scale     : float,
     shear     : FloatAnyT,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int], None] = None,
     drop_ratio: float                        = 0.0,
 ) -> Tensor:
     """Apply affine transformation on the image keeping image center invariant.
@@ -162,104 +135,6 @@ def _affine_tensor_box(
     return clip_box(box=xy, image_size=image_size, drop_ratio=drop_ratio)
 
 
-def _affine_numpy_box(
-    box       : np.ndarray,
-    image_size: Int2Or3T,
-    angle     : float,
-    translate : IntAnyT,
-    scale     : float,
-    shear     : FloatAnyT,
-    center    : Optional[ListOrTuple2T[int]] = None,
-    drop_ratio: float                        = 0.0,
-) -> np.ndarray:
-    """Apply affine transformation on the image keeping image center invariant.
-    
-    References:
-        https://www.thepythoncode.com/article/image-transformations-using-opencv-in-python
-    
-    Args:
-        box (np.ndarray[B, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[H, W]):
-            Image size.
-        angle (float):
-            Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (IntAnyT):
-            Horizontal and vertical translations (post-rotation translation).
-        scale (float):
-            Overall scale.
-        shear (FloatAnyT):
-            Shear angle value in degrees between -180 to 180, clockwise
-            direction. If a sequence is specified, the first value corresponds
-            to a shear parallel to the x-axis, while the second value
-            corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], optional):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-            
-    Returns:
-        box (np.ndarray[B, 4]):
-            Transformed box.
-    """
-    if not isinstance(angle, (int, float)):
-        raise TypeError(f"`angle` must be `int` or `float`. But got: {type(angle)}.")
-    if isinstance(angle, int):
-        angle = float(angle)
-
-    if isinstance(translate, (int, float)):
-        translate = [translate, translate]
-    if not isinstance(translate, (list, tuple)):
-        raise TypeError(f"`translate` must be `list` or `tuple`. But got: {type(translate)}.")
-    if isinstance(translate, tuple):
-        translate = list(translate)
-    if len(translate) != 2:
-        raise ValueError(f"`translate` must be a sequence of length 2. But got: {len(translate)}.")
-    
-    if isinstance(scale, int):
-        scale = float(scale)
-    if scale < 0.0:
-        raise ValueError(f"`scale` must be positive. But got: {scale}.")
-   
-    if not isinstance(shear, (int, float, list, tuple)):
-        raise TypeError(f"`shear` must be a single value or a sequence of length 2. But got: {shear}.")
-    if isinstance(shear, (int, float)):
-        shear = [shear, 0.0]
-    if isinstance(shear, tuple):
-        shear = list(shear)
-    if len(shear) == 1:
-        shear = [shear[0], shear[0]]
-    if len(shear) != 2:
-        raise ValueError(f"`translate` must be a sequence of length 2. But got: {len(shear)}.")
-        
-    h, w   = to_size(image_size)
-    center = (h * 0.5, w * 0.5) if center is None else center
-    center = tuple(center[::-1])
-    angle  = -angle
-    R      = cv2.getRotationMatrix2D(center=center, angle=angle, scale=scale)
-    T      = translate
-    S      = [math.radians(-shear[0]), math.radians(-shear[1])]
-    M      = np.float32([[R[0, 0]       , S[0] + R[0, 1], R[0, 2] + T[0] + (-S[0] * center[1])],
-                         [S[1] + R[1, 0], R[1, 1]       , R[1, 2] + T[1] + (-S[1] * center[0])],
-                         [0             , 0             , 1]])
-    
-    # NOTE: Create new boxes
-    n         = len(box)
-    xy        = np.ones((n * 4, 3))
-    xy[:, :2] = box[:, [0, 1, 2, 3, 0, 3, 2, 1]].reshape(n * 4, 2)  # x1y1, x2y2, x1y2, x2y1
-    xy        = xy @ M.T  # Transform
-    xy        = xy[:, :2].reshape(n, 8)
-    x         = xy[:, [0, 2, 4, 6]]
-    y         = xy[:, [1, 3, 5, 7]]
-    xy        = np.concatenate((x.min(1), y.min(1), x.max(1), y.max(1))).reshape(4, n).T
-    
-    return clip_box(box=xy, image_size=image_size, drop_ratio=drop_ratio)
-
-
 def affine_box(
     box       : TensorOrArray,
     image_size: Int2Or3T,
@@ -267,7 +142,7 @@ def affine_box(
     translate : IntAnyT,
     scale     : float,
     shear     : FloatAnyT,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int]] = None,
     drop_ratio: float                        = 0.0,
 ) -> TensorOrArray:
     """Apply affine transformation on the image keeping image center invariant.
@@ -306,17 +181,6 @@ def affine_box(
     """
     if isinstance(box, Tensor):
         return _affine_tensor_box(
-            box        = box,
-            image_size = image_size,
-            angle      = angle,
-            translate  = translate,
-            scale      = scale,
-            shear      = shear,
-            center     = center,
-            drop_ratio = drop_ratio,
-        )
-    elif isinstance(box, np.ndarray):
-        return _affine_numpy_box(
             box        = box,
             image_size = image_size,
             angle      = angle,
@@ -837,7 +701,7 @@ def htranslate_box(
     box       : TensorOrArray,
     image_size: Int2Or3T,
     magnitude : int,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int]] = None,
     drop_ratio: float                        = 0.0,
 ) -> TensorOrArray:
     """Translate the bounding box in horizontal direction.
@@ -986,7 +850,7 @@ def rotate_box(
     box       : TensorOrArray,
     image_size: Int2Or3T,
     angle     : float,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int]] = None,
     drop_ratio: float                        = 0.0,
 ) -> TensorOrArray:
     """Rotate the bounding box by the given magnitude.
@@ -1026,8 +890,8 @@ def rotate_box(
 def scale_box(
     box       : TensorOrArray,
     cur_size  : Int2Or3T,
-    new_size  : Optional[Int2Or3T] = None,
-    factor    : Optional[Float2T]  = (1.0, 1.0),
+    new_size  : Union[Int2Or3T] = None,
+    factor    : Union[Float2T]  = (1.0, 1.0),
     keep_shape: bool               = False,
     drop_ratio: float              = 0.0
 ) -> TensorOrArray:
@@ -1131,7 +995,7 @@ def shear_box(
     box       : TensorOrArray,
     image_size: Int2Or3T,
     magnitude : Int2T,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int]] = None,
     drop_ratio: float                        = 0.0,
 ) -> TensorOrArray:
     """Shear bounding boxes coordinates by the given magnitude.
@@ -1172,7 +1036,7 @@ def translate_box(
     box       : TensorOrArray,
     image_size: Int2Or3T,
     magnitude : Int2T,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int]] = None,
     drop_ratio: float                        = 0.0,
 ) -> TensorOrArray:
     """Translate the bounding box by the given magnitude.
@@ -1248,7 +1112,7 @@ def vtranslate_box(
     box       : TensorOrArray,
     image_size: Int2Or3T,
     magnitude : int,
-    center    : Optional[ListOrTuple2T[int]] = None,
+    center    : Union[ListOrTuple2T[int]] = None,
     drop_ratio: float                        = 0.0,
 ) -> TensorOrArray:
     """Translate the bounding box in vertical direction.
@@ -1289,3 +1153,13 @@ def vtranslate_box(
         center     = center,
         drop_ratio = drop_ratio,
     )
+
+
+# MARK: - Main
+
+__all__ = [
+    name for name, value in inspect.getmembers(
+        sys.modules[__name__],
+        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
+    )
+]

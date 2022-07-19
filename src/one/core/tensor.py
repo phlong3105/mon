@@ -12,12 +12,13 @@ from typing import Any
 
 import numpy as np
 import torch
-from multipledispatch import dispatch
 from torch import Tensor
 from torch.linalg import solve
 
-from one.core.collection import is_list_of
 from one.core.rich import error_console
+from one.core.types import assert_tensor
+from one.core.types import assert_tensor_of_ndim_in_range
+from one.core.types import is_list_of
 from one.core.version import torch_version_geq
 
 
@@ -34,19 +35,13 @@ def _to_3d(input: Tensor) -> Tensor:
         input (Tensor):
             Tensor of shape [1, H, W] or [C, H, W].
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
-   
+    assert_tensor_of_ndim_in_range(input, 2, 4)
     if input.ndim == 2:  # [H, W] -> [1, H, W]
         input = input.unsqueeze(dim=0)
     elif input.ndim == 3:  # [C, H, W]
         pass
     elif input.ndim == 4 and input.shape[0] == 1:  # [1, C, H, W] -> [C, H, W]
         input = input.squeeze(dim=0)
-    else:
-        raise ValueError(
-            f"Require 2 <= `input.ndim` <= 4. But got: {input.ndim}."
-        )
     return input
 
 
@@ -61,9 +56,7 @@ def _to_4d(input: Tensor) -> Tensor:
         input (Tensor):
             Tensor of shape [1, C, H, W] or [B, C, H, W].
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
-   
+    assert_tensor_of_ndim_in_range(input, 2, 5)
     if input.ndim == 2:  # [H, W] -> [1, 1, H, W]
         input = input.unsqueeze(dim=0)
         input = input.unsqueeze(dim=0)
@@ -73,8 +66,6 @@ def _to_4d(input: Tensor) -> Tensor:
         pass
     elif input.ndim == 5 and input.shape[0] == 1:
         input = input.squeeze(dim=0)
-    else:
-        raise ValueError(f"Require 2 <= `input.ndim` <= 5. But got: {input.ndim}.")
     return input
 
 
@@ -89,24 +80,20 @@ def _to_5d(input: Tensor) -> Tensor:
         input (Tensor):
             Tensor of shape [1, B, C, H, W] or [*, B, C, H, W].
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
-    
+    assert_tensor_of_ndim_in_range(input, 2, 6)
     if input.ndim == 2:  # [H, W] -> [1, 1, 1, H, W]
         input = input.unsqueeze(dim=0)
         input = input.unsqueeze(dim=0)
         input = input.unsqueeze(dim=0)
-    if input.ndim == 3:  # [C, H, W] -> [1, 1, C, H, W]
+    elif input.ndim == 3:  # [C, H, W] -> [1, 1, C, H, W]
         input = input.unsqueeze(dim=0)
         input = input.unsqueeze(dim=0)
-    if input.ndim == 4:  # [B, C, H, W] -> [1, B, C, H, W]
+    elif input.ndim == 4:  # [B, C, H, W] -> [1, B, C, H, W]
         input = input.unsqueeze(dim=0)
-    if input.ndim == 5:  # [*, B, C, H, W]
+    elif input.ndim == 5:  # [*, B, C, H, W]
         pass
-    if input.ndim == 6 and input.shape[0] == 1:
+    elif input.ndim == 6 and input.shape[0] == 1:
         input = input.squeeze(dim=0)
-    else:
-        raise ValueError(f"Require 2 <= `input.ndim` <= 6. But got: {input.ndim}.")
     return input
 
 
@@ -143,8 +130,7 @@ def histc_cast(input: Tensor, bins: int, min: int, max: int) -> Tensor:
     input data type to fp32, apply torch.inverse, and cast back to the input
     dtype.
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+    assert_tensor(input)
     dtype = input.dtype
     if dtype not in (torch.float32, torch.float64):
         dtype = torch.float32
@@ -159,8 +145,7 @@ def inverse_cast(input: Tensor) -> Tensor:
 	input data type to fp32, apply torch.inverse, and cast back to the input
 	dtype.
 	"""
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+    assert_tensor(input)
     dtype = input.dtype
     if dtype not in (torch.float32, torch.float64):
         dtype = torch.float32
@@ -178,8 +163,7 @@ def safe_solve_with_mask(B: Tensor, A: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         return sol, lu, torch.ones(len(A), dtype=torch.bool, device=A.device)
     # Based on https://github.com/pytorch/pytorch/issues/31546#issuecomment
     # -694135622
-    if not isinstance(B, Tensor):
-        raise TypeError(f"`B` must be a `Tensor`. But got: {type(B)}.")
+    assert_tensor(B)
     
     dtype = B.dtype
     if dtype not in (torch.float32, torch.float64):
@@ -201,8 +185,7 @@ def safe_inverse_with_mask(A: Tensor) -> tuple[Tensor, Tensor]:
         error_console.log("PyTorch version < 1.9, inverse validness mask maybe "
                           "not correct", RuntimeWarning)
         return inv, torch.ones(len(A), dtype=torch.bool, device=A.device)
-    if isinstance(A, Tensor):
-        raise TypeError(f"`A` must be a `Tensor`. But got: {type(A)}.")
+    assert_tensor(A)
    
     dtype_original = A.dtype
     if dtype_original not in (torch.float32, torch.float64):
@@ -222,8 +205,7 @@ def solve_cast(input: Tensor, A: Tensor) -> tuple[Tensor, Tensor]:
     impossible to be used by fp16 or others. What this function does, is cast
     input data type to fp32, apply torch.svd, and cast back to the input dtype.
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+    assert_tensor(input)
     dtype = input.dtype
     if dtype not in (torch.float32, torch.float64):
         dtype = torch.float32
@@ -241,8 +223,7 @@ def svd_cast(input: Tensor) -> tuple[Tensor, Tensor, Tensor]:
 
     NOTE: in torch 1.8.1 this function is recommended to use as torch.linalg.svd
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+    assert_tensor(input)
     dtype = input.dtype
     if dtype not in (torch.float32, torch.float64):
         dtype = torch.float32
@@ -385,7 +366,6 @@ def to_5d_tensor(input) -> Tensor:
     raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
 
 
-@dispatch(Tensor)
 def upcast(input: Tensor) -> Tensor:
     """Protects from numerical overflows in multiplications by upcasting to
     the equivalent higher type.
@@ -398,8 +378,7 @@ def upcast(input: Tensor) -> Tensor:
         input (Tensor):
             Tensor of higher type.
     """
-    if not isinstance(input, Tensor):
-        raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+    assert_tensor(input)
     if input.dtype in (torch.float16, torch.float32, torch.float64):
         return input.to(torch.float)
     if input.dtype in (torch.int8, torch.int16, torch.int32, torch.int64):

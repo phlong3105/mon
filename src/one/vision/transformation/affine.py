@@ -1,58 +1,56 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
+"""Affine transformation.
 """
 
 from __future__ import annotations
 
 import inspect
 import sys
-from copy import copy
-from copy import deepcopy
 from typing import Union
 
 import cv2
 import numpy as np
-import PIL.Image
 import torch
 import torchvision.transforms.functional as F
-from multipledispatch import dispatch
-from PIL import ExifTags
 from torch import nn
 from torch import Tensor
-from torchvision.transforms import functional_pil as F_pil
 from torchvision.transforms import functional_tensor as F_t
 
+from one.core import assert_number
+from one.core import assert_positive_number
+from one.core import assert_sequence_of_length
+from one.core import assert_tensor
+from one.core import assert_tensor_of_ndim
+from one.core import assert_value_in_collection
 from one.core import batch_image_processing
 from one.core import Color
+from one.core import Float4T
 from one.core import FloatAnyT
 from one.core import Int2Or3T
 from one.core import Int2T
 from one.core import Int3T
+from one.core import Int4T
 from one.core import IntAnyT
 from one.core import InterpolationMode
 from one.core import ListOrTuple2T
+from one.core import ListOrTupleAnyT
 from one.core import PaddingMode
-from one.core import TensorOrArray
 from one.core import to_size
 from one.core import TRANSFORMS
-from one.core.rich import error_console
-from one.math import make_divisible
 from one.vision.shape import affine_box
 from one.vision.shape import hflip_box
 from one.vision.shape import vflip_box
-from one.vision.transformation.utils import Transform
-
-# Get orientation exif tag
-for orientation in ExifTags.TAGS.keys():
-    if ExifTags.TAGS[orientation] == "Orientation":
-        break
+from one.vision.transformation.misc import get_image_center4
+from one.vision.transformation.misc import get_image_size
+from one.vision.transformation.misc import is_channel_last
+from one.vision.transformation.transform import Transform
 
 
 # MARK: - Functional
 
-def _affine_tensor_image(
+def affine(
     image        : Tensor,
     angle        : float,
     translate    : IntAnyT,
@@ -61,16 +59,16 @@ def _affine_tensor_image(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Apply affine transformation on the image keeping image center invariant.
-    If the image is torch Tensor, it is expected to have [..., H, W] shape,
-    where ... means an arbitrary number of leading dimensions.
-
+    
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be transformed.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         angle (float):
             Rotation angle in degrees between -180 and 180, clockwise direction.
         translate (IntAnyT):
@@ -83,39 +81,35 @@ def _affine_tensor_image(
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
         center (ListOrTuple2T[int], None):
-            Center of affine transformation. If `None`, use the center of the
+            Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
-            If `True`, expands the output image to make it large enough to
+            If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
             If `False` or omitted, make the output image the same size as the
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-            Default: `None`.
-
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
     """
-    if not isinstance(angle, (int, float)):
-        raise TypeError(
-            f"`angle` must be `int` or `float`. But got: {type(angle)}."
-        )
+    assert_tensor(image)
+    
+    assert_number(angle)
     if isinstance(angle, int):
         angle = float(angle)
     
@@ -123,66 +117,30 @@ def _affine_tensor_image(
         translate = [translate, translate]
     if isinstance(translate, tuple):
         translate = list(translate)
-    if not isinstance(translate, (list, tuple)):
-        raise TypeError(
-            f"`translate` must be `list` or `tuple`. "
-            f"But got: {type(translate)}."
-        )
-    if not len(translate) == 2:
-        raise ValueError(
-            f"`translate` must be a sequence of length 2. "
-            f"But got: {len(translate)}."
-        )
-    
+    assert_sequence_of_length(translate, 2)
+   
     if isinstance(scale, int):
         scale = float(scale)
-    if not scale >= 0.0:
-        raise ValueError(f"`scale` must be positive. But got: {scale}.")
+    assert_positive_number(scale)
     
-    if not isinstance(shear, (int, float, list, tuple)):
-        raise TypeError(
-            f"`shear` must be a single value or a sequence of length 2. "
-            f"But got: {shear}."
-        )
     if isinstance(shear, (int, float)):
         shear = [shear, 0.0]
     if isinstance(shear, tuple):
         shear = list(shear)
     if len(shear) == 1:
         shear = [shear[0], shear[0]]
-    if not len(shear) == 2:
-        raise ValueError(
-            f"`translate` must be a sequence of length 2. "
-            f"But got: {len(shear)}."
-        )
+    assert_sequence_of_length(shear, 2)
     
     if not isinstance(interpolation, InterpolationMode):
         interpolation = InterpolationMode.from_value(interpolation)
     
-    img    = image.clone()
-    h, w   = get_image_size(img)
+    if not inplace:
+        image = image.clone()
+        
+    h, w   = get_image_size(image)
     center = (h * 0.5, w * 0.5) if center is None else center  # H, W
-    center = tuple(center[::-1])  # W, H
+    center = list(center[::-1])  # W, H
     
-    if not isinstance(image, Tensor):
-        # center = (img_size[0] * 0.5 + 0.5, img_size[1] * 0.5 + 0.5)
-        # it is visually better to estimate the center without 0.5 offset
-        # otherwise image rotated by 90 degrees is shifted vs output image of torch.rot90 or F_t.affine
-        matrix = F._get_inverse_affine_matrix(
-            center    = center,
-            angle     = angle,
-            translate = translate,
-            scale     = scale,
-            shear     = shear
-        )
-        pil_interpolation = InterpolationMode.pil_modes_mapping[interpolation]
-        return F_pil.affine(
-            image         = image,
-            matrix        = matrix,
-            interpolation = pil_interpolation,
-            fill          = fill
-        )
-
     # If keep shape, find the new width and height bounds
     if not keep_shape:
         matrix  = F._get_inverse_affine_matrix(
@@ -194,9 +152,16 @@ def _affine_tensor_image(
         )
         abs_cos = abs(matrix[0])
         abs_sin = abs(matrix[1])
-        new_w   = int(h * abs_sin + w * abs_cos)
         new_h   = int(h * abs_cos + w * abs_sin)
-        image   = pad_image(image, pad_size=(new_h, new_w))
+        new_w   = int(h * abs_sin + w * abs_cos)
+        pad_h   = (new_h - h) / 2
+        pad_w   = (new_w - w) / 2
+        image   = pad(
+            image        = image,
+            padding      = (pad_h, pad_w),
+            fill         = fill,
+            padding_mode = padding_mode
+        )
     
     translate_f = [1.0 * t for t in translate]
     matrix      = F._get_inverse_affine_matrix(
@@ -214,133 +179,6 @@ def _affine_tensor_image(
     )
 
 
-def add_weighted(
-    image1: Tensor,
-    alpha : float,
-    image2: Tensor,
-    beta  : float,
-    gamma : float = 0.0,
-) -> Tensor:
-    """Calculate the weighted sum of two Tensors.
-    
-    Function calculates the weighted sum of two Tensors as follows:
-        output = image1 * alpha + image2 * beta + gamma
-
-    Args:
-        image1 (Tensor[..., C, H, W]):
-            First image Tensor.
-        alpha (float):
-            Weight of the image1 elements.
-        image2 (Tensor[..., C, H, W]):
-            Second image Tensor of same shape as `src1`.
-        beta (float):
-            Weight of the image2 elements.
-        gamma (float):
-            Scalar added to each sum. Default: `0.0`.
-
-    Returns:
-        output (Tensor[..., C, H, W]):
-            Weighted Tensor.
-    """
-    if not isinstance(image1, Tensor):
-        raise TypeError(f"`image1` must be a `Tensor`. But got: {type(image1)}.")
-    if not isinstance(image2, Tensor):
-        raise TypeError(f"`image2` must be a `Tensor`. But got: {type(image2)}.")
-    if image1.shape != image2.shape:
-        raise ValueError(
-            f"`image1` and `image2` must have the same shape. "
-            f"But got: {image1.shape} != {image2.shape}."
-        )
-    if not isinstance(alpha, float):
-        raise TypeError(f"`alpha` must be a `float`. But got: {type(alpha)}.")
-    if not isinstance(beta, float):
-        raise TypeError(f"`beta` must be a `float`. But got: {type(beta)}.")
-    if not isinstance(gamma, float):
-        raise TypeError(f"`gamma` must be a `float`. But got: {type(gamma)}.")
-    
-    bound = 1.0 if image1.is_floating_point() else 255.0
-    output = image1 * alpha + image2 * beta + gamma
-    output = output.clamp(0, bound).to(image1.dtype)
-    return output
-
-
-def affine(
-    image        : Union[Tensor, PIL.Image],
-    angle        : float,
-    translate    : IntAnyT,
-    scale        : float,
-    shear        : FloatAnyT,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
-) -> Tensor:
-    """Apply affine transformation on the image keeping image center invariant.
-    
-    Args:
-        image (Tensor[..., C, H, W]):
-            Image to be transformed.
-        angle (float):
-            Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (IntAnyT):
-            Horizontal and vertical translations (post-rotation translation).
-        scale (float):
-            Overall scale.
-        shear (FloatAnyT):
-            Shear angle value in degrees between -180 to 180, clockwise
-            direction. If a sequence is specified, the first value corresponds
-            to a shear parallel to the x-axis, while the second value
-            corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
-        keep_shape (bool):
-            If `True`, expands the output image to  make it large enough to
-            hold the entire rotated image.
-            If `False` or omitted, make the output image the same size as the
-            input image.
-            Note that the `keep_shape` flag assumes rotation around the center
-            and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
-            One of the padding modes defined in `PaddingMode`.
-            Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-
-    Returns:
-        image (Tensor[..., C, H, W]):
-            Transformed image.
-    """
-    if isinstance(image, (Tensor, PIL.Image)):
-        return _affine_tensor_image(
-            image         = image,
-            angle         = angle,
-            translate     = translate,
-            scale         = scale,
-            shear         = shear,
-            center        = center,
-            interpolation = interpolation,
-            keep_shape    = keep_shape,
-            pad_mode      = pad_mode,
-            fill          = fill,
-        )
-    else:
-        raise ValueError(
-            f"`image` must be a `Tensor` or `PIL.Image`. "
-            f"But got: {type(image)}."
-        )
-
-
 def affine_image_box(
     image        : Tensor,
     box          : Tensor,
@@ -351,15 +189,17 @@ def affine_image_box(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
     drop_ratio   : float                              = 0.0,
+    inplace      : bool                               = False,
 ) -> tuple[Tensor, Tensor]:
     """Apply affine transformation on the image keeping image center invariant.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be transformed.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
@@ -378,13 +218,8 @@ def affine_image_box(
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -392,16 +227,19 @@ def affine_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
             clipped is less than `drop_ratio` the bounding box is dropped.
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[C, H, W]):
@@ -409,10 +247,7 @@ def affine_image_box(
         box (Tensor[N, 4]):
             Transformed box.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"R`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     image_size = get_image_size(image)
     return \
         affine(
@@ -424,8 +259,9 @@ def affine_image_box(
             center        = center,
             interpolation = interpolation,
             keep_shape    = keep_shape,
-            pad_mode      = pad_mode,
             fill          = fill,
+            padding_mode  = padding_mode,
+            inplace       = inplace,
         ), \
         affine_box(
             box        = box,
@@ -436,68 +272,110 @@ def affine_image_box(
             shear      = shear,
             center     = center,
             drop_ratio = drop_ratio,
+            inplace    = inplace,
         )
 
 
-def blend(
-    image1: Tensor,
-    image2: Tensor,
-    alpha : float,
-    gamma : float = 0.0
+def center_crop(
+    image: Tensor, output_size: Int2T, inplace: bool = False
 ) -> Tensor:
-    """Blends 2 images together.
-    
-    output = image1 * alpha + image2 * beta + gamma
+    """Crops the given image at the center. If image size is smaller than
+    output size along any edge, image is padded with 0 and then center cropped.
 
     Args:
-        image1 (Tensor[..., C, H, W]):
-            Source image.
-        image2 (Tensor[..., C, H, W]):
-            Image we want to overlay on top of `image1`.
-        alpha (float):
-            Alpha transparency of the overlay.
-        gamma (float):
-            Scalar added to each sum. Default: `0.0`.
-
+        image (Tensor[..., C, H, W]):
+            Image to be cropped, where ... means an arbitrary number of leading
+            dimensions.
+        output_size (Int2T):
+            Height, width of the crop box. If int or sequence with single int,
+            it is used for both directions.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
-        blend (Tensor[..., C, H, W]):
-            Blended image.
+        image (Tensor[..., C, H, W]):
+            Cropped image.
     """
-    return add_weighted(
-        image1 = image2,
-        alpha  = alpha,
-        image2 = image1,
-        beta   = 1.0 - alpha,
-        gamma  = gamma
+    output_size      = to_size(output_size)
+    image_h, image_w = get_image_size(image)
+    crop_h,  crop_w  = output_size
+    
+    if not inplace:
+        image = image.clone()
+    
+    if crop_w > image_w or crop_h > image_h:
+        padding_ltrb = [
+            (crop_w - image_w)     // 2 if crop_w > image_w else 0,
+            (crop_h - image_h)     // 2 if crop_h > image_h else 0,
+            (crop_w - image_w + 1) // 2 if crop_w > image_w else 0,
+            (crop_h - image_h + 1) // 2 if crop_h > image_h else 0,
+        ]
+        image = pad(image, padding_ltrb, fill=0)  # PIL uses fill value 0
+        _, image_h, image_w = get_image_size(image)
+        if crop_w == image_w and crop_h == image_h:
+            return image
+
+    crop_top  = int(round((image_h - crop_h) / 2.0))
+    crop_left = int(round((image_w - crop_w) / 2.0))
+    return crop(
+        image   = image,
+        top     = crop_top,
+        left    = crop_left,
+        height  = crop_h,
+        width   = crop_w,
+        inplace = inplace
     )
 
 
-def check_image_size(size: Int2Or3T, stride: int = 32) -> int:
-    """Verify image size is a multiple of stride and return the new size.
+def crop(
+    image  : Tensor,
+    top    : int,
+    left   : int,
+    height : int,
+    width  : int,
+    inplace: bool = False
+) -> Tensor:
+    """Crop the given image at specified location and output size.
     
     Args:
-        size (Int2Or3T):
-            Image size of shape [C*, H, W].
-        stride (int):
-            Stride. Default: `32`.
-    
+        image (Tensor[..., C, H, W]):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        top (int):
+            Vertical component of the top left corner of the crop box.
+        left (int):
+            Horizontal component of the top left corner of the crop box.
+        height (int):
+            Height of the crop box.
+        width (int):
+            Width of the crop box.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
-        new_size (int):
-            Appropriate size.
+        image (Tensor[..., C, H, W]):
+            Cropped image.
     """
-    if isinstance(size, (list, tuple)):
-        if len(size) == 3:    # [C, H, W]
-            size = size[1]
-        elif len(size) == 2:  # [H, W]
-            size = size[0]
-        
-    new_size = make_divisible(size, int(stride))  # ceil gs-multiple
-    if new_size != size:
-        error_console.log(
-            "WARNING: image_size %g must be multiple of max stride %g, "
-            "updating to %g" % (size, stride, new_size)
+    assert_tensor(image)
+    h, w   = get_image_size(image)
+    right  = left + width
+    bottom = top  + height
+    
+    if not inplace:
+        image = image.clone()
+    
+    if left < 0 or top < 0 or right > w or bottom > h:
+        padding_ltrb = [
+            max(-left, 0), max(-top, 0), max(right - w, 0), max(bottom - h, 0)
+        ]
+        return pad(
+            image        = image[..., max(top, 0) : bottom, max(left, 0) : right],
+            padding      = padding_ltrb,
+            fill         = 0,
+            padding_mode = PaddingMode.CONSTANT,
+            inplace      = inplace,
         )
-    return new_size
+    return image[..., top:bottom, left:right]
 
 
 @batch_image_processing
@@ -512,8 +390,7 @@ def crop_zero_region(image: Tensor) -> Tensor:
         image (Tensor[C, H, W]):
             Cropped image.
     """
-    if not isinstance(image, Tensor):
-        raise ValueError(f"`image` must be a `Tensor`. But got: {type(image)}.")
+    assert_tensor(image)
     if is_channel_last(image):
         cols       = torch.any(image, dim=0)
         rows       = torch.any(image, dim=1)
@@ -529,316 +406,92 @@ def crop_zero_region(image: Tensor) -> Tensor:
     return image
 
 
-def denormalize(
-    image: Tensor,
-    mean : Union[Tensor, float],
-    std  : Union[Tensor, float]
-) -> Tensor:
-    """Denormalize an image Tensor with mean and standard deviation.
+def five_crop(
+    image: Tensor, size: Int2Or3T
+) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
+    """Crop the given image into four corners and the central crop.
     
-    image[channel] = (image[channel] * std[channel]) + mean[channel]
-    where `mean` is [M_1, ..., M_n] and `std` [S_1, ..., S_n] for `n` channels.
-
-    Args:
-        image (Tensor[..., C, H, W]):
-            Image Tensor.
-        mean (Tensor[..., C, H, W], float):
-            Mean for each channel.
-        std (Tensor[..., C, H, W], float):
-            Standard deviations for each channel.
-
-    Returns:
-        output (Tensor[..., C, H, W]):
-            Denormalized image with same size as input.
-
-    Examples:
-        >>> x   = torch.rand(1, 4, 3, 3)
-        >>> output = denormalize(x, 0.0, 255.)
-        >>> output.shape
-        torch.Size([1, 4, 3, 3])
-
-        >>> x    = torch.rand(1, 4, 3, 3, 3)
-        >>> mean = torch.zeros(1, 4)
-        >>> std  = 255. * torch.ones(1, 4)
-        >>> output  = denormalize(x, mean, std)
-        >>> output.shape
-        torch.Size([1, 4, 3, 3, 3])
-    """
-    shape = image.shape
-
-    if isinstance(mean, float):
-        mean = torch.tensor([mean] * shape[1], device=image.device, dtype=image.dtype)
-    if isinstance(std, float):
-        std  = torch.tensor([std] * shape[1], device=image.device, dtype=image.dtype)
-    if not isinstance(image, Tensor):
-        raise TypeError(f"`data` should be a `Tensor`. But got: {type(image)}")
-    if not isinstance(mean, Tensor):
-        raise TypeError(f"`mean` should be a `Tensor`. But got: {type(mean)}")
-    if not isinstance(std, Tensor):
-        raise TypeError(f"`std` should be a `Tensor`. But got: {type(std)}")
-
-    # Allow broadcast on channel dimension
-    if mean.shape and mean.shape[0] != 1:
-        if mean.shape[0] != image.shape[-3] and mean.shape[:2] != image.shape[:2]:
-            raise ValueError(
-                f"`mean` and `data` must have the same shape. "
-                f"But got: {mean.shape} and {image.shape}."
-            )
-
-    # Allow broadcast on channel dimension
-    if std.shape and std.shape[0] != 1:
-        if std.shape[0] != image.shape[-3] and std.shape[:2] != image.shape[:2]:
-            raise ValueError(
-                f"`std` and `data` must have the same shape. "
-                f"But got: {std.shape} and {image.shape}."
-            )
-
-    mean = torch.as_tensor(mean, device=image.device, dtype=image.dtype)
-    std  = torch.as_tensor(std,  device=image.device, dtype=image.dtype)
-
-    if mean.shape:
-        mean = mean[..., :, None]
-    if std.shape:
-        std  = std[...,  :, None]
-
-    output = (image.view(shape[0], shape[1], -1) * std) + mean
-    return output.view(shape)
-
-
-@dispatch(Tensor)
-def denormalize_naive(image: Tensor) -> Tensor:
-    """Naively denormalize an image Tensor.
+    Notes:
+        This transform returns a tuple of images and there may be a mismatch in
+        the number of inputs and targets your `Dataset` returns.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image Tensor.
-    
-    Returns:
-        output (Tensor[..., C, H, W]):
-            Normalized image Tensor.
-    """
-    return torch.clamp(image * 255, 0, 255).to(torch.uint8)
-    
+            Image to be cropped, where ... means an arbitrary number of leading
+            dimensions.
+        size (Int2Or3T):
+            Desired output size of the crop. If size is an int instead of
+            sequence like (h, w), a square crop (size, size) is made.
+            If provided a sequence of length 1, it will be interpreted
+            as (size[0], size[0]).
 
-@dispatch(list)
-def denormalize_naive(image: list[Tensor]) -> list:
-    """Naively denormalize a list of image Tensor.
+    Returns:
+        (tuple):
+            Corresponding top left, top right, bottom left, bottom right and
+            center crop.
+    """
+    size = to_size(size)
+    assert_sequence_of_length(size, 2)
+
+    image_h, image_w = get_image_size(image)
+    crop_h,  crop_w  = size
+    if crop_w > image_w or crop_h > image_h:
+        msg = "Requested crop size {} is bigger than input size {}"
+        raise ValueError(msg.format(size, (image_h, image_w)))
+
+    tl = crop(image, 0, 0, crop_h, crop_w)
+    tr = crop(image, 0, image_w - crop_w, crop_h, crop_w)
+    bl = crop(image, image_h - crop_h, 0, crop_h, crop_w)
+    br = crop(image, image_h - crop_h, image_w - crop_w, crop_h, crop_w)
+
+    center = center_crop(image, [crop_h, crop_w])
+    return tl, tr, bl, br, center
+
+
+def horizontal_flip(image: Tensor, inplace: bool = False) -> Tensor:
+    """Horizontally flip image.
     
     Args:
-        image (list[Tensor[..., C, H, W]]):
-            List of image Tensor.
-    
-    Returns:
-        output (list[Tensor[..., C, H, W]]):
-            Normalized list of image Tensors.
-    """
-    if all(i.ndim == 3 for i in image):
-        return list(denormalize_naive(torch.stack(image)))
-    elif all(i.ndim == 4 for i in image):
-        return [denormalize_naive(i) for i in image]
-    else:
-        raise TypeError(f"`image` must be a list of `Tensor`.")
-
-
-@dispatch(tuple)
-def denormalize_naive(image: tuple) -> tuple:
-    """Naively denormalize a tuple of image Tensor.
-    
-    Args:
-        image (tuple[Tensor[..., C, H, W]]):
-            Tuple of image Tensor.
-    
-    Returns:
-        output (tuple[Tensor[..., C, H, W]]):
-            Normalized tuple of image Tensors.
-    """
-    return tuple(denormalize_naive(list(image)))
-
-
-@dispatch(dict)
-def denormalize_naive(image: dict) -> dict:
-    """Naively denormalize a dictionary of image Tensor.
-    
-    Args:
-        image (dict):
-            Dictionary of image Tensor.
-    
-    Returns:
-        output (dict):
-            Normalized dictionary of image Tensors.
-    """
-    if not all(isinstance(v, (Tensor, list, tuple)) for k, v in image.items()):
-        raise TypeError(
-            f"`image` must be a `dict` of `Tensor`, `list`, or `tuple`."
-        )
-    for k, v in image.items():
-        image[k] = denormalize_naive(v)
-    return image
-
-
-def get_exif_size(image: PIL.Image) -> Int2T:
-    """Return the exif-corrected PIL size.
-    
-    Args:
-        image (PIL.Image):
-            Image.
+        image (Tensor[..., C, H, W]):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
-        size (Int2T[H, W]):
-            Image size.
-    """
-    size = image.size  # (width, height)
-    try:
-        rotation = dict(image._getexif().items())[orientation]
-        if rotation == 6:  # rotation 270
-            size = (size[1], size[0])
-        elif rotation == 8:  # rotation 90
-            size = (size[1], size[0])
-    except:
-        pass
-    return size[1], size[0]
-
-
-def get_image_center(image: Tensor) -> Tensor:
-    """Get image center as  (x=h/2, y=w/2).
-    
-    Args:
         image (Tensor[..., C, H, W]):
-            Image Tensor.
-   
-    Returns:
-        center (Tensor[2]):
-            Image center as (x=h/2, y=w/2).
+            Flipped image.
     """
-    h, w = get_image_hw(image)
-    return torch.Tensor([h / 2, w / 2])
-
-
-def get_image_center4(image: Tensor) -> Tensor:
-    """Get image center as (x=h/2, y=w/2, x=h/2, y=w/2).
-    
-    Args:
-        image (Tensor[..., C, H, W]):
-            Image.
-   
-    Returns:
-        center (Tensor[4]):
-            Image center as (x=h/2, y=w/2, x=h/2, y=w/2).
-    """
-    h, w = get_image_hw(image)
-    return torch.Tensor([h / 2, w / 2, h / 2, w / 2])
-    
-
-def get_image_hw(image: Union[Tensor, np.ndarray, PIL.Image]) -> Int2T:
-    """Returns the size of an image as [H, W].
-    
-    Args:
-        image (Tensor, np.ndarray, PIL Image):
-            Image.
-   
-    Returns:
-        size (Int2T):
-            Image size as [H, W].
-    """
-    if isinstance(image, (Tensor, np.ndarray)):
-        if is_channel_first(image):  # [.., C, H, W]
-            return [image.shape[-2], image.shape[-1]]
-        else:  # [.., H, W, C]
-            return [image.shape[-3], image.shape[-2]]
-    elif F._is_pil_image(image):
-        return list(image.size)
-    else:
-        raise TypeError(
-            f"`image` must be a `Tensor`, `np.ndarray`, or `PIL.Image. "
-            f"But got: {type(image)}."
-        )
-    
-    
-get_image_size = get_image_hw
-
-
-def get_image_shape(image: Union[Tensor, np.ndarray, PIL.Image]) -> Int3T:
-    """Returns the shape of an image as [H, W, C].
-
-    Args:
-        image (Tensor, np.ndarray, PIL Image):
-            Image.
-
-    Returns:
-        shape (Int3T):
-            Image shape as [C, H, W].
-    """
-    if isinstance(image, (Tensor, np.ndarray)):
-        if is_channel_first(image):  # [.., C, H, W]
-            return [image.shape[-3], image.shape[-2], image.shape[-1]]
-        else:  # [.., H, W, C]
-            return [image.shape[-1], image.shape[-3], image.shape[-2]]
-    elif F._is_pil_image(image):
-        return list(image.size)
-    else:
-        raise TypeError(
-            f"`image` must be a `Tensor`, `np.ndarray`, or `PIL.Image`. "
-            f"But got: {type(image)}."
-        )
-
-
-def get_num_channels(image: TensorOrArray) -> int:
-    """Get number of channels of the image.
-    
-    Args:
-        image (Tensor, np.ndarray):
-            Image.
-
-    Returns:
-        num_channels (int):
-            Image channels.
-    """
-    if not isinstance(image, (Tensor, np.ndarray)):
-        raise TypeError(
-            f"`image` must be a `Tensor` or `np.ndarray`. "
-            f"But got: {type(image)}."
-        )
-    if image.ndim == 4:
-        if is_channel_first(image):
-            _, c, h, w = list(image.shape)
-        else:
-            _, h, w, c = list(image.shape)
-        return c
-    elif image.ndim == 3:
-        if is_channel_first(image):
-            c, h, w = list(image.shape)
-        else:
-            h, w, c = list(image.shape)
-        return c
-    else:
-        raise ValueError(
-            f"`image.ndim` must be == 3 or 4. But got: {image.ndim}."
-        )
+    assert_tensor(image)
+    if not inplace:
+        image = image.clone()
+    return image.flip(-1)
 
 
 def horizontal_flip_image_box(
-    image: Tensor, box: Tensor = ()
+    image: Tensor, box: Tensor, inplace: bool = False,
 ) -> tuple[Tensor, Tensor]:
     """Horizontally flip images and bounding boxes.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image.
-        box (Tensor[N, 4):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        box (Tensor[N, 4]):
             Box.
-    
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        
     Returns:
         image (Tensor[..., C, H, W]):
             Flipped image.
-        box (Tensor[N, 4):
+        box (Tensor[N, 4)]:
             Flipped box.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     center = get_image_center4(image)
-    return F.hflip(image), hflip_box(box, center)
+    return horizontal_flip(image=image, inplace=inplace), \
+           hflip_box(box=box, image_center=center, inplace=inplace)
 
 
 def horizontal_shear(
@@ -847,14 +500,16 @@ def horizontal_shear(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Shear image horizontally.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to transform.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         magnitude (float):
             Shear angle value in degrees between -180 to 180, clockwise
             direction.
@@ -876,13 +531,16 @@ def horizontal_shear(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-    
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
@@ -896,8 +554,9 @@ def horizontal_shear(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
 
 
@@ -907,27 +566,24 @@ def horizontal_translate(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Translate image in horizontal direction.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to transform.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         magnitude (int):
             Horizontal translation (post-rotation translation)
         center (ListOrTuple2T[int], None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -935,13 +591,16 @@ def horizontal_translate(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
@@ -955,8 +614,9 @@ def horizontal_translate(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
 
 
@@ -967,9 +627,10 @@ def horizontal_translate_image_box(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
-    drop_ratio   : float                              = 0.0
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    drop_ratio   : float                              = 0.0,
+    inplace      : bool                               = False,
 ) -> tuple[Tensor, Tensor]:
     """Translate images and bounding boxes in horizontal direction.
     
@@ -978,7 +639,8 @@ def horizontal_translate_image_box(
         
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be translated.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         box (Tensor[N, 4]):
             Box to be translated. They are expected to be in (x1, y1, x2, y2)
             format with `0 <= x1 < x2` and `0 <= y1 < y2`.
@@ -988,13 +650,8 @@ def horizontal_translate_image_box(
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -1002,16 +659,19 @@ def horizontal_translate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
             clipped is less than `drop_ratio` the bounding box is dropped.
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[..., C, H, W]):
@@ -1029,69 +689,11 @@ def horizontal_translate_image_box(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
         drop_ratio    = drop_ratio,
+        inplace       = inplace,
     )
-
-
-def is_channel_first(image: TensorOrArray) -> bool:
-    """Return `True` if the image is in channel first format."""
-    if image.ndim == 5:
-        _, _, s2, s3, s4 = list(image.shape)
-        if (s2 < s3) and (s2 < s4):
-            return True
-        elif (s4 < s2) and (s4 < s3):
-            return False
-    elif image.ndim == 4:
-        _, s1, s2, s3 = list(image.shape)
-        if (s1 < s2) and (s1 < s3):
-            return True
-        elif (s3 < s1) and (s3 < s2):
-            return False
-    elif image.ndim == 3:
-        s0, s1, s2 = list(image.shape)
-        if (s0 < s1) and (s0 < s2):
-            return True
-        elif (s2 < s0) and (s2 < s1):
-            return False
-    raise ValueError(
-        f"`image.ndim` must be == 3, 4, or 5. But got: {image.ndim}."
-    )
-
-
-def is_channel_last(image: TensorOrArray) -> bool:
-    """Return `True` if the image is in channel last format."""
-    return not is_channel_first(image)
-
-
-def is_integer_image(image: TensorOrArray) -> bool:
-    """Return `True` if the given image is integer-encoded."""
-    c = get_num_channels(image)
-    if c == 1:
-        return True
-    return False
-
-
-def is_normalized(image: TensorOrArray) -> TensorOrArray:
-    """Return `True` if the given image is normalized."""
-    if isinstance(image, Tensor):
-        return abs(torch.max(image)) <= 1.0
-    elif isinstance(image, np.ndarray):
-        return abs(np.amax(image)) <= 1.0
-    else:
-        raise TypeError(
-            f"`image` must be a `Tensor` or `np.ndarray`. "
-            f"But got: {type(image)}."
-        )
-
-
-def is_one_hot_image(image: TensorOrArray) -> bool:
-    """Return `True` if the given image is one-hot encoded."""
-    c = get_num_channels(image)
-    if c > 1:
-        return True
-    return False
 
 
 def letterbox_resize(
@@ -1101,7 +703,8 @@ def letterbox_resize(
     color     : Color                 = (114, 114, 114),
     auto      : bool                  = True,
     scale_fill: bool                  = False,
-    scale_up  : bool                  = True
+    scale_up  : bool                  = True,
+    inplace   : bool                  = False,
 ):
     """Resize image to a `stride`-pixel-multiple rectangle.
     
@@ -1114,17 +717,26 @@ def letterbox_resize(
         
     Args:
         image:
+        
         size:
+        
         stride:
+        
         color:
+        
         auto:
+        
         scale_fill:
+        
         scale_up:
-
+        
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
 
     """
-    old_size = get_image_hw(image)
+    old_size = get_image_size(image)
     
     if size is None:
         return image, None, None, None
@@ -1170,216 +782,120 @@ def letterbox_resize(
     return image, ratio, (dw, dh)
 
 
-def normalize_min_max(
-    image  : Tensor,
-    min_val: float = 0.0,
-    max_val: float = 1.0,
-    eps    : float = 1e-6
-) -> Tensor:
-    """Normalise an image/video image by MinMax and re-scales the value
-    between a range.
-
-    Args:
-        image (Tensor[..., C, H, W]):
-            Image to be normalized.
-        min_val (float):
-            Minimum value for the new range. Default: `0.0`.
-        max_val (float):
-            Maximum value for the new range. Default: `1.0`.
-        eps (float):
-            Float number to avoid zero division. Default: `1e-6`.
-
-    Returns:
-        output (Tensor[..., C, H, W]):
-            Normalized tensor image with same shape.
-
-    Example:
-        >>> x      = torch.rand(1, 5, 3, 3)
-        >>> x_norm = normalize_min_max(image, min_val=-1., max_val=1.)
-        >>> x_norm.min()
-        image(-1.)
-        >>> x_norm.max()
-        image(1.0000)
-    """
-    if not isinstance(image, Tensor):
-        raise TypeError(
-            f"`image` should be a `Tensor`. But got: {type(image)}."
-        )
-    if not isinstance(min_val, float):
-        raise TypeError(
-            f"`min_val` should be a `float`. But got: {type(min_val)}."
-        )
-    if not isinstance(max_val, float):
-        raise TypeError(
-            f"`max_val` should be a `float`. But got: {type(max_val)}."
-        )
-    if image.ndim < 3:
-        raise ValueError(
-            f"`image.ndim` must be >= 3. But got: {image.shape}."
-        )
-
-    shape = image.shape
-    B, C  = shape[0], shape[1]
-
-    x_min = image.view(B, C, -1).min(-1)[0].view(B, C, 1)
-    x_max = image.view(B, C, -1).max(-1)[0].view(B, C, 1)
-
-    output = ((max_val - min_val) * (image.view(B, C, -1) - x_min) /
-              (x_max - x_min + eps) + min_val)
-    return output.view(shape)
-
-
-@dispatch(Tensor)
-def normalize_naive(image: Tensor) -> Tensor:
-    """Convert image from `torch.uint8` type and range [0, 255] to `torch.float`
-    type and range of [0.0, 1.0].
-    
-    Args:
-        image (Tensor[..., C, H, W]):
-            Image Tensor.
-    
-    Returns:
-        output (Tensor[..., C, H, W]):
-            Normalized image Tensor.
-    """
-    if abs(torch.max(image)) > 1.0:
-        return image.to(torch.get_default_dtype()).div(255.0)
-    else:
-        return image.to(torch.get_default_dtype())
-    
-
-@dispatch(list)
-def normalize_naive(image: list) -> list:
-    """Convert a list of images from `torch.uint8` type and range [0, 255]
-    to `torch.float` type and range of [0.0, 1.0].
-    
-    Args:
-        image (list[Tensor[..., C, H, W]]):
-            List of image Tensor.
-    
-    Returns:
-        output (list[Tensor[..., C, H, W]]):
-            Normalized list of image Tensors.
-    """
-    if all(isinstance(i, Tensor) and i.ndim == 3 for i in image):
-        image = normalize_naive(torch.stack(image))
-        return list(image)
-    elif all(isinstance(i, Tensor) and i.ndim == 4 for i in image):
-        image = [normalize_naive(i) for i in image]
-        return image
-    else:
-        raise TypeError(
-            f"`image` must be a `list` of `Tensor`. But got: {type(image)}."
-        )
-
-
-@dispatch(tuple)
-def normalize_naive(image: tuple) -> tuple:
-    """Convert a tuple of images from `torch.uint8` type and range [0, 255]
-    to `torch.float` type and range of [0.0, 1.0].
-    
-    Args:
-        image (tuple[Tensor[..., C, H, W]]):
-            Tuple of image Tensor.
-    
-    Returns:
-        output (tuple[Tensor[..., C, H, W]]):
-            Normalized tuple of image Tensors.
-    """
-    return tuple(normalize_naive(list(image)))
-
-
-@dispatch(dict)
-def normalize_naive(image: dict) -> dict:
-    """Convert a dict of images from `torch.uint8` type and range [0, 255]
-        to `torch.float` type and range of [0.0, 1.0].
-
-        Args:
-            image (dict):
-                Dict of image Tensor.
-
-        Returns:
-            output (dict):
-                Normalized dict of image Tensors.
-        """
-    if not all(isinstance(v, (Tensor, list, tuple)) for k, v in image.items()):
-        raise ValueError(
-            f"`image` must be a `dict` of `Tensor`, `list`, or `tuple`."
-        )
-    for k, v in image.items():
-        image[k] = normalize_naive(v)
-    return image
-
-
-def pad_image(
-    image   : Tensor,
-    pad_size: Int2Or3T,
-    mode    : Union[PaddingMode, str, int] = PaddingMode.CONSTANT,
-    value   : Union[FloatAnyT, None]       = 0.0,
+def pad(
+    image       : Tensor,
+    padding     : Int4T,
+    fill        : Float4T                      = 0.0,
+    padding_mode: Union[PaddingMode, str, int] = PaddingMode.CONSTANT,
+    inplace     : bool                         = False,
 ) -> Tensor:
     """Pad image with `value`.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be padded.
-        pad_size (Int2Or3T[C, H, W]):
-            Padded image size.
-        mode (PaddingMode, str, int):
-            One of the padding modes defined in `PaddingMode`.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        padding (Int4T):
+            Padding on each border. If a single int is provided this is used to
+            pad all borders. If sequence of length 2 is provided this is the
+            padding on left/right and top/bottom respectively. If a sequence
+            of length 4 is provided this is the padding for the left, top,
+            right and bottom borders respectively.
+        fill (Float4T):
+            Fill value for `constant` padding. If a tuple of length 3, it is
+            used to fill R, G, B channels respectively. Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
+            One of: ["constant", "edge", "reflect", "symmetric"]
             Default: `constant`.
-        value (FloatAnyT, None):
-            Fill value for `constant` padding. Default: `0.0`.
+            - constant: pads with a constant value, this value is specified
+              with fill
+            - edge: pads with the last value at the edge of the image. If input
+              a 5D torch Tensor, the last 3 dimensions will be padded instead
+              of the last 2
+            - reflect: pads with reflection of image without repeating the last
+              value on the edge. For example, padding [1, 2, 3, 4] with 2
+              elements on both sides in reflect mode will result in
+              [3, 2, 1, 2, 3, 4, 3, 2]
+            - symmetric: pads with reflection of image repeating the last value
+              on the edge. For example, padding [1, 2, 3, 4] with 2 elements on
+              both sides in symmetric mode will result in
+              [2, 1, 1, 2, 3, 4, 4, 3]
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[..., C, H, W]):
             Padded image.
     """
-    if not 3 <= image.ndim <= 4:
-        raise ValueError(
-            f"Require 3 <= `image.ndim` <= 4. But got: {image.ndim}"
-        )
-    if not isinstance(mode, PaddingMode):
-        mode = PaddingMode.from_value(value=mode)
-    mode = mode.value
-    if mode not in ("constant", "circular", "reflect", "replicate"):
-        raise ValueError(
-            f"`mode` must be one of ['constant', 'circular', 'reflect', "
-            f"'replicate']. But got: {mode}."
-        )
-    
-    h0, w0 = get_image_size(image)
-    h1, w1 = to_size(pad_size)
-    # Image size > pad size, do nothing
-    if (h0 * w0) >= (h1 * w1):
-        return image
-    
-    if value is None:
-        value = 0
-    pad_h = int(abs(h0 - h1) / 2)
-    pad_w = int(abs(w0 - w1) / 2)
+    assert_tensor(image)
+    if not inplace:
+        image = image.clone()
+        
+    assert_number(fill)
 
-    if isinstance(image, Tensor):
-        if is_channel_first(image):
-            pad = (pad_w, pad_w, pad_h, pad_h)
-        else:
-            pad = (0, 0, pad_w, pad_w, pad_h, pad_h)
-        return nn.functional.pad(input=image, pad=pad, mode=mode, value=value)
+    if not isinstance(padding, (int, tuple, list)):
+        raise TypeError("Got inappropriate padding arg")
+    if isinstance(padding, tuple):
+        padding = list(padding)
+    if isinstance(padding, list) and len(padding) not in [1, 2, 4]:
+        raise ValueError(
+            f"`padding` must be an int or a 1, 2, or 4 element tuple. "
+            f"But got: {len(padding)}."
+        )
+    padding = F_t._parse_pad_padding(padding)
+
+    if not isinstance(padding_mode, PaddingMode):
+        padding_mode = PaddingMode.from_value(value=padding_mode)
+    padding_mode = padding_mode.value
+    assert_value_in_collection(padding_mode, ["constant", "edge", "reflect", "symmetric"])
+    if padding_mode == "edge":
+        padding_mode = "replicate"  # Remap padding_mode str
+    elif padding_mode == "symmetric":
+        # route to another implementation
+        return F_t._pad_symmetric(image, padding)
+    
+    need_squeeze = False
+    if image.ndim < 4:
+        image        = image.unsqueeze(dim=0)
+        need_squeeze = True
+    
+    out_dtype = image.dtype
+    need_cast = False
+    if (padding_mode != "constant") and image.dtype not in (torch.float32, torch.float64):
+        # Here we temporary cast input tensor to float until pytorch issue is
+        # resolved: https://github.com/pytorch/pytorch/issues/40763
+        need_cast = True
+        image     = image.to(torch.float32)
+
+    if padding_mode in ("reflect", "replicate"):
+        image = nn.functional.pad(image, padding, mode=padding_mode)
+    else:
+        image = nn.functional.pad(image, padding, mode=padding_mode, value=float(fill))
+
+    if need_squeeze:
+        image = image.squeeze(dim=0)
+
+    if need_cast:
+        image = image.to(out_dtype)
+
     return image
 
 
 def resize(
     image        : Tensor,
     size         : Union[Int2Or3T, None]              = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.LINEAR,
+    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     max_size     : Union[int, None]                   = None,
-    antialias    : Union[bool, None]                  = None
+    antialias    : Union[bool, None]                  = None,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Resize an image. Adapted from:
     `torchvision.transforms.functional.resize()`
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         size (Int2Or3T[C, H, W], None):
             Desired output size. Default: `None`.
         interpolation (InterpolationMode, str, int):
@@ -1388,20 +904,21 @@ def resize(
             Default: `None`.
         antialias (bool, None):
             Default: `None`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
-        resize (Tensor[..., C, H, W]):
+        image (Tensor[..., C, H, W]):
             Resized image.
     """
-    if not isinstance(image, Tensor):
-        raise TypeError(
-            f"`image` must be a `Tensor` or `PIL Image`. "
-            f"But got: {type(image)}."
-        )
+    assert_tensor(image)
     
     if size is None:
         return image
     size = to_size(size)  # H, W
+    
+    if not inplace:
+        image = image.clone()
     
     if not isinstance(interpolation, InterpolationMode):
         interpolation = InterpolationMode.from_value(interpolation)
@@ -1417,34 +934,85 @@ def resize(
     )
 
 
+def resized_crop(
+    image        : Tensor,
+    top          : int,
+    left         : int,
+    height       : int,
+    width        : int,
+    size         : Union[Int2Or3T, None]              = None,
+    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
+    inplace      : bool                               = False,
+) -> Tensor:
+    """Crop the given image and resize it to desired size.
+    
+    Notably used in :class:`~torchvision.transforms.RandomResizedCrop`.
+
+    Args:
+        image (Tensor[..., C, H, W]):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        top (int):
+            Vertical component of the top left corner of the crop box.
+        left (int):
+            Horizontal component of the top left corner of the crop box.
+        height (int):
+            Height of the crop box.
+        width (int):
+            Width of the crop box.
+        size (Int2Or3T[C, H, W], None):
+            Desired output size. Default: `None`.
+        interpolation (InterpolationMode, str, int):
+            Interpolation method. Default: `InterpolationMode.BILINEAR`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        image (Tensor[..., C, H, W]):
+            Resized crop image.
+    """
+    image = crop(
+        image   = image,
+        top     = top,
+        left    = left,
+        height  = height,
+        width   = width,
+        inplace = inplace,
+    )
+    image = resize(
+        image         = image,
+        size          = size,
+        interpolation = interpolation,
+        inplace       = inplace,
+    )
+    return image
+
+
 def rotate(
     image        : Tensor,
     angle        : float,
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Rotate a tensor image or a batch of tensor images. Input must be a
     tensor of shape [C, H, W] or a batch of tensors Tensor[..., C, H, W].
     
     Args:
         image (Tensor[.., C, H, W]):
-            Image to be rotated.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         angle (float):
             Angle to rotate the image.
         center (ListOrTuple2T[int], None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -1452,35 +1020,34 @@ def rotate(
             input image. Default: `True`.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-   
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Rotated image.
     """
-    if isinstance(image, Tensor):
-        return affine(
-            image         = image,
-            angle         = angle,
-            translate     = [0, 0],
-            scale         = 1.0,
-            shear         = [0, 0],
-            center        = center,
-            interpolation = interpolation,
-            keep_shape    = keep_shape,
-            pad_mode      = pad_mode,
-            fill          = fill,
-        )
-    else:
-        raise ValueError(
-            f"`image` must be a `Tensor` or `PIL.Image`. "
-            f"But got: {type(image)}."
-        )
+    assert_tensor(image)
+    return affine(
+        image         = image,
+        angle         = angle,
+        translate     = [0, 0],
+        scale         = 1.0,
+        shear         = [0, 0],
+        center        = center,
+        interpolation = interpolation,
+        keep_shape    = keep_shape,
+        fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace
+    )
 
 
 def rotate_horizontal_flip(
@@ -1489,28 +1056,25 @@ def rotate_horizontal_flip(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Rotate a tensor image or a batch of tensor images and then horizontally
     flip.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be rotated and flipped.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         angle (float):
             Angle to rotate the image.
         center (ListOrTuple2T[int], None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -1518,13 +1082,16 @@ def rotate_horizontal_flip(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-   
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Rotated and flipped image.
@@ -1535,10 +1102,11 @@ def rotate_horizontal_flip(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
-    return F.hflip(image)
+    return horizontal_flip(image=image, inplace=inplace)
 
 
 def rotate_image_box(
@@ -1548,16 +1116,18 @@ def rotate_image_box(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
-    drop_ratio   : float                              = 0.0
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    drop_ratio   : float                              = 0.0,
+    inplace      : bool                               = False,
 ) -> tuple[Tensor, Tensor]:
     """Rotate a tensor image or a batch of tensor images. Input must be a
     tensor of shape [C, H, W] or a batch of tensors Tensor[..., C, H, W].
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be rotated.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         box (Tensor[N, 4]):
             Bounding boxes to be rotated.
         angle (float):
@@ -1566,13 +1136,8 @@ def rotate_image_box(
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -1580,16 +1145,19 @@ def rotate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
             clipped is less than `drop_ratio` the bounding box is dropped.
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[..., C, H, W]):
@@ -1597,10 +1165,7 @@ def rotate_image_box(
         box (Tensor[N, 4]):
             Rotated bounding boxes.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     return affine_image_box(
         image         = image,
         box           = box,
@@ -1611,9 +1176,10 @@ def rotate_image_box(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
         drop_ratio    = drop_ratio,
+        inplace       = inplace,
     )
 
 
@@ -1623,28 +1189,25 @@ def rotate_vertical_flip(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Rotate a tensor image or a batch of tensor images and then vertically
     flip.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be rotated and flipped.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         angle (float):
             Angle to rotate the image.
         center (ListOrTuple2T[int], None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -1652,13 +1215,16 @@ def rotate_vertical_flip(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-   
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Rotated and flipped image.
@@ -1669,10 +1235,11 @@ def rotate_vertical_flip(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace
     )
-    return F.vflip(image)
+    return vertical_flip(image=image, inplace=inplace)
 
 
 def shear(
@@ -1681,14 +1248,16 @@ def shear(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Shear image.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to transform.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         magnitude (FloatAnyT):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
@@ -1698,27 +1267,25 @@ def shear(
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
             If `False` or omitted, make the output image the same size as the
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
-            and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+            and no translation. Default: `True`
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
@@ -1732,8 +1299,9 @@ def shear(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
 
 
@@ -1744,16 +1312,18 @@ def shear_image_box(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
-    drop_ratio   : float                              = 0.0
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    drop_ratio   : float                              = 0.0,
+    inplace      : bool                               = False,
 ) -> tuple[Tensor, Tensor]:
     """Rotate a tensor image or a batch of tensor images. Input must be a
     tensor of shape [C, H, W] or a batch of tensors Tensor[..., C, H, W].
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be rotated.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         box (Tensor[N, 4]):
             Bounding boxes to be rotated.
         magnitude (FloatAnyT):
@@ -1765,13 +1335,8 @@ def shear_image_box(
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -1779,16 +1344,19 @@ def shear_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
             clipped is less than `drop_ratio` the bounding box is dropped.
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[..., C, H, W]):
@@ -1796,10 +1364,7 @@ def shear_image_box(
         box (Tensor[N, 4]):
             Rotated bounding boxes.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"R`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     return affine_image_box(
         image         = image,
         box           = box,
@@ -1810,290 +1375,53 @@ def shear_image_box(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
         drop_ratio    = drop_ratio,
+        inplace       = inplace,
     )
 
 
-@dispatch(Tensor, keep_dims=bool)
-def to_channel_first(image: Tensor, keep_dims: bool = True) -> Tensor:
-    """Convert image to channel first format.
-    
-    Args:
-        image (Tensor):
-            Image Tensor of arbitrary channel format.
-        keep_dims (bool):
-            If `False` unsqueeze the image to match the shape [..., C, H, W].
-            Else, keep the original dimension. Default: `True`.
-    
-    Returns:
-        image (np.ndarray):
-            Image Tensor in channel first format.
-    """
-    image = copy(image)
-    if is_channel_first(image):
-        pass
-    elif image.ndim == 2:
-        image     = image.unsqueeze(0)
-    elif image.ndim == 3:
-        image     = image.permute(2, 0, 1)
-    elif image.ndim == 4:
-        image     = image.permute(0, 3, 1, 2)
-        keep_dims = True
-    elif image.ndim == 5:
-        image     = image.permute(0, 1, 4, 2, 3)
-        keep_dims = True
-    else:
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 5. But got: {image.ndim}."
-        )
-    return image.unsqueeze(0) if not keep_dims else image
-
-
-@dispatch(np.ndarray, keep_dims=bool)
-def to_channel_first(image: np.ndarray, keep_dims: bool = True) -> np.ndarray:
-    """Convert image to channel first format.
-    
-    Args:
-        image (np.ndarray):
-            Image array of arbitrary channel format.
-        keep_dims (bool):
-            If `False` unsqueeze the image to match the shape [..., C, H, W].
-            Else, keep the original dimension. Default: `True`.
-        
-    Returns:
-        image (np.ndarray):
-            Image array in channel first format.
-    """
-    image = copy(image)
-    if is_channel_first(image):
-        pass
-    elif image.ndim == 2:
-        image    = np.expand_dims(image, 0)
-    elif image.ndim == 3:
-        image    = np.transpose(image, (2, 0, 1))
-    elif image.ndim == 4:
-        image    = np.transpose(image, (0, 3, 1, 2))
-        keep_dims = True
-    elif image.ndim == 5:
-        image    = np.transpose(image, (0, 1, 4, 2, 3))
-        keep_dims = True
-    else:
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 5. But got: {image.ndim}."
-        )
-    return np.expand_dims(image, 0) if not keep_dims else image
-
-
-@dispatch(Tensor, keep_dims=bool)
-def to_channel_last(image: Tensor, keep_dims: bool = True) -> Tensor:
-    """Convert image to channel last format.
-    
-    Args:
-        image (Tensor):
-            Image Tensor of arbitrary channel format.
-        keep_dims (bool):
-            If `False` squeeze the input image to match the shape [H, W, C] or
-            [H, W]. Else, keep the original dimension. Default: `True`.
-    
-    Returns:
-        image (np.ndarray):
-            Image Tensor in channel last format.
-    """
-    image       = copy(image)
-    input_shape = image.shape
-    
-    if is_channel_last(image):
-        pass
-    elif image.ndim == 2:
-        pass
-    elif image.ndim == 3:
-        if input_shape[0] == 1:
-            # Grayscale for proper plt.imshow needs to be [H, W]
-            image = image.squeeze()
-        else:
-            image = image.permute(1, 2, 0)
-    elif image.ndim == 4:  # [..., C, H, W] -> [..., H, W, C]
-        image = image.permute(0, 2, 3, 1)
-        if input_shape[0] == 1 and not keep_dims:
-            image = image.squeeze(0)
-        if input_shape[1] == 1:
-            image = image.squeeze(-1)
-    elif image.ndim == 5:
-        image = image.permute(0, 1, 3, 4, 2)
-        if input_shape[0] == 1 and not keep_dims:
-            image = image.squeeze(0)
-        if input_shape[2] == 1:
-            image = image.squeeze(-1)
-    else:
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 5. But got: {image.ndim}."
-        )
-    return image
-    
-
-@dispatch(np.ndarray, keep_dims=bool)
-def to_channel_last(image: np.ndarray, keep_dims: bool = True) -> np.ndarray:
-    """Convert image to channel last format.
-    
-    Args:
-        image (np.ndarray):
-            Image array of arbitrary channel format.
-        keep_dims (bool):
-            If `False` squeeze the input image to match the shape [H, W, C] or
-            [H, W]. Else, keep the original dimension. Default: `True`.
-            
-    Returns:
-        image (np.ndarray):
-            Image array in channel last format.
-    """
-    image       = copy(image)
-    input_shape = image.shape
-    
-    if is_channel_last(image):
-        pass
-    elif image.ndim == 2:
-        pass
-    elif image.ndim == 3:
-        if input_shape[0] == 1:
-            # Grayscale for proper plt.imshow needs to be [H, W]
-            image = image.squeeze()
-        else:
-            image = np.transpose(image, (1, 2, 0))
-    elif image.ndim == 4:
-        image = np.transpose(image, (0, 2, 3, 1))
-        if input_shape[0] == 1 and not keep_dims:
-            image = image.squeeze(0)
-        if input_shape[1] == 1:
-            image = image.squeeze(-1)
-    elif image.ndim == 5:
-        image = np.transpose(image, (0, 1, 3, 4, 2))
-        if input_shape[0] == 1 and not keep_dims:
-            image = image.squeeze(0)
-        if input_shape[2] == 1:
-            image = image.squeeze(-1)
-    else:
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 5. But got: {image.ndim}."
-        )
-    return image
-
-
-def to_image(
-    input      : Tensor,
-    keep_dims  : bool = True,
-    denormalize: bool = False
-) -> np.ndarray:
-    """Converts a PyTorch Tensor to a numpy image. In case the image is in the
-    GPU, it will be copied back to CPU.
-
-    Args:
-        input (Tensor):
-            Image arbitrary shape.
-        keep_dims (bool):
-            If `False` squeeze the input image to match the shape [H, W, C] or
-            [H, W]. Else, keep the original dimension. Default: `True`.
-        denormalize (bool):
-            If `True`, converts the image in the range [0.0, 1.0] to the range
-            [0, 255]. Default: `False`.
-        
-    Returns:
-        image (np.ndarray):
-            Image of the form [H, W], [H, W, C] or [..., H, W, C].
-    """
-    if not torch.is_tensor(input):
-        error_console.log(f"Input type is not a Tensor. Got: {type(input)}.")
-        return input
-    if not 2 <= input.ndim <= 4:
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 4. But got: {input.ndim}."
-        )
-
-    image = input.cpu().detach().numpy()
-    
-    # NOTE: Channel last format
-    image = to_channel_last(image, keep_dims=keep_dims)
-    
-    # NOTE: Denormalize
-    if denormalize:
-        image = denormalize_naive(image)
-        
-    return image.astype(np.uint8)
-
-
-def to_pil_image(image: TensorOrArray) -> PIL.Image:
-    """Convert image from `np.ndarray` or `Tensor` to PIL image."""
-    if torch.is_tensor(image):
-        # Equivalent to: `np_image = image.numpy()` but more efficient
-        return F.pil_to_tensor(image)
-    elif isinstance(image, np.ndarray):
-        return PIL.Image.fromarray(image.astype(np.uint8), "RGB")
-    raise TypeError(f"Do not support {type(image)}.")
-
-
-def to_tensor(
-    image    : Union[Tensor, np.ndarray, PIL.Image],
-    keep_dims: bool = True,
-    normalize: bool = False,
-) -> Tensor:
-    """Convert a `PIL Image` or `np.ndarray` image to a 4d tensor.
-    
-    Args:
-        image (Tensor, np.ndarray, PIL.Image):
-            Image array or PIL.Image in [H, W, C], [H, W] or [..., H, W, C].
-        keep_dims (bool):
-            If `False` unsqueeze the image to match the shape [..., C, H, W].
-            Else, keep the original dimension. Default: `True`.
-        normalize (bool):
-            If `True`, converts the tensor in the range [0, 255] to the range
-            [0.0, 1.0]. Default: `False`.
-    
-    Returns:
-        img (Tensor):
-            Image Tensor.
-    """
-    if not (F._is_numpy(image) or torch.is_tensor(image)
-            or F._is_pil_image(image)):
-        raise TypeError(
-            f"`image` must be a `Tensor`, `np.ndarray`, or `PIL.Image. "
-            f"But got: {type(image)}."
-        )
-    
-    if ((F._is_numpy(image) or torch.is_tensor(image))
-        and not (2 <= image.ndim <= 4)):
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 4. But got: {image.ndim}."
-        )
-
-    # img = image
-    img = deepcopy(image)
-    
-    # NOTE: Handle PIL Image
-    if F._is_pil_image(img):
-        mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
-        img = np.array(img, mode_to_nptype.get(img.mode, np.uint8), copy=True)
-        if image.mode == "1":
-            img = 255 * img
-    
-    # NOTE: Handle numpy array
-    if F._is_numpy(img):
-        img = torch.from_numpy(img).contiguous()
-    
-    # NOTE: Channel first format
-    img = to_channel_first(img, keep_dims=keep_dims)
+def ten_crop(
+    image: Tensor, size: Int2Or3T, vflip: bool = False
+) -> ListOrTupleAnyT[Tensor]:
+    """Generate ten cropped images from the given image. Crop the given image
+    into four corners and the central crop plus the flipped version of these
+    (horizontal flipping is used by default).
    
-    # NOTE: Normalize
-    if normalize:
-        img = normalize_naive(img)
+    .. Note::
+        This transform returns a tuple of images and there may be a
+        mismatch in the number of inputs and targets your ``Dataset`` returns.
+
+    Args:
+        image (Tensor[..., C, H, W]):
+            Image to be cropped, where ... means an arbitrary number of leading
+            dimensions.
+        size (Int2Or3T):
+            Desired output size of the crop. If size is an int instead of
+            sequence like (h, w), a square crop (size, size) is made.
+            If provided a sequence of length 1, it will be interpreted
+            as (size[0], size[0]).
+        vflip (bool):
+            Use vertical flipping instead of horizontal. Default: `False`.
+
+    Returns:
+        (tuple):
+            Corresponding top left, top right, bottom left, bottom right and
+            center crop and same for the flipped image.
+    """
+    size = to_size(size)
+    assert_sequence_of_length(size, 2)
     
-    # NOTE: Convert type
-    if isinstance(img, torch.ByteTensor):
-        return img.to(dtype=torch.get_default_dtype())
-    
-    # NOTE: Place in memory
-    img = img.contiguous()
-    return img
+    first_five = five_crop(image, size)
+
+    if vflip:
+        image = vertical_flip(image=image)
+    else:
+        image = horizontal_flip(image=image)
+
+    second_five = five_crop(image, size)
+    return first_five + second_five
 
 
 def translate(
@@ -2102,27 +1430,24 @@ def translate(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Translate image in vertical and horizontal direction.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to transform.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         magnitude (Int2T):
             Horizontal and vertical translations (post-rotation translation).
         center (ListOrTuple2T[int], None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -2130,13 +1455,16 @@ def translate(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
@@ -2150,8 +1478,9 @@ def translate(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
 
 
@@ -2162,9 +1491,10 @@ def translate_image_box(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int, int]  = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
-    drop_ratio   : float                              = 0.0
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    drop_ratio   : float                              = 0.0,
+    inplace      : bool                               = False,
 ) -> tuple[Tensor, Tensor]:
     """Translate the image and bounding box with the given magnitude.
     
@@ -2173,7 +1503,8 @@ def translate_image_box(
         
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be translated.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         box (Tensor[N, 4]):
             Box to be translated. They are expected to be in (x1, y1, x2, y2)
             format with `0 <= x1 < x2` and `0 <= y1 < y2`.
@@ -2183,13 +1514,8 @@ def translate_image_box(
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -2197,16 +1523,19 @@ def translate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
             clipped is less than `drop_ratio` the bounding box is dropped.
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[..., C, H, W]):
@@ -2214,10 +1543,7 @@ def translate_image_box(
         box (Tensor[N, 4]):
             Translated boxes.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"R`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     return affine_image_box(
         image         = image,
         box           = box,
@@ -2228,36 +1554,58 @@ def translate_image_box(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
         drop_ratio    = drop_ratio,
+        inplace       = inplace,
     )
 
 
+def vertical_flip(image: Tensor, inplace: bool = False) -> Tensor:
+    """Vertically flip image.
+    
+    Args:
+        image (Tensor[..., C, H, W]):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        image (Tensor[..., C, H, W]):
+            Flipped image.
+    """
+    assert_tensor(image)
+    if not inplace:
+        image = image.clone()
+    return image.flip(-2)
+
+
 def vertical_flip_image_box(
-    image: Tensor, box: Tensor = ()
+    image: Tensor, box: Tensor, inplace: bool = False
 ) -> tuple[Tensor, Tensor]:
     """Vertically flip images and bounding boxes.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image.
-        box (Tensor[N, 4):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        box (Tensor[N, 4)]:
             Box.
-    
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Flipped image.
-        box (Tensor[N, 4):
+        box (Tensor[N, 4)]:
             Flipped box.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"R`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     center = get_image_center4(image)
-    return F.vflip(image), vflip_box(box, center)
-    
+    return vertical_flip(image=image, inplace=inplace), \
+           vflip_box(box=box, image_center=center, inplace=inplace)
+
 
 def vertical_shear(
     image        : Tensor,
@@ -2265,14 +1613,16 @@ def vertical_shear(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Shear image vertically.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to transform.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         magnitude (int):
             Shear angle value in degrees between -180 to 180, clockwise
             direction.
@@ -2280,13 +1630,8 @@ def vertical_shear(
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -2294,13 +1639,16 @@ def vertical_shear(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
@@ -2314,8 +1662,9 @@ def vertical_shear(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
 
 
@@ -2325,27 +1674,24 @@ def vertical_translate(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    inplace      : bool                               = False,
 ) -> Tensor:
     """Translate image in vertical direction.
     
     Args:
         image (Tensor[..., C, H, W]):
-            Image to transform.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         magnitude (int):
             Vertical translation (post-rotation translation)
         center (ListOrTuple2T[int], None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -2353,13 +1699,16 @@ def vertical_translate(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
-
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
     Returns:
         image (Tensor[..., C, H, W]):
             Transformed image.
@@ -2373,8 +1722,9 @@ def vertical_translate(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
+        inplace       = inplace,
     )
 
 
@@ -2385,9 +1735,10 @@ def vertical_translate_image_box(
     center       : Union[ListOrTuple2T[int], None]    = None,
     interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
     keep_shape   : bool                               = True,
-    pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    fill         : Union[FloatAnyT, None]             = None,
-    drop_ratio   : float                              = 0.0
+    fill         : Float4T                            = 0.0,
+    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+    drop_ratio   : float                              = 0.0,
+    inplace      : bool                               = False,
 ) -> tuple[Tensor, Tensor]:
     """Translate the image and bounding box in vertical direction.
     
@@ -2396,7 +1747,8 @@ def vertical_translate_image_box(
         
     Args:
         image (Tensor[..., C, H, W]):
-            Image to be translated.
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
         box (Tensor[N, 4]):
             Box to be translated. They are expected to be in (x1, y1, x2, y2)
             format with `0 <= x1 < x2` and `0 <= y1 < y2`.
@@ -2406,13 +1758,8 @@ def vertical_translate_image_box(
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -2420,16 +1767,19 @@ def vertical_translate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
             clipped is less than `drop_ratio` the bounding box is dropped.
             If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
             
     Returns:
         image (Tensor[..., C, H, W]):
@@ -2437,10 +1787,7 @@ def vertical_translate_image_box(
         box (Tensor[N, 4]):
             Translated boxes.
     """
-    if box.ndim != 2:
-        raise ValueError(
-            f"R`box` must be a 2D `Tensor`. But got: {image.ndim}."
-        )
+    assert_tensor_of_ndim(box, 2)
     return affine_image_box(
         image         = image,
         box           = box,
@@ -2451,50 +1798,14 @@ def vertical_translate_image_box(
         center        = center,
         interpolation = interpolation,
         keep_shape    = keep_shape,
-        pad_mode      = pad_mode,
         fill          = fill,
+        padding_mode  = padding_mode,
         drop_ratio    = drop_ratio,
+        inplace       = inplace,
     )
-    
+
 
 # MARK: - Modules
-
-@TRANSFORMS.register(name="add_weighted")
-class AddWeighted(Transform):
-    """Calculate the weighted sum of two Tensors.
-    
-    Function calculates the weighted sum of two Tensors as follows:
-        output = image1 * alpha + image2 * beta + gamma
-
-    Args:
-        alpha (float):
-            Weight of the image1 elements.
-        beta (float):
-            Weight of the image2 elements.
-        gamma (float):
-            Scalar added to each sum. Default: `0.0`.
-    """
-    
-    # MARK: Magic Functions
-    
-    def __init__(self, alpha: float, beta: float, gamma: float):
-        super().__init__()
-        self.alpha = alpha
-        self.beta  = beta
-        self.gamma = gamma
-
-    # MARK: Forward Pass
-
-    # noinspection PyMethodOverriding
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        return add_weighted(
-            image1 = input,
-            alpha  = self.alpha,
-            image2 = target,
-            beta   = self.beta,
-            gamma  = self.gamma
-        )
-      
 
 @TRANSFORMS.register(name="affine")
 class Affine(Transform):
@@ -2516,13 +1827,8 @@ class Affine(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -2530,12 +1836,17 @@ class Affine(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
@@ -2549,11 +1860,13 @@ class Affine(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.angle         = angle
         self.translate     = translate
         self.scale         = scale
@@ -2561,8 +1874,9 @@ class Affine(Transform):
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
 
     # MARK: Forward Pass
     
@@ -2582,6 +1896,8 @@ class Affine(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             affine(
                 image         = target,
@@ -2592,59 +1908,39 @@ class Affine(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace
             ) if target is not None else None
         
 
-@TRANSFORMS.register(name="add_weighted")
-class Blend(Transform):
-    """Blends 2 images together.
-
-    Args:
-        alpha (float):
-            Alpha transparency of the overlay.
-        gamma (float):
-            Scalar added to each sum. Default: `0.0`.
-    """
-
-    # MARK: Magic Functions
-    
-    def __init__(self, alpha: float, gamma: float, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.alpha = alpha
-        self.gamma = gamma
-    
-    # MARK: Forward Pass
-
-    # noinspection PyMethodOverriding
-    def forward(self, input : Tensor, target: Tensor, *args, **kwargs) -> Tensor:
-        return blend(
-            image1 = input,
-            image2 = target,
-            alpha  = self.alpha,
-            gamma  = self.gamma,
-        )
-    
-
 @TRANSFORMS.register(name="center_crop")
 class CenterCrop(Transform):
-    """Crops the given image at the center. If the image is Tensor, it is
-    expected to have [..., H, W] shape, where ... means an arbitrary number of
-    leading dimensions. If image size is smaller than output size along any
-    edge, image is padded with 0 and then cropped.
+    """Crops the given image at the center.
 
     Args:
-        size (Int2T):
+        output_size (Int2Or3T):
             Desired output size of the crop. If size is an int instead of
             sequence like (h, w), a square crop (size, size) is made.
             If provided a sequence of length 1, it will be interpreted as
             (size[0], size[0]).
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
     
-    def __init__(self, size: Int2T, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.size = to_size(size=size)
+    def __init__(
+        self,
+        output_size: Int2Or3T,
+        inplace    : bool               = False,
+        p          : Union[float, None] = None,
+        *args, **kwargs
+    ):
+        super().__init__(p=p, *args, **kwargs)
+        self.output_size = to_size(size=output_size)
+        self.inplace     = inplace
 
     # MARK: Forward Pass
     
@@ -2654,9 +1950,17 @@ class CenterCrop(Transform):
         target: Union[Tensor, None] = None,
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
-        return F.center_crop(img=input,  output_size=self.size), \
-               F.center_crop(img=target, output_size=self.size) \
-                    if target is not None else None
+        return \
+            center_crop(
+                image       = input,
+                output_size = self.output_size,
+                inplace     = self.inplace,
+            ), \
+            center_crop(
+                image       = target,
+                output_size = self.output_size,
+                inplace     = self.inplace,
+            ) if target is not None else None
     
     
 @TRANSFORMS.register(name="crop")
@@ -2674,18 +1978,30 @@ class Crop(Transform):
             Height of the crop box.
         width (int):
             Width of the crop box.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
     
     def __init__(
-        self, top: int, left: int, height: int, width: int, *args, **kwargs
+        self,
+        top    : int,
+        left   : int,
+        height : int,
+        width  : int,
+        inplace: bool               = False,
+        p      : Union[float, None] = None,
+        *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
-        self.top    = top
-        self.left   = left
-        self.height = height
-        self.width  = width
+        super().__init__(p=p, *args, **kwargs)
+        self.top     = top
+        self.left    = left
+        self.height  = height
+        self.width   = width
+        self.inplace = inplace
 
     # MARK: Forward Pass
     
@@ -2696,48 +2012,49 @@ class Crop(Transform):
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
         return \
-            F.crop(
-                img    = input,
-                top    = self.top,
-                left   = self.left,
-                height = self.height,
-                width  = self.width
+            crop(
+                image   = input,
+                top     = self.top,
+                left    = self.left,
+                height  = self.height,
+                width   = self.width,
+                inplace = self.inplace,
             ), \
-            F.crop(
-                img    = target,
-                top    = self.top,
-                left   = self.left,
-                height = self.height,
-                width  = self.width
+            crop(
+                image   = target,
+                top     = self.top,
+                left    = self.left,
+                height  = self.height,
+                width   = self.width,
+                inplace = self.inplace,
             ) if target is not None else None
 
 
-@TRANSFORMS.register(name="denormalize")
-class Denormalize(Transform):
-    """Denormalize an image Tensor with mean and standard deviation.
- 
-    image[channel] = (image[channel] * std[channel]) + mean[channel]
-    where `mean` is [M_1, ..., M_n] and `std` [S_1, ..., S_n] for `n` channels.
+@TRANSFORMS.register(name="five_crop")
+class FiveCrop(Transform):
+    """Crop the given image into four corners and the central crop.
 
     Args:
-        mean (Tensor[..., C, H, W], float):
-            Mean for each channel.
-        std (Tensor[..., C, H, W], float):
-            Standard deviations for each channel.
+        size (Int2Or3T):
+            Desired output size of the crop. If size is an int instead of
+            sequence like (h, w), a square crop (size, size) is made.
+            If provided a sequence of length 1, it will be interpreted
+            as (size[0], size[0]).
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
     
     def __init__(
         self,
-        mean: Union[Tensor, float],
-        std : Union[Tensor, float],
+        size : Int2Or3T,
+        p    : Union[float, None] = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
-        self.mean = mean
-        self.std  = std
-     
+        super().__init__(p=p, *args, **kwargs)
+        self.size = to_size(size=size)
+
     # MARK: Forward Pass
     
     def forward(
@@ -2745,17 +2062,35 @@ class Denormalize(Transform):
         input : Tensor,
         target: Union[Tensor, None] = None,
         *args, **kwargs
-    ) -> tuple[Tensor, Union[Tensor, None]]:
-        return denormalize(image=input,  mean=self.mean, std=self.std), \
-               denormalize(image=target, mean=self.mean, std=self.std) \
-                    if target is not None else None
-
-
+    ) -> tuple[
+        tuple[Tensor, Tensor, Tensor, Tensor, Tensor],
+        Union[tuple[Tensor, Tensor, Tensor, Tensor, Tensor], None]
+    ]:
+        return five_crop(image=input , size=self.size), \
+               five_crop(image=target, size=self.size) if target is not None else None
+    
+    
 @TRANSFORMS.register(name="hflip")
 @TRANSFORMS.register(name="horizontal_flip")
 class HorizontalFlip(Transform):
-    """Horizontally flip image."""
-
+    """Horizontally flip image.
+    
+    Args:
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
+    """
+    
+    def __init__(
+        self,
+        inplace: bool               = False,
+        p      : Union[float, None] = None,
+        *args, **kwargs
+    ):
+        super().__init__(p=p, *args, **kwargs)
+        self.inplace = inplace
+    
     # MARK: Forward Pass
     
     def forward(
@@ -2764,14 +2099,31 @@ class HorizontalFlip(Transform):
         target: Union[Tensor, None] = None,
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
-        return F.hflip(img=input), \
-               F.hflip(img=target) if target is not None else None
+        return horizontal_flip(image=input,  inplace=self.inplace), \
+               horizontal_flip(image=target, inplace=self.inplace) \
+                   if target is not None else None
     
 
 @TRANSFORMS.register(name="hflip_image_box")
 @TRANSFORMS.register(name="horizontal_flip_image_box")
 class HorizontalFlipImageBox(Transform):
-    """Horizontally flip image and bounding box."""
+    """Horizontally flip image and bounding box.
+    
+    Args:
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
+    """
+    
+    def __init__(
+        self,
+        inplace: bool               = False,
+        p      : Union[float, None] = None,
+        *args, **kwargs
+    ):
+        super().__init__(p=p, *args, **kwargs)
+        self.inplace = inplace
     
     # MARK: Forward Pass
 
@@ -2779,7 +2131,9 @@ class HorizontalFlipImageBox(Transform):
     def forward(
         self, input : Tensor, target: Tensor, *args, **kwargs
     ) -> tuple[Tensor, Tensor]:
-        return horizontal_flip_image_box(image=input, box=target)
+        return horizontal_flip_image_box(
+            image=input, box=target, inplace=self.inplace
+        )
    
    
 @TRANSFORMS.register(name="hshear")
@@ -2795,13 +2149,8 @@ class HorizontalShear(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -2809,12 +2158,17 @@ class HorizontalShear(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
@@ -2825,17 +2179,20 @@ class HorizontalShear(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
     
@@ -2852,8 +2209,9 @@ class HorizontalShear(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             horizontal_shear(
                 image         = target,
@@ -2861,8 +2219,9 @@ class HorizontalShear(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
 
 
@@ -2878,13 +2237,8 @@ class HorizontalTranslate(Transform):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -2892,12 +2246,17 @@ class HorizontalTranslate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
@@ -2908,23 +2267,27 @@ class HorizontalTranslate(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
+        *args, **kwargs
     ):
-        super().__init__()
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
 
     # MARK: Forward Pass
     
     def forward(
         self,
         input : Tensor,
-        target: Tensor = (),
+        target: Union[Tensor, None] = None,
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
         return \
@@ -2934,8 +2297,9 @@ class HorizontalTranslate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             horizontal_translate(
                 image         = target,
@@ -2943,8 +2307,9 @@ class HorizontalTranslate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
       
 
@@ -2960,13 +2325,8 @@ class HorizontalTranslateImageBox(Transform):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -2974,12 +2334,17 @@ class HorizontalTranslateImageBox(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -2990,21 +2355,26 @@ class HorizontalTranslateImageBox(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
+        *args, **kwargs
     ):
-        super().__init__()
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
-    
+
+    # noinspection PyMethodOverriding
     def forward(
-        self, input: Tensor, target: Tensor = (), *args, **kwargs
+        self, input: Tensor, target: Tensor, *args, **kwargs
     ) -> tuple[Tensor, Tensor]:
         return horizontal_translate_image_box(
             image         = input,
@@ -3013,9 +2383,92 @@ class HorizontalTranslateImageBox(Transform):
             center        = self.center,
             interpolation = self.interpolation,
             keep_shape    = self.keep_shape,
-            pad_mode      = self.pad_mode,
             fill          = self.fill,
+            padding_mode  = self.padding_mode,
+            inplace       = self.inplace,
         )
+
+
+@TRANSFORMS.register(name="pad")
+class Pad(Transform):
+    """Pad the given image on all sides with the given "pad" value.
+
+    Args:
+        Args:
+        image (Tensor[..., C, H, W]):
+            Image to be transformed, where ... means it can have an arbitrary
+            number of leading dimensions.
+        padding (Int4T):
+            Padding on each border. If a single int is provided this is used to
+            pad all borders. If sequence of length 2 is provided this is the
+            padding on left/right and top/bottom respectively. If a sequence
+            of length 4 is provided this is the padding for the left, top,
+            right and bottom borders respectively.
+        fill (Float4T):
+            Fill value for `constant` padding. If a tuple of length 3, it is
+            used to fill R, G, B channels respectively. Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
+            One of: ["constant", "edge", "reflect", "symmetric"]
+            Default: `constant`.
+            - constant: pads with a constant value, this value is specified
+              with fill
+            - edge: pads with the last value at the edge of the image. If input
+              a 5D torch Tensor, the last 3 dimensions will be padded instead
+              of the last 2
+            - reflect: pads with reflection of image without repeating the last
+              value on the edge. For example, padding [1, 2, 3, 4] with 2
+              elements on both sides in reflect mode will result in
+              [3, 2, 1, 2, 3, 4, 3, 2]
+            - symmetric: pads with reflection of image repeating the last value
+              on the edge. For example, padding [1, 2, 3, 4] with 2 elements on
+              both sides in symmetric mode will result in
+              [2, 1, 1, 2, 3, 4, 4, 3]
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
+    """
+
+    # MARK: Magic Functions
+    
+    def __init__(
+        self,
+        padding     : Int4T,
+        fill        : Float4T                      = 0.0,
+        padding_mode: Union[PaddingMode, str, int] = PaddingMode.CONSTANT,
+        inplace     : bool                         = False,
+        p           : Union[float, None]           = None,
+        *args, **kwargs
+    ):
+        super().__init__(p=p, *args, **kwargs)
+        self.padding      = padding
+        self.fill         = fill
+        self.padding_mode = padding_mode
+        self.inplace      = inplace
+
+    # MARK: Forward Pass
+    
+    def forward(
+        self,
+        input : Tensor,
+        target: Union[Tensor, None] = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Union[Tensor, None]]:
+        return \
+            pad(
+                image        = input,
+                padding      = self.padding,
+                fill         = self.fill,
+                padding_mode = self.padding_mode,
+                inplace      = self.inplace,
+            ), \
+            pad(
+                image        = target,
+                padding      = self.padding,
+                fill         = self.fill,
+                padding_mode = self.padding_mode,
+                inplace      = self.inplace,
+            ) if target is not None else None
 
 
 @TRANSFORMS.register(name="resize")
@@ -3059,6 +2512,10 @@ class Resize(Transform):
             .. warning::
                 There is no autodiff support for `antialias=True` option with
                 input `img` as Tensor.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
@@ -3069,13 +2526,16 @@ class Resize(Transform):
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         max_size     : Union[int, None]                   = None,
         antialias    : Union[bool, None]                  = None,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.size          = size
         self.interpolation = interpolation
         self.max_size      = max_size
         self.antialias     = antialias
+        self.inplace       = inplace
 
     # MARK: Forward Pass
     
@@ -3092,6 +2552,7 @@ class Resize(Transform):
                 interpolation = self.interpolation,
                 max_size      = self.max_size,
                 antialias     = self.antialias,
+                inplace       = self.inplace,
             ), \
             resize(
                 image         = target,
@@ -3099,6 +2560,7 @@ class Resize(Transform):
                 interpolation = self.interpolation,
                 max_size      = self.max_size,
                 antialias     = self.antialias,
+                inplace       = self.inplace,
             ) if target is not None else None
     
 
@@ -3125,6 +2587,10 @@ class ResizedCrop(Transform):
             `InterpolationMode.BICUBIC` are supported.
             For backward compatibility integer values (e.g. `PIL.Image.NEAREST`)
             are still acceptable.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3137,15 +2603,18 @@ class ResizedCrop(Transform):
         width        : int,
         size         : list[int],
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.top           = top
         self.left          = left
         self.height        = height
         self.width         = width
         self.size          = size
         self.interpolation = interpolation
+        self.inplace       = inplace
 
     # MARK: Forward Pass
     
@@ -3156,23 +2625,25 @@ class ResizedCrop(Transform):
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
         return \
-            F.resized_crop(
-                img           = input,
+            resized_crop(
+                image= input,
                 top           = self.top,
                 left          = self.left,
                 height        = self.height,
                 width         = self.width,
                 size          = self.size,
-                interpolation = self.interpolation
+                interpolation = self.interpolation,
+                inplace       = self.inplace,
             ), \
-            F.resized_crop(
-                img           = target,
+            resized_crop(
+                image= target,
                 top           = self.top,
                 left          = self.left,
                 height        = self.height,
                 width         = self.width,
                 size          = self.size,
-                interpolation = self.interpolation
+                interpolation = self.interpolation,
+                inplace       = self.inplace
             ) if target is not None else None
 
 
@@ -3187,13 +2658,8 @@ class Rotate(Transform):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -3201,12 +2667,17 @@ class Rotate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
 
     # MARK: Magic Functions
@@ -3217,17 +2688,20 @@ class Rotate(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.angle         = angle
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
 
     # MARK: Forward Pass
     
@@ -3244,8 +2718,9 @@ class Rotate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             rotate(
                 image         = target,
@@ -3253,8 +2728,9 @@ class Rotate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
 
 
@@ -3270,13 +2746,8 @@ class RotateHorizontalFlip(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3284,12 +2755,17 @@ class RotateHorizontalFlip(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3300,17 +2776,20 @@ class RotateHorizontalFlip(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.angle         = angle
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
     
@@ -3327,8 +2806,9 @@ class RotateHorizontalFlip(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             rotate_horizontal_flip(
                 image         = target,
@@ -3336,8 +2816,9 @@ class RotateHorizontalFlip(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
     
 
@@ -3353,13 +2834,8 @@ class RotateVerticalFlip(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3367,12 +2843,17 @@ class RotateVerticalFlip(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3383,17 +2864,20 @@ class RotateVerticalFlip(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.angle         = angle
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
     
@@ -3410,8 +2894,9 @@ class RotateVerticalFlip(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             rotate_vertical_flip(
                 image         = target,
@@ -3419,8 +2904,9 @@ class RotateVerticalFlip(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
     
 
@@ -3438,13 +2924,8 @@ class Shear(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3452,12 +2933,17 @@ class Shear(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3468,17 +2954,20 @@ class Shear(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
     
@@ -3495,8 +2984,9 @@ class Shear(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             shear(
                 image         = target,
@@ -3504,37 +2994,47 @@ class Shear(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
 
 
-@TRANSFORMS.register(name="to_image")
-class ToImage(Transform):
-    """Converts a PyTorch Tensor to a numpy image. In case the image is in the
-    GPU, it will be copied back to CPU.
+@TRANSFORMS.register(name="ten_crop")
+class TenCrop(Transform):
+    """Generate ten cropped images from the given image. Crop the given image
+    into four corners and the central crop plus the flipped version of these
+    (horizontal flipping is used by default).
+
+    .. Note::
+        This transform returns a tuple of images and there may be a
+        mismatch in the number of inputs and targets your ``Dataset`` returns.
 
     Args:
-        keep_dims (bool):
-            If `False` squeeze the input image to match the shape [H, W, C] or
-            [H, W]. Else, keep the original dimension. Default: `True`.
-        denormalize (bool):
-            If `True`, converts the image in the range [0.0, 1.0] to the range
-            [0, 255]. Default: `False`.
+        size (Int2Or3T):
+            Desired output size of the crop. If size is an int instead of
+            sequence like (h, w), a square crop (size, size) is made.
+            If provided a sequence of length 1, it will be interpreted
+            as (size[0], size[0]).
+        vflip (bool):
+            Use vertical flipping instead of horizontal. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
-    
+
     # MARK: Magic Functions
     
     def __init__(
         self,
-        keep_dims  : bool = True,
-        denormalize: bool = False,
+        size : Int2Or3T,
+        vflip: bool               = False,
+        p    : Union[float, None] = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
-        self.keep_dims   = keep_dims
-        self.denormalize = denormalize
-    
+        super().__init__(p=p, *args, **kwargs)
+        self.size  = to_size(size=size)
+        self.vflip = vflip
+
     # MARK: Forward Pass
     
     def forward(
@@ -3542,64 +3042,13 @@ class ToImage(Transform):
         input : Tensor,
         target: Union[Tensor, None] = None,
         *args, **kwargs
-    ) -> tuple[Tensor, Union[Tensor, None]]:
-        return \
-            to_image(
-                input       = input,
-                keep_dims   = self.keep_dims,
-                denormalize = self.denormalize
-            ), \
-            to_image(
-                input       = target,
-                keep_dims   = self.keep_dims,
-                denormalize = self.denormalize
-            ) if target is not None else None
-    
-
-@TRANSFORMS.register(name="to_tensor")
-class ToTensor(Transform):
-    """Convert a `PIL Image` or `np.ndarray` image to a 4D tensor.
-    
-    Args:
-        keep_dims (bool):
-            If `False` unsqueeze the image to match the shape [..., C, H, W].
-            Else, keep the original dimension. Default: `True`.
-        normalize (bool):
-            If `True`, converts the tensor in the range [0, 255] to the range
-            [0.0, 1.0]. Default: `False`.
-    """
-    
-    # MARK: Magic Functions
-
-    def __init__(
-        self,
-        keep_dims: bool = False,
-        normalize: bool = False,
-        *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        self.keep_dims = keep_dims
-        self.normalize = normalize
-    
-    # MARK: Forward Pass
-    
-    def forward(
-        self,
-        input : Tensor,
-        target: Union[Tensor, None] = None,
-        *args, **kwargs
-    ) -> tuple[Tensor, Union[Tensor, None]]:
-        return \
-            to_tensor(
-                image     = input,
-                keep_dims = self.keep_dims,
-                normalize = self.normalize
-            ), \
-            to_tensor(
-                image     = input,
-                keep_dims = self.keep_dims,
-                normalize = self.normalize
-            ) if target is not None else None
+    ) -> tuple[
+        ListOrTupleAnyT[Tensor],
+        Union[ListOrTupleAnyT[Tensor], None]
+    ]:
+        return ten_crop(image=input,  size=self.size, vflip=self.vflip), \
+               ten_crop(image=target, size=self.size, vflip=self.vflip) \
+                   if target is not None else None
     
 
 @TRANSFORMS.register(name="translate")
@@ -3613,13 +3062,8 @@ class Translate(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3627,12 +3071,17 @@ class Translate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3643,17 +3092,20 @@ class Translate(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
 
     # MARK: Forward Pass
     
@@ -3670,8 +3122,9 @@ class Translate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             translate(
                 image         = input,
@@ -3679,8 +3132,9 @@ class Translate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
 
 
@@ -3695,13 +3149,8 @@ class TranslateImageBox(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3709,12 +3158,17 @@ class TranslateImageBox(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3725,17 +3179,20 @@ class TranslateImageBox(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
 
@@ -3750,15 +3207,34 @@ class TranslateImageBox(Transform):
             center        = self.center,
             interpolation = self.interpolation,
             keep_shape    = self.keep_shape,
-            pad_mode      = self.pad_mode,
             fill          = self.fill,
+            padding_mode  = self.padding_mode,
+            inplace       = self.inplace,
         )
 
 
 @TRANSFORMS.register(name="vflip")
 @TRANSFORMS.register(name="vertical_flip")
 class VerticalFlip(Transform):
-    """Vertically flip image."""
+    """Vertically flip image.
+    
+    Args:
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
+    """
+    
+    # MARK: Magic Functions
+    
+    def __init__(
+        self,
+        inplace: bool               = False,
+        p      : Union[float, None] = None,
+        *args, **kwargs
+    ):
+        super().__init__(p=p, *args, **kwargs)
+        self.inplace = inplace
   
     # MARK: Forward Pass
     
@@ -3768,22 +3244,43 @@ class VerticalFlip(Transform):
         target: Union[Tensor, None] = None,
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
-        return F.vflip(img=input), \
-               F.vflip(img=target) if target is not None else None
+        return vertical_flip(image=input,  inplace=self.inplace), \
+               vertical_flip(image=target, inplace=self.inplace) \
+                   if target is not None else None
     
     
 @TRANSFORMS.register(name="vflip_image_box")
 @TRANSFORMS.register(name="vertical_flip_image_box")
 class VerticalFlipImageBox(Transform):
-    """Vertically flip image and bounding box."""
+    """Vertically flip image and bounding box.
     
+    Args:
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
+    """
+    
+    # MARK: Magic Functions
+    
+    def __init__(
+        self,
+        inplace: bool               = False,
+        p      : Union[float, None] = None,
+        *args, **kwargs
+    ):
+        super().__init__(p=p, *args, **kwargs)
+        self.inplace = inplace
+        
     # MARK: Forward Pass
 
     # noinspection PyMethodOverriding
     def forward(
         self, input: Tensor, target: Tensor, *args, **kwargs
     ) -> tuple[Tensor, Tensor]:
-        return vertical_flip_image_box(image=input, box=target)
+        return vertical_flip_image_box(
+            image=input, box=target, inplace=self.inplace
+        )
 
 
 @TRANSFORMS.register(name="yshear")
@@ -3799,13 +3296,8 @@ class VerticalShear(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3813,12 +3305,17 @@ class VerticalShear(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3829,17 +3326,20 @@ class VerticalShear(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
     
@@ -3856,8 +3356,9 @@ class VerticalShear(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             vertical_shear(
                 image         = target,
@@ -3865,8 +3366,9 @@ class VerticalShear(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
-                fill          = self.fill
+                fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
 
 
@@ -3882,13 +3384,8 @@ class VerticalTranslate(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
@@ -3896,12 +3393,17 @@ class VerticalTranslate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3912,17 +3414,20 @@ class VerticalTranslate(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
     
@@ -3939,8 +3444,9 @@ class VerticalTranslate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ), \
             vertical_translate(
                 image         = target,
@@ -3948,8 +3454,9 @@ class VerticalTranslate(Transform):
                 center        = self.center,
                 interpolation = self.interpolation,
                 keep_shape    = self.keep_shape,
-                pad_mode      = self.pad_mode,
                 fill          = self.fill,
+                padding_mode  = self.padding_mode,
+                inplace       = self.inplace,
             ) if target is not None else None
 
 
@@ -3965,13 +3472,8 @@ class VerticalTranslateImageBox(Transform):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
         interpolation (InterpolationMode, str, int):
-            Desired interpolation enum defined by
-            :class:`torchvision.transforms.InterpolationMode`.
-            Default is `InterpolationMode.NEAREST`.
-            If input is Tensor, only `InterpolationMode.NEAREST`,
-            `InterpolationMode.BILINEAR` are supported. For backward
-            compatibility integer values (e.g. `PIL.Image.NEAREST`) are still
-            acceptable.
+            Desired interpolation enum defined by `InterpolationMode`.
+            Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
             If `True`, expands the output image to  make it large enough to
             hold the entire rotated image.
@@ -3979,12 +3481,17 @@ class VerticalTranslateImageBox(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        pad_mode (PaddingMode, str, int):
+        fill (Float4T):
+            Pixel values for the area outside the transformed image.
+            If given a number, the value is used for all bands respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode, str, int):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
-        fill (FloatAnyT, None):
-            Pixel fill value for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+        p (float):
+            Probability of the image being adjusted. Default: `None`.
     """
     
     # MARK: Magic Functions
@@ -3995,17 +3502,20 @@ class VerticalTranslateImageBox(Transform):
         center       : Union[ListOrTuple2T[int], None]    = None,
         interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
         keep_shape   : bool                               = True,
-        pad_mode     : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        fill         : Union[FloatAnyT, None]             = None,
+        fill         : Float4T                            = 0.0,
+        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
+        inplace      : bool                               = False,
+        p            : Union[float, None]                 = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(p=p, *args, **kwargs)
         self.magnitude     = magnitude
         self.center        = center
         self.interpolation = interpolation
         self.keep_shape    = keep_shape
-        self.pad_mode      = pad_mode
         self.fill          = fill
+        self.padding_mode  = padding_mode
+        self.inplace       = inplace
     
     # MARK: Forward Pass
 
@@ -4020,8 +3530,9 @@ class VerticalTranslateImageBox(Transform):
             center        = self.center,
             interpolation = self.interpolation,
             keep_shape    = self.keep_shape,
-            pad_mode      = self.pad_mode,
             fill          = self.fill,
+            padding_mode  = self.padding_mode,
+            inplace       = self.inplace,
         )
         
 
