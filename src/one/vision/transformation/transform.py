@@ -162,7 +162,7 @@ class ComposeScript(nn.Sequential):
             if not all(isinstance(t, Transform) for t in transforms):
                 raise TypeError(f"All items in `transforms` must be callable.")
         
-        args = transforms + args
+        args = transforms + list(args)
         super().__init__(*args, **kwargs)
 
     def __repr__(self) -> str:

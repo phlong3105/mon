@@ -40,8 +40,8 @@ from one.core import PaddingMode
 from one.core import to_size
 from one.core import TRANSFORMS
 from one.vision.shape import affine_box
-from one.vision.shape import hflip_box
-from one.vision.shape import vflip_box
+from one.vision.shape import horizontal_flip_box
+from one.vision.shape import vertical_flip_box
 from one.vision.transformation.misc import get_image_center4
 from one.vision.transformation.misc import get_image_size
 from one.vision.transformation.misc import is_channel_last
@@ -491,7 +491,7 @@ def horizontal_flip_image_box(
     assert_tensor_of_ndim(box, 2)
     center = get_image_center4(image)
     return horizontal_flip(image=image, inplace=inplace), \
-           hflip_box(box=box, image_center=center, inplace=inplace)
+           horizontal_flip_box(box=box, image_center=center, inplace=inplace)
 
 
 def horizontal_shear(
@@ -784,7 +784,7 @@ def letterbox_resize(
 
 def pad(
     image       : Tensor,
-    padding     : Int4T,
+    padding     : Float4T,
     fill        : Float4T                      = 0.0,
     padding_mode: Union[PaddingMode, str, int] = PaddingMode.CONSTANT,
     inplace     : bool                         = False,
@@ -795,7 +795,7 @@ def pad(
         image (Tensor[..., C, H, W]):
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
-        padding (Int4T):
+        padding (Float4T):
             Padding on each border. If a single int is provided this is used to
             pad all borders. If sequence of length 2 is provided this is the
             padding on left/right and top/bottom respectively. If a sequence
@@ -1604,7 +1604,7 @@ def vertical_flip_image_box(
     assert_tensor_of_ndim(box, 2)
     center = get_image_center4(image)
     return vertical_flip(image=image, inplace=inplace), \
-           vflip_box(box=box, image_center=center, inplace=inplace)
+           vertical_flip_box(box=box, image_center=center, inplace=inplace)
 
 
 def vertical_shear(

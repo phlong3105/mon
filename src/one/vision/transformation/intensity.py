@@ -28,6 +28,7 @@ from one.core import assert_tensor_of_atleast_ndim
 from one.core import assert_tensor_of_channels
 from one.core import assert_tensor_of_ndim_in_range
 from one.core import Float2T
+from one.core import ListOrTuple2T
 from one.core import TRANSFORMS
 from one.vision.transformation.color import hsv_to_rgb
 from one.vision.transformation.color import rgb_to_grayscale
@@ -96,7 +97,7 @@ def adjust_brightness(image: Tensor, brightness_factor: float) -> Tensor:
             Brightness adjusted image.
     """
     assert_positive_number(brightness_factor)
-    assert_tensor_of_channels(image)
+    assert_tensor_of_channels(image, [1, 3])
     return blend(
 	    image1 = image,
 	    alpha  = brightness_factor,
@@ -428,7 +429,7 @@ def denormalize_naive(image: Tensor) -> Tensor:
     return torch.clamp(image * 255, 0, 255).to(torch.uint8)
     
 
-@dispatch(list, bool)
+@dispatch(list)
 def denormalize_naive(image: list[Tensor]) -> list:
     """Naively denormalize a list of image Tensor.
     
@@ -448,21 +449,19 @@ def denormalize_naive(image: list[Tensor]) -> list:
         raise TypeError(f"`image` must be a list of `Tensor`.")
 
 
-@dispatch(tuple, bool)
-def denormalize_naive(image: tuple, inplace: bool = False) -> tuple:
+@dispatch(tuple)
+def denormalize_naive(image: tuple) -> tuple:
     """Naively denormalize a tuple of image Tensor.
     
     Args:
         image (tuple[Tensor[..., C, H, W]]):
             Tuple of image Tensor.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        
     Returns:
         image (tuple[Tensor[..., C, H, W]]):
             Normalized tuple of image Tensors.
     """
-    return tuple(denormalize_naive(list(image), inplace))
+    return tuple(denormalize_naive(list(image)))
 
 
 @dispatch(dict)
@@ -1216,7 +1215,7 @@ class ColorJitter(Transform):
         contrast  : Union[Float2T, None] = 0.0,
         saturation: Union[Float2T, None] = 0.0,
         hue       : Union[Float2T, None] = 0.0,
-        p         : Union[float, None]   = None,
+        p         : Union[float,   None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -1247,7 +1246,7 @@ class ColorJitter(Transform):
         center            : int   = 1,
         bound             : tuple = (0, float("inf")),
         clip_first_on_zero: bool  = True
-    ) -> Union[list, tuple, None]:
+    ) -> Union[ListOrTuple2T[float], None]:
         if isinstance(value, numbers.Number):
             assert_positive_number(value)
             value = [center - float(value), center + float(value)]
@@ -1271,31 +1270,31 @@ class ColorJitter(Transform):
     
     @staticmethod
     def get_params(
-        brightness: Union[list[float], None],
-        contrast  : Union[list[float], None],
-        saturation: Union[list[float], None],
-        hue       : Union[list[float], None],
+        brightness: Union[ListOrTuple2T[float], None],
+        contrast  : Union[ListOrTuple2T[float], None],
+        saturation: Union[ListOrTuple2T[float], None],
+        hue       : Union[ListOrTuple2T[float], None],
     ) -> tuple[
         Tensor,
-        Union[list[float], None],
-        Union[list[float], None],
-        Union[list[float], None],
-        Union[list[float], None]
+        Union[float, None],
+        Union[float, None],
+        Union[float, None],
+        Union[float, None]
     ]:
         """Get the parameters for the randomized transform to be applied on
         image.
 
         Args:
-            brightness (tuple of float (min, max), optional):
+            brightness (ListOrTuple2T[float], None):
                 The range from which the `brightness_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
-            contrast (tuple of float (min, max), optional):
+            contrast (ListOrTuple2T[float], None):
                 The range from which the `contrast_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
-            saturation (tuple of float (min, max), optional):
+            saturation (ListOrTuple2T[float], None):
                 The range from which the `saturation_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
-            hue (tuple of float (min, max), optional):
+            hue (ListOrTuple2T[float], None):
                 The range from which the `hue_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
 
@@ -1668,8 +1667,8 @@ class RandomErase(Transform):
     @staticmethod
     def get_params(
         image: Tensor,
-        scale: tuple[float, float],
-        ratio: tuple[float, float],
+        scale: ListOrTuple2T[float],
+        ratio: ListOrTuple2T[float],
         value: Union[list[float], None] = None
     ) -> tuple[int, int, int, int, Tensor]:
         """Get parameters for `erase` for a random erasing.
@@ -1677,9 +1676,9 @@ class RandomErase(Transform):
         Args:
             image (Tensor):
                 Tensor image to be erased.
-            scale (tuple[float, float]):
+            scale (ListOrTuple2T[float]):
                 Range of proportion of erased area against input image.
-            ratio (tuple[float, float]):
+            ratio (ListOrTuple2T[float]):
                 Range of aspect ratio of erased area.
             value (list[float], None):
                 Erasing value. If None, it is interpreted as "random"
@@ -1692,7 +1691,7 @@ class RandomErase(Transform):
                 erasing.
         """
         img_c, img_h, img_w = get_image_shape(image)
-        area = img_h * img_w
+        area                = img_h * img_w
 
         log_ratio = torch.log(torch.tensor(ratio))
         for _ in range(10):

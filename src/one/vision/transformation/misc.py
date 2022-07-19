@@ -18,6 +18,7 @@ from multipledispatch import dispatch
 from PIL import ExifTags
 from torch import Tensor
 
+from one.core import assert_tensor_of_ndim_in_range
 from one.core import error_console
 from one.core import Int2Or3T
 from one.core import Int2T
@@ -451,14 +452,8 @@ def to_image(
     """
     from one.vision.transformation import denormalize_naive
     
-    if not torch.is_tensor(input):
-        error_console.log(f"Input type is not a Tensor. Got: {type(input)}.")
-        return input
-    if not 2 <= input.ndim <= 4:
-        raise ValueError(
-            f"Require 2 <= `image.ndim` <= 4. But got: {input.ndim}."
-        )
-
+    assert_tensor_of_ndim_in_range(input, 2, 4)
+   
     image = input.cpu().detach().numpy()
     
     # NOTE: Channel last format
