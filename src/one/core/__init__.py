@@ -15,6 +15,7 @@ from .numpy import *
 from .rich import *
 from .serialization import *
 from .tensor import *
+from .transform import *
 from .types import *
 from .version import *
 from .wrapper import *

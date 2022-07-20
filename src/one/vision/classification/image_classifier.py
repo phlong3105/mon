@@ -15,8 +15,8 @@ from torch import Tensor
 
 from one.core import Indexes
 from one.core import Tensors
-from one.imgproc import imshow_cls_plt
 from one.nn import BaseModel
+from one.visualize import imshow_cls_plt
 
 __all__ = [
     "ImageClassifier"

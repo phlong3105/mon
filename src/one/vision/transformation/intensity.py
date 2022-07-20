@@ -29,13 +29,13 @@ from one.core import assert_tensor_of_channels
 from one.core import assert_tensor_of_ndim_in_range
 from one.core import Float2T
 from one.core import ListOrTuple2T
+from one.core import Transform
 from one.core import TRANSFORMS
+from one.vision.acquisition import get_image_shape
+from one.vision.acquisition import get_num_channels
 from one.vision.transformation.color import hsv_to_rgb
 from one.vision.transformation.color import rgb_to_grayscale
 from one.vision.transformation.color import rgb_to_hsv
-from one.vision.transformation.misc import get_image_shape
-from one.vision.transformation.misc import get_num_channels
-from one.vision.transformation.transform import Transform
 
 
 # MARK: - Functional
@@ -572,6 +572,30 @@ def invert(image: Tensor) -> Tensor:
     )
     return bound - image
 
+
+def is_normalized(image: Tensor) -> Tensor:
+    """Return `True` if the given image is normalized."""
+    assert_tensor(image)
+    return abs(torch.max(image)) <= 1.0
+
+
+def is_integer_image(image: Tensor) -> bool:
+    """Return `True` if the given image is integer-encoded."""
+    assert_tensor(image)
+    c = get_num_channels(image)
+    if c == 1:
+        return True
+    return False
+
+
+def is_one_hot_image(image: Tensor) -> bool:
+    """Return `True` if the given image is one-hot encoded."""
+    assert_tensor(image)
+    c = get_num_channels(image)
+    if c > 1:
+        return True
+    return False
+   
 
 def normalize(
     image  : Tensor,

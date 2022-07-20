@@ -10,19 +10,20 @@ import inspect
 import math
 import sys
 from typing import Any
-from typing import Optional
 from typing import Sequence
+from typing import Union
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from one.core import Arrays
-from one.core import make_image_grid
 from one.core import to_4d_array_list
-from one.core import to_channel_last
-from one.core import to_image
-from one.core import to_pil_image
+from one.data import ClassLabels
+from one.vision.transformation import to_channel_last
+from one.vision.transformation import to_image
+from one.vision.transformation import to_pil_image
+from one.visualize.utils import make_image_grid
 
 plt.ion()
 plt.switch_backend("qt5agg")
@@ -46,7 +47,7 @@ def show_images(
 			Number of images displayed in each row of the grid. Ffinal grid
 			size is `[B / nrow, nrow]`.
 		denormalize (bool):
-			Should unnormalize the images? Default: `False`.
+			Should denormalize the images? Default: `False`.
 		figure_num (int):
 			matplotlib figure id.
 		wait_time (float):
@@ -54,7 +55,7 @@ def show_images(
 	"""
 	# NOTE: Make an image grid
 	cat_image = make_image_grid(images, nrow)
-	cat_image = to_image(cat_image, denormalize=True)
+	cat_image = to_image(cat_image, denormalize=denormalize)
 	"""
 	cat_image = cat_image.numpy() if torch.is_tensor(cat_image) else cat_image
 	cat_image = to_channel_last(cat_image)
@@ -74,25 +75,25 @@ def show_images(
 
 def imshow_plt(
 	images    : Any,
-	labels    : Optional[Sequence[str]] = None,
-	scale     : int                     = 1,
-	save_cfg  : Optional[dict]          = None,
-	verbose	  : bool					= True,
-	show_max_n: int					    = 8,
-	wait_time : float                   = 0.01,
-	figure_num: int                     = 0,
+	labels    : Union[Sequence[str], None] = None,
+	scale     : int                        = 1,
+	save_cfg  : Union[dict, None]          = None,
+	verbose	  : bool				   	   = True,
+	show_max_n: int					       = 8,
+	wait_time : float                      = 0.01,
+	figure_num: int                        = 0,
 ):
 	"""Visualize images as a grid using matplotlib.
 	
 	Args:
 		images (Any):
 			A sequence of images. Each element is of shape [B, C, H, W].
-		labels (Sequence[str], optional):
-			Sequence of images' labels string.
+		labels (Sequence[str], None):
+			Sequence of images' labels string. Default: `None`.
 		scale (int):
 			Scale the size of matplotlib figure. `1` means (default size x 1).
-		save_cfg (dict, optional):
-			Save figure config.
+		save_cfg (dict, None):
+			Save figure config. Default: `None`.
 		verbose (bool):
 			If `True`, verbose the debug image, else skip. Default: `True`.
 		show_max_n (int):
@@ -100,7 +101,7 @@ def imshow_plt(
 		wait_time (float):
 			Wait some time (in seconds) to display the figure then reset.
 		figure_num (int):
-			Fmatplotlib figure id. Default: `0`.
+			Matplotlib figure id. Default: `0`.
 			
 	Examples:
 		>>> import cv2
@@ -118,13 +119,14 @@ def imshow_plt(
 		>>> outputs = { "RGB": rgbs, "BGR": bgrs }
 		>>> imshow_plt(images=outputs, figure_num=1, scale=2)
 	"""
+	from one.vision.transformation import denormalize_naive
+
 	if not verbose and save_cfg is None:
 		return
 	
 	# NOTE: Prepare images
 	images_ = to_4d_array_list(images)  # List of 4D-array
 	images_ = [to_channel_last(i)	for i in images_]
-	from one.core import denormalize_naive
 	images_ = [denormalize_naive(i) for i in images_]
 	images_ = [i[: show_max_n]    	for i in images_]
 	
@@ -176,37 +178,37 @@ def imshow_plt(
 
 def imshow_cls_plt(
 	images 	    : Any,
-	preds	    : Optional[Arrays]		  = None,
-	targets	    : Optional[Arrays]		  = None,
-	labels	    : Optional[Sequence[str]] = None,
-	class_labels: Optional["ClassLabels"] = None,
-	top_k	    : int 				      = 5,
-	scale       : int                     = 1,
-	save_cfg    : Optional[dict]          = None,
-	verbose	    : bool					  = True,
-	show_max_n  : int					  = 8,
-	wait_time   : float                   = 0.01,
-	figure_num  : int                     = 0,
+	preds	    : Union[Arrays, None]		 = None,
+	targets	    : Union[Arrays, None]		 = None,
+	labels	    : Union[Sequence[str], None] = None,
+	class_labels: Union[ClassLabels, None]   = None,
+	top_k	    : int 				         = 5,
+	scale       : int                        = 1,
+	save_cfg    : Union[dict, None]          = None,
+	verbose	    : bool					     = True,
+	show_max_n  : int					     = 8,
+	wait_time   : float                      = 0.01,
+	figure_num  : int                        = 0,
 ):
 	"""Visualize classification results on images using matplotlib.
 	
 	Args:
 		images (Any):
 			A sequence of images. Each element is of shape [B, C, H, W].
-		preds (Arrays, optional):
+		preds (Arrays, None):
 			A sequence of predicted classes probabilities. Default: `None`.
-		targets (Arrays, optional):
+		targets (Arrays, None):
 			A sequence of ground-truths. Default: `None`.
-		labels (Sequence[str], optional):
+		labels (Sequence[str], None):
 			Sequence of images' labels string. Default: `None`.
-		class_labels (ClassLabels, optional):
+		class_labels (ClassLabels, None):
 			`ClassLabels` objects that contains all class labels in the
 			datasets. Default: `None`.
 		top_k (int):
 			Show only the top k classes' probabilities. Default: `5`.
 		scale (int):
 			Scale the size of matplotlib figure. `1` means (default size x 1).
-		save_cfg (dict, optional):
+		save_cfg (dict, None):
 			Save figure config.
 		verbose (bool):
 			If `True`, verbose the debug image, else skip. Default: `True`.

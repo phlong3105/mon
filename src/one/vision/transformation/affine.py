@@ -38,14 +38,14 @@ from one.core import ListOrTuple2T
 from one.core import ListOrTupleAnyT
 from one.core import PaddingMode
 from one.core import to_size
+from one.core import Transform
 from one.core import TRANSFORMS
+from one.vision.acquisition import get_image_center4
+from one.vision.acquisition import get_image_size
+from one.vision.acquisition import is_channel_last
 from one.vision.shape import affine_box
 from one.vision.shape import horizontal_flip_box
 from one.vision.shape import vertical_flip_box
-from one.vision.transformation.misc import get_image_center4
-from one.vision.transformation.misc import get_image_size
-from one.vision.transformation.misc import is_channel_last
-from one.vision.transformation.transform import Transform
 
 
 # MARK: - Functional

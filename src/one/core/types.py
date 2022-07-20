@@ -1246,6 +1246,67 @@ def is_number_in_range(
         )
 
 
+def is_numpy(input: Any) -> bool:
+    if isinstance(input, np.ndarray):
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `np.ndarray`. But got: {type(input)}."
+        )
+
+
+def is_numpy_of_atleast_ndim(input: Any, ndim: int) -> bool:
+    assert_numpy(input)
+    if input.ndim >= ndim:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `np.ndarray` of ndim `{ndim}`. "
+            f"But got: {input.ndim}."
+        )
+    
+
+def is_numpy_of_channels(input: Any, channels: Union[list, tuple, int]) -> bool:
+    from one.vision.transformation import get_num_channels
+    assert_numpy_of_atleast_ndim(input, 3)
+    
+    if isinstance(channels, int):
+        channels = [channels]
+    elif isinstance(channels, tuple):
+        channels = list(channels)
+    assert_list(channels)
+    
+    c = get_num_channels(input)
+    if c in channels:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `np.ndarray` of channels `{channels}`. "
+            f"But got: {c}."
+        )
+
+
+def is_numpy_of_ndim(input: Any, ndim: int) -> bool:
+    assert_numpy(input)
+    if input.ndim == ndim:
+        return True
+    else:
+        raise TypeError(
+            f"`input` must be a `np.ndarray` of ndim `{ndim}`. "
+            f"But got: {input.ndim}."
+        )
+    
+
+def is_numpy_of_ndim_in_range(input: Any, start: int, end: int) -> bool:
+    assert_numpy(input)
+    if start <= input.ndim <= end:
+        return True
+    else:
+        raise ValueError(
+            f"Require {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
+        )
+
+
 def is_positive_number(input: Any) -> bool:
     assert_number(input)
     if input >= 0.0:
@@ -1449,6 +1510,11 @@ assert_negative_number         = is_negative_number
 assert_number                  = is_number
 assert_number_divisible_to     = is_number_divisible_to
 assert_number_in_range         = is_number_in_range
+assert_numpy                   = is_numpy
+assert_numpy_of_atleast_ndim   = is_numpy_of_atleast_ndim
+assert_numpy_of_channels       = is_numpy_of_channels
+assert_numpy_of_ndim           = is_numpy_of_ndim
+assert_numpy_of_ndim_in_range  = is_numpy_of_ndim_in_range
 assert_positive_number         = is_positive_number
 assert_same_length             = is_same_length
 assert_same_shape              = is_same_shape

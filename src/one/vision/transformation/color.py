@@ -21,10 +21,10 @@ from one.core import assert_tensor_of_channels
 from one.core import CFA
 from one.core import ListOrTuple2T
 from one.core import Tensor
+from one.core import Transform
 from one.core import TRANSFORMS
-from one.vision.transformation.misc import get_num_channels
-from one.vision.transformation.misc import to_channel_first
-from one.vision.transformation.transform import Transform
+from one.vision.acquisition import get_num_channels
+from one.vision.acquisition import to_channel_first
 
 
 # MARK: - Functional
