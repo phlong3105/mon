@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 from one.core import console
 from one.core import Devices
 from one.core import EvalDataLoaders
-from one.core import Int3T
+from one.core import Ints
 from one.core import Table
 from one.core import TrainDataLoaders
 from one.data import ClassLabels
@@ -35,7 +35,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
             Root directory of dataset.
         name (str):
             Dataset's name.
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -67,7 +67,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         self,
         root            : str,
         name            : str,
-        shape           : Int3T,
+        shape           : Ints,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
         transforms      : Union[Callable, list, dict, None] = None,

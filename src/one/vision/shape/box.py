@@ -22,12 +22,8 @@ from one.core import assert_positive_number
 from one.core import assert_sequence_of_length
 from one.core import assert_tensor
 from one.core import assert_tensor_of_ndim
-from one.core import Float2T
-from one.core import FloatAnyT
-from one.core import Int2Or3T
-from one.core import Int2T
-from one.core import IntAnyT
-from one.core import ListOrTuple2T
+from one.core import Floats
+from one.core import Ints
 from one.core import to_size
 from one.core import upcast
 from one.vision.shape.box_convert import box_xyxy_to_cxcywh
@@ -37,14 +33,14 @@ from one.vision.shape.box_convert import box_xyxy_to_cxcywh
 
 def affine_box(
     box       : Tensor,
-    image_size: Int2Or3T,
+    image_size: Ints,
     angle     : float,
-    translate : IntAnyT,
+    translate : Ints,
     scale     : float,
-    shear     : FloatAnyT,
-    center    : Union[ListOrTuple2T[int], None] = None,
-    drop_ratio: float                           = 0.0,
-    inplace   : bool                            = False,
+    shear     : Floats,
+    center    : Union[Ints, None] = None,
+    drop_ratio: float             = 0.0,
+    inplace   : bool              = False,
 ) -> Tensor:
     """Apply affine transformation on the image keeping image center invariant.
     
@@ -55,20 +51,20 @@ def affine_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[H, W]):
+        image_size (Ints[H, W]):
             Image size.
         angle (float):
             Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (IntAnyT):
+        translate (Ints):
             Horizontal and vertical translations (post-rotation translation).
         scale (float):
             Overall scale.
-        shear (FloatAnyT):
+        shear (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], optional):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         drop_ratio (float):
@@ -146,7 +142,7 @@ def affine_box(
 
 def clip_box(
     box       : Tensor,
-    image_size: Int2Or3T,
+    image_size: Ints,
     drop_ratio: float = 0.0,
     inplace   : bool  = False,
 ) -> Tensor:
@@ -158,7 +154,7 @@ def clip_box(
     Args:
         box (Tensor[N, 4]):
             Bounding boxes.
-        image_size (Dim2T[H, W], optional):
+        image_size (Dim2T[H, W], None):
             Image size.
         drop_ratio (float):
             If the fraction of a bounding box left in the image after being
@@ -517,11 +513,11 @@ def horizontal_flip_box(
 
 def horizontal_translate_box(
     box       : Tensor,
-    image_size: Int2Or3T,
+    image_size: Ints,
     magnitude : int,
-    center    : Union[ListOrTuple2T[int], None] = None,
-    drop_ratio: float                           = 0.0,
-    inplace   : bool                            = False,
+    center    : Union[Ints, None] = None,
+    drop_ratio: float             = 0.0,
+    inplace   : bool              = False,
 ) -> Tensor:
     """Translate the bounding box in horizontal direction.
 
@@ -529,11 +525,11 @@ def horizontal_translate_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[H, W, *]):
+        image_size (Ints[H, W, *]):
             Original image size.
         magnitude (int):
              Horizontally translation.
-        center (ListOrTuple2T[int], optional):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         drop_ratio (float):
@@ -632,11 +628,11 @@ def nms(box: Tensor, scores: Tensor, iou_threshold: float) -> Tensor:
 
 def rotate_box(
     box       : Tensor,
-    image_size: Int2Or3T,
+    image_size: Ints,
     angle     : float,
-    center    : Union[ListOrTuple2T[int], None] = None,
-    drop_ratio: float                           = 0.0,
-    inplace   : bool                            = False,
+    center    : Union[Ints, None] = None,
+    drop_ratio: float             = 0.0,
+    inplace   : bool              = False,
 ) -> Tensor:
     """Rotate the bounding box by the given magnitude.
 
@@ -644,11 +640,11 @@ def rotate_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[H, W, *]):
+        image_size (Ints[H, W, *]):
             Original image size.
         angle (float):
 			Angle to rotate the bounding box.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         drop_ratio (float):
@@ -677,12 +673,12 @@ def rotate_box(
 
 def scale_box(
     box       : Tensor,
-    cur_size  : Int2Or3T,
-    new_size  : Union[Int2Or3T, None] = None,
-    factor    : Union[Float2T, None]  = (1.0, 1.0),
-    keep_shape: bool                  = False,
-    drop_ratio: float                 = 0.0,
-    inplace   : bool                  = False,
+    cur_size  : Ints,
+    new_size  : Union[Ints,   None] = None,
+    factor    : Union[Floats, None] = (1.0, 1.0),
+    keep_shape: bool                = False,
+    drop_ratio: float               = 0.0,
+    inplace   : bool                = False,
 ) -> Tensor:
     """Scale bounding boxes coordinates by the given factor or by inferring from
     current image size and new size.
@@ -694,11 +690,11 @@ def scale_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        cur_size (Int2Or3T[C, H, W]):
+        cur_size (Ints[C, H, W]):
             Current image size.
-        new_size (Int2Or3T[C, W, H]):
+        new_size (Ints[C, W, H]):
             New image size. Default: `None`.
-        factor (Float2T):
+        factor (Floats):
             Desired scaling factor in each direction. If scalar, the value is
             used for both the vertical and horizontal direction.
             Default: `(1.0, 1.0)`.
@@ -747,8 +743,8 @@ def scale_box(
 
 def scale_box_original(
     box       : Tensor,
-    cur_size  : Int2Or3T,
-    new_size  : Int2Or3T,
+    cur_size  : Ints,
+    new_size  : Ints,
     ratio_pad = None,
     inplace   : bool = False,
 ) -> Tensor:
@@ -759,9 +755,9 @@ def scale_box_original(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        cur_size (Int2Or3T[C, H, W]):
+        cur_size (Ints[C, H, W]):
             Detector's input size.
-        new_size (Int2Or3T[C, H, W]):
+        new_size (Ints[C, H, W]):
             Original image size.
         ratio_pad:
             Default: `None`.
@@ -797,11 +793,11 @@ def scale_box_original(
 
 def shear_box(
     box       : Tensor,
-    image_size: Int2Or3T,
-    magnitude : Int2T,
-    center    : Union[ListOrTuple2T[int], None] = None,
-    drop_ratio: float                           = 0.0,
-    inplace   : bool                            = False,
+    image_size: Ints,
+    magnitude : Ints,
+    center    : Union[Ints, None] = None,
+    drop_ratio: float             = 0.0,
+    inplace   : bool              = False,
 ) -> Tensor:
     """Shear bounding boxes coordinates by the given magnitude.
     
@@ -809,11 +805,11 @@ def shear_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[C, H, W]):
+        image_size (Ints[C, H, W]):
             Original image size.
-        magnitude (Int2T[hor, ver]):
+        magnitude (Ints[hor, ver]):
              Shear magnitude.
-        center (ListOrTuple2T[int], optional):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         drop_ratio (float):
@@ -842,11 +838,11 @@ def shear_box(
 
 def translate_box(
     box       : Tensor,
-    image_size: Int2Or3T,
-    magnitude : Int2T,
-    center    : Union[ListOrTuple2T[int], None] = None,
-    drop_ratio: float                           = 0.0,
-    inplace   : bool                            = False,
+    image_size: Ints,
+    magnitude : Ints,
+    center    : Union[Ints, None] = None,
+    drop_ratio: float             = 0.0,
+    inplace   : bool              = False,
 ) -> Tensor:
     """Translate the bounding box by the given magnitude.
 
@@ -854,11 +850,11 @@ def translate_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[H, W, *]):
+        image_size (Ints[H, W, *]):
             Original image size.
-        magnitude (Int2T[hor, ver]):
+        magnitude (Ints[hor, ver]):
              Translation magnitude.
-        center (ListOrTuple2T[int], optional):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         drop_ratio (float):
@@ -920,11 +916,11 @@ def vertical_flip_box(
 
 def vertical_translate_box(
     box       : Tensor,
-    image_size: Int2Or3T,
+    image_size: Ints,
     magnitude : int,
-    center    : Union[ListOrTuple2T[int], None] = None,
-    drop_ratio: float                           = 0.0,
-    inplace   : bool                            = False
+    center    : Union[Ints, None] = None,
+    drop_ratio: float             = 0.0,
+    inplace   : bool              = False
 ) -> Tensor:
     """Translate the bounding box in vertical direction.
 
@@ -932,11 +928,11 @@ def vertical_translate_box(
         box (Tensor[N, 4]):
             Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Int2Or3T[H, W, *]):
+        image_size (Ints[H, W, *]):
             Original image size.
         magnitude (int):
              Vertically translation.
-        center (ListOrTuple2T[int], optional):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
         drop_ratio (float):

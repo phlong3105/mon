@@ -21,10 +21,10 @@ import numpy as np
 import xmltodict
 import yaml
 
+from one.core.factory import FILE_HANDLERS
 from one.core.types import assert_dict
 from one.core.types import assert_dict_contain_key
-from one.core.types import FILE_HANDLERS
-from one.core.types import ScalarListOrTupleAnyT
+from one.core.types import ScalarOrSequenceT
 
 try:
     from yaml import CLoader as FullLoader, CDumper as Dumper
@@ -118,7 +118,7 @@ def load_file(
 
 
 def merge_files(
-    in_paths   : ScalarListOrTupleAnyT[Union[str, Path, TextIO]],
+    in_paths   : ScalarOrSequenceT[Union[str, Path, TextIO]],
     out_path   : Union[str, Path, TextIO],
     file_format: Union[str, None] = None,
     **kwargs
@@ -126,7 +126,7 @@ def merge_files(
     """Merge data from json/yaml/pickle strings or files.
     
     Args:
-        in_paths (str, Path, TextIO, list[str, Path, TextIO]):
+        in_paths (ScalarOrSequenceT[str, Path, TextIO]):
             Paths to join.
         out_path (str, Path, TextIO):
             If not specified, then the object is dump to a str, otherwise to a

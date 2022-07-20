@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""LoL dataset and datamodule
+"""LoL dataset and datamodule.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 from one.core import console
 from one.core import DATAMODULES
 from one.core import DATASETS
-from one.core import Int3T
+from one.core import Ints
 from one.core import is_image_file
 from one.core import ModelState
 from one.core import progress_bar
@@ -45,7 +45,7 @@ class LoL(ImageEnhancementDataset):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, None):
             Functions/transforms that takes in an input sample and returns a
@@ -62,7 +62,7 @@ class LoL(ImageEnhancementDataset):
         cache_images (bool):
             If `True`, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Default: `False`.
-        backend (VisionBackend, str):
+        backend (VisionBackend, str, int):
             Vision backend to process image. Default: `VISION_BACKEND`.
         verbose (bool):
             Verbosity. Default: `True`.
@@ -73,16 +73,16 @@ class LoL(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                          = "train",
-        shape           : Int3T                        = (720, 1280, 3),
-        class_labels    : Union[ClassLabel, str, Path] = None,
-        transform       : Union[Callable, None]        = None,
-        target_transform: Union[Callable, None]        = None,
-        transforms      : Union[Callable, None]        = None,
-        cache_data      : bool                         = False,
-        cache_images    : bool                         = False,
-        backend         : Union[VisionBackend, str]    = VISION_BACKEND,
-        verbose         : bool                         = True,
+        split           : str                            = "train",
+        shape           : Ints                           = (720, 1280, 3),
+        class_labels    : Union[ClassLabel, str, Path]   = None,
+        transform       : Union[Callable, None]          = None,
+        target_transform: Union[Callable, None]          = None,
+        transforms      : Union[Callable, None]          = None,
+        cache_data      : bool                           = False,
+        cache_images    : bool                           = False,
+        backend         : Union[VisionBackend, str, int] = VISION_BACKEND,
+        verbose         : bool                           = True,
         *args, **kwargs
     ):
         super().__init__(

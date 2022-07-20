@@ -36,15 +36,14 @@ from one.core import assert_tensor_of_ndim
 from one.core import assert_tensor_of_ndim_in_range
 from one.core import create_dirs
 from one.core import error_console
-from one.core import Int2Or3T
-from one.core import Int2T
-from one.core import Int3T
+from one.core import Ints
 from one.core import is_image_file
 from one.core import TensorOrArray
 from one.core import Tensors
 from one.core import Transform
 from one.core import TRANSFORMS
 from one.core import VisionBackend
+from one.core import VisionBackend_
 from one.math import make_divisible
 
 # Get orientation exif tag
@@ -56,11 +55,11 @@ for orientation in ExifTags.TAGS.keys():
 
 # MARK: - Functional
 
-def check_image_size(size: Int2Or3T, stride: int = 32) -> int:
+def check_image_size(size: Ints, stride: int = 32) -> int:
     """Verify image size is a multiple of stride and return the new size.
     
     Args:
-        size (Int2Or3T):
+        size (Ints):
             Image size of shape [C, H, W].
         stride (int):
             Stride. Default: `32`.
@@ -84,7 +83,7 @@ def check_image_size(size: Int2Or3T, stride: int = 32) -> int:
     return new_size
 
 
-def get_exif_size(image: PIL.Image) -> Int2T:
+def get_exif_size(image: PIL.Image) -> Ints:
     """Return the exif-corrected PIL size.
     
     Args:
@@ -92,7 +91,7 @@ def get_exif_size(image: PIL.Image) -> Int2T:
             Image.
             
     Returns:
-        size (Int2T[H, W]):
+        size (Ints[H, W]):
             Image size.
     """
     size = image.size  # (width, height)
@@ -139,7 +138,7 @@ def get_image_center4(image: Tensor) -> Tensor:
     return torch.Tensor([h / 2, w / 2, h / 2, w / 2])
     
 
-def get_image_hw(image: Tensor) -> Int2T:
+def get_image_hw(image: Tensor) -> Ints:
     """Returns the size of an image as [H, W].
     
     Args:
@@ -147,7 +146,7 @@ def get_image_hw(image: Tensor) -> Int2T:
             Image.
    
     Returns:
-        size (Int2T):
+        size (Ints):
             Image size as [H, W].
     """
     assert_tensor_of_atleast_ndim(image, 3)
@@ -160,7 +159,7 @@ def get_image_hw(image: Tensor) -> Int2T:
 get_image_size = get_image_hw
 
 
-def get_image_shape(image: Tensor) -> Int3T:
+def get_image_shape(image: Tensor) -> Ints:
     """Returns the shape of an image as [H, W, C].
 
     Args:
@@ -168,7 +167,7 @@ def get_image_shape(image: Tensor) -> Int3T:
             Image.
 
     Returns:
-        shape (Int3T):
+        shape (Ints):
             Image shape as [C, H, W].
     """
     assert_tensor_of_atleast_ndim(image, 3)
@@ -278,16 +277,13 @@ def read_image_pil(path: str) -> Tensor:
     return image
 
 
-def read_image(
-    path   : str,
-    backend: Union[VisionBackend, str, int] = VisionBackend.CV,
-) -> Tensor:
+def read_image(path: str, backend: VisionBackend_ = VisionBackend.CV) -> Tensor:
     """Read image with the corresponding backend.
     
     Args:
         path (str):
             Image file.
-        backend (VisionBackend, str, int):
+        backend (VisionBackend_):
             Vision backend used to read images. Default: `VisionBackend.CV`.
             
     Returns:
@@ -748,7 +744,7 @@ class ImageLoader:
             It can be a pathname pattern to images.
         batch_size (int):
             Number of samples in one forward & backward pass. Default: `1`.
-        backend (VisionBackend, str, int):
+        backend (VisionBackend_):
             Vision backend used to read images. Default: `VisionBackend.CV`.
     """
 
@@ -757,8 +753,8 @@ class ImageLoader:
     def __init__(
         self,
         data      : str,
-        batch_size: int = 1,
-        backend   : Union[VisionBackend, str, int] = VisionBackend.CV
+        batch_size: int            = 1,
+        backend   : VisionBackend_ = VisionBackend.CV
     ):
         super().__init__()
         self.data       = data

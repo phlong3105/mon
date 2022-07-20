@@ -13,6 +13,7 @@ import torch
 from pynvml import *
 from torch import Tensor
 
+from one.core.types import MemoryUnit_
 from one.core.types import assert_number_divisible_to
 from one.core.types import MemoryUnit
 
@@ -56,18 +57,10 @@ def extract_device_dtype(tensor_list: list) -> tuple[torch.device, torch.dtype]:
 
 
 def get_gpu_memory(
-    device_index: int = 0,
-    unit        : Union["MemoryUnit", str, int] = MemoryUnit.GB
-) -> tuple[int, int, int]:
-    if isinstance(unit, (str, int)):
-        unit = MemoryUnit.from_value(unit)
-    
-    if unit not in MemoryUnit:
-        from one.core import error_console
-        error_console.log(f"Unknown memory unit: {unit}.")
-        unit = MemoryUnit.GB
-        
+    device_index: int = 0, unit: MemoryUnit_ = MemoryUnit.GB
+    ) -> tuple[int, int, int]:
     nvmlInit()
+    unit  = MemoryUnit.from_value(unit)
     h     = nvmlDeviceGetHandleByIndex(device_index)
     info  = nvmlDeviceGetMemoryInfo(h)
     ratio = MemoryUnit.byte_conversion_mapping[unit]

@@ -26,17 +26,14 @@ from one.core import assert_tensor_of_ndim
 from one.core import assert_value_in_collection
 from one.core import batch_image_processing
 from one.core import Color
-from one.core import Float4T
-from one.core import FloatAnyT
-from one.core import Int2Or3T
-from one.core import Int2T
-from one.core import Int3T
-from one.core import Int4T
-from one.core import IntAnyT
+from one.core import Floats
 from one.core import InterpolationMode
-from one.core import ListOrTuple2T
-from one.core import ListOrTupleAnyT
+from one.core import InterpolationMode_
+from one.core import Ints
 from one.core import PaddingMode
+from one.core import PaddingMode_
+from one.core import Tensors
+from one.core import to_list
 from one.core import to_size
 from one.core import Transform
 from one.core import TRANSFORMS
@@ -53,15 +50,15 @@ from one.vision.shape import vertical_flip_box
 def affine(
     image        : Tensor,
     angle        : float,
-    translate    : IntAnyT,
+    translate    : Ints,
     scale        : float,
-    shear        : FloatAnyT,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    shear        : Floats,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Apply affine transformation on the image keeping image center invariant.
     
@@ -71,19 +68,19 @@ def affine(
             number of leading dimensions.
         angle (float):
             Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (IntAnyT):
+        translate (Ints):
             Horizontal and vertical translations (post-rotation translation).
         scale (float):
             Overall scale.
-        shear (FloatAnyT):
+        shear (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -93,11 +90,17 @@ def affine(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -113,10 +116,7 @@ def affine(
     if isinstance(angle, int):
         angle = float(angle)
     
-    if isinstance(translate, (int, float)):
-        translate = [translate, translate]
-    if isinstance(translate, tuple):
-        translate = list(translate)
+    translate = to_list(translate)
     assert_sequence_of_length(translate, 2)
    
     if isinstance(scale, int):
@@ -183,16 +183,16 @@ def affine_image_box(
     image        : Tensor,
     box          : Tensor,
     angle        : float,
-    translate    : IntAnyT,
+    translate    : Ints,
     scale        : float,
-    shear        : FloatAnyT,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    drop_ratio   : float                              = 0.0,
-    inplace      : bool                               = False,
+    shear        : Floats,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    drop_ratio   : float              = 0.0,
+    inplace      : bool               = False,
 ) -> tuple[Tensor, Tensor]:
     """Apply affine transformation on the image keeping image center invariant.
     
@@ -205,33 +205,39 @@ def affine_image_box(
             with `0 <= x1 < x2` and `0 <= y1 < y2`.
         angle (float):
             Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (IntAnyT):
+        translate (Ints):
             Horizontal and vertical translations (post-rotation translation).
         scale (float):
             Overall scale.
-        shear (FloatAnyT):
+        shear (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
-            Center of affine transformation.  If `None`, use the center of the
+        center (Ints, None):
+            Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
-            If `True`, expands the output image to  make it large enough to
+            If `True`, expands the output image to make it large enough to
             hold the entire rotated image.
             If `False` or omitted, make the output image the same size as the
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         drop_ratio (float):
@@ -277,7 +283,7 @@ def affine_image_box(
 
 
 def center_crop(
-    image: Tensor, output_size: Int2T, inplace: bool = False
+    image: Tensor, output_size: Ints, inplace: bool = False
 ) -> Tensor:
     """Crops the given image at the center. If image size is smaller than
     output size along any edge, image is padded with 0 and then center cropped.
@@ -286,7 +292,7 @@ def center_crop(
         image (Tensor[..., C, H, W]):
             Image to be cropped, where ... means an arbitrary number of leading
             dimensions.
-        output_size (Int2T):
+        output_size (Ints):
             Height, width of the crop box. If int or sequence with single int,
             it is used for both directions.
         inplace (bool):
@@ -407,7 +413,7 @@ def crop_zero_region(image: Tensor) -> Tensor:
 
 
 def five_crop(
-    image: Tensor, size: Int2Or3T
+    image: Tensor, size: Ints
 ) -> tuple[Tensor, Tensor, Tensor, Tensor, Tensor]:
     """Crop the given image into four corners and the central crop.
     
@@ -419,7 +425,7 @@ def five_crop(
         image (Tensor[..., C, H, W]):
             Image to be cropped, where ... means an arbitrary number of leading
             dimensions.
-        size (Int2Or3T):
+        size (Ints):
             Desired output size of the crop. If size is an int instead of
             sequence like (h, w), a square crop (size, size) is made.
             If provided a sequence of length 1, it will be interpreted
@@ -497,12 +503,12 @@ def horizontal_flip_image_box(
 def horizontal_shear(
     image        : Tensor,
     magnitude    : float,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Shear image horizontally.
     
@@ -513,10 +519,10 @@ def horizontal_shear(
         magnitude (float):
             Shear angle value in degrees between -180 to 180, clockwise
             direction.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by
             :class:`torchvision.transforms.InterpolationMode`.
             Default is `InterpolationMode.NEAREST`.
@@ -531,11 +537,17 @@ def horizontal_shear(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -563,12 +575,12 @@ def horizontal_shear(
 def horizontal_translate(
     image        : Tensor,
     magnitude    : int,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Translate image in horizontal direction.
     
@@ -578,10 +590,10 @@ def horizontal_translate(
             number of leading dimensions.
         magnitude (int):
             Horizontal translation (post-rotation translation)
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -591,11 +603,17 @@ def horizontal_translate(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -624,13 +642,13 @@ def horizontal_translate_image_box(
     image        : Tensor,
     box          : Tensor,
     magnitude    : int,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    drop_ratio   : float                              = 0.0,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    drop_ratio   : float              = 0.0,
+    inplace      : bool               = False,
 ) -> tuple[Tensor, Tensor]:
     """Translate images and bounding boxes in horizontal direction.
     
@@ -646,10 +664,10 @@ def horizontal_translate_image_box(
             format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         magnitude (int):
             Horizontal translation (post-rotation translation).
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -659,11 +677,17 @@ def horizontal_translate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         drop_ratio (float):
@@ -698,13 +722,13 @@ def horizontal_translate_image_box(
 
 def letterbox_resize(
     image     : np.ndarray,
-    size      : Union[Int2Or3T, None] = 768,
-    stride    : int                   = 32,
-    color     : Color                 = (114, 114, 114),
-    auto      : bool                  = True,
-    scale_fill: bool                  = False,
-    scale_up  : bool                  = True,
-    inplace   : bool                  = False,
+    size      : Union[Ints, None] = 768,
+    stride    : int               = 32,
+    color     : Color             = (114, 114, 114),
+    auto      : bool              = True,
+    scale_fill: bool              = False,
+    scale_up  : bool              = True,
+    inplace   : bool              = False,
 ):
     """Resize image to a `stride`-pixel-multiple rectangle.
     
@@ -784,10 +808,10 @@ def letterbox_resize(
 
 def pad(
     image       : Tensor,
-    padding     : Float4T,
-    fill        : Float4T                      = 0.0,
-    padding_mode: Union[PaddingMode, str, int] = PaddingMode.CONSTANT,
-    inplace     : bool                         = False,
+    padding     : Floats,
+    fill        : Floats       = 0.0,
+    padding_mode: PaddingMode_ = PaddingMode.CONSTANT,
+    inplace     : bool         = False,
 ) -> Tensor:
     """Pad image with `value`.
     
@@ -801,25 +825,32 @@ def pad(
             padding on left/right and top/bottom respectively. If a sequence
             of length 4 is provided this is the padding for the left, top,
             right and bottom borders respectively.
-        fill (Float4T):
-            Fill value for `constant` padding. If a tuple of length 3, it is
-            used to fill R, G, B channels respectively. Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        fill (Floats):
+            Pixel values for the area outside the transformed image.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode_):
             One of: ["constant", "edge", "reflect", "symmetric"]
-            Default: `constant`.
             - constant: pads with a constant value, this value is specified
-              with fill
+              with fill.
             - edge: pads with the last value at the edge of the image. If input
               a 5D torch Tensor, the last 3 dimensions will be padded instead
-              of the last 2
+              of the last 2.
             - reflect: pads with reflection of image without repeating the last
               value on the edge. For example, padding [1, 2, 3, 4] with 2
               elements on both sides in reflect mode will result in
-              [3, 2, 1, 2, 3, 4, 3, 2]
+              [3, 2, 1, 2, 3, 4, 3, 2].
             - symmetric: pads with reflection of image repeating the last value
               on the edge. For example, padding [1, 2, 3, 4] with 2 elements on
               both sides in symmetric mode will result in
-              [2, 1, 1, 2, 3, 4, 4, 3]
+              [2, 1, 1, 2, 3, 4, 4, 3].
+             Default: `constant`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
             
@@ -828,9 +859,12 @@ def pad(
             Padded image.
     """
     assert_tensor(image)
+    
     if not inplace:
         image = image.clone()
-        
+    
+    if isinstance(fill, (tuple, list)):
+        fill = fill[0]
     assert_number(fill)
 
     if not isinstance(padding, (int, tuple, list)):
@@ -858,7 +892,6 @@ def pad(
     if image.ndim < 4:
         image        = image.unsqueeze(dim=0)
         need_squeeze = True
-    
     out_dtype = image.dtype
     need_cast = False
     if (padding_mode != "constant") and image.dtype not in (torch.float32, torch.float64):
@@ -866,28 +899,24 @@ def pad(
         # resolved: https://github.com/pytorch/pytorch/issues/40763
         need_cast = True
         image     = image.to(torch.float32)
-
     if padding_mode in ("reflect", "replicate"):
         image = nn.functional.pad(image, padding, mode=padding_mode)
     else:
-        image = nn.functional.pad(image, padding, mode=padding_mode, value=float(fill))
-
+        image = nn.functional.pad(image, padding, mode=padding_mode, value=fill)
     if need_squeeze:
         image = image.squeeze(dim=0)
-
     if need_cast:
         image = image.to(out_dtype)
-
     return image
 
 
 def resize(
     image        : Tensor,
-    size         : Union[Int2Or3T, None]              = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    max_size     : Union[int, None]                   = None,
-    antialias    : Union[bool, None]                  = None,
-    inplace      : bool                               = False,
+    size         : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    max_size     : Union[int,  None]  = None,
+    antialias    : Union[bool, None]  = None,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Resize an image. Adapted from:
     `torchvision.transforms.functional.resize()`
@@ -896,9 +925,9 @@ def resize(
         image (Tensor[..., C, H, W]):
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
-        size (Int2Or3T[C, H, W], None):
+        size (Ints[C, H, W], None):
             Desired output size. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Interpolation method.
         max_size (int, None):
             Default: `None`.
@@ -940,8 +969,8 @@ def resized_crop(
     left         : int,
     height       : int,
     width        : int,
-    size         : Union[Int2Or3T, None]              = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
+    size         : Union[Ints, None]              = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
     inplace      : bool                               = False,
 ) -> Tensor:
     """Crop the given image and resize it to desired size.
@@ -960,9 +989,9 @@ def resized_crop(
             Height of the crop box.
         width (int):
             Width of the crop box.
-        size (Int2Or3T[C, H, W], None):
+        size (Ints[C, H, W], None):
             Desired output size. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Interpolation method. Default: `InterpolationMode.BILINEAR`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
@@ -991,12 +1020,12 @@ def resized_crop(
 def rotate(
     image        : Tensor,
     angle        : float,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Rotate a tensor image or a batch of tensor images. Input must be a
     tensor of shape [C, H, W] or a batch of tensors Tensor[..., C, H, W].
@@ -1007,10 +1036,10 @@ def rotate(
             number of leading dimensions.
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1020,11 +1049,17 @@ def rotate(
             input image. Default: `True`.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1053,12 +1088,12 @@ def rotate(
 def rotate_horizontal_flip(
     image        : Tensor,
     angle        : float,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Rotate a tensor image or a batch of tensor images and then horizontally
     flip.
@@ -1069,10 +1104,10 @@ def rotate_horizontal_flip(
             number of leading dimensions.
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1082,11 +1117,17 @@ def rotate_horizontal_flip(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1113,13 +1154,13 @@ def rotate_image_box(
     image        : Tensor,
     box          : Tensor,
     angle        : float,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    drop_ratio   : float                              = 0.0,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    drop_ratio   : float              = 0.0,
+    inplace      : bool               = False,
 ) -> tuple[Tensor, Tensor]:
     """Rotate a tensor image or a batch of tensor images. Input must be a
     tensor of shape [C, H, W] or a batch of tensors Tensor[..., C, H, W].
@@ -1132,10 +1173,10 @@ def rotate_image_box(
             Bounding boxes to be rotated.
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1145,11 +1186,17 @@ def rotate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         drop_ratio (float):
@@ -1186,12 +1233,12 @@ def rotate_image_box(
 def rotate_vertical_flip(
     image        : Tensor,
     angle        : float,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Rotate a tensor image or a batch of tensor images and then vertically
     flip.
@@ -1202,10 +1249,10 @@ def rotate_vertical_flip(
             number of leading dimensions.
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1215,11 +1262,17 @@ def rotate_vertical_flip(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1244,13 +1297,13 @@ def rotate_vertical_flip(
 
 def shear(
     image        : Tensor,
-    magnitude    : FloatAnyT,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    magnitude    : Floats,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Shear image.
     
@@ -1258,15 +1311,15 @@ def shear(
         image (Tensor[..., C, H, W]):
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
-        magnitude (FloatAnyT):
+        magnitude (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1276,11 +1329,17 @@ def shear(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1308,14 +1367,14 @@ def shear(
 def shear_image_box(
     image        : Tensor,
     box          : Tensor,
-    magnitude    : FloatAnyT,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    drop_ratio   : float                              = 0.0,
-    inplace      : bool                               = False,
+    magnitude    : Floats,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    drop_ratio   : float              = 0.0,
+    inplace      : bool               = False,
 ) -> tuple[Tensor, Tensor]:
     """Rotate a tensor image or a batch of tensor images. Input must be a
     tensor of shape [C, H, W] or a batch of tensors Tensor[..., C, H, W].
@@ -1326,15 +1385,15 @@ def shear_image_box(
             number of leading dimensions.
         box (Tensor[N, 4]):
             Bounding boxes to be rotated.
-        magnitude (FloatAnyT):
+        magnitude (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1344,11 +1403,17 @@ def shear_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         drop_ratio (float):
@@ -1383,8 +1448,8 @@ def shear_image_box(
 
 
 def ten_crop(
-    image: Tensor, size: Int2Or3T, vflip: bool = False
-) -> ListOrTupleAnyT[Tensor]:
+    image: Tensor, size: Ints, vflip: bool = False
+) -> Tensors:
     """Generate ten cropped images from the given image. Crop the given image
     into four corners and the central crop plus the flipped version of these
     (horizontal flipping is used by default).
@@ -1397,7 +1462,7 @@ def ten_crop(
         image (Tensor[..., C, H, W]):
             Image to be cropped, where ... means an arbitrary number of leading
             dimensions.
-        size (Int2Or3T):
+        size (Ints):
             Desired output size of the crop. If size is an int instead of
             sequence like (h, w), a square crop (size, size) is made.
             If provided a sequence of length 1, it will be interpreted
@@ -1426,13 +1491,13 @@ def ten_crop(
 
 def translate(
     image        : Tensor,
-    magnitude    : Int2T,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    magnitude    : Ints,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Translate image in vertical and horizontal direction.
     
@@ -1440,12 +1505,12 @@ def translate(
         image (Tensor[..., C, H, W]):
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
-        magnitude (Int2T):
+        magnitude (Ints):
             Horizontal and vertical translations (post-rotation translation).
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1455,11 +1520,17 @@ def translate(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1487,14 +1558,14 @@ def translate(
 def translate_image_box(
     image        : Tensor,
     box          : Tensor,
-    magnitude    : Int2T,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    drop_ratio   : float                              = 0.0,
-    inplace      : bool                               = False,
+    magnitude    : Ints,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    drop_ratio   : float              = 0.0,
+    inplace      : bool               = False,
 ) -> tuple[Tensor, Tensor]:
     """Translate the image and bounding box with the given magnitude.
     
@@ -1508,12 +1579,12 @@ def translate_image_box(
         box (Tensor[N, 4]):
             Box to be translated. They are expected to be in (x1, y1, x2, y2)
             format with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        magnitude (Int2T):
+        magnitude (Ints):
             Horizontal and vertical translations (post-rotation translation).
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1523,11 +1594,17 @@ def translate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         drop_ratio (float):
@@ -1610,12 +1687,12 @@ def vertical_flip_image_box(
 def vertical_shear(
     image        : Tensor,
     magnitude    : float,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Shear image vertically.
     
@@ -1626,10 +1703,10 @@ def vertical_shear(
         magnitude (int):
             Shear angle value in degrees between -180 to 180, clockwise
             direction.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1639,11 +1716,17 @@ def vertical_shear(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1671,12 +1754,12 @@ def vertical_shear(
 def vertical_translate(
     image        : Tensor,
     magnitude    : int,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    inplace      : bool               = False,
 ) -> Tensor:
     """Translate image in vertical direction.
     
@@ -1686,10 +1769,10 @@ def vertical_translate(
             number of leading dimensions.
         magnitude (int):
             Vertical translation (post-rotation translation)
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1699,11 +1782,17 @@ def vertical_translate(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
@@ -1732,13 +1821,13 @@ def vertical_translate_image_box(
     image        : Tensor,
     box          : Tensor,
     magnitude    : int,
-    center       : Union[ListOrTuple2T[int], None]    = None,
-    interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-    keep_shape   : bool                               = True,
-    fill         : Float4T                            = 0.0,
-    padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-    drop_ratio   : float                              = 0.0,
-    inplace      : bool                               = False,
+    center       : Union[Ints, None]  = None,
+    interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+    keep_shape   : bool               = True,
+    fill         : Floats             = 0.0,
+    padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+    drop_ratio   : float              = 0.0,
+    inplace      : bool               = False,
 ) -> tuple[Tensor, Tensor]:
     """Translate the image and bounding box in vertical direction.
     
@@ -1754,10 +1843,10 @@ def vertical_translate_image_box(
             format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         magnitude (int):
             Vertical translation (post-rotation translation).
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1767,11 +1856,17 @@ def vertical_translate_image_box(
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         drop_ratio (float):
@@ -1814,19 +1909,19 @@ class Affine(Transform):
     Args:
         angle (float):
             Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (IntAnyT):
+        translate (Ints):
             Horizontal and vertical translations (post-rotation translation).
         scale (float):
             Overall scale.
-        shear (FloatAnyT):
+        shear (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -1836,17 +1931,24 @@ class Affine(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1854,16 +1956,16 @@ class Affine(Transform):
     def __init__(
         self,
         angle        : float,
-        translate    : IntAnyT,
+        translate    : Ints,
         scale        : float,
-        shear        : FloatAnyT,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        shear        : Floats,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -1918,7 +2020,7 @@ class CenterCrop(Transform):
     """Crops the given image at the center.
 
     Args:
-        output_size (Int2Or3T):
+        output_size (Ints):
             Desired output size of the crop. If size is an int instead of
             sequence like (h, w), a square crop (size, size) is made.
             If provided a sequence of length 1, it will be interpreted as
@@ -1926,14 +2028,15 @@ class CenterCrop(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
     
     def __init__(
         self,
-        output_size: Int2Or3T,
+        output_size: Ints,
         inplace    : bool               = False,
         p          : Union[float, None] = None,
         *args, **kwargs
@@ -1981,7 +2084,8 @@ class Crop(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -2035,20 +2139,21 @@ class FiveCrop(Transform):
     """Crop the given image into four corners and the central crop.
 
     Args:
-        size (Int2Or3T):
+        size (Ints):
             Desired output size of the crop. If size is an int instead of
             sequence like (h, w), a square crop (size, size) is made.
             If provided a sequence of length 1, it will be interpreted
             as (size[0], size[0]).
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
     
     def __init__(
         self,
-        size : Int2Or3T,
+        size : Ints,
         p    : Union[float, None] = None,
         *args, **kwargs
     ):
@@ -2079,7 +2184,8 @@ class HorizontalFlip(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     def __init__(
@@ -2113,7 +2219,8 @@ class HorizontalFlipImageBox(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     def __init__(
@@ -2145,10 +2252,10 @@ class HorizontalShear(Transform):
         magnitude (float):
             Shear angle value in degrees between -180 to 180, clockwise
             direction.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2158,17 +2265,24 @@ class HorizontalShear(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -2176,13 +2290,13 @@ class HorizontalShear(Transform):
     def __init__(
         self,
         magnitude    : float,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2233,10 +2347,10 @@ class HorizontalTranslate(Transform):
     Args:
         magnitude (int):
             Horizontal translation magnitude.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2246,17 +2360,24 @@ class HorizontalTranslate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -2264,13 +2385,13 @@ class HorizontalTranslate(Transform):
     def __init__(
         self,
         magnitude    : int,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2321,10 +2442,10 @@ class HorizontalTranslateImageBox(Transform):
     Args:
         magnitude (int):
             Horizontal translation magnitude.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2334,17 +2455,24 @@ class HorizontalTranslateImageBox(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -2352,13 +2480,13 @@ class HorizontalTranslateImageBox(Transform):
     def __init__(
         self,
         magnitude    : int,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2398,16 +2526,23 @@ class Pad(Transform):
         image (Tensor[..., C, H, W]):
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
-        padding (Int4T):
+        padding (Ints):
             Padding on each border. If a single int is provided this is used to
             pad all borders. If sequence of length 2 is provided this is the
             padding on left/right and top/bottom respectively. If a sequence
             of length 4 is provided this is the padding for the left, top,
             right and bottom borders respectively.
-        fill (Float4T):
-            Fill value for `constant` padding. If a tuple of length 3, it is
-            used to fill R, G, B channels respectively. Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        fill (Floats):
+            Pixel values for the area outside the transformed image.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
+            Default: `0.0`.
+        padding_mode (PaddingMode_):
             One of: ["constant", "edge", "reflect", "symmetric"]
             Default: `constant`.
             - constant: pads with a constant value, this value is specified
@@ -2426,18 +2561,19 @@ class Pad(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
     
     def __init__(
         self,
-        padding     : Int4T,
-        fill        : Float4T                      = 0.0,
-        padding_mode: Union[PaddingMode, str, int] = PaddingMode.CONSTANT,
-        inplace     : bool                         = False,
-        p           : Union[float, None]           = None,
+        padding     : Ints,
+        fill        : Floats             = 0.0,
+        padding_mode: PaddingMode_       = PaddingMode.CONSTANT,
+        inplace     : bool               = False,
+        p           : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2476,7 +2612,7 @@ class Resize(Transform):
     """Resize image to the given size.
 
     Args:
-        size (Int3T):
+        size (Ints):
             Desired output size. If size is a sequence like [H, W], the output
             size will be matched to this. If size is an int, the smaller edge
             of the image will be matched to this number maintaining the aspect
@@ -2486,7 +2622,7 @@ class Resize(Transform):
             .. note::
                 In torchscript mode size as single int is not supported, use a
                 sequence of length 1: `[size, ]`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by
             :class:`torchvision.transforms.InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`. If input is Tensor, only
@@ -2515,19 +2651,20 @@ class Resize(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
     
     def __init__(
         self,
-        size         : Union[Int3T, None],
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        max_size     : Union[int, None]                   = None,
-        antialias    : Union[bool, None]                  = None,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        size         : Union[Ints,  None],
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        max_size     : Union[int,   None] = None,
+        antialias    : Union[bool,  None] = None,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2579,7 +2716,7 @@ class ResizedCrop(Transform):
             Width of the crop box.
         size (list[int]):
             Desired output size. Same semantics as `resize`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by
             :class:`torchvision.transforms.InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`. If input is Tensor, only
@@ -2590,7 +2727,8 @@ class ResizedCrop(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -2602,9 +2740,9 @@ class ResizedCrop(Transform):
         height       : int,
         width        : int,
         size         : list[int],
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2654,10 +2792,10 @@ class Rotate(Transform):
     Args:
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation.  If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2667,17 +2805,24 @@ class Rotate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -2685,13 +2830,13 @@ class Rotate(Transform):
     def __init__(
         self,
         angle        : float,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2742,10 +2887,10 @@ class RotateHorizontalFlip(Transform):
     Args:
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2755,17 +2900,24 @@ class RotateHorizontalFlip(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -2773,13 +2925,13 @@ class RotateHorizontalFlip(Transform):
     def __init__(
         self,
         angle        : float,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2830,10 +2982,10 @@ class RotateVerticalFlip(Transform):
     Args:
         angle (float):
             Angle to rotate the image.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2843,17 +2995,24 @@ class RotateVerticalFlip(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -2861,13 +3020,13 @@ class RotateVerticalFlip(Transform):
     def __init__(
         self,
         angle        : float,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2915,15 +3074,15 @@ class Shear(Transform):
     """Shear image.
     
     Args:
-        magnitude (FloatAnyT):
+        magnitude (Floats):
             Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -2933,17 +3092,24 @@ class Shear(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -2951,13 +3117,13 @@ class Shear(Transform):
     def __init__(
         self,
         magnitude    : list[float],
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -3008,10 +3174,10 @@ class TenCrop(Transform):
 
     .. Note::
         This transform returns a tuple of images and there may be a
-        mismatch in the number of inputs and targets your ``Dataset`` returns.
+        mismatch in the number of inputs and targets your `Dataset` returns.
 
     Args:
-        size (Int2Or3T):
+        size (Ints):
             Desired output size of the crop. If size is an int instead of
             sequence like (h, w), a square crop (size, size) is made.
             If provided a sequence of length 1, it will be interpreted
@@ -3019,14 +3185,15 @@ class TenCrop(Transform):
         vflip (bool):
             Use vertical flipping instead of horizontal. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
     
     def __init__(
         self,
-        size : Int2Or3T,
+        size : Ints,
         vflip: bool               = False,
         p    : Union[float, None] = None,
         *args, **kwargs
@@ -3042,10 +3209,7 @@ class TenCrop(Transform):
         input : Tensor,
         target: Union[Tensor, None] = None,
         *args, **kwargs
-    ) -> tuple[
-        ListOrTupleAnyT[Tensor],
-        Union[ListOrTupleAnyT[Tensor], None]
-    ]:
+    ) -> tuple[Tensors, Union[Tensors, None]]:
         return ten_crop(image=input,  size=self.size, vflip=self.vflip), \
                ten_crop(image=target, size=self.size, vflip=self.vflip) \
                    if target is not None else None
@@ -3056,12 +3220,12 @@ class Translate(Transform):
     """Translate image.
     
     Args:
-        magnitude (Int2T):
+        magnitude (Ints):
             Horizontal and vertical translation magnitude.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -3071,31 +3235,38 @@ class Translate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
     
     def __init__(
         self,
-        magnitude    : Int2T,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        magnitude    : Ints,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -3143,12 +3314,12 @@ class TranslateImageBox(Transform):
     """Translate image and bounding box.
     
     Args:
-        magnitude (Int2T):
+        magnitude (Ints):
             Horizontal and vertical translation magnitude.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -3158,31 +3329,38 @@ class TranslateImageBox(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
     
     def __init__(
         self,
-        magnitude    : Int2T,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        magnitude    : Ints,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -3222,7 +3400,8 @@ class VerticalFlip(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -3258,7 +3437,8 @@ class VerticalFlipImageBox(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -3292,10 +3472,10 @@ class VerticalShear(Transform):
         magnitude (float):
             Shear angle value in degrees between -180 to 180, clockwise
             direction.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -3305,17 +3485,24 @@ class VerticalShear(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -3323,13 +3510,13 @@ class VerticalShear(Transform):
     def __init__(
         self,
         magnitude    : float,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -3380,10 +3567,10 @@ class VerticalTranslate(Transform):
     Args:
         magnitude (int):
             Vertical translation magnitude.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -3393,17 +3580,24 @@ class VerticalTranslate(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -3411,13 +3605,13 @@ class VerticalTranslate(Transform):
     def __init__(
         self,
         magnitude    : int,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -3468,10 +3662,10 @@ class VerticalTranslateImageBox(Transform):
     Args:
         magnitude (int):
             Vertical translation magnitude.
-        center (ListOrTuple2T[int], None):
+        center (Ints, None):
             Center of affine transformation. If `None`, use the center of the
             image. Default: `None`.
-        interpolation (InterpolationMode, str, int):
+        interpolation (InterpolationMode_):
             Desired interpolation enum defined by `InterpolationMode`.
             Default is `InterpolationMode.BILINEAR`.
         keep_shape (bool):
@@ -3481,17 +3675,24 @@ class VerticalTranslateImageBox(Transform):
             input image.
             Note that the `keep_shape` flag assumes rotation around the center
             and no translation. Default: `True`.
-        fill (Float4T):
+        fill (Floats):
             Pixel values for the area outside the transformed image.
-            If given a number, the value is used for all bands respectively.
+            - If a single number, the value is used for all borders.
+            - If a sequence of length 2, it is used to fill band left/right and
+              top/bottom respectively
+            - If a sequence of length 3, it is used to fill R, G, B channels
+              respectively.
+            - If a sequence of length 4, it is used to fill each band
+              (left, right, top, bottom) respectively.
             Default: `0.0`.
-        padding_mode (PaddingMode, str, int):
+        padding_mode (PaddingMode_):
             One of the padding modes defined in `PaddingMode`.
             Default: `PaddingMode.CONSTANT`.
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -3499,13 +3700,13 @@ class VerticalTranslateImageBox(Transform):
     def __init__(
         self,
         magnitude    : int,
-        center       : Union[ListOrTuple2T[int], None]    = None,
-        interpolation: Union[InterpolationMode, str, int] = InterpolationMode.BILINEAR,
-        keep_shape   : bool                               = True,
-        fill         : Float4T                            = 0.0,
-        padding_mode : Union[PaddingMode, str, int]       = PaddingMode.CONSTANT,
-        inplace      : bool                               = False,
-        p            : Union[float, None]                 = None,
+        center       : Union[Ints, None]  = None,
+        interpolation: InterpolationMode_ = InterpolationMode.BILINEAR,
+        keep_shape   : bool               = True,
+        fill         : Floats             = 0.0,
+        padding_mode : PaddingMode_       = PaddingMode.CONSTANT,
+        inplace      : bool               = False,
+        p            : Union[float, None] = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)

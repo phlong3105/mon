@@ -29,7 +29,6 @@ import torch
 from multipledispatch import dispatch
 from munch import Munch
 from ordered_enum import OrderedEnum
-from torch import nn
 from torch import Tensor
 from torch.nn.modules.loss import _Loss
 from torch.optim import Optimizer
@@ -1010,107 +1009,54 @@ VISION_BACKEND          = VisionBackend.PIL
 
 
 # MARK: - Typing
-
-T                      = TypeVar("T")
-Callable               = Union[str, type, object, types.FunctionType, functools.partial]
-ScalarOrTuple1T        = Union[T, tuple[T]]
-ScalarOrTuple2T        = Union[T, tuple[T, T]]
-ScalarOrTuple3T        = Union[T, tuple[T, T, T]]
-ScalarOrTuple4T        = Union[T, tuple[T, T, T, T]]
-ScalarOrTuple5T        = Union[T, tuple[T, T, T, T, T]]
-ScalarOrTuple6T        = Union[T, tuple[T, T, T, T, T, T]]
-ScalarOrTupleAnyT      = Union[T, tuple[T, ...]]
-ScalarListOrTuple1T    = Union[T, list[T], tuple[T]]
-ScalarListOrTuple2T    = Union[T, list[T], tuple[T, T]]
-ScalarListOrTuple3T    = Union[T, list[T], tuple[T, T, T]]
-ScalarListOrTuple4T    = Union[T, list[T], tuple[T, T, T, T]]
-ScalarListOrTuple5T    = Union[T, list[T], tuple[T, T, T, T, T]]
-ScalarListOrTuple6T    = Union[T, list[T], tuple[T, T, T, T, T, T]]
-ScalarListOrTupleAnyT  = Union[T, list[T], tuple[T, ...]]
-ScalarOrCollectionAnyT = Union[T, list[T], tuple[T, ...], dict[Any, T]]
-ListOrTupleAnyT        = Union[   list[T], tuple[T, ...]]
-ListOrTuple1T          = Union[   list[T], tuple[T]]
-ListOrTuple2T          = Union[   list[T], tuple[T, T]]
-ListOrTuple3T          = Union[   list[T], tuple[T, T, T]]
-ListOrTuple4T          = Union[   list[T], tuple[T, T, T, T]]
-ListOrTuple5T          = Union[   list[T], tuple[T, T, T, T, T]]
-ListOrTuple6T          = Union[   list[T], tuple[T, T, T, T, T, T]]
-ListOrTuple3or4T       = Union[   list[T], tuple[T, T, T], tuple[T, T, T, T]]
-
-Array1T                = ScalarListOrTuple1T[np.ndarray]
-Array2T                = ScalarListOrTuple2T[np.ndarray]
-Array3T                = ScalarListOrTuple3T[np.ndarray]
-Array4T                = ScalarListOrTuple4T[np.ndarray]
-Array5T                = ScalarListOrTuple5T[np.ndarray]
-Array6T                = ScalarListOrTuple6T[np.ndarray]
-ArrayAnyT              = ScalarListOrTupleAnyT[np.ndarray]
-ArrayList              = list[np.ndarray]
-Arrays                 = ScalarOrCollectionAnyT[np.ndarray]
-Augment_               = Union[dict, Callable]
-Color                  = ListOrTuple3or4T[int]
-Devices                = Union[ScalarListOrTupleAnyT[int],
-                               ScalarListOrTupleAnyT[str]]
-EvalDataLoaders        = Union[DataLoader, Sequence[DataLoader]]
-Int1T                  = ScalarListOrTuple1T[int]
-Int2T                  = ScalarListOrTuple2T[int]
-Int3T                  = ScalarListOrTuple3T[int]
-Int4T                  = ScalarListOrTuple4T[int]
-Int5T                  = ScalarListOrTuple5T[int]
-Int6T                  = ScalarListOrTuple6T[int]
-IntAnyT                = ScalarListOrTupleAnyT[int]
-Int2Or3T               = Union[Int2T, Int3T]
-Float1T                = ScalarListOrTuple1T[float]
-Float2T                = ScalarListOrTuple2T[float]
-Float3T                = ScalarListOrTuple3T[float]
-Float4T                = ScalarListOrTuple4T[float]
-Float5T                = ScalarListOrTuple5T[float]
-Float6T                = ScalarListOrTuple6T[float]
-FloatAnyT              = ScalarListOrTupleAnyT[float]
-Indexes                = ScalarListOrTupleAnyT[int]
-Losses_                = Union[_Loss,  dict, list[Union[_Loss,  dict]]]
-Metrics_               = Union[Metric, dict, list[Union[Metric, dict]]]
-Number                 = Union[int, float]
-Optimizers_            = Union[Optimizer, dict, list[Union[Optimizer, dict]]]
-Padding1T              = Union[str, ScalarListOrTuple1T[int]]
-Padding2T              = Union[str, ScalarListOrTuple2T[int]]
-Padding3T              = Union[str, ScalarListOrTuple3T[int]]
-Padding4T              = Union[str, ScalarListOrTuple4T[int]]
-Padding5T              = Union[str, ScalarListOrTuple5T[int]]
-Padding6T              = Union[str, ScalarListOrTuple6T[int]]
-PaddingAnyT            = Union[str, ScalarListOrTupleAnyT[int]]
-Pretrained             = Union[bool, str, dict]
-Tasks                  = ScalarListOrTupleAnyT[str]
-Tensor1T               = ScalarListOrTuple1T[Tensor]
-Tensor2T               = ScalarListOrTuple2T[Tensor]
-Tensor3T               = ScalarListOrTuple3T[Tensor]
-Tensor4T               = ScalarListOrTuple4T[Tensor]
-Tensor5T               = ScalarListOrTuple5T[Tensor]
-Tensor6T               = ScalarListOrTuple6T[Tensor]
-TensorAnyT             = ScalarListOrTupleAnyT[Tensor]
-TensorList             = list[Tensor]
-Tensors                = ScalarOrCollectionAnyT[Tensor]
-TensorOrArray          = Union[Tensor, np.ndarray]
-TensorsOrArrays        = Union[Tensors, Arrays]
-TrainDataLoaders       = Union[
-    DataLoader,
-    Sequence[DataLoader],
-    Sequence[Sequence[DataLoader]],
-    Sequence[dict[str, DataLoader]],
-    dict[str, DataLoader],
-    dict[str, dict[str, DataLoader]],
-    dict[str, Sequence[DataLoader]],
-]
-Transform_             = Union[dict, Callable]
-Transforms_            = Union[str, nn.Sequential, Transform_, list[Transform_]]
-Weights                = Union[Tensor,
-                               ListOrTupleAnyT[float],
-                               ListOrTupleAnyT[int]]
-
-ForwardOutput          = tuple[TensorsOrArrays, Union[TensorsOrArrays, None]]
-StepOutput             = Union[TensorsOrArrays, dict]
-EpochOutput            = list[StepOutput]
-EvalOutput             = list[dict]
-PredictOutput          = Union[list[Any], list[list[Any]]]
+# NOTE: Template
+T                   = TypeVar("T")
+ScalarOrSequenceT   = Union[T, list[T], tuple[T, ...]]
+ScalarOrCollectionT = Union[T, list[T], tuple[T, ...], dict[Any, T]]
+SequenceT           = Union[   list[T], tuple[T, ...]]
+# NOTE: Basic Types
+Callable            = Union[str, type, object, types.FunctionType, functools.partial]
+Color               = SequenceT[int]
+Devices             = ScalarOrSequenceT[Union[str, int]]
+EvalDataLoaders     = Union[DataLoader, Sequence[DataLoader]]
+Ints                = ScalarOrSequenceT[int]
+Floats              = ScalarOrSequenceT[float]
+Indexes             = ScalarOrSequenceT[int]
+Number              = Union[int, float]
+Paddings            = Union[ScalarOrSequenceT[int], str]
+Pretrained          = Union[bool, str, dict]
+Strs                = ScalarOrSequenceT[str]
+Tasks               = ScalarOrSequenceT[str]
+Tensors             = ScalarOrCollectionT[Tensor]
+TensorOrArray       = Union[Tensor, np.ndarray]
+TrainDataLoaders    = Union[DataLoader,
+                            Sequence[DataLoader],
+                            Sequence[Sequence[DataLoader]],
+                            Sequence[dict[str, DataLoader]],
+                            dict[str, DataLoader],
+                            dict[str, dict[str, DataLoader]],
+                            dict[str, Sequence[DataLoader]]]
+Weights             = Union[Tensor, Floats, Ints]
+# NOTE: Type That May Require Parsing
+BBoxFormat_         = Union[BBoxFormat,        str, int]
+CFA_                = Union[CFA,               str, int]
+DistanceMetric_     = Union[DistanceMetric,    str, int]
+ImageFormat_        = Union[ImageFormat,       str, int]
+InterpolationMode_  = Union[InterpolationMode, str, int]
+Losses_             = Union[_Loss,     dict, list[Union[_Loss,  dict]]]
+MemoryUnit_         = Union[MemoryUnit,        str, int]
+Metrics_            = Union[Metric,    dict, list[Union[Metric,    dict]]]
+Optimizers_         = Union[Optimizer, dict, list[Union[Optimizer, dict]]]
+ModelState_         = Union[ModelState,        str, int]
+PaddingMode_        = Union[PaddingMode,       str, int]
+VideoFormat_        = Union[VideoFormat,       str, int]
+VisionBackend_      = Union[VisionBackend,     str, int]
+# NOTE: Model Training
+ForwardOutput       = tuple[Tensors, Union[Tensors, None]]
+StepOutput          = Union[Tensors, dict]
+EpochOutput         = list[StepOutput]
+EvalOutput          = list[dict]
+PredictOutput       = Union[list[Any], list[list[Any]]]
 
 
 # MARK: - Assertion
@@ -1611,6 +1557,81 @@ def intersect_ordered_dicts(
     )
 
 
+def iter_to_iter(
+    inputs     : Iterable,
+    item_type  : type,
+    return_type: Union[type, None] = None,
+    inplace    : bool              = False,
+):
+    """Cast items of an iterable object into some type.
+    
+    Args:
+        inputs (Iterable):
+            Iterable object.
+        item_type (type):
+            Item type.
+        return_type (type, None):
+            If specified, the iterable object will be converted to this type,
+            otherwise an iterator. Default: `None`.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        (iterable):
+            Iterable object of type `return_type` containing items of type
+            `item_type`.
+    """
+    assert_iterable(inputs)
+    assert_valid_type(item_type)
+    
+    if not inplace:
+        inputs = copy(inputs)
+        
+    inputs = map(item_type, inputs)
+    if return_type is None:
+        return inputs
+    else:
+        return return_type(inputs)
+
+
+def iter_to_list(
+    inputs: Iterable, item_type: type, inplace: bool = False
+) -> list:
+    """Cast items of an iterable object into a list of some type.
+
+    Args:
+        inputs (Iterable):
+            Iterable object.
+        item_type (type):
+            Item type.
+        inplace (bool):
+            If `True`, make this operation inplace. Default: `False`.
+            
+    Returns:
+        (list):
+            List containing items of type `item_type`.
+    """
+    return iter_to_iter(
+        inputs=inputs, item_type=item_type, return_type=list, inplace=inplace
+    )
+
+
+def iter_to_tuple(inputs: Iterable, item_type: type):
+    """Cast items of an iterable object into a tuple of some type.
+
+    Args:
+        inputs (Iterable):
+            Iterable object.
+        item_type (type):
+            Item type.
+    
+    Returns:
+        (tuple):
+            Tuple containing items of type `item_type`.
+    """
+    return iter_to_iter(inputs=inputs, item_type=item_type, return_type=tuple)
+
+
 def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
     """Slice a list into several sub-lists of various lengths.
     
@@ -1640,67 +1661,33 @@ def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
     return out_list
 
 
-def to_iter(
-    inputs     : Iterable,
-    item_type  : type,
-    return_type: Union[type, None] = None,
-    inplace    : bool              = False,
-):
-    """Cast items of an iterable object into some type.
-    
+def to_list(input: Any) -> list:
+    """Cast input into a list.
+
     Args:
-        inputs (Iterable):
-            Iterable object.
-        item_type (type):
-            Item type.
-        return_type (type, None):
-            If specified, the iterable object will be converted to this type,
-            otherwise an iterator. Default: `None`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        input (Any):
+            Object.
+       
     Returns:
-        Iterable object of type `return_type` containing items of type
-        `item_type`.
+        (list):
+            List containing input.
     """
-    assert_iterable(inputs)
-    assert_valid_type(item_type)
-    
-    if not inplace:
-        inputs = copy(inputs)
-        
-    inputs = map(item_type, inputs)
-    if return_type is None:
-        return inputs
+    if isinstance(input, list):
+        pass
+    elif isinstance(input, tuple):
+        input = list(input)
+    elif isinstance(input, dict):
+        input = [v for k, v in input.items()]
     else:
-        return return_type(inputs)
-
-
-def to_list(inputs: Iterable, item_type: type, inplace: bool = False) -> list:
-    """Cast items of an iterable object into a list of some type.
-
-    Args:
-        inputs (Iterable):
-            Iterable object.
-        item_type (type):
-            Item type.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
-    Returns:
-        List containing items of type `item_type`.
-    """
-    return to_iter(
-        inputs=inputs, item_type=item_type, return_type=list, inplace=inplace
-    )
-
+        input = [input]
+    return input
+    
 
 def to_ntuple(n: int) -> tuple:
     """A helper functions to cast input to n-tuple.
     
     Args:
         n (int):
-        
     """
     def parse(x) -> tuple:
         if isinstance(x, collections.abc.Iterable):
@@ -1710,15 +1697,37 @@ def to_ntuple(n: int) -> tuple:
     return parse
 
 
-def to_size(size: Int2Or3T) -> Int2T:
+def to_tuple(input: Any) -> tuple:
+    """Cast input into a tuple.
+
+    Args:
+        input (Any):
+            Object.
+       
+    Returns:
+        (tuple):
+            Tuple containing input.
+    """
+    if isinstance(input, list):
+        input = tuple(input)
+    elif isinstance(input, tuple):
+        pass
+    elif isinstance(input, dict):
+        input = tuple([v for k, v in input.items()])
+    else:
+        input = tuple(input)
+    return input
+
+
+def to_size(size: Ints) -> tuple[int, int]:
     """Cast size object of any format into standard [H, W].
     
     Args:
-        size (Int2Or3T):
+        size (Ints):
             Size object of any format.
             
     Returns:
-        size (Int2T):
+        size (tuple[int, int]):
             Size of [H, W].
     """
     if isinstance(size, (list, tuple)):
@@ -1729,21 +1738,6 @@ def to_size(size: Int2Or3T) -> Int2T:
     elif isinstance(size, (int, float)):
         size = (size, size)
     return tuple(size)
-
-
-def to_tuple(inputs: Iterable, item_type: type):
-    """Cast items of an iterable object into a tuple of some type.
-
-    Args:
-        inputs (Iterable):
-            Iterable object.
-        item_type (type):
-            Item type.
-    
-    Returns:
-        Tuple containing items of type `item_type`.
-    """
-    return to_iter(inputs=inputs, item_type=item_type, return_type=tuple)
 
 
 @dispatch(list)

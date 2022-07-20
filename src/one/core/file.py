@@ -45,26 +45,24 @@ import validators
 
 from one.core.rich import console
 from one.core.types import ImageFormat
-from one.core.types import ScalarListOrTupleAnyT
+from one.core.types import Strs
+from one.core.types import to_list
 from one.core.types import unique
 from one.core.types import VideoFormat
 
 
 # MARK: - Functional
 
-def create_dirs(paths: ScalarListOrTupleAnyT[str], recreate: bool = False):
+def create_dirs(paths: Strs, recreate: bool = False):
     """Check and create directories.
 
     Args:
-        paths (ScalarListOrTupleAnyT[str]):
-            List of directories' paths to create.
+        paths (Strs):
+            Sequence of directories' paths to create.
         recreate (bool):
             If `True`, delete and recreate existing directories.
     """
-    if isinstance(paths, str):
-        paths = [paths]
-    elif isinstance(paths, tuple):
-        paths = list(paths)
+    paths       = to_list(paths)
     paths       = [p for p in paths if p is not None]
     unique_dirs = unique(paths)
     try:
@@ -79,17 +77,17 @@ def create_dirs(paths: ScalarListOrTupleAnyT[str], recreate: bool = False):
 
 
 def delete_files(
-    files    : ScalarListOrTupleAnyT[str] = "",
-    dirs     : ScalarListOrTupleAnyT[str] = "",
+    files    : Strs = "",
+    dirs     : Strs = "",
     extension: str  = "",
     recursive: bool = True
 ):
     """Delete all files in directories that match the desired extension.
 
     Args:
-        files (ScalarListOrTupleAnyT[str]):
+        files (Strs):
             List of files that contains the files to be deleted. Default: "".
-        dirs (ScalarListOrTupleAnyT[str]):
+        dirs (Strs):
             List of directories that contains the files to be deleted.
             Default: "".
         extension (str):
@@ -97,16 +95,10 @@ def delete_files(
         recursive (bool):
             Search subdirectories if any. Default: `True`.
     """
-    if isinstance(files, str):
-        files = [files]
-    elif isinstance(files, tuple):
-        files = list(files)
-    if isinstance(dirs, str):
-        dirs = [dirs]
-    elif isinstance(dirs, tuple):
-        dirs = list(dirs)
+    files     = to_list(files)
     files     = [f for f in files if os.path.isfile(f)]
     files     = unique(files)
+    dirs      = to_list(dirs)
     dirs      = [d for d in dirs if d is not None]
     dirs      = unique(dirs)
     extension = f".{extension}" if "." not in extension else extension
@@ -118,21 +110,18 @@ def delete_files(
         os.remove(f)
         
 
-def get_hash(files: ScalarListOrTupleAnyT[str]) -> int:
+def get_hash(files: Strs) -> int:
     """Get a single hash value of a list of files.
     
     Args:
-        files (ScalarListOrTupleAnyT[str]):
+        files (Strs):
             List of files.
     
     Returns:
         hash (int):
             Sum of all file size.
     """
-    if isinstance(files, str):
-        files = [files]
-    elif isinstance(files, tuple):
-        files = list(files)
+    files = to_list(files)
     files = [f for f in files if f is not None]
     return sum(os.path.getsize(f) for f in files if os.path.isfile(f))
 
@@ -321,21 +310,18 @@ def is_yaml_file(path: Union[str, None]) -> bool:
     return False
 
 
-def list_files(patterns: ScalarListOrTupleAnyT[str]) -> list[str]:
+def list_files(patterns: Strs) -> list[str]:
     """List all files that match the desired patterns.
     
     Args:
-        patterns (ScalarListOrTupleAnyT[str]):
+        patterns (Strs):
             File patterns.
             
     Returns:
         image_paths (list[str]):
             List of images paths.
     """
-    if isinstance(patterns, str):
-        patterns = [patterns]
-    elif isinstance(patterns, tuple):
-        patterns = list(patterns)
+    patterns    = to_list(patterns)
     patterns    = [p for p in patterns if p is not None]
     patterns    = unique(patterns)
     image_paths = []

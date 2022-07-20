@@ -27,8 +27,7 @@ from one.core import assert_tensor
 from one.core import assert_tensor_of_atleast_ndim
 from one.core import assert_tensor_of_channels
 from one.core import assert_tensor_of_ndim_in_range
-from one.core import Float2T
-from one.core import ListOrTuple2T
+from one.core import Floats
 from one.core import Transform
 from one.core import TRANSFORMS
 from one.vision.acquisition import get_image_shape
@@ -844,7 +843,8 @@ class AddWeighted(Transform):
         gamma (float):
             Scalar added to each sum. Default: `0.0`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -885,7 +885,8 @@ class AdjustBrightness(Transform):
             0 gives a black image, 1 gives the original image while 2 increases
             the brightness by a factor of 2.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -928,7 +929,8 @@ class AdjustContrast(Transform):
             0 gives a solid gray image, 1 gives the original image while 2
             increases the contrast by a factor of 2.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -973,7 +975,8 @@ class AdjustGamma(Transform):
         gain (float):
             Default: `1.0`.
        p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1022,7 +1025,8 @@ class AdjustHue(Transform):
             Therefore, both -0.5 and 0.5 will give an image with complementary
             colors while 0 gives the original image.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1065,7 +1069,8 @@ class AdjustSaturation(Transform):
             image, 1 will give the original image while 2 will enhance the
             saturation by a factor of 2.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1108,7 +1113,8 @@ class AdjustSharpness(Transform):
             image, 1 will give the original image while 2 will enhance the
             saturation by a factor of 2.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1148,7 +1154,8 @@ class AutoContrast(Transform):
     
     Args:
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -1178,7 +1185,8 @@ class Blend(Transform):
         gamma (float):
             Scalar added to each sum. Default: `0.0`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1211,34 +1219,35 @@ class ColorJitter(Transform):
     """Randomly change the brightness, contrast, saturation and hue of an image.
     
     Args:
-        brightness (Float2T):
+        brightness (Floats):
             How much to jitter brightness. `brightness_factor` is chosen
             uniformly from [max(0, 1 - brightness), 1 + brightness] or the
             given [min, max]. Should be non negative numbers. Default: `0.0`.
-        contrast (Float2T):
+        contrast (Floats):
             How much to jitter contrast. `contrast_factor` is chosen uniformly
             from [max(0, 1 - contrast), 1 + contrast] or the given [min, max].
             Should be non-negative numbers. Default: `0.0`.
-        saturation (Float2T):
+        saturation (Floats):
             How much to jitter saturation. `saturation_factor` is chosen
             uniformly from [max(0, 1 - saturation), 1 + saturation] or the given
             [min, max]. Should be non-negative numbers. Default: `0.0`.
-        hue (Float2T):
+        hue (Floats):
             How much to jitter hue. `hue_factor` is chosen uniformly from
             [-hue, hue] or the given [min, max]. Should have 0<= hue <= 0.5
             or -0.5 <= min <= max <= 0.5. Default: `0.0`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
     
     def __init__(
         self,
-        brightness: Union[Float2T, None] = 0.0,
-        contrast  : Union[Float2T, None] = 0.0,
-        saturation: Union[Float2T, None] = 0.0,
-        hue       : Union[Float2T, None] = 0.0,
+        brightness: Union[Floats, None] = 0.0,
+        contrast  : Union[Floats, None] = 0.0,
+        saturation: Union[Floats, None] = 0.0,
+        hue       : Union[Floats, None] = 0.0,
         p         : Union[float,   None] = None,
         *args, **kwargs
     ):
@@ -1270,7 +1279,7 @@ class ColorJitter(Transform):
         center            : int   = 1,
         bound             : tuple = (0, float("inf")),
         clip_first_on_zero: bool  = True
-    ) -> Union[ListOrTuple2T[float], None]:
+    ) -> Union[Floats, None]:
         if isinstance(value, numbers.Number):
             assert_positive_number(value)
             value = [center - float(value), center + float(value)]
@@ -1294,10 +1303,10 @@ class ColorJitter(Transform):
     
     @staticmethod
     def get_params(
-        brightness: Union[ListOrTuple2T[float], None],
-        contrast  : Union[ListOrTuple2T[float], None],
-        saturation: Union[ListOrTuple2T[float], None],
-        hue       : Union[ListOrTuple2T[float], None],
+        brightness: Union[Floats, None],
+        contrast  : Union[Floats, None],
+        saturation: Union[Floats, None],
+        hue       : Union[Floats, None],
     ) -> tuple[
         Tensor,
         Union[float, None],
@@ -1309,16 +1318,16 @@ class ColorJitter(Transform):
         image.
 
         Args:
-            brightness (ListOrTuple2T[float], None):
+            brightness (Floats, None):
                 The range from which the `brightness_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
-            contrast (ListOrTuple2T[float], None):
+            contrast (Floats, None):
                 The range from which the `contrast_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
-            saturation (ListOrTuple2T[float], None):
+            saturation (Floats, None):
                 The range from which the `saturation_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
-            hue (ListOrTuple2T[float], None):
+            hue (Floats, None):
                 The range from which the `hue_factor` is chosen uniformly.
                 Pass `None` to turn off the transformation.
 
@@ -1436,7 +1445,8 @@ class Erase(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -1497,7 +1507,8 @@ class Equalize(Transform):
     
     Args:
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
@@ -1523,7 +1534,8 @@ class Invert(Transform):
     
     Args:
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1603,7 +1615,8 @@ class Posterize(Transform):
         bits (int):
             Number of bits to keep for each channel (0-8).
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
@@ -1639,9 +1652,9 @@ class RandomErase(Transform):
         'Random Erasing Data Augmentation' by Zhong et al. See https://arxiv.org/abs/1708.04896
     
     Args:
-        scale (Float2T):
+        scale (Floats):
             Range of proportion of erased area against input image.
-        ratio (Float2T):
+        ratio (Floats):
             Range of aspect ratio of erased area.
         value (int, float, str, tuple, list):
             Erasing value. Default is `0`. If a single int, it is used to erase
@@ -1651,15 +1664,16 @@ class RandomErase(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
     
     # MARK: Magic Functions
 
     def __init__(
         self,
-        scale  : Float2T                             = (0.02, 0.33),
-        ratio  : Float2T                             = (0.3, 3.3),
+        scale  : Floats                             = (0.02, 0.33),
+        ratio  : Floats                             = (0.3, 3.3),
         value  : Union[int, float, str, tuple, list] = 0,
         inplace: bool                                = False,
         p      : Union[float, None]                  = None,
@@ -1691,8 +1705,8 @@ class RandomErase(Transform):
     @staticmethod
     def get_params(
         image: Tensor,
-        scale: ListOrTuple2T[float],
-        ratio: ListOrTuple2T[float],
+        scale: Floats,
+        ratio: Floats,
         value: Union[list[float], None] = None
     ) -> tuple[int, int, int, int, Tensor]:
         """Get parameters for `erase` for a random erasing.
@@ -1700,9 +1714,9 @@ class RandomErase(Transform):
         Args:
             image (Tensor):
                 Tensor image to be erased.
-            scale (ListOrTuple2T[float]):
+            scale (Floats):
                 Range of proportion of erased area against input image.
-            ratio (ListOrTuple2T[float]):
+            ratio (Floats):
                 Range of aspect ratio of erased area.
             value (list[float], None):
                 Erasing value. If None, it is interpreted as "random"
@@ -1799,7 +1813,8 @@ class Solarize(Transform):
         threshold (float):
             All pixels equal or above this value are inverted.
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions

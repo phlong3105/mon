@@ -52,9 +52,10 @@ import torch.utils.data as data
 from torch import Tensor
 
 from one.core import Callable
+from one.core import ComposeScript
 from one.core import console
 from one.core import download_bar
-from one.core import Int3T
+from one.core import Ints
 from one.core import is_image_file
 from one.core import is_json_file
 from one.core import load_file
@@ -65,7 +66,6 @@ from one.datasets.utils import BBox
 from one.datasets.utils import ClassLabel
 from one.datasets.utils import Image
 from one.datasets.utils import VOCLabel
-from one.vision.transformation import ComposeScript
 
 
 # MARK: - Base
@@ -79,7 +79,7 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -100,7 +100,7 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
         transforms      : Union[Callable, list, dict, None] = None,
@@ -194,7 +194,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -220,7 +220,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         self,
         root        : str,
         split       : str,
-        shape       : Int3T,
+        shape       : Ints,
         transform   : Union[Callable, list, dict, None] = None,
         transforms  : Union[Callable, list, dict, None] = None,
         cache_data  : bool                              = False,
@@ -352,7 +352,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -378,7 +378,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         self,
         root        : str,
         split       : str,
-        shape       : Int3T,
+        shape       : Ints,
         transform   : Union[Callable, list, dict, None] = None,
         transforms  : Union[Callable, list, dict, None] = None,
         cache_data  : bool                              = False,
@@ -439,7 +439,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -468,7 +468,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
@@ -600,7 +600,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -629,7 +629,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
@@ -739,7 +739,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -768,7 +768,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
@@ -876,7 +876,7 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -905,7 +905,7 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
@@ -957,7 +957,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -986,7 +986,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
@@ -1054,7 +1054,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -1083,7 +1083,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,
@@ -1197,7 +1197,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
             Root directory of dataset.
         split (str):
             Split to use. One of: ["train", "val", "test"].
-        shape (Int3T):
+        shape (Ints):
             Image shape as [H, W, C], [H, W], or [S, S].
         transform (Callable, list, dict, None):
             Functions/transforms that takes in an input sample and returns a
@@ -1226,7 +1226,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         self,
         root            : str,
         split           : str,
-        shape           : Int3T,
+        shape           : Ints,
         class_labels    : Union[ClassLabel, str, Path]      = None,
         transform       : Union[Callable, list, dict, None] = None,
         target_transform: Union[Callable, list, dict, None] = None,

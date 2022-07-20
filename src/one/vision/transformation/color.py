@@ -19,8 +19,8 @@ from torch.nn import functional as F
 from one.core import assert_tensor
 from one.core import assert_tensor_of_channels
 from one.core import CFA
-from one.core import ListOrTuple2T
 from one.core import Tensor
+from one.core import Tensors
 from one.core import Transform
 from one.core import TRANSFORMS
 from one.vision.acquisition import get_num_channels
@@ -1118,7 +1118,7 @@ def rgb_to_yuv(image: Tensor) -> Tensor:
     return yuv
 
 
-def rgb_to_yuv420(image: Tensor) -> ListOrTuple2T[Tensor]:
+def rgb_to_yuv420(image: Tensor) -> Tensors:
     """Convert RGB image to YUV 420 (sub-sampled). Image data is assumed
     to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
     divisible by 2 horizontal and vertical. This function will output chroma
@@ -1154,7 +1154,7 @@ def rgb_to_yuv420(image: Tensor) -> ListOrTuple2T[Tensor]:
     )
 
 
-def rgb_to_yuv422(image: Tensor) -> ListOrTuple2T[Tensor]:
+def rgb_to_yuv422(image: Tensor) -> Tensors:
     """Convert RGB image to YUV 422 (sub-sampled). Image data is assumed
     to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
     divisible by 2 vertical. This function will output chroma siting (0.5).

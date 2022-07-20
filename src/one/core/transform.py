@@ -208,12 +208,13 @@ class Transform(nn.Module, metaclass=ABC):
     
     Args:
         p (float):
-            Probability of the image being adjusted. Default: `None`.
+            Probability of the image being adjusted. Default: `None` means 
+            process as normal.
     """
 
     # MARK: Magic Functions
     
-    def __init__(self, p: Union[float, None] = None, *args, **kwargs):
+    def __init__(self, p: float = 1.0, *args, **kwargs):
         super().__init__()
         assert_number_in_range(p, 0.0, 1.0)
         self.p = p
@@ -227,7 +228,7 @@ class Transform(nn.Module, metaclass=ABC):
         target: Union[Tensor, None] = None,
         *args, **kwargs
     ) -> tuple[Tensor, Union[Tensor, None]]:
-        if self.p is None or torch.rand(1).item() <= self.p:
+        if self.p is not None or torch.rand(1).item() <= self.p:
             return super.__call__(input, target, *args, **kwargs)
         return input, target
         

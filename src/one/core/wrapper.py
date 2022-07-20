@@ -67,7 +67,7 @@ def channel_last_processing(func: Callable):
 	@functools.wraps(func)
 	def wrapper(image: TensorOrArray, *args, **kwargs) -> TensorOrArray:
 		img           = image.copy()
-		from one.vision.transformation import is_channel_first
+		from one.vision.acquisition import is_channel_first
 		channel_first = is_channel_first(img)
 		
 		if not isinstance(image, (Tensor, np.ndarray)):

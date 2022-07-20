@@ -24,15 +24,15 @@ from torch import Tensor
 
 from one.core import create_dirs
 from one.core import error_console
-from one.core import Int2Or3T
+from one.core import Ints
 from one.core import is_image_file
 from one.core import is_video_file
 from one.core import is_video_stream
 from one.core import Tensors
 from one.core import to_size
-from one.vision.transformation import to_channel_last
-from one.vision.transformation import to_image
-from one.vision.transformation import to_tensor
+from one.vision.acquisition.image import to_channel_last
+from one.vision.acquisition.image import to_image
+from one.vision.acquisition.image import to_tensor
 
 
 # MARK: - Functional
@@ -79,7 +79,7 @@ def ffmpeg_write_frame(process, frame: Union[Tensor, None]):
 			`Tensor` frame/image.
 	"""
 	if isinstance(frame, Tensor):
-		frame = to_image(input=frame, keep_dims=False, denormalize=True)
+		frame = to_image(image=frame, keep_dims=False, denormalize=True)
 		process.stdin.write(
 			frame
 				.astype(np.uint8)
@@ -193,7 +193,7 @@ class BaseVideoLoader(metaclass=ABCMeta):
 		return self.frame_count == -1
 	
 	@property
-	def shape(self) -> Int2Or3T:
+	def shape(self) -> Ints:
 		"""Return shape of the frames in the video stream in [C, H, W] format.
 		"""
 		return self.frame_height, self.frame_width
@@ -222,7 +222,7 @@ class BaseVideoWriter(metaclass=ABCMeta):
 	Args:
 		dst (str):
 			Output video file or a directory.
-		shape (Int2Or3T):
+		shape (Ints):
 			Output size as [C, H, W]. This is also used to reshape the input.
 			Default: `(3, 480, 640)`.
 		frame_rate (float):
@@ -240,11 +240,11 @@ class BaseVideoWriter(metaclass=ABCMeta):
 	def __init__(
 		self,
 		dst		  : str,
-		shape     : Int2Or3T = (3, 480, 640),
-		frame_rate: float    = 10,
-		save_image: bool     = False,
-		save_video: bool     = True,
-		verbose   : bool     = False,
+		shape     : Ints  = (3, 480, 640),
+		frame_rate: float = 10,
+		save_image: bool  = False,
+		save_video: bool  = True,
+		verbose   : bool  = False,
 		*args, **kwargs
 	):
 		super().__init__()
@@ -357,7 +357,7 @@ class CVVideoLoader(BaseVideoLoader):
 			files (list):
 				List of image files.
 			rel_paths (list):
-				List of images" relative paths corresponding to data.
+				List of images' relative paths corresponding to data.
 		"""
 		if not self.is_stream and self.index >= self.frame_count:
 			self.close()
@@ -515,7 +515,7 @@ class CVVideoWriter(BaseVideoWriter):
 	Args:
 		dst (str):
 			Output video file or a directory.
-		shape (Int2Or3T):
+		shape (Ints):
 			Output size as [C, H, W]. This is also used to reshape the input.
 			Default: `(3, 480, 640)`.
 		frame_rate (int):
@@ -536,12 +536,12 @@ class CVVideoWriter(BaseVideoWriter):
 	def __init__(
 		self,
 		dst		  : str,
-		shape     : Int2Or3T = (3, 480, 640),
-		frame_rate: float    = 10,
-		fourcc    : str      = "mp4v",
-		save_image: bool     = False,
-		save_video: bool     = True,
-		verbose   : bool     = False,
+		shape     : Ints  = (3, 480, 640),
+		frame_rate: float = 10,
+		fourcc    : str   = "mp4v",
+		save_image: bool  = False,
+		save_video: bool  = True,
+		verbose   : bool  = False,
 	):
 		super().__init__(
 			dst        = dst,
@@ -595,7 +595,7 @@ class CVVideoWriter(BaseVideoWriter):
 			image_file (str, None):
 				Image file. Default: `None`.
 		"""
-		image = to_image(input=image, keep_dims=False, denormalize=True)
+		image = to_image(image=image, keep_dims=False, denormalize=True)
 		
 		if self.save_image:
 			if image_file is not None:
@@ -826,12 +826,12 @@ class FFmpegVideoWriter(BaseVideoWriter):
 	def __init__(
 		self,
 		dst		  : str,
-		shape     : Int2Or3T = (3, 480, 640),
-		frame_rate: float    = 10,
-		pix_fmt   : str      = "yuv420p",
-		save_image: bool     = False,
-		save_video: bool     = True,
-		verbose   : bool     = False,
+		shape     : Ints  = (3, 480, 640),
+		frame_rate: float = 10,
+		pix_fmt   : str   = "yuv420p",
+		save_image: bool  = False,
+		save_video: bool  = True,
+		verbose   : bool  = False,
 		*args, **kwargs
 	):
 		super().__init__(

@@ -34,9 +34,9 @@ from one.core import print_table
 from one.core import VISION_BACKEND
 from one.core import VisionBackend
 from one.vision.acquisition import read_image
+from one.vision.acquisition import to_tensor
 from one.vision.shape import box_xyxy_to_cxcywh_norm
 from one.vision.transformation import get_image_shape
-from one.vision.transformation import to_tensor
 
 
 # MARK: - Functional

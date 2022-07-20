@@ -35,7 +35,6 @@ from one.core.types import assert_dict
 from one.core.types import assert_list_of
 from one.core.types import MemoryUnit
 
-
 # MARK: - Globals
 
 custom_theme = Theme({
