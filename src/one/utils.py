@@ -10,11 +10,11 @@ import inspect
 import os
 import sys
 from shutil import copyfile
-from typing import Union
 
 from munch import Munch
 
 from one.core import create_dirs
+from one.core import Dict
 from one.core import load_file
 
 # MARK: - Directories
@@ -34,16 +34,16 @@ if not os.path.isdir(data_dir):
 
 # MARK: - Process Config
 
-def load_config(config: Union[str, dict, Munch]) -> Munch:
-    """Load config as namespace.
+def load_config(config: str | Dict) -> Munch:
+    """
+    Load config as namespace.
 
 	Args:
-		config (str, dict, Munch):
-			Config filepath that contains configuration values or the
-			config dict.
+		config (str | Dict): Config filepath that contains configuration values
+		    or the config dict.
 	"""
     # NOTE: Load dictionary from file and convert to namespace using Munch
-    if not isinstance(config, (dict, Munch, str)):
+    if not isinstance(config, (str, dict, Munch)):
         raise TypeError(
             f"`config` must be a `dict` or a path to config file. "
             f"But got: {config}."
@@ -61,7 +61,14 @@ def load_config(config: Union[str, dict, Munch]) -> Munch:
 
 
 def copy_config_file(config_file: str, dst: str):
-    """Copy `config_file` to `dst` dir."""
+    """
+    Copy a configuration file to a destination directory.
+    
+    Args:
+        config_file (str): The path to the config file.
+        dst (str): The destination directory where the config file will be
+            copied to.
+    """
     create_dirs(paths=[dst])
     copyfile(config_file, os.path.join(dst, os.path.basename(config_file)))
 

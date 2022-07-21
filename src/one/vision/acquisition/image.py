@@ -13,7 +13,6 @@ import sys
 from copy import deepcopy
 from glob import glob
 from pathlib import Path
-from typing import Union
 
 import cv2
 import numpy as np
@@ -38,8 +37,8 @@ from one.core import create_dirs
 from one.core import error_console
 from one.core import Ints
 from one.core import is_image_file
-from one.core import TensorOrArray
 from one.core import Tensors
+from one.core import to_3d_tensor_list
 from one.core import Transform
 from one.core import TRANSFORMS
 from one.core import VisionBackend
@@ -56,17 +55,15 @@ for orientation in ExifTags.TAGS.keys():
 # MARK: - Functional
 
 def check_image_size(size: Ints, stride: int = 32) -> int:
-    """Verify image size is a multiple of stride and return the new size.
+    """If the input image size is not a multiple of the stride, then the image
+    size is updated to the next multiple of the stride.
     
     Args:
-        size (Ints):
-            Image size of shape [C, H, W].
-        stride (int):
-            Stride. Default: `32`.
+        size (Ints): the size of the image.
+        stride (int): the stride of the network. Defaults to 32.
     
     Returns:
-        new_size (int):
-            Appropriate size.
+        The new size of the image.
     """
     if isinstance(size, (list, tuple)):
         if len(size) == 3:    # [C, H, W]
@@ -84,38 +81,36 @@ def check_image_size(size: Ints, stride: int = 32) -> int:
 
 
 def get_exif_size(image: PIL.Image) -> Ints:
-    """Return the exif-corrected PIL size.
+    """If the image has an EXIF orientation tag, and the orientation is 6 or
+    8, then the image is rotated 90 or 270 degrees, so we swap the width and
+    height.
     
     Args:
-        image (PIL.Image):
-            Image.
-            
+        image (PIL.Image): PIL.Image.
+    
     Returns:
-        size (Ints[H, W]):
-            Image size.
+        The height and width of the image.
     """
     size = image.size  # (width, height)
     try:
         rotation = dict(image._getexif().items())[orientation]
         if rotation == 6:  # rotation 270
-            size = (size[1], size[0])
+            size = [size[1], size[0]]
         elif rotation == 8:  # rotation 90
-            size = (size[1], size[0])
+            size = [size[1], size[0]]
     except:
         pass
-    return size[1], size[0]
+    return [size[1], size[0]]
 
 
 def get_image_center(image: Tensor) -> Tensor:
-    """Get image center as  (x=h/2, y=w/2).
+    """It takes an image and returns the center of the image as (x=h/2, y=w/2).
     
     Args:
-        image (Tensor[..., C, H, W]):
-            Image Tensor.
-   
+        image (Tensor): The image to get the center of.
+    
     Returns:
-        center (Tensor[2]):
-            Image center as (x=h/2, y=w/2).
+        The center of the image.
     """
     assert_tensor(image)
     h, w = get_image_hw(image)
@@ -123,15 +118,14 @@ def get_image_center(image: Tensor) -> Tensor:
 
 
 def get_image_center4(image: Tensor) -> Tensor:
-    """Get image center as (x=h/2, y=w/2, x=h/2, y=w/2).
+    """It takes an image and returns the coordinates of the center of the image
+    as (x=h/2, y=w/2, x=h/2, y=w/2).
     
     Args:
-        image (Tensor[..., C, H, W]):
-            Image.
-   
+        image (Tensor): the image tensor.
+    
     Returns:
-        center (Tensor[4]):
-            Image center as (x=h/2, y=w/2, x=h/2, y=w/2).
+        The center of the image.
     """
     assert_tensor(image)
     h, w = get_image_hw(image)
@@ -139,15 +133,13 @@ def get_image_center4(image: Tensor) -> Tensor:
     
 
 def get_image_hw(image: Tensor) -> Ints:
-    """Returns the size of an image as [H, W].
+    """Given an image tensor, return its height and width
     
     Args:
-        image (Tensor):
-            Image.
-   
+        image (Tensor[..., C, H, W])): The image tensor.
+    
     Returns:
-        size (Ints):
-            Image size as [H, W].
+        The height and width of the image.
     """
     assert_tensor_of_atleast_ndim(image, 3)
     if is_channel_first(image):  # [.., C, H, W]
@@ -160,15 +152,14 @@ get_image_size = get_image_hw
 
 
 def get_image_shape(image: Tensor) -> Ints:
-    """Returns the shape of an image as [H, W, C].
-
+    """
+    It returns the shape of the image as a list of integers.
+    
     Args:
-        image (Tensor):
-            Image.
-
+        image (Tensor): The image tensor.
+    
     Returns:
-        shape (Ints):
-            Image shape as [C, H, W].
+        The shape of the image as [C, H, W].
     """
     assert_tensor_of_atleast_ndim(image, 3)
     if is_channel_first(image):  # [.., C, H, W]
@@ -178,15 +169,14 @@ def get_image_shape(image: Tensor) -> Ints:
 
 
 def get_num_channels(image: Tensor) -> int:
-    """Get number of channels of the image.
+    """
+    It returns the number of channels in an image.
     
     Args:
-        image (Tensor):
-            Image.
-
+        image (Tensor): The image to get the number of channels from.
+    
     Returns:
-        num_channels (int):
-            Image channels.
+        The number of channels in the image.
     """
     assert_tensor_of_ndim_in_range(image, 3, 4)
     if image.ndim == 4:
@@ -205,7 +195,15 @@ def get_num_channels(image: Tensor) -> int:
 
 
 def is_channel_first(image: Tensor) -> bool:
-    """Return `True` if the image is in channel first format."""
+    """
+    If the first dimension is the smallest, then it's channel first.
+    
+    Args:
+        image (Tensor): The image to be checked.
+    
+    Returns:
+        A boolean value.
+    """
     assert_tensor_of_ndim_in_range(image, 3, 5)
     if image.ndim == 5:
         _, _, s2, s3, s4 = list(image.shape)
@@ -229,20 +227,28 @@ def is_channel_first(image: Tensor) -> bool:
 
 
 def is_channel_last(image: Tensor) -> bool:
-    """Return `True` if the image is in channel last format."""
+    """
+    If the image is not channel first, then it is channel last.
+    
+    Args:
+        image (Tensor): The image tensor.
+    
+    Returns:
+        A boolean value.
+    """
     return not is_channel_first(image)
 
 
 def read_image_cv(path: str) -> Tensor:
-    """Read image using OpenCV and return a Tensor.
+    """
+    It reads an image from a path, converts it to RGB, and converts it to a
+    PyTorch tensor.
     
     Args:
-        path (str):
-            Image file.
+        path (str): The path to the image file.
     
     Returns:
-        image (Tensor[1, C, H, W]):
-            Image Tensor.
+        A tensor of shape [1, C, H, W].
     """
     image = cv2.imread(path)             # BGR
     image = image[:, :, ::-1]            # BGR -> RGB
@@ -262,15 +268,15 @@ def read_image_libvips(path: str) -> np.ndarray:
 
 
 def read_image_pil(path: str) -> Tensor:
-    """Read image using PIL and return a Tensor.
+    """
+    It reads an image from a file, converts it to a tensor, and returns the
+    tensor.
     
     Args:
-        path (str):
-            Image file.
+        path (str): The path to the image file.
     
     Returns:
-        image (Tensor[1, C, H, W]):
-            Image Tensor.
+        A tensor of shape [1, C, H, W].
     """
     image = Image.open(path)                         # PIL Image
     image = to_tensor(image=image, keep_dims=False)  # Tensor[C, H, W]
@@ -278,17 +284,15 @@ def read_image_pil(path: str) -> Tensor:
 
 
 def read_image(path: str, backend: VisionBackend_ = VisionBackend.CV) -> Tensor:
-    """Read image with the corresponding backend.
+    """
+    It reads an image from a file path and returns a tensor.
     
     Args:
-        path (str):
-            Image file.
-        backend (VisionBackend_):
-            Vision backend used to read images. Default: `VisionBackend.CV`.
-            
+        path (str): The path to the image file.
+        backend (VisionBackend_): Vision backend to use.
+    
     Returns:
-        image (Tensor[1, C, H, W]):
-            Image Tensor.
+        A tensor of shape [1, C, H, W].
     """
     backend = VisionBackend.from_value(backend)
     if backend == VisionBackend.CV:
@@ -305,20 +309,18 @@ def read_image(path: str, backend: VisionBackend_ = VisionBackend.CV) -> Tensor:
 def to_channel_first(
     image: Tensor, keep_dims: bool = True, inplace: bool = False
 ) -> Tensor:
-    """Convert image to channel first format.
+    """
+    It takes a tensor of any shape and returns a tensor of the same shape,
+    but with the channel first.
     
     Args:
-        image (Tensor):
-            Image Tensor of arbitrary channel format.
-        keep_dims (bool):
-            If `False` unsqueeze the image to match the shape [..., C, H, W].
-            Else, keep the original dimension. Default: `True`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        image (Tensor): The image to convert.
+        keep_dims (bool): If True, the dimension will be kept. Defaults to True.
+        inplace (bool): If True, the operation will be done in-place.
+            Defaults to False
+    
     Returns:
-        image (Tensor):
-            Image Tensor in channel first format.
+        A tensor with the channel first.
     """
     assert_tensor_of_ndim_in_range(image, 2, 5)
     if not inplace:
@@ -341,20 +343,19 @@ def to_channel_first(
 def to_channel_last(
     image: Tensor, keep_dims: bool = True, inplace: bool = False
 ) -> Tensor:
-    """Convert image to channel last format.
+    """
+    It takes a tensor of any shape and returns a tensor of the same shape,
+    but with the channel last.
     
     Args:
-        image (Tensor):
-            Image Tensor of arbitrary channel format.
-        keep_dims (bool):
-            If `False` squeeze the input image to match the shape [H, W, C] or
-            [H, W]. Else, keep the original dimension. Default: `True`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        image (Tensor): The image to convert.
+        keep_dims (bool): If True, the dimension will be kept.
+            Defaults to True
+        inplace (bool): If True, the operation will be done in-place.
+            Defaults to False
+    
     Returns:
-        image (np.ndarray):
-            Image Tensor in channel last format.
+        A tensor with the channel last.
     """
     assert_tensor_of_ndim_in_range(image, 2, 5)
     if not inplace:
@@ -392,24 +393,20 @@ def to_image(
     denormalize: bool = False,
     inplace    : bool = False,
 ) -> np.ndarray:
-    """Converts a PyTorch Tensor to a numpy image. In case the image is in the
-    GPU, it will be copied back to CPU.
-
+    """
+    It converts a tensor to a numpy array.
+    
     Args:
-        image (Tensor):
-            Image of arbitrary shape.
-        keep_dims (bool):
-            If `False` squeeze the input image to match the shape [H, W, C] or
-            [H, W]. Else, keep the original dimension. Default: `True`.
-        denormalize (bool):
-            If `True`, converts the image in the range [0.0, 1.0] to the range
-            [0, 255]. Default: `False`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        image (Tensor): Tensor
+        keep_dims (bool): If True, the function will keep the dimensions of
+            the input tensor. Defaults to True.
+        denormalize (bool): If True, the image will be denormalized to [0, 255].
+            Defaults to False.
+        inplace (bool): If True, the input tensor will be modified inplace.
+            Defaults to False.
+    
     Returns:
-        image (np.ndarray):
-            Image of the form [H, W], [H, W, C] or [..., H, W, C].
+        A numpy array of the image.
     """
     from one.vision.transformation import denormalize_naive
     
@@ -429,8 +426,16 @@ def to_image(
     return image.astype(np.uint8)
 
 
-def to_pil_image(image: TensorOrArray) -> PIL.Image:
-    """Convert image from `np.ndarray` or `Tensor` to PIL image."""
+def to_pil_image(image: Tensor | np.ndarray) -> PIL.Image:
+    """
+    It converts a tensor or numpy array to a PIL image.
+    
+    Args:
+        image (Tensor | np.ndarray): The image to be transformed.
+    
+    Returns:
+        A PIL image.
+    """
     if torch.is_tensor(image):
         # Equivalent to: `np_image = image.numpy()` but more efficient
         return F.pil_to_tensor(image)
@@ -440,28 +445,27 @@ def to_pil_image(image: TensorOrArray) -> PIL.Image:
 
 
 def to_tensor(
-    image    : Union[Tensor, np.ndarray, PIL.Image],
+    image    : Tensor | np.ndarray | PIL.Image,
     keep_dims: bool = True,
     normalize: bool = False,
     inplace  : bool = False,
 ) -> Tensor:
-    """Convert a `PIL Image` or `np.ndarray` image to a 4d tensor.
+    """
+    Convert a Tensor, np.ndarray, or PIL.Image to a Tensor with channel
+    first format.
     
     Args:
-        image (Tensor, np.ndarray, PIL.Image):
-            Image array or PIL.Image in [H, W, C], [H, W] or [..., H, W, C].
-        keep_dims (bool):
-            If `False` unsqueeze the image to match the shape [..., C, H, W].
-            Else, keep the original dimension. Default: `True`.
-        normalize (bool):
-            If `True`, converts the tensor in the range [0, 255] to the range
-            [0.0, 1.0]. Default: `False`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        image (Tensor | np.ndarray | PIL.Image): The image to be converted.
+        keep_dims (bool): If True, the channel dimension will be kept. If False
+            unsqueeze the image to match the shape [..., C, H, W].
+            Defaults to True
+        normalize (bool): If True, normalize the image to [0, 1].
+            Defaults to False
+        inplace (bool): If True, the input image will be modified inplace.
+            Defaults to False
+    
     Returns:
-        img (Tensor):
-            Image Tensor.
+        A tensor.
     """
     from one.vision.transformation.intensity import normalize_naive
 
@@ -517,20 +521,16 @@ def write_image(
     prefix   : str = "",
     extension: str = ".png"
 ):
-    """Save the image using `PIL`.
-
+    """
+    It takes an image, a directory, a name, a prefix, and an extension, and
+    writes the image to the directory with the name and prefix and extension.
+    
     Args:
-        image (np.ndarray):
-            A single image.
-        dir (str):
-            Saving directory.
-        name (str):
-            Name of the image file.
-        prefix (str):
-            Filename prefix. Default: ``.
-        extension (str):
-            Image file extension. One of [`.jpg`, `.jpeg`, `.png`, `.bmp`].
-            Default: `png`.
+        image (np.ndarray): The image to write.
+        dir (str): The directory to write the image to.
+        name (str): The name of the image.
+        prefix (str): The prefix to add to the name of the image.
+        extension (str): The extension of the image file. Defaults to .png
     """
     from one.vision.transformation import denormalize_naive
     assert_numpy_of_ndim_in_range(image, 2, 3)
@@ -568,20 +568,16 @@ def write_image(
     prefix   : str = "",
     extension: str = ".png"
 ):
-    """Save the image using `torchvision`.
-
+    """
+    It takes an image, a directory, a name, a prefix, and an extension, and
+    writes the image to the directory with the name and prefix and extension.
+    
     Args:
-        image (Tensor):
-            A single image.
-        dir (str):
-            Saving directory.
-        name (str):
-            Name of the image file.
-        prefix (str):
-            Filename prefix. Default: ``.
-        extension (str):
-            Image file extension. One of: [`.jpg`, `.jpeg`, `.png`].
-            Default: `.png`.
+        image (np.ndarray): The image to write.
+        dir (str): The directory to write the image to.
+        name (str): The name of the image.
+        prefix (str): The prefix to add to the name of the image.
+        extension (str): The extension of the image file. Defaults to .png
     """
     from one.vision.transformation import denormalize_naive
     assert_tensor_of_ndim_in_range(image, 2, 3)
@@ -615,18 +611,14 @@ def write_images(
     name     : str,
     extension: str = ".png"
 ):
-    """Save multiple images using `PIL`.
-
+    """
+    It writes a batch of images to disk.
+    
     Args:
-        images (np.ndarray):
-            A batch of images.
-        dir (str):
-            Saving directory.
-        name (str):
-            Name of the image file.
-        extension (str):
-            Image file extension. One of [`.jpg`, `.jpeg`, `.png`, `.bmp`].
-            Default: `.png`.
+        images (np.ndarray): a 4D numpy array of shape [B, H, W, C].
+        dir (str): The directory to write the image to.
+        name (str): The name of the image.
+        extension (str): The extension of the image file. Defaults to .png
     """
     assert_numpy_of_ndim(images, 4)
     num_jobs = multiprocessing.cpu_count()
@@ -643,18 +635,14 @@ def write_images(
     name     : str,
     extension: str = ".png"
 ):
-    """Save multiple images using `torchvision`.
-
+    """
+    It writes a batch of images to disk.
+    
     Args:
-        images (Tensor):
-            A image of image.
-        dir (str):
-            Saving directory.
-        name (str):
-            Name of the image file.
-        extension (str):
-            Image file extension. One of: [`.jpg`, `.jpeg`, `.png`].
-            Default: `.png`.
+        images (Tensor): a 4D tensor of shape [B, C, H, W]
+        dir (str): The directory to write the images to.
+        name (str): The name of the image.
+        extension (str): The file extension of the image. Defaults to .png
     """
     assert_tensor_of_ndim(images, 4)
     num_jobs = multiprocessing.cpu_count()
@@ -671,18 +659,14 @@ def write_images(
     name     : str,
     extension: str = ".png"
 ):
-    """Save multiple images.
-
+    """
+    It takes a list of images, and writes them to a directory.
+    
     Args:
-        images (list):
-            A list of images.
-        dir (str):
-            Saving directory.
-        name (str):
-            Name of the image file.
-        extension (str):
-            Image file extension. One of: [`.jpg`, `.jpeg`, `.png`].
-            Default: `.png`.
+        images (list): list of images to be written.
+        dir (str): the directory to save the images to.
+        name (str): The name of the image.
+        extension (str): The file extension of the image. Defaults to .png
     """
     if (isinstance(images, list) and
         all(isinstance(image, np.ndarray) for image in images)):
@@ -703,18 +687,16 @@ def write_images(
     name     : str,
     extension: str = ".png"
 ):
-    """Save multiple images.
-
+    """
+    It takes a dictionary of images, concatenates them, and writes them to a
+    file.
+    
     Args:
-        images (dict):
-            A list of images.
-        dir (str):
-            Saving directory.
-        name (str):
-            Name of the image file.
-        extension (str):
-            Image file extension. One of: [`.jpg`, `.jpeg`, `.png`].
-            Default: `.png`.
+        images (dict): a dictionary of images, where the keys are the names of
+            the images and the values are the images themselves.
+        dir (str): The directory to save the images to.
+        name (str): The name of the image.
+        extension (str): The file extension of the image. Defaults to .png
     """
     if (isinstance(images, dict) and
         all(isinstance(image, np.ndarray) for _, image in images.items())):
@@ -728,7 +710,7 @@ def write_images(
         cat_image = torch.stack(values)
         write_images(cat_image, dir, name, extension)
     else:
-        raise TypeError
+        raise TypeError(f"Do not support {type(images)}.")
 
 
 # MARK: - Modules
@@ -740,12 +722,12 @@ class ImageLoader:
 
     Args:
         data (str):
-            Data source. Can be a path to an image file or a directory.
-            It can be a pathname pattern to images.
+            The path to the image file. Can be a path to an image file or a
+            directory, or a pathname pattern to images.
         batch_size (int):
-            Number of samples in one forward & backward pass. Default: `1`.
+            The number of images to be processed at once. Defaults to 1
         backend (VisionBackend_):
-            Vision backend used to read images. Default: `VisionBackend.CV`.
+           The backend to use for image processing. Default to VisionBackend.CV.
     """
 
     # MARK: Magic Functions
@@ -763,34 +745,41 @@ class ImageLoader:
         self.images     = []
         self.num_images = -1
         self.index      = 0
-        
         self.list_files(data=self.data)
 
-    def __len__(self):
-        """Return the number of images in the `image_files`."""
-        return self.num_images  # Number of images
+    def __len__(self) -> int:
+        """
+        The function returns the number of images in the dataset.
+        
+        Returns:
+            The number of images in the dataset.
+        """
+        return self.num_images
     
     def __iter__(self):
-        """Return an iterator starting at index 0."""
+        """
+        The __iter__() function returns an iterator object.
+        
+        Returns:
+            The object itself.
+        """
         self.index = 0
         return self
 
     def __next__(self) -> tuple[Tensor, list, list, list]:
-        """Next iterator.
+        """
+        It reads a batch of images from the disk, converts them to RGB, and
+        returns them as a tensor.
         
         Examples:
-            >>> video_stream = ImageLoader("cam_1.mp4")
-            >>> for index, image in enumerate(video_stream):
+            >>> images = ImageLoader("cam_1.mp4")
+            >>> for index, image in enumerate(images):
         
         Returns:
-            images (Tensor[B, C, H, W]):
-                Images tensor.
-            indexes (list):
-                List of image indexes.
-            files (list):
-                List of image files.
-            rel_paths (list):
-                List of images' relative paths corresponding to data.
+            Images tensor of shape [B, C, H, W].
+            List of image indexes
+            List of image files.
+            List of images' relative paths corresponding to data.
         """
         if self.index >= self.num_images:
             raise StopIteration
@@ -828,9 +817,8 @@ class ImageLoader:
         """Initialize list of image files in data source.
         
         Args:
-            data (str):
-                Data source. Can be a path to an image file or a directory.
-                It can be a pathname pattern to image files.
+            data (str): The path to the image file. Can be a path to an image
+                file or a directory, or a pathname pattern to images.
         """
         if is_image_file(data):
             self.images = [data]
@@ -850,11 +838,9 @@ class ImageWriter:
     """Video Writer saves images to a destination directory.
 
     Args:
-        dst (str):
-            Output directory or filepath.
-        extension (str):
-            Image file extension. One of [`.jpg`, `.jpeg`, `.png`, `.bmp`].
-            Default: `jpg`.
+        dst (str): The destination folder where the images will be saved.
+        extension (str): The extension of the file to be saved.
+            Defaults to .jpg
     """
 
     # MARK: Magic Functions
@@ -865,26 +851,33 @@ class ImageWriter:
         self.extension = extension
         self.index     = 0
 
-    def __len__(self):
-        """Return the number of already written images."""
+    def __len__(self) -> int:
+        """
+        The function returns the number of items in the stack.
+        
+        Returns:
+            The index of the last item in the list.
+        """
         return self.index
 
     # MARK: Write
 
     def write_image(
         self,
-        image     : Tensor,
-        image_file: Union[str, None] = None
+        image      : Tensor,
+        image_file : str | None = None,
+        denormalize: bool       = True
     ):
-        """Write image.
-
-        Args:
-            image (Tensor[C, H, W]):
-                Image.
-            image_file (str, None):
-                Path to save image. Default: `None`.
         """
-        image = to_image(image=image, keep_dims=False, denormalize=True)
+        It takes an image, converts it to a numpy array, and saves it to disk.
+        
+        Args:
+            image (Tensor): The image to write.
+            image_file (str | None): The name of the image file.
+            denormalize (bool): If True, the image will be denormalized to
+                [0, 255]. Defaults to False.
+        """
+        image = to_image(image=image, keep_dims=False, denormalize=denormalize)
         
         if image_file is not None:
             image_file = (image_file[1:] if image_file.startswith("\\")
@@ -905,27 +898,34 @@ class ImageWriter:
     def write_images(
         self,
         images     : Tensors,
-        image_files: Union[list[str], None] = None
+        image_files: list[str] | None = None,
+        denormalize: bool             = True,
     ):
-        """Write batch of images.
-
+        """
+        Write a list of images to disk.
+        
         Args:
-            images (Tensors):
-                Images.
-            image_files (list[str], None):
-                Paths to save images. Default: `None`.
+            images (Tensors): A list of tensors, each of which is a single
+                image.
+            image_files (list[str] | None): Paths to save images.
+                Defaults to None.
+            denormalize (bool): If True, the image will be denormalized to
+                [0, 255]. Defaults to False.
         """
         if image_files is None:
             image_files = [None for _ in range(len(images))]
-
+        
+        images = to_3d_tensor_list(images)
         for image, image_file in zip(images, image_files):
-            self.write_image(image=image, image_file=image_file)
+            self.write_image(
+                image=image, image_file=image_file, denormalize=denormalize
+            )
 
 
 @TRANSFORMS.register(name="to_image")
 class ToImage(Transform):
-    """Converts a PyTorch Tensor to a numpy image. In case the image is in the
-    GPU, it will be copied back to CPU.
+    """Converts a Tensor to a numpy image. In case the image is in the GPU,
+    it will be copied back to CPU.
 
     Args:
         keep_dims (bool):

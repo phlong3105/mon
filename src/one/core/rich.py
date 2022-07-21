@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Extend Rich API: https://github.com/willmcgugan/rich
+"""
+Extend Rich API: https://github.com/willmcgugan/rich
 """
 
 from __future__ import annotations
 
 import inspect
 import sys
-from typing import Union
 
 from multipledispatch import dispatch
 from munch import Munch
@@ -34,6 +34,8 @@ from one.core.device import get_gpu_memory
 from one.core.types import assert_dict
 from one.core.types import assert_list_of
 from one.core.types import MemoryUnit
+from one.core.types import MemoryUnit_
+
 
 # MARK: - Globals
 
@@ -65,6 +67,15 @@ error_console = Console(
 # MARK: - Functional
 
 def download_bar() -> Progress:
+    """
+    It returns a progress bar that displays the current time, the task
+    description, a progress bar, the percentage complete, the transfer speed,
+    the amount downloaded, the time remaining, the time elapsed, and a
+    right-pointing arrow.
+    
+    Returns:
+        A progress bar.
+    """
     return Progress(
         TextColumn(
             console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
@@ -86,6 +97,15 @@ def download_bar() -> Progress:
 
 
 def progress_bar() -> Progress:
+    """
+    It returns a progress bar that displays the current time, the task
+    description, a progress bar, the percentage complete, the number of items
+    processed, the processing speed, the time remaining, the time elapsed,
+    and a spinner.
+    
+    Returns:
+        A progress bar.
+    """
     return Progress(
         TextColumn(
             console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
@@ -108,7 +128,13 @@ def progress_bar() -> Progress:
 
 
 def print_dict(data: dict, title: str = ""):
-    """Print a dictionary."""
+    """
+    It takes a dictionary and prints it in a pretty format.
+    
+    Args:
+        data (dict): The data to be printed.
+        title (str): The title of the panel.
+    """
     if isinstance(data, Munch):
         data = data.toDict()
         
@@ -125,7 +151,12 @@ def print_dict(data: dict, title: str = ""):
 
 @dispatch(list)
 def print_table(data: list[dict]):
-    """Print a list of dictionary as a table."""
+    """
+    This function takes a list of dictionaries and prints them in a table.
+    
+    Args:
+        data (list[dict]): A list of dictionary.
+    """
     assert_list_of(data, dict)
     table = Table(show_header=True, header_style="bold magenta")
     for k, v in data[0].items():
@@ -140,7 +171,12 @@ def print_table(data: list[dict]):
 
 @dispatch(dict)
 def print_table(data: dict):
-    """Print a dictionary as a table."""
+    """
+    It takes a dictionary and prints it as a table.
+    
+    Args:
+        data (dict): dict
+    """
     assert_dict(data)
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Key")
@@ -156,18 +192,36 @@ def print_table(data: dict):
 # MARK: - Modules
 
 class GPUMemoryUsageColumn(ProgressColumn):
-    """Renders GPU memory usage, e.g. `33.1/48.0GB`."""
+    """
+    Renders GPU memory usage, e.g. `33.1/48.0GB`.
+    """
 
     def __init__(
         self,
-        unit        : MemoryUnit          = MemoryUnit.GB,
-        table_column: Union[Column, None] = None
+        unit        : MemoryUnit_   = MemoryUnit.GB,
+        table_column: Column | None = None
     ):
+        """
+        This function initializes a `Memory` object.
+        
+        Args:
+            unit (MemoryUnit_): The unit of memory to use.
+            table_column (Column | None): The column in the table that this
+                field is associated with.
+        """
         super().__init__(table_column=table_column)
-        self.unit = unit
+        self.unit = MemoryUnit.from_value(unit)
 
     def render(self, task: Task) -> Text:
-        """Calculate common unit for completed and total."""
+        """
+        It returns a Text object with the memory usage of the GPU.
+        
+        Args:
+            task (Task): Task.
+        
+        Returns:
+            A Text object with the memory status.
+        """
         total, used, free = get_gpu_memory()
         memory_status     = f"{used:.1f}/{total:.1f}{self.unit.value}"
         memory_text       = Text(memory_status, style="bright_yellow")
@@ -175,13 +229,30 @@ class GPUMemoryUsageColumn(ProgressColumn):
     
 
 class ProcessedItemsColumn(ProgressColumn):
-    """Renders processed files and total, e.g. `1728/2025`."""
+    """
+    Renders processed files and total, e.g. `1728/2025`.
+    """
 
-    def __init__(self, table_column: Union[Column, None] = None):
+    def __init__(self, table_column: Column | None = None):
+        """
+        This function is a constructor for the class `Column`.
+        
+        Args:
+            table_column (Column | None): The column that this widget is
+                associated with.
+        """
         super().__init__(table_column=table_column)
 
     def render(self, task: Task) -> Text:
-        """Calculate common unit for completed and total."""
+        """
+        It takes a Task object and returns a Text object.
+        
+        Args:
+            task (Task): Task.
+        
+        Returns:
+            A Text object with the download status.
+        """
         completed       = int(task.completed)
         total           = int(task.total)
         download_status = f"{completed}/{total}"
@@ -190,10 +261,20 @@ class ProcessedItemsColumn(ProgressColumn):
 
 
 class ProcessingSpeedColumn(ProgressColumn):
-    """Renders human-readable progress speed."""
+    """
+    Renders human-readable progress speed.
+    """
 
     def render(self, task: Task) -> Text:
-        """Show data transfer speed."""
+        """
+        It takes a task and returns a Text object.
+        
+        Args:
+            task (Task): Task.
+        
+        Returns:
+            A Text object with the speed data.
+        """
         speed = task.speed
         if speed is None:
             return Text("?", style="progress.data.speed")

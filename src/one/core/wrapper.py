@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Implement processing wrapper functions.
+"""
+Implement processing wrapper functions.
 """
 
 from __future__ import annotations
@@ -13,10 +14,9 @@ import sys
 import numpy as np
 from torch import Tensor
 
-from one.core.numpy import to_4d_array
-from one.core.tensor import to_4d_tensor
 from one.core.types import Callable
-from one.core.types import TensorOrArray
+from one.core.types import to_4d_array
+from one.core.types import to_4d_tensor
 
 
 # MARK: - Functional
@@ -26,7 +26,9 @@ def batch_image_processing(func: Callable):
 	"""
 	
 	@functools.wraps(func)
-	def wrapper(image: TensorOrArray, *args, **kwargs) -> TensorOrArray:
+	def wrapper(
+		image: Tensor | np.ndarray, *args, **kwargs
+	) -> Tensor | np.ndarray:
 		if not isinstance(image, (Tensor, np.ndarray)):
 			raise TypeError(
 				f"`image` must be a `Tensor` or `np.ndarray`. "
@@ -65,9 +67,14 @@ def channel_last_processing(func: Callable):
 	"""
 	
 	@functools.wraps(func)
-	def wrapper(image: TensorOrArray, *args, **kwargs) -> TensorOrArray:
-		img           = image.copy()
+	def wrapper(
+		image: Tensor | np.ndarray, *args, **kwargs
+	) -> Tensor | np.ndarray:
 		from one.vision.acquisition import is_channel_first
+		from one.vision.acquisition import to_channel_last
+		from one.vision.acquisition import to_channel_first
+		
+		img           = image.copy()
 		channel_first = is_channel_first(img)
 		
 		if not isinstance(image, (Tensor, np.ndarray)):
@@ -77,13 +84,12 @@ def channel_last_processing(func: Callable):
 			)
 		
 		if channel_first:
-			from one.vision.transformation import to_channel_last
+			
 			img = to_channel_last(img)
 
 		img = func(img, *args, **kwargs)
 		
 		if channel_first:
-			from one.vision.transformation import to_channel_first
 			img = to_channel_first(img)
 		
 		return img

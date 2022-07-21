@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Compose multiple transformations.
+"""
+Compose multiple transformations.
 """
 
 from __future__ import annotations
@@ -10,7 +11,6 @@ import inspect
 import sys
 from abc import ABC
 from abc import abstractmethod
-from typing import Union
 
 import numpy as np
 import PIL
@@ -20,19 +20,94 @@ from torch import nn
 from torch import Tensor
 from torchvision.utils import _log_api_usage_once
 
-from one.core import assert_number_in_range
-from one.core import Callable
-from one.core import TRANSFORMS
+from one.core.factory import TRANSFORMS
+from one.core.types import assert_number_in_range
+from one.core.types import Dict
+from one.core.types import ScalarOrCollectionT
 
 
 # MARK: - Module
 
+class Transform(nn.Module, metaclass=ABC):
+    """
+    Transform module.
+    
+    Args:
+        p (float):
+            Probability of the image being adjusted. Default: `None` means
+            process as normal.
+    """
+
+    # MARK: Magic Functions
+    
+    def __init__(self, p: float = 1.0, *args, **kwargs):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        self.p = p
+    
+    def __repr__(self) -> str:
+        """
+        The `__repr__` function returns a string representation of the object.
+        
+        Returns:
+            The class name.
+        """
+        return f"{self.__class__.__name__}()"
+    
+    def __call__(
+        self,
+        input : Tensor,
+        target: Tensor | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor | None]:
+        """
+        If the probability is greater than a random number, then apply
+        transforms, otherwise return the input.
+        
+        Args:
+            input (Tensor): The input tensor to be transformed.
+            target (Tensor | None): The target tensor to be transformed.
+                Defaults to None.
+        
+        Returns:
+            The input and target tensors.
+        """
+        if self.p is not None or torch.rand(1).item() <= self.p:
+            return super.__call__(input, target, *args, **kwargs)
+        return input, target
+        
+    # MARK: Forward Pass
+    
+    @abstractmethod
+    def forward(
+        self,
+        input : Tensor,
+        target: Tensor | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor | None]:
+        """
+        The function `forward` takes a tensor `input` and an optional tensor
+        `target` and returns a tuple of two tensors, the first being the
+        transformed input and the second being the transformed target.
+        
+        Args:
+            input (Tensor):  The input tensor to be transformed.
+            target (Tensor | None): The target tensor to be transformed.
+                Defaults to None.
+        
+        Returns:
+            The input and target tensors.
+        """
+        pass
+
+
 class Compose:
-    """Composes several transforms together. This transform does not support
+    """
+    Composes several transforms together. This transform does not support
     torchscript. Please, see the note below.
 
     Args:
-        transforms (list[Union[list, dict]], dict):
+        transforms (ScalarOrCollectionT[Transform | Dict]):
             List of transforms to compose.
 
     Example:
@@ -60,7 +135,7 @@ class Compose:
     
     def __init__(
         self,
-        transforms: Union[list[Union[Callable, dict]], dict],
+        transforms: ScalarOrCollectionT[Transform | Dict],
         *args, **kwargs
     ):
         if not torch.jit.is_scripting() and not torch.jit.is_tracing():
@@ -81,32 +156,38 @@ class Compose:
 
     def __call__(
         self,
-        input : Union[Tensor, np.ndarray, PIL.Image],
-        target: Union[Tensor, np.ndarray, PIL.Image, None] = None,
+        input : Tensor | np.ndarray | PIL.Image,
+        target: Tensor | np.ndarray | PIL.Image | None = None,
         *args, **kwargs
     ) -> tuple[
-        Union[Tensor, np.ndarray, PIL.Image],
-        Union[Tensor, np.ndarray, PIL.Image, None]
+        Tensor | np.ndarray | PIL.Image,
+        Tensor | np.ndarray | PIL.Image | None
     ]:
         """
+        It applies the transforms to the input and target.
         
         Args:
-            input (Tensor, np.ndarray, PIL.Image):
-                Input.
-            target (Tensor, np.ndarray, PIL.Image, None):
-                Target. Default: `None`.
-
+            input (Tensor | np.ndarray | PIL.Image): The input tensor to be
+                transformed.
+            target (Tensor | np.ndarray | PIL.Image | None): The target tensor
+                to be transformed.
+        
         Returns:
-            input (Tensor, np.ndarray, PIL.Image):
-                Transformed input.
-            target (Tensor, np.ndarray, PIL.Image, None):
-                Transformed target. Default: `None`.
+            The transformed input and target.
         """
         for t in self.transforms:
             input, target = t(input, target)
         return input, target
 
     def __repr__(self) -> str:
+        """
+        The function returns a string that contains the name of the class,
+        and the string representation of each transform in the list of
+        transforms.
+        
+        Returns:
+            A string representation of the object.
+        """
         format_string = self.__class__.__name__ + "("
         for t in self.transforms:
             format_string += "\n"
@@ -116,11 +197,12 @@ class Compose:
 
 
 class ComposeScript(nn.Sequential):
-    """Composes several transforms together. This transform support torchscript.
+    """
+    Composes several transforms together. This transform support torchscript.
     Please, see the note below.
 
     Args:
-        transforms (list of `Transform` objects):
+        transforms (ScalarOrCollectionT[Transform | Dict]):
             List of transforms to compose.
 
     Example:
@@ -148,7 +230,7 @@ class ComposeScript(nn.Sequential):
     
     def __init__(
         self,
-        transforms: Union[list[Union[Callable, dict]], dict],
+        transforms: ScalarOrCollectionT[Transform | Dict],
         *args, **kwargs
     ):
         if isinstance(transforms, dict):
@@ -164,8 +246,41 @@ class ComposeScript(nn.Sequential):
         
         args = transforms + list(args)
         super().__init__(*args, **kwargs)
-
+    
+    def __call__(
+        self,
+        input : Tensor | np.ndarray | PIL.Image,
+        target: Tensor | np.ndarray | PIL.Image | None = None,
+        *args, **kwargs
+    ) -> tuple[
+        Tensor | np.ndarray | PIL.Image,
+        Tensor | np.ndarray | PIL.Image | None
+    ]:
+        """
+        It applies the transforms to the input and target.
+        
+        Args:
+            input (Tensor | np.ndarray | PIL.Image): The input tensor to be
+                transformed.
+            target (Tensor | np.ndarray | PIL.Image | None): The target tensor
+                to be transformed.
+        
+        Returns:
+            The transformed input and target.
+        """
+        for t in self.transforms:
+            input, target = t(input, target)
+        return input, target
+    
     def __repr__(self) -> str:
+        """
+        The function returns a string that contains the name of the class,
+        and the string representation of each transform in the list of
+        transforms.
+        
+        Returns:
+            A string representation of the object.
+        """
         format_string = self.__class__.__name__ + "("
         for t in self.transforms:
             format_string += "\n"
@@ -177,73 +292,30 @@ class ComposeScript(nn.Sequential):
     
     def forward(
         self,
-        input : Union[Tensor, np.ndarray, PIL.Image],
-        target: Union[Tensor, np.ndarray, PIL.Image, None] = None,
+        input : Tensor | np.ndarray | PIL.Image,
+        target: Tensor | np.ndarray | PIL.Image | None = None,
         *args, **kwargs
     ) -> tuple[
-        Union[Tensor, np.ndarray, PIL.Image],
-        Union[Tensor, np.ndarray, PIL.Image, None]
+        Tensor | np.ndarray | PIL.Image,
+        Tensor | np.ndarray | PIL.Image | None
     ]:
         """
+        It applies the transforms to the input and target.
         
         Args:
-            input (Tensor, np.ndarray, PIL.Image):
-                Input.
-            target (Tensor, np.ndarray, PIL.Image, None):
-                Target. Default: `None`.
-
+            input (Tensor | np.ndarray | PIL.Image): The input tensor to be
+                transformed.
+            target (Tensor | np.ndarray | PIL.Image | None): The target tensor
+                to be transformed.
+        
         Returns:
-            input (Tensor, np.ndarray, PIL.Image):
-                Transformed input.
-            target (Tensor, np.ndarray, PIL.Image, None):
-                Transformed target. Default: `None`.
+            The transformed input and target.
         """
         for t in self:
             input, target = t(input, target)
         return input, target
-    
 
-class Transform(nn.Module, metaclass=ABC):
-    """Transform module.
     
-    Args:
-        p (float):
-            Probability of the image being adjusted. Default: `None` means 
-            process as normal.
-    """
-
-    # MARK: Magic Functions
-    
-    def __init__(self, p: float = 1.0, *args, **kwargs):
-        super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
-        self.p = p
-    
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"
-    
-    def __call__(
-        self,
-        input : Tensor,
-        target: Union[Tensor, None] = None,
-        *args, **kwargs
-    ) -> tuple[Tensor, Union[Tensor, None]]:
-        if self.p is not None or torch.rand(1).item() <= self.p:
-            return super.__call__(input, target, *args, **kwargs)
-        return input, target
-        
-    # MARK: Forward Pass
-    
-    @abstractmethod
-    def forward(
-        self,
-        input : Tensor,
-        target: Union[Tensor, None] = None,
-        *args, **kwargs
-    ) -> tuple[Tensor, Union[Tensor, None]]:
-        pass
-    
-
 # MARK: - Main
 
 __all__ = [

@@ -9,9 +9,10 @@ from __future__ import annotations
 import inspect
 import logging
 import sys
-from typing import Union
 
 from rich.logging import RichHandler
+
+from one.core.types import Path
 
 field_style = {
     "asctime"  : {"color": "green"},
@@ -41,14 +42,16 @@ logger.setLevel(logging.INFO)
 
 # MARK: - Functional
 
-def get_logger(log_file: Union[str, None] = None):
-    """Create logger object.
+def get_logger(log_file: Path | None = None):
+    """
+    It creates a logger that logs to a file if a file is provided.
     
     Args:
-        log_file (str, None):
-            Provide the log file to save logging info. Default: `None`.
+        log_file (Path | None): The given log file.
+    
+    Returns:
+        A logger object.
     """
-    # NOTE: File Logging
     if log_file:
         file = logging.FileHandler(log_file)
         file.setLevel(logging.INFO)

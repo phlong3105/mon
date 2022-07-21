@@ -13,31 +13,31 @@ import torch
 from pynvml import *
 from torch import Tensor
 
-from one.core.types import MemoryUnit_
 from one.core.types import assert_number_divisible_to
 from one.core.types import MemoryUnit
+from one.core.types import MemoryUnit_
 
 
 # MARK: - Functional
 
-def extract_device_dtype(tensor_list: list) -> tuple[torch.device, torch.dtype]:
-    """Check if all the input are in the same device (only if when they are
-    Tensor). If so, it would return a tuple of (device, dtype).
-    Default: (cpu, `get_default_dtype()`).
-
+def extract_device_dtype(tensors: list) -> tuple[torch.device, torch.dtype]:
+    """
+    Take a list of tensors and returns a tuple of `device` and `dtype` that
+    are the same for all tensors in the list.
+    
+    Args:
+        tensors (list): list.
+    
     Returns:
-        device (torch.device):
-            Device of the tensor.
-        dtype (torch.dtype):
-        
+        A tuple of the device and dtype of the tensor.
     """
     device, dtype = None, None
-    for tensor in tensor_list:
-        if tensor is not None:
-            if not isinstance(tensor, (Tensor,)):
+    for tensors in tensors:
+        if tensors is not None:
+            if not isinstance(tensors, (Tensor,)):
                 continue
-            _device = tensor.device
-            _dtype  = tensor.dtype
+            _device = tensors.device
+            _dtype  = tensors.dtype
             if device is None and dtype is None:
                 device = _device
                 dtype  = _dtype
@@ -58,7 +58,19 @@ def extract_device_dtype(tensor_list: list) -> tuple[torch.device, torch.dtype]:
 
 def get_gpu_memory(
     device_index: int = 0, unit: MemoryUnit_ = MemoryUnit.GB
-    ) -> tuple[int, int, int]:
+) -> tuple[int, int, int]:
+    """
+    Return the total, used, and free memory of the GPU with the given index
+    in the given unit.
+    
+    Args:
+        device_index (int): The index of the GPU you want to get the memory
+            usage of. Defaults to 0.
+        unit (MemoryUnit_): MemoryUnit_ = MemoryUnit.GB.
+    
+    Returns:
+        A tuple of the total, used, and free memory in the specified unit.
+    """
     nvmlInit()
     unit  = MemoryUnit.from_value(unit)
     h     = nvmlDeviceGetHandleByIndex(device_index)
@@ -71,30 +83,27 @@ def get_gpu_memory(
 
 
 def select_device(
-    model_name: str              = "",
-    device    : Union[str, None] = "",
-    batch_size: Union[int, None] = None
+    model_name: str        = "",
+    device    : str | None = "",
+    batch_size: int | None = None
 ) -> torch.device:
-    """Select the device to runners the model.
+    """
+    Return a torch.device object, which is either cuda:0 or cpu, depending
+    on whether CUDA is available.
     
     Args:
-        model_name (str):
-            Name of the model. Default: "".
-        device (str, None):
-            Name of device for running. Can be: 'cpu' or '0' or '0,1,2,3'.
-            Default: "".
-        batch_size (int, None):
-            Number of samples in one forward & backward pass. Default: `None`.
-
+        model_name (str): The name of the model. This is used to print a
+            message to the console.
+        device (str | None): The device to run the model on. If None, the
+          default device is used.
+        batch_size (int | None): The number of samples to process in a single
+            batch.
+    
     Returns:
-        device (torch.device):
-            GPUs or CPU.
+        A torch.device object.
     """
     from .rich import console
-    
-    if isinstance(device, int):
-        device = f"{device}"
-        
+    device      = f"{device}"
     cpu_request = device.lower() == "cpu"
     if device and not cpu_request:  # If device requested other than `cpu`
         os.environ["CUDA_VISIBLE_DEVICES"] = device  # set environment variable
@@ -131,23 +140,24 @@ def select_device(
 
 
 def select_device_old(
-    model_name: str              = "",
-    device    : Union[str, None] = "",
-    batch_size: Union[int, None] = None
+    model_name: str        = "",
+    device    : str | None = "",
+    batch_size: int | None = None
 ) -> torch.device:
-    """Select the device to runners the model.
+    """
+    Set the environment variable `CUDA_VISIBLE_DEVICES` to the requested
+    device, and returns a `torch.device` object.
     
     Args:
-        model_name (str):
-            Name of the model. Default: "".
-        device (str, None):
-            Name of device for running. Default: "".
-        batch_size (int, None):
-            Number of samples in one forward & backward pass. Default: `None`.
-
+        model_name (str): The name of the model. This is used to print a message
+            to the console.
+        device (str | None): The device to run the model on. If None, the
+          default device is used.
+        batch_size (int | None): The number of samples to process in a single
+            batch.
+    
     Returns:
-        device (torch.device):
-            GPUs or CPU.
+        A torch.device object.
     """
     from .rich import console
     
@@ -195,6 +205,13 @@ def select_device_old(
 
 
 def time_synchronized():
+    """
+    Synchronize the CUDA device if it's available, and then returns the
+    current time.
+    
+    Returns:
+        The time in seconds since the epoch as a floating point number.
+    """
     torch.cuda.synchronize() if torch.cuda.is_available() else None
     return time.time()
 

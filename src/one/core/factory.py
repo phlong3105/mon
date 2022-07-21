@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base factory class for creating and registering classes.
+"""
+Base factory class for creating and registering classes.
 """
 
 from __future__ import annotations
@@ -9,14 +10,14 @@ from __future__ import annotations
 import inspect
 import sys
 from copy import deepcopy
-from typing import Union
 
-from munch import Munch
 from torch import nn
 from torch.optim import Optimizer
 # noinspection PyUnresolvedReferences
 from torch.optim.lr_scheduler import _LRScheduler
 
+from one.core import Dict
+from one.core import to_list
 from one.core.types import assert_class
 from one.core.types import assert_dict
 from one.core.types import assert_dict_contain_key
@@ -29,9 +30,10 @@ from one.core.types import is_list_of
 # MARK: - Modules
 
 class Registry:
-	"""Base registry class for registering classes.
+	"""
+	Base registry class for registering classes.
 
-	Attributes:
+	Args:
 		name (str):
 			Registry name.
 	"""
@@ -42,13 +44,36 @@ class Registry:
 		self._name     = name
 		self._registry = {}
 	
-	def __len__(self):
+	def __len__(self) -> int:
+		"""
+		The function returns the length of the registry.
+		
+		Returns:
+		    The length of the registry.
+		"""
 		return len(self._registry)
 	
 	def __contains__(self, key: str):
+		"""
+		If the key is in the dictionary, return the value associated with the
+		key, otherwise return the default value.
+		
+		Args:
+		    key (str): The key to look for.
+		
+		Returns:
+		    The value of the key.
+		"""
 		return self.get(key) is not None
 	
 	def __repr__(self):
+		"""
+		The __repr__ function returns a string that contains the name of the 
+		class, the name of the object, and the contents of the registry.
+		
+		Returns:
+		    The name of the class and the name of the registry.
+		"""
 		format_str = self.__class__.__name__ \
 					 + f"(name={self._name}, items={self._registry})"
 		return format_str
@@ -57,16 +82,34 @@ class Registry:
 	
 	@property
 	def name(self) -> str:
-		"""Return the registry's name."""
+		"""
+		It returns the name of the object.
+		
+		Returns:
+		    The name of the registry.
+		"""
 		return self._name
 	
 	@property
 	def registry(self) -> dict:
-		"""Return the registry's dictionary."""
+		"""
+		It returns the dictionary of the class.
+		
+		Returns:
+		    A dictionary.
+		"""
 		return self._registry
 	
 	def get(self, key: str) -> Callable:
-		"""Get the registry record of the given `key`."""
+		"""
+		If the key is in the registry, return the value.
+		
+		Args:
+		    key (str): The name of the command.
+		
+		Returns:
+		    A callable object.
+		"""
 		if key in self._registry:
 			return self._registry[key]
 	
@@ -74,16 +117,13 @@ class Registry:
 	
 	def register(
 		self,
-		name  : Union[str, None] = None,
-		module: Callable	     = None,
-		force : bool             = False
+		name  : str | None = None,
+		module: Callable   = None,
+		force : bool       = False
 	) -> callable:
-		"""Register a module.
-
-		A record will be added to `self._registry`, whose key is the class name
-		or the specified name, and value is the class itself. It can be used
-		as a decorator or a normal function.
-
+		"""
+		It can be used as a normal method or as a decorator.
+		
 		Example:
 			# >>> backbones = Factory("backbone")
 			# >>>
@@ -98,15 +138,16 @@ class Registry:
 			# >>> class ResNet:
 			# >>>     pass
 			# >>> backbones.register(ResNet)
-
+			
 		Args:
-			name (str, None):
-				Module name to be registered. If not specified, the class
-				name will be used.
-			module (type):
-				Module class to be registered.
-			force (bool):
-				Whether to override an existing class with the same name.
+		    name (str | None): The name of the module. If not specified, it
+		        will be the class name.
+		    module (Callable): The module to register.
+		    force (bool): If True, it will overwrite the existing module with
+		        the same name. Defaults to False.
+		
+		Returns:
+		    A function.
 		"""
 		if not (name is None or isinstance(name, str)):
 			raise TypeError(
@@ -128,16 +169,25 @@ class Registry:
 	def register_module(
 		self,
 		module_class: Callable,
-		module_name : Union[str, None] = None,
-		force	    : bool 			   = False
+		module_name : str | None = None,
+		force       : bool       = False
 	):
+		"""
+		It takes a class and a name, and adds the class to the registry under
+		the name.
+		
+		Args:
+		    module_class (Callable): The class of the module to be registered.
+		    module_name (str | None): The name of the module. If not provided,
+		        it will be the class name in lowercase.
+		    force (bool): If True, the module will be registered even if it's
+		        already registered. Defaults to False.
+		"""
 		assert_class(module_class)
 		
 		if module_name is None:
 			module_name = module_class.__name__.lower()
-		
-		if isinstance(module_name, str):
-			module_name = [module_name]
+		module_name = to_list(module_name)
 		
 		for name in module_name:
 			if not force and name in self._registry:
@@ -149,7 +199,9 @@ class Registry:
 	# MARK: Print
 
 	def print(self):
-		"""Print the registry dictionary."""
+		"""
+		It prints the name of the object, and then prints the registry.
+		"""
 		from one.core.rich import console
 		from one.core.rich import print_table
 		
@@ -158,7 +210,8 @@ class Registry:
 
 
 class Factory(Registry):
-	"""Default factory class for creating objects.
+	"""
+	Default factory class for creating objects.
 	
 	Registered object could be built from registry.
     Example:
@@ -174,16 +227,15 @@ class Factory(Registry):
 	# MARK: Build
 	
 	def build(self, name: str, *args, **kwargs) -> object:
-		"""Factory command to create a class' instance with arguments given in
-		`kwargs`.
+		"""
+		It takes a name, and returns an instance of the class that is
+		registered under that name.
 		
 		Args:
-			name (str):
-				Class's name.
-			
+		    name (str): The name of the class to be built.
+		
 		Returns:
-			instance (object, None):
-				Class' instance.
+			An instance of the class that is registered with the name.
 		"""
 		assert_dict_contain_key(self.registry, name)
 		instance = self.registry[name](*args, **kwargs)
@@ -191,19 +243,16 @@ class Factory(Registry):
 			instance.name = name
 		return instance
 	
-	def build_from_dict(
-		self, cfg: Union[dict, Munch, None], **kwargs
-	) -> Union[object, None]:
-		"""Factory command to create a class' instance with arguments given in
+	def build_from_dict(self, cfg: Dict | None, **kwargs) -> object | None:
+		"""
+		Factory command to create a class' instance with arguments given in
 		`cfgs`.
 		
 		Args:
-			cfg (dict, Munch, None):
-				Class's arguments.
+			cfg (Dict | None): Class's arguments.
 		
 		Returns:
-			instance (object, None):
-				Class's instance.
+			Class's instance.
 		"""
 		if cfg is None:
 			return None
@@ -217,19 +266,18 @@ class Factory(Registry):
 	
 	def build_from_dictlist(
 		self,
-		cfgs: Union[list[Union[dict, Munch]], None],
+		cfgs: list[Dict] | None,
 		**kwargs
-	) -> Union[list[object], None]:
-		"""Factory command to create classes' instances with arguments given in
+	) -> list[object] | None:
+		"""
+		Factory command to create classes' instances with arguments given in
 		`cfgs`.
 
 		Args:
-			cfgs (list[dict, Munch], None):
-				List of classes' arguments.
+			cfgs (list[Dict] | None): List of classes' arguments.
 
 		Returns:
-			instances (list[object], None):
-				Classes' instances.
+			Classes' instances.
 		"""
 		if cfgs is None:
 			return None
@@ -246,7 +294,9 @@ class Factory(Registry):
 
 
 class OptimizerFactory(Registry):
-	"""Factory class for creating optimizers."""
+	"""
+	Factory class for creating optimizers.
+	"""
 	
 	# MARK: Build
 	
@@ -255,19 +305,17 @@ class OptimizerFactory(Registry):
 		net : nn.Module,
 		name: str,
 		*args, **kwargs
-	) -> Union[Optimizer, None]:
-		"""Factory command to create an optimizer with arguments given in
+	) -> Optimizer | None:
+		"""
+		Factory command to create an optimizer with arguments given in
 		`kwargs`.
 		
 		Args:
-			net (nn.Module):
-				Neural network module.
-			name (str):
-				Optimizer's name.
+			net (nn.Module): Neural network module.
+			name (str): Optimizer's name.
 		
 		Returns:
-			optimizer (Optimizer, None):
-				Optimizer.
+			Optimizer.
 		"""
 		assert_dict_contain_key(self.registry, name)
 		return self.registry[name](params=net.parameters(), *args, **kwargs)
@@ -275,21 +323,19 @@ class OptimizerFactory(Registry):
 	def build_from_dict(
 		self,
 		net: nn.Module,
-		cfg: Union[Union[dict, Munch], None],
+		cfg: Dict | None,
 		**kwargs
-	) -> Union[Optimizer, None]:
-		"""Factory command to create an optimizer with arguments given in
+	) -> Optimizer | None:
+		"""
+		Factory command to create an optimizer with arguments given in
 		`cfgs`.
 
 		Args:
-			net (nn.Module):
-				Neural network module.
-			cfg (dict, Munch, None):
-				Optimizer's arguments.
+			net (nn.Module): Neural network module.
+			cfg (Dict | None): Optimizer's arguments.
 
 		Returns:
-			optimizer (Optimizer, None):
-				Optimizer.
+			Optimizer.
 		"""
 		if cfg is None:
 			return None
@@ -304,20 +350,18 @@ class OptimizerFactory(Registry):
 	def build_from_dictlist(
 		self,
 		net : nn.Module,
-		cfgs: Union[list[Union[dict, Munch]], None],
+		cfgs: list[Dict] | None,
 		**kwargs
-	) -> Union[list[Optimizer], None]:
-		"""Factory command to create optimizers with arguments given in `cfgs`.
+	) -> list[Optimizer] | None:
+		"""
+		Factory command to create optimizers with arguments given in `cfgs`.
 
 		Args:
-			net (nn.Module):
-				List of neural network modules.
-			cfgs (list[dict, Munch], None):
-				List of optimizers' arguments.
+			net (nn.Module): List of neural network modules.
+			cfgs (list[Dict] | None): List of optimizers' arguments.
 
 		Returns:
-			optimizers (list[Optimizer], None):
-				Optimizers.
+			Optimizers.
 		"""
 		if cfgs is None:
 			return None
@@ -335,20 +379,18 @@ class OptimizerFactory(Registry):
 	def build_from_list(
 		self,
 		nets: list[nn.Module],
-		cfgs: Union[list[Union[dict, Munch]], None],
+		cfgs: list[Dict] | None,
 		**kwargs
-	) -> Union[list[Optimizer], None]:
-		"""Factory command to create optimizers with arguments given in `cfgs`.
+	) -> list[Optimizer] | None:
+		"""
+		Factory command to create optimizers with arguments given in `cfgs`.
 
 		Args:
-			nets (list[nn.Module]):
-				List of neural network modules.
-			cfgs (list[dict, Munch]):
-				List of optimizers' arguments.
+			nets (list[nn.Module]): List of neural network modules.
+			cfgs (list[Dict] | None): List of optimizers' arguments.
 
 		Returns:
-			optimizers (list[Optimizer], None):
-				Optimizers.
+			Optimizers.
 		"""
 		if cfgs is None:
 			return None
@@ -367,28 +409,28 @@ class OptimizerFactory(Registry):
 
 
 class SchedulerFactory(Registry):
-	"""Factory class for creating schedulers."""
+	"""
+	Factory class for creating schedulers.
+	"""
 	
 	# MARK: Build
 	
 	def build(
 		self,
 		optimizer: Optimizer,
-		name     : Union[str, None],
+		name     : str | None,
 		*args, **kwargs
-	) -> Union[_LRScheduler, None]:
-		"""Factory command to create a scheduler with arguments given in
+	) -> _LRScheduler | None:
+		"""
+		Factory command to create a scheduler with arguments given in
 		`kwargs`.
 		
 		Args:
-			optimizer (Optimizer):
-				Optimizer.
-			name (str, None):
-				Scheduler's name.
+			optimizer (Optimizer): Optimizer.
+			name (str | None): Scheduler's name.
 		
 		Returns:
-			scheduler (_LRScheduler, None):
-				Scheduler.
+			Scheduler.
 		"""
 		if name is None:
 			return None
@@ -415,20 +457,18 @@ class SchedulerFactory(Registry):
 	def build_from_dict(
 		self,
 		optimizer: Optimizer,
-		cfg      : Union[Union[dict, Munch], None],
+		cfg      : Dict | None,
 		**kwargs
-	) -> Union[_LRScheduler, None]:
-		"""Factory command to create a scheduler with arguments given in `cfg`.
+	) -> _LRScheduler | None:
+		"""
+		Factory command to create a scheduler with arguments given in `cfg`.
 
 		Args:
-			optimizer (Optimizer):
-				Optimizer.
-			cfg (dict, Munch, None):
-				Scheduler's arguments.
+			optimizer (Optimizer): Optimizer.
+			cfg (Dict | None): Scheduler's arguments.
 
 		Returns:
-			scheduler (_LRScheduler, None):
-				Scheduler.
+			Scheduler.
 		"""
 		if cfg is None:
 			return None
@@ -443,20 +483,18 @@ class SchedulerFactory(Registry):
 	def build_from_dictlist(
 		self,
 		optimizer: Optimizer,
-		cfgs     : Union[list[Union[dict, Munch]], None],
+		cfgs     : Dict | None,
 		**kwargs
-	) -> Union[list[_LRScheduler], None]:
-		"""Factory command to create schedulers with arguments given in `cfgs`.
+	) -> list[_LRScheduler] | None:
+		"""
+		Factory command to create schedulers with arguments given in `cfgs`.
 
 		Args:
-			optimizer (Optimizer):
-				Optimizer.
-			cfgs (list[dict, Munch], None):
-				List of schedulers' arguments.
+			optimizer (Optimizer): Optimizer.
+			cfgs (list[Dict] | None): List of schedulers' arguments.
 
 		Returns:
-			schedulers (list[Optimizer], None):
-				Schedulers.
+			Schedulers.
 		"""
 		if cfgs is None:
 			return None
@@ -474,20 +512,18 @@ class SchedulerFactory(Registry):
 	def build_from_list(
 		self,
 		optimizers: list[Optimizer],
-		cfgs      : Union[list[list[Union[dict, Munch]]], None],
+		cfgs      : list[list[Dict]] | None,
 		**kwargs
-	) -> Union[list[_LRScheduler], None]:
-		"""Factory command to create schedulers with arguments given in `cfgs`.
+	) -> list[_LRScheduler] | None:
+		"""
+		Factory command to create schedulers with arguments given in `cfgs`.
 
 		Args:
-			optimizers (list[Optimizer]):
-				List of optimizers.
-			cfgs (list[list[dict, Munch]], None):
-				2D-list of schedulers' arguments.
+			optimizers (list[Optimizer]): List of optimizers.
+			cfgs (list[list[Dict]] | None): 2D-list of schedulers' arguments.
 
 		Returns:
-			schedulers (list[Optimizer], None):
-				Schedulers.
+			Schedulers.
 		"""
 		if cfgs is None:
 			return None

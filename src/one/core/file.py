@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Functions for managing files and directories.
+"""
+Functions for managing files and directories.
 
 File, dir, Path definitions:
 - drive         : A string that represents the drive name. For example,
@@ -39,7 +40,6 @@ import shutil
 import sys
 from glob import glob
 from pathlib import Path
-from typing import Union
 
 import validators
 
@@ -54,13 +54,13 @@ from one.core.types import VideoFormat
 # MARK: - Functional
 
 def create_dirs(paths: Strs, recreate: bool = False):
-    """Check and create directories.
-
+    """
+    Create a list of directories, if they don't exist.
+    
     Args:
-        paths (Strs):
-            Sequence of directories' paths to create.
-        recreate (bool):
-            If `True`, delete and recreate existing directories.
+        paths (Strs): A list of paths to create.
+        recreate (bool): If True, the directory will be deleted and recreated.
+            Defaults to False.
     """
     paths       = to_list(paths)
     paths       = [p for p in paths if p is not None]
@@ -82,18 +82,15 @@ def delete_files(
     extension: str  = "",
     recursive: bool = True
 ):
-    """Delete all files in directories that match the desired extension.
-
+    """
+    Deletes files.
+    
     Args:
-        files (Strs):
-            List of files that contains the files to be deleted. Default: "".
-        dirs (Strs):
-            List of directories that contains the files to be deleted.
-            Default: "".
-        extension (str):
-            File extension. Default: "".
-        recursive (bool):
-            Search subdirectories if any. Default: `True`.
+        files (Strs): A list of files to delete.
+        dirs (Strs): A list of directories to search for files to delete.
+        extension (str): File extension. Defaults to "".
+        recursive (bool): If True, then the function will search for files
+            recursively. Defaults to True.
     """
     files     = to_list(files)
     files     = [f for f in files if os.path.isfile(f)]
@@ -111,34 +108,31 @@ def delete_files(
         
 
 def get_hash(files: Strs) -> int:
-    """Get a single hash value of a list of files.
+    """
+    It returns the sum of the sizes of the files in the list.
     
     Args:
-        files (Strs):
-            List of files.
+        files (Strs): File paths.
     
     Returns:
-        hash (int):
-            Sum of all file size.
+        The sum of the sizes of the files in the list.
     """
     files = to_list(files)
     files = [f for f in files if f is not None]
     return sum(os.path.getsize(f) for f in files if os.path.isfile(f))
 
 
-def get_latest_file(path: str, recursive: bool = True) -> Union[str, None]:
-    """Get the latest file from a folder or pattern according to modified time.
-
+def get_latest_file(path: str, recursive: bool = True) -> str | None:
+    """
+    It returns the latest file in a given directory.
+    
     Args:
-        path (str):
-            Directory path or path pattern.
-        recursive (str):
-            Should look for sub-directories also?.
-
+        path (str): The path to the directory you want to search.
+        recursive (bool): If True, the pattern “**” will match any files and
+            zero or more directories and subdirectories. Defaults to True
+    
     Returns:
-        latest_path (str, None):
-            Latest file path. Return `None` if not found (no file, wrong path
-            format, wrong file extension).
+        The latest file in the path.
     """
     if path:
         file_list = glob(path, recursive=recursive)
@@ -147,13 +141,31 @@ def get_latest_file(path: str, recursive: bool = True) -> Union[str, None]:
     return None
 
 
-def has_subdir(path: str, name: str) -> bool:
-    """Return `True` if the subdirectory with `name` is found inside `path`."""
+def has_subdir(path: Path, name: str) -> bool:
+    """
+    Return True if the directory at the given path has a subdirectory with the
+    given name.
+    
+    Args:
+        path (Path): The path to the directory you want to check.
+        name (str): The name of the subdirectory to check for.
+    
+    Returns:
+        A boolean value.
+    """
     return name in list_subdirs(path=path)
 
 
-def is_basename(path: Union[str, None]) -> bool:
-    """Check if the given path is a basename, i.e, a file path without extension.
+def is_basename(path: Path | None) -> bool:
+    """
+    If the path is not None, and the parent of the path is the current
+    directory, then the path is a basename.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
     """
     if path is None:
         return False
@@ -164,8 +176,17 @@ def is_basename(path: Union[str, None]) -> bool:
     return False
 
 
-def is_bmp_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a `.bmp` image file."""
+def is_bmp_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is `.bmp`, then return True.
+    Otherwise, return False.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -174,8 +195,17 @@ def is_bmp_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_ckpt_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a `.ckpt` file."""
+def is_ckpt_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is `.ckpt`, then return True.
+    Otherwise, return False.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -184,8 +214,17 @@ def is_ckpt_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_image_file(path: Union[str, None]) -> bool:
-    """Check if the given path is an image file."""
+def is_image_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is in the list of image formats,
+    then return True.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -194,8 +233,17 @@ def is_image_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_json_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a `.json` file."""
+def is_json_file(path: str | None) -> bool:
+    """
+    If the path is a file and the file extension is json, return True.
+    Otherwise, return False.
+    
+    Args:
+        path (str | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and path.split(".")[1].lower() in ["json"]:
@@ -203,8 +251,17 @@ def is_json_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_name(path: Union[str, None]) -> bool:
-    """Check if the given path is a name with extension."""
+def is_name(path: Path | None) -> bool:
+    """
+    If the path is None, return False. If the path is the same as the path's
+    stem, return True. Otherwise, return False.
+
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if path == str(Path(path).stem):
@@ -212,8 +269,17 @@ def is_name(path: Union[str, None]) -> bool:
     return False
 
 
-def is_stem(path: Union[str, None]) -> bool:
-    """Check if the given path is a stem, i.e., a name without extension."""
+def is_stem(path: Path | None) -> bool:
+    """
+    If the path is not None, and the parent of the path is the current
+    directory, and the path has no extension, then the path is a stem.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if str(Path(path).parent) == ".":
@@ -223,8 +289,20 @@ def is_stem(path: Union[str, None]) -> bool:
     return False
 
 
-def is_torch_saved_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a `.pt`, `.pth`, `.weights`, or `.ckpt` file.
+def is_torch_saved_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is one of the following:
+        - pt
+        - pth
+        - weights
+        - ckpt
+    Then return True. Otherwise, return False.
+    
+    Args:
+      path (Path | None): The path to the file to be checked.
+    
+    Returns:
+      A boolean value.
     """
     if path is None:
         return False
@@ -234,8 +312,17 @@ def is_torch_saved_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_txt_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a `.txt` file."""
+def is_txt_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is txt, return True, otherwise
+    return False.
+
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -244,8 +331,16 @@ def is_txt_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_url(path: Union[str, None]) -> bool:
-    """Check if the given path is a valid url."""
+def is_url(path: Path | None) -> bool:
+    """
+    If the path is a URL, return True, otherwise return False.
+    
+    Args:
+        path (Path | None): The path to the file or directory.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if isinstance(validators.url(path), validators.ValidationFailure):
@@ -253,8 +348,16 @@ def is_url(path: Union[str, None]) -> bool:
     return True
 
 
-def is_url_or_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a valid url or a local file."""
+def is_url_or_file(path: Path | None) -> bool:
+    """
+    If the path is a URL or a file, return True. Otherwise, return False
+    
+    Args:
+        path (Path | None): The path to the file or URL.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if isinstance(validators.url(path), validators.ValidationFailure) or \
@@ -263,8 +366,17 @@ def is_url_or_file(path: Union[str, None]) -> bool:
     return True
 
 
-def is_video_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a video file."""
+def is_video_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is in the list of video
+    formats, then return True.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -273,15 +385,33 @@ def is_video_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_video_stream(path: Union[str, None]) -> bool:
-    """Check if the given path is a video stream."""
+def is_video_stream(path: Path | None) -> bool:
+    """
+    If the path is not None and contains the string 'rtsp', return True,
+    otherwise return False.
+    
+    Args:
+        path (Path | None): The path to the video file or stream.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     return "rtsp" in path.lower()
 
 
-def is_weights_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a `.pt` or `.pth` file."""
+def is_weights_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is `pt` or `pth`, then return
+    True. Otherwise, return False.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -290,8 +420,17 @@ def is_weights_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_xml_file(path: Union[str, None]) -> bool:
-    """Check if the given path is a .xml file."""
+def is_xml_file(path: Path | None) -> bool:
+    """
+    If the path is a file and the file extension is xml, return True, otherwise
+    return False.
+    
+    Args:
+        path (Path | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
     if path is None:
         return False
     if os.path.isfile(path=path) and \
@@ -300,7 +439,7 @@ def is_xml_file(path: Union[str, None]) -> bool:
     return False
 
 
-def is_yaml_file(path: Union[str, None]) -> bool:
+def is_yaml_file(path: Path | None) -> bool:
     """Check if the given path is a `.yaml` file."""
     if path is None:
         return False
@@ -311,15 +450,15 @@ def is_yaml_file(path: Union[str, None]) -> bool:
 
 
 def list_files(patterns: Strs) -> list[str]:
-    """List all files that match the desired patterns.
+    """
+    It takes a list of file patterns and returns a list of all files that match
+    those patterns.
     
     Args:
-        patterns (Strs):
-            File patterns.
-            
+      patterns (Strs): A list of file paths to search for images.
+    
     Returns:
-        image_paths (list[str]):
-            List of images paths.
+        A list of unique file paths.
     """
     patterns    = to_list(patterns)
     patterns    = [p for p in patterns if p is not None]
@@ -332,10 +471,19 @@ def list_files(patterns: Strs) -> list[str]:
     return unique(image_paths)
 
 
-def list_subdirs(path: Union[str, None]) -> Union[list[str], None]:
-    """List all subdirectories inside the given `path`."""
+def list_subdirs(path: Path | None) -> list[str] | None:
+    """
+    It returns a list of all the subdirectories of the given path
+    
+    Args:
+        path (Path | None): The given path.
+    
+    Returns:
+        A list of all the subdirectories in the given path.
+    """
     if path is None:
         return None
+    path = str(Path)
     return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
 
 

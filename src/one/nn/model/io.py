@@ -18,7 +18,7 @@ from torch import Tensor
 from torch.hub import load_state_dict_from_url
 
 from one.core import console
-from one.core import intersect_ordered_dicts
+from one.core import intersect_weight_ordered_dicts
 from one.io import get_latest_file
 from one.io import is_torch_saved_file
 from one.io import is_url
@@ -126,7 +126,7 @@ def match_state_dict(
             Filtered model's `state_dict`.
     """
     # 1. Filter out unnecessary keys
-    intersect_dict = intersect_ordered_dicts(pretrained_dict, model_dict, exclude)
+    intersect_dict = intersect_weight_ordered_dicts(pretrained_dict, model_dict, exclude)
     """
        intersect_dict = {
            k: v for k, v in pretrained_dict.items()

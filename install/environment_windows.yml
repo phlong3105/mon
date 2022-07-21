@@ -100,6 +100,7 @@ dependencies:
         - PyQt5
           # Qt UI.
         - pytorch-lightning>=1.6.1
+        - pyupgrade
           # Pytorch lightning.
         - pyvips
           # A fast image processing library with low memory needs.

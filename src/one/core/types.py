@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Define all enums, constants, custom types, assertion, and conversion.
+"""
+Define all enums, constants, custom types, assertion, and conversion.
 """
 
 from __future__ import annotations
@@ -10,12 +11,15 @@ import collections
 import functools
 import inspect
 import itertools
+import pathlib
 import sys
 import types
+import typing
 from collections import abc
 from collections import OrderedDict
 from copy import copy
 from enum import Enum
+from numbers import Number
 from typing import Any
 from typing import Collection
 from typing import Iterable
@@ -39,7 +43,9 @@ from torchmetrics import Metric
 # MARK: - Enums
 
 class AppleRGB(OrderedEnum):
-    """Define 12 Apple colors."""
+    """
+    Define 12 Apple colors.
+    """
     GRAY   = (128, 128, 128)
     RED    = (255, 59 , 48 )
     GREEN  = ( 52, 199, 89 )
@@ -55,18 +61,20 @@ class AppleRGB(OrderedEnum):
     WHITE  = (255, 255, 255)
     
     @staticmethod
-    def values():
-        """Return the list of all values.
-
+    def values() -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
         Returns:
-            (list):
-                List of all color tuple.
+            A list of the values of the enumeration.
         """
         return [e.value for e in AppleRGB]
 
 
 class BasicRGB(OrderedEnum):
-    """Define 12 basic colors."""
+    """
+    Define 12 basic colors.
+    """
     BLACK   = (0  , 0  , 0  )
     WHITE   = (255, 255, 255)
     RED     = (255, 0  , 0  )
@@ -85,12 +93,12 @@ class BasicRGB(OrderedEnum):
     NAVY    = (0  , 0  , 128)
     
     @staticmethod
-    def values():
-        """Return the list of all values.
+    def values() -> list:
+        """
+        Return a list of all the values of the enumeration.
         
         Returns:
-            (list):
-                List of all color tuple.
+            A list of the values of the enumeration.
         """
         return [e.value for e in BasicRGB]
 
@@ -106,6 +114,13 @@ class BBoxFormat(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "cxcyar"     : BBoxFormat.CXCYAR,
             "cxcyrh"     : BBoxFormat.CXCYRH,
@@ -118,6 +133,13 @@ class BBoxFormat(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0: BBoxFormat.CXCYAR,
             1: BBoxFormat.CXCYRH,
@@ -129,16 +151,43 @@ class BBoxFormat(Enum):
     
     @staticmethod
     def from_str(value: str) -> BBoxFormat:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(BBoxFormat.str_mapping, value.lower())
         return BBoxFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> BBoxFormat:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(BBoxFormat.int_mapping, value)
         return BBoxFormat.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[BBoxFormat, str, int]) -> BBoxFormat:
+    def from_value(value: BBoxFormat_) -> BBoxFormat:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (BBoxFormat_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, BBoxFormat):
             return value
         elif isinstance(value, str):
@@ -152,16 +201,29 @@ class BBoxFormat(Enum):
             )
     
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [b for b in BBoxFormat]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [b.value for b in BBoxFormat]
     
 
 class CFA(Enum):
-    """Define the configuration of the color filter array.
+    """
+    Define the configuration of the color filter array.
 
     So far only bayer images is supported and the enum sets the pixel order for
     bayer. Note that this can change due to things like rotations and cropping
@@ -178,7 +240,6 @@ class CFA(Enum):
     Reference:
         https://en.wikipedia.org/wiki/Color_filter_array
     """
-
     BG = 0
     GB = 1
     RG = 2
@@ -213,6 +274,13 @@ class DistanceMetric(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "braycurtis"        : DistanceMetric.BRAYCURTIS,
             "canberra"          : DistanceMetric.CANBERRA,
@@ -242,6 +310,13 @@ class DistanceMetric(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0 : DistanceMetric.BRAYCURTIS,
             1 : DistanceMetric.CANBERRA,
@@ -270,16 +345,43 @@ class DistanceMetric(Enum):
     
     @staticmethod
     def from_str(value: str) -> DistanceMetric:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(DistanceMetric.str_mapping, value.lower())
         return DistanceMetric.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> DistanceMetric:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(DistanceMetric.int_mapping, value)
         return DistanceMetric.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[DistanceMetric, str, int]) -> DistanceMetric:
+    def from_value(value: DistanceMetric_) -> DistanceMetric:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (DistanceMetric_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, DistanceMetric):
             return value
         if isinstance(value, str):
@@ -293,11 +395,23 @@ class DistanceMetric(Enum):
             )
         
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in DistanceMetric]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in DistanceMetric]
  
 
@@ -314,6 +428,13 @@ class ImageFormat(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "bmp" : ImageFormat.BMP,
             "dng" : ImageFormat.DNG,
@@ -328,6 +449,13 @@ class ImageFormat(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0: ImageFormat.BMP,
             1: ImageFormat.DNG,
@@ -341,16 +469,43 @@ class ImageFormat(Enum):
     
     @staticmethod
     def from_str(value: str) -> ImageFormat:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(ImageFormat.str_mapping, value.lower())
         return ImageFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ImageFormat:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(ImageFormat.int_mapping, value)
         return ImageFormat.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[ImageFormat, str, int]) -> ImageFormat:
+    def from_value(value: ImageFormat_) -> ImageFormat:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (ImageFormat_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, ImageFormat):
             return value
         if isinstance(value, str):
@@ -364,11 +519,23 @@ class ImageFormat(Enum):
             )
     
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in ImageFormat]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in ImageFormat]
 
 
@@ -392,6 +559,13 @@ class InterpolationMode(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "bicubic"      : InterpolationMode.BICUBIC,
             "bilinear"     : InterpolationMode.BILINEAR,
@@ -411,6 +585,13 @@ class InterpolationMode(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0 : InterpolationMode.BICUBIC,
             1 : InterpolationMode.BILINEAR,
@@ -430,6 +611,16 @@ class InterpolationMode(Enum):
     @classmethod
     @property
     def cv_modes_mapping(cls) -> dict:
+        """
+        It maps the `InterpolationMode` enum to the corresponding OpenCV
+        interpolation mode.
+        
+        Args:
+            cls: The class that the decorator is being applied to.
+        
+        Returns:
+            A dictionary of the different interpolation modes.
+        """
         return {
             InterpolationMode.AREA    : cv2.INTER_AREA,
             InterpolationMode.CUBIC   : cv2.INTER_CUBIC,
@@ -442,6 +633,17 @@ class InterpolationMode(Enum):
     @classmethod
     @property
     def pil_modes_mapping(cls) -> dict:
+        """
+        It maps the `InterpolationMode` enum to the corresponding PIL
+        interpolation mode.
+        
+        Args:
+            cls: The class that the decorator is being applied to.
+        
+        Returns:
+            A dictionary with the keys being the InterpolationMode enum and the
+            values being the corresponding PIL interpolation mode.
+        """
         return {
             InterpolationMode.NEAREST : 0,
             InterpolationMode.LANCZOS : 1,
@@ -453,18 +655,43 @@ class InterpolationMode(Enum):
     
     @staticmethod
     def from_str(value: str) -> InterpolationMode:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(InterpolationMode.str_mapping, value.lower())
         return InterpolationMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> InterpolationMode:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(InterpolationMode.int_mapping, value)
         return InterpolationMode.int_mapping[value]
 
     @staticmethod
-    def from_value(
-        value: Union[InterpolationMode, str, int]
-    ) -> InterpolationMode:
+    def from_value(value: InterpolationMode_) -> InterpolationMode:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (InterpolationMode_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, InterpolationMode):
             return value
         if isinstance(value, str):
@@ -478,11 +705,23 @@ class InterpolationMode(Enum):
             )
         
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in InterpolationMode]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in InterpolationMode]
 
 
@@ -497,6 +736,13 @@ class MemoryUnit(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "b" : MemoryUnit.B,
             "kb": MemoryUnit.KB,
@@ -509,6 +755,13 @@ class MemoryUnit(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0: MemoryUnit.B,
             1: MemoryUnit.KB,
@@ -521,6 +774,17 @@ class MemoryUnit(Enum):
     @classmethod
     @property
     def byte_conversion_mapping(cls):
+        """
+        It returns a dictionary that maps the MemoryUnit enum to the number of
+        bytes in that unit.
+        
+        Args:
+            cls: The class that the method is being called on.
+        
+        Returns:
+            A dictionary with the keys being the MemoryUnit enum and the values
+            being the number of bytes in each unit.
+        """
         return {
             MemoryUnit.B : 1024 ** 0,
             MemoryUnit.KB: 1024 ** 1,
@@ -532,16 +796,43 @@ class MemoryUnit(Enum):
     
     @staticmethod
     def from_str(value: str) -> MemoryUnit:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(MemoryUnit.str_mapping, value.lower())
         return MemoryUnit.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> MemoryUnit:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(MemoryUnit.int_mapping, value)
         return MemoryUnit.int_mapping[value]
     
     @staticmethod
-    def from_value(value: Union[MemoryUnit, str, int]) -> MemoryUnit:
+    def from_value(value: MemoryUnit_) -> MemoryUnit:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (MemoryUnit_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, MemoryUnit):
             return value
         if isinstance(value, str):
@@ -555,11 +846,23 @@ class MemoryUnit(Enum):
             )
     
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in MemoryUnit]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in MemoryUnit]
 
 
@@ -573,6 +876,13 @@ class ModelState(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "training" : ModelState.TRAINING,
             "testing"  : ModelState.TESTING,
@@ -582,6 +892,13 @@ class ModelState(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0: ModelState.TRAINING,
             1: ModelState.TESTING,
@@ -590,16 +907,43 @@ class ModelState(Enum):
 
     @staticmethod
     def from_str(value: str) -> ModelState:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(ModelState.str_mapping, value.lower())
         return ModelState.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> ModelState:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(ModelState.int_mapping, value)
         return ModelState.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[ModelState, str, int]) -> ModelState:
+    def from_value(value: ModelState_) -> ModelState:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (ModelState_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, ModelState):
             return value
         if isinstance(value, str):
@@ -611,16 +955,26 @@ class ModelState(Enum):
                 f"`value` must be `ModelState`, `str`, or `int`. "
                 f"But got: {type(value)}."
             )
-    
+
+    @staticmethod
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in ModelState]
+
     @staticmethod
     def values() -> list[str]:
-        """Return the list of all values."""
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in ModelState]
-    
-    @staticmethod
-    def keys():
-        """Return the list of all enum keys."""
-        return [e for e in ModelState]
     
 
 class PaddingMode(Enum):
@@ -643,6 +997,13 @@ class PaddingMode(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "constant"   : PaddingMode.CONSTANT,
             "circular"   : PaddingMode.CIRCULAR,
@@ -662,6 +1023,13 @@ class PaddingMode(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0 : PaddingMode.CONSTANT,
             1 : PaddingMode.CIRCULAR,
@@ -680,16 +1048,43 @@ class PaddingMode(Enum):
 
     @staticmethod
     def from_str(value: str) -> PaddingMode:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(PaddingMode.str_mapping, value)
         return PaddingMode.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> PaddingMode:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(PaddingMode.int_mapping, value)
         return PaddingMode.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[PaddingMode, str, int]) -> PaddingMode:
+    def from_value(value: PaddingMode_) -> PaddingMode:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (PaddingMode_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, PaddingMode):
             return value
         if isinstance(value, str):
@@ -703,11 +1098,23 @@ class PaddingMode(Enum):
             )
         
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in PaddingMode]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in PaddingMode]
 
 
@@ -854,12 +1261,12 @@ class RGB(OrderedEnum):
     WHITE                   = (255, 255, 255)
     
     @staticmethod
-    def values():
-        """Return the list of all values.
-
+    def values() -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
         Returns:
-            (list):
-                List of all color tuple.
+            A list of the values of the enumeration.
         """
         return [e.value for e in RGB]
     
@@ -877,6 +1284,13 @@ class VideoFormat(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "avi" : VideoFormat.AVI,
             "m4v" : VideoFormat.M4V,
@@ -891,6 +1305,13 @@ class VideoFormat(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0: VideoFormat.AVI,
             1: VideoFormat.M4V,
@@ -904,16 +1325,43 @@ class VideoFormat(Enum):
     
     @staticmethod
     def from_str(value: str) -> VideoFormat:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(VideoFormat.str_mapping, value.lower())
         return VideoFormat.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VideoFormat:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(VideoFormat.int_mapping, value)
         return VideoFormat.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[VideoFormat, str, int]) -> VideoFormat:
+    def from_value(value: VideoFormat_) -> VideoFormat:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (VideoFormat_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, VideoFormat):
             return value
         if isinstance(value, str):
@@ -927,11 +1375,23 @@ class VideoFormat(Enum):
             )
     
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in VideoFormat]
     
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in VideoFormat]
     
 
@@ -944,6 +1404,13 @@ class VisionBackend(Enum):
     @classmethod
     @property
     def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
         return {
             "cv"     : VisionBackend.CV,
             "ffmpeg" : VisionBackend.FFMPEG,
@@ -954,6 +1421,13 @@ class VisionBackend(Enum):
     @classmethod
     @property
     def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
         return {
             0: VisionBackend.CV,
             1: VisionBackend.FFMPEG,
@@ -963,16 +1437,43 @@ class VisionBackend(Enum):
     
     @staticmethod
     def from_str(value: str) -> VisionBackend:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(VisionBackend.str_mapping, value.lower())
         return VisionBackend.str_mapping[value]
     
     @staticmethod
     def from_int(value: int) -> VisionBackend:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
         assert_dict_contain_key(VisionBackend.int_mapping, value)
         return VisionBackend.int_mapping[value]
 
     @staticmethod
-    def from_value(value: Union[VisionBackend, str, int]) -> VisionBackend:
+    def from_value(value: VisionBackend_) -> VisionBackend:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (VisionBackend_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
         if isinstance(value, VisionBackend):
             return value
         elif isinstance(value, int):
@@ -986,49 +1487,58 @@ class VisionBackend(Enum):
             )
     
     @staticmethod
-    def keys():
+    def keys() -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
         return [e for e in VisionBackend]
 
     @staticmethod
     def values() -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
         return [e.value for e in VisionBackend]
 
 
-# MARK: - Constants
-
-DEFAULT_CROP_PCT        = 0.875
-IMAGENET_DEFAULT_MEAN   = (0.485, 0.456, 0.406)
-IMAGENET_DEFAULT_STD    = (0.229, 0.224, 0.225)
-IMAGENET_INCEPTION_MEAN = (0.5, 0.5, 0.5)
-IMAGENET_INCEPTION_STD  = (0.5, 0.5, 0.5)
-IMAGENET_DPN_MEAN       = (124 / 255, 117 / 255, 104 / 255)
-IMAGENET_DPN_STD        = tuple([1 / (0.0167 * 255)] * 3)
-
-PI                      = torch.tensor(3.14159265358979323846)
-VISION_BACKEND          = VisionBackend.PIL
+BBoxFormat_         = Union[BBoxFormat,        str, int]
+CFA_                = Union[CFA,               str, int]
+DistanceMetric_     = Union[DistanceMetric,    str, int]
+ImageFormat_        = Union[ImageFormat,       str, int]
+InterpolationMode_  = Union[InterpolationMode, str, int]
+MemoryUnit_         = Union[MemoryUnit,        str, int]
+ModelState_         = Union[ModelState,        str, int]
+PaddingMode_        = Union[PaddingMode,       str, int]
+VideoFormat_        = Union[VideoFormat,       str, int]
+VisionBackend_      = Union[VisionBackend,     str, int]
 
 
 # MARK: - Typing
 # NOTE: Template
 T                   = TypeVar("T")
-ScalarOrSequenceT   = Union[T, list[T], tuple[T, ...]]
-ScalarOrCollectionT = Union[T, list[T], tuple[T, ...], dict[Any, T]]
-SequenceT           = Union[   list[T], tuple[T, ...]]
-# NOTE: Basic Types
-Callable            = Union[str, type, object, types.FunctionType, functools.partial]
-Color               = SequenceT[int]
-Devices             = ScalarOrSequenceT[Union[str, int]]
-EvalDataLoaders     = Union[DataLoader, Sequence[DataLoader]]
+ScalarOrSequenceT   = Union[T, Sequence[T]]
+ScalarOrCollectionT = Union[T, Collection[T]]
+# NOTE: Built-in Types
+Callable            = Union[typing.Callable, types.FunctionType, functools.partial]
+Dict                = Union[dict, Munch]
 Ints                = ScalarOrSequenceT[int]
 Floats              = ScalarOrSequenceT[float]
-Indexes             = ScalarOrSequenceT[int]
-Number              = Union[int, float]
-Paddings            = Union[ScalarOrSequenceT[int], str]
-Pretrained          = Union[bool, str, dict]
+Numbers             = ScalarOrSequenceT[Number]
 Strs                = ScalarOrSequenceT[str]
-Tasks               = ScalarOrSequenceT[str]
+# NOTE: Custom Types
+Color               = Sequence[int]
+Devices             = Union[Ints, Strs]
+Path                = Union[str, pathlib.Path, typing.TextIO]
+Paths               = ScalarOrSequenceT[Path]
 Tensors             = ScalarOrCollectionT[Tensor]
-TensorOrArray       = Union[Tensor, np.ndarray]
+# NOTE: Data Types
+EvalDataLoaders     = ScalarOrSequenceT[DataLoader]
 TrainDataLoaders    = Union[DataLoader,
                             Sequence[DataLoader],
                             Sequence[Sequence[DataLoader]],
@@ -1036,27 +1546,13 @@ TrainDataLoaders    = Union[DataLoader,
                             dict[str, DataLoader],
                             dict[str, dict[str, DataLoader]],
                             dict[str, Sequence[DataLoader]]]
-Weights             = Union[Tensor, Floats, Ints]
-# NOTE: Type That May Require Parsing
-BBoxFormat_         = Union[BBoxFormat,        str, int]
-CFA_                = Union[CFA,               str, int]
-DistanceMetric_     = Union[DistanceMetric,    str, int]
-ImageFormat_        = Union[ImageFormat,       str, int]
-InterpolationMode_  = Union[InterpolationMode, str, int]
-Losses_             = Union[_Loss,     dict, list[Union[_Loss,  dict]]]
-MemoryUnit_         = Union[MemoryUnit,        str, int]
-Metrics_            = Union[Metric,    dict, list[Union[Metric,    dict]]]
-Optimizers_         = Union[Optimizer, dict, list[Union[Optimizer, dict]]]
-ModelState_         = Union[ModelState,        str, int]
-PaddingMode_        = Union[PaddingMode,       str, int]
-VideoFormat_        = Union[VideoFormat,       str, int]
-VisionBackend_      = Union[VisionBackend,     str, int]
-# NOTE: Model Training
-ForwardOutput       = tuple[Tensors, Union[Tensors, None]]
-StepOutput          = Union[Tensors, dict]
-EpochOutput         = list[StepOutput]
-EvalOutput          = list[dict]
-PredictOutput       = Union[list[Any], list[list[Any]]]
+# NOTE: Model Building Types
+Losses_             = ScalarOrCollectionT[Union[_Loss,     Dict]]
+Metrics_            = ScalarOrCollectionT[Union[Metric,    Dict]]
+Optimizers_         = ScalarOrCollectionT[Union[Optimizer, Dict]]
+Paddings            = Union[Ints, str]
+Pretrained          = Union[bool, str, Dict]
+Weights             = Union[Tensor, Numbers]
 
 
 # MARK: - Assertion
@@ -1119,6 +1615,13 @@ def is_float(input: Any) -> bool:
         raise TypeError(f"`input` must be a `float`. But got: {type(input)}.")
 
 
+def is_int(input: Any) -> bool:
+    if isinstance(input, int):
+        return True
+    else:
+        raise TypeError(f"`input` must be an `int`. But got: {type(input)}.")
+    
+    
 def is_iterable(input: Any) -> bool:
     if isinstance(input, Iterable):
         return True
@@ -1161,16 +1664,15 @@ def is_negative_number(input: Any) -> bool:
     
     
 def is_number(input: Any) -> bool:
-    if isinstance(input, (int, float)):
+    if isinstance(input, Number):
         return True
     else:
-        raise TypeError(
-            f"`input` must be an `int` or `float`. But got: {type(input)}."
-        )
+        raise TypeError(f"`input` must be a `Number`. But got: {type(input)}.")
 
 
 def is_number_divisible_to(input: Any, k: int) -> bool:
     assert_number(input)
+    assert_number(k)
     if input % k == 0:
         return True
     else:
@@ -1180,10 +1682,10 @@ def is_number_divisible_to(input: Any, k: int) -> bool:
         )
 
 
-def is_number_in_range(
-    input: Any, start: Union[int, float], end: Union[int, float]
-) -> bool:
+def is_number_in_range(input: Any, start: Number, end: Number) -> bool:
     assert_number(input)
+    assert_number(start)
+    assert_number(end)
     if start <= input <= end:
         return True
     else:
@@ -1203,6 +1705,7 @@ def is_numpy(input: Any) -> bool:
 
 def is_numpy_of_atleast_ndim(input: Any, ndim: int) -> bool:
     assert_numpy(input)
+    assert_int(ndim)
     if input.ndim >= ndim:
         return True
     else:
@@ -1212,14 +1715,11 @@ def is_numpy_of_atleast_ndim(input: Any, ndim: int) -> bool:
         )
     
 
-def is_numpy_of_channels(input: Any, channels: Union[list, tuple, int]) -> bool:
+def is_numpy_of_channels(input: Any, channels: Ints) -> bool:
     from one.vision.transformation import get_num_channels
     assert_numpy_of_atleast_ndim(input, 3)
     
-    if isinstance(channels, int):
-        channels = [channels]
-    elif isinstance(channels, tuple):
-        channels = list(channels)
+    channels = to_list(channels)
     assert_list(channels)
     
     c = get_num_channels(input)
@@ -1234,6 +1734,7 @@ def is_numpy_of_channels(input: Any, channels: Union[list, tuple, int]) -> bool:
 
 def is_numpy_of_ndim(input: Any, ndim: int) -> bool:
     assert_numpy(input)
+    assert_int(ndim)
     if input.ndim == ndim:
         return True
     else:
@@ -1245,6 +1746,8 @@ def is_numpy_of_ndim(input: Any, ndim: int) -> bool:
 
 def is_numpy_of_ndim_in_range(input: Any, start: int, end: int) -> bool:
     assert_numpy(input)
+    assert_int(start)
+    assert_int(end)
     if start <= input.ndim <= end:
         return True
     else:
@@ -1273,7 +1776,9 @@ def is_same_length(input1: Sequence, input2: Sequence) -> bool:
         )
 
 
-def is_same_shape(input1: TensorOrArray, input2: TensorOrArray) -> bool:
+def is_same_shape(
+    input1: Tensor | np.ndarray, input2: Tensor | np.ndarray
+) -> bool:
     if input1.shape == input2.shape:
         return True
     else:
@@ -1284,11 +1789,11 @@ def is_same_shape(input1: TensorOrArray, input2: TensorOrArray) -> bool:
 
 
 def is_sequence(input: Any) -> bool:
-    if isinstance(input, (list, tuple)):
+    if isinstance(input, Sequence):
         return True
     else:
         raise TypeError(
-            f"`input` must be a `list` or `tuple`. But got: {type(input)}."
+            f"`input` must be a `Sequence`. But got: {type(input)}."
         )
 
 
@@ -1326,6 +1831,7 @@ def is_sequence_of(
 
 def is_sequence_of_length(input: Any, len: int) -> bool:
     assert_sequence(input)
+    assert_int(len)
     if len(input) == len:
         return True
     else:
@@ -1351,6 +1857,7 @@ def is_tensor(input: Any) -> bool:
 
 def is_tensor_of_atleast_ndim(input: Any, ndim: int) -> bool:
     assert_tensor(input)
+    assert_int(ndim)
     if input.ndim >= ndim:
         return True
     else:
@@ -1360,14 +1867,11 @@ def is_tensor_of_atleast_ndim(input: Any, ndim: int) -> bool:
         )
     
 
-def is_tensor_of_channels(input: Any, channels: Union[list, tuple, int]) -> bool:
+def is_tensor_of_channels(input: Any, channels: Ints) -> bool:
     from one.vision.transformation import get_num_channels
     assert_tensor_of_atleast_ndim(input, 3)
     
-    if isinstance(channels, int):
-        channels = [channels]
-    elif isinstance(channels, tuple):
-        channels = list(channels)
+    channels = to_list(channels)
     assert_list(channels)
     
     c = get_num_channels(input)
@@ -1382,6 +1886,7 @@ def is_tensor_of_channels(input: Any, channels: Union[list, tuple, int]) -> bool
 
 def is_tensor_of_ndim(input: Any, ndim: int) -> bool:
     assert_tensor(input)
+    assert_int(ndim)
     if input.ndim == ndim:
         return True
     else:
@@ -1393,6 +1898,8 @@ def is_tensor_of_ndim(input: Any, ndim: int) -> bool:
 
 def is_tensor_of_ndim_in_range(input: Any, start: int, end: int) -> bool:
     assert_tensor(input)
+    assert_int(start)
+    assert_int(end)
     if start <= input.ndim <= end:
         return True
     else:
@@ -1449,6 +1956,7 @@ assert_dict                    = is_dict
 assert_dict_contain_key        = is_dict_contain_key
 assert_dict_of                 = is_dict_of
 assert_float                   = is_float
+assert_int                     = is_int
 assert_iterable                = is_iterable
 assert_list                    = is_list
 assert_list_of                 = is_list_of
@@ -1479,20 +1987,163 @@ assert_valid_type              = is_valid_type
 assert_value_in_collection     = is_value_in_collection
 
 
-# MARK: - Conversion and Parsing
+# MARK: - Parsing
 
-def concat_lists(ll: list[list], inplace: bool = False) -> list:
-    """Concatenate a list of list into a single list.
+def _to_3d_array(input: np.ndarray) -> np.ndarray:
+    """
+    Convert an input to a 3D array.
+    
+    If the input is a 2D array, add a new axis at the beginning. If the input
+    is a 4D array with the first dimension being 1, remove the first dimension.
     
     Args:
-        ll (list[list]):
-            A list of list.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        input (np.ndarray): The input array.
+    
     Returns:
-        (list):
-            Concatenated list.
+        A 3D array of shape [H, W, C].
+    """
+    assert_numpy_of_ndim_in_range(input, 2, 4)
+    if input.ndim == 2:  # [H, W] -> [1, H, W]
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 3:  # [H, W, C]
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 4 and input.shape[0] == 1:  # [1, C, H, W] -> [C, H, W]
+        input = np.squeeze(input, axis=0)
+    return input
+
+
+def _to_3d_tensor(input: Tensor) -> Tensor:
+    """
+    Convert an input to a 3D tensor.
+    
+    If the input is a 2D tensor, add a new axis at the beginning. If the input
+    is a 4D array with the first dimension being 1, remove the first dimension.
+    
+    Args:
+        input (Tensor): The input tensor.
+    
+    Returns:
+        A 3D tensor of shape [C, H, W].
+    """
+    assert_tensor_of_ndim_in_range(input, 2, 4)
+    if input.ndim == 2:    # [H, W] -> [1, H, W]
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 3:  # [C, H, W]
+        pass
+    elif input.ndim == 4 and input.shape[0] == 1:  # [1, C, H, W] -> [C, H, W]
+        input = input.squeeze(dim=0)
+    return input
+
+
+def _to_4d_array(input: np.ndarray) -> np.ndarray:
+    """
+    Convert an input to a 4D array.
+    
+    Args:
+        input (np.ndarray): The input image.
+    
+    Returns:
+        A 4D array of shape [B, H, W, C].
+    """
+    assert_numpy_of_ndim_in_range(input, 2, 5)
+    if input.ndim == 2:  # [H, W] -> [1, H, W, 1]
+        input = np.expand_dims(input, axis=0)
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 3:  # [C, H, W] -> [1, H, W, C]
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 4:  # [B, H, W, C]
+        pass
+    elif input.ndim == 5 and input.shape[0] == 1:
+        input = np.squeeze(input, axis=0)
+    return input
+
+
+def _to_4d_tensor(input: Tensor) -> Tensor:
+    """
+    Convert an input to a 4D tensor.
+    
+    Args:
+        input (Tensor): The input tensor.
+    
+    Returns:
+        A 4D tensor of shape [B, C, H, W].
+    """
+    assert_tensor_of_ndim_in_range(input, 2, 5)
+    if input.ndim == 2:    # [H, W] -> [1, 1, H, W]
+        input = input.unsqueeze(dim=0)
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 3:  # [C, H, W] -> [1, C, H, W]
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 4:  # [B, C, H, W]
+        pass
+    elif input.ndim == 5 and input.shape[0] == 1:
+        input = input.squeeze(dim=0)
+    return input
+
+
+def _to_5d_array(input: np.ndarray) -> np.ndarray:
+    """
+    Convert an input to a 5D array.
+    
+    Args:
+        input (np.ndarray): The input array.
+    
+    Returns:
+        A 5D array of shape [*, B, C, H, W].
+    """
+    assert_numpy_of_ndim_in_range(input, 2, 6)
+    if input.ndim == 2:  # [H, W] -> [1, 1, H, W, 1]
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 3:  # [C, H, W] -> [1, 1, H, W, 1]
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 4:  # [B, C, H, W] -> [1, B, H, W, C]
+        input = np.expand_dims(input, axis=0)
+    elif input.ndim == 5:  # [*, B, H, W, C]
+        pass
+    elif input.ndim == 6 and input.shape[0] == 1:
+        input = np.squeeze(input, axis=0)
+    return input
+
+
+def _to_5d_tensor(input: Tensor) -> Tensor:
+    """
+    Convert an input to a 5D tensor.
+    
+    Args:
+        input (Tensor): The input tensor.
+    
+    Returns:
+        A 5D tensor of shape [*, B, C, H, W].
+    """
+    assert_tensor_of_ndim_in_range(input, 2, 6)
+    if input.ndim == 2:    # [H, W] -> [1, 1, 1, H, W]
+        input = input.unsqueeze(dim=0)
+        input = input.unsqueeze(dim=0)
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 3:  # [C, H, W] -> [1, 1, C, H, W]
+        input = input.unsqueeze(dim=0)
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 4:  # [B, C, H, W] -> [1, B, C, H, W]
+        input = input.unsqueeze(dim=0)
+    elif input.ndim == 5:  # [*, B, C, H, W]
+        pass
+    elif input.ndim == 6 and input.shape[0] == 1:
+        input = input.squeeze(dim=0)
+    return input
+
+
+def concat_lists(ll: list[list], inplace: bool = False) -> list:
+    """
+    Take a list of lists and returns a single list containing all the
+    elements of the input list
+    
+    Args:
+        ll (list[list]): List of lists.
+        inplace (bool): If True, the original list is modified. If False, a
+            copy is made. Defaults to False.
+    
+    Returns:
+        A list of all the elements in the list of lists.
     """
     if not inplace:
         ll = ll.copy()
@@ -1500,8 +2151,16 @@ def concat_lists(ll: list[list], inplace: bool = False) -> list:
 
 
 def copy_attr(a, b, include=(), exclude=()):
-    """Copy attributes from b to a, options to only include [...] and to
-    exclude [...].
+    """
+    Copy all the attributes of object `b` to object `a`, except for those that
+    start with an underscore, or are in the exclude list.
+    
+    Args:
+        a: the object to copy to
+        b: the object to copy from
+        include: a tuple of attributes to include. If this is specified, only
+            the attributes whose names are contained here will be copied over.
+        exclude: A list of attributes to exclude from copying.
     """
     for k, v in b.__dict__.items():
         if (len(include) and k not in include) or \
@@ -1511,22 +2170,41 @@ def copy_attr(a, b, include=(), exclude=()):
             setattr(a, k, v)
 
 
-def intersect_dicts(
-    da: dict, db: dict, exclude: Union[tuple, list] = ()
-) -> dict:
-    """Dictionary intersection omitting `exclude` keys, using da values.
+@dispatch(int, Tensor)
+def eye_like(n: int, input: Tensor) -> Tensor:
+    """
+    Create a tensor of shape `(n, n)` with ones on the diagonal and zeros
+    everywhere else, and then repeats it along the batch dimension to match the
+    shape of the input tensor.
     
     Args:
-        da (dict):
-            Dict a.
-        db (dict):
-            Dict b.
-        exclude (tuple, list):
-            Exclude keys.
-        
+        n (int): The number of rows and columns in the output tensor.
+        input (Tensor): The input tensor.
+    
     Returns:
-        (dict):
-            Dictionary intersection.
+        A tensor of shape (input.shape[0], n, n).
+    """
+    if not n > 0:
+        raise ValueError(f"Require `n` > 0. But got: {n}.")
+    assert_tensor_of_atleast_ndim(input, 1)
+    identity = torch.eye(n, device=input.device, dtype=input.dtype)
+    return identity[None].repeat(input.shape[0], 1, 1)
+
+
+def intersect_weight_dicts(da: dict, db: dict, exclude: tuple | list = ()) -> dict:
+    """
+    Take two dictionaries, and returns a new ordered dictionary that contains
+    only the keys that are in both dictionaries, and whose values have the same
+    shape.
+    
+    Args:
+        da (dict): First dictionary.
+        db (dict): Second dictionary.
+        exclude (tuple | list): a list of strings that will be excluded from
+            the intersection.
+    
+    Returns:
+        A dictionary of the intersection of the two input dictionaries.
     """
     return {
         k: v for k, v in da.items()
@@ -1534,22 +2212,22 @@ def intersect_dicts(
     }
 
 
-def intersect_ordered_dicts(
-    da: OrderedDict, db: OrderedDict, exclude: Union[tuple, list] = ()
+def intersect_weight_ordered_dicts(
+    da: OrderedDict, db: OrderedDict, exclude: tuple | list = ()
 ) -> OrderedDict:
-    """Dictionary intersection omitting `exclude` keys, using da values.
+    """
+    Take two ordered dictionaries, and returns a new ordered dictionary that
+    contains only the keys that are in both dictionaries, and whose values
+    have the same shape.
     
     Args:
-        da (dict):
-            Dict a.
-        db (dict):
-            Dict b.
-        exclude (tuple, list):
-            Exclude keys.
-        
+        da (OrderedDict): First ordered dictionary.
+        db (OrderedDict): Second ordered dictionary.
+        exclude (tuple | list): a list of strings that will be excluded from
+            the intersection.
+    
     Returns:
-        (dict):
-            Dictionary intersection.
+        An ordered dictionary of the intersection of the two input dictionaries.
     """
     return OrderedDict(
         (k, v) for k, v in da.items()
@@ -1560,26 +2238,22 @@ def intersect_ordered_dicts(
 def iter_to_iter(
     inputs     : Iterable,
     item_type  : type,
-    return_type: Union[type, None] = None,
-    inplace    : bool              = False,
+    return_type: type | None = None,
+    inplace    : bool        = False,
 ):
-    """Cast items of an iterable object into some type.
+    """
+    Take an iterable, converts each item to a given type, and returns the
+    result as an iterable of the same type as the input.
     
     Args:
-        inputs (Iterable):
-            Iterable object.
-        item_type (type):
-            Item type.
-        return_type (type, None):
-            If specified, the iterable object will be converted to this type,
-            otherwise an iterator. Default: `None`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        inputs (Iterable): The iterable to be converted.
+        item_type (type): The type of the items in the iterable.
+        return_type (type | None): Iterable type.
+        inplace (bool): If True, the input iterable will be modified in place.
+            Defaults to False.
+    
     Returns:
-        (iterable):
-            Iterable object of type `return_type` containing items of type
-            `item_type`.
+        An iterable object of the inputs, cast to the item_type.
     """
     assert_iterable(inputs)
     assert_valid_type(item_type)
@@ -1594,57 +2268,56 @@ def iter_to_iter(
         return return_type(inputs)
 
 
-def iter_to_list(
-    inputs: Iterable, item_type: type, inplace: bool = False
-) -> list:
-    """Cast items of an iterable object into a list of some type.
-
+def iter_to_list(inputs: Iterable, item_type: type, inplace: bool = False) -> list:
+    """
+    Take an iterable, and returns a list of the same items, but with the type
+    of each item being the type specified by the `item_type` argument.
+    
     Args:
-        inputs (Iterable):
-            Iterable object.
-        item_type (type):
-            Item type.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
-            
+        inputs (Iterable): The iterable to be converted.
+        item_type (type): The type of the items in the iterable.
+        inplace (bool): If True, the input will be modified in place.
+            Defaults to False.
+    
     Returns:
-        (list):
-            List containing items of type `item_type`.
+        A list of the inputs, cast to the item_type.
     """
     return iter_to_iter(
         inputs=inputs, item_type=item_type, return_type=list, inplace=inplace
     )
 
 
-def iter_to_tuple(inputs: Iterable, item_type: type):
-    """Cast items of an iterable object into a tuple of some type.
-
-    Args:
-        inputs (Iterable):
-            Iterable object.
-        item_type (type):
-            Item type.
-    
-    Returns:
-        (tuple):
-            Tuple containing items of type `item_type`.
+def iter_to_tuple(inputs: Iterable, item_type: type, inplace: bool = False):
     """
-    return iter_to_iter(inputs=inputs, item_type=item_type, return_type=tuple)
-
-
-def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
-    """Slice a list into several sub-lists of various lengths.
+    Take an iterable, and returns a tuple of the same items, but with the type
+    of each item being the type specified by the `item_type` argument.
     
     Args:
-        l (list):
-            List to be sliced.
-        lens (int, list[int]):
-            Expected length of each output sub-list. If `int`, split to equal
-            length. If `list[int]`, split each sub-list to dedicated length.
+        inputs (Iterable): The iterable to be converted.
+        item_type (type): The type of the items in the iterable.
+        inplace (bool): If True, the input will be modified in place.
+            Defaults to False.
     
     Returns:
-        out_list (list):
-            A list of sliced lists.
+        A tuple of the inputs, cast to the item_type.
+    """
+    return iter_to_iter(
+        inputs=inputs, item_type=item_type, return_type=tuple, inplace=inplace
+    )
+
+
+def slice_list(l: list, lens: Ints) -> list[list]:
+    """
+    Takes a list and a list of integers, and returns a list of lists, where
+    each sublist is of length specified by the corresponding integer in the
+    list of integers.
+    
+    Args:
+        l (list): list.
+        lens (Ints): The number of elements in each sublist.
+    
+    Returns:
+        A list of lists.
     """
     if isinstance(lens, int):
         assert_number_divisible_to(len(l), lens)
@@ -1661,16 +2334,279 @@ def slice_list(l: list, lens: Union[int, list[int]]) -> list[list]:
     return out_list
 
 
-def to_list(input: Any) -> list:
-    """Cast input into a list.
-
+def to_3d_array_list(input: Any) -> list[np.ndarray]:
+    """
+    Convert input to a list of 3D arrays.
+   
     Args:
-        input (Any):
-            Object.
-       
+        input (Any): Input of arbitrary type.
+        
     Returns:
-        (list):
-            List containing input.
+        List of 3D arrays of shape [C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, Tensor):
+        input = input.detach().cpu().numpy()
+    if isinstance(input, np.ndarray):
+        if input.ndim == 3:
+            input = [input]
+        elif input.ndim == 4:
+            input = list(input)
+        else:
+            raise ValueError(
+                f"Require 3 <= `input.ndim` <= 4. But got: {input.ndim}."
+            )
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        input = [i.detach().cpu().numpy() for i in input]
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        if all(i.ndim == 3 for i in input):
+            return input
+        else:
+            raise ValueError(f"Require all `input.ndim` == 3.")
+    raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
+
+
+def to_3d_tensor_list(input: Any) -> list[Tensor]:
+    """
+    Convert input to a list of 3D tensors.
+   
+    Args:
+        input (Any): Input of arbitrary type.
+            
+    Returns:
+        List of 3D tensors of shape [C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, np.ndarray):
+        input = torch.from_numpy(input)
+    if isinstance(input, Tensor):
+        if input.ndim == 3:
+            input = [input.unsqueeze(dim=0)]
+        elif input.ndim == 4:
+            input = list(input)
+        else:
+            raise ValueError(
+                f"Require 3 <= `input.ndim` <= 4. But got: {input.ndim}."
+            )
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        input = [torch.from_numpy(i) for i in input]
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        if all(i.ndim == 3 for i in input):
+            return input
+        else:
+            raise ValueError(f"Require all `input.ndim` == 3.")
+    raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+
+
+def to_4d_array(input) -> np.ndarray:
+    """
+    Convert input to a 4D array.
+   
+    Args:
+        input (Any): Input of arbitrary type.
+        
+    Returns:
+        A 4D array of shape [B, C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        input = [i.detach().cpu().numpy() for i in input]
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        if all(i.ndim == 2 for i in input):
+            input = [np.expand_dims(i, axis=0) for i in input]
+        elif all(i.ndim == 3 for i in input):
+            input = np.stack(input)
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")
+    if isinstance(input, Tensor):
+        input = input.detach().cpu().numpy()
+    if isinstance(input, np.ndarray):
+        return _to_4d_array(input)
+    raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
+
+
+def to_4d_tensor(input: Any) -> Tensor:
+    """
+    Convert input to a 4D tensor.
+   
+    Args:
+        input (Any): Input of arbitrary type.
+            
+    Returns:
+        A 4D tensor of shape [B, C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        input = [torch.from_numpy(i) for i in input]
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        if all(i.ndim == 2 for i in input):
+            input = [i.unsqueeze(dim=0) for i in input]
+        elif all(i.ndim == 3 for i in input):
+            input = torch.stack(input, dim=0)
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")
+    if isinstance(input, np.ndarray):
+        input = torch.from_numpy(input)
+    if isinstance(input, Tensor):
+        return _to_4d_tensor(input)
+    raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+    
+
+def to_4d_array_list(input) -> list[np.ndarray]:
+    """
+    Convert input to a list of 4D arrays.
+   
+    Args:
+        input (Any): Input of arbitrary type.
+        
+    Returns:
+        List of 4D arrays of shape [B, C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, Tensor):
+        input = input.detach().cpu().numpy()
+    if isinstance(input, np.ndarray):
+        if input.ndim == 3:
+            input = [np.expand_dims(input, axis=0)]
+        elif input.ndim == 4:
+            input = [input]
+        elif input.ndim == 5:
+            input = list(input)
+        else:
+            raise ValueError(f"Require 3 <= `input.ndim` <= 5.")
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        input = [i.detach().cpu().numpy() for i in input]
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        if all(i.ndim == 3 for i in input):
+            return [np.stack(input, axis=0)]
+        elif all(i.ndim == 4 for i in input):
+            return input
+        else:
+            raise ValueError(f"Require 3 <= `input.ndim` <= 4.")
+    raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
+
+
+def to_4d_tensor_list(input) -> list[Tensor]:
+    """
+    Convert input to a list of 4D tensors.
+   
+    Args:
+        input (Any): Input of arbitrary type.
+            
+    Returns:
+        List of 4D tensors of shape [B, C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, np.ndarray):
+        input = torch.from_numpy(input)
+    if isinstance(input, Tensor):
+        if input.ndim == 3:
+            input = [input.unsqueeze(dim=0)]
+        elif input.ndim == 4:
+            input = [input]
+        elif input.ndim == 5:
+            input = list(input)
+        else:
+            raise ValueError(f"Require 3 <= `input.ndim` <= 5.")
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        input = [torch.from_numpy(i) for i in input]
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        if all(i.ndim == 3 for i in input):
+            return [torch.stack(input, dim=0)]
+        elif all(i.ndim == 4 for i in input):
+            return input
+        else:
+            raise ValueError(f"Require 3 <= `input.ndim` <= 4.")
+    raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+
+
+def to_5d_array(input) -> np.ndarray:
+    """
+    Convert input to a 5D array.
+    
+    Args:
+        input (Any): Input of arbitrary type.
+    
+    Returns:
+        A 5D array of shape [*, B, C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        input = [i.detach().cpu().numpy() for i in input]
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        if all(i.ndim == 2 for i in input):
+            input = [np.expand_dims(i, axis=0) for i in input]
+        elif all(3 <= i.ndim <= 4 for i in input):
+            input = np.stack(input)
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")
+    if isinstance(input, Tensor):
+        input = input.detach().cpu().numpy()
+    if isinstance(input, np.ndarray):
+        return _to_5d_array(input)
+    raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
+
+
+def to_5d_tensor(input: Any) -> Tensor:
+    """
+    Convert input to a 5D tensor.
+    
+    Args:
+        input (Any): Input of arbitrary type.
+    
+    Returns:
+        A 5D tensor of shape [*, B, C, H, W].
+    """
+    if isinstance(input, dict):
+        input = list(input.values())
+    if isinstance(input, tuple):
+        input = list(input)
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        input = [torch.from_numpy(i) for i in input]
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        if all(i.ndim == 2 for i in input):
+            input = [i.unsqueeze(dim=0) for i in input]
+        if all(3 <= i.ndim <= 4 for i in input):
+            input = torch.stack(input, dim=0)
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")
+    if isinstance(input, np.ndarray):
+        input = torch.from_numpy(input)
+    if isinstance(input, Tensor):
+        return _to_5d_tensor(input)
+    raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
+
+
+def to_list(input: Any) -> list:
+    """
+    Convert input into a list.
+    
+    Args:
+        input (Any): Input of arbitrary type.
+    
+    Returns:
+        A list of the input.
     """
     if isinstance(input, list):
         pass
@@ -1684,10 +2620,16 @@ def to_list(input: Any) -> list:
     
 
 def to_ntuple(n: int) -> tuple:
-    """A helper functions to cast input to n-tuple.
+    """
+    Take an integer n and returns a function that takes an iterable and returns
+    a tuple of length n.
     
     Args:
-        n (int):
+        n (int): the number of elements in the tuple.
+    
+    Returns:
+        A function that takes an integer and returns a tuple of that integer
+        repeated n times.
     """
     def parse(x) -> tuple:
         if isinstance(x, collections.abc.Iterable):
@@ -1698,15 +2640,14 @@ def to_ntuple(n: int) -> tuple:
 
 
 def to_tuple(input: Any) -> tuple:
-    """Cast input into a tuple.
-
+    """
+    Convert input into a tuple.
+    
     Args:
-        input (Any):
-            Object.
-       
+        input (Any): Input of arbitrary type.
+    
     Returns:
-        (tuple):
-            Tuple containing input.
+        A tuple of the input.
     """
     if isinstance(input, list):
         input = tuple(input)
@@ -1720,52 +2661,109 @@ def to_tuple(input: Any) -> tuple:
 
 
 def to_size(size: Ints) -> tuple[int, int]:
-    """Cast size object of any format into standard [H, W].
+    """
+    Cast size object of any format into standard [H, W].
     
     Args:
-        size (Ints):
-            Size object of any format.
-            
+        size (Ints): The size of the image to be generated.
+    
     Returns:
-        size (tuple[int, int]):
-            Size of [H, W].
+        A tuple of size (H, W).
     """
     if isinstance(size, (list, tuple)):
         if len(size) == 3:
             size = size[0:2]
         if len(size) == 1:
             size = (size[0], size[0])
-    elif isinstance(size, (int, float)):
+    elif isinstance(size, int):
         size = (size, size)
     return tuple(size)
 
 
-@dispatch(list)
-def unique(l: list) -> list:
-    """Return a list with only unique items.
+@dispatch(np.ndarray)
+def upcast(input: np.ndarray) -> np.ndarray:
+    """
+    Protects from numerical overflows in multiplications by upcasting to
+    the equivalent higher type.
     
     Args:
-        l (list):
-            List that may contain duplicate items.
+        input (Tensor): Array of arbitrary type.
     
     Returns:
-        l (list):
-            List containing only unique items.
+        Array of higher type.
+    """
+    if not isinstance(input, np.ndarray):
+        raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
+    if type(input) in (np.float16, np.float32, np.float64):
+        return input.astype(float)
+    if type(input) in (np.int16, np.int32, np.int64):
+        return input.astype(int)
+    return input
+
+
+@dispatch(Tensor)
+def upcast(input: Tensor) -> Tensor:
+    """
+    Protects from numerical overflows in multiplications by upcasting to
+    the equivalent higher type.
+    
+    Args:
+        input (Tensor): Tensor of arbitrary type.
+    
+    Returns:
+        Tensor of higher type.
+    """
+    assert_tensor(input)
+    if input.dtype in (torch.float16, torch.float32, torch.float64):
+        return input.to(torch.float)
+    if input.dtype in (torch.int8, torch.int16, torch.int32, torch.int64):
+        return input.to(torch.int)
+    return input
+
+
+@dispatch(int, Tensor)
+def vec_like(n: int, input: Tensor) -> Tensor:
+    """
+    Create a vector of zeros with the same shape as the input.
+    
+    Args:
+        n (int): The number of elements in the vector.
+        input (Tensor): The input tensor.
+    
+    Returns:
+        A tensor of zeros with the same shape as the input tensor.
+    """
+    if not n > 0:
+        raise ValueError(f"Require `n` > 0. But got: {n}.")
+    assert_tensor_of_atleast_ndim(input, 1)
+    vec = torch.zeros(n, 1, device=input.device, dtype=input.dtype)
+    return vec[None].repeat(input.shape[0], 1, 1)
+
+
+@dispatch(list)
+def unique(l: list) -> list:
+    """
+    Return a list with only unique items.
+
+    Args:
+        l (list): list.
+    
+    Returns:
+        A list containing only unique items.
     """
     return list(set(l))
 
 
 @dispatch(tuple)
 def unique(t: tuple) -> tuple:
-    """Return a tuple with only unique items.
+    """
+    Return a tuple containing the unique elements of the given tuple.
     
     Args:
-        t (tuple):
-            List that may contain duplicate items.
+        t (tuple): tuple.
     
     Returns:
-        t (tuple):
-            List containing only unique items.
+        A tuple of unique elements from the input tuple.
     """
     return tuple(set(t))
 
@@ -1776,6 +2774,20 @@ to_3tuple = to_ntuple(3)
 to_4tuple = to_ntuple(4)
 to_5tuple = to_ntuple(5)
 to_6tuple = to_ntuple(6)
+
+
+# MARK: - Constants
+
+DEFAULT_CROP_PCT        = 0.875
+IMAGENET_DEFAULT_MEAN   = (0.485, 0.456, 0.406)
+IMAGENET_DEFAULT_STD    = (0.229, 0.224, 0.225)
+IMAGENET_INCEPTION_MEAN = (0.5, 0.5, 0.5)
+IMAGENET_INCEPTION_STD  = (0.5, 0.5, 0.5)
+IMAGENET_DPN_MEAN       = (124 / 255, 117 / 255, 104 / 255)
+IMAGENET_DPN_STD        = tuple([1 / (0.0167 * 255)] * 3)
+
+PI                      = torch.tensor(3.14159265358979323846)
+VISION_BACKEND          = VisionBackend.PIL
 
 
 # MARK: - Main
