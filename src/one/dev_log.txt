@@ -1,0 +1,65 @@
+|-------------------------------------------------------------------------------|
+|                                                                               |
+| Zen of Python:                                                                |
+| 	 1. Beautiful is better than ugly.                                          |
+| 	 2. Explicit is better than implicit.                                       |
+| 	 3. Simple is better than complex.                                          |
+| 	 4. Complex is better than complicated.                                     |
+| 	 5. Flat is better than nested.                                             |
+| 	 6. Sparse is better than dense.                                            |
+| 	 7. Readability counts.                                                     |
+| 	 8. Special cases aren't special enough to break the rules.                 |
+| 	 9. Although practicality beats purity.                                     |
+| 	10. Errors should never pass silently.                                      |
+| 	11. Unless explicitly silenced.                                             |
+| 	12. In the face of ambiguity, refuse the temptation to guess.               |
+| 	13. There should be one – and preferably only one – obvious way to do it.   |
+| 	14. Although that way may not be obvious at first unless you're Dutch.      |
+| 	15. Now is better than never.                                               |
+| 	16. Although never is often better than right now.                          |
+| 	17. If the implementation is hard to explain, it's a bad idea.              |
+| 	18. If the implementation is easy to explain, it may be a good idea.        |
+| 	19. Namespaces are one honking great idea – let's do more of those!         |
+|                                                                               |
+|-------------------------------------------------------------------------------|
+
+Rules:
+	1. This package is `Tensor[C, H, W]` first. At least for all deep learning
+       related tasks.
+
+	2. Operations on Tensor should support batch processing by default,
+       i.e, 4D shape [B, C, H, W].
+
+    3. Data flow:
+       |-------------------|  Channel first  |------------------|  Channel last  |---------------------|
+       |       Input       | --------------> |    Processing    | -------------> |        Output       |
+       |-------------------|    Normalize    |------------------|  Denormalize   |---------------------|
+        np.ndarray[H, W, C]                   Tensor[B, C, H, W]      List        [np.ndarray[H, W, C]]
+             [0, 255]                             [0.0, 1.0]                             [0, 255]
+
+        |------------------|                                                     |---------------------|
+             image.py                                                                    image.py
+             video.py                                                                    video.py
+            dataset*.py                                                                   plot.py
+
+	4. Naming parameter:
+		a) input / output
+		b)
+
+
+2022.07.23
+    For years I have been finding a good organization to group  pieces of code
+    that are the base of all others. Well, splitting codes into multiple files
+    usually means more complex import statements and circular dependency. Also,
+    I have to deal with "relatively sound" taxonomy, context, and hierarchy to
+    group codes, which is a pain and time-consuming process.
+
+    So to end this pointless struggle, I have decided to place anything to a
+    single module. Codes are grouped by their meanings and relationships to
+    others. For instance, maths codes should stay together in `math.py` module,
+    regarless it is discrete maths or calculus maths. Similarly, all codes
+    involes in putting info out on the screen should be put in `plot.py`.
+
+	After 2 days of experimenting with the new approach, I found a peace of
+	mind. It seems like Zen[5] is a good advice. So, there should only be at
+    most 3 level of hierarchy.

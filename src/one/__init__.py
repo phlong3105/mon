@@ -22,15 +22,6 @@
    ===========`-.`___`-.__\ \___  /__.-'_.'_.-'================
                            `=--=-'
 
-
-Notes:
-	1. This package is `Tensor[C, H, W]` first. At least for all deep learning
-	   related tasks.
-	2. Operations on Tensors should support batch processing as default,
-	   i.e, 4D shape [B, C, H, W].
-	3. Naming parameter:
-		a) input / output : For basic functions. Ex: conversion,
-		b)
 """
 
 from __future__ import annotations

@@ -169,7 +169,7 @@ class Inference:
                 if self.verbose:
                     self.show_results(results=results)
                 if self.save_image:
-                    self.image_writer.write_images(
+                    self.image_writer.write_batch(
                         images=results, image_files=rel_paths
                     )
                     
@@ -490,7 +490,7 @@ class MultiThreadInference(Inference):
             if self.verbose:
                 self.show_results(results=results)
             if self.save_image:
-                self.image_writer.write_images(
+                self.image_writer.write_batch(
                     images=results, image_files=rel_paths
                 )
     

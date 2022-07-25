@@ -40,8 +40,6 @@ from one.core import upcast
 """
 
 
-# MARK: cxcyar -> ...
-
 def box_cxcyar_to_cxcyrh(box: Tensor) -> Tensor:
     """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h)
     format.
@@ -184,8 +182,6 @@ def box_cxcyar_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
     
 
-# MARK: cxcyrh -> ...
-
 def box_cxcyrh_to_cxcyar(box: Tensor) -> Tensor:
     """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r)
     format.
@@ -325,8 +321,6 @@ def box_cxcyrh_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
    
    
-# MARK: cxcywh ->
-
 def box_cxcywh_to_cxcyar(box: Tensor) -> Tensor:
     """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r)
     format.
@@ -461,8 +455,6 @@ def box_cxcywh_to_xyxy(box: Tensor) -> Tensor:
     y2               = cy + h / 2.0
     return torch.stack((x1, y1, x2, y2), -1)
     
-
-# MARK: cxcywh_norm ->
 
 def box_cxcywh_norm_to_cxcyar(box: Tensor, height: int, width: int) -> Tensor:
     """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a, r)
@@ -635,8 +627,6 @@ def box_cxcywh_norm_to_xyxy(box: Tensor, height: int, width: int) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
 
 
-# MARK: xywh ->
-
 def box_xywh_to_cxcyar(box: Tensor) -> Tensor:
     """Converts bounding boxes from (x, y, w, h) format to (cx, cy, a, r)
     format.
@@ -775,8 +765,6 @@ def box_xywh_to_xyxy(box: Tensor) -> Tensor:
     y2             = y + h
     return torch.stack((x, y, x2, y2), -1)
    
-
-# MARK: xyxy ->
 
 def box_xyxy_to_cxcyar(box: Tensor) -> Tensor:
     """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)

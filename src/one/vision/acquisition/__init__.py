@@ -6,6 +6,4 @@
 
 from __future__ import annotations
 
-from .image import *
-from .pointcloud import *
-from .video import *
+from .io import *

@@ -112,6 +112,9 @@ dependencies:
           # Pretrained models for Pytorch (Work in progress).
         - ptflops
           # Flops counter for convolutional networks in pytorch framework.
+        - pynvml
+          # Provides a Python interface to GPU management and monitoring
+          # functions.
         - rawpy
           # Load RAW images, work on their data, and create a postprocessed
           # image.

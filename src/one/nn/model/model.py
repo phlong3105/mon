@@ -34,7 +34,7 @@ from one.core import LOSSES
 from one.core import Losses_
 from one.core import METRICS
 from one.core import Metrics_
-from one.core import ModelState
+from one.core import ModelPhase
 from one.core import OPTIMIZERS
 from one.core import Optimizers_
 from one.core import Pretrained
@@ -86,7 +86,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             If `>= 0`, return the ith layer's output.
             If `-1`, return the final layer's output.
             Default: `-1`.
-        model_state (ModelState):
+        model_state (ModelPhase):
             Model's running model_state. Default: `ModelState.TRAINING`.
         pretrained (Pretrained):
             Initialize weights from pretrained.
@@ -144,7 +144,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         num_classes    : Optional[int] 		       = None,
         class_labels   : Optional[ClassLabels]     = None,
         out_indexes    : Indexes 				   = -1,
-        model_state    : ModelState                = ModelState.TRAINING,
+        model_state    : ModelPhase                = ModelPhase.TRAINING,
         pretrained     : Pretrained			       = False,
         loss   	       : Optional[Losses_]	   	   = None,
         metrics	       : Optional[Metrics_]	       = None,
@@ -250,15 +250,15 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         return self.dim
     
     @property
-    def model_state(self) -> ModelState:
+    def model_state(self) -> ModelPhase:
         """Returns the model's running state."""
         return self._model_state
     
     @model_state.setter
-    def model_state(self, phase: ModelState = ModelState.TRAINING):
+    def model_state(self, phase: ModelPhase = ModelPhase.TRAINING):
         """Assign the model's running state."""
         self._model_state = phase
-        if self._model_state is ModelState.TRAINING:
+        if self._model_state is ModelPhase.TRAINING:
             self.unfreeze()
         else:
             self.freeze()

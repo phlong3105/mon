@@ -114,7 +114,6 @@ def affine_box(
                          [0             , 0             , 1]])
     m      = torch.from_numpy(m).to(torch.double).to(box.device)
 
-    # NOTE: Create new boxes
     if not inplace:
         box = box.clone()
         

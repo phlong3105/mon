@@ -3,6 +3,7 @@
 cython
 # The Cython language is a superset of the Python language that additionally
 # supports calling C functions and declaring C types on variables and class attributes.
+ffmpeg
 filterpy
 # FilterPy is a Python library that implements a number of Bayesian filtering,
 # most notably Kalman filtering
@@ -61,6 +62,8 @@ pretrainedmodels
 # Pretrained models for Pytorch (Work in progress)
 ptflops
 # Flops counter for convolutional networks in pytorch framework
+pynvml
+# Provides a Python interface to GPU management and monitoring functions.
 rawpy
 # Load RAW images, work on their data, and create a postprocessed image
 requests

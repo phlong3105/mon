@@ -61,7 +61,7 @@ def main(args):
         config_path = os.path.join(data_dir, args.dataset, args.configs, args.config)
         camera_cfg  = load_config(config_path)
         # Update value from args
-        camera_cfg.data_dir        = data_dir
+        camera_cfg.DATA_DIR        = data_dir
         camera_cfg.dataset         = args.dataset
         camera_cfg.subset          = args.subset
         camera_cfg.verbose         = args.verbose

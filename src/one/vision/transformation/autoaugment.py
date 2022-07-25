@@ -23,7 +23,7 @@ from one.vision.acquisition import get_num_channels
 from one.vision.transformation.intensity import autocontrast
 
 
-# MARK: - Functional
+# MARK: - Functional -----------------------------------------------------------
 
 
 def apply_transform_op(
@@ -51,30 +51,22 @@ def apply_transform_op(
         fill (Floats):
 
     """
-    # NOTE: Adjust HSV
     if op_name == "auto_contrast":
         input = autocontrast(input)
-    # NOTE: Brightness
     elif op_name == "brightness":
         input = adjust_brightness(input, 1.0 + magnitude)
-    # NOTE: Color
     elif op_name == "color":
         input = adjust_saturation(input, 1.0 + magnitude)
-    # NOTE: Contrast
     elif op_name == "contrast":
         input = adjust_contrast(input, 1.0 + magnitude)
-    # NOTE: Equalize
     elif op_name == "equalize":
         input = equalize(input)
-    # NOTE: Hflip
     elif op_name == "hflip":
         input = F.hflip(input)
-    # NOTE: Hflip Image Box
     elif op_name == "hflip_image_box":
         if target is None:
             raise ValueError("`target` must not be `None`.")
         input, target[:, 2:6] = hflip_image_box(input, target[:, 2:6])
-    # NOTE: Hshear
     elif op_name == "hshear":
         input = F.affine(
             input,
@@ -85,7 +77,6 @@ def apply_transform_op(
             interpolation = interpolation,
             fill          = fill,
         )
-    # NOTE: Htranslate
     elif op_name == "htranslate":
         input = F.affine(
             input,
@@ -96,13 +87,10 @@ def apply_transform_op(
             shear         = [0.0, 0.0],
             fill          = fill,
         )
-    # NOTE: Identity
     elif op_name == "identity":
         pass
-    # NOTE: Invert
     elif op_name == "invert":
         input = F.invert(input)
-    # NOTE: Low-High Resolution Images Random Crop
     elif op_name == "lowhighres_images_random_crop":
         if not isinstance(magnitude, (list, tuple)):
             raise TypeError(f"`magnitude` must be a `list` or `tuple`. "
@@ -118,10 +106,8 @@ def apply_transform_op(
             size    = magnitude[0],
             scale   = magnitude[1],
         )
-    # NOTE: Posterize
     elif op_name == "posterize":
         input = F.posterize(input, int(magnitude))
-    # NOTE: Random Box Perspective
     elif op_name == "image_box_random_perspective":
         if not isinstance(magnitude, (list, tuple)):
             raise TypeError(f"`magnitude` must be a `list` or `tuple`. "
@@ -140,24 +126,18 @@ def apply_transform_op(
             shear       = magnitude[3],
             perspective = magnitude[4],
         )
-    # NOTE: Rotate
     elif op_name == "rotate":
         input = F.rotate(input, magnitude, interpolation=interpolation, fill=fill)
-    # NOTE: Sharpness
     elif op_name == "sharpness":
         input = F.adjust_sharpness(input, 1.0 + magnitude)
-    # NOTE: Solarize
     elif op_name == "solarize":
         input = F.solarize(input, magnitude)
-    # NOTE: Vflip
     elif op_name == "vflip":
         input = F.vflip(input)
-    # NOTE: Vflip Image Box
     elif op_name == "vflip_image_box":
         if target is None:
             raise ValueError("`target` must not be None.")
         input, target[:, 2:6] = vflip_image_box(input, target[:, 2:6])
-    # NOTE: Vshear
     elif op_name == "vshear":
         input = F.affine(
             input,
@@ -168,7 +148,6 @@ def apply_transform_op(
             interpolation = interpolation,
             fill          = fill,
         )
-    # NOTE: Vtranslate
     elif op_name == "vtranslate":
         input = F.affine(
             input,
@@ -179,7 +158,6 @@ def apply_transform_op(
             shear         = [0.0, 0.0],
             fill          = fill,
         )
-    # NOTE: Error
     else:
         raise ValueError(f"`op_name` must be recognized. But got: {op_name}.")
     
@@ -189,7 +167,7 @@ def apply_transform_op(
         return input
 
 
-# MARK: - Module
+# MARK: - Module ---------------------------------------------------------------
 
 class AutoAugment(Transform):
     """AutoAugment data augmentation method based on `"AutoAugment: Learning
@@ -307,8 +285,6 @@ class AutoAugment(Transform):
         ],
     }
     
-    # MARK: Magic Functions
-
     def __init__(
         self,
         policy       : str                = "imagenet",
@@ -322,8 +298,6 @@ class AutoAugment(Transform):
         self.interpolation = interpolation
         self.fill          = fill
         self.transforms    = self.cfgs[policy]
-
-    # MARK: Configure
 
     def _augmentation_space(
         self,
@@ -359,8 +333,6 @@ class AutoAugment(Transform):
             fill = [float(f) for f in fill]
         return fill
         
-    # MARK: Forward Pass
-    
     def forward(
         self,
         input : Tensor,

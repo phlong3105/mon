@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Transformation on pixel intensity.
+"""
+Transformation on pixel intensity.
 """
 
 from __future__ import annotations
@@ -37,7 +38,7 @@ from one.vision.transformation.color import rgb_to_grayscale
 from one.vision.transformation.color import rgb_to_hsv
 
 
-# MARK: - Functional
+# MARK: - Functional -----------------------------------------------------------
 
 def add_weighted(
     image1: Tensor,
@@ -46,26 +47,21 @@ def add_weighted(
     beta  : float,
     gamma : float = 0.0,
 ) -> Tensor:
-    """Calculate the weighted sum of two Tensors.
+    """
+    Calculate the weighted sum of two Tensors.
     
     Function calculates the weighted sum of two Tensors as follows:
         output = image1 * alpha + image2 * beta + gamma
 
     Args:
-        image1 (Tensor[..., C, H, W]):
-            First image Tensor.
-        alpha (float):
-            Weight of the image1 elements.
-        image2 (Tensor[..., C, H, W]):
-            Second image Tensor of same shape as `src1`.
-        beta (float):
-            Weight of the image2 elements.
-        gamma (float):
-            Scalar added to each sum. Default: `0.0`.
+        image1 (Tensor): First image of shape [..., C, H, W].
+        alpha (float): Weight of the image1 elements.
+        image2 (Tensor): Second image of same shape as `src1`.
+        beta (float): Weight of the image2 elements.
+        gamma (float): Scalar added to each sum. Defaults to 0.0.
 
     Returns:
-        output (Tensor[..., C, H, W]):
-            Weighted Tensor.
+        Weighted image of shape [..., C, H, W].
     """
     assert_tensor(image1)
     assert_tensor(image2)
@@ -80,20 +76,19 @@ def add_weighted(
 
 
 def adjust_brightness(image: Tensor, brightness_factor: float) -> Tensor:
-    """Adjust brightness of an image.
+    """
+    Adjust brightness of an image.
 
     Args:
-        image (Tensor[..., 1 or 3, H, W]):
-            Image to be adjusted, where ... means it can have an arbitrary
-            number of leading dimensions.
-        brightness_factor (float):
-            How much to adjust the brightness. Can be any non-negative number.
-            0 gives a black image, 1 gives the original image while 2 increases
-            the brightness by a factor of 2.
+        image (Tensor): Image of shape [..., 1 or 3, H, W] to be adjusted,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+        brightness_factor (float): How much to adjust the brightness. Can be
+            any non-negative number. 0 gives a black image, 1 gives the original
+            image while 2 increases the brightness by a factor of 2.
         
     Returns:
-        image (Tensor):
-            Brightness adjusted image.
+        Brightness adjusted image of shape [..., 1 or 3, H, W].
     """
     assert_positive_number(brightness_factor)
     assert_tensor_of_channels(image, [1, 3])
@@ -105,20 +100,19 @@ def adjust_brightness(image: Tensor, brightness_factor: float) -> Tensor:
 
 
 def adjust_contrast(image: Tensor, contrast_factor: float) -> Tensor:
-    """Adjust contrast of an image.
+    """
+    Adjust contrast of an image.
 
     Args:
-        image (Tensor[..., 1 or 3, H, W]):
-            Image to be adjusted, where ... means it can have an arbitrary
-            number of leading dimensions.
-        contrast_factor (float):
-            How much to adjust the contrast. Can be any non-negative number.
-            0 gives a solid gray image, 1 gives the original image while 2
-            increases the contrast by a factor of 2.
+        image (Tensor): Image of shape [..., 1 or 3, H, W] to be adjusted,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+        contrast_factor (float): How much to adjust the contrast. Can be any
+            non-negative number. 0 gives a solid gray image, 1 gives the
+            original image while 2 increases the contrast by a factor of 2.
 
     Returns:
-        image (Tensor):
-            Contrast adjusted image.
+        Contrast adjusted image of shape [..., 1 or 3, H, W].
     """
     assert_positive_number(contrast_factor)
     assert_tensor_of_channels(image, [1, 3])
@@ -135,22 +129,20 @@ def adjust_contrast(image: Tensor, contrast_factor: float) -> Tensor:
 
 
 def adjust_gamma(image: Tensor, gamma: float, gain: float = 1.0) -> Tensor:
-    """Adjust gamma of an image.
+    """
+    Adjust gamma of an image.
 
     Args:
-        image (Tensor[..., 1 or 3, H, W]):
-            Image to be adjusted, where ... means it can have an arbitrary
-            number of leading dimensions.
-        gamma (float):
-            How much to adjust the gamma. Can be any non-negative number.
-            0 gives a black image, 1 gives the original image while 2 increases
-            the brightness by a factor of 2.
-        gain (float):
-            Default: `1.0`.
+        image (Tensor): Image of shape [..., 1 or 3, H, W] to be adjusted, 
+            where ... means it can have an arbitrary number of leading 
+            dimensions.
+        gamma (float): How much to adjust the gamma. Can be any non-negative 
+            number. 0 gives a black image, 1 gives the original image while 2 
+            increases the brightness by a factor of 2.
+        gain (float): Default to 1.0.
         
     Returns:
-        result (Tensor):
-            Gamma adjusted image.
+        Gamma adjusted image f shape [..., 1 or 3, H, W].
     """
     assert_positive_number(gamma)
     assert_tensor_of_channels(image, [1, 3])
@@ -165,7 +157,8 @@ def adjust_gamma(image: Tensor, gamma: float, gain: float = 1.0) -> Tensor:
 
 
 def adjust_hue(image: Tensor, hue_factor: float) -> Tensor:
-    """Adjust hue of an image.
+    """
+    Adjust hue of an image.
 
     The image hue is adjusted by converting the image to HSV and cyclically
     shifting the intensities in the hue channel (H). The image is then
@@ -179,19 +172,17 @@ def adjust_hue(image: Tensor, hue_factor: float) -> Tensor:
     .. _Hue: https://en.wikipedia.org/wiki/Hue
 
     Args:
-        image (Tensor[..., 1 or 3, H, W]):
-            Image to be adjusted, where ... means it can have an arbitrary
-            number of leading dimensions.
-        hue_factor (float):
-            How much to shift the hue channel. Should be in [-0.5, 0.5]. 0.5
-            and -0.5 give complete reversal of hue channel in HSV space in
-            positive and negative direction respectively. 0 means no shift.
-            Therefore, both -0.5 and 0.5 will give an image with complementary
-            colors while 0 gives the original image.
+        image (Tensor): Image of shape [..., 1 or 3, H, W] to be adjusted,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+        hue_factor (float): How much to shift the hue channel. Should be in
+            [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in
+            HSV space in positive and negative direction respectively. 0 means
+            no shift. Therefore, both -0.5 and 0.5 will give an image with
+            complementary colors while 0 gives the original image.
 
     Returns:
-        image (Tensor):
-            Hue adjusted image.
+        Hue adjusted image of shape [..., 1 or 3, H, W].
     """
     assert_number_in_range(hue_factor, -0.5, 0.5)
     assert_tensor_of_channels(image, [1, 3])
@@ -317,7 +308,7 @@ def blend(
         alpha (float):
             Alpha transparency of the overlay.
         gamma (float):
-            Scalar added to each sum. Default: `0.0`.
+            Scalar added to each sum. Defaults to 0.0.
 
     Returns:
         blend (Tensor[..., C, H, W]):
@@ -661,9 +652,9 @@ def normalize_min_max(
         image (Tensor[..., C, H, W]):
             Image to be normalized.
         min_val (float):
-            Minimum value for the new range. Default: `0.0`.
+            Minimum value for the new range. Defaults to 0.0.
         max_val (float):
-            Maximum value for the new range. Default: `1.0`.
+            Maximum value for the new range. Default to 1.0.
         eps (float):
             Float number to avoid zero division. Default: `1e-6`.
 
@@ -826,7 +817,7 @@ def solarize(image: Tensor, threshold: float) -> Tensor:
     return torch.where(image >= threshold, inverted_img, image)
 
 
-# MARK: - Module
+# MARK: - Module ---------------------------------------------------------------
 
 @TRANSFORMS.register(name="add_weighted")
 class AddWeighted(Transform):
@@ -841,13 +832,11 @@ class AddWeighted(Transform):
         beta (float):
             Weight of the image2 elements.
         gamma (float):
-            Scalar added to each sum. Default: `0.0`.
+            Scalar added to each sum. Defaults to 0.0.
         p (float):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-    
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -861,8 +850,6 @@ class AddWeighted(Transform):
         self.alpha = alpha
         self.beta  = beta
         self.gamma = gamma
-
-    # MARK: Forward Pass
 
     # noinspection PyMethodOverriding
     def forward(self, input: Tensor, target: Tensor) -> Tensor:
@@ -888,8 +875,6 @@ class AdjustBrightness(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -900,8 +885,6 @@ class AdjustBrightness(Transform):
         super().__init__(p=p, *args, **kwargs)
         self.brightness_factor = brightness_factor
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -932,8 +915,6 @@ class AdjustContrast(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -944,8 +925,6 @@ class AdjustContrast(Transform):
         super().__init__(p=p, *args, **kwargs)
         self.contrast_factor = contrast_factor
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -973,13 +952,11 @@ class AdjustGamma(Transform):
             0 gives a black image, 1 gives the original image while 2 increases
             the brightness by a factor of 2.
         gain (float):
-            Default: `1.0`.
+            Default to 1.0.
        p (float):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -992,8 +969,6 @@ class AdjustGamma(Transform):
         self.gamma = gamma
         self.gain  = gain
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -1028,8 +1003,6 @@ class AdjustHue(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1040,8 +1013,6 @@ class AdjustHue(Transform):
         super().__init__(p=p, *args, **kwargs)
         self.hue_factor = hue_factor
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -1072,8 +1043,6 @@ class AdjustSaturation(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1084,8 +1053,6 @@ class AdjustSaturation(Transform):
         super().__init__(p=p, *args, **kwargs)
         self.saturation_factor = saturation_factor
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -1116,8 +1083,6 @@ class AdjustSharpness(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1128,8 +1093,6 @@ class AdjustSharpness(Transform):
         super().__init__(p=p, *args, **kwargs)
         self.sharpness_factor = sharpness_factor
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -1158,13 +1121,9 @@ class AutoContrast(Transform):
             process as normal.
     """
     
-    # MARK: Magic Functions
-
     def __init__(self, p: Union[float, None] = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
     
-    # MARK: Forward Pass
-
     def forward(
         self,
         input : Tensor,
@@ -1183,13 +1142,11 @@ class Blend(Transform):
         alpha (float):
             Alpha transparency of the overlay.
         gamma (float):
-            Scalar added to each sum. Default: `0.0`.
+            Scalar added to each sum. Defaults to 0.0.
         p (float):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1202,8 +1159,6 @@ class Blend(Transform):
         self.alpha = alpha
         self.gamma = gamma
     
-    # MARK: Forward Pass
-
     # noinspection PyMethodOverriding
     def forward(self, input : Tensor, target: Tensor, *args, **kwargs) -> Tensor:
         return blend(
@@ -1222,25 +1177,23 @@ class ColorJitter(Transform):
         brightness (Floats):
             How much to jitter brightness. `brightness_factor` is chosen
             uniformly from [max(0, 1 - brightness), 1 + brightness] or the
-            given [min, max]. Should be non negative numbers. Default: `0.0`.
+            given [min, max]. Should be non negative numbers. Defaults to 0.0.
         contrast (Floats):
             How much to jitter contrast. `contrast_factor` is chosen uniformly
             from [max(0, 1 - contrast), 1 + contrast] or the given [min, max].
-            Should be non-negative numbers. Default: `0.0`.
+            Should be non-negative numbers. Defaults to 0.0.
         saturation (Floats):
             How much to jitter saturation. `saturation_factor` is chosen
             uniformly from [max(0, 1 - saturation), 1 + saturation] or the given
-            [min, max]. Should be non-negative numbers. Default: `0.0`.
+            [min, max]. Should be non-negative numbers. Defaults to 0.0.
         hue (Floats):
             How much to jitter hue. `hue_factor` is chosen uniformly from
             [-hue, hue] or the given [min, max]. Should have 0<= hue <= 0.5
-            or -0.5 <= min <= max <= 0.5. Default: `0.0`.
+            or -0.5 <= min <= max <= 0.5. Defaults to 0.0.
         p (float):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-    
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1268,9 +1221,7 @@ class ColorJitter(Transform):
             f"hue={self.hue})"
         )
         return s
-    
-    # MARK: Configure
-    
+        
     @torch.jit.unused
     def _check_input(
         self,
@@ -1346,9 +1297,7 @@ class ColorJitter(Transform):
         h = None if hue is None \
             else float(torch.empty(1).uniform_(hue[0], hue[1]))
         return fn_idx, b, c, s, h
-    
-    # MARK: Forward Pass
-    
+        
     def forward(
         self,
         input : Tensor,
@@ -1398,8 +1347,6 @@ class Denormalize(Transform):
         std (Tensor[..., C, H, W], float):
             Standard deviations for each channel.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1411,9 +1358,7 @@ class Denormalize(Transform):
         super().__init__(p=p, *args, **kwargs)
         self.mean = mean
         self.std  = std
-     
-    # MARK: Forward Pass
-    
+        
     def forward(
         self,
         input : Tensor,
@@ -1449,8 +1394,6 @@ class Erase(Transform):
             process as normal.
     """
     
-    # MARK: Magic Functions
-
     def __init__(
         self,
         i      : int,
@@ -1469,9 +1412,7 @@ class Erase(Transform):
         self.w       = w
         self.v       = v
         self.inplace = inplace
-    
-    # MARK: Forward Pass
-    
+        
     def forward(
         self,
         input : Tensor,
@@ -1511,13 +1452,9 @@ class Equalize(Transform):
             process as normal.
     """
     
-    # MARK: Magic Functions
-
     def __init__(self, p: Union[float, None] = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
-    
-    # MARK: Forward Pass
-    
+        
     def forward(
         self,
         input : Tensor,
@@ -1538,12 +1475,8 @@ class Invert(Transform):
             process as normal.
     """
 
-    # MARK: Magic Functions
-
     def __init__(self, p: Union[float, None] = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
-
-    # MARK: Forward Pass
    
     def forward(
         self,
@@ -1567,8 +1500,6 @@ class Normalize(Transform):
         inplace (bool):
             If `True`, make this operation inplace. Default: `False`.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1582,9 +1513,7 @@ class Normalize(Transform):
         self.mean    = mean
         self.std     = std
         self.inplace = inplace
-     
-    # MARK: Forward Pass
-    
+        
     def forward(
         self,
         input : Tensor,
@@ -1618,8 +1547,6 @@ class Posterize(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1629,8 +1556,6 @@ class Posterize(Transform):
     ):
         super().__init__(p=p, *args, **kwargs)
         self.bits = bits
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1668,8 +1593,6 @@ class RandomErase(Transform):
             process as normal.
     """
     
-    # MARK: Magic Functions
-
     def __init__(
         self,
         scale  : Floats                             = (0.02, 0.33),
@@ -1699,9 +1622,7 @@ class RandomErase(Transform):
         self.ratio   = ratio
         self.value   = value
         self.inplace = inplace
-    
-    # MARK: Configure
-    
+        
     @staticmethod
     def get_params(
         image: Tensor,
@@ -1752,9 +1673,7 @@ class RandomErase(Transform):
 
         # Return original image
         return 0, 0, img_h, img_w, image
-    
-    # MARK: Forward Pass
-    
+        
     def forward(
         self,
         input : Tensor,
@@ -1816,8 +1735,6 @@ class Solarize(Transform):
             Probability of the image being adjusted. Default: `None` means 
             process as normal.
     """
-
-    # MARK: Magic Functions
     
     def __init__(
         self,
@@ -1827,8 +1744,6 @@ class Solarize(Transform):
     ):
         super().__init__(p=p, *args, **kwargs)
         self.threshold = threshold
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1841,7 +1756,7 @@ class Solarize(Transform):
                    if target is not None else None
     
     
-# MARK: - Main
+# MARK: - Main -----------------------------------------------------------------
 
 __all__ = [
     name for name, value in inspect.getmembers(

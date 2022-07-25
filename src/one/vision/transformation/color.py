@@ -27,39 +27,38 @@ from one.vision.acquisition import get_num_channels
 from one.vision.acquisition import to_channel_first
 
 
-# MARK: - Functional
+# MARK: - Functional -----------------------------------------------------------
 
 def bgr_to_grayscale(image: Tensor) -> Tensor:
-    """Convert BGR image to grayscale. Image data is assumed to be in the
-    range of [0.0, 1.0]. First flips to RGB, then converts.
+    """
+    Convert BGR image to grayscale. Image data is assumed to be in the range of
+    [0.0, 1.0]. First flips to RGB, then converts.
 
     Args:
-        image (Tensor[..., 3, H, W]):
-            Image to be transformed, where ... means it can have an arbitrary
-            number of leading dimensions.
+        image (Tensor): Image of shape [..., 3, H, W] to be transformed,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
 
     Returns:
-        grayscale (Tensor[..., 1, H, W]):
-            Grayscale version of the image.
+        Grayscale image of shape [..., 1, H, W].
     """
     assert_tensor_of_channels(image, 3)
     return rgb_to_grayscale(image=bgr_to_rgb(image=image))
 
 
 def bgr_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
-    """Convert BGR image to HSV. Image data is assumed to be in the range of
+    """
+    Convert BGR image to HSV. Image data is assumed to be in the range of
     [0.0, 1.0].
 
     Args:
-        image (Tensor[..., 3, H, W]):
-            Image to be transformed, where ... means it can have an arbitrary
-            number of leading dimensions.
-        eps (float):
-            Scalar to enforce numerical stability. Default: `1e-8`.
+        image (Tensor): Image of shape [..., 3, H, W] to be transformed, 
+            where ... means it can have an arbitrary number of leading 
+            dimensions.
+        eps (float): Scalar to enforce numerical stability. Defaults to `1e-8`.
 
     Returns:
-        hsv (Tensor[..., 3, H, W]):
-            HSV version of the image. H channel values are in the range
+        HSV image of shape [..., 3, H, W]. H channel values are in the range
             [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
     assert_tensor_of_channels(image, 3)
@@ -94,7 +93,7 @@ def bgr_to_luv(image: Tensor, eps: float = 1e-12) -> Tensor:
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
         eps (float):
-            For numerically stability when dividing. Default: `1e-12`.
+            For numerically stability when dividing. Defaults to `1e-12`.
 
     Returns:
         luv (Tensor[..., 3, H, W]):
@@ -214,7 +213,7 @@ def grayscale_to_rgb(image: Tensor) -> Tensor:
     assert_tensor_of_channels(image, 1)
     rgb = torch.cat([image, image, image], dim=-3)
 
-    # NOTE: we should find a better way to raise this kind of warnings
+    # we should find a better way to raise this kind of warnings
     # if not torch.is_floating_point(image):
     #     warnings.warn(f"Input image is not of float dtype. Got: {image.dtype}")
 
@@ -328,14 +327,14 @@ def _integer_to_color(image: np.ndarray, colors: list) -> np.ndarray:
     if len(colors) <= 0:
         raise ValueError(f"No colors are provided.")
     
-    # NOTE: Convert to channel-first
+    # Convert to channel-first
     image = to_channel_first(image)
     
-    # NOTE: Squeeze dims to 2
+    # Squeeze dims to 2
     if image.ndim == 3:
         image = np.squeeze(image)
     
-    # NOTE: Draw color
+    # Draw color
     r = np.zeros_like(image).astype(np.uint8)
     g = np.zeros_like(image).astype(np.uint8)
     b = np.zeros_like(image).astype(np.uint8)
@@ -371,7 +370,7 @@ def lab_to_bgr(image: Tensor, clip: bool = True) -> Tensor:
             number of leading dimensions.
         clip (bool):
             Whether to apply clipping to insure output BGR values in range
-            [0.0 1.0]. Default: `True`.
+            [0.0 1.0]. Defaults to `True`.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
@@ -390,7 +389,7 @@ def lab_to_rgb(image: Tensor, clip: bool = True) -> Tensor:
             number of leading dimensions.
         clip (bool):
             Whether to apply clipping to insure output RGB values in range
-            [0.0 1.0]. Default: `True`.
+            [0.0 1.0]. Defaults to `True`.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
@@ -464,7 +463,7 @@ def luv_to_bgr(image: Tensor, eps: float = 1e-12) -> Tensor:
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
         eps (float):
-            For numerically stability when dividing. Default: `1e-12`.
+            For numerically stability when dividing. Defaults to `1e-12`.
 
     Returns:
         bgr (Tensor[..., 3, H, W]):
@@ -482,7 +481,7 @@ def luv_to_rgb(image: Tensor, eps: float = 1e-12) -> Tensor:
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
         eps (float):
-            For numerically stability when dividing. Default: `1e-12`.
+            For numerically stability when dividing. Defaults to `1e-12`.
 
     Returns:
         rgb (Tensor[..., 3, H, W]):
@@ -694,7 +693,7 @@ def rgb_to_grayscale(
             number of leading dimensions.
         rgb_weights (list[float]):
             Weights that will be applied on each channel (RGB). Sum of the
-            weights should add up to one. Default: `(0.299, 0.587, 0.114)`.
+            weights should add up to one. Defaults to `(0.299, 0.587, 0.114)`.
     
     Returns:
         grayscale (Tensor[..., 1, H, W]):
@@ -733,7 +732,7 @@ def rgb_to_hls(image: Tensor, eps: float = 1e-8) -> Tensor:
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
         eps (float):
-            Epsilon value to avoid div by zero. Default: `1e-8`.
+            Epsilon value to avoid div by zero. Defaults to `1e-8`.
 
     Returns:
         hls (Tensor[..., 3, H, W]):
@@ -769,7 +768,7 @@ def rgb_to_hls(image: Tensor, eps: float = 1e-8) -> Tensor:
     else:
         # define the resulting image to avoid the torch.stack([h, ll, s])
         # so, h, ll and s require inplace operations
-        # NOTE: stack() increases in a 10% the cost in colab
+        # stack() increases in a 10% the cost in colab
         image_hls = torch.empty_like(image)
         h         = torch.select(image_hls, -3, 0)
         l_        = torch.select(image_hls, -3, 1)
@@ -815,7 +814,7 @@ def rgb_to_hsv(image: Tensor, eps: float = 1e-8) -> Tensor:
             Image to be transformed, where ... means it can have an arbitrary
             number of leading dimensions.
         eps (float):
-            Scalar to enforce numerical stability. Default: `1e-8`.
+            Scalar to enforce numerical stability. Defaults to `1e-8`.
 
     Returns:
         hsv (Tensor[..., 3, H, W]):
@@ -1452,15 +1451,13 @@ def yuv_to_rgb(image: Tensor) -> Tensor:
     return rgb
 
 
-# MARK: - Modules
+# MARK: - Modules --------------------------------------------------------------
 
 @TRANSFORMS.register(name="bgr_to_grayscale")
 class BgrToGrayscale(Transform):
     """Convert BGR image to grayscale. Image data is assumed to be in the
     range of [0.0, 1.0]. First flips to RGB, then converts.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1479,16 +1476,12 @@ class BgrToHsv(Transform):
 
     Args:
         eps (float):
-            Scalar to enforce numerical stability. Default: `1e-8`.
+            Scalar to enforce numerical stability. Defaults to `1e-8`.
     """
-    
-    # MARK: Magic Functions
     
     def __init__(self, eps: float = 1e-8):
         super().__init__()
         self.eps = eps
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1506,8 +1499,6 @@ class BgrToLab(Transform):
     """Convert BGR image to Lab. Image data is assumed to be in the range
     of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1525,8 +1516,6 @@ class BgrToLuv(Transform):
     range of [0.0, 1.0]. Luv color is computed using the D65 illuminant and
     Observer 2.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1542,8 +1531,6 @@ class BgrToLuv(Transform):
 class BgrToRgb(Transform):
     """Convert BGR image to RGB.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1563,14 +1550,10 @@ class BgrToRgba(Transform):
         alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, alpha_val: Union[float, Tensor]):
         super().__init__()
         self.alpha_val = alpha_val
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1586,8 +1569,6 @@ class BgrToRgba(Transform):
 @TRANSFORMS.register(name="bgr_to_xyz")
 class BgrToXyz(Transform):
     """Convert BGR image to XYZ."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1602,8 +1583,6 @@ class BgrToXyz(Transform):
 @TRANSFORMS.register(name="bgr_to_ycrcb")
 class BgrToYcrcb(Transform):
     """Convert RGB image to YCrCb."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1620,8 +1599,6 @@ class BgrToYuv(Transform):
     """Convert BGR image to YUV. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1638,8 +1615,6 @@ class GrayscaleToRgb(Transform):
     """Convert grayscale image to RGB version of image. Image data is assumed
     to be in the range of [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1656,8 +1631,6 @@ class HlsToRgb(Transform):
     """Convert HLS image to RGB. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1674,8 +1647,6 @@ class HsvToBgr(Transform):
     """Convert HSV image to BGR. FH channel values are assumed to be in
     the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1692,8 +1663,6 @@ class HsvToRgb(Transform):
     """Convert HSV image to RGB. H channel values are assumed to be in the
     range [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1710,14 +1679,10 @@ class LabToBgr(Transform):
     """Convert integer-encoded image to color image. Fill an image with labels'
     colors.
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, clip: bool = True):
         super().__init__()
         self.clip = clip
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1734,13 +1699,9 @@ class LabToBgr(Transform):
 class LabToRgb(Transform):
     """Convert Lab image to BGR."""
     
-    # MARK: Magic Functions
-    
     def __init__(self, clip: bool = True):
         super().__init__()
         self.clip = clip
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1756,8 +1717,6 @@ class LabToRgb(Transform):
 @TRANSFORMS.register(name="linear_rgb_to_rgb")
 class LinearRgbToRgb(Transform):
     """Convert linear RGB image to sRGB."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1772,8 +1731,6 @@ class LinearRgbToRgb(Transform):
 @TRANSFORMS.register(name="luv_to_bgr")
 class LuvToBgr(Transform):
     """Convert Luv image to BGR."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1788,8 +1745,6 @@ class LuvToBgr(Transform):
 @TRANSFORMS.register(name="luv_to_rgb")
 class LuvToRgb(Transform):
     """Convert Luv image to RGB."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1811,14 +1766,10 @@ class RawToRgb(Transform):
     Image data is assumed to be in the range of [0.0, 1.0]. Image H/W is
     assumed to be evenly divisible by 2.0 for simplicity reasons.
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, cfa: CFA):
         super().__init__()
         self.cfa = cfa
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1834,8 +1785,6 @@ class RawToRgb(Transform):
 @TRANSFORMS.register(name="rgba_to_bgr")
 class RgbaToBgr(Transform):
     """Convert RGBA image to BGR."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1852,8 +1801,6 @@ class RgbaToRgb(Transform):
     """Convert RGBA image to RGB. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1870,8 +1817,6 @@ class RgbToBgr(Transform):
     """Convert RGB image to BGR. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1888,14 +1833,10 @@ class RgbToGrayscale(Transform):
     """Convert RGB image to grayscale version of image. Image data is assumed
     to be in the range of [0.0, 1.0].
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, rgb_weights: list[float] = (0.299, 0.587, 0.114)):
         super().__init__()
         self.rgb_weights = rgb_weights
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1913,8 +1854,6 @@ class RgbToHls(Transform):
     """Convert RGB image to HLS. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1933,16 +1872,12 @@ class RgbToHsv(Transform):
 
     Args:
         eps (float):
-            Scalar to enforce numerical stability. Default: `1e-8`.
+            Scalar to enforce numerical stability. Defaults to `1e-8`.
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, eps: float = 1e-8):
         super().__init__()
         self.eps = eps
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1960,8 +1895,6 @@ class RgbToLab(Transform):
     """Convert RGB image to Lab. Image data is assumed to be in the range
     of [0.0 1.0]. Lab color is computed using the D65 illuminant and Observer 2.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1976,8 +1909,6 @@ class RgbToLab(Transform):
 @TRANSFORMS.register(name="rgb_to_linear_rgb")
 class RgbToLinearRgb(Transform):
     """Convert sRGB image to linear RGB."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -1994,8 +1925,6 @@ class RgbToLuv(Transform):
     """Convert RGB image to Luv. Image data is assumed to be in the range of
     [0.0, 1.0]. Luv color is computed using the D65 illuminant and Observer 2.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2012,14 +1941,10 @@ class RgbToRaw(Transform):
     """Convert RGB image to RAW version of image with the specified color
     filter array. Image data is assumed to be in the range of [0.0, 1.0].
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, cfa: CFA):
         super().__init__()
         self.cfa = cfa
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2040,14 +1965,10 @@ class RgbToRgba(Transform):
         alpha_val (float, Tensor[..., 1, H, W]):
             A float number or tensor for the alpha value.
     """
-
-    # MARK: Magic Functions
     
     def __init__(self, alpha_val: Union[float, Tensor]):
         super().__init__()
         self.alpha_val = alpha_val
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2064,8 +1985,6 @@ class RgbToRgba(Transform):
 class RgbToXyz(Transform):
     """Convert RGB image to XYZ.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2081,8 +2000,6 @@ class RgbToXyz(Transform):
 class RgbToYcrcb(Transform):
     """Convert RGB image to YCrCb.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2099,8 +2016,6 @@ class RgbToYuv(Transform):
     """Convert RGB image to YUV. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2119,8 +2034,6 @@ class RgbToYuv420(Transform):
     divisible by 2 horizontal and vertical. This function will output chroma
     siting [0.5, 0.5].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2138,8 +2051,6 @@ class RgbToYuv422(Transform):
     to be in the range of [0.0, 1.0]. Input need to be padded to be evenly
     divisible by 2 vertical. This function will output chroma siting (0.5).
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2154,8 +2065,6 @@ class RgbToYuv422(Transform):
 @TRANSFORMS.register(name="xyz_to_bgr")
 class XyzToBgr(Transform):
     """Convert XYZ image to BGR."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2170,8 +2079,6 @@ class XyzToBgr(Transform):
 @TRANSFORMS.register(name="xyz_to_rgb")
 class XyzToRgb(Transform):
     """Convert XYZ image to RGB."""
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2188,8 +2095,6 @@ class YcrcbToBgr(Transform):
     """Convert YCbCr image to BGR. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2206,8 +2111,6 @@ class YcrcbToRgb(Transform):
     """Convert YCbCr to RGB. Image data is assumed to be in the range of
     [0.0, 1.0].
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2224,8 +2127,6 @@ class YuvToBgr(Transform):
     """Convert YUV image to Bgr. Image data is assumed to be in the range of
     [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
     """
-
-    # MARK: Forward Pass
     
     def forward(
         self,
@@ -2243,8 +2144,6 @@ class YuvToRgb(Transform):
     [0.0, 1.0] for luma and [-0.5, 0.5] for chroma.
     """
     
-    # MARK: Forward Pass
-    
     def forward(
         self,
         input : Tensor,
@@ -2261,7 +2160,7 @@ hls_to_rgb.__setattr__("HLS2RGB",     torch.tensor([[[0.0]], [[8.0]], [[4.0]]]))
 rgb_to_hls.__setattr__("RGB2HSL_IDX", torch.tensor([[[0.0]], [[1.0]], [[2.0]]]))  # [3, 1, 1]
 
 
-# MARK: - Main
+# MARK: - All ------------------------------------------------------------------
 
 __all__ = [
     name for name, value in inspect.getmembers(

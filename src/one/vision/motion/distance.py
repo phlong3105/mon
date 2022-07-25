@@ -324,8 +324,6 @@ def pairwise_squared_distance(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 class ChebyshevDistance:
 	"""Calculate Chebyshev distance."""
 
-	# MARK: Magic Functions
-
 	def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
 		return chebyshev_distance(x=x, y=y)
 
@@ -333,8 +331,6 @@ class ChebyshevDistance:
 @DISTANCES.register(name="cosine")
 class CosineDistance:
 	"""Calculate Cosine distance."""
-
-	# MARK: Magic Functions
 
 	def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
 		return cosine_distance(x=x, y=y)
@@ -344,8 +340,6 @@ class CosineDistance:
 class EuclideanDistance:
 	"""Calculate Euclidean distance."""
 
-	# MARK: Magic Functions
-
 	def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
 		return euclidean_distance(x=x, y=y)
 
@@ -353,8 +347,6 @@ class EuclideanDistance:
 @DISTANCES.register(name="hausdorff")
 class HausdorffDistance:
 	"""Calculate Hausdorff distance."""
-
-	# MARK: Magic Functions
 
 	def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
 		return hausdorff_distance(x=x, y=y)
@@ -364,8 +356,6 @@ class HausdorffDistance:
 class HaversineDistance:
 	"""Calculate Haversine distance."""
 
-	# MARK: Magic Functions
-
 	def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
 		return haversine_distance(x=x, y=y)
 
@@ -373,8 +363,6 @@ class HaversineDistance:
 @DISTANCES.register(name="manhattan")
 class ManhattanDistance:
 	"""Calculate Manhattan distance."""
-
-	# MARK: Magic Functions
 
 	def __call__(self, x: np.ndarray, y: np.ndarray) -> float:
 		return manhattan_distance(x=x, y=y)
