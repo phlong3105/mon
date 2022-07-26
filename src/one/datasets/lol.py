@@ -8,9 +8,8 @@ LoL dataset and datamodule.
 from __future__ import annotations
 
 import glob
-import inspect
 import os
-import sys
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 
@@ -30,7 +29,8 @@ from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VISION_BACKEND
 from one.core import VisionBackend_
-from one.plot import show_images
+from one.plot import imshow
+from one.vision.transformation import Resize
 
 
 # MARK: - Module ---------------------------------------------------------------
@@ -116,7 +116,7 @@ class LoL(ImageEnhancementDataset):
                 self.images,
                 description=f"[bright_yellow]Listing LoL {self.split} labels"
             ):
-                path = img.path.replace("low", "high")
+                path = Path(str(img.path).replace("low", "high"))
                 if is_image_file(path):
                     self.labels.append(Image(path=path, backend=self.backend))
     
@@ -170,15 +170,29 @@ class LoLDataModule(DataModule):
                 Defaults to None.
         """
         console.log(f"Setup [red]LoL[/red] datasets.")
-        phase = ModelPhase.from_value(phase)
-        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
             self.train = LoL(
-                root=self.dataset_dir, split="train", **self.dataset_kwargs
+                root             = self.root,
+                split            = "train",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
             )
             self.val = LoL(
-                root=self.dataset_dir, split="val", **self.dataset_kwargs
+                root             = self.root,
+                split            = "val",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
             )
             self.class_label = getattr(self.train, "class_labels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
@@ -186,7 +200,14 @@ class LoLDataModule(DataModule):
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
             self.test = LoL(
-                root=self.dataset_dir, split="test", **self.dataset_kwargs
+                root             = self.root,
+                split            = "test",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
             )
             self.class_label = getattr(self.test, "class_labels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
@@ -197,15 +218,17 @@ class LoLDataModule(DataModule):
         self.summarize()
         
     def load_class_label(self):
-        """Load ClassLabels."""
+        """
+        Load ClassLabel.
+        """
         pass
 
 
 # MARK: - Test -----------------------------------------------------------------
 
 def test_lol():
-    cfgs = {
-        "root": os.path.join(DATA_DIR, "lol"),
+    cfg = {
+        "root": DATA_DIR / "lol",
            # Root directory of dataset.
         "name": "lol",
             # Dataset's name.
@@ -217,7 +240,9 @@ def test_lol():
         "target_transform": None,
             # Functions/transforms that takes in a target and returns a
             # transformed version.
-        "transforms": None,
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
             # Functions/transforms that takes in an input and a target and
             # returns the transformed versions of both.
         "cache_data": False,
@@ -228,7 +253,7 @@ def test_lol():
             # large datasets may exceed system RAM). Defaults to False.
         "backend": VISION_BACKEND,
             # Vision backend to process image. Defaults to VISION_BACKEND.
-        "batch_size": 4,
+        "batch_size": 8,
             # Number of samples in one forward & backward pass. Defaults to 1.
         "devices" : 0,
             # The devices to use. Defaults to 0.
@@ -238,7 +263,7 @@ def test_lol():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm = LoLDataModule(**cfgs)
+    dm  = LoLDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:
@@ -246,19 +271,9 @@ def test_lol():
     # Visualize one sample
     data_iter            = iter(dm.train_dataloader)
     input, target, shape = next(data_iter)
-    show_images(images=input,  nrow=2, denormalize=True)
-    show_images(images=target, nrow=2, denormalize=True, figure_num=1)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
     plt.show(block=True)
-
-
-# MARK: - All ------------------------------------------------------------------
-
-__all__ = [
-    name for name, value in inspect.getmembers(
-        sys.modules[__name__],
-        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
-    )
-]
 
 
 # MARK: - Main -----------------------------------------------------------------

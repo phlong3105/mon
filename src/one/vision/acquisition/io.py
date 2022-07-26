@@ -7,10 +7,8 @@
 from __future__ import annotations
 
 import glob
-import inspect
 import multiprocessing
 import subprocess
-import sys
 from abc import ABCMeta
 from abc import abstractmethod
 from copy import deepcopy
@@ -239,17 +237,14 @@ def to_image(
     Returns:
         A numpy array of the image.
     """
-    from one.vision.transformation.intensity import denormalize_naive
+    import one.vision.transformation as t
     
     if not inplace:
         image = image.clone()
     image = image.detach()
     image = to_3d_tensor(image)
+    image = t.denormalize(image) if denormalize else image
     image = to_channel_last(image, keep_dims=keep_dims)
-    
-    if denormalize:
-        image = denormalize_naive(image)
-    
     image = image.numpy()
     return image.astype(np.uint8)
 
@@ -295,7 +290,7 @@ def to_tensor(
     Returns:
         A tensor.
     """
-    from one.vision.transformation.intensity import normalize_naive
+    from one.vision.transformation.intensity import normalize
 
     if not (F._is_numpy(image) or torch.is_tensor(image)
             or F._is_pil_image(image)):
@@ -330,7 +325,7 @@ def to_tensor(
    
     # Normalize
     if normalize:
-        image = normalize_naive(image)
+        image = normalize(image)
     
     # Convert type
     if isinstance(image, torch.ByteTensor):
@@ -702,11 +697,11 @@ def write_image_torch(
         denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
     """
-    from one.vision.transformation import denormalize_naive
+    from one.vision.transformation.intensity import denormalize
     assert_tensor_of_ndim_in_range(image, 2, 3)
     
     # Convert image
-    image = denormalize_naive(image) if denormalize else image
+    image = denormalize(image) if denormalize else image
     image = to_channel_last(image)
     
     # Write image
@@ -1921,13 +1916,3 @@ class VideoWriterFFmpeg(VideoWriter):
 
         for image, image_file in zip(images, image_files):
             self.write(image=image, image_file=image_file)
-
-
-# MARK: - All ------------------------------------------------------------------
-
-__all__ = [
-    name for name, value in inspect.getmembers(
-        sys.modules[__name__],
-        predicate = lambda f: (inspect.isfunction(f) or inspect.isclass(f)) and f.__module__ == __name__
-    )
-]

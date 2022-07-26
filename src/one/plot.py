@@ -26,7 +26,7 @@ from one.core import Tensors
 from one.core import to_3d_tensor_list
 from one.core import to_list
 from one.vision.acquisition import to_image
-from one.vision.transformation import denormalize_naive
+import one.vision.transformation as t
 
 # mpl.use("wxAgg")
 
@@ -86,7 +86,7 @@ def make_image_grid(
     """
     nrow   = nrow if isinstance(nrow, int) and nrow > 0 else 8
     images = to_3d_tensor_list(images)
-    images = denormalize_naive(images) if denormalize else images
+    images = t.denormalize(images) if denormalize else images
     return torchvision.utils.make_grid(tensor=images, nrow=nrow)
 
 
@@ -110,11 +110,11 @@ def imshow(
     winname    : str,
     image      : Tensor,
     label      : Strs | None = None,
-    denormalize: bool        = False,
+    denormalize: bool        = True,
     scale      : int         = 1,
     save_cfg   : dict | None = None,
     max_n      : int  | None = None,
-    nrow       : int  | None = None,
+    nrow       : int  | None = 8,
     wait_time  : float       = 0.01,
     figure_num : int         = 0,
 ):
@@ -145,8 +145,6 @@ def imshow(
     # Prepare image and label
     image = to_3d_tensor_list(image)
     image = image[: max_n] if isinstance(max_n, int) else image
-    image = [to_image(image=i, keep_dims=False, denormalize=denormalize)
-             for i in image]
     
     if label is not None:
         label = to_list(label)
@@ -163,19 +161,20 @@ def imshow(
         squeeze = False,
         clear   = True
     )
+    
     move_figure(x=0, y=0)
     
     for idx, img in enumerate(image):
-        i   = math.ceil(idx / nrow)
+        i   = int(idx / nrow)
         j   = int(idx % nrow)
         img = to_image(image=img, keep_dims=False, denormalize=denormalize)
         axs[i, j].imshow(np.asarray(img))
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
-        axs[i, j].set_title(label[i])
-    plt.title(winname)
+        if label is not None:
+            axs[i, j].set_title(label[i])
+    plt.get_current_fig_manager().set_window_title(winname)
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.0, hspace=0.0)
-    plt.show()
     
     # Save figure
     if save_cfg:
@@ -312,13 +311,3 @@ def imshow_cls_plt(
     if verbose:
         plt.show()
         plt.pause(wait_time)
-
-
-# H1: - All --------------------------------------------------------------------
-
-__all__ = [
-    name for name, value in inspect.getmembers(
-        sys.modules[__name__],
-        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
-    )
-]

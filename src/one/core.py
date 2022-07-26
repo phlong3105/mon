@@ -1086,7 +1086,7 @@ class BBoxFormat(Enum):
         return BBoxFormat.int_mapping()[value]
 
     @staticmethod
-    def from_value(value: Any) -> BBoxFormat:
+    def from_value(value: Any) -> BBoxFormat | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1102,10 +1102,11 @@ class BBoxFormat(Enum):
             return BBoxFormat.from_str(value)
         if isinstance(value, int):
             return BBoxFormat.from_int(value)
-        raise TypeError(
-            f"`value` must be `BBoxFormat`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `BBoxFormat`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
     
     @staticmethod
     def keys() -> list:
@@ -1277,7 +1278,7 @@ class DistanceMetric(Enum):
         return DistanceMetric.int_mapping()[value]
     
     @staticmethod
-    def from_value(value: Any) -> DistanceMetric:
+    def from_value(value: Any) -> DistanceMetric | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1293,10 +1294,11 @@ class DistanceMetric(Enum):
             return DistanceMetric.from_str(value)
         if isinstance(value, int):
             return DistanceMetric.from_int(value)
-        raise TypeError(
-            f"`value` must be `BBoxFormat`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `DistanceMetric`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
     
     @staticmethod
     def keys() -> list:
@@ -1398,7 +1400,7 @@ class ImageFormat(Enum):
         return ImageFormat.int_mapping()[value]
 
     @staticmethod
-    def from_value(value: Enum_) -> ImageFormat:
+    def from_value(value: Enum_) -> ImageFormat | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1414,10 +1416,11 @@ class ImageFormat(Enum):
             return ImageFormat.from_str(value)
         if isinstance(value, int):
             return ImageFormat.from_int(value)
-        raise TypeError(
-            f"`value` must be `ImageFormat`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
     
     @staticmethod
     def keys() -> list:
@@ -1573,7 +1576,7 @@ class InterpolationMode(Enum):
         return InterpolationMode.int_mapping()[value]
 
     @staticmethod
-    def from_value(value: Enum_) -> InterpolationMode:
+    def from_value(value: Enum_) -> InterpolationMode | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1589,10 +1592,11 @@ class InterpolationMode(Enum):
             return InterpolationMode.from_str(value)
         if isinstance(value, int):
             return InterpolationMode.from_int(value)
-        raise TypeError(
-            f"`value` must be `InterpolationMode`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `InterpolationMode`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
         
     @staticmethod
     def keys() -> list:
@@ -1707,7 +1711,7 @@ class MemoryUnit(Enum):
         return MemoryUnit.int_mapping()[value]
     
     @staticmethod
-    def from_value(value: Any) -> MemoryUnit:
+    def from_value(value: Any) -> MemoryUnit | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1723,10 +1727,11 @@ class MemoryUnit(Enum):
             return MemoryUnit.from_str(value)
         if isinstance(value, int):
             return MemoryUnit.from_int(value)
-        raise TypeError(
-            f"`value` must be `MemoryUnit`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `MemoryUnit`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
     
     @staticmethod
     def keys() -> list:
@@ -1818,7 +1823,7 @@ class ModelPhase(Enum):
         return ModelPhase.int_mapping()[value]
 
     @staticmethod
-    def from_value(value: Any) -> ModelPhase:
+    def from_value(value: Any) -> ModelPhase | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1834,10 +1839,11 @@ class ModelPhase(Enum):
             return ModelPhase.from_str(value)
         if isinstance(value, int):
             return ModelPhase.from_int(value)
-        raise TypeError(
-            f"`value` must be `ModelState`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `ModelPhase`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
 
     @staticmethod
     def keys() -> list:
@@ -1956,7 +1962,7 @@ class PaddingMode(Enum):
         return PaddingMode.int_mapping()[value]
 
     @staticmethod
-    def from_value(value: Any) -> PaddingMode:
+    def from_value(value: Any) -> PaddingMode | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -1972,10 +1978,11 @@ class PaddingMode(Enum):
             return PaddingMode.from_str(value)
         if isinstance(value, int):
             return PaddingMode.from_int(value)
-        raise TypeError(
-            f"`value` must be `PaddingMode`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `PaddingMode`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
         
     @staticmethod
     def keys() -> list:
@@ -2232,7 +2239,7 @@ class VideoFormat(Enum):
         return VideoFormat.int_mapping()[value]
 
     @staticmethod
-    def from_value(value: Any) -> VideoFormat:
+    def from_value(value: Any) -> VideoFormat | None:
         """
         It converts an arbitrary value to an enum.
         
@@ -2248,10 +2255,11 @@ class VideoFormat(Enum):
             return VideoFormat.from_str(value)
         if isinstance(value, int):
             return VideoFormat.from_int(value)
-        raise TypeError(
-            f"`value` must be `VideoFormat`, `str`, or `int`. "
+        error_console.log(
+            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
     
     @staticmethod
     def keys() -> list:
@@ -2357,6 +2365,10 @@ class VisionBackend(Enum):
             return VisionBackend.from_int(value)
         if isinstance(value, str):
             return VisionBackend.from_str(value)
+        error_console.log(
+            f"`value` must be `VisionBackend`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
         return VISION_BACKEND
     
     @staticmethod
@@ -2389,21 +2401,17 @@ PRETRAINED_DIR   = CONTENT_ROOT_DIR / "pretrained"  # "workspaces/one/pretrained
 DATA_DIR         = os.getenv("DATA_DIR", None)      # In case we have set value in os.environ
 if DATA_DIR is None:
     DATA_DIR = Path("/data")                        # Run from Docker container
-if not os.path.isdir(DATA_DIR):
+if not DATA_DIR.is_dir():
     DATA_DIR = CONTENT_ROOT_DIR / "data"            # Run from `one` package
-if not os.path.isdir(DATA_DIR):
+if not DATA_DIR.is_dir():
     DATA_DIR = ""
     
     
-DEFAULT_CROP_PCT        = 0.875
-IMAGENET_DEFAULT_MEAN   = (0.485, 0.456, 0.406)
-IMAGENET_DEFAULT_STD    = (0.229, 0.224, 0.225)
-IMAGENET_INCEPTION_MEAN = (0.5, 0.5, 0.5)
-IMAGENET_INCEPTION_STD  = (0.5, 0.5, 0.5)
-IMAGENET_DPN_MEAN       = (124 / 255, 117 / 255, 104 / 255)
-IMAGENET_DPN_STD        = tuple([1 / (0.0167 * 255)] * 3)
-PI                      = torch.tensor(3.14159265358979323846)
-VISION_BACKEND          = VisionBackend.PIL
+DEFAULT_CROP_PCT = 0.875
+IMG_MEAN         = [0.485, 0.456, 0.406]
+IMG_STD          = [0.229, 0.224, 0.225]
+PI               = torch.tensor(3.14159265358979323846)
+VISION_BACKEND   = VisionBackend.PIL
 
 
 # H1: - Conversion -------------------------------------------------------------
@@ -3347,7 +3355,7 @@ class ClassLabel:
         self._classes = classes
 
     @staticmethod
-    def parse_from_dict(d: dict) -> ClassLabel:
+    def from_dict(d: dict) -> ClassLabel:
         """
         It takes a dictionary and returns a ClassLabel object.
         
@@ -3363,7 +3371,7 @@ class ClassLabel:
         return ClassLabel(classes=classes)
         
     @staticmethod
-    def parse_from_file(path: Path_) -> ClassLabel:
+    def from_file(path: Path_) -> ClassLabel:
         """
         It creates a ClassLabel object from a `json` file.
         
@@ -3374,10 +3382,10 @@ class ClassLabel:
             A ClassLabel object.
         """
         assert_json_file(path)
-        return ClassLabel.parse_from_dict(load_from_file(path))
+        return ClassLabel.from_dict(load_from_file(path))
     
     @staticmethod
-    def parse_from_value(value: Any) -> ClassLabel:
+    def from_value(value: Any) -> ClassLabel | None:
         """
         It converts an arbitrary value to a ClassLabel.
         
@@ -3390,13 +3398,14 @@ class ClassLabel:
         if isinstance(value, ClassLabel):
             return value
         if isinstance(value, (dict, Munch)):
-            return ClassLabel.parse_from_dict(value)
+            return ClassLabel.from_dict(value)
         if isinstance(value, (str, Path)):
-            return ClassLabel.parse_from_file(value)
-        raise TypeError(
+            return ClassLabel.from_file(value)
+        error_console.log(
             f"`value` must be `ClassLabel`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
+        return None
         
     @property
     def classes(self) -> list:
@@ -4416,8 +4425,8 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         
         self.images: list[Image] = []
         
-        cache_file = os.path.join(self.root, f"{self.split}.cache")
-        if cache_data or not os.path.isfile(cache_file):
+        cache_file = self.root / f"{self.split}.cache"
+        if cache_data or not cache_file.is_file():
             self.list_images()
         else:
             cache       = torch.load(cache_file)
@@ -4425,7 +4434,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         
         self.filter()
         self.verify()
-        if cache_data or not os.path.isfile(cache_file):
+        if cache_data or not cache_file.is_file():
             self.cache_data(path=cache_file)
         if cache_images:
             self.cache_images()
@@ -4448,9 +4457,9 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         meta  = item.meta
         
         if self.transform is not None:
-            input = self.transform(input, self)
+            input, *_ = self.transform(input=input, target=None, dataset=self)
         if self.transforms is not None:
-            input = self.transforms(input, None, self)
+            input, *_ = self.transforms(input=input, target=None, dataset=self)
         return input, meta
         
     def __len__(self) -> int:
@@ -4668,19 +4677,16 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             verbose          = verbose,
             *args, **kwargs
         )
-        self.backend = VisionBackend.from_value(backend)
+        self.backend     = VisionBackend.from_value(backend)
+        self.class_label = ClassLabel.from_value(class_label)
         
-        if class_label is None:
-            class_label = os.path.join(self.root, "class_label.json")
-        self.class_label = ClassLabel.parse_from_value(class_label)
-        
-        if hasattr(self, "images"):
+        if not hasattr(self, "images"):
             self.images: list[Image] = []
-        if hasattr(self, "labels"):
+        if not hasattr(self, "labels"):
             self.labels = []
         
-        cache_file = os.path.join(self.root, f"{self.split}.cache")
-        if cache_data or not os.path.isfile(cache_file):
+        cache_file = self.root / f"{self.split}.cache"
+        if cache_data or not cache_file.is_file():
             self.list_images()
             self.list_labels()
         else:
@@ -4690,7 +4696,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             
         self.filter()
         self.verify()
-        if cache_data or not os.path.isfile(cache_file):
+        if cache_data or not cache_file.is_file():
             self.cache_data(path=cache_file)
         if cache_images:
             self.cache_images()
@@ -4720,7 +4726,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             The length of the images list.
         """
         return len(self.images)
-        
+    
     @abstractmethod
     def list_images(self):
         """
@@ -4751,7 +4757,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
                 f"Number of `images` and `labels` must be the same. "
                 f"But got: {len(self.images)} != {len(self.labels)}"
             )
-        console.log(f"Number of samples: {len(self.images)}.")
+        console.log(f"Number of {self.split} samples: {len(self.images)}.")
         
     def cache_data(self, path: Path_):
         """
@@ -4862,11 +4868,11 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         meta   = item.meta
         
         if self.transform is not None:
-            input  = self.transform(input, self)
+            input,  *_ = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
-            target = self.target_transform(target, self)
+            target, *_ = self.target_transform(input=target, target=None, dataset=self)
         if self.transforms is not None:
-            input, target = self.transforms(input, target, self)
+            input, target = self.transforms(input=input, target=target, dataset=self)
         return input, target, meta
         
     def cache_images(self):
@@ -4996,11 +5002,11 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         meta   = item.meta
 
         if self.transform is not None:
-            input = self.transform(input, self)
+            input,  *_ = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
-            target = self.target_transform(target, self)
+            target, *_ = self.target_transform(input=target, target=None, dataset=self)
         if self.transforms is not None:
-            input, target = self.transforms(input, target, self)
+            input, target = self.transforms(input=input, target=target, dataset=self)
         return input, target, meta
         
     def cache_images(self):
@@ -5282,7 +5288,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
 			input (Tensor[1, C, H, W]): Input sample, optionally transformed by
 			    the respective transforms.
 			target (Tensor[1, C, H, W]): Enhance image, optionally transformed
-			by the respective transforms.
+			    by the respective transforms.
 			meta (Image): Metadata of image.
 		"""
         input  = self.images[index].image
@@ -5292,11 +5298,11 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         meta   = self.images[index].meta
         
         if self.transform is not None:
-            input = self.transform(input, self)
+            input, *_  = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
-            target = self.target_transform(target, self)
+            target, *_ = self.target_transform(input=target, target=None, dataset=self)
         if self.transforms is not None:
-            input, target = self.transforms(input, target, self)
+            input, target = self.transforms(input=input, target=target, dataset=self)
         return input, target, meta
         
     def cache_images(self):
@@ -5327,6 +5333,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
         """
         input, target, meta = zip(*batch)  # Transposed
+
         if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
             input  = torch.stack(input,  0)
             target = torch.stack(target, 0)
@@ -5422,11 +5429,11 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         meta   = self.images[index].meta
 
         if self.transform is not None:
-            input = self.transform(input, self)
+            input,  *_ = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
-            target = self.target_transform(target, self)
+            target, *_ = self.target_transform(input=target, target=None, dataset=self)
         if self.transforms is not None:
-            input, target = self.transforms(input, target, self)
+            input, target = self.transforms(input=input, target=target, dataset=self)
         return input, target, meta
     
     def cache_images(self):
@@ -7110,14 +7117,14 @@ class Transform(nn.Module, ABC):
     Transform module.
     
     Args:
-        p (float):
-            Probability of the image being adjusted. Defaults to None means
-            process as normal.
+        p (float | None): Probability of the image being adjusted. Defaults to
+            None means process as normal.
     """
     
-    def __init__(self, p: float = 1.0, *args, **kwargs):
+    def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
+        if p is not None:
+            assert_number_in_range(p, 0.0, 1.0)
         self.p = p
     
     def __repr__(self) -> str:
@@ -7131,8 +7138,9 @@ class Transform(nn.Module, ABC):
     
     def __call__(
         self,
-        input : Tensor,
-        target: Tensor | None = None,
+        input  : Tensor,
+        target : Tensor  | None = None,
+        dataset: Dataset | None = None,
         *args, **kwargs
     ) -> tuple[Tensor, Tensor | None]:
         """
@@ -7143,19 +7151,26 @@ class Transform(nn.Module, ABC):
             input (Tensor): The input tensor to be transformed.
             target (Tensor | None): The target tensor to be transformed.
                 Defaults to None.
-        
+            dataset (Dataset | None): The dataset. Defaults to None.
+            
         Returns:
             The input and target tensors.
         """
-        if self.p is not None or torch.rand(1).item() <= self.p:
-            return super.__call__(input, target, *args, **kwargs)
+        if self.p is None or torch.rand(1).item() <= self.p:
+            return super().__call__(
+                input   = input,
+                target  = target,
+                dataset = dataset,
+                *args, **kwargs
+            )
         return input, target
         
     @abstractmethod
     def forward(
         self,
-        input : Tensor,
-        target: Tensor | None = None,
+        input  : Tensor,
+        target : Tensor  | None = None,
+        dataset: Dataset | None = None,
         *args, **kwargs
     ) -> tuple[Tensor, Tensor | None]:
         """
@@ -7167,6 +7182,7 @@ class Transform(nn.Module, ABC):
             input (Tensor):  The input tensor to be transformed.
             target (Tensor | None): The target tensor to be transformed.
                 Defaults to None.
+            dataset (Dataset | None): The dataset. Defaults to None.
         
         Returns:
             The input and target tensors.
@@ -7225,8 +7241,9 @@ class ComposeTransform(nn.Sequential):
     
     def __call__(
         self,
-        input : Tensor | np.ndarray | PIL.Image,
-        target: Tensor | np.ndarray | PIL.Image | None = None,
+        input  : Tensor | np.ndarray | PIL.Image,
+        target : Tensor | np.ndarray | PIL.Image | None = None,
+        dataset: Dataset | None                         = None,
         *args, **kwargs
     ) -> tuple[
         Tensor | np.ndarray | PIL.Image,
@@ -7240,13 +7257,19 @@ class ComposeTransform(nn.Sequential):
                 transformed.
             target (Tensor | np.ndarray | PIL.Image | None): The target tensor
                 to be transformed.
-        
+            dataset (Dataset | None): The dataset. Defaults to None.
+            
         Returns:
             The transformed input and target.
         """
-        for t in self.transforms:
-            input, target = t(input, target)
-        return input, target
+        # for t in self.named_modules():
+        #     input, target = t(input, target)
+        return super().__call__(
+            input   = input,
+            target  = target,
+            dataset = dataset,
+            *args, **kwargs
+        )
     
     def __repr__(self) -> str:
         """
@@ -7266,8 +7289,9 @@ class ComposeTransform(nn.Sequential):
     
     def forward(
         self,
-        input : Tensor | np.ndarray | PIL.Image,
-        target: Tensor | np.ndarray | PIL.Image | None = None,
+        input  : Tensor | np.ndarray | PIL.Image,
+        target : Tensor | np.ndarray | PIL.Image | None = None,
+        dataset: Dataset | None                         = None,
         *args, **kwargs
     ) -> tuple[
         Tensor | np.ndarray | PIL.Image,
@@ -7281,12 +7305,18 @@ class ComposeTransform(nn.Sequential):
                 transformed.
             target (Tensor | np.ndarray | PIL.Image | None): The target tensor
                 to be transformed.
-        
+            dataset (Dataset | None): The dataset. Defaults to None.
+            
         Returns:
             The transformed input and target.
         """
         for t in self:
-            input, target = t(input, target)
+            input, target = t(
+                input   = input,
+                target  = target,
+                dataset = dataset,
+                *args, **kwargs
+            )
         return input, target
 
 
@@ -7335,13 +7365,3 @@ Optimizers_         = ScalarOrCollectionT[Union[Optimizer, dict]]
 Paddings            = Union[Ints, str]
 Pretrained          = Union[bool, str, dict]
 Weights             = Union[Tensor, Numbers]
-
-
-# H1: - All --------------------------------------------------------------------
-
-__all__ = [
-    name for name, value in inspect.getmembers(
-        sys.modules[__name__],
-        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
-    )
-]

@@ -25,7 +25,6 @@ from one.vision.transformation.intensity import autocontrast
 
 # MARK: - Functional -----------------------------------------------------------
 
-
 def apply_transform_op(
     input        : Tensor,
     target       : Union[Tensor, None] = None,
