@@ -7,9 +7,7 @@ Plotting functions.
 
 from __future__ import annotations
 
-import inspect
 import math
-import sys
 from typing import Any
 
 import matplotlib
@@ -18,6 +16,7 @@ import torchvision
 from matplotlib import pyplot as plt
 from torch import Tensor
 
+import one.vision.transformation as t
 from one.core import Arrays
 from one.core import assert_same_length
 from one.core import ClassLabel
@@ -26,7 +25,6 @@ from one.core import Tensors
 from one.core import to_3d_tensor_list
 from one.core import to_list
 from one.vision.acquisition import to_image
-import one.vision.transformation as t
 
 # mpl.use("wxAgg")
 
@@ -152,7 +150,9 @@ def imshow(
         assert_same_length(image, label)
     
     # Draw figure
-    nrows, ncols = get_grid_size(n=len(image), nrow=nrow)
+    n            = len(image)
+    nrow         = n if n < nrow else nrow
+    nrows, ncols = get_grid_size(n=n, nrow=nrow)
     fig, axs     = plt.subplots(
         nrows   = nrows,
         ncols   = ncols,

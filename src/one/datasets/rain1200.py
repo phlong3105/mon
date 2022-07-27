@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-LoL dataset and datamodule.
+Rain1200 dataset and datamodule.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from torch.utils.data import random_split
 
 from one.core import ClassLabel_
 from one.core import console
@@ -32,11 +33,11 @@ from one.vision.transformation import Resize
 
 # MARK: - Module ---------------------------------------------------------------
 
-@DATASETS.register(name="lol")
-class LoL(ImageEnhancementDataset):
+@DATASETS.register(name="rain1200")
+class Rain1200(ImageEnhancementDataset):
     """
-    LoL dataset consists of multiple datasets related to low-light image
-    enhancement task.
+    Rain1200 dataset consists 1200 pairs of rain/no-rain test images and 12,000
+    pairs of rain/no-rain train images.
     
     Args:
         root (str): Root directory of dataset.
@@ -94,12 +95,18 @@ class LoL(ImageEnhancementDataset):
         """
         List image files.
         """
+        if self.split not in ["train", "val", "test"]:
+            console.log(
+                f"Rain1200 dataset only supports `split`: `train`, `val`, or "
+                f"`test`. Get: {self.split}."
+            )
+            
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / self.split / "low"
+            pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing LoL {self.split} images"
+                list(pattern.rglob("no_rain/*.jpg")),
+                description=f"[bright_yellow]Listing Rain1200 {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -111,22 +118,22 @@ class LoL(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing LoL {self.split} labels"
+                description=f"[bright_yellow]Listing Rain1200 {self.split} labels"
             ):
-                path = Path(str(img.path).replace("low", "high"))
+                path = Path(str(img.path).replace("no_rain", "rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
-                
+   
 
-@DATAMODULES.register(name="lol")
-class LoLDataModule(DataModule):
+@DATAMODULES.register(name="rain1200")
+class Rain1200DataModule(DataModule):
     """
-    LoL DataModule.
+    Rain1200 DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol",
-        name: str = "lol",
+        root: str = DATA_DIR / "rain13k" / "rain1200",
+        name: str = "rain1200",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -159,12 +166,12 @@ class LoLDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]LoL[/red] datasets.")
+        console.log(f"Setup [red]Rain1200[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = LoL(
+            self.train = Rain1200(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -174,7 +181,7 @@ class LoLDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.val = LoL(
+            self.val = Rain1200(
                 root             = self.root,
                 split            = "val",
                 shape            = self.shape,
@@ -189,7 +196,7 @@ class LoLDataModule(DataModule):
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = LoL(
+            self.test = Rain1200(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -218,9 +225,9 @@ class LoLDataModule(DataModule):
 
 def test():
     cfg = {
-        "root": DATA_DIR / "lol",
+        "root": DATA_DIR / "rain13k" / "rain1200",
            # Root directory of dataset.
-        "name": "lol",
+        "name": "rain1200",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -253,7 +260,7 @@ def test():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = LoLDataModule(**cfg)
+    dm  = Rain1200DataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:

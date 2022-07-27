@@ -78,8 +78,8 @@ dependencies:
           # Ninja is a small build system with a focus on speed.
         - numpy
           # NumPy is the fundamental package for array computing with Python.
-        - opencv-python==4.4.0.46
-        - opencv-contrib-python==4.4.0.46
+        # - opencv-python==4.4.0.46
+        # - opencv-contrib-python==4.4.0.46
         # - opencv-python==4.4.0.46                 ; sys_platform=="win32" or sys_platform=="linux"
         # - opencv-contrib-python==4.4.0.46         ; sys_platform=="win32" or sys_platform=="linux"
         - opencv-python-headless==4.4.0.46        ; sys_platform=="darwin"

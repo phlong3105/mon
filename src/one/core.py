@@ -4060,9 +4060,11 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             target_transform = ComposeTransform(target_transform)
         if transforms is not None:
             transforms = ComposeTransform(transforms)
+        
         self.transform        = transform
         self.target_transform = target_transform
         self.transforms       = transforms
+        
         """
         has_transforms         = transforms is not None
         has_separate_transform = transform is not None or target_transform is not None
@@ -4272,7 +4274,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         if self.test:
             return DataLoader(
                 dataset            = self.test,
-                batch_size         = 1,  # self.batch_size,
+                batch_size         = self.batch_size,
                 shuffle            = False,
                 num_workers        = self.num_workers,
                 pin_memory         = True,
@@ -4412,6 +4414,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         verbose     : bool               = True,
         *args, **kwargs
     ):
+        import one.vision.transformation as t
         super().__init__(
             root       = root,
             split      = split,
@@ -4478,7 +4481,6 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         """
         pass
     
-    @abstractmethod
     def filter(self):
         """
         Filter unwanted samples.
@@ -5325,6 +5327,17 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             ):
                 self.labels[i].load(keep_in_memory=True)
         console.log(f"Labels have been cached.")
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        keep = []
+        for i, (img, lab) in enumerate(zip(self.images, self.labels)):
+            if is_image_file(img.path) and is_image_file(lab.path):
+                keep.append(i)
+        self.images = [img for i, img in enumerate(self.images) if i in keep]
+        self.labels = [lab for i, lab in enumerate(self.labels) if i in keep]
         
     @staticmethod
     def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
@@ -6706,31 +6719,28 @@ def dump_to_file(
         raise TypeError("`path` must be a filename str or a file-object.")
 
 
-def load_config(config: str | dict | Munch) -> Munch:
+def load_config(cfg: Path_ | dict | Munch) -> Munch:
     """
-    Load config as namespace.
+    Load dictionary from file and convert to namespace using Munch.
 
 	Args:
-		config (str | dict | Munch): Config filepath that contains
-		configuration values
-		    or the config dict.
+		cfg (Path_ | dict | Munch): Config filepath that contains
+		    configuration values or the config dict.
 	"""
-    # Load dictionary from file and convert to namespace using Munch
-    if not isinstance(config, (str, dict, Munch)):
-        raise TypeError(
-            f"`config` must be a `dict` or a path to config file. "
-            f"But got: {config}."
-        )
-    if isinstance(config, str):
-        config_dict = load_from_file(path=config)
+    if isinstance(cfg, (Path, str)):
+        d = load_from_file(path=cfg)
+    elif isinstance(cfg, (dict, Munch)):
+        d = cfg
     else:
-        config_dict = config
+        raise TypeError(
+            f"`cfg` must be a `dict` or a path to config file. But got: {cfg}."
+        )
     
-    if config_dict is None:
-        raise IOError(f"No configuration is found at: {config}.")
+    if d is None:
+        raise IOError(f"No configuration is found at: {cfg}.")
     
-    config = Munch.fromDict(config_dict)
-    return config
+    cfg = Munch.fromDict(d)
+    return cfg
 
 
 def load_from_file(
