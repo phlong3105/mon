@@ -45,7 +45,6 @@ import os
 import pathlib
 import pickle
 import shutil
-import sys
 import time
 import types
 import typing
@@ -4420,7 +4419,6 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         verbose     : bool               = True,
         *args, **kwargs
     ):
-        import one.vision.transformation as t
         super().__init__(
             root       = root,
             split      = split,
