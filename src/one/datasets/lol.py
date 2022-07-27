@@ -94,11 +94,17 @@ class LoL(ImageEnhancementDataset):
         """
         List image files.
         """
+        if self.split not in ["train", "val", "test"]:
+            console.log(
+                f"LoL dataset only supports `split`: `train`, `val`, or "
+                f"`test`. Get: {self.split}."
+            )
+            
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / self.split / "low"
+            pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("*.png")),
+                list(pattern.rglob("low/*.png")),
                 description=f"[bright_yellow]Listing LoL {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))

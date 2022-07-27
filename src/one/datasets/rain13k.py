@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Rain13k dataset and datamodule.
+Rain13K dataset and datamodule.
 """
 
 from __future__ import annotations
@@ -34,9 +34,9 @@ from one.vision.transformation import Resize
 # MARK: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="rain13k")
-class Rain13k(ImageEnhancementDataset):
+class Rain13K(ImageEnhancementDataset):
     """
-    Rain13k dataset consists 13k pairs of rain/no-rain train images.
+    Rain13K dataset consists 13k pairs of rain/no-rain train images.
     
     Args:
         root (str): Root directory of dataset.
@@ -96,7 +96,7 @@ class Rain13k(ImageEnhancementDataset):
         """
         if self.split not in ["test"]:
             console.log(
-                f"Rain13k dataset only supports `split`: `test`. "
+                f"Rain13K dataset only supports `split`: `test`. "
                 f"Get: {self.split}."
             )
             
@@ -105,7 +105,7 @@ class Rain13k(ImageEnhancementDataset):
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob(f"{self.split}/no_rain/*")),
-                description=f"[bright_yellow]Listing Rain13k {self.split} images"
+                description=f"[bright_yellow]Listing Rain13K {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -117,16 +117,16 @@ class Rain13k(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing Rain13k {self.split} labels"
+                description=f"[bright_yellow]Listing Rain13K {self.split} labels"
             ):
                 path = Path(str(img.path).replace("no_rain", "rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
 @DATAMODULES.register(name="rain13k")
-class Rain13kDataModule(DataModule):
+class Rain13KDataModule(DataModule):
     """
-    Rain13k DataModule.
+    Rain13K DataModule.
     """
     
     def __init__(
@@ -165,12 +165,12 @@ class Rain13kDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]Rain13k[/red] datasets.")
+        console.log(f"Setup [red]Rain13K[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = Rain13k(
+            self.train = Rain13K(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -180,7 +180,7 @@ class Rain13kDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.val = Rain13k(
+            self.val = Rain13K(
                 root             = self.root,
                 split            = "val",
                 shape            = self.shape,
@@ -195,7 +195,7 @@ class Rain13kDataModule(DataModule):
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain13k(
+            self.test = Rain13K(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -259,7 +259,7 @@ def test():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = Rain13kDataModule(**cfg)
+    dm  = Rain13KDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:
