@@ -142,80 +142,11 @@ class SateHaze1K(ImageEnhancementDataset):
                 
 
 @DATASETS.register(name="satehaze1kthin")
-class SateHaze1KThin(ImageEnhancementDataset):
+class SateHaze1KThin(SateHaze1K):
     """
-    SateHaze1K dataset consists 1200 pairs of hazy and corresponding haze-free
-    images.
-    
-    The new haze satellite dataset on which we evaluate our approach contains
-    1200 individual pairs of hazy images, corresponding hazy-free images and SAR
-    images. In order to guarantee the facticity, abundance, and diversity of
-    haze masks in our dataset, we use Photoshop Software to extract real haze
-    masks of the easily accessible original hazy remote sensing images to
-    generate transmission maps for synthetic images. The dataset consists of 3
-    levels of fog, called Thin fog, Moderate fog, Thick fog. In the synthetic
-    images covered by thin fog, the haze mask will be only mist which picks up
-    from the original real cloudy image. For the moderate fog image, samples
-    overlap with mist and medium fog. But for the thick fog, the transmission
-    maps are selected from the dense haze.
-    
-    Training, validation and test folds. Our training, validation and test folds
-    were approximately 80%, 10%, 10% of the total data respectively. We split
-    every 400 images to train, valid, and test set, and artificially label 45
-    of thick fog images for segmentation purposes.
-    
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+    SateHaze1K-Thin dataset.
     """
     
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
-     
     def list_images(self):
         """
         List image files.
@@ -250,80 +181,11 @@ class SateHaze1KThin(ImageEnhancementDataset):
 
 
 @DATASETS.register(name="satehaze1kmoderate")
-class SateHaze1KModerate(ImageEnhancementDataset):
+class SateHaze1KModerate(SateHaze1K):
     """
-    SateHaze1K dataset consists 1200 pairs of hazy and corresponding haze-free
-    images.
-    
-    The new haze satellite dataset on which we evaluate our approach contains
-    1200 individual pairs of hazy images, corresponding hazy-free images and SAR
-    images. In order to guarantee the facticity, abundance, and diversity of
-    haze masks in our dataset, we use Photoshop Software to extract real haze
-    masks of the easily accessible original hazy remote sensing images to
-    generate transmission maps for synthetic images. The dataset consists of 3
-    levels of fog, called Thin fog, Moderate fog, Thick fog. In the synthetic
-    images covered by thin fog, the haze mask will be only mist which picks up
-    from the original real cloudy image. For the moderate fog image, samples
-    overlap with mist and medium fog. But for the thick fog, the transmission
-    maps are selected from the dense haze.
-    
-    Training, validation and test folds. Our training, validation and test folds
-    were approximately 80%, 10%, 10% of the total data respectively. We split
-    every 400 images to train, valid, and test set, and artificially label 45
-    of thick fog images for segmentation purposes.
-    
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+    SateHaze1K-Moderate.
     """
     
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
-     
     def list_images(self):
         """
         List image files.
@@ -358,79 +220,10 @@ class SateHaze1KModerate(ImageEnhancementDataset):
                 
 
 @DATASETS.register(name="satehaze1kthick")
-class SateHaze1KThick(ImageEnhancementDataset):
+class SateHaze1KThick(SateHaze1K):
     """
-    SateHaze1K dataset consists 1200 pairs of hazy and corresponding haze-free
-    images.
-    
-    The new haze satellite dataset on which we evaluate our approach contains
-    1200 individual pairs of hazy images, corresponding hazy-free images and SAR
-    images. In order to guarantee the facticity, abundance, and diversity of
-    haze masks in our dataset, we use Photoshop Software to extract real haze
-    masks of the easily accessible original hazy remote sensing images to
-    generate transmission maps for synthetic images. The dataset consists of 3
-    levels of fog, called Thin fog, Moderate fog, Thick fog. In the synthetic
-    images covered by thin fog, the haze mask will be only mist which picks up
-    from the original real cloudy image. For the moderate fog image, samples
-    overlap with mist and medium fog. But for the thick fog, the transmission
-    maps are selected from the dense haze.
-    
-    Training, validation and test folds. Our training, validation and test folds
-    were approximately 80%, 10%, 10% of the total data respectively. We split
-    every 400 images to train, valid, and test set, and artificially label 45
-    of thick fog images for segmentation purposes.
-    
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+    SateHaze1K-Thick dataset.
     """
-    
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
     
     def list_images(self):
         """
@@ -563,29 +356,11 @@ class SateHaze1KDataModule(DataModule):
 
 
 @DATAMODULES.register(name="satehaze1kthin")
-class SateHaze1KThinDataModule(DataModule):
+class SateHaze1KThinDataModule(SateHaze1KDataModule):
     """
-    SateHaze1KThin DataModule.
+    SateHaze1K-Thin DataModule.
     """
-    
-    def __init__(
-        self,
-        root: str = DATA_DIR / "satehaze1k",
-        name: str = "satehaze1kthin",
-        *args, **kwargs
-    ):
-        super().__init__(root=root, name=name, *args, **kwargs)
-        
-    def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.class_label is None:
-            self.load_class_label()
-    
+  
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -651,37 +426,13 @@ class SateHaze1KThinDataModule(DataModule):
             self.load_class_label()
 
         self.summarize()
-        
-    def load_class_label(self):
-        """
-        Load ClassLabel.
-        """
-        pass
-
+  
       
 @DATAMODULES.register(name="satehaze1kmoderate")
-class SateHaze1KModerateDataModule(DataModule):
+class SateHaze1KModerateDataModule(SateHaze1KDataModule):
     """
-    SateHaze1KModerate DataModule.
+    SateHaze1K-Moderate DataModule.
     """
-    
-    def __init__(
-        self,
-        root: str = DATA_DIR / "satehaze1k",
-        name: str = "satehaze1kmoderate",
-        *args, **kwargs
-    ):
-        super().__init__(root=root, name=name, *args, **kwargs)
-        
-    def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.class_label is None:
-            self.load_class_label()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -748,37 +499,13 @@ class SateHaze1KModerateDataModule(DataModule):
             self.load_class_label()
 
         self.summarize()
-        
-    def load_class_label(self):
-        """
-        Load ClassLabel.
-        """
-        pass
-
+      
       
 @DATAMODULES.register(name="satehaze1kthick")
-class SateHaze1KThickDataModule(DataModule):
+class SateHaze1KThickDataModule(SateHaze1KDataModule):
     """
-    SateHaze1KThick DataModule.
+    SateHaze1K-Thick DataModule.
     """
-    
-    def __init__(
-        self,
-        root: str = DATA_DIR / "satehaze1k",
-        name: str = "satehaze1kthick",
-        *args, **kwargs
-    ):
-        super().__init__(root=root, name=name, *args, **kwargs)
-        
-    def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.class_label is None:
-            self.load_class_label()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -845,14 +572,8 @@ class SateHaze1KThickDataModule(DataModule):
             self.load_class_label()
 
         self.summarize()
-        
-    def load_class_label(self):
-        """
-        Load ClassLabel.
-        """
-        pass
-
-
+  
+  
 # MARK: - Test -----------------------------------------------------------------
 
 def test():

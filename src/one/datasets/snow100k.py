@@ -151,7 +151,20 @@ class Snow100KS(Snow100K):
                 description=f"[bright_yellow]Listing Snow100K-S {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
-
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing Snow100K-S {self.split} labels"
+            ):
+                path = Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(Image(path=path, backend=self.backend))
+                
 
 @DATASETS.register(name="snow100km")
 class Snow100KM(Snow100K):
@@ -180,7 +193,20 @@ class Snow100KM(Snow100K):
                 description=f"[bright_yellow]Listing Snow100K-M {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
-
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing Snow100K-M {self.split} labels"
+            ):
+                path = Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(Image(path=path, backend=self.backend))
+    
 
 @DATASETS.register(name="snow100km")
 class Snow100KL(Snow100K):
@@ -209,7 +235,20 @@ class Snow100KL(Snow100K):
                 description=f"[bright_yellow]Listing Snow100K-L {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
-
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing Snow100K-L {self.split} labels"
+            ):
+                path = Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(Image(path=path, backend=self.backend))
+                
 
 @DATAMODULES.register(name="snow100k")
 class Snow100KDataModule(DataModule):

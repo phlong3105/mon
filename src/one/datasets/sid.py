@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Rain800 dataset and datamodule.
+SID dataset and datamodule.
 """
 
 from __future__ import annotations
@@ -32,10 +32,10 @@ from one.vision.transformation import Resize
 
 # MARK: - Module ---------------------------------------------------------------
 
-@DATASETS.register(name="rain800")
-class Rain800(ImageEnhancementDataset):
+@DATASETS.register(name="sid")
+class SID(ImageEnhancementDataset):
     """
-    Rain800 dataset consists 800 pairs of rain/no-rain train-val images.
+    SID dataset.
     
     Args:
         root (str): Root directory of dataset.
@@ -95,7 +95,7 @@ class Rain800(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"Rain800 dataset only supports `split`: `train`, `val`, or "
+                f"SID dataset only supports `split`: `train`, `val`, or "
                 f"`test`. Get: {self.split}."
             )
             
@@ -103,8 +103,8 @@ class Rain800(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.jpg")),
-                description=f"[bright_yellow]Listing Rain800 {self.split} images"
+                list(pattern.rglob("low/*.ARW")) + list(pattern.rglob("low/*.RAF")),
+                description=f"[bright_yellow]Listing SID {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -116,22 +116,29 @@ class Rain800(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing Rain800 {self.split} labels"
+                description=f"[bright_yellow]Listing SID {self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                name     = str(img.path.name)
+                ext      = str(img.path.suffix)
+                prefix   = name.split("_")[0]
+                
+                new_name = f"{prefix}{ext}"
+                path     = str(img.path).replace("low", "high")
+                path     = path.replace(name, new_name)
+                path     = Path(path)
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
-@DATAMODULES.register(name="rain800")
-class Rain800DataModule(DataModule):
+@DATAMODULES.register(name="sid")
+class SIDDataModule(DataModule):
     """
-    Rain800 DataModule.
+    SID DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "rain13k" / "rain800",
-        name: str = "rain800",
+        root: str = DATA_DIR / "sid",
+        name: str = "sid",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -164,12 +171,12 @@ class Rain800DataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]Rain800[/red] datasets.")
+        console.log(f"Setup [red]SID[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = Rain800(
+            self.train = SID(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -179,7 +186,7 @@ class Rain800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.val = Rain800(
+            self.val = SID(
                 root             = self.root,
                 split            = "val",
                 shape            = self.shape,
@@ -194,7 +201,7 @@ class Rain800DataModule(DataModule):
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain800(
+            self.test = SID(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -223,9 +230,9 @@ class Rain800DataModule(DataModule):
 
 def test():
     cfg = {
-        "root": DATA_DIR / "rain13k" / "rain800",
+        "root": DATA_DIR / "sid",
            # Root directory of dataset.
-        "name": "rain800",
+        "name": "sid",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -258,7 +265,7 @@ def test():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = Rain800DataModule(**cfg)
+    dm  = SIDDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:

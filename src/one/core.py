@@ -1322,12 +1322,14 @@ class DistanceMetric(Enum):
  
 
 class ImageFormat(Enum):
+    ARW  = ".arw"
     BMP  = ".bmp"
     DNG	 = ".dng"
     JPG  = ".jpg"
     JPEG = ".jpeg"
     PNG  = ".png"
     PPM  = ".ppm"
+    RAF  = ".raf"
     TIF  = ".tif"
     TIFF = ".tiff"
     
@@ -1341,12 +1343,14 @@ class ImageFormat(Enum):
                 enum and the values being the enum itself.
         """
         return {
+            "arw" : ImageFormat.ARW,
             "bmp" : ImageFormat.BMP,
             "dng" : ImageFormat.DNG,
             "jpg" : ImageFormat.JPG,
             "jpeg": ImageFormat.JPEG,
             "png" : ImageFormat.PNG,
             "ppm" : ImageFormat.PPM,
+            "raf" : ImageFormat.RAF,
             "tif" : ImageFormat.TIF,
             "tiff": ImageFormat.TIF,
         }
@@ -1361,14 +1365,16 @@ class ImageFormat(Enum):
                 being the enum itself.
         """
         return {
-            0: ImageFormat.BMP,
-            1: ImageFormat.DNG,
-            2: ImageFormat.JPG,
-            3: ImageFormat.JPEG,
-            4: ImageFormat.PNG,
-            5: ImageFormat.PPM,
-            6: ImageFormat.TIF,
-            7: ImageFormat.TIF,
+            0: ImageFormat.ARW,
+            1: ImageFormat.BMP,
+            2: ImageFormat.DNG,
+            3: ImageFormat.JPG,
+            4: ImageFormat.JPEG,
+            5: ImageFormat.PNG,
+            6: ImageFormat.PPM,
+            7: ImageFormat.RAF,
+            8: ImageFormat.TIF,
+            9: ImageFormat.TIF,
         }
     
     @staticmethod
@@ -3740,7 +3746,7 @@ class Image:
         if path is not None:
             path = Path(path)
             assert_image_file(path)
-        self.path = path
+        self.path: Path = path
         
         if name is None:
             name = str(Path(path).name) if is_image_file(path=path) else f"{id}"
