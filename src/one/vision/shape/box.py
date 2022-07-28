@@ -7,10 +7,7 @@ calculations, box metrics, ...
 
 from __future__ import annotations
 
-import inspect
 import math
-import sys
-from typing import Union
 
 import cv2
 import numpy as np
@@ -38,45 +35,39 @@ def affine_box(
     translate : Ints,
     scale     : float,
     shear     : Floats,
-    center    : Union[Ints, None] = None,
-    drop_ratio: float             = 0.0,
-    inplace   : bool              = False,
+    center    : Ints | None = None,
+    drop_ratio: float       = 0.0,
+    inplace   : bool        = False,
 ) -> Tensor:
-    """Apply affine transformation on the image keeping image center invariant.
+    """
+    Apply affine transformation on the image keeping image center invariant.
     
     References:
         https://www.thepythoncode.com/article/image-transformations-using-opencv-in-python
     
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Ints[H, W]):
-            Image size.
-        angle (float):
-            Rotation angle in degrees between -180 and 180, clockwise direction.
-        translate (Ints):
-            Horizontal and vertical translations (post-rotation translation).
-        scale (float):
-            Overall scale.
-        shear (Floats):
-            Shear angle value in degrees between -180 to 180, clockwise
-            direction. If a sequence is specified, the first value corresponds
-            to a shear parallel to the x-axis, while the second value
-            corresponds to a shear parallel to the y-axis.
-        center (Ints, None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image_size (Ints): Image size of shape [H, W].
+        angle (float): Rotation angle in degrees between -180 and 180,
+            clockwise direction.
+        translate (Ints): Horizontal and vertical translations (post-rotation
+            translation).
+        scale (float): Overall scale.
+        shear (Floats): Shear angle value in degrees between -180 to 180,
+            clockwise direction. If a sequence is specified, the first value
+            corresponds to a shear parallel to the x-axis, while the second
+            value corresponds to a shear parallel to the y-axis.
+        center (Ints | None): Center of affine transformation. If None, use the
+            center of the image. Defaults to None.
+        drop_ratio (float): If the fraction of a bounding box left in the image 
+            after being clipped is less than `drop_ratio` the bounding box is 
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes. 
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Transformed box.
+        Transformed box of shape [N, 4].
     """
     assert_tensor_of_ndim(box, 2)
     
@@ -145,26 +136,23 @@ def clip_box(
     drop_ratio: float = 0.0,
     inplace   : bool  = False,
 ) -> Tensor:
-    """Clip bounding boxes to image size [H, W] and removes the bounding boxes
+    """
+    Clip bounding boxes to image size [H, W] and removes the bounding boxes
     which lose too much area as a result of the augmentation. Both sets of boxes
     are expected to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
     `0 <= y1 < y2`.
     
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes.
-        image_size (Dim2T[H, W], None):
-            Image size.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4].
+        image_size (Ints | None): Image size of shape [H, W].
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Clipped bounding boxes.
+        Clipped bounding boxes of shape [N, 4].
     """
     assert_tensor_of_ndim(box, 2)
     h, w = to_size(image_size)
@@ -184,17 +172,17 @@ def clip_box(
 
 
 def compute_box_area(box: Tensor) -> Tensor:
-    """Computes the area of bounding box(es), which are specified by their
+    """
+    Computes the area of bounding box(es), which are specified by their
     (x1, y1, x2, y2) coordinates.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes for which the area will be computed. They are expected to be
-            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        box (Tensor): Bounding boxes for which the area will be computed.
+            They are expected to be in (x1, y1, x2, y2) format with
+            `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Returns:
-        area (Tensor[N, 4]):
-            The area for each box.
+        The area for each box.
     """
     assert_tensor_of_ndim(box, 2)
     box                = upcast(box)
@@ -205,25 +193,21 @@ def compute_box_area(box: Tensor) -> Tensor:
 def compute_box_intersection_union(
     box1: Tensor, box2: Tensor
 ) -> tuple[Tensor, Tensor]:
-    """Compute the intersection and union of two set of boxes. Both sets of
-    boxes are expected to be in (x1, y1, x2, y2) format with
-    `0 <= x1 < x2` and `0 <= y1 < y2`.
+    """
+    Compute the intersection and union of two set of boxes. Both sets of boxes
+    are expected to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
+    `0 <= y1 < y2`.
     
-    Implementation from https://github.com/kuangliu/torchcv/blob/master
-    /torchcv/utils/box.py
+    Implementation from https://github.com/kuangliu/torchcv/blob/master/torchcv/utils/box.py
     with slight modifications.
     
     Args:
-        box1 (Tensor[N, 4]):
-            First set of boxes.
-        box2 (Tensor[N, 4]):
-            Second set of boxes.
+        box1 (Tensor): First set of boxes of shape [N, 4].
+        box2 (Tensor): Second set of boxes of shape [N, 4].
             
     Returns:
-        inter (Tensor):
-            Intersection
-        union (Tensor):
-            Union.
+        Intersection.
+        Union.
     """
     assert_tensor_of_ndim(box1, 2)
     assert_tensor_of_ndim(box2, 2)
@@ -238,20 +222,18 @@ def compute_box_intersection_union(
 
 
 def compute_box_iou(box1: Tensor, box2: Tensor) -> Tensor:
-    """Return intersection-over-union (Jaccard index) between two sets of boxes.
+    """
+    Return intersection-over-union (Jaccard index) between two sets of boxes.
     Both sets of boxes are expected to be in (x1, y1, x2, y2) format with
     `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Args:
-        box1 (Tensor[N, 4]):
-            First set of boxes.
-        box2 (Tensor[M, 4]):
-            Second set of boxes.
+        box1 (Tensor): First set of boxes of shape [N, 4].
+        box2 (Tensor): Second set of boxes of shape [M, 4].
     
     Returns:
-        iou (Tensor[N, M]):
-            The NxM matrix containing the pairwise IoU values for every element
-            in boxes1 and boxes2.
+        The NxM matrix containing the pairwise IoU values for every element
+        in boxes1 and boxes2.
     """
     inter, union = compute_box_intersection_union(box1, box2)
     iou          = inter / union
@@ -259,22 +241,20 @@ def compute_box_iou(box1: Tensor, box2: Tensor) -> Tensor:
 
 
 def compute_box_iou_old(box1: Tensor, box2: Tensor) -> Tensor:
-    """From SORT: Computes IOU between two sets of boxes.
+    """
+    From SORT: Computes IOU between two sets of boxes.
     
     Return intersection-over-union (Jaccard index) between two sets of boxes.
     Both sets of boxes are expected to be in (x1, y1, x2, y2) format with
     `0 <= x1 < x2` and `0 <= y1 < y2`.
 
     Args:
-        box1 (Tensor[N, 4]):
-            First set of boxes.
-        box2 (Tensor[M, 4]):
-            Second set of boxes.
+        box1 (Tensor): First set of boxes of shape [N, 4].
+        box2 (Tensor): Second set of boxes of shape [M, 4].
     
     Returns:
-        iou (Tensor[N, M]):
-            The NxM matrix containing the pairwise IoU values for every element
-            in boxes1 and boxes2.
+        The NxM matrix containing the pairwise IoU values for every element in
+        boxes1 and boxes2.
     """
     assert_tensor_of_ndim(box1, 2)
     assert_tensor_of_ndim(box2, 2)
@@ -297,24 +277,22 @@ def compute_box_iou_old(box1: Tensor, box2: Tensor) -> Tensor:
 def generate_box(
     x_start: Tensor, y_start: Tensor, width: Tensor, height: Tensor
 ) -> Tensor:
-    """Generate 2D bounding boxes according to the provided start coords,
+    """
+    Generate 2D bounding boxes according to the provided start coords,
     width and height.
 
     Args:
-        x_start (Tensor):
-            Tensor containing the x coordinates of the bounding boxes to be
-            extracted. Shape must be a scalar image or [B].
-        y_start (Tensor):
-            Tensor containing the y coordinates of the bounding boxes to be
-            extracted. Shape must be a scalar image or [B].
-        width (Tensor):
-            Widths of the masked image. Shape must be a scalar image or [B].
-        height (Tensor):
-            Heights of the masked image. Shape must be a scalar image or [B].
+        x_start (Tensor): Tensor containing the x coordinates of the bounding
+            boxes to be extracted. Shape must be a scalar image or [B].
+        y_start (Tensor): Tensor containing the y coordinates of the bounding
+            boxes to be extracted. Shape must be a scalar image or [B].
+        width (Tensor): Widths of the masked image. Shape must be a scalar
+            image or [B].
+        height (Tensor): Heights of the masked image. Shape must be a scalar
+            image or [B].
 
     Returns:
-        box (Tensor):
-            Bounding box image.
+        Bounding box.
 
     Examples:
         >>> x_start = Tensor([0, 1])
@@ -368,17 +346,16 @@ def generate_box(
 
 
 def get_box_center(box: Tensor) -> Tensor:
-    """Computes the center of bounding box(es), which are specified by their
+    """
+    Computes the center of bounding box(es), which are specified by their
     (x1, y1, x2, y2) coordinates.
     
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Returns:
-        center (Tensor[N, 2]):
-            The center for each box.
+        The center for each box of shape [N, 2].
     """
     assert_tensor_of_ndim(box, 2)
     box          = upcast(box)
@@ -388,17 +365,16 @@ def get_box_center(box: Tensor) -> Tensor:
 
 
 def get_box_corners(box: Tensor) -> Tensor:
-    """Get corners of bounding boxes.
+    """
+    Get corners of bounding boxes.
     
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Returns:
-        corners (Tensor[N, 8]):
-            Shape `N x 8` containing N bounding boxes each described by their
-            corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
+        Tensor of shape `N x 8` containing N bounding boxes each described by
+        their corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
     """
     assert_tensor_of_ndim(box, 2)
     width  = (box[:, 2] - box[:, 0]).reshape(-1, 1)
@@ -415,16 +391,15 @@ def get_box_corners(box: Tensor) -> Tensor:
 
 
 def get_box_corners_points(box: Tensor) -> Tensor:
-    """Get corners of bounding boxes as points.
+    """
+    Get corners of bounding boxes as points.
     
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Returns:
         corners (Tensor):
-        
     """
     assert_tensor(box)
     if box.ndim == 2:
@@ -453,17 +428,16 @@ def get_box_corners_points(box: Tensor) -> Tensor:
 
 
 def get_enclosing_box(box: Tensor) -> Tensor:
-    """Get an enclosing box for rotated corners of a bounding box.
+    """
+    Get an enclosing box for rotated corners of a bounding box.
     
     Args:
-        box (Tensor[N, 8]):
-            Shape `N x 8` containing N bounding boxes each described by their
-            corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
+        box (Tensor): Bounding of shape [N, 8], containing N bounding boxes
+            each described by their corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
 
     Returns:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        Bounding boxes of shape [N, 4]. They are expected to be in
+            (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
     """
     assert_tensor_of_ndim(box, 2)
     x_    = box[:, [0, 2, 4, 6]]
@@ -479,23 +453,20 @@ def get_enclosing_box(box: Tensor) -> Tensor:
 def horizontal_flip_box(
     box: Tensor, image_center: Tensor, inplace: bool = False
 ) -> Tensor:
-    """Horizontally flip boxes, which are specified by their (cx, cy, w, h) norm
+    """
+    Horizontally flip boxes, which are specified by their (cx, cy, w, h) norm
     coordinates.
     
     Reference:
 		https://blog.paperspace.com/data-augmentation-for-bounding-boxes/
 	
     Args:
-        box (Tensor[N, 4]):
-            Boxes to be flipped.
-        image_center (Tensor[4]):
-            Center of the image.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4] to be flipped.
+        image_center (Tensor): Center of the image.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Flipped boxes.
+        Flipped boxes of shape [N, 4].
     """
     assert_tensor_of_ndim(box, 2)
     assert_tensor_of_ndim(image_center, 1)
@@ -514,33 +485,27 @@ def horizontal_translate_box(
     box       : Tensor,
     image_size: Ints,
     magnitude : int,
-    center    : Union[Ints, None] = None,
-    drop_ratio: float             = 0.0,
-    inplace   : bool              = False,
+    center    : Ints | None = None,
+    drop_ratio: float       = 0.0,
+    inplace   : bool        = False,
 ) -> Tensor:
     """Translate the bounding box in horizontal direction.
 
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Ints[H, W, *]):
-            Original image size.
-        magnitude (int):
-             Horizontally translation.
-        center (Ints, None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image_size (Ints): Original image size.
+        magnitude (int): Horizontally translation.
+        center (Ints | None): Center of affine transformation. If None, use the
+            center of the image. Defaults to None.
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Translated boxes.
+        Translated boxes of shape [N, 4].
     """
     return translate_box(
         box        = box,
@@ -553,7 +518,8 @@ def horizontal_translate_box(
 
 
 def nms(box: Tensor, scores: Tensor, iou_threshold: float) -> Tensor:
-    """Perform non-maxima suppression (NMS) on a given image of bounding boxes
+    """
+    Perform non-maxima suppression (NMS) on a given image of bounding boxes
     according to the intersection-over-union (IoU).
     
     NMS iteratively removes lower scoring boxes which have an IoU greater than
@@ -565,18 +531,16 @@ def nms(box: Tensor, scores: Tensor, iou_threshold: float) -> Tensor:
     PyTorch when repeated values are present.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes to perform NMS on. They are expected to be in (x1, y1, x2, y2)
-            format with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        scores (Tensor[N]):
-            Scores for each one of the boxes.
-        iou_threshold (float):
-            Discards all overlapping boxes with IoU > iou_threshold
+        box (Tensor): Bounding boxes of shape [N, 4] to perform NMS on.
+            They are expected to be in (x1, y1, x2, y2) format with
+            `0 <= x1 < x2` and `0 <= y1 < y2`.
+        scores (Tensor): Scores for each one of the boxes.
+        iou_threshold (float): Discards all overlapping boxes with
+            iou > iou_threshold
 
     Return:
-        (Tensor):
-            Indices of the elements that have been kept by NMS, sorted in
-            decreasing order of scores
+        Indices of the elements that have been kept by NMS, sorted in decreasing
+        order of scores
 
     Example:
         >>> boxes  = Tensor([
@@ -629,33 +593,28 @@ def rotate_box(
     box       : Tensor,
     image_size: Ints,
     angle     : float,
-    center    : Union[Ints, None] = None,
+    center    : Ints | None = None,
     drop_ratio: float             = 0.0,
     inplace   : bool              = False,
 ) -> Tensor:
-    """Rotate the bounding box by the given magnitude.
+    """
+    Rotate the bounding box by the given magnitude.
 
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Ints[H, W, *]):
-            Original image size.
-        angle (float):
-			Angle to rotate the bounding box.
-        center (Ints, None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image_size (Ints): Original image size.
+        angle (float): Angle to rotate the bounding box.
+        center (Ints | None): Center of affine transformation. If None, use the
+            center of the image. Defaults to None.
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Translated boxes.
+        Translated boxes of shape [N, 4].
     """
     return affine_box(
         box        = box,
@@ -673,42 +632,37 @@ def rotate_box(
 def scale_box(
     box       : Tensor,
     cur_size  : Ints,
-    new_size  : Union[Ints,   None] = None,
-    factor    : Union[Floats, None] = (1.0, 1.0),
-    keep_shape: bool                = False,
-    drop_ratio: float               = 0.0,
-    inplace   : bool                = False,
+    new_size  : Ints |   None = None,
+    factor    : Floats | None = (1.0, 1.0),
+    keep_shape: bool          = False,
+    drop_ratio: float         = 0.0,
+    inplace   : bool          = False,
 ) -> Tensor:
-    """Scale bounding boxes coordinates by the given factor or by inferring from
+    """
+    Scale bounding boxes coordinates by the given factor or by inferring from
     current image size and new size.
     
     References:
         https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
 
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        cur_size (Ints[C, H, W]):
-            Current image size.
-        new_size (Ints[C, W, H]):
-            New image size. Default: `None`.
-        factor (Floats):
-            Desired scaling factor in each direction. If scalar, the value is
-            used for both the vertical and horizontal direction.
-            Default: `(1.0, 1.0)`.
-        keep_shape (bool):
-            When `True`, translate the scaled bounding boxes. Default: `False`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        cur_size (Ints): Current image size.
+        new_size (Ints | None): New image size. Defaults to None.
+        factor (Floats): Desired scaling factor in each direction. If scalar,
+            the value is used for both the vertical and horizontal direction.
+            Defaults to (1.0, 1.0).
+        keep_shape (bool): When True, translate the scaled bounding boxes.
+            Defaults to False.
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Scaled bounding boxes.
+        Scaled bounding boxes of shape [N, 4].
     """
     assert_tensor_of_ndim(box, 2)
     
@@ -744,28 +698,23 @@ def scale_box_original(
     box       : Tensor,
     cur_size  : Ints,
     new_size  : Ints,
-    ratio_pad = None,
+    ratio_pad        = None,
     inplace   : bool = False,
 ) -> Tensor:
-    """Scale bounding boxes coordinates (from detector size) to the original
-    image size.
+    """
+    Scale bounding boxes coordinates (from detector size) to the original image
+    size.
 
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        cur_size (Ints[C, H, W]):
-            Detector's input size.
-        new_size (Ints[C, H, W]):
-            Original image size.
-        ratio_pad:
-            Default: `None`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor):Bounding boxes of shape [N, 4]. They are expected to be in
+            (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        cur_size (Ints): Detector's input size.
+        new_size (Ints): Original image size.
+        ratio_pad: Defaults to None.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Scaled bounding boxes.
+        Scaled bounding boxes of shape [N, 4].
     """
     assert_tensor_of_ndim(box, 2)
     
@@ -794,33 +743,28 @@ def shear_box(
     box       : Tensor,
     image_size: Ints,
     magnitude : Ints,
-    center    : Union[Ints, None] = None,
-    drop_ratio: float             = 0.0,
-    inplace   : bool              = False,
+    center    : Ints | None = None,
+    drop_ratio: float       = 0.0,
+    inplace   : bool        = False,
 ) -> Tensor:
-    """Shear bounding boxes coordinates by the given magnitude.
+    """
+    Shear bounding boxes coordinates by the given magnitude.
     
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Ints[C, H, W]):
-            Original image size.
-        magnitude (Ints[hor, ver]):
-             Shear magnitude.
-        center (Ints, None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image_size (Ints): Original image size.
+        magnitude (Ints): Shear magnitude.
+        center (Ints | None): Center of affine transformation. If None, use the
+            center of the image. Defaults to None.
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Sheared bounding boxes.
+        Sheared bounding boxes of shape [N, 4].
     """
     return affine_box(
         box        = box,
@@ -839,33 +783,28 @@ def translate_box(
     box       : Tensor,
     image_size: Ints,
     magnitude : Ints,
-    center    : Union[Ints, None] = None,
-    drop_ratio: float             = 0.0,
-    inplace   : bool              = False,
+    center    : Ints | None = None,
+    drop_ratio: float       = 0.0,
+    inplace   : bool        = False,
 ) -> Tensor:
-    """Translate the bounding box by the given magnitude.
+    """
+    Translate the bounding box by the given magnitude.
 
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Ints[H, W, *]):
-            Original image size.
-        magnitude (Ints[hor, ver]):
-             Translation magnitude.
-        center (Ints, None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image_size (Ints): Original image size.
+        magnitude (Ints): Translation magnitude.
+        center (Ints | None): Center of affine transformation. If None, use the
+            center of the image. Defaults to None.
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Translated boxes.
+        Translated boxes of shape [N, 4].
     """
     return affine_box(
         box        = box,
@@ -883,23 +822,20 @@ def translate_box(
 def vertical_flip_box(
     box: Tensor, image_center: Tensor, inplace: bool = False,
 ) -> Tensor:
-    """Flip boxes vertically, which are specified by their (cx, cy, w, h) norm
+    """
+    Flip boxes vertically, which are specified by their (cx, cy, w, h) norm
     coordinates.
 	
 	Reference:
 		https://blog.paperspace.com/data-augmentation-for-bounding-boxes/
 	
     Args:
-        box (Tensor[N, 4]):
-            Boxes to be flipped.
-        image_center (Tensor[4]):
-            Center of the image.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4] to be flipped.
+        image_center (Tensor): Center of the image.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Flipped boxes.
+        Flipped boxes of shape [N, 4].
     """
     assert_tensor_of_ndim(box, 2)
     
@@ -917,33 +853,28 @@ def vertical_translate_box(
     box       : Tensor,
     image_size: Ints,
     magnitude : int,
-    center    : Union[Ints, None] = None,
-    drop_ratio: float             = 0.0,
-    inplace   : bool              = False
+    center    : Ints | None = None,
+    drop_ratio: float       = 0.0,
+    inplace   : bool        = False
 ) -> Tensor:
-    """Translate the bounding box in vertical direction.
+    """
+    Translate the bounding box in vertical direction.
 
     Args:
-        box (Tensor[N, 4]):
-            Bounding boxes. They are expected to be in (x1, y1, x2, y2) format
-            with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size (Ints[H, W, *]):
-            Original image size.
-        magnitude (int):
-             Vertically translation.
-        center (Ints, None):
-            Center of affine transformation.  If `None`, use the center of the
-            image. Default: `None`.
-        drop_ratio (float):
-            If the fraction of a bounding box left in the image after being
-            clipped is less than `drop_ratio` the bounding box is dropped.
-            If `drop_ratio==0`, don't drop any bounding boxes. Default: `0.0`.
-        inplace (bool):
-            If `True`, make this operation inplace. Default: `False`.
+        box (Tensor): Bounding boxes of shape [N, 4]. They are expected to be
+            in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image_size (Ints): Original image size.
+        magnitude (int): Vertically translation.
+        center (Ints | None): Center of affine transformation. If None, use the
+            center of the image. Defaults to None.
+        drop_ratio (float): If the fraction of a bounding box left in the image
+            after being clipped is less than `drop_ratio` the bounding box is
+            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
+            Defaults to 0.0.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
             
     Returns:
-        box (Tensor[N, 4]):
-            Translated boxes.
+        Translated boxes of shape [N, 4].
     """
     return translate_box(
         box        = box,
@@ -953,13 +884,3 @@ def vertical_translate_box(
         drop_ratio = drop_ratio,
         inplace    = inplace,
     )
-
-
-# MARK: - Main
-
-__all__ = [
-    name for name, value in inspect.getmembers(
-        sys.modules[__name__],
-        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
-    )
-]

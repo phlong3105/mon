@@ -2900,20 +2900,20 @@ def to_4d_array(input) -> np.ndarray:
     """
     if isinstance(input, dict):
         input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]
-    if isinstance(input, tuple):                                                
+    if isinstance(input, tuple):
         input = list(input)                                                     # tuple -> list[Tensor | np.ndarray]
-    if isinstance(input, list) and is_list_of(input, Tensor):                   
+    if isinstance(input, list) and is_list_of(input, Tensor):
         input = [i.detach().cpu().numpy() for i in input]                       # list[Tensor] -> list[np.ndarray]
     if isinstance(input, list) and is_list_of(input, np.ndarray):
-        if all(i.ndim == 2 for i in input):                                     
+        if all(i.ndim == 2 for i in input):
             input = [np.expand_dims(i, axis=0) for i in input]                  # list[2D np.ndarray] -> list[3D np.ndarray]
-        if all(i.ndim == 3 for i in input):                                     
+        if all(i.ndim == 3 for i in input):
             input = np.stack(input)                                             # list[3D np.ndarray] -> 4D np.ndarray
-        else:                                                                   
-            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")                
-    if isinstance(input, Tensor):                                               
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")
+    if isinstance(input, Tensor):
         input = input.detach().cpu().numpy()                                    # Tensor -> np.ndarray any dimensions
-    if isinstance(input, np.ndarray):                                           
+    if isinstance(input, np.ndarray):
         return _to_4d_array(input)                                              # np.ndarray any dimensions -> 4D np.ndarray
     raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
     
@@ -2992,21 +2992,21 @@ def to_4d_tensor_list(input) -> list[Tensor]:
         List of 4D tensors of shape [B, C, H, W].
     """
     if isinstance(input, dict):
-        input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]              
-    if isinstance(input, tuple):                                                                                                 
-        input = list(input)                                                     # tuple -> list[Tensor | np.ndarray]             
-    if isinstance(input, np.ndarray):                                                                                            
-        input = torch.from_numpy(input)                                         # np.ndarray -> Tensor any dimension             
-    if isinstance(input, Tensor):                                                                                                
-        if input.ndim == 3:                                                                                                      
+        input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]
+    if isinstance(input, tuple):
+        input = list(input)                                                     # tuple -> list[Tensor | np.ndarray]
+    if isinstance(input, np.ndarray):
+        input = torch.from_numpy(input)                                         # np.ndarray -> Tensor any dimension
+    if isinstance(input, Tensor):
+        if input.ndim == 3:
             input = [input.unsqueeze(dim=0)]                                    # Tensor -> list[4D Tensor]
-        elif input.ndim == 4:                                                                                                    
+        elif input.ndim == 4:
             input = [input]                                                     # Tensor -> list[4D Tensor]
-        elif input.ndim == 5:                                                                                                    
+        elif input.ndim == 5:
             input = list(input)                                                 # Tensor -> list[4D Tensor]
-        else:                                                                                                                    
-            raise ValueError(f"Require 3 <= `input.ndim` <= 5.")                                                                 
-    if isinstance(input, list) and is_list_of(input, np.ndarray):                                                                
+        else:
+            raise ValueError(f"Require 3 <= `input.ndim` <= 5.")
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
         input = [torch.from_numpy(i) for i in input]                            # list[np.ndarray] -> list[Tensor any dimensions]
     
     if isinstance(input, list) and is_list_of(input, Tensor):
@@ -3025,21 +3025,21 @@ def to_5d_array(input) -> np.ndarray:
         A 5D array of shape [*, B, H, W, C].
     """
     if isinstance(input, dict):
-        input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]         
-    if isinstance(input, tuple):                                                                                            
-        input = list(input)                                                     # tuple -> list[Tensor | np.ndarray]        
-    if isinstance(input, list) and is_list_of(input, Tensor):                                                               
-        input = [i.detach().cpu().numpy() for i in input]                       # list[Tensor] -> list[np.ndarray]          
-    if isinstance(input, list) and is_list_of(input, np.ndarray):                                                          
-        if all(i.ndim == 2 for i in input):                                                                                 
+        input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]
+    if isinstance(input, tuple):
+        input = list(input)                                                     # tuple -> list[Tensor | np.ndarray]
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        input = [i.detach().cpu().numpy() for i in input]                       # list[Tensor] -> list[np.ndarray]
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        if all(i.ndim == 2 for i in input):
             input = [np.expand_dims(i, axis=0) for i in input]                  # list[2D np.ndarray] -> list[3D np.ndarray]
         if all(3 <= i.ndim <= 4 for i in input):
-            input = np.stack(input)                                             # list[3D np.ndarray] -> 4D np.ndarray      
-        else:                                                                                                               
-            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")                                                            
-    if isinstance(input, Tensor):                                                                                           
-        input = input.detach().cpu().numpy()                                    # Tensor -> np.ndarray any dimensions       
-    if isinstance(input, np.ndarray):                                                                                       
+            input = np.stack(input)                                             # list[3D np.ndarray] -> 4D np.ndarray
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")
+    if isinstance(input, Tensor):
+        input = input.detach().cpu().numpy()                                    # Tensor -> np.ndarray any dimensions
+    if isinstance(input, np.ndarray):
         return _to_5d_array(input)                                              # np.ndarray any dimensions -> 5D np.ndarray
     raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
 
@@ -3055,21 +3055,21 @@ def to_5d_tensor(input: Any) -> Tensor:
         A 5D tensor of shape [*, B, C, H, W].
     """
     if isinstance(input, dict):
-        input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]  
-    if isinstance(input, tuple):                                                                                     
-        input = list(input)                                                     # tuple -> list[Tensor | np.ndarray] 
-    if isinstance(input, list) and is_list_of(input, np.ndarray):                                                    
-        input = [torch.from_numpy(i) for i in input]                            # list[np.ndarray] -> list[Tensor]   
-    if isinstance(input, list) and is_list_of(input, Tensor):                                                        
-        if all(i.ndim == 2 for i in input):                                                                          
-            input = [i.unsqueeze(dim=0) for i in input]                         # list[2D Tensor] -> list[3D Tensor] 
-        if all(3 <= i.ndim <= 4 for i in input):                                                                     
-            input = torch.stack(input, dim=0)                                   # list[3D Tensor] -> 4D Tensor       
-        else:                                                                                                        
-            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")                                                     
-    if isinstance(input, np.ndarray):                                                                                
+        input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]
+    if isinstance(input, tuple):
+        input = list(input)                                                     # tuple -> list[Tensor | np.ndarray]
+    if isinstance(input, list) and is_list_of(input, np.ndarray):
+        input = [torch.from_numpy(i) for i in input]                            # list[np.ndarray] -> list[Tensor]
+    if isinstance(input, list) and is_list_of(input, Tensor):
+        if all(i.ndim == 2 for i in input):
+            input = [i.unsqueeze(dim=0) for i in input]                         # list[2D Tensor] -> list[3D Tensor]
+        if all(3 <= i.ndim <= 4 for i in input):
+            input = torch.stack(input, dim=0)                                   # list[3D Tensor] -> 4D Tensor
+        else:
+            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")
+    if isinstance(input, np.ndarray):
         input = torch.from_numpy(input)                                         # np.ndarray -> Tensor any dimensions
-    if isinstance(input, Tensor):                                                                                    
+    if isinstance(input, Tensor):
         return _to_5d_tensor(input)                                             # Tensor any dimensions -> 5D Tensor
     raise TypeError(f"`input` must be a `Tensor`. But got: {type(input)}.")
 
@@ -3254,6 +3254,8 @@ to_6tuple = to_ntuple(6)
 
 # H1: - Dataclass --------------------------------------------------------------
 
+# H2: - Class Label ------------------------------------------------------------
+
 def majority_voting(labels: list[dict]) -> dict:
     """
     It counts the number of appearance of each label, and returns the label with
@@ -3280,67 +3282,6 @@ def majority_voting(labels: list[dict]) -> dict:
     # Get k (label's id) with max v
     max_id = max(label_voting, key=label_voting.get)
     return unique_labels[max_id]
-
-
-class BBox:
-    """
-    Bounding box object with (b1, b2, b3, b4, confidence) format.
-    
-    References:
-        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/BBox
-    """
-    
-    def __init__(
-        self,
-        b1        : float,
-        b2        : float,
-        b3        : float,
-        b4        : float,
-        confidence: float            = 1.0,
-        id        : int | str        = uuid.uuid4().int,
-        image_id  : int | str | None = None,
-        class_id  : int | str | None = None,
-        format    : BBoxFormat       = BBoxFormat.CXCYWH_NORM,
-    ):
-        self.id         = id
-        self.image_id   = image_id
-        self.class_id   = class_id
-        self.b1         = b1
-        self.b2         = b2
-        self.b3         = b3
-        self.b4         = b4
-        self.confidence = confidence
-        self.format     = format
-        
-    @property
-    def is_normalized(self) -> bool:
-        """
-        It checks if the values of the four variables are less than or equal
-        to 1.0.
-        
-        Returns:
-          A boolean value.
-        """
-        return all(i <= 1.0 for i in [self.b1, self.b2, self.b3, self.b4])
-    
-    @property
-    def label(self) -> Tensor:
-        """
-        It returns a tensor containing the image id, class id, bounding box
-        coordinates, and confidence
-        
-        Returns:
-            A tensor of the image_id, class_id, b1, b2, b3, b4, and confidence.
-        """
-        return torch.Tensor(
-            [
-                self.image_id,
-                self.class_id,
-                self.b1, self.b2, self.b3, self.b4,
-                self.confidence
-            ],
-            dtype=torch.float32
-        )
 
 
 class ClassLabel:
@@ -3702,6 +3643,68 @@ class ClassLabel:
         print_table(self.classes)
 
 
+# H2: - Composite Data ---------------------------------------------------------
+
+class BBox:
+    """
+    Bounding box object with (b1, b2, b3, b4, confidence) format.
+    
+    References:
+        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/BBox
+    """
+    
+    def __init__(
+        self,
+        b1        : float,
+        b2        : float,
+        b3        : float,
+        b4        : float,
+        confidence: float      = 1.0,
+        id        : int        = uuid.uuid4().int,
+        image_id  : int        = -1,
+        class_id  : int        = -1,
+        format    : BBoxFormat = BBoxFormat.CXCYWH_NORM,
+    ):
+        self.id         = id
+        self.image_id   = image_id
+        self.class_id   = class_id
+        self.b1         = b1
+        self.b2         = b2
+        self.b3         = b3
+        self.b4         = b4
+        self.confidence = confidence
+        self.format     = format
+     
+    @property
+    def bbox(self) -> Tensor:
+        """
+        It returns a tensor containing the image id, class id, bounding box
+        coordinates, and confidence.
+        
+        Returns:
+            A tensor of the image_id, class_id, b1, b2, b3, b4, and confidence.
+        """
+        return torch.Tensor(
+            [
+                self.image_id, self.class_id,
+                self.b1, self.b2, self.b3, self.b4,
+                self.confidence,
+            ],
+            dtype=torch.float32
+        )
+    
+    @property
+    def is_normalized(self) -> bool:
+        """
+        It checks if the values of the four variables are less than or equal
+        to 1.0.
+        
+        Returns:
+          A boolean value.
+        """
+        return all(i <= 1.0 for i in [self.b1, self.b2, self.b3, self.b4])
+   
+
 class Image:
     """
     Image object.
@@ -3807,12 +3810,66 @@ class Image:
         }
 
 
-class KITTILabel:
+class Instance:
+    """
+    Instance (Segmentation) data consists of object's parts (polygons) and a
+    single bounding box covering all parts.
     """
     
-    """
-    pass
+    def __init__(
+        self,
+        bbox      : Tensor | Sequence[float],
+        polygons  : Tensor | Sequence[float],
+        confidence: float      = 1.0,
+        id        : int        = uuid.uuid4().int,
+        image_id  : int        = -1,
+        class_id  : int        = -1,
+        format    : BBoxFormat = BBoxFormat.CXCYWH_NORM,
+        *args, **kwargs
+    ):
+        self.id         = id
+        self.image_id   = image_id
+        self.class_id   = class_id
+        self.bbox       = bbox
+        self.polygons   = polygons
+        self.confidence = confidence
+        self.format     = format
+        
+    def simplify(self, n: int = -1):
+        """
+        Simplify each polygon to contains only `n` points.
+         
+        Args:
+            n (int): Number of points to keep in each polygon
 
+        Returns:
+
+        """
+        pass
+
+
+class SegmentationMask(Image):
+    """
+    Segmentation mask is similar to an image but each pixel is encoded with
+    the class id instead of RGB values.
+    """
+    
+    @property
+    def class_mask(self) -> Tensor:
+        pass
+    
+    @property
+    def one_hot_mask(self) -> Tensor:
+        pass
+
+
+class COCOInstance(Instance):
+    """
+    COCO instance format.
+    """
+    
+    pass
+    
 
 class VOCBBox(BBox):
     """
@@ -3832,7 +3889,7 @@ class VOCBBox(BBox):
         difficult (int): An object is marked as difficult when the object is
             considered difficult to recognize. If the object is difficult to
             recognize then we set difficult to 1 else set it to 0.
-        bndbox (Tensor | list | tuple): Axis-aligned rectangle specifying the
+        bndbox (Tensor | Sequence[float]): Axis-aligned rectangle specifying the
             extent of the object visible in the image.
         pose (str): Specify the skewness or orientation of the image.
             Defaults to Unspecified, which means that the image is not skewed.
@@ -3843,7 +3900,7 @@ class VOCBBox(BBox):
         name     : str,
         truncated: int,
         difficult: int,
-        bndbox   : Tensor | list | tuple,
+        bndbox   : Tensor | Sequence[float],
         pose     : str = "Unspecified",
         *args, **kwargs
     ):
@@ -3878,9 +3935,80 @@ class VOCBBox(BBox):
             else class_labels.get_id(key="name", value=self.name)
 
 
-class VOCLabel:
+# H2: - Label ------------------------------------------------------------------
+
+class DetectionLabel(metaclass=ABCMeta):
     """
-    VOC label.
+    Base class for all detection label format.
+    """
+    
+    @property
+    @abstractmethod
+    def bboxes(self) -> Tensor:
+        pass
+
+
+class InstanceLabel(metaclass=ABCMeta):
+    """
+    Base class for all instance label format.
+    """
+
+    @abstractmethod
+    def draw(self) -> Tensor:
+        pass
+    
+    @property
+    @abstractmethod
+    def polygons(self) -> Tensor:
+        pass
+
+
+class COCOInstanceLabel(DetectionLabel, InstanceLabel):
+    
+    def __init__(
+        self,
+        path    : Path_ | None       = None,
+        objects : list[COCOInstance] = [],
+        image_id: int                = -1,
+        
+    ):
+        super().__init__()
+        
+    @staticmethod
+    def from_file() -> list[COCOInstanceLabel]:
+        """
+        Parse multiple labels from a .json file.
+        
+        Returns:
+
+        """
+        pass
+    
+    @property
+    def bboxes(self) -> Tensor:
+        pass
+
+    @property
+    def polygons(self) -> Tensor:
+        pass
+
+    def draw(self) -> Tensor:
+        pass
+
+
+class KITTILabel(DetectionLabel):
+    """
+    """
+
+    @property
+    def bboxes(self) -> Tensor:
+        pass
+
+
+class VOCLabel(DetectionLabel):
+    """
+    VOC label consists of several bounding boxes. VOC YOLO label corresponds to
+    one image and one annotation file.
     
     Args:
         folder (str): Folder that contains the images.
@@ -3919,17 +4047,51 @@ class VOCLabel:
     
     def __init__(
         self,
-        folder      : str,
-        filename    : str,
-        path        : Path_,
-        source      : dict,
-        size        : dict,
-        segmented   : int,
-        object      : dict | list | None,
+        path        : Path_ | None      = None,
+        objects     : list[VOCBBox]     = [],
+        image_id    : int               = -1,
+        folder      : str               = "",
+        filename    : str               = "",
+        image_path  : Path_             = "",
+        source      : dict              = {"database": "Unknown"},
+        size        : dict              = {"width": 0, "height": 0, "depth": 3},
+        segmented   : int               = 0,
         class_labels: ClassLabel | None = None,
         *args, **kwargs
     ):
         from one.vision.shape import box_xyxy_to_cxcywh_norm
+        
+        super().__init__()
+        self.path = Path(path) if isinstance(path, (str, Path)) else path
+        
+        if len(objects) == 0 and (self.path is None or not is_xml_file(self.path)):
+            raise ValueError()
+        if len(objects) == 0:
+            xml_data   = load_from_file(path)
+            assert_dict_contain_key(xml_data, "annotation")
+            annotation = xml_data["annotation"]
+            folder     = annotation.get("folder"   , folder)
+            filename   = annotation.get("filename" , filename)
+            image_path = annotation.get("path"     , image_path)
+            source     = annotation.get("source"   , source)
+            size       = annotation.get("size"     , size)
+            width      = int(size.get("width",  0))
+            height     = int(size.get("height", 0))
+            depth      = int(size.get("depth",  0))
+            segmented  = annotation.get("segmented", segmented)
+            objects    = annotation.get("object"   , objects)
+            objects    = [objects] if not isinstance(objects, list) else objects
+            
+            assert_list_of(objects, dict)
+            for i, o in enumerate(object):
+                bndbox   = o.get("bndbox")
+                box_xyxy = torch.FloatTensor([
+                    int(bndbox["xmin"]), int(bndbox["ymin"]),
+                    int(bndbox["xmax"]), int(bndbox["ymax"])
+                ])
+                o["image_id"] = image_id
+                o["bndbox"]   = box_xyxy_to_cxcywh_norm(box_xyxy, height, width)
+                o["format"]   = BBoxFormat.CXCYWH_NORM
         
         self.folder    = folder
         self.filename  = filename
@@ -3940,65 +4102,11 @@ class VOCLabel:
         self.height    = int(self.size.get("height", 0))
         self.depth     = int(self.size.get("depth",  0))
         self.segmented = segmented
-
-        if object is None:
-            object = []
-        else:
-            object = [object] if not isinstance(object, dict) else object
-        assert_list_of(object, dict)
-        
-        for i, o in enumerate(object):
-            bndbox   = o.get("bndbox")
-            box_xyxy = torch.FloatTensor([
-                int(bndbox["xmin"]), int(bndbox["ymin"]),
-                int(bndbox["xmax"]), int(bndbox["ymax"])
-            ])
-            o["bndbox"] = box_xyxy_to_cxcywh_norm(box_xyxy, self.height, self.width)
-            o["format"] = BBoxFormat.CXCYWH_NORM
-        self.bboxes = [VOCBBox(*b) for b in object]
+        self.objects   = [VOCBBox(*o) for o in objects]
         
         if isinstance(class_labels, ClassLabel):
             self.convert_names_to_ids(class_labels=class_labels)
     
-    @staticmethod
-    def create_from_dict(d: dict, *args, **kwargs) -> VOCLabel:
-        """
-        Create a VOCLabel object from a dictionary.
-        
-        Args:
-            d (dict):
-                Dictionary containing VOC data.
-        
-        Returns:
-            A VOCLabel object.
-        """
-        assert_dict_contain_key(d, "annotation")
-        d = d["annotation"]
-        return VOCLabel(
-            folder    = d.get("folder"   , ""),
-            filename  = d.get("filename" , ""),
-            path      = d.get("path"     , ""),
-            source    = d.get("source"   , {"database": "Unknown"}),
-            size      = d.get("size"     , {"width": 0, "height": 0, "depth": 3}),
-            segmented = d.get("segmented", 0),
-            object    = d.get("object"   , []),
-            *args, **kwargs
-        )
-        
-    @staticmethod
-    def create_from_file(path: Path_, *args, **kwargs) -> VOCLabel:
-        """
-        Load VOC label from file.
-        
-        Args:
-            path (Path): Annotation file.
-            
-        Returns:
-            A VOCLabel object.
-        """
-        assert_xml_file(path)
-        return VOCLabel.create_from_dict(load_from_file(path), *args, **kwargs)
-   
     def convert_names_to_ids(
         self, class_labels: ClassLabel, parallel: bool = False
     ):
@@ -4012,14 +4120,59 @@ class VOCLabel:
         """
         if parallel:
             def run(i):
-                self.bboxes[i].convert_name_to_id(class_labels)
+                self.objects[i].convert_name_to_id(class_labels)
             
             Parallel(n_jobs=os.cpu_count(), require="sharedmem")(
-                delayed(run)(i) for i in range(len(self.bboxes))
+                delayed(run)(i) for i in range(len(self.objects))
             )
         else:
-            for o in self.bboxes:
+            for o in self.objects:
                 o.convert_name_to_id(class_labels=class_labels)
+
+    @property
+    def bboxes(self) -> Tensor:
+        return torch.stack([o.bbox for o in self.objects], dim=0)
+    
+
+class YOLOLabel(DetectionLabel):
+    """
+    YOLO label consists of several bounding boxes. One YOLO label corresponds to
+    one image and one annotation file.
+    """
+    
+    def __init__(
+        self,
+        path    : Path_ | None = None,
+        objects : list[BBox]   = [],
+        image_id: int          = -1,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.image_id = image_id
+        self.path     = Path(path) if isinstance(path, (str, Path)) else path
+        
+        if len(objects) == 0 and (self.path is None or not is_txt_file(self.path)):
+            raise ValueError()
+        if len(objects) == 0:
+            lines = open(self.path, "r").readlines()
+            for l in lines:
+                d = l.split(" ")
+                objects.append(
+                    BBox(
+                        image_id = image_id,
+                        class_id = int(d[0]),
+                        b1       = float(d[1]),
+                        b2       = float(d[2]),
+                        b3       = float(d[3]),
+                        b4       = float(d[4]),
+                        format   = BBoxFormat.CXCYWH_NORM
+                    )
+                )
+        self.objects = objects
+    
+    @property
+    def bboxes(self) -> Tensor:
+        return torch.stack([o.bbox for o in self.objects], dim=0)
 
 
 # H1: - Dataset ----------------------------------------------------------------
@@ -4451,14 +4604,14 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
 
-		Args:
-			index (int): The index of the sample to be retrieved.
+        Args:
+            index (int): The index of the sample to be retrieved.
 
-		Returns:
-			input (Tensor[1, C, H, W]): Sample, optionally transformed by the
-			    respective transforms.
-			meta (dict): Metadata of image.
-		"""
+        Returns:
+            Sample of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Metadata of image.
+        """
         item  = self.images[index]
         input = item.image if item.image is not None else item.load()
         meta  = item.meta
@@ -4685,9 +4838,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         )
         self.backend     = VisionBackend.from_value(backend)
         self.class_label = ClassLabel.from_value(class_label)
-        
-        if not hasattr(self, "images"):
-            self.images: list[Image] = []
+        self.images: list[Image] = []
         if not hasattr(self, "labels"):
             self.labels = []
         
@@ -4713,15 +4864,15 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
         
-		Args:
+        Args:
           index (int): The index of the sample to be retrieved.
 
-		Returns:
-			input (Tensor[1, C, H, W]): Input sample, optionally transformed by
-			    the respective transforms.
-			target (Any): Target, depended on label type.
-			meta (Image): Meta data of image.
-		"""
+        Returns:
+            Sample of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Target, depending on label type.
+            Metadata of image.
+        """
         pass
     
     def __len__(self) -> int:
@@ -4859,15 +5010,15 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
         
-		Args:
+        Args:
           index (int): The index of the sample to be retrieved.
 
-		Returns:
-			input (Tensor[1, C, H, W]): Input sample, optionally transformed
-			    by the respective transforms.
-			target (int): Classification labels.
-			meta (dict): Metadata of image.
-		"""
+        Returns:
+            Sample of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Classification labels.
+            Metadata of image.
+        """
         item   = self.images[index]
         input  = item.image if item.image is not None else item.load()
         target = self.labels[index]
@@ -4971,7 +5122,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         verbose         : bool               = True,
         *args, **kwargs
     ):
-        self.labels: list[list[BBox]] = []
+        self.labels: list[DetectionLabel] = []
         super().__init__(
             root             = root,
             split            = split,
@@ -4992,19 +5143,18 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
         
-		Args:
+        Args:
           index (int): The index of the sample to be retrieved.
 
-		Returns:
-			input (Tensor[1, C, H, W]): Input sample, optionally transformed by
-			    the respective transforms.
-			target (Tensor[N, 7]): Bounding boxes.
-			meta (Image): Metadata of image.
-		"""
+        Returns:
+            Sample of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Bounding boxes of shape [N, 7].
+            Metadata of image.
+        """
         item   = self.images[index]
         input  = item.image if item.image is not None else item.load()
-        target = self.labels[index]
-        target = torch.stack([b.label for b in target])
+        target = self.labels[index].bboxes
         meta   = item.meta
 
         if self.transform is not None:
@@ -5053,7 +5203,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
     
 class VideoDetectionDataset(LabeledVideoDataset, metaclass=ABCMeta):
     """
-    Base type for datasets that represent a collection of videos and a set of 
+    Base type for datasets that represent a collection of videos and a set of
     associated video detections.
     """
     pass
@@ -5061,8 +5211,8 @@ class VideoDetectionDataset(LabeledVideoDataset, metaclass=ABCMeta):
 
 class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     """
-    A labeled dataset consisting of images and their associated object 
-    detections saved in `COCO Object Detection Format 
+    A labeled dataset consisting of images and their associated object
+    detections saved in `COCO Object Detection Format
     <https://cocodataset.org/#format-data>`.
     
     Args:
@@ -5124,7 +5274,31 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         json = self.annotation_file()
         assert_json_file(json)
         json_data = load_from_file(json)
-    
+        assert_dict(json_data)
+        
+        info	    = json_data.get("info", 	   None)
+        licenses    = json_data.get("licenses",    None)
+        categories  = json_data.get("categories",  None)
+        images	    = json_data.get("images",	   None)
+        annotations = json_data.get("annotations", None)
+
+        data = Munch()
+        temp = Munch()
+        for img in images:
+            id       = img.get("id",        uuid.uuid4().int)
+            filename = img.get("file_name", "")
+            image    = Image(
+                id   = id,
+                name = filename,
+                path = "",
+            )
+            image.coco_url      = img.get("coco_url",      "")
+            image.flickr_url    = img.get("flickr_url",    "")
+            image.license       = img.get("license",       0 )
+            image.date_captured = img.get("date_captured", "")
+            data[id]            = image
+            temp[filename]      = id
+        
     @abstractmethod
     def annotation_file(self) -> Path_:
         """
@@ -5192,7 +5366,9 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         )
     
     def list_labels(self):
-        """List label files."""
+        """
+        List label files.
+        """
         files = self.annotation_files()
         if not (is_same_length(files, self.images) and len(self.images) > 0):
             raise RuntimeError(
@@ -5200,19 +5376,99 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
                 f"But got: {len(files)} != {len(self.labels)}"
             )
         
-        labels: list[VOCLabel] = []
+        self.labels: list[VOCLabel] = []
         with progress_bar() as pbar:
             for f in pbar.track(
                 files, description=f"[red]Listing {self.split} labels"
             ):
-                labels.append(
-                    VOCLabel.create_from_file(
-                        path         = f,
-                        class_labels = self.class_label
-                    )
+                self.labels.append(
+                    VOCLabel(path=f, class_labels=self.class_label)
                 )
+                
+    @abstractmethod
+    def annotation_files(self) -> Paths_:
+        """
+        Returns the path to json annotation files.
+        """
+        pass
+
+
+class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
+    """
+    A labeled dataset consisting of images and their associated object
+    detections saved in `YOLO format`.
+    
+    Args:
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
+        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        root            : Path_,
+        split           : str,
+        shape           : Ints,
+        class_label     : ClassLabel_ | None = None,
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        cache_images    : bool               = False,
+        cache_data      : bool               = False,
+        backend         : VisionBackend_     = VISION_BACKEND,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            root             = root,
+            split            = split,
+            shape            = shape,
+            class_label      = class_label,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        files = self.annotation_files()
+        if not (is_same_length(files, self.images) and len(self.images) > 0):
+            raise RuntimeError(
+                f"`Number of `images` and `labels` must be the same. "
+                f"But got: {len(files)} != {len(self.labels)}"
+            )
         
-        self.labels = labels
+        self.labels: list[YOLOLabel] = []
+        with progress_bar() as pbar:
+            for i, f in pbar.track(
+                enumerate(files),
+                description=f"[red]Listing {self.split} labels"
+            ):
+                image_id = self.images[i].path.name
+                self.labels.append(YOLOLabel(path=f))
         
     @abstractmethod
     def annotation_files(self) -> Paths_:
@@ -5287,16 +5543,16 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
         
-		Args:
+        Args:
             index (int): The index of the sample to be retrieved.
 
-		Returns:
-			input (Tensor[1, C, H, W]): Input sample, optionally transformed by
-			    the respective transforms.
-			target (Tensor[1, C, H, W]): Enhance image, optionally transformed
-			    by the respective transforms.
-			meta (Image): Metadata of image.
-		"""
+        Returns:
+            Sample of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Target of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Metadata of image.
+        """
         input  = self.images[index].image
         target = self.labels[index].image
         input  = self.images[index].load() if input  is None else input
@@ -5429,16 +5685,16 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
         
-		Args:
+        Args:
             index (int): The index of the sample to be retrieved.
           
-		Returns:
-			input (Tensor[1, C, H, W]): Input sample, optionally transformed by
-			    the respective transforms.
-			target (Tensor[1, C or 1, H, W]): Semantic segmentation mask,
-			    optionally transformed by the respective transforms.
-			meta (Image): Metadata of image.
-		"""
+        Returns:
+            input (Tensor[1, C, H, W]): Input sample, optionally transformed by
+                the respective transforms.
+            target (Tensor[1, C or 1, H, W]): Semantic segmentation mask,
+                optionally transformed by the respective transforms.
+            meta (Image): Metadata of image.
+        """
         input  = self.images[index].image
         target = self.labels[index].image
         input  = self.images[index].load() if input  is None else input
@@ -6727,10 +6983,10 @@ def load_config(cfg: Path_ | dict | Munch) -> Munch:
     """
     Load dictionary from file and convert to namespace using Munch.
 
-	Args:
-		cfg (Path_ | dict | Munch): Config filepath that contains
-		    configuration values or the config dict.
-	"""
+    Args:
+        cfg (Path_ | dict | Munch): Config filepath that contains
+            configuration values or the config dict.
+    """
     if isinstance(cfg, (Path, str)):
         d = load_from_file(path=cfg)
     elif isinstance(cfg, (dict, Munch)):

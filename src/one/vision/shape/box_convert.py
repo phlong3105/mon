@@ -9,17 +9,11 @@ References:
 
 from __future__ import annotations
 
-import inspect
-import sys
-
 import torch
 from torch import Tensor
 
 from one.core import assert_tensor_of_ndim
 from one.core import upcast
-
-
-# MARK: - Functional
 
 """Coordination of bounding box's points.
 
@@ -40,22 +34,22 @@ from one.core import upcast
 """
 
 
+# MARK: - CXCYAR ---------------------------------------------------------------
+
 def box_cxcyar_to_cxcyrh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, a, r) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format.
+        Boxes in (cx, cy, r, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -66,21 +60,19 @@ def box_cxcyar_to_cxcyrh(box: Tensor) -> Tensor:
    
 
 def box_cxcyar_to_cxcywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, a, r) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format.
+        Boxes in (cx, cy, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -91,28 +83,25 @@ def box_cxcyar_to_cxcywh(box: Tensor) -> Tensor:
     
 
 def box_cxcyar_to_cxcywhnorm(box: Tensor, height: int, width : int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h) norm
+    """
+    Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h) norm
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, a, r) format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        boxes (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format.
+        Boxes in (cx, cy, w, h) norm format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -127,21 +116,19 @@ def box_cxcyar_to_cxcywhnorm(box: Tensor, height: int, width : int) -> Tensor:
    
 
 def box_cxcyar_to_xywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (x, y, w, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, a, r) format to (x, y, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, a, r) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format.
+        Boxes in (x, y, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -154,21 +141,20 @@ def box_cxcyar_to_xywh(box: Tensor) -> Tensor:
     
     
 def box_cxcyar_to_xyxy(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (x1, y1, x2, y2)
+    """
+    Converts bounding boxes from (cx, cy, a, r) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, a, r) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format.
+        Boxes in (x1, y1, x2, y2) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -182,22 +168,22 @@ def box_cxcyar_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
     
 
+# MARK: - CXCYRH ---------------------------------------------------------------
+
 def box_cxcyrh_to_cxcyar(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, r, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format.
+        Boxes in (cx, cy, a, r) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -209,21 +195,19 @@ def box_cxcyrh_to_cxcyar(box: Tensor) -> Tensor:
 
 
 def box_cxcyrh_to_cxcywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, r, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format.
+        Boxes in (cx, cy, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -233,28 +217,25 @@ def box_cxcyrh_to_cxcywh(box: Tensor) -> Tensor:
 
 
 def box_cxcyrh_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h) norm
+    """
+    Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h) norm
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, r, h) format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format.
+        box (Tensor): Boxes in (cx, cy, w, h) norm format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -268,21 +249,19 @@ def box_cxcyrh_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
 
 
 def box_cxcyrh_to_xywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (x, y, w, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, r, h) format to (x, y, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, r, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format.
+        Boxes in (x, y, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -294,21 +273,20 @@ def box_cxcyrh_to_xywh(box: Tensor) -> Tensor:
     
 
 def box_cxcyrh_to_xyxy(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (x1, y1, x2, y2)
+    """
+    Converts bounding boxes from (cx, cy, r, h) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, r, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format.
+        Boxes in (x1, y1, x2, y2) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -320,23 +298,23 @@ def box_cxcyrh_to_xyxy(box: Tensor) -> Tensor:
     y2               = cy + h / 2.0
     return torch.stack((x1, y1, x2, y2), -1)
    
-   
+
+# MARK: - CXCYWH ---------------------------------------------------------------
+
 def box_cxcywh_to_cxcyar(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, w, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format.
+        Boxes in (cx, cy, a, r) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -347,21 +325,19 @@ def box_cxcywh_to_cxcyar(box: Tensor) -> Tensor:
     
 
 def box_cxcywh_to_cxcyrh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, w, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format.
+        Boxes in (cx, cy, r, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -371,28 +347,25 @@ def box_cxcywh_to_cxcyrh(box: Tensor) -> Tensor:
    
 
 def box_cxcywh_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
+    """
+    Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, w, h) format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) norm format.
+        Boxes in (cx, cy, r, h) norm format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -405,21 +378,19 @@ def box_cxcywh_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
    
 
 def box_cxcywh_to_xywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (x, y, w, h)
-    format.
+    """
+    Converts bounding boxes from (cx, cy, w, h) format to (x, y, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, w, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format.
+        Boxes in (x, y, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -430,21 +401,20 @@ def box_cxcywh_to_xywh(box: Tensor) -> Tensor:
     
 
 def box_cxcywh_to_xyxy(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (x1, y1, x2, y2)
+    """
+    Converts bounding boxes from (cx, cy, w, h) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format which will be converted.
+        box (Tensor): Boxes in (cx, cy, w, h) format which will be converted.
         
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format.
+        Boxes in (x1, y1, x2, y2) format.
     """
     assert_tensor_of_ndim(box, 2)
     box              = upcast(box)
@@ -456,29 +426,28 @@ def box_cxcywh_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
     
 
+# MARK: - CXCYWH Norm ----------------------------------------------------------
+
 def box_cxcywh_norm_to_cxcyar(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a, r)
+    """
+    Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a, r)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, w, h) norm format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format.
+        Boxes in (cx, cy, a, r) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                                  = upcast(box)
@@ -491,28 +460,25 @@ def box_cxcywh_norm_to_cxcyar(box: Tensor, height: int, width: int) -> Tensor:
     
 
 def box_cxcywh_norm_to_cxcyrh(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, r, h)
+    """
+    Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, w, h) norm format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format.
+        Boxes in (cx, cy, r, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                                  = upcast(box)
@@ -525,28 +491,25 @@ def box_cxcywh_norm_to_cxcyrh(box: Tensor, height: int, width: int) -> Tensor:
     
 
 def box_cxcywh_norm_to_cxcywh(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, w, h)
+    """
+    Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, w, h) norm format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format.
+        Boxes in (cx, cy, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                                  = upcast(box)
@@ -559,28 +522,25 @@ def box_cxcywh_norm_to_cxcywh(box: Tensor, height: int, width: int) -> Tensor:
    
 
 def box_cxcywh_norm_to_xywh(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (x, y, w, h)
+    """
+    Converts bounding boxes from (cx, cy, w, h) norm format to (x, y, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, w, h) norm format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format.
+        Boxes in (x, y, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                                  = upcast(box)
@@ -593,29 +553,25 @@ def box_cxcywh_norm_to_xywh(box: Tensor, height: int, width: int) -> Tensor:
    
    
 def box_cxcywh_norm_to_xyxy(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (x1, y1,
-    x2, y2)
+    """
+    Converts bounding boxes from (cx, cy, w, h) norm format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (cx, cy, w, h) norm format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format.
+        Boxes in (x1, y1, x2, y2) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                                  = upcast(box)
@@ -627,22 +583,22 @@ def box_cxcywh_norm_to_xyxy(box: Tensor, height: int, width: int) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
 
 
+# MARK: - XYWH -----------------------------------------------------------------
+
 def box_xywh_to_cxcyar(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, a, r)
-    format.
+    """
+    Converts bounding boxes from (x, y, w, h) format to (cx, cy, a, r) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format which will be converted.
+        box (Tensor): Boxes in (x, y, w, h) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format.
+        Boxes in (cx, cy, a, r) format.
     """
     assert_tensor_of_ndim(box, 2)
     box            = upcast(box)
@@ -655,21 +611,19 @@ def box_xywh_to_cxcyar(box: Tensor) -> Tensor:
     
 
 def box_xywh_to_cxcyrh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, r, h)
-    format.
+    """
+    Converts bounding boxes from (x, y, w, h) format to (cx, cy, r, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format which will be converted.
+        box (Tensor): Boxes in (x, y, w, h) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format.
+        Boxes in (cx, cy, r, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box            = upcast(box)
@@ -681,21 +635,19 @@ def box_xywh_to_cxcyrh(box: Tensor) -> Tensor:
 
 
 def box_xywh_to_cxcywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, w, h)
-    format.
+    """
+    Converts bounding boxes from (x, y, w, h) format to (cx, cy, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format which will be converted.
+        box (Tensor): Boxes in (x, y, w, h) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format.
+        Boxes in (cx, cy, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box            = upcast(box)
@@ -706,28 +658,25 @@ def box_xywh_to_cxcywh(box: Tensor) -> Tensor:
     
 
 def box_xywh_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, w, h) norm
+    """
+    Converts bounding boxes from (x, y, w, h) format to (cx, cy, w, h) norm
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (x, y, w, h) format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format.
+        Boxes in (cx, cy, w, h) norm format.
     """
     assert_tensor_of_ndim(box, 2)
     box            = upcast(box)
@@ -742,21 +691,19 @@ def box_xywh_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
 
 
 def box_xywh_to_xyxy(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (x1, y1, x2, y2)
-    format.
+    """
+    Converts bounding boxes from (x, y, w, h) format to (x1, y1, x2, y2) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format which will be converted.
+        box (Tensor): Boxes in (x, y, w, h) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format.
+        Boxes in (x1, y1, x2, y2) format.
     """
     assert_tensor_of_ndim(box, 2)
     box            = upcast(box)
@@ -766,22 +713,23 @@ def box_xywh_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x, y, x2, y2), -1)
    
 
+# MARK: - XYXY -----------------------------------------------------------------
+
 def box_xyxy_to_cxcyar(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)
+    """
+    Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format which will be converted.
+        box (Tensor): Boxes in (x1, y1, x2, y2) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, a, r) format.
+        Boxes in (cx, cy, a, r) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                = upcast(box)
@@ -796,21 +744,20 @@ def box_xyxy_to_cxcyar(box: Tensor) -> Tensor:
    
 
 def box_xyxy_to_cxcyrh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, r, h)
+    """
+    Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format which will be converted.
+        box (Tensor): Boxes in (x1, y1, x2, y2) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, r, h) format.
+        Boxes in (cx, cy, r, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                = upcast(box)
@@ -824,21 +771,20 @@ def box_xyxy_to_cxcyrh(box: Tensor) -> Tensor:
     
 
 def box_xyxy_to_cxcywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
+    """
+    Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format which will be converted.
+        box (Tensor): Boxes in (x1, y1, x2, y2) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) format.
+        Boxes in (cx, cy, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                = upcast(box)
@@ -851,29 +797,25 @@ def box_xyxy_to_cxcywh(box: Tensor) -> Tensor:
    
 
 def box_xyxy_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w,
-    h) norm
+    """
+    Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h) norm
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format which will be converted.
-        height (int):
-            Height of the image.
-        width (int):
-            Width of the image.
+        box (Tensor): Boxes in (x1, y1, x2, y2) format which will be converted.
+        height (int): Height of the image.
+        width (int): Width of the image.
             
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (cx, cy, w, h) norm format.
+        Boxes in (cx, cy, w, h) norm format.
     """
     assert_tensor_of_ndim(box, 2)
     box                = upcast(box)
@@ -890,21 +832,19 @@ def box_xyxy_to_cxcywh_norm(box: Tensor, height: int, width: int) -> Tensor:
    
 
 def box_xyxy_to_xywh(box: Tensor) -> Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (x, y, w, h)
-    format.
+    """
+    Converts bounding boxes from (x1, y1, x2, y2) format to (x, y, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
-           bounding box.
+        bounding box.
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box (Tensor[N, 4]):
-            Boxes in (x1, y1, x2, y2) format which will be converted.
+        box (Tensor): Boxes in (x1, y1, x2, y2) format which will be converted.
        
     Returns:
-        box (Tensor[N, 4]):
-            Boxes in (x, y, w, h) format.
+        Boxes in (x, y, w, h) format.
     """
     assert_tensor_of_ndim(box, 2)
     box                = upcast(box)
@@ -912,13 +852,3 @@ def box_xyxy_to_xywh(box: Tensor) -> Tensor:
     w                  = x2 - x1
     h                  = y2 - y1
     return torch.stack((x1, y1, w, h), -1)
-    
-
-# MARK: - Main
-
-__all__ = [
-    name for name, value in inspect.getmembers(
-        sys.modules[__name__],
-        predicate=lambda f: inspect.isfunction(f) and f.__module__ == __name__
-    )
-]

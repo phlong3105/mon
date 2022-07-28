@@ -109,7 +109,7 @@ def top_k_acc(pred_file, gt_file, k_val, outdir):
     predictions = np.zeros((len(k_val), len(gt_df)))
     for index, row in gt_df.iterrows():
         # Get gt class idx
-        gt_cls_df = clsidx_df.loc[clsidx_df["label"] == row.label]
+        gt_cls_df = clsidx_df.loc[clsidx_df["label"] == row.bbox]
         gt_cls_idx = gt_cls_df["idx"].values[0]
         groundtruth[0, index] = gt_cls_idx
 
@@ -168,4 +168,3 @@ if __name__ == '__main__':
     print('Calculating Accuracy...')
     top_k_acc(pred_file, gt_file, k, outdir)
     print('DONE!')
-
