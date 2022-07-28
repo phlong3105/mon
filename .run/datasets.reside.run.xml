@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="datasets.npe" type="PythonConfigurationType" factoryName="Python" folderName="datasets" singleton="false">
+  <configuration default="false" name="datasets.reside" type="PythonConfigurationType" factoryName="Python" folderName="datasets" singleton="false">
     <module name="one" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -22,7 +22,7 @@
         <ENTRY IS_ENABLED="true" PARSER="runconfig" />
       </ENTRIES>
     </EXTENSION>
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/one/datasets/npe.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/one/datasets/reside.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="true" />

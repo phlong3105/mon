@@ -193,7 +193,7 @@ def test(model: BaseModel, dm: DataModule, config: Munch) -> EvalOutput:
     trainer.global_step   = get_global_step(ckpt=ckpt)
     
     # NOTE: Test
-    results = trainer.test(
+    results = trainer.test_realblurj(
         model       = model,
         dataloaders = dm.test_dataloader,
         ckpt_path   = ckpt

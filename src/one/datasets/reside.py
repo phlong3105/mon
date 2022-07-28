@@ -2,10 +2,22 @@
 # -*- coding: utf-8 -*-
 
 """
-LoL226 dataset and datamodule.
+RESIDE dataset and datamodule.
+
+---------------------------------------------------------------------
+| Subset                                         | Number of Images |
+---------------------------------------------------------------------
+| Indoor Training Set (ITS)                      | 13,990	        |
+| Outdoor Training Set (OTS)                     |      	        |
+| Synthetic Objective Testing Set (SOTS) Indoor  | 500              |
+| Synthetic Objective Testing Set (SOTS) Outdoor | 500              |
+| Hybrid Subjective Testing Set (HSTS)           | 20               |
+---------------------------------------------------------------------
 """
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
@@ -17,13 +29,12 @@ from one.core import DataModule
 from one.core import DATAMODULES
 from one.core import DATASETS
 from one.core import Image
+from one.core import ImageEnhancementDataset
 from one.core import Ints
-from one.core import is_image_file
 from one.core import ModelPhase
 from one.core import ModelPhase_
 from one.core import progress_bar
 from one.core import Transforms_
-from one.core import UnlabeledImageDataset
 from one.core import VISION_BACKEND
 from one.core import VisionBackend_
 from one.plot import imshow
@@ -32,14 +43,27 @@ from one.vision.transformation import Resize
 
 # MARK: - Module ---------------------------------------------------------------
 
-@DATASETS.register(name="dcim")
-class DCIM(UnlabeledImageDataset):
+
+@DATASETS.register(name="reside_hsts")
+class RESIDEHSTS(ImageEnhancementDataset):
     """
-    DCIM dataset consists of 64 low-light images only.
+    RESIDE-HSTS dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
     
     Args:
         root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
+        split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -93,381 +117,57 @@ class DCIM(UnlabeledImageDataset):
         """
         List image files.
         """
+        if self.split not in ["test"]:
+            console.log(
+                f"RESIDE-HSTS dataset only supports `split`: `test`. "
+                f"Get: {self.split}."
+            )
+            
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / "low"
+            pattern = self.root / "sots" / "hsts"
             for path in pbar.track(
-                list(pattern.rglob("*.jpg")),
-                description=f"[bright_yellow]Listing DCIM images"
+                list(pattern.rglob("haze/*.png")),
+                description=f"[bright_yellow]Listing RESIDE-HSTS {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
-            
-
-@DATASETS.register(name="lime")
-class LIME(UnlabeledImageDataset):
-    """
-    LIME dataset consists 10 low-light images only.
     
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
-    """
-    
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "test",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
-     
-    def list_images(self):
+    def list_labels(self):
         """
-        List image files.
+        List label files.
         """
-        self.images: list[Image] = []
+        self.labels: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*.bmp")),
-                description=f"[bright_yellow]Listing LIME images"
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-HSTS {self.split} labels"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
-   
-
-@DATASETS.register(name="lol226")
-class LoL226(UnlabeledImageDataset):
-    """
-    LoL226 dataset consists of 226 low-light images only.
-    
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
-    """
-    
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "test",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
-     
-    def list_images(self):
-        """
-        List image files.
-        """
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
-            pattern = self.root
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"[bright_yellow]Listing LoL226 images"
-            ):
-                if is_image_file(path):
-                    self.images.append(Image(path=path, backend=self.backend))
-            
-
-@DATASETS.register(name="mef")
-class MEF(UnlabeledImageDataset):
-    """
-    MEF dataset consists 17 low-light images only.
-
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
-    """
-    
-    def __init__(
-        self,
-        root: str,
-        split: str = "test",
-        shape: Ints = (3, 720, 1280),
-        class_label: ClassLabel_ | None = None,
-        transform: Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms: Transforms_ | None = None,
-        cache_data: bool = False,
-        cache_images: bool = False,
-        backend: VisionBackend_ = VISION_BACKEND,
-        verbose: bool = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root=root,
-            split=split,
-            shape=shape,
-            class_label=class_label,
-            transform=transform,
-            target_transform=target_transform,
-            transforms=transforms,
-            cache_data=cache_data,
-            cache_images=cache_images,
-            backend=backend,
-            verbose=verbose,
-            *args, **kwargs
-        )
-    
-    def list_images(self):
-        """
-        List image files.
-        """
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
-            pattern = self.root / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing MEF images"
-            ):
-                self.images.append(Image(path=path, backend=self.backend))
-
-            
-@DATASETS.register(name="npe")
-class NPE(UnlabeledImageDataset):
-    """
-    NPE dataset consists 85 low-light images only.
-    
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
-    """
-    
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "test",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
-     
-    def list_images(self):
-        """
-        List image files.
-        """
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
-            pattern = self.root / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"[bright_yellow]Listing NPE images"
-            ):
-                if is_image_file(path):
-                    self.images.append(Image(path=path, backend=self.backend))
-            
-
-@DATASETS.register(name="vip")
-class VIP(UnlabeledImageDataset):
-    """
-    VIP dataset consists of 8 low-light images only.
-    
-    Args:
-        root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
-            Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
-    """
-    
-    def __init__(
-        self,
-        root            : str,
-        split           : str                = "test",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            root             = root,
-            split            = split,
-            shape            = shape,
-            class_label      = class_label,
-            transform        = transform,
-            target_transform = target_transform,
-            transforms       = transforms,
-            cache_data       = cache_data,
-            cache_images     = cache_images,
-            backend          = backend,
-            verbose          = verbose,
-            *args, **kwargs
-        )
-     
-    def list_images(self):
-        """
-        List image files.
-        """
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
-            pattern = self.root / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing VIP images"
-            ):
-                self.images.append(Image(path=path, backend=self.backend))
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.png"
+                self.labels.append(Image(path=path, backend=self.backend))
   
 
-@DATASETS.register(name="vv")
-class VV(UnlabeledImageDataset):
+@DATASETS.register(name="reside_its")
+class RESIDEITS(ImageEnhancementDataset):
     """
-    VV dataset consists of 24 low-light images only.
+    RESIDE-ITS dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
     
     Args:
         root (str): Root directory of dataset.
-        split (str): Split to use. One of: ["test"].
+        split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -490,7 +190,7 @@ class VV(UnlabeledImageDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "test",
+        split           : str                = "train",
         shape           : Ints               = (3, 720, 1280),
         class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
@@ -521,26 +221,568 @@ class VV(UnlabeledImageDataset):
         """
         List image files.
         """
+        if self.split not in ["train", "val"]:
+            console.log(
+                f"RESIDE-ITS dataset only supports `split`: `train` or `val`. "
+                f"Get: {self.split}."
+            )
+            
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / "low"
+            pattern = self.root / "its" / self.split
             for path in pbar.track(
-                list(pattern.rglob("*.jpg")),
-                description=f"[bright_yellow]Listing VV images"
+                list(pattern.rglob("haze/*.png")),
+                description=f"[bright_yellow]Listing RESIDE-ITS {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
-  
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-ITS {self.split} labels"
+            ):
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.png"
+                self.labels.append(Image(path=path, backend=self.backend))
                 
-@DATAMODULES.register(name="dcim")
-class DCIMDataModule(DataModule):
+
+@DATASETS.register(name="reside_its_v2")
+class RESIDEITSv2(ImageEnhancementDataset):
     """
-    DCIM DataModule.
+    RESIDE-ITSv2 dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
+    
+    Args:
+        root (str): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "dcim",
-        name: str = "dcim",
+        root            : str,
+        split           : str                = "train",
+        shape           : Ints               = (3, 720, 1280),
+        class_label     : ClassLabel_ | None = None,
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        cache_data      : bool               = False,
+        cache_images    : bool               = False,
+        backend         : VisionBackend_     = VISION_BACKEND,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            root             = root,
+            split            = split,
+            shape            = shape,
+            class_label      = class_label,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        if self.split not in ["train"]:
+            console.log(
+                f"RESIDE-ITSv2 dataset only supports `split`: `train`. "
+                f"Get: {self.split}."
+            )
+            
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "its_v2"
+            for path in pbar.track(
+                list(pattern.rglob("haze/*.png")),
+                description=f"[bright_yellow]Listing RESIDE-ITSv2 {self.split} images"
+            ):
+                print(path)
+                self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-ITSv2 {self.split} labels"
+            ):
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.png"
+                self.labels.append(Image(path=path, backend=self.backend))
+
+
+@DATASETS.register(name="reside_ots")
+class RESIDEOTS(ImageEnhancementDataset):
+    """
+    RESIDE-OTS dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
+    
+    Args:
+        root (str): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        root            : str,
+        split           : str                = "train",
+        shape           : Ints               = (3, 720, 1280),
+        class_label     : ClassLabel_ | None = None,
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        cache_data      : bool               = False,
+        cache_images    : bool               = False,
+        backend         : VisionBackend_     = VISION_BACKEND,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            root             = root,
+            split            = split,
+            shape            = shape,
+            class_label      = class_label,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        if self.split not in ["train"]:
+            console.log(
+                f"RESIDE-OTS dataset only supports `split`: `train`. "
+                f"Get: {self.split}."
+            )
+            
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "ots"
+            for path in pbar.track(
+                list(pattern.rglob("haze/*.jpg")),
+                description=f"[bright_yellow]Listing RESIDE-OTS {self.split} images"
+            ):
+                self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-OTS {self.split} labels"
+            ):
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.jpg"
+                self.labels.append(Image(path=path, backend=self.backend))
+                
+
+@DATASETS.register(name="reside_sots")
+class RESIDESOTS(ImageEnhancementDataset):
+    """
+    RESIDE-SOTS dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
+    
+    Args:
+        root (str): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        root            : str,
+        split           : str                = "train",
+        shape           : Ints               = (3, 720, 1280),
+        class_label     : ClassLabel_ | None = None,
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        cache_data      : bool               = False,
+        cache_images    : bool               = False,
+        backend         : VisionBackend_     = VISION_BACKEND,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            root             = root,
+            split            = split,
+            shape            = shape,
+            class_label      = class_label,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        if self.split not in ["test"]:
+            console.log(
+                f"RESIDE-SOTS dataset only supports `split`: `test`. "
+                f"Get: {self.split}."
+            )
+            
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "sots"
+            for path in pbar.track(
+                list(pattern.rglob("haze/*.png")),
+                description=f"[bright_yellow]Listing RESIDE-SOTS {self.split} images"
+            ):
+                self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-SOTS {self.split} labels"
+            ):
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.png"
+                self.labels.append(Image(path=path, backend=self.backend))
+  
+
+@DATASETS.register(name="reside_sots_indoor")
+class RESIDESOTSIndoor(ImageEnhancementDataset):
+    """
+    RESIDE-SOTS Indoor dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
+    
+    Args:
+        root (str): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        root            : str,
+        split           : str                = "train",
+        shape           : Ints               = (3, 720, 1280),
+        class_label     : ClassLabel_ | None = None,
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        cache_data      : bool               = False,
+        cache_images    : bool               = False,
+        backend         : VisionBackend_     = VISION_BACKEND,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            root             = root,
+            split            = split,
+            shape            = shape,
+            class_label      = class_label,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        if self.split not in ["test"]:
+            console.log(
+                f"RESIDE-SOTS Indoor dataset only supports `split`: `test`. "
+                f"Get: {self.split}."
+            )
+            
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "sots" / "indoor"
+            for path in pbar.track(
+                list(pattern.rglob("haze/*.png")),
+                description=f"[bright_yellow]Listing RESIDE-SOTS Indoor {self.split} images"
+            ):
+                self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-SOTS Indoor {self.split} labels"
+            ):
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.png"
+                self.labels.append(Image(path=path, backend=self.backend))
+  
+
+@DATASETS.register(name="reside_sots_outdoor")
+class RESIDESOTSOutdoor(ImageEnhancementDataset):
+    """
+    RESIDE-SOTS Outdoor dataset.
+    
+    We present a comprehensive study and evaluation of existing single image
+    dehazing algorithms, using a new large-scale benchmark consisting of both
+    synthetic and real-world hazy images, called REalistic Single Image
+    DEhazing (RESIDE). RESIDE highlights diverse data sources and image
+    contents, and is divided into five subsets, each serving different training
+    or evaluation purposes. We further provide a rich variety of criteria for
+    dehazing algorithm evaluation, ranging from full-reference metrics, to
+    no-reference metrics, to subjective evaluation and the novel task-driven
+    evaluation. Experiments on RESIDE sheds light on the comparisons and
+    limitations of state-of-the-art dehazing algorithms, and suggest promising
+    future directions.
+    
+    Args:
+        root (str): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        root            : str,
+        split           : str                = "train",
+        shape           : Ints               = (3, 720, 1280),
+        class_label     : ClassLabel_ | None = None,
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        cache_data      : bool               = False,
+        cache_images    : bool               = False,
+        backend         : VisionBackend_     = VISION_BACKEND,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            root             = root,
+            split            = split,
+            shape            = shape,
+            class_label      = class_label,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        if self.split not in ["test"]:
+            console.log(
+                f"RESIDE-SOTS Outdoor dataset only supports `split`: `test`. "
+                f"Get: {self.split}."
+            )
+            
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "sots" / "outdoor"
+            for path in pbar.track(
+                list(pattern.rglob("haze/*.png")),
+                description=f"[bright_yellow]Listing RESIDE-SOTS Outdoor {self.split} images"
+            ):
+                self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"[bright_yellow]Listing RESIDE-SOTS Outdoor {self.split} labels"
+            ):
+                dir  = img.path.parents[1]
+                stem = str(img.path.stem).split("_")[0]
+                path = dir / "clear" / f"{stem}.png"
+                self.labels.append(Image(path=path, backend=self.backend))
+  
+
+@DATAMODULES.register(name="reside_hsts")
+class RESIDEHSTSDataModule(DataModule):
+    """
+    RESIDE-HSTS DataModule.
+    """
+    
+    def __init__(
+        self,
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_hsts",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -573,14 +815,14 @@ class DCIMDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]DCIM[/red] datasets.")
+        console.log(f"Setup [red]RESIDE-HSTS[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = DCIM(
+            full_dataset = RESIDEHSTS(
                 root             = self.root,
-                split            = "train",
+                split            = "test",
                 shape            = self.shape,
                 transform        = self.transform,
                 target_transform = self.target_transform,
@@ -595,12 +837,109 @@ class DCIMDataModule(DataModule):
             )
             self.class_label = getattr(full_dataset, "class_labels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+        
+        # Assign test datasets for use in dataloader(s)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDEHSTS(
+                root             = self.root,
+                split            = "test",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
+            )
+            self.class_label = getattr(self.test, "class_labels", None)
+            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+         
+        if self.class_label is None:
+            self.load_class_label()
+
+        self.summarize()
+        
+    def load_class_label(self):
+        """
+        Load ClassLabel.
+        """
+        pass
+
+    
+@DATAMODULES.register(name="reside_its")
+class RESIDEITSDataModule(DataModule):
+    """
+    RESIDE-ITS DataModule.
+    """
+    
+    def __init__(
+        self,
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_its",
+        *args, **kwargs
+    ):
+        super().__init__(root=root, name=name, *args, **kwargs)
+        
+    def prepare_data(self, *args, **kwargs):
+        """
+        Use this method to do things that might write to disk or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.class_label is None:
+            self.load_class_label()
+    
+    def setup(self, phase: ModelPhase_ | None = None):
+        """
+        There are also data operations you might want to perform on every GPU.
+
+        Todos:
+            - Count number of classes.
+            - Build class_labels vocabulary.
+            - Perform train/val/test splits.
+            - Apply transforms (defined explicitly in your datamodule or
+              assigned in init).
+            - Define collate_fn for you custom dataset.
+
+        Args:
+            phase (ModelPhase_ | None):
+                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
+                Set to None to setup all train, val, and test data.
+                Defaults to None.
+        """
+        console.log(f"Setup [red]RESIDE-ITS[/red] datasets.")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        # Assign train/val datasets for use in dataloaders
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = RESIDEITS(
+                root             = self.root,
+                split            = "train",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
+            )
+            self.val = RESIDEITS(
+                root             = self.root,
+                split            = "val",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
+            )
+            self.class_label = getattr(self.train, "class_labels", None)
+            self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = DCIM(
+            self.test = RESIDEITS(
                 root             = self.root,
-                split            = "test",
+                split            = "val",
                 shape            = self.shape,
                 transform        = self.transform,
                 target_transform = self.target_transform,
@@ -623,16 +962,16 @@ class DCIMDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="lime")
-class LIMEDataModule(DataModule):
+@DATAMODULES.register(name="reside_its_v2")
+class RESIDEITSv2DataModule(DataModule):
     """
-    LIME DataModule.
+    RESIDE-ITSv2 DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "lime",
-        name: str = "lime",
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_its_v2",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -665,12 +1004,12 @@ class LIMEDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]LIME[/red] datasets.")
+        console.log(f"Setup [red]RESIDE-ITSv2[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = LIME(
+            full_dataset = RESIDEITSv2(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -687,22 +1026,7 @@ class LIMEDataModule(DataModule):
             )
             self.class_label = getattr(full_dataset, "class_labels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
-            
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test = LIME(
-                root             = self.root,
-                split            = "test",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
-            )
-            self.class_label = getattr(self.test, "class_labels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
-        
+         
         if self.class_label is None:
             self.load_class_label()
 
@@ -715,16 +1039,16 @@ class LIMEDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="lol226")
-class LoL226DataModule(DataModule):
+@DATAMODULES.register(name="reside_ots")
+class RESIDEOTSDataModule(DataModule):
     """
-    LoL226 DataModule.
+    RESIDE-OTS DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226",
-        name: str = "lol226",
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_ots",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -757,12 +1081,12 @@ class LoL226DataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]LoL226[/red] datasets.")
+        console.log(f"Setup [red]RESIDE-OTS[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
+        
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = LoL226(
+            full_dataset = RESIDEOTS(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -779,22 +1103,7 @@ class LoL226DataModule(DataModule):
             )
             self.class_label = getattr(full_dataset, "class_labels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
-            
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test = LoL226(
-                root             = self.root,
-                split            = "test",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
-            )
-            self.class_label = getattr(self.test, "class_labels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
-        
+         
         if self.class_label is None:
             self.load_class_label()
 
@@ -807,16 +1116,16 @@ class LoL226DataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="mef")
-class MEFDataModule(DataModule):
+@DATAMODULES.register(name="reside_sots")
+class RESIDESOTSDataModule(DataModule):
     """
-    MEF DataModule.
+    RESIDE-SOTS DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "mef",
-        name: str = "mef",
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_sots",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -849,14 +1158,14 @@ class MEFDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]MEF[/red] datasets.")
+        console.log(f"Setup [red]RESIDE-SOTS[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
+        
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = MEF(
+            full_dataset = RESIDESOTS(
                 root             = self.root,
-                split            = "train",
+                split            = "test",
                 shape            = self.shape,
                 transform        = self.transform,
                 target_transform = self.target_transform,
@@ -871,10 +1180,10 @@ class MEFDataModule(DataModule):
             )
             self.class_label = getattr(full_dataset, "class_labels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
-            
+        
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = MEF(
+            self.test = RESIDESOTS(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -886,7 +1195,7 @@ class MEFDataModule(DataModule):
             )
             self.class_label = getattr(self.test, "class_labels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
-        
+         
         if self.class_label is None:
             self.load_class_label()
 
@@ -899,16 +1208,16 @@ class MEFDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="npe")
-class NPEDataModule(DataModule):
+@DATAMODULES.register(name="reside_ots_indoor")
+class RESIDESOTSIndoorDataModule(DataModule):
     """
-    NPE DataModule.
+    RESIDE-SOTS Indoor DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "npe",
-        name: str = "mef",
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_ots_indoor",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -941,14 +1250,14 @@ class NPEDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]NPE[/red] datasets.")
+        console.log(f"Setup [red]RESIDE-SOTS Indoor[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
+        
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = NPE(
+            full_dataset = RESIDESOTSIndoor(
                 root             = self.root,
-                split            = "train",
+                split            = "test",
                 shape            = self.shape,
                 transform        = self.transform,
                 target_transform = self.target_transform,
@@ -963,10 +1272,10 @@ class NPEDataModule(DataModule):
             )
             self.class_label = getattr(full_dataset, "class_labels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
-            
+        
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = NPE(
+            self.test = RESIDESOTSIndoor(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -978,7 +1287,7 @@ class NPEDataModule(DataModule):
             )
             self.class_label = getattr(self.test, "class_labels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
-        
+         
         if self.class_label is None:
             self.load_class_label()
 
@@ -991,16 +1300,16 @@ class NPEDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="vip")
-class VIPDataModule(DataModule):
+@DATAMODULES.register(name="reside_ots_outdoor")
+class RESIDESOTSOutdoorDataModule(DataModule):
     """
-    VIP DataModule.
+    RESIDE-SOTS Outdoor DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "vip",
-        name: str = "vip",
+        root: str = DATA_DIR / "reside",
+        name: str = "reside_ots_outdoor",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1033,14 +1342,14 @@ class VIPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]VIP[/red] datasets.")
+        console.log(f"Setup [red]RESIDE-SOTS Outdoor[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
+        
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = VIP(
+            full_dataset = RESIDESOTSOutdoor(
                 root             = self.root,
-                split            = "train",
+                split            = "test",
                 shape            = self.shape,
                 transform        = self.transform,
                 target_transform = self.target_transform,
@@ -1055,10 +1364,10 @@ class VIPDataModule(DataModule):
             )
             self.class_label = getattr(full_dataset, "class_labels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
-            
+        
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = VIP(
+            self.test = RESIDESOTSOutdoor(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -1070,99 +1379,7 @@ class VIPDataModule(DataModule):
             )
             self.class_label = getattr(self.test, "class_labels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
-        
-        if self.class_label is None:
-            self.load_class_label()
-
-        self.summarize()
-        
-    def load_class_label(self):
-        """
-        Load ClassLabel.
-        """
-        pass
-
-
-@DATAMODULES.register(name="vv")
-class VVDataModule(DataModule):
-    """
-    VV DataModule.
-    """
-    
-    def __init__(
-        self,
-        root: str = DATA_DIR / "lol226" / "vv",
-        name: str = "vv",
-        *args, **kwargs
-    ):
-        super().__init__(root=root, name=name, *args, **kwargs)
-        
-    def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.class_label is None:
-            self.load_class_label()
-    
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
-            - Count number of classes.
-            - Build class_labels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
-
-        Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
-                Defaults to None.
-        """
-        console.log(f"Setup [red]VV[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-
-        # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = VV(
-                root             = self.root,
-                split            = "train",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
-            )
-            train_size   = int(0.8 * len(full_dataset))
-            val_size     = len(full_dataset) - train_size
-            self.train, self.val = random_split(
-                full_dataset, [train_size, val_size]
-            )
-            self.class_label = getattr(full_dataset, "class_labels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
-            
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test = VV(
-                root             = self.root,
-                split            = "test",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
-            )
-            self.class_label = getattr(self.test, "class_labels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
-        
+         
         if self.class_label is None:
             self.load_class_label()
 
@@ -1177,11 +1394,11 @@ class VVDataModule(DataModule):
 
 # MARK: - Test -----------------------------------------------------------------
 
-def test_dcim():
+def test_reside_hsts():
     cfg = {
-        "root": DATA_DIR / "lol226" / "dcim",
+        "root": DATA_DIR / "reside",
            # Root directory of dataset.
-        "name": "dcim",
+        "name": "reside_hsts",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -1196,7 +1413,7 @@ def test_dcim():
         ],
             # Functions/transforms that takes in an input and a target and
             # returns the transformed versions of both.
-        "cache_data": False,
+        "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
@@ -1214,23 +1431,124 @@ def test_dcim():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = DCIMDataModule(**cfg)
+    dm  = RESIDEHSTSDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:
         dm.class_label.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
+    plt.show(block=True)
+    
+   
+def test_reside_its():
+    cfg = {
+        "root": DATA_DIR / "reside",
+           # Root directory of dataset.
+        "name": "reside_its",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [H, W, C], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": True,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = RESIDEITSDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.class_label:
+        dm.class_label.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
+    plt.show(block=True)
+
+
+def test_reside_its_v2():
+    cfg = {
+        "root": DATA_DIR / "reside",
+           # Root directory of dataset.
+        "name": "reside_its_v2",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [H, W, C], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": True,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = RESIDEITSv2DataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.class_label:
+        dm.class_label.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
     plt.show(block=True)
     
 
-def test_lime():
+def test_reside_ots():
     cfg = {
-        "root": DATA_DIR / "lol226" / "lime",
+        "root": DATA_DIR / "reside",
            # Root directory of dataset.
-        "name": "lime",
+        "name": "reside_ots",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -1245,7 +1563,7 @@ def test_lime():
         ],
             # Functions/transforms that takes in an input and a target and
             # returns the transformed versions of both.
-        "cache_data": False,
+        "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
@@ -1263,23 +1581,74 @@ def test_lime():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = LIMEDataModule(**cfg)
+    dm  = RESIDEOTSDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:
         dm.class_label.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
     plt.show(block=True)
 
+
+def test_reside_sots():
+    cfg = {
+        "root": DATA_DIR / "reside",
+           # Root directory of dataset.
+        "name": "reside_sots",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [H, W, C], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": True,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = RESIDESOTSDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.class_label:
+        dm.class_label.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
+    plt.show(block=True)
     
-def test_lol226():
+
+def test_reside_sots_indoor():
     cfg = {
-        "root": DATA_DIR / "lol226",
+        "root": DATA_DIR / "reside",
            # Root directory of dataset.
-        "name": "lol226",
+        "name": "reside_sots_indoor",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -1294,7 +1663,7 @@ def test_lol226():
         ],
             # Functions/transforms that takes in an input and a target and
             # returns the transformed versions of both.
-        "cache_data": False,
+        "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
@@ -1312,23 +1681,24 @@ def test_lol226():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = LoL226DataModule(**cfg)
+    dm  = RESIDESOTSIndoorDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:
         dm.class_label.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
     plt.show(block=True)
+    
 
-
-def test_mef():
+def test_reside_sots_outdoor():
     cfg = {
-        "root": DATA_DIR / "lol226" / "mef",
+        "root": DATA_DIR / "reside",
            # Root directory of dataset.
-        "name": "mef",
+        "name": "reside_sots_outdoor",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -1343,7 +1713,7 @@ def test_mef():
         ],
             # Functions/transforms that takes in an input and a target and
             # returns the transformed versions of both.
-        "cache_data": False,
+        "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
@@ -1361,166 +1731,20 @@ def test_mef():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = MEFDataModule(**cfg)
+    dm  = RESIDESOTSOutdoorDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.class_label:
         dm.class_label.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
     plt.show(block=True)
-
-
-def test_npe():
-    cfg = {
-        "root": DATA_DIR / "lol226" / "mef",
-           # Root directory of dataset.
-        "name": "mef",
-            # Dataset's name.
-        "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
-        "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
-        "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
-        "transforms": [
-            Resize(size=[3, 512, 512])
-        ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
-        "cache_data": False,
-            # If True, cache data to disk for faster loading next time.
-            # Defaults to False.
-        "cache_images": False,
-            # If True, cache images into memory for faster training (WARNING:
-            # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
-        "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
-        "devices" : 0,
-            # The devices to use. Defaults to 0.
-        "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
-            # Defaults to True.
-        "verbose": True,
-            # Verbosity. Defaults to True.
-    }
-    dm  = NPEDataModule(**cfg)
-    dm.setup()
-    # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
-    # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
-    plt.show(block=True)
-
-
-def test_vip():
-    cfg = {
-        "root": DATA_DIR / "lol226" / "vip",
-           # Root directory of dataset.
-        "name": "vip",
-            # Dataset's name.
-        "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
-        "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
-        "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
-        "transforms": [
-            Resize(size=[3, 512, 512])
-        ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
-        "cache_data": False,
-            # If True, cache data to disk for faster loading next time.
-            # Defaults to False.
-        "cache_images": False,
-            # If True, cache images into memory for faster training (WARNING:
-            # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
-        "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
-        "devices" : 0,
-            # The devices to use. Defaults to 0.
-        "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
-            # Defaults to True.
-        "verbose": True,
-            # Verbosity. Defaults to True.
-    }
-    dm  = VIPDataModule(**cfg)
-    dm.setup()
-    # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
-    # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
-    plt.show(block=True)
-
-
-def test_vv():
-    cfg = {
-        "root": DATA_DIR / "lol226" / "vv",
-           # Root directory of dataset.
-        "name": "vv",
-            # Dataset's name.
-        "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
-        "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
-        "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
-        "transforms": [
-            Resize(size=[3, 512, 512])
-        ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
-        "cache_data": False,
-            # If True, cache data to disk for faster loading next time.
-            # Defaults to False.
-        "cache_images": False,
-            # If True, cache images into memory for faster training (WARNING:
-            # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
-        "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
-        "devices" : 0,
-            # The devices to use. Defaults to 0.
-        "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
-            # Defaults to True.
-        "verbose": True,
-            # Verbosity. Defaults to True.
-    }
-    dm  = VVDataModule(**cfg)
-    dm.setup()
-    # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
-    # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
-    plt.show(block=True)
-
-
+    
+    
 # MARK: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
-    test_lol226()
+    test_reside_ots()

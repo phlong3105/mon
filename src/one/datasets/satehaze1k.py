@@ -576,11 +576,161 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
   
 # MARK: - Test -----------------------------------------------------------------
 
-def test():
+def test_satehaze1k():
     cfg = {
         "root": DATA_DIR / "satehaze1k",
            # Root directory of dataset.
         "name": "satehaze1k",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [H, W, C], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": False,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = SateHaze1KDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.class_label:
+        dm.class_label.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
+    plt.show(block=True)
+
+
+def test_satehaze1kmoderate():
+    cfg = {
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
+        "name": "satehaze1kmoderate",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [H, W, C], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": False,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = SateHaze1KModerateDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.class_label:
+        dm.class_label.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
+    plt.show(block=True)
+
+
+def test_satehaze1kthick():
+    cfg = {
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
+        "name": "satehaze1kthick",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [H, W, C], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": False,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = SateHaze1KThickDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.class_label:
+        dm.class_label.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    imshow(winname="image",  image=input,  figure_num=0)
+    imshow(winname="target", image=target, figure_num=1)
+    plt.show(block=True)
+
+
+def test_satehaze1kthick():
+    cfg = {
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
+        "name": "satehaze1kthin",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -629,4 +779,4 @@ def test():
 # MARK: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
-    test()
+    test_satehaze1k()
