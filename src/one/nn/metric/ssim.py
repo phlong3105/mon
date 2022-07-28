@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
-from torch import Tensor
-
 from one.imgproc import filter2d
 from one.imgproc import get_gaussian_kernel2d
+from torch import Tensor
 
 __all__ = [
     "ssim",

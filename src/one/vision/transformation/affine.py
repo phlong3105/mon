@@ -15,6 +15,7 @@ from torch import nn
 from torch import Tensor
 from torchvision.transforms import functional_tensor as F_t
 
+from one.constants import TRANSFORMS
 from one.core import assert_number
 from one.core import assert_positive_number
 from one.core import assert_sequence_of_length
@@ -32,7 +33,6 @@ from one.core import Tensors
 from one.core import to_list
 from one.core import to_size
 from one.core import Transform
-from one.core import TRANSFORMS
 from one.vision.acquisition import get_image_center4
 from one.vision.acquisition import get_image_size
 from one.vision.acquisition import is_channel_last

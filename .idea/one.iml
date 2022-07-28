@@ -14,7 +14,7 @@
       <excludeFolder url="file://$MODULE_DIR$/src/one.egg-info" />
       <excludeFolder url="file://$MODULE_DIR$/docs/.sync" />
       <excludeFolder url="file://$MODULE_DIR$/docs/.idea" />
-      <excludeFolder url="file://$MODULE_DIR$/src/one/data/datasets" />
+      <excludeFolder url="file://$MODULE_DIR$/src/one/data1/datasets" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (one)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

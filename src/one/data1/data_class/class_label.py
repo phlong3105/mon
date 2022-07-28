@@ -13,10 +13,10 @@ from typing import Union
 import cv2
 import numpy as np
 from munch import Munch
+from one.io import load_file
 
 from one.core import console
 from one.core import print_table
-from one.io import load_file
 
 __all__ = [
     "ClassLabels",

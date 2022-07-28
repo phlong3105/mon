@@ -12,6 +12,7 @@ from typing import Sequence
 from typing import Union
 
 import torch
+from one.imgproc import rgb_to_yuv
 from torch import tensor
 from torch import Tensor
 from torchmetrics import Metric
@@ -20,7 +21,6 @@ from torchmetrics.functional.image.psnr import _psnr_update
 from torchmetrics.utilities import rank_zero_warn
 
 from one.core import METRICS
-from one.imgproc import rgb_to_yuv
 
 __all__ = [
     "PeakSignalNoiseRatioY",

@@ -6,8 +6,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 import torch
 from torch import Tensor
 
@@ -15,43 +13,35 @@ from one.core import AUGMENTS
 from one.core import get_image_hw
 from one.core import get_num_channels
 from one.core import to_tensor
-from one.data.augment.base import BaseAugment
-from one.data.augment.base import BaseAugmentModule
-from one.data.augment.utils import apply_transform_op
+from one.data1.augment.base import BaseAugment
+from one.data1.augment.base import BaseAugmentModule
+from one.data1.augment.utils import apply_transform_op
 
 __all__ = [
-    "PairedImagesAugmentModule",
-    "PairedImagesAutoAugment",
-    "PairedImagesRandAugment",
-    "PairedImagesTrivialAugmentWide",
+    "ImageAugmentModule",
+    "ImageAutoAugment",
+    "ImageRandAugment",
+    "ImageTrivialAugmentWide",
 ]
 
 
 # MARK: - Modules
 
-@AUGMENTS.register(name="paired_images_augment_module")
-class PairedImagesAugmentModule(BaseAugmentModule):
-    r"""Perform the same set of augmentation operations on a pair of 2 images.
-    """
-   
+@AUGMENTS.register(name="image_augment_module")
+class ImageAugmentModule(BaseAugmentModule):
+
     # MARK: Forward Pass
     
-    def forward(
-        self, input: Tensor, target: Optional[Tensor] = None
-    ) -> tuple[Tensor, Optional[Tensor]]:
-        """Transform image and target.
+    def forward(self, input: Tensor) -> Tensor:
+        """Transform image.
         
         Args:
             input (Tensor[*, C, H, W]):
-                Image to be transformed.
-            target (Tensor[*, C, H, W], optional):
-                Target to be transformed.
-                
+                Input image.
+
         Returns:
             input (Tensor[B, C, H, W]):
                 Transformed image.
-            target (Tensor[B, C, H, W], optional):
-                Transformed target.
         """
         # NOTE: Transform
         if self.random_transform:
@@ -59,26 +49,17 @@ class PairedImagesAugmentModule(BaseAugmentModule):
             transforms = self.transforms[index]
         else:
             transforms = self.transforms
-            
-        if target is not None:
-            concat        = torch.stack([input, target])
-            augment       = transforms(concat)
-            input, target = torch.chunk(augment, 2, 0)
-            input         = input.squeeze(0)
-            target        = target.squeeze(0)
-        else:
-            input         = transforms(input)
-        
+        input = transforms(input)
+
         # NOTE: Convert to tensor
         if self.to_tensor:
-            input  = to_tensor(input,  normalize=True)
-            target = to_tensor(target, normalize=True) if (target is not None) else None
+            input = to_tensor(input, normalize=True)
 
-        return input, target
+        return input
 
 
-@AUGMENTS.register(name="paired_images_auto_augment")
-class PairedImagesAutoAugment(BaseAugment):
+@AUGMENTS.register(name="image_auto_augment")
+class ImageAutoAugment(BaseAugment):
     r"""AutoAugment data augmentation method based on `"AutoAugment: Learning
     Augmentation Strategies from Data" <https://arxiv.org/pdf/1805.09501.pdf>`.
     If the image is Tensor, it should be of type torch.uint8, and it is
@@ -88,12 +69,11 @@ class PairedImagesAutoAugment(BaseAugment):
 
     Args:
         policy (str):
-			Augmentation policy. One of: [`imagenet`, `cifar10`, `svhn`,
-			`enhancement`, `super_resolution`]. Default: `enhancement`.
+			Augmentation policy. One of: [`imagenet`, `cifar10`, `svhn`].
+			Default: `imagenet`.
     """
 
     cfgs = {
-        # Image classification
         "imagenet": [
             # (op_name, p, magnitude, num_magnitude_bins=10)
             (("posterize", 0.4, 8   , 10)  , ("rotate"       , 0.6, 9   , 10)),
@@ -178,29 +158,11 @@ class PairedImagesAutoAugment(BaseAugment):
             (("vshear"  , 0.8, 5   , 10)  , ("auto_contrast", 0.7, None, None)),
             (("hshear"  , 0.7, 2   , 10)  , ("invert"       , 0.1, None, None)),
         ],
-        # Image enhancement
-        "enhancement": [
-            # (op_name, p, magnitude, num_magnitude_bins=10)
-            (("hflip",  0.5, None, None),),
-            (("vflip",  0.5, None, None),),
-            (("rotate", 0.5, 0, 4),),
-            (("rotate", 0.5, 1, 4),),
-            (("rotate", 0.5, 2, 4),),
-            (("rotate", 0.5, 3, 4),),
-            (("rotate", 0.5, 0, 4), ("hflip", 0.5, None, None)),
-            (("rotate", 0.5, 1, 4), ("hflip", 0.5, None, None)),
-            (("rotate", 0.5, 2, 4), ("hflip", 0.5, None, None)),
-            (("rotate", 0.5, 3, 4), ("hflip", 0.5, None, None)),
-            (("rotate", 0.5, 0, 4), ("vflip", 0.5, None, None)),
-            (("rotate", 0.5, 1, 4), ("vflip", 0.5, None, None)),
-            (("rotate", 0.5, 2, 4), ("vflip", 0.5, None, None)),
-            (("rotate", 0.5, 3, 4), ("vflip", 0.5, None, None)),
-        ],
     }
     
     # MARK: Magic Functions
 
-    def __init__(self, policy: str = "enhancement", *args, **kwargs):
+    def __init__(self, policy: str = "imagenet", *args, **kwargs):
         super().__init__(*args, **kwargs)
         if policy not in self.cfgs:
             raise ValueError(f"`policy` must be one of: {self.cfgs.keys()}."
@@ -228,7 +190,7 @@ class PairedImagesAutoAugment(BaseAugment):
             "identity"     : (torch.tensor(0.0), False),
             "invert"       : (torch.tensor(0.0), False),
             "posterize"    : (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
-            "rotate"       : (torch.linspace(0.0, 270.0, num_bins), True),
+            "rotate"       : (torch.linspace(0.0, 30.0,  num_bins), True),
             "sharpness"    : (torch.linspace(0.0, 0.9,   num_bins), True),
             "hshear"       : (torch.linspace(0.0, 0.3,   num_bins), True),
             "vshear"       : (torch.linspace(0.0, 0.3,   num_bins), True),
@@ -239,22 +201,16 @@ class PairedImagesAutoAugment(BaseAugment):
 
     # MARK: Forward Pass
     
-    def forward(
-        self, input: Tensor, target: Optional[Tensor] = None
-    ) -> tuple[Tensor, Optional[Tensor]]:
-        """Transform image and target.
+    def forward(self, input: Tensor) -> Tensor:
+        """Transform image.
         
         Args:
             input (Tensor[*, C, H, W]):
                 Image to be transformed.
-            target (Tensor[*, C, H, W], optional):
-                Target to be transformed.
-                
+
         Returns:
             input (Tensor[B, C, H, W]):
                 Transformed image.
-            target (Tensor[B, C, H, W], optional):
-                Transformed target.
         """
         # NOTE: Fill
         fill = self.fill
@@ -282,7 +238,6 @@ class PairedImagesAutoAugment(BaseAugment):
                              if magnitude is not None else 0.0)
                 if signed and signs[i] == 0:
                     magnitude *= -1.0
-                
                 input = apply_transform_op(
                     input         = input,
                     op_name       = op_name,
@@ -290,25 +245,16 @@ class PairedImagesAutoAugment(BaseAugment):
                     interpolation = self.interpolation,
                     fill          = fill
                 )
-                if target is not None:
-                    target = apply_transform_op(
-                        input         = target,
-                        op_name       = op_name,
-                        magnitude     = magnitude,
-                        interpolation = self.interpolation,
-                        fill          = fill
-                    )
         
         # NOTE: Convert to tensor
         if self.to_tensor:
-            input  = to_tensor(input,  normalize=True)
-            target = to_tensor(target, normalize=True) if (target is not None) else None
-          
-        return input, target
+            input = to_tensor(input, normalize=True)
+   
+        return input
 
 
-@AUGMENTS.register(name="paired_images_rand_augment")
-class PairedImagesRandAugment(BaseAugment):
+@AUGMENTS.register(name="image_rand_augment")
+class ImageRandAugment(BaseAugment):
     r"""RandAugment data augmentation method based on `"RandAugment: Practical
     automated data augmentation with a reduced search space"
     <https://arxiv.org/abs/1909.13719>`.
@@ -368,7 +314,7 @@ class PairedImagesRandAugment(BaseAugment):
             "identity"     : (torch.tensor(0.0), False),
             "invert"       : (torch.tensor(0.0), False),
             "posterize"    : (8 - (torch.arange(num_bins) / ((num_bins - 1) / 4)).round().int(), False),
-            "rotate"       : (torch.linspace(0.0, 270.0, 4), True),
+            "rotate"       : (torch.linspace(0.0, 30.0,  num_bins), True),
             "sharpness"    : (torch.linspace(0.0, 0.9,   num_bins), True),
             "hshear"       : (torch.linspace(0.0, 0.3,   num_bins), True),
             "vshear"       : (torch.linspace(0.0, 0.3,   num_bins), True),
@@ -378,23 +324,17 @@ class PairedImagesRandAugment(BaseAugment):
         }
     
     # MARK: Forward Pass
-
-    def forward(
-        self, input: Tensor, target: Optional[Tensor] = None
-    ) -> tuple[Tensor, Optional[Tensor]]:
-        """Transform input and target.
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """Transform image.
         
         Args:
             input (Tensor[*, C, H, W]):
                 Image to be transformed.
-            target (Tensor[*, C, H, W], optional):
-                Target to be transformed.
-                
+
         Returns:
             input (Tensor[B, C, H, W]):
                 Transformed image.
-            target (Tensor[B, C, H, W], optional):
-                Transformed target.
         """
         # NOTE: Fill
         fill = self.fill
@@ -416,7 +356,6 @@ class PairedImagesRandAugment(BaseAugment):
                          if magnitudes.ndim > 0 else 0.0)
             if signed and torch.randint(2, (1,)):
                 magnitude *= -1.0
-
             input = apply_transform_op(
                 input         = input,
                 op_name       = op_name,
@@ -424,29 +363,19 @@ class PairedImagesRandAugment(BaseAugment):
                 interpolation = self.interpolation,
                 fill          = fill
             )
-            if target is not None:
-                target = apply_transform_op(
-                    input         = target,
-                    op_name       = op_name,
-                    magnitude     = magnitude,
-                    interpolation = self.interpolation,
-                    fill          = fill
-                )
         
         # NOTE: Convert to tensor
         if self.to_tensor:
-            input  = to_tensor(input,  normalize=True)
-            target = to_tensor(target, normalize=True) if (target is not None) else None
+            input = to_tensor(input, normalize=True)
 
-        return input, target
+        return input
 
 
-@AUGMENTS.register(name="paired_images_trivial_augment_wide")
-class PairedImagesTrivialAugmentWide(BaseAugment):
+@AUGMENTS.register(name="image_trivial_augment_wide")
+class ImageTrivialAugmentWide(BaseAugment):
     r"""Dataset-independent data-augmentation with TrivialAugment Wide, as
     described in `"TrivialAugment: Tuning-free Yet State-of-the-Art Data
     Augmentation" <https://arxiv.org/abs/2103.10158>`.
-    
     If the image is Tensor, it should be of type torch.uint8, and it is
     expected to have [..., 1 or 3, H, W] shape, where ... means an arbitrary
     number of leading dimensions. If img is PIL Image, it is expected to be in
@@ -486,7 +415,7 @@ class PairedImagesTrivialAugmentWide(BaseAugment):
             "identity"     : (torch.tensor(0.0), False),
             "invert"       : (torch.tensor(0.0), False),
             "posterize"    : (8 - (torch.arange(num_bins) / ((num_bins - 1) / 6)).round().int(), False),
-            "rotate"       : (torch.linspace(0.0, 270.0, 4), True),
+            "rotate"       : (torch.linspace(0.0, 135.0, num_bins), True),
             "sharpness"    : (torch.linspace(0.0, 0.99,  num_bins), True),
             "hshear"       : (torch.linspace(0.0, 0.99,  num_bins), True),
             "vshear"       : (torch.linspace(0.0, 0.99,  num_bins), True),
@@ -496,23 +425,17 @@ class PairedImagesTrivialAugmentWide(BaseAugment):
         }
     
     # MARK: Forward Pass
-
-    def forward(
-        self, input: Tensor, target: Optional[Tensor] = None
-    ) -> tuple[Tensor, Optional[Tensor]]:
-        """Transform image and target.
+    
+    def forward(self, input: Tensor) -> Tensor:
+        """Transform image.
         
         Args:
             input (Tensor[*, C, H, W]):
                 Image to be transformed.
-            target (Tensor[*, C, H, W], optional):
-                Target to be transformed.
-                
+
         Returns:
             input (Tensor[B, C, H, W]):
                 Transformed image.
-            target (Tensor[B, C, H, W], optional):
-                Transformed target.
         """
         # NOTE: Fill
         fill = self.fill
@@ -531,7 +454,7 @@ class PairedImagesTrivialAugmentWide(BaseAugment):
                      if magnitudes.ndim > 0 else 0.0)
         if signed and torch.randint(2, (1,)):
             magnitude *= -1.0
-
+        
         input = apply_transform_op(
             input         = input,
             op_name       = op_name,
@@ -539,18 +462,9 @@ class PairedImagesTrivialAugmentWide(BaseAugment):
             interpolation = self.interpolation,
             fill          = fill
         )
-        if target is not None:
-            target = apply_transform_op(
-                input         = target,
-                op_name       = op_name,
-                magnitude     = magnitude,
-                interpolation = self.interpolation,
-                fill          = fill
-            )
         
         # NOTE: Convert to tensor
         if self.to_tensor:
-            input  = to_tensor(input,  normalize=True)
-            target = to_tensor(target, normalize=True) if (target is not None) else None
+            input = to_tensor(input, normalize=True)
 
-        return input, target
+        return input

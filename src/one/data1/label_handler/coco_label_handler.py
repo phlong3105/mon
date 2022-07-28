@@ -10,17 +10,17 @@ from pathlib import Path
 
 import numpy as np
 from munch import Munch
-
-from one.core import LABEL_HANDLERS
-from one.core import progress_bar
-from one.data.data_class import ImageInfo
-from one.data.data_class import ObjectAnnotation as Annotation
-from one.data.data_class import VisionData
-from one.data.label_handler.base import BaseLabelHandler
 from one.imgproc import box_xywh_to_cxcywh_norm
 from one.io import dump_file
 from one.io import is_json_file
 from one.io import load_file
+
+from one.core import LABEL_HANDLERS
+from one.core import progress_bar
+from one.data1.data_class import ImageInfo
+from one.data1.data_class import ObjectAnnotation as Annotation
+from one.data1.data_class import VisionData
+from one.data1.label_handler.base import BaseLabelHandler
 
 __all__ = [
 	"CocoDetectionLabelHandler"

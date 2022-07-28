@@ -13,10 +13,10 @@ from typing import Union
 
 import cv2
 import numpy as np
-
-from one.core import Color
 from one.imgproc import box_xyxy_to_cxcyrh
 from one.imgproc import get_box_center
+
+from one.core import Color
 
 __all__ = [
 	"Detection",

@@ -16,6 +16,10 @@ from typing import Union
 import cv2
 import numpy as np
 import torch
+from one.imgproc import resize
+from one.io import create_dirs
+from one.io import ImageLoader
+from one.io import ImageWriter
 from torch import Tensor
 from torchvision.transforms import functional as F
 
@@ -28,10 +32,6 @@ from one.core import InterpolationMode
 from one.core import progress_bar
 from one.core import select_device
 from one.core import to_image
-from one.imgproc import resize
-from one.io import create_dirs
-from one.io import ImageLoader
-from one.io import ImageWriter
 from one.nn.model.utils import get_next_version
 
 __all__ = [

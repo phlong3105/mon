@@ -16,6 +16,8 @@ from typing import Union
 
 import pytorch_lightning as pl
 import torch
+from one.io import create_dirs
+from one.io import is_url_or_file
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS
 from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 from torch import nn
@@ -41,9 +43,7 @@ from one.core import Pretrained
 from one.core import SCHEDULERS
 from one.core import StepOutput
 from one.core import Tensors
-from one.data import ClassLabels
-from one.io import create_dirs
-from one.io import is_url_or_file
+from one.data1 import ClassLabels
 from one.nn.model.debugger import Debugger
 from one.nn.model.io import load_pretrained
 from one.nn.model.utils import get_next_version

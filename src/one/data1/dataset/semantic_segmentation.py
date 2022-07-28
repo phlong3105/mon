@@ -18,6 +18,11 @@ import numpy as np
 import torch
 from joblib import delayed
 from joblib import Parallel
+from one.imgproc import resize
+from one.io import create_dirs
+from one.io import get_hash
+from one.io import is_image_file
+from one.io import read_image
 from sortedcontainers import SortedDict
 from torch import Tensor
 from torchvision.datasets import VisionDataset
@@ -32,16 +37,11 @@ from one.core import progress_bar
 from one.core import to_tensor
 from one.core import VISION_BACKEND
 from one.core import VisionBackend
-from one.data.augment import BaseAugment
-from one.data.data_class import ClassLabels
-from one.data.data_class import ImageInfo
-from one.data.data_class import VisionData
-from one.data.label_handler import VisionDataHandler
-from one.imgproc import resize
-from one.io import create_dirs
-from one.io import get_hash
-from one.io import is_image_file
-from one.io import read_image
+from one.data1.augment import BaseAugment
+from one.data1.data_class import ClassLabels
+from one.data1.data_class import ImageInfo
+from one.data1.data_class import VisionData
+from one.data1.label_handler import VisionDataHandler
 
 __all__ = [
     "SemanticSegmentationDataset"

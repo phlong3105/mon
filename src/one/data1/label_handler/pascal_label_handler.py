@@ -11,18 +11,18 @@ from collections import OrderedDict
 from pathlib import Path
 
 import numpy as np
-
-from one.core import LABEL_HANDLERS
-from one.data.data_class import ImageInfo
-from one.data.data_class import ObjectAnnotation as Annotation
-from one.data.data_class import VisionData
-from one.data.label_handler.base import BaseLabelHandler
 from one.imgproc import box_cxcywh_norm_to_xyxy
 from one.imgproc import box_xyxy_to_cxcywh_norm
 from one.imgproc import compute_box_area
 from one.io import dump_file
 from one.io import is_xml_file
 from one.io import load_file
+
+from one.core import LABEL_HANDLERS
+from one.data1.data_class import ImageInfo
+from one.data1.data_class import ObjectAnnotation as Annotation
+from one.data1.data_class import VisionData
+from one.data1.label_handler.base import BaseLabelHandler
 
 """
 from one.core import error_console

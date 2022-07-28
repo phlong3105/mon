@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import argparse
 
-from one.data.datasets.chalearn import convert_yolo_labels
-from one.data.datasets.chalearn import convert_yolo_labels_asynchronous
-from one.data.datasets.chalearn import shuffle_images_labels
+from one.data1.datasets.chalearn import convert_yolo_labels
+from one.data1.datasets.chalearn import convert_yolo_labels_asynchronous
+from one.data1.datasets.chalearn import shuffle_images_labels
 
 
 # MARK: - Main

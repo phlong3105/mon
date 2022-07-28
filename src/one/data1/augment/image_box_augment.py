@@ -11,9 +11,9 @@ import torch
 from torch import Tensor
 
 from one.core import AUGMENTS
-from one.data.augment.base import BaseAugment
-from one.data.augment.utils import apply_transform_op
-from one.data.data_class import ObjectAnnotation
+from one.data1.augment.base import BaseAugment
+from one.data1.augment.utils import apply_transform_op
+from one.data1.data_class import ObjectAnnotation
 
 __all__ = [
     "ImageBoxAugment",

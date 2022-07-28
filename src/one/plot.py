@@ -19,11 +19,11 @@ from torch import Tensor
 import one.vision.transformation as t
 from one.core import Arrays
 from one.core import assert_same_length
-from one.core import ClassLabel
 from one.core import Strs
 from one.core import Tensors
 from one.core import to_3d_tensor_list
 from one.core import to_list
+from one.data import ClassLabel
 from one.vision.acquisition import to_image
 
 # mpl.use("wxAgg")

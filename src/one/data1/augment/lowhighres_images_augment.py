@@ -11,8 +11,8 @@ from torch import Tensor
 
 from one.core import AUGMENTS
 from one.core import to_tensor
-from one.data.augment.base import BaseAugment
-from one.data.augment.utils import apply_transform_op
+from one.data1.augment.base import BaseAugment
+from one.data1.augment.utils import apply_transform_op
 
 __all__ = [
     "LowHighResImagesAugment",

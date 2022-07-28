@@ -27,6 +27,7 @@ from PIL import ExifTags
 from PIL import Image
 from torch import Tensor
 
+from one.constants import TRANSFORMS
 from one.core import assert_same_length
 from one.core import assert_tensor
 from one.core import assert_tensor_of_atleast_ndim
@@ -47,7 +48,6 @@ from one.core import to_3d_tensor
 from one.core import to_3d_tensor_list
 from one.core import to_size
 from one.core import Transform
-from one.core import TRANSFORMS
 from one.core import VisionBackend
 from one.core import VisionBackend_
 from one.math import make_divisible

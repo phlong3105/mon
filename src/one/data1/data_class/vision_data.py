@@ -14,8 +14,8 @@ from typing import Union
 
 import numpy as np
 
-from one.data.data_class.image_info import ImageInfo
-from one.data.data_class.object_annotation import ObjectAnnotation
+from one.data1.data_class.image_info import ImageInfo
+from one.data1.data_class.object_annotation import ObjectAnnotation
 
 __all__ = [
 	"VisionData"

@@ -12,13 +12,13 @@ from collections import Callable
 from typing import Optional
 
 import torch.nn
+from one.io import load_file
 from torch import nn
 from torch import Tensor
 from torchvision.transforms import InterpolationMode
 
 from one.core import TRANSFORMS
 from one.core import Transforms_
-from one.io import load_file
 
 __all__ = [
 	"BaseAugment",

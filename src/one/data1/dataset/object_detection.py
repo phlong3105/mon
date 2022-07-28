@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Template for (Supervised) Image Classification datasets.
+"""Template for (Supervised) 2D Object Detection datasets.
 """
 
 from __future__ import annotations
@@ -17,6 +17,14 @@ import numpy as np
 import torch
 from joblib import delayed
 from joblib import Parallel
+from one.imgproc import box_cxcywh_norm_to_xyxy
+from one.imgproc import box_xyxy_to_cxcywh_norm
+from one.imgproc import letterbox_resize
+from one.imgproc import resize
+from one.imgproc import translate_box
+from one.io import create_dirs
+from one.io import get_hash
+from one.io import read_image
 from sortedcontainers import SortedDict
 from torch import Tensor
 from torchvision.datasets import VisionDataset
@@ -31,25 +39,21 @@ from one.core import progress_bar
 from one.core import to_tensor
 from one.core import VISION_BACKEND
 from one.core import VisionBackend
-from one.data.augment import BaseAugment
-from one.data.data_class import ClassLabels
-from one.data.data_class import ImageInfo
-from one.data.data_class import VisionData
-from one.data.label_handler import VisionDataHandler
-from one.imgproc import resize
-from one.io import create_dirs
-from one.io import get_hash
-from one.io import read_image
+from one.data1.augment import BaseAugment
+from one.data1.data_class import ClassLabels
+from one.data1.data_class import ImageInfo
+from one.data1.data_class import VisionData
+from one.data1.label_handler import VisionDataHandler
 
 __all__ = [
-    "ImageClassificationDataset",
+    "ObjectDetectionDataset"
 ]
 
 
-# MARK: - ImageClassificationDataset
+# MARK: - ObjectDetectionDataset
 
-class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
-    """A base class for all (supervised) image classification datasets.
+class ObjectDetectionDataset(VisionDataset, metaclass=ABCMeta):
+    """A base class for all (supervised) 2D Object Detection datasets.
     
     Attributes:
         root (str):
@@ -61,7 +65,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
             List of all image files.
         label_paths (list):
             List of all label files.
-        custom_label_paths (list):
+         custom_label_paths (list):
             List of all custom label files.
         data (list[VisionData]):
             List of all `VisionData` objects.
@@ -153,12 +157,12 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         self.fast_dev_run       = fast_dev_run
         self.load_augment       = load_augment
         self.augment 		    = augment
-
+        
         if vision_backend in VisionBackend:
             self.vision_backend = vision_backend
         else:
             self.vision_backend = VISION_BACKEND
-
+        
         self.image_paths        = []
         self.label_paths        = []
         self.custom_label_paths = []
@@ -172,7 +176,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         self.load_data()
         # NOTE: Post-load data
         self.post_load_data()
-    
+        
     def __len__(self) -> int:
         """Return the size of the dataset."""
         return len(self.image_paths)
@@ -184,16 +188,11 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         target = items[1]
         rest   = items[2:]
         
-        if self.augment is not None:
-            input  = self.augment.forward(input=input)
-        else:
-            input  = to_tensor(input, normalize=True)
-            
-        if self.transform is not None:
+        if self.transform:
             input  = self.transform(input)
-        if self.target_transform is not None:
+        if self.target_transform:
             target = self.target_transform(target)
-        if self.transforms is not None:
+        if self.transforms:
             input  = self.transforms(input)
             target = self.transforms(target)
         return input, target, rest
@@ -224,6 +223,14 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         """Check if we have custom label files. If `True`, then those files
         will be loaded. Else, load the raw data	from the dataset, convert
         them to our custom data format, and write to files.
+        """
+        """
+        n = len(self.custom_label_paths)
+        return (
+            n > 0 and
+            n == len(self.image_paths) and
+            all(os.path.isfile(p) for p in self.custom_label_paths)
+        )
         """
         return self._has_custom_labels
     
@@ -257,14 +264,14 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
               `image_paths`, `label_paths`, `custom_label_paths`.
         """
         pass
-
-    # MARK: Load ClassLabels
     
+    # MARK: Load ClassLabels
+
     @abstractmethod
     def load_class_labels(self):
         """Load ClassLabels."""
         pass
-    
+
     # MARK: Load Data
     
     def load_data(self):
@@ -279,7 +286,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         cached_label_path = f"{split_prefix}{self.split}.cache"
         """
         cached_label_path = os.path.join(self.root, f"{self.split}.cache")
-
+        
         if os.path.isfile(cached_label_path):
             cache = torch.load(cached_label_path)  # Load
             hash  = (get_hash([self.label_paths] + self.custom_label_paths + self.image_paths)
@@ -321,15 +328,16 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
             with progress_bar() as pbar:
                 for i in pbar.track(
                     range(len(self.image_paths)),
-                    description=f"[bright_yellow]Caching {self.split} labels"
+                    description=f"Caching {self.split} labels"
                 ):
-                    label_path 	      = self.label_paths[i]
+                    label_path = (
+                        self.label_paths[i] if os.path.isfile(self.label_paths[i])
+                        else None
+                    )
                     custom_label_path = (
                         self.custom_label_paths[i]
-                        if (
-                            self.has_custom_labels
-                            and os.path.isfile(self.custom_label_paths[i])
-                        )
+                        if (self.has_custom_labels
+                            and os.path.isfile(self.custom_label_paths[i]))
                         else None
                     )
                     label = self.load_label(
@@ -384,13 +392,14 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
                 )
                 
                 def cache_label(i):
-                    label_path 	      = self.label_paths[i]
+                    label_path = (
+                        self.label_paths[i] if os.path.isfile(self.label_paths[i])
+                        else None
+                    )
                     custom_label_path = (
                         self.custom_label_paths[i]
-                        if (
-                            self.has_custom_labels
-                            and os.path.isfile(self.custom_label_paths[i])
-                        )
+                        if (self.has_custom_labels
+                            and os.path.isfile(self.custom_label_paths[i]))
                         else None
                     )
                     label = self.load_label(
@@ -429,13 +438,13 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
     @abstractmethod
     def load_label(
         self,
-        image_path		 : str,
+        image_path	     : str,
         label_path		 : str,
         custom_label_path: Optional[str] = None
     ) -> VisionData:
         """Load label data associated with the image from the corresponding
         label file.
-
+        
         Args:
             image_path (str):
                 Image file.
@@ -443,7 +452,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
                 Label file.
             custom_label_path (str, optional):
                 Custom label file. Default: `None`.
-
+                
         Returns:
             data (VisionData):
                 `VisionData` object.
@@ -452,27 +461,22 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
     
     @abstractmethod
     def load_labels(
-        self,
-        image_paths	     : list[str],
-        label_path 	     : str,
-        custom_label_path: Optional[str] = None
+        self, image_paths: list[str], label_path: str,
     ) -> dict[str, VisionData]:
         """Load all labels from one label file.
 
         Args:
             image_paths (list[str]):
-                List of image paths.
+                List of image files.
             label_path (str):
                 Label file.
-            custom_label_path (str, optional):
-                Custom label file. Default: `None`.
-
+        
         Returns:
             data (dict):
                 Dictionary of `VisionData` objects.
         """
         pass
-        
+    
     def cache_images(self):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
@@ -494,7 +498,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         
         Args:
             index (int):
-                Image index.
+                Index.
                 
         Returns:
             image (np.ndarray):
@@ -512,18 +516,110 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
                 raise ValueError(f"No image found at: {path}.")
             
             # NOTE: Resize image while keeping the image ratio
+            """h0, w0 = image.shape[:2]  # Original HW
+            ratio  = self.image_size / max(h0, w0)  # Resize image to image_size
+            h1, w1 = int(h0 * ratio), int(w0 * ratio)
+            if ratio != 1:  # Always resize down, only resize up if training with augmentation
+                interpolation = cv2.INTER_AREA if (ratio < 1 and not self.augment) else cv2.INTER_LINEAR
+                image         = cv2.resize(image, (w1, h1), interpolation=interpolation)"""
             h0, w0 = get_image_hw(image)
             image  = resize(image, self.shape)
             h1, w1 = get_image_hw(image)
             
             # NOTE: Assign image info if it has not been defined (just to be sure)
-            info        = ImageInfo.from_file(image_path=path, info=info)
+            info = ImageInfo.from_file(image_path=path, info=info)
+            
             info.height = h1 if info.height != h1 else info.height
             info.width  = w1 if info.width  != w1 else info.width
             info.depth  = (image.shape[2] if info.depth != image.shape[2]
                            else info.depth)
-            
+        
         return image, info
+        
+    def load_mosaic(self, index: int) -> tuple[np.ndarray, np.ndarray]:
+        """Load 4 images and create a mosaic.
+        
+        Args:
+            index (int):
+                Index.
+                
+        Returns:
+            input4 (np.ndarray):
+                Mosaic input.
+            target4 (np.ndarray):
+                Mosaic-ed box_labels.
+        """
+        target4       = []
+        s             = self.image_size
+        yc, xc        = s, s  # Mosaic center x, y
+        mosaic_border = [-s // 2, -s // 2]
+        # 3 additional input indices
+        indices = [index] + \
+                  [int(torch.randint(len(self.data) - 1, (1,))) for _ in range(3)]
+        
+        for i, index in enumerate(indices):
+            # Load input
+            input, info = self.load_image(index=index)
+            h, w, _     = info.shape
+            
+            # Place input in input4
+            if i == 0:  # Top left
+                input4 = np.full((s * 2, s * 2, input.shape[2]), 114, np.uint8)
+                # base input with 4 tiles
+                x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc
+                # xmin, ymin, xmax, ymax (large input)
+                x1b, y1b, x2b, y2b = w - (x2a - x1a), h - (y2a - y1a), w, h
+                # xmin, ymin, xmax, ymax (small input)
+            elif i == 1:  # Top right
+                x1a, y1a, x2a, y2a = xc, max(yc - h, 0), min(xc + w, s * 2), yc
+                x1b, y1b, x2b, y2b = 0, h - (y2a - y1a), min(w, x2a - x1a), h
+            elif i == 2:  # Bottom left
+                x1a, y1a, x2a, y2a = max(xc - w, 0), yc, xc, min(s * 2, yc + h)
+                x1b, y1b, x2b, y2b = w - (x2a - x1a), 0, max(xc, w), min(y2a - y1a, h)
+            elif i == 3:  # Bottom right
+                x1a, y1a, x2a, y2a = xc, yc, min(xc + w, s * 2), min(s * 2, yc + h)
+                x1b, y1b, x2b, y2b = 0, 0, min(w, x2a - x1a), min(y2a - y1a, h)
+            
+            input4[y1a:y2a, x1a:x2a] = input[y1b:y2b, x1b:x2b]
+            # input4[ymin:ymax, xmin:xmax]
+            padw = x1a - x1b
+            padh = y1a - y1b
+            
+            # Labels
+            target = self.data[index].box_labels
+            if target.size > 0:
+                target[:, 2:6] = box_cxcywh_norm_to_xyxy(target[:, 2:6], h, w)
+                # Normalized xywh to pixel xyxy format
+                target[:, 2:6] = translate_box(target[:, 2:6], (padw, padh))
+                # Add padding
+            target4.append(target)
+            
+        # Concat/clip target
+        if len(target4):
+            target4 = np.concatenate(target4, 0)
+            # np.clip(target4[:, 1:] - s / 2, 0, s, out=target4[:, 1:])
+            # use with center crop
+            np.clip(target4[:, 2:6], 0, 2 * s, out=target4[:, 2:6])
+            # use with random_affine
+    
+            # Replicate
+            # input4, target4 = replicate(input4, target4)
+        
+        return input4, target4
+    
+    def load_mixup(
+        self, input: np.ndarray, target: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """MixUp https://arxiv.org/pdf/1710.09412.pdf."""
+        input2, target2 = self.load_mosaic(
+            index=int(torch.randint(len(self.data) - 1, (1,)))
+        )
+        ratio  = np.random.beta(8.0, 8.0)
+        # mixup ratio, alpha=beta=8.0
+        input  = input * ratio + input2 * (1 - ratio)
+        input  = input.astype(np.uint8)
+        target = np.concatenate((target, target2), 0)
+        return input, target
     
     # MARK: Post-Load Data
     
@@ -533,17 +629,17 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         to add more operations, just `extend` this method.
         """
         # NOTE: Prepare for rectangular training
-        # if self.augment.rect:
-        #    self.prepare_for_rect_training()
+        if isinstance(self.load_augment, dict) and self.load_augment.get("rect", False):
+            self.prepare_for_rect_training()
         
         # NOTE: Write data to our custom label format
         if not self.has_custom_labels and self.write_labels:
             self.write_custom_labels()
-    
+
     # MARK: Get Item
     
     def get_item(self, index: int) -> tuple[Tensor, Tensor, Int3T]:
-        """Convert the data at the given index to enhancement input item.
+        """Get the item.
   
         Args:
             index (int):
@@ -552,33 +648,75 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         Returns:
             input (Tensor[1, C, H, W]):
                 Image.
-            target (Tensor[1]):
-                Class ID.
+            target (Tensor[*, 4]):
+                Bounding boxes.
             shape (Int3T):
                 Shape of the resized images.
         """
-        data = self.data[index]
+        input = target = shape = None
+        data  = self.data[index]
+
+        # NOTE: Augmented load input
+        if isinstance(self.load_augment, dict):
+            mosaic = self.load_augment.get("mosaic", 0)
+            mixup  = self.load_augment.get("mixup",  0)
+            rect   = self.load_augment.get("rect",   False)
+            if torch.rand(1) <= mosaic and not rect:  # Load mosaic
+                input, target = self.load_mosaic(index)
+                shape         = input.shape
+                if torch.rand(1) <= mixup:  # Mixup
+                    input, target = self.load_mixup(input, target)
         
-        # NOTE: Load image normally
-        input, info = self.load_image(index=index)
-        (h0, w0, _) = info.shape0
-        (h,  w,  _) = info.shape
-        shape       = (h0, w0), (h, w)
-        target      = data.class_id
-        target      = target if isinstance(target, int) else int(target)
+        # NOTE: Load input normally
+        if input is None:
+            input , info = self.load_image(index=index)
+            (h0, w0, _)  = info.shape0
+            (h,  w,  _)  = info.shape
+
+            # Letterbox
+            if isinstance(self.load_augment, dict) and self.load_augment.get("rect", False):
+                shape = self.batch_shapes[self.batch_indexes[index]]
+            else:
+                shape = self.image_size
+            scale_up          = self.augment is not None
+            input, ratio, pad = letterbox_resize(
+                image=input, size=shape, auto=False, scale_up=scale_up
+            )
+            shape = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
+
+            # Load labels
+            target = data.box_labels
+            new_h  = ratio[1] * h
+            new_w  = ratio[0] * w
+            # Normalized xywh to xyxy format
+            target[:, 2:6] = box_cxcywh_norm_to_xyxy(target[:, 2:6], new_h, new_w)
+            # Add padding
+            target[:, 2:6] = translate_box(
+                box        = target[:, 2:6],
+                image_size = (new_h, new_w),
+                magnitude  = (pad[1], pad[0])
+            )[:, :]
+            target[:, 2:6] = box_xyxy_to_cxcywh_norm(target[:, 2:6], new_h, new_w)
+            
+        # NOTE: Augment
+        h1, w1 = get_image_hw(input)
+        target[:, 2:6] = box_cxcywh_norm_to_xyxy(target[:, 2:6], h1, w1)
+        input, target = self.augment(input=input, target=target)
+        target[:, 2:6] = box_xyxy_to_cxcywh_norm(target[:, 2:6], h1, w1)
         
         # NOTE: Convert to tensor
-        input  = to_tensor(input, keep_dims=False, normalize=False).to(torch.uint8)
-        target = torch.tensor(target)
+        input  = to_tensor(input, keep_dims=False, normalize=True)
+        target = torch.from_numpy(target).to(torch.get_default_dtype())
         
         return input, target, shape
-        
+
     @staticmethod
     def collate_fn(batch) -> tuple[Tensor, Tensor, Int3T]:
         """Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the DataLoader wrapper.
         """
         input, target, shapes = zip(*batch)  # transposed
+        
         if all(i.ndim == 3 for i in input):
             input = torch.stack(input, 0)
         elif all(i.ndim == 4 for i in input):
@@ -586,8 +724,11 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         else:
             raise ValueError(f"Each `input.ndim` must be 3 or 4.")
         
-        return input, torch.cat(target), shapes
-        
+        for i, l in enumerate(target):
+            l[:, 0] = i  # add target image index for build_targets()
+            
+        return input, torch.cat(target, 0), shapes
+    
     # MARK: Utils
     
     def prepare_for_rect_training(self):
@@ -596,9 +737,9 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         References:
             https://github.com/ultralytics/yolov3/issues/232
         """
-        rect   = self.augment.rect
-        stride = self.augment.stride
-        pad    = self.augment.pad
+        rect   = self.load_augment.get("rect",   False)
+        stride = self.load_augment.get("stride", 32)
+        pad    = self.load_augment.get("pad",    0)
         
         if rect:
             # NOTE: Get number of batches
@@ -627,8 +768,10 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
                 elif mini > 1:
                     shapes[i] = [1, 1 / mini]
             
-            self.batch_shapes  = stride * np.ceil(
-                np.array(shapes) * self.image_size / stride + pad).astype(np.int)
+            self.batch_shapes  = \
+                stride * np.ceil(np.array(shapes)
+                                 * self.image_size / stride
+                                 + pad).astype(np.int)
             self.batch_indexes = bi
         
     def write_custom_labels(self):
@@ -648,7 +791,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
         # NOTE: Scan all images to get information
         with progress_bar() as pbar:
             for i in pbar.track(
-                range(len(self.data)), description="[red]Scanning images"
+                range(len(self.data)), description="Scanning images"
             ):
                 # image, hw_original, hw_resized
                 _, self.data[i].image_info = self.load_image(index=i)
@@ -656,7 +799,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
             # NOTE: Parallel write labels
             for (data, path) in pbar.track(
                 zip(self.data, self.custom_label_paths),
-                description="[red]Writing custom annotations",
+                description="Writing custom annotations",
                 total=len(self.data)
             ):
                 VisionDataHandler().dump_to_file(data=data, path=path)

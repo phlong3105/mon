@@ -8,12 +8,12 @@ from __future__ import annotations
 
 from pytorch_lightning import callbacks
 from pytorch_lightning.callbacks.progress.rich_progress import \
-	BatchesProcessedColumn
+    BatchesProcessedColumn
 from pytorch_lightning.callbacks.progress.rich_progress import CustomBarColumn
 from pytorch_lightning.callbacks.progress.rich_progress import CustomProgress
 from pytorch_lightning.callbacks.progress.rich_progress import MetricsTextColumn
 from pytorch_lightning.callbacks.progress.rich_progress import \
-	ProcessingSpeedColumn
+    ProcessingSpeedColumn
 from rich.progress import SpinnerColumn
 from rich.progress import TextColumn
 from rich.progress import TimeElapsedColumn

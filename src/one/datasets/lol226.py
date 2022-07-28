@@ -10,13 +10,11 @@ from __future__ import annotations
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
-from one.core import ClassLabel_
+from one.constants import DATA_DIR
+from one.constants import DATAMODULES
+from one.constants import DATASETS
+from one.constants import VISION_BACKEND
 from one.core import console
-from one.core import DATA_DIR
-from one.core import DataModule
-from one.core import DATAMODULES
-from one.core import DATASETS
-from one.core import Image
 from one.core import Ints
 from one.core import is_image_file
 from one.core import ModelPhase
@@ -24,8 +22,10 @@ from one.core import ModelPhase_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import UnlabeledImageDataset
-from one.core import VISION_BACKEND
 from one.core import VisionBackend_
+from one.data import ClassLabel_
+from one.data import DataModule
+from one.data import Image
 from one.plot import imshow
 from one.vision.transformation import Resize
 

@@ -13,15 +13,15 @@ from typing import Optional
 from typing import Union
 
 import torch
+from one.io import get_latest_file
+from one.io import is_torch_saved_file
+from one.io import is_url
 from torch import nn
 from torch import Tensor
 from torch.hub import load_state_dict_from_url
 
 from one.core import console
 from one.core import intersect_weight_ordered_dicts
-from one.io import get_latest_file
-from one.io import is_torch_saved_file
-from one.io import is_url
 
 __all__ = [
     "ckpt_to_weights",

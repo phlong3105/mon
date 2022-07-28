@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Template for (Supervised) Image Enhancement datasets.
+"""Template for Unsupervised Image datasets.
 """
 
 from __future__ import annotations
@@ -17,6 +17,10 @@ import numpy as np
 import torch
 from joblib import delayed
 from joblib import Parallel
+from one.imgproc import resize
+from one.io import create_dirs
+from one.io import get_hash
+from one.io import read_image
 from sortedcontainers import SortedDict
 from torch import Tensor
 from torchvision.datasets import VisionDataset
@@ -31,25 +35,21 @@ from one.core import progress_bar
 from one.core import to_tensor
 from one.core import VISION_BACKEND
 from one.core import VisionBackend
-from one.data.augment import BaseAugment
-from one.data.data_class import ClassLabels
-from one.data.data_class import ImageInfo
-from one.data.data_class import VisionData
-from one.data.label_handler import VisionDataHandler
-from one.imgproc import resize
-from one.io import create_dirs
-from one.io import get_hash
-from one.io import read_image
+from one.data1.augment import BaseAugment
+from one.data1.data_class import ClassLabels
+from one.data1.data_class import ImageInfo
+from one.data1.data_class import VisionData
+from one.data1.label_handler import VisionDataHandler
 
 __all__ = [
-    "ImageEnhancementDataset",
+    "UnsupervisedImageDataset"
 ]
 
 
-# MARK: - ImageEnhancementDataset
+# MARK: - UnsupervisedImageDataset
 
-class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
-    """A base class for all (supervised) image enhancement datasets.
+class UnsupervisedImageDataset(VisionDataset, metaclass=ABCMeta):
+    """A base class for all unsupervised image enhancement datasets.
 
     Attributes:
         root (str):
@@ -59,11 +59,9 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
             Split to use. One of: ["train", "val", "test"].
         image_paths (list):
             List of all image files.
-        eimage_paths (list):
-            List of all target image files.
         label_paths (list):
             List of all label files that can provide extra info about the
-            image and target image.
+            image.
         custom_label_paths (list):
             List of all custom label files.
         data (list):
@@ -71,7 +69,7 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         class_labels (ClassLabels, optional):
             `ClassLabels` object contains all class-labels defined in the
             dataset. Default: `None`.
-        shape (Dim3):
+        shape (Int3T):
             Image shape as [H, W, C].
         caching_labels (bool):
             Should overwrite the existing cached labels?
@@ -139,7 +137,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
             self.vision_backend = VISION_BACKEND
         
         self.image_paths        = []
-        self.eimage_paths       = []
         self.label_paths        = []
         self.custom_label_paths = []
         self.data               = []
@@ -159,25 +156,20 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
     
     def __getitem__(self, index: int) -> Any:
         """Return a tuple of data item from the dataset."""
-        items  = self.get_item(index=index)
-        input  = items[0]
-        target = items[1]
-        rest   = items[2:]
+        items = self.get_item(index=index)
+        input = items[0]
+        rest  = items[1:]
         
         if self.augment is not None:
-            input, target = self.augment(input=input, target=target)
+            input, _ = self.augment(input=input)
         else:
-            input  = to_tensor(input,  normalize=True)
-            target = to_tensor(target, normalize=True) if (target is not None) else None
+            input = to_tensor(input, normalize=True)
             
         if self.transform is not None:
-            input  = self.transform(input)
-        if self.target_transform is not None:
-            target = self.target_transform(target) if (target is not None) else None
+            input = self.transform(input)
         if self.transforms is not None:
-            input  = self.transforms(input)
-            target = self.transforms(target) if (target is not None) else None
-        return input, target, rest
+            input = self.transforms(input)
+        return input, None, rest
         
     # MARK: Properties
     
@@ -230,7 +222,7 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
             - If none is found, proceed to listing the images and raw labels'
               files.
             - After this method, these following attributes MUST be defined:
-              `image_paths`, `target_paths`, `label_paths`, `custom_label_paths`.
+              `image_paths`, `label_paths`, `custom_label_paths`.
         """
         pass
     
@@ -244,20 +236,12 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
     # MARK: Load Data
     
     def load_data(self):
-        """Load and cache images, enhance images, and labels."""
+        """Load and cache images and labels."""
         # NOTE: Cache labels
-        """
-        path              = self.eimage_paths[0]
-        split_prefix      = path[: path.find(self.split)]
-        cached_label_path = f"{split_prefix}{self.split}.cache"
-        """
         cached_label_path = os.path.join(self.root, f"{self.split}.cache")
         if os.path.isfile(cached_label_path):
             cache = torch.load(cached_label_path)  # Load
-            hash  = get_hash(
-                self.image_paths + self.eimage_paths + self.label_paths
-                + self.custom_label_paths
-            )
+            hash  = get_hash(self.label_paths + self.custom_label_paths + self.image_paths)
             if self.caching_labels or cache["hash"] != hash:
                 # Re-cache
                 cache = self.cache_labels_multithreaded(path=cached_label_path)
@@ -271,7 +255,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         # NOTE: Cache images
         if self.caching_images:
             self.cache_images()
-            self.cache_enhance_images()
 
     def cache_labels(self, path: str) -> dict:
         """Cache labels, check images and read shapes.
@@ -307,7 +290,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
                 )
                 label = self.load_label(
                     image_path        = self.image_paths[i],
-                    enhance_path      = self.eimage_paths[i],
                     label_path        = label_path,
                     custom_label_path = custom_label_path
                 )
@@ -322,8 +304,7 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         # NOTE: Write cache
         console.log(f"Labels has been cached to: {path}.")
         cache_labels["hash"] = get_hash(
-            self.image_paths + self.eimage_paths + self.label_paths
-            + self.custom_label_paths
+            self.label_paths + self.custom_label_paths + self.image_paths
         )
         torch.save(cache_labels, path)  # Save for next time
         return cache_labels
@@ -364,7 +345,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
                 )
                 label = self.load_label(
                     image_path        = self.image_paths[i],
-                    enhance_path      = self.eimage_paths[i],
                     label_path        = label_path,
                     custom_label_path = custom_label_path
                 )
@@ -385,8 +365,7 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         # NOTE: Write cache
         console.log(f"Labels has been cached to: {path}.")
         cache_labels["hash"] = get_hash(
-            self.image_paths + self.eimage_paths + self.label_paths
-            + self.custom_label_paths
+            self.label_paths + self.custom_label_paths + self.image_paths
         )
         torch.save(cache_labels, path)  # Save for next time
         return cache_labels
@@ -395,7 +374,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
     def load_label(
         self,
         image_path       : str,
-        enhance_path     : str,
         label_path       : Optional[str] = None,
         custom_label_path: Optional[str] = None
     ) -> VisionData:
@@ -404,8 +382,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         Args:
             image_path (str):
                 Image file.
-            enhance_path (str):
-                Enhance image file.
             label_path (str, optional):
                 Label file. Default: `None`.
             custom_label_path (str, optional):
@@ -471,62 +447,8 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         
         return image, info
     
-    def cache_enhance_images(self):
-        """Cache target images into memory for faster training (WARNING:
-        large datasets may exceed system RAM).
-        """
-        gb = 0  # Gigabytes of cached images
-        with download_bar() as pbar:
-            # Should be max 10k images
-            for i in pbar.track(
-                range(len(self.eimage_paths)),
-                description=f"Caching {self.split} enhance images"
-            ):
-                # image, hw_original, hw_resized
-                (self.data[i].eimage,
-                 self.data[i].eimage_info) = self.load_enhance_image(index=i)
-                gb += self.data[i].eimage.nbytes
-                # pbar.desc = "Caching target images (%.1fGB)" % (gb / 1E9)
-    
-    def load_enhance_image(self, index: int) -> tuple[np.ndarray, ImageInfo]:
-        """Load 1 target image from dataset and preprocess image.
-
-        Args:
-            index (int):
-                Enhance image index.
-
-        Returns:
-            image (np.ndarray):
-                Target image.
-            info (ImageInfo):
-                `ImageInfo` object.
-        """
-        image = self.data[index].eimage
-        info  = self.data[index].eimage_info
-        
-        if image is None:  # Not cached
-            path  = self.eimage_paths[index]
-            image = read_image(path, backend=self.vision_backend)  # RGB
-            if image is None:
-                raise ValueError(f"No enhanced image found at: {path}.")
-            
-            # NOTE: Resize image while keeping the image ratio
-            h0, w0 = get_image_hw(image)
-            image  = resize(image, self.shape)
-            h1, w1 = get_image_hw(image)
-            
-            # NOTE: Assign image info if it has not been defined
-            # (just to be sure)
-            info        = ImageInfo.from_file(image_path=path, info=info)
-            info.height = h1 if info.height != h1 else info.height
-            info.width  = w1 if info.width != w1 else info.width
-            info.depth  = (image.shape[2] if info.depth != image.shape[2]
-                           else info.depth)
-
-        return image, info
-    
-    def load_mosaic(self, index: int) -> tuple[np.ndarray, np.ndarray]:
-        """Load 4 images and target images and create a mosaic.
+    def load_mosaic(self, index: int) -> np.ndarray:
+        """Load 4 images and create a mosaic.
         
         Args:
             index (int):
@@ -535,27 +457,23 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         Returns:
             input4 (np.ndarray):
                 Mosaic input.
-            target4 (np.ndarray):
-                Mosaic target.
         """
         shape         = self.shape
         yc, xc        = shape[0], shape[1]  # Mosaic center x, y
         mosaic_border = [-yc // 2, -xc // 2]
         # 3 additional input indices
-        indices = [index] + [int(torch.randint(len(self.data) - 1, (1,))) for _ in range(3)]
+        indices = [index] + \
+				  [int(torch.randint(len(self.data) - 1, (1,))) for _ in range(3)]
         
         # NOTE: Create mosaic input and target input
         for i, index in enumerate(indices):
             # Load input
             input, info = self.load_image(index=index)
-            target, _   = self.load_enhance_image(index=index)
             h, w, _     = info.shape
             
             # Place input in input4
             if i == 0:  # Top left
-                input4  = np.full((yc * 2, xc * 2, input.shape[2]), 114, np.uint8)
-                # base input with 4 tiles
-                target4 = np.full((yc * 2, xc * 2, target.shape[2]), 114, np.uint8)
+                input4 = np.full((yc * 2, xc * 2, input.shape[2]), 114, np.uint8)
                 # base input with 4 tiles
                 x1a, y1a, x2a, y2a = max(xc - w, 0), max(yc - h, 0), xc, yc
                 # xmin, ymin, xmax, ymax (large input)
@@ -573,28 +491,20 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
             
             input4[y1a:y2a, x1a:x2a]  = input[y1b:y2b, x1b:x2b]
             # input4[ymin:ymax, xmin:xmax]
-            target4[y1a:y2a, x1a:x2a] = target[y1b:y2b, x1b:x2b]
-            # input4[ymin:ymax, xmin:xmax]
             padw = x1a - x1b
             padh = y1a - y1b
         
-        return input4, target4
+        return input4
     
-    def load_mixup(
-        self, input: np.ndarray, target: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def load_mixup(self, input: np.ndarray) -> np.ndarray:
         """MixUp https://arxiv.org/pdf/1710.09412.pdf."""
-        input2, target2 = self.load_mosaic(
-            index=int(torch.randint(len(self.data) - 1, (1,)))
-        )
+        input2 = self.load_mosaic(index=int(torch.randint(len(self.data) - 1, (1,))))
         ratio  = np.random.beta(8.0, 8.0)
         # mixup ratio, alpha=beta=8.0
         input  = input * ratio + input2 * (1 - ratio)
         input  = input.astype(np.uint8)
-        target = target * ratio + target2 * (1 - ratio)
-        target = target.astype(np.uint8)
-        return input, target
-        
+        return input
+    
     # MARK: Post-Load Data
     
     def post_load_data(self):
@@ -608,7 +518,7 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
     
     # MARK: Get Item
     
-    def get_item(self, index: int) -> tuple[Tensor, Tensor, Int3T]:
+    def get_item(self, index: int) -> tuple[Tensor, Int3T]:
         """Get the item.
   
         Args:
@@ -618,55 +528,49 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
         Returns:
             input (Tensor[1, C, H, W]):
                 Image.
-            target (Tensor[1, C, H, W]):
-                Enhanced image.
             shape (Int3T):
                 Shape of the resized images.
         """
-        input = target = shape = None
+        input = shape = None
         
         # NOTE: Augmented load input
         if isinstance(self.load_augment, dict):
             mosaic = self.load_augment.get("mosaic", 0)
             mixup  = self.load_augment.get("mixup",  0)
             if torch.rand(1) <= mosaic:  # Load mosaic
-                input, target = self.load_mosaic(index)
-                shape         = input.shape
+                input = self.load_mosaic(index)
+                shape = input.shape
                 if torch.rand(1) <= mixup:  # Mixup
-                    input, target = self.load_mixup(input, target)
+                    input = self.load_mixup(input)
         
         # NOTE: Load input normally
         if input is None:
-            input , info = self.load_image(index=index)
-            target, _    = self.load_enhance_image(index=index)
-            (h0, w0, _)  = info.shape0
-            (h,  w,  _)  = info.shape
-            shape        = (h0, w0), (h, w)
+            input, info = self.load_image(index=index)
+            (h0, w0, _) = info.shape0
+            (h,  w,  _) = info.shape
+            shape       = (h0, w0), (h, w)
         
         # NOTE: Convert to tensor
-        input  = to_tensor(input,  keep_dims=False, normalize=False).to(torch.uint8)
-        target = to_tensor(target, keep_dims=False, normalize=False).to(torch.uint8)
+        input = to_tensor(input, keep_dims=False, normalize=False).to(torch.uint8)
         
-        return input, target, shape
-    
+        return input, shape
+        
     @staticmethod
-    def collate_fn(batch) -> tuple[Tensor, Tensor, Int3T]:
+    def collate_fn(batch) -> tuple[Tensor, None, Int3T]:
         """Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the DataLoader wrapper.
         """
-        input, target, shapes = zip(*batch)  # Transposed
-
-        if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
-            input  = torch.stack(input,  0)
-            target = torch.stack(target, 0)
-        elif all(i.ndim == 4 for i in input) and all(t.ndim == 4 for t in target):
-            input  = torch.cat(input,  0)
-            target = torch.cat(target, 0)
-        else:
-            raise ValueError(f"Each `input.ndim` and `target.ndim` must be 3 or 4.")
-            
-        return input, target, shapes
+        input, _, shapes = zip(*batch)  # Transposed
         
+        if all(i.ndim == 3 for i in input):
+            input = torch.stack(input, 0)
+        elif all(i.ndim == 4 for i in input):
+            input = torch.cat(input, 0)
+        else:
+            raise ValueError(f"Each `input.ndim` must be 3 or 4.")
+
+        return input, None, shapes
+    
     # MARK: Utils
     
     def write_custom_labels(self):
@@ -683,12 +587,6 @@ class ImageEnhancementDataset(VisionDataset, metaclass=ABCMeta):
             ):
                 # image, hw_original, hw_resized
                 _, self.data[i].image_info = self.load_image(index=i)
-            
-            for i in pbar.track(
-                range(len(self.data)), description="[red]Scanning target images"
-            ):
-                # image, hw_original, hw_resized
-                _, self.data[i].eimage_info = self.load_enhance_image(index=i)
             
             # NOTE: Parallel write labels
             for (data, path) in pbar.track(

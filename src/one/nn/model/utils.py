@@ -10,10 +10,10 @@ import os
 from typing import Callable
 
 import torch
+from one.io import is_weights_file
 from torch import nn
 
 from one.core import console
-from one.io import is_weights_file
 
 __all__ = [
     "find_modules",
