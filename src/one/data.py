@@ -4,6 +4,19 @@
 """
 Data module implements all helper functions and classes related to storing data
 including labels, datasets, dataloaders, and metadata.
+
+Taxonomy:
+    |
+    |__ Label
+    |__ Dataset
+    |     |__ Unlabeled
+    |     |__ Labeled
+    |     |__ Classification
+    |     |__ Detection
+    |     |__ Enhancement
+    |     |__ Segmentation
+    |     |__ Multitask
+    |__ Serialization
 """
 
 from __future__ import annotations
@@ -43,11 +56,16 @@ from one.core import assert_dict_contain_key
 from one.core import assert_dir
 from one.core import assert_image_file
 from one.core import assert_json_file
+from one.core import assert_list
 from one.core import assert_list_of
+from one.core import assert_number_in_range
 from one.core import assert_sequence_of_length
 from one.core import assert_tensor_of_ndim
+from one.core import assert_txt_file
+from one.core import assert_xml_file
 from one.core import BBoxFormat
 from one.core import Callable
+from one.core import Color
 from one.core import ComposeTransform
 from one.core import console
 from one.core import Devices
@@ -56,6 +74,7 @@ from one.core import error_console
 from one.core import EvalDataLoaders
 from one.core import Ints
 from one.core import is_image_file
+from one.core import is_list_of
 from one.core import is_same_length
 from one.core import is_txt_file
 from one.core import is_xml_file
@@ -64,6 +83,7 @@ from one.core import Path_
 from one.core import Paths_
 from one.core import print_table
 from one.core import progress_bar
+from one.core import RGB
 from one.core import to_list
 from one.core import TrainDataLoaders
 from one.core import Transforms_
@@ -73,16 +93,38 @@ from one.core import VisionBackend_
 
 # H1: - Label ------------------------------------------------------------------
 
-def majority_voting(labels: list[dict]) -> dict:
+class Label(metaclass=ABCMeta):
+    """
+    Base class for labels. Label instances represent a logical collection of
+    data associated with a particular task for a sample or frame in a dataset.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        for k, v in kwargs.items():
+            self.__setattr__(k, v)
+    
+    @abstractmethod
+    @property
+    def tensor(self):
+        """
+        Return the label in tensor format.
+        """
+        pass
+
+
+# H2: - Class Label ------------------------------------------------------------
+
+def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
     """
     It counts the number of appearance of each label, and returns the label with
     the highest count.
     
     Args:
-        labels (list[dict]): List of object's label.
+        labels (list[ClassLabel]): List of object's classlabels.
     
     Returns:
-        A dictionary of the label that has the most votes.
+        A ClassLabel that has the most votes.
     """
     # Count number of appearance of each label.
     unique_labels = Munch()
@@ -101,78 +143,91 @@ def majority_voting(labels: list[dict]) -> dict:
     return unique_labels[max_id]
 
 
-class ClassLabel:
+class ClassLabel(Munch, Label):
     """
-    ClassLabel is a list of all classes' dictionaries in the dataset.
-    
-    References:
-        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/ClassLabel
-
-    Attributes:
-        classes (list[dict]):
-            List of all classes in the dataset.
+    A class label consisting of basic attributes: id, name, and color.
+    Each dataset can have additional attributes.
     """
 
-    def __init__(self, classes: list[dict]):
-        assert_list_of(classes, item_type=dict)
-        self._classes = classes
-
-    @staticmethod
-    def from_dict(d: dict) -> ClassLabel:
+    @property
+    def tensor(self):
         """
-        It takes a dictionary and returns a ClassLabel object.
+        Return the label in tensor format.
+        """
+        return None
+
+
+class ClassLabels(Label):
+    """
+    A list of ClassLabels in the dataset.
+    
+    Args:
+        classlabels (list[ClassLabel]): List of all classes in the dataset.
+    """
+
+    def __init__(self, classlabels: list[ClassLabel], *args, **kwargs):
+        super().__init__()
+        assert_list_of(classlabels, item_type=ClassLabel)
+        self.classlabels = classlabels
+
+    @classmethod
+    def from_dict(cls, d: dict) -> ClassLabels:
+        """
+        It takes a dictionary and returns a ClassLabels object.
         
         Args:
             d (dict): dict.
         
         Returns:
-            A ClassLabel object.
+            A ClassLabels object.
         """
-        assert_dict_contain_key(d, "classes")
-        classes = d["classes"]
-        classes = Munch.fromDict(classes)
-        return ClassLabel(classes=classes)
+        assert_dict_contain_key(d, "classlabels")
+        classlabels = d["classlabels"]
+        assert_list(classlabels)
+        if is_list_of(classlabels, item_type=dict):
+            classlabels = [ClassLabel(**c) for c in classlabels]
+        return cls(classlabels=classlabels)
         
-    @staticmethod
-    def from_file(path: Path_) -> ClassLabel:
+    @classmethod
+    def from_file(cls, path: Path_) -> ClassLabels:
         """
-        It creates a ClassLabel object from a `json` file.
+        It creates a ClassLabels object from a `json` file.
         
         Args:
             path (Path_): The path to the `json` file.
         
         Returns:
-            A ClassLabel object.
+            A ClassLabels object.
         """
         assert_json_file(path)
-        return ClassLabel.from_dict(load_from_file(path))
+        return cls.from_dict(load_from_file(path))
     
-    @staticmethod
-    def from_value(value: Any) -> ClassLabel | None:
+    @classmethod
+    def from_value(cls, value: Any) -> ClassLabels | None:
         """
-        It converts an arbitrary value to a ClassLabel.
+        It converts an arbitrary value to a ClassLabels.
         
         Args:
             value (Any): The value to be converted.
         
         Returns:
-            A ClassLabel object.
+            A ClassLabels object.
         """
-        if isinstance(value, ClassLabel):
+        if isinstance(value, ClassLabels):
             return value
         if isinstance(value, (dict, Munch)):
-            return ClassLabel.from_dict(value)
+            return cls.from_dict(value)
         if isinstance(value, (str, Path)):
-            return ClassLabel.from_file(value)
+            return cls.from_file(value)
         error_console.log(
-            f"`value` must be `ClassLabel`, `dict`, `str`, or `Path`. "
+            f"`value` must be `ClassLabels`, `dict`, `str`, or `Path`. "
             f"But got: {type(value)}."
         )
         return None
         
     @property
-    def classes(self) -> list:
-        return self._classes
+    def classes(self) -> list[ClassLabel]:
+        return self.classlabels
 
     def color_legend(self, height: int | None = None) -> Tensor:
         """
@@ -278,10 +333,10 @@ class ClassLabel:
                     continue
                 ids.append(c[key])
         return ids
-
+    
     @property
     def list(self) -> list:
-        return self.classes
+        return self.classlabels
 
     @property
     def name2label(self) -> dict[str, dict]:
@@ -401,8 +456,8 @@ class ClassLabel:
         Returns:
             The id of the class.
         """
-        class_label: dict = self.get_class(key=key, value=value)
-        return class_label["id"] if class_label is not None else None
+        classlabel: dict = self.get_class(key=key, value=value)
+        return classlabel["id"] if classlabel is not None else None
     
     def get_id_by_name(self, name: str) -> int | None:
         """
@@ -414,8 +469,8 @@ class ClassLabel:
         Returns:
             The id of the class.
         """
-        class_label = self.get_class_by_name(name=name)
-        return class_label["id"] if class_label is not None else None
+        classlabel = self.get_class_by_name(name=name)
+        return classlabel["id"] if classlabel is not None else None
     
     def get_name(
         self,
@@ -447,7 +502,14 @@ class ClassLabel:
         plt.imshow(color_legend.permute(1, 2, 0))
         plt.title("Color Legend")
         plt.show()
-        
+
+    @property
+    def tensor(self):
+        """
+        Return the label in tensor format.
+        """
+        return None
+    
     def print(self):
         """
         Print all classes using `rich` package.
@@ -460,70 +522,498 @@ class ClassLabel:
         print_table(self.classes)
 
 
-ClassLabel_ = Union[ClassLabel, str, list, dict]
+ClassLabels_ = Union[ClassLabels, str, list, dict]
 
 
-class BBox:
+# H2: - Classification ---------------------------------------------------------
+
+class Classification(Label):
     """
-    Bounding box object with (b1, b2, b3, b4, confidence) format.
+    A classification label.
     
-    References:
-        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/BBox
+    Args:
+        id (int): The class id of the classification label. Defaults to -1 means
+            unknown.
+        label (str): The label string. Defaults to "".
+        confidence (float): A confidence in [0.0, 1.0] for the classification.
+            Defaults to 1.0.
+        logits (Tensor | Sequence | None): Logits associated with the labels.
+            Defaults to None.
     """
     
     def __init__(
         self,
-        b1        : float,
-        b2        : float,
-        b3        : float,
-        b4        : float,
-        confidence: float      = 1.0,
-        id        : int        = uuid.uuid4().int,
-        image_id  : int        = -1,
-        class_id  : int        = -1,
-        format    : BBoxFormat = BBoxFormat.CXCYWH_NORM,
+        id        : int                      = -1,
+        label     : str                      = "",
+        confidence: float                    = 1.0,
+        logits    : Tensor | Sequence | None = None,
+        *args, **kwargs
     ):
-        self.id         = id
-        self.image_id   = image_id
-        self.class_id   = class_id
-        self.b1         = b1
-        self.b2         = b2
-        self.b3         = b3
-        self.b4         = b4
-        self.confidence = confidence
-        self.format     = format
-     
-    @property
-    def bbox(self) -> Tensor:
-        """
-        It returns a tensor containing the image id, class id, bounding box
-        coordinates, and confidence.
+        super().__init__(*args, **kwargs)
+        self.id     = id
+        self.label  = label
+        self.logits = logits
         
-        Returns:
-            A tensor of the image_id, class_id, b1, b2, b3, b4, and confidence.
+        assert_number_in_range(confidence, 0.0, 1.0)
+        self.confidence = confidence
+
+        if self.id == -1.0 and self.label == "":
+            raise ValueError(
+                f"Either `id` or `name` must be defined. "
+                f"But got: {self.id} and {self.label}"
+            )
+
+    @property
+    def tensor(self) -> Tensor:
         """
-        return torch.Tensor(
-            [
-                self.image_id, self.class_id,
-                self.b1, self.b2, self.b3, self.b4,
-                self.confidence,
-            ],
-            dtype=torch.float32
-        )
+        Return the label in tensor format.
+        """
+        return torch.FloatTensor([self.id])
+        
+
+class Classifications(Label):
+    """
+    A list of classifications for an image.
+
+    Args:
+        classifications (list[Classification]): A list of Classification
+            instances
+        logits (Tensor | Sequence): Logits associated with the labels.
+    """
+    
+    def __init__(
+        self,
+        classifications: list[Classification],
+        logits         : Tensor | Sequence,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_list_of(classifications, Classification)
+        self.classifications = classifications
+        self.logits          = logits
     
     @property
-    def is_normalized(self) -> bool:
+    def tensor(self) -> Tensor:
         """
-        It checks if the values of the four variables are less than or equal
-        to 1.0.
+        Return the label in tensor format.
+        """
+        return torch.stack([c.tensor for c in self.classifications], dim=0)
+    
+
+# H2: - Detection -----------------------------------------------------------
+
+class Detection(Label):
+    """
+    An object detection.
+    
+    Args:
+        index (int): An index for the object. Defaults to -1.
+        id (int): The class id of the detection label. Defaults to -1 means
+            unknown.
+        label (str): The label string. Defaults to "".
+        bbox (Tensor | Sequence[float]): A list of relative bounding box
+            coordinates in [0.0, 1.0] in the following format xywh_norm.
+        mask (Tensor | None): An instance segmentation mask for the detection
+            within its bounding box, which should be a 2D binary list or 0/1
+            integer tensor.
+        confidence (float): A confidence in [0.0, 1.0] for the detection.
+            Defaults to 1.0.
+    """
+    
+    def __init__(
+        self,
+        index     : int                      = -1,
+        id        : int                      = -1,
+        label     : str                      = "",
+        bbox      : Tensor | Sequence[float] = [],
+        mask      : Tensor | None            = [],
+        confidence: float                    = 1.0,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.index = index
+        self.id    = id
+        self.label = label
+        self.mask  = mask
+        
+        assert_number_in_range(confidence, 0.0, 1.0)
+        self.confidence = confidence
+        
+        if not isinstance(bbox, Tensor):
+            bbox = torch.FloatTensor(bbox)
+        self.bbox = bbox
+
+    @classmethod
+    def from_mask(cls, mask: Tensor, label: str, **kwargs):
+        """
+        Creates a Detection object with its `mask` attribute populated from
+        the given full image mask.
+        
+        The instance mask for the object is extracted by computing the bounding
+        rectangle of the non-zero values in the image mask.
+        
+        Args:
+            mask (Tensor): A boolean or 0/1 Tensor.
+            label (str): The label string.
+            **kwargs: Additional attributes for the `Detection`.
         
         Returns:
-          A boolean value.
+            A Detection object.
         """
-        return all(i <= 1.0 for i in [self.b1, self.b2, self.b3, self.b4])
-   
+        pass
+    
+    @property
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        return torch.FloatTensor(
+            [
+                self.index, self.id,
+                self.bbox[0], self.bbox[1], self.bbox[2], self.bbox[3],
+                self.confidence,
+            ]
+        )
+        pass
+    
+    def to_polyline(self, tolerance: int = 2, filled: bool = True) -> Tensor:
+        """
+        Returns a Polyline representation of this instance. If the detection
+        has a mask, the returned polyline will trace the boundary of the mask;
+        otherwise, the polyline will trace the bounding box itself.
+        
+        Args:
+            tolerance (int): A tolerance, in pixels, when generating an
+                approximate polyline for the instance mask. Typical values are
+                1-3 pixels. Defaults to 2.
+            filled (Bool): If True, the polyline should be filled.
+                Defaults to True.
+       
+        Returns:
+            A Polyline object.
+        """
+        pass
+    
+    def to_segmentation(
+        self,
+        mask      : Tensor | None = None,
+        frame_size: Ints   | None = None,
+        target    : int           = 255
+    ) -> Tensor:
+        """
+        Returns a Segmentation representation of this instance. The detection
+        must have an instance mask, i.e., `mask` attribute must be populated.
+        You must provide either `mask` or `frame_size` to use this method.
+        
+        Args:
+            mask (Tensor | None): An optional 2D integer numpy array to use as
+                an initial mask to which to add this object. Defaults to None.
+            frame_size (Ints | None): The shape of the segmentation mask to
+                render. This parameter has no effect if a `mask` is provided.
+                Defaults to None.
+            target (int): The pixel value to use to render the object. If you
+                want color mask, just pass in the `id` attribute.
+                Defaults to 255.
+        
+        Returns:
+            A Segmentation object.
+        """
+        pass
+    
 
-class Image:
+class Detections(Label):
+    """
+    A list of object detections in an image.
+    
+    Args:
+        detections (list[Detection]): A list of Detection objects.
+            Defaults to [].
+    """
+    
+    def __init__(
+        self,
+        detections: list[Detection] = [],
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_list_of(detections, Detection)
+        self.detections = detections
+    
+    @property
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        return torch.stack([d.tensor for d in self.detections], dim=0)
+    
+    def to_polylines(self, tolerance: int = 2, filled: bool = True) -> Tensor:
+        """
+        Returns a Polylines representation of this instance.
+        
+        For detections with masks, the returned polylines will trace the
+        boundaries of the masks; otherwise, the polylines will trace the
+        bounding boxes themselves.
+        
+        Args:
+            tolerance (int): A tolerance, in pixels, when generating an
+                approximate polyline for the instance mask. Typical values are
+                1-3 pixels. Defaults to 2.
+            filled (Bool): If True, the polyline should be filled.
+                Defaults to True.
+       
+        Returns:
+            A Polylines object.
+        """
+        pass
+    
+    def to_segmentation(
+        self,
+        mask      : Tensor | None = None,
+        frame_size: Ints   | None = None,
+        target    : int           = 255
+    ) -> Tensor:
+        """
+        Returns a Segmentation representation of this instance.
+        
+        Only detections with instance masks (i.e., their `mask` attributes
+        populated) will be rendered.
+        
+        Args:
+            mask (Tensor | None): An optional 2D integer numpy array to use as
+                an initial mask to which to add this object. Defaults to None.
+            frame_size (Ints | None): The shape of the segmentation mask to
+                render. This parameter has no effect if a `mask` is provided.
+                Defaults to None.
+            target (int): The pixel value to use to render the object. If you
+                want color mask, just pass in the `id` attribute.
+                Defaults to 255.
+        
+        Returns:
+            A Segmentation object.
+        """
+        pass
+    
+
+class TemporalDetection(Label):
+    """
+    A temporal detection in a video whose support is defined by a start and
+    end frame.
+    """
+
+    @property
+    def tensor(self):
+        pass
+
+
+class COCODetections(Detections):
+    """
+    """
+    pass
+
+
+class KITTIDetections(Detections):
+    """
+    """
+    pass
+
+
+class VOCDetections(Detections):
+    """
+    VOCDetections object consists of several bounding boxes.
+    
+    One VOCDetections corresponds to one image and one annotation .xml file.
+    
+    Args:
+        folder (str): Folder that contains the images.
+        filename (str): Name of the physical file that exists in the folder.
+        path (Path_): The absolute path where the image file is present.
+        source (dict): Specifies the original location of the file in a
+            database. Since we do not use a database, it is set to `Unknown`
+            by default.
+        size (dict): Specify the width, height, depth of an image. If the image
+            is black and white then the depth will be 1. For color images,
+            depth will be 3.
+        segmented (int): Signify if the images contain annotations that are
+            non-linear (irregular) in shape - commonly referred to as polygons.
+            Defaults to 0 (linear shape).
+        object (dict | list | None): Contains the object details. If you have
+            multiple annotations then the object tag with its contents is
+            repeated. The components of the object tags are:
+            - name (int, str): This is the name of the object that we are
+                trying to identify (i.e., class_id).
+            - pose (str): Specify the skewness or orientation of the image.
+                Defaults to `Unspecified`, which means that the image is not
+                skewed.
+            - truncated (int): Indicates that the bounding box specified for
+                the object does not correspond to the full extent of the object.
+                For example, if an object is visible partially in the image
+                then we set truncated to 1. If the object is fully visible then
+                set truncated to 0.
+            - difficult (int): An object is marked as difficult when the object
+                is considered difficult to recognize. If the object is
+                difficult to recognize then we set difficult to 1 else set it
+                to 0.
+            - bndbox (dict): Axis-aligned rectangle specifying the extent of
+                the object visible in the image.
+        classlabels (ClassLabels | None): ClassLabel object. Defaults to None.
+    """
+    
+    def __init__(
+        self,
+        folder     : str                = "",
+        filename   : str                = "",
+        path       : Path_              = "",
+        source     : dict               = {"database": "Unknown"},
+        size       : dict               = {"width": 0, "height": 0, "depth": 3},
+        segmented  : int                = 0,
+        classlabels: ClassLabels | None = None,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.folder      = folder
+        self.filename    = filename
+        self.path        = Path(path)
+        self.source      = source
+        self.size        = size
+        self.segmented   = segmented
+        self.classlabels = classlabels
+    
+    @classmethod
+    def from_file(
+        cls, path: Path_, classlabels: ClassLabels | None
+    ) -> VOCDetections:
+        """
+        It creates a VOCDetections object from a .xml file.
+        
+        Args:
+            path (Path_): The path to the .xml file.
+            classlabels (ClassLabels | None): ClassLabel object.
+                Defaults to None.
+            
+        Returns:
+            A VOCDetections object.
+        """
+        from one.vision.shape import box_xyxy_to_cxcywh_norm
+        
+        path = Path(path)
+        assert_xml_file(path)
+        
+        xml_data   = load_from_file(path)
+        assert_dict_contain_key(xml_data, "annotation")
+       
+        annotation = xml_data["annotation"]
+        folder     = annotation.get("folder"  , "")
+        filename   = annotation.get("filename", "")
+        image_path = annotation.get("path"    , "")
+        source     = annotation.get("source"  , {"database": "Unknown"})
+        size       = annotation.get("size"    , {"width": 0, "height": 0, "depth": 3})
+        width      = int(size.get("width" , 0))
+        height     = int(size.get("height", 0))
+        depth      = int(size.get("depth" , 0))
+        segmented  = annotation.get("segmented", 0)
+        objects    = annotation.get("object"   , [])
+        objects    = [objects] if not isinstance(objects, list) else objects
+        
+        detections: list[Detection] = []
+        for i, o in enumerate(objects):
+            name       = o.get["name"]
+            bndbox     = o.get["bndbox"]
+            bbox       = torch.FloatTensor([bndbox["xmin"], bndbox["ymin"],
+                                            bndbox["xmax"], bndbox["ymax"]])
+            bbox       = box_xyxy_to_cxcywh_norm(bbox, height, width)
+            confidence = o.get("confidence", 1.0)
+            truncated  = o.get("truncated" , 0)
+            difficult  = o.get("difficult" , 0)
+            pose       = o.get("pose", "Unspecified")
+
+            if name.isnumeric():
+                id = int(name)
+            elif isinstance(classlabels, ClassLabels):
+                id = classlabels.get_id(key="name", value=name)
+            else:
+                id = -1
+
+            detections.append(
+                Detection(
+                    id         = id,
+                    label      = name,
+                    bbox       = bbox,
+                    confidence = confidence,
+                    truncated  = truncated,
+                    difficult  = difficult,
+                    pose       = pose,
+                )
+            )
+        return cls(
+            folder      = folder,
+            filename    = filename,
+            path        = image_path,
+            source      = source,
+            size        = size,
+            segmented   = segmented,
+            detections  = detections,
+            classlabels = classlabels
+        )
+
+
+class YOLODetections(Detections):
+    """
+    YOLO label consists of several bounding boxes. One YOLO label corresponds
+    to one image and one annotation file.
+    """
+    
+    @classmethod
+    def from_file(cls, path: Path_) -> YOLODetections:
+        """
+        It creates a YOLODetections object from a .txt file.
+        
+        Args:
+            path (Path_): The path to the .txt file.
+        
+        Returns:
+            A YOLODetections object.
+        """
+        path = Path(path)
+        assert_txt_file(path)
+        
+        detections: list[Detection] = []
+        lines = open(path, "r").readlines()
+        for l in lines:
+            d          = l.split(" ")
+            bbox       = [float(b) for b in d[1:5]]
+            confidence = float(d[5]) if len(d) >= 6 else 1.0
+            detections.append(
+                Detection(
+                    id         = int(d[0]),
+                    bbox       = bbox,
+                    confidence = confidence
+                )
+            )
+        return cls(detections=detections)
+        
+    
+# H2: - Heatmap ----------------------------------------------------------------
+
+class Heatmap(Label):
+    """
+    A heatmap for an image.
+    
+    Args:
+        map (None): a 2D numpy array.
+        range (None): an optional `[min, max]` range of the map's values. If
+            None is provided, `[0, 1]` will be assumed if `map` contains
+            floating point values, and `[0, 255]` will be assumed if `map`
+            contains integer values.
+    """
+
+    @property
+    def tensor(self):
+        pass
+
+
+# H2: - Image ------------------------------------------------------------------
+
+class Image(Label):
     """
     Image object.
     
@@ -531,7 +1021,7 @@ class Image:
         https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image
     
     Args:
-        id (int | str): The id of the image. This can be an integer or a string.
+        id (int): The id of the image. This can be an integer or a string.
             This attribute is useful for batch processing where you want to keep
             the objects in the correct frame sequence.
         name (str | None): The name of the image. Defaults to None.
@@ -548,16 +1038,17 @@ class Image:
     
     def __init__(
         self,
-        id            : int | str      = uuid.uuid4().int,
-        name          : str | None     = None,
-        path          : Path_ | None   = None,
+        id            : int            = uuid.uuid4().int,
+        name          : str    | None  = None,
+        path          : Path_  | None  = None,
         image         : Tensor | None  = None,
         load_on_create: bool           = False,
         keep_in_memory: bool           = False,
         backend       : VisionBackend_ = VISION_BACKEND,
+        *args, **kwargs
     ):
         from one.vision.acquisition import get_image_shape
-        
+        super().__init__(*args, **kwargs)
         self.id             = id
         self.image          = None
         self.keep_in_memory = keep_in_memory
@@ -626,369 +1117,457 @@ class Image:
             "path" : self.path,
             "shape": self.shape,
         }
+    
+    @property
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        if self.image is None:
+            self.load()
+        return self.image
+    
 
+# H2: - Keypoint ---------------------------------------------------------------
 
-class Instance:
+class Keypoint(Label):
     """
-    Instance (Segmentation) data consists of object's parts (polygons) and a
-    single bounding box covering all parts.
+    A list of keypoints in an image.
+    
+    Args:
+        index (int): An index for the polyline. Defaults to -1.
+        id (int): The class id of the polyline label. Defaults to -1 means
+            unknown.
+        label (str): The label string. Defaults to "".
+        points (Tensor | Sequence[float]): A list of lists of `(x, y)` points
+            in `[0, 1] x [0, 1]`.
+        confidence (float): A confidence in [0.0, 1.0] for the detection.
+            Defaults to 1.0.
     """
     
     def __init__(
         self,
-        bbox      : Tensor | Sequence[float],
-        polygons  : Tensor | Sequence[float],
-        confidence: float      = 1.0,
-        id        : int        = uuid.uuid4().int,
-        image_id  : int        = -1,
-        class_id  : int        = -1,
-        format    : BBoxFormat = BBoxFormat.CXCYWH_NORM,
+        index     : int                      = -1,
+        id        : int                      = -1,
+        label     : str                      = "",
+        points    : Tensor | Sequence[float] = [],
+        confidence: float                    = 1.0,
         *args, **kwargs
     ):
-        self.id         = id
-        self.image_id   = image_id
-        self.class_id   = class_id
-        self.bbox       = bbox
-        self.polygons   = polygons
+        super().__init__(*args, **kwargs)
+        self.index  = index
+        self.id     = id
+        self.label  = label
+        
+        assert_number_in_range(confidence, 0.0, 1.0)
         self.confidence = confidence
-        self.format     = format
         
-    def simplify(self, n: int = -1):
+        if not isinstance(points, Tensor):
+            points = torch.FloatTensor(points)
+        self.points = points
+       
+    @property
+    def tensor(self) -> Tensor:
         """
-        Simplify each polygon to contains only `n` points.
-        
-        Args:
-            n (int): Number of points to keep in each polygon
-
-        Returns:
-
+        Return the label in tensor format.
         """
         pass
+    
 
-
-class SegmentationMask(Image):
+class Keypoints(Label):
     """
-    Segmentation mask is similar to an image but each pixel is encoded with
-    the class id instead of RGB values.
+    A list of Keypoint objects in an image.
+    
+    Args:
+        keypoints (list[Keypoint]): A list of Keypoint object.
+            Defaults to [].
     """
+    
+    def __init__(
+        self,
+        keypoints: list[Keypoint] = [],
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_list_of(keypoints, Keypoint)
+        self.keypoints = keypoints
     
     @property
-    def class_mask(self) -> Tensor:
-        pass
-    
-    @property
-    def one_hot_mask(self) -> Tensor:
-        pass
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        return torch.stack([k.tensor for k in self.keypoints], dim=0)
 
 
-class COCOInstance(Instance):
+class COCOKeypoints(Keypoints):
     """
-    COCO instance format.
     """
-    
     pass
-    
 
-class VOCBBox(BBox):
+
+# H2: - Polyline ---------------------------------------------------------------
+
+class Polyline(Label):
     """
-    VOC bounding box object.
-    
-    References:
-        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/BBox
+    A set of semantically related polylines or polygons.
     
     Args:
-        name (int | str): This is the name of the object that we are trying to
-            identify (i.e., class_id).
-        truncated (int): Indicates that the bounding box specified for the
-            object does not correspond to the full extent of the object.
-            For example, if an object is visible partially in the image then
-            we set truncated to 1. If the object is fully visible then set
-            truncated to 0.
-        difficult (int): An object is marked as difficult when the object is
-            considered difficult to recognize. If the object is difficult to
-            recognize then we set difficult to 1 else set it to 0.
-        bndbox (Tensor | Sequence[float]): Axis-aligned rectangle specifying the
-            extent of the object visible in the image.
-        pose (str): Specify the skewness or orientation of the image.
-            Defaults to Unspecified, which means that the image is not skewed.
+        index (int): An index for the polyline. Defaults to -1.
+        id (int): The class id of the polyline label. Defaults to -1 means
+            unknown.
+        label (str): The label string. Defaults to "".
+        points (Tensor | Sequence[float]): A list of lists of `(x, y)` points
+            in `[0, 1] x [0, 1]` describing the vertices of each shape in the
+            polyline.
+        closed (bool): Whether the shapes are closed, i.e., and edge should
+            be drawn from the last vertex to the first vertex of each shape.
+            Defaults to False.
+        filled (bool): Whether the polyline represents polygons, i.e., shapes
+            that should be filled when rendering them. Defaults to False.
+        confidence (float): A confidence in [0.0, 1.0] for the detection.
+            Defaults to 1.0.
+        attributes ({}): a dict mapping attribute names to :class:`Attribute`
+            instances
     """
     
     def __init__(
         self,
-        name     : str,
-        truncated: int,
-        difficult: int,
-        bndbox   : Tensor | Sequence[float],
-        pose     : str = "Unspecified",
+        index     : int                      = -1,
+        id        : int                      = -1,
+        label     : str                      = "",
+        points    : Tensor | Sequence[float] = [],
+        closed    : bool                     = False,
+        filled    : bool                     = False,
+        confidence: float                    = 1.0,
         *args, **kwargs
     ):
-        if isinstance(bndbox, Tensor):
-            assert_tensor_of_ndim(bndbox, 1)
-            bndbox = bndbox.tolist()
-        if isinstance(bndbox, (list, tuple)):
-            assert_sequence_of_length(bndbox, 4)
-        super().__init__(
-            b1 = bndbox[0],
-            b2 = bndbox[1],
-            b3 = bndbox[2],
-            b4 = bndbox[3],
-            *args, **kwargs
-        )
-        self.name      = name
-        self.pose      = pose
-        self.truncated = truncated
-        self.difficult = difficult
+        super().__init__(*args, **kwargs)
+        self.index  = index
+        self.id     = id
+        self.label  = label
+        self.closed = closed
+        self.filled = filled
         
-    def convert_name_to_id(self, class_labels: ClassLabel):
+        assert_number_in_range(confidence, 0.0, 1.0)
+        self.confidence = confidence
+        
+        if not isinstance(points, Tensor):
+            points = torch.FloatTensor(points)
+        self.points = points
+       
+    @classmethod
+    def from_mask(cls, mask: Tensor, label: str, tolerance: int = 2, **kwargs):
         """
-        If the class name is a number, then it is the class id.
-        Otherwise, the class id is searched from the ClassLabel object.
+        Creates a `Detection` instance with its `mask` attribute populated from
+        the given full image mask.
+        
+        The instance mask for the object is extracted by computing the bounding
+        rectangle of the non-zero values in the image mask.
         
         Args:
-            class_labels (ClassLabel): The ClassLabel containing all classes
-                in the dataset.
-        """
-        self.class_id = int(self.name) \
-            if self.name.isnumeric() \
-            else class_labels.get_id(key="name", value=self.name)
-
-
-class DetectionLabel(metaclass=ABCMeta):
-    """
-    Base class for all detection label format.
-    """
-    
-    @property
-    @abstractmethod
-    def bboxes(self) -> Tensor:
-        pass
-
-
-class InstanceLabel(metaclass=ABCMeta):
-    """
-    Base class for all instance label format.
-    """
-
-    @abstractmethod
-    def draw(self) -> Tensor:
-        pass
-    
-    @property
-    @abstractmethod
-    def polygons(self) -> Tensor:
-        pass
-
-
-class COCOInstanceLabel(DetectionLabel, InstanceLabel):
-    
-    def __init__(
-        self,
-        path    : Path_ | None       = None,
-        objects : list[COCOInstance] = [],
-        image_id: int                = -1,
-        
-    ):
-        super().__init__()
-        
-    @staticmethod
-    def from_file() -> list[COCOInstanceLabel]:
-        """
-        Parse multiple labels from a .json file.
+            mask (Tensor): A boolean or 0/1 Tensor.
+            label (str): The label string.
+            tolerance (int): A tolerance, in pixels, when generating approximate
+                polygons for each region. Typical values are 1-3 pixels.
+                Defaults to 2.
+            **kwargs: additional attributes for the `Detection`.
         
         Returns:
-
+            A `Detection`.
         """
         pass
     
     @property
-    def bboxes(self) -> Tensor:
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
         pass
-
-    @property
-    def polygons(self) -> Tensor:
-        pass
-
-    def draw(self) -> Tensor:
-        pass
-
-
-class KITTILabel(DetectionLabel):
-    """
-    """
-
-    @property
-    def bboxes(self) -> Tensor:
-        pass
-
-
-class VOCLabel(DetectionLabel):
-    """
-    VOC label consists of several bounding boxes. VOC YOLO label corresponds to
-    one image and one annotation file.
     
-    Args:
-        folder (str): Folder that contains the images.
-        filename (str): Name of the physical file that exists in the folder.
-        path (Path_): The absolute path where the image file is present.
-        source (dict): Specifies the original location of the file in a
-            database. Since we do not use a database, it is set to `Unknown`
-            by default.
-        size (dict): Specify the width, height, depth of an image. If the image
-            is black and white then the depth will be 1. For color images,
-            depth will be 3.
-        segmented (int): Signify if the images contain annotations that are
-            non-linear (irregular) in shape - commonly referred to as polygons.
-            Defaults to 0 (linear shape).
-        object (dict | list | None): Contains the object details. If you have
-            multiple annotations then the object tag with its contents is
-            repeated. The components of the object tags are:
-            - name (int, str): This is the name of the object that we are
-                trying to identify (i.e., class_id).
-            - pose (str): Specify the skewness or orientation of the image.
-                Defaults to `Unspecified`, which means that the image is not
-                skewed.
-            - truncated (int): Indicates that the bounding box specified for
-                the object does not correspond to the full extent of the object.
-                For example, if an object is visible partially in the image
-                then we set truncated to 1. If the object is fully visible then
-                set truncated to 0.
-            - difficult (int): An object is marked as difficult when the object
-                is considered difficult to recognize. If the object is
-                difficult to recognize then we set difficult to 1 else set it
-                to 0.
-            - bndbox (dict): Axis-aligned rectangle specifying the extent of
-                the object visible in the image.
-        class_labels (ClassLabel | None): ClassLabel object. Defaults to None.
-    """
-    
-    def __init__(
+    def to_detection(
         self,
-        path        : Path_ | None      = None,
-        objects     : list[VOCBBox]     = [],
-        image_id    : int               = -1,
-        folder      : str               = "",
-        filename    : str               = "",
-        image_path  : Path_             = "",
-        source      : dict              = {"database": "Unknown"},
-        size        : dict              = {"width": 0, "height": 0, "depth": 3},
-        segmented   : int               = 0,
-        class_labels: ClassLabel | None = None,
-        *args, **kwargs
-    ):
-        from one.vision.shape import box_xyxy_to_cxcywh_norm
-        
-        super().__init__()
-        self.path = Path(path) if isinstance(path, (str, Path)) else path
-        
-        if len(objects) == 0 and (self.path is None or not is_xml_file(self.path)):
-            raise ValueError()
-        if len(objects) == 0:
-            xml_data   = load_from_file(path)
-            assert_dict_contain_key(xml_data, "annotation")
-            annotation = xml_data["annotation"]
-            folder     = annotation.get("folder"   , folder)
-            filename   = annotation.get("filename" , filename)
-            image_path = annotation.get("path"     , image_path)
-            source     = annotation.get("source"   , source)
-            size       = annotation.get("size"     , size)
-            width      = int(size.get("width",  0))
-            height     = int(size.get("height", 0))
-            depth      = int(size.get("depth",  0))
-            segmented  = annotation.get("segmented", segmented)
-            objects    = annotation.get("object"   , objects)
-            objects    = [objects] if not isinstance(objects, list) else objects
-            
-            assert_list_of(objects, dict)
-            for i, o in enumerate(object):
-                bndbox   = o.get("bndbox")
-                box_xyxy = torch.FloatTensor([
-                    int(bndbox["xmin"]), int(bndbox["ymin"]),
-                    int(bndbox["xmax"]), int(bndbox["ymax"])
-                ])
-                o["image_id"] = image_id
-                o["bndbox"]   = box_xyxy_to_cxcywh_norm(box_xyxy, height, width)
-                o["format"]   = BBoxFormat.CXCYWH_NORM
-        
-        self.folder    = folder
-        self.filename  = filename
-        self.path      = Path(path)
-        self.source    = source
-        self.size      = size
-        self.width     = int(self.size.get("width",  0))
-        self.height    = int(self.size.get("height", 0))
-        self.depth     = int(self.size.get("depth",  0))
-        self.segmented = segmented
-        self.objects   = [VOCBBox(*o) for o in objects]
-        
-        if isinstance(class_labels, ClassLabel):
-            self.convert_names_to_ids(class_labels=class_labels)
-    
-    def convert_names_to_ids(
-        self, class_labels: ClassLabel, parallel: bool = False
-    ):
+        mask_size : Ints | None = None,
+        frame_size: Ints | None = None,
+    ) -> Tensor:
         """
-        Convert `name` property in each `object` to class id.
+        Returns a Detection representation of this instance whose bounding
+        box tightly encloses the polyline.
+        
+        If a `mask_size` is provided, an instance mask of the specified size
+        encoding the polyline's shape is included.
+       
+        Alternatively, if a `frame_size` is provided, the required mask size
+        is then computed based off of the polyline points and `frame_size`.
         
         Args:
-            class_labels (ClassLabel): The ClassLabel containing all classes
-                in the dataset.
-            parallel (bool): If True, run parallely. Defaults to False.
+            mask_size (Ints): An optional shape at which to render an instance
+                mask for the polyline.
+            frame_size (None): Used when no `mask_size` is provided. An optional
+                shape of the frame containing this polyline that is used to
+                compute the required `mask_size`.
+        
+        Returns:
+            A Detection object.
         """
-        if parallel:
-            def run(i):
-                self.objects[i].convert_name_to_id(class_labels)
-            
-            Parallel(n_jobs=os.cpu_count(), require="sharedmem")(
-                delayed(run)(i) for i in range(len(self.objects))
-            )
-        else:
-            for o in self.objects:
-                o.convert_name_to_id(class_labels=class_labels)
+        pass
+    
+    def to_segmentation(
+        self,
+        mask      : Tensor | None = None,
+        frame_size: Ints   | None = None,
+        target    : int           = 255,
+        thickness : int           = 1,
+    ) -> Tensor:
+        """
+        Returns a Segmentation representation of this instance. The detection
+        must have an instance mask, i.e., `mask` attribute must be populated.
+        You must provide either `mask` or `frame_size` to use this method.
+        
+        Args:
+            mask (Tensor | None): An optional 2D integer numpy array to use as
+                an initial mask to which to add this object. Defaults to None.
+            frame_size (Ints | None): The shape of the segmentation mask to
+                render. This parameter has no effect if a `mask` is provided.
+                Defaults to None.
+            target (int): The pixel value to use to render the object. If you
+                want color mask, just pass in the `id` attribute.
+                Defaults to 255.
+            thickness (int): The thickness, in pixels, at which to render
+                (non-filled) polylines. Defaults to 1.
+                
+        Returns:
+            A Segmentation object.
+        """
+        pass
+    
 
-    @property
-    def bboxes(self) -> Tensor:
-        return torch.stack([o.bbox for o in self.objects], dim=0)
-
-
-class YOLOLabel(DetectionLabel):
+class Polylines(Label):
     """
-    YOLO label consists of several bounding boxes. One YOLO label corresponds to
-    one image and one annotation file.
+    A list of polylines or polygons in an image.
+    
+    Args:
+        polylines (list[Polyline]): A list of Polyline objects.
+            Defaults to [].
     """
     
     def __init__(
         self,
-        path    : Path_ | None = None,
-        objects : list[BBox]   = [],
-        image_id: int          = -1,
+        polylines: list[Polyline] = [],
         *args, **kwargs
     ):
         super().__init__()
-        self.image_id = image_id
-        self.path     = Path(path) if isinstance(path, (str, Path)) else path
-        
-        if len(objects) == 0 and (self.path is None or not is_txt_file(self.path)):
-            raise ValueError()
-        if len(objects) == 0:
-            lines = open(self.path, "r").readlines()
-            for l in lines:
-                d = l.split(" ")
-                objects.append(
-                    BBox(
-                        image_id = image_id,
-                        class_id = int(d[0]),
-                        b1       = float(d[1]),
-                        b2       = float(d[2]),
-                        b3       = float(d[3]),
-                        b4       = float(d[4]),
-                        format   = BBoxFormat.CXCYWH_NORM
-                    )
-                )
-        self.objects = objects
+        assert_list_of(polylines, Polyline)
+        self.polylines = polylines
     
     @property
-    def bboxes(self) -> Tensor:
-        return torch.stack([o.bbox for o in self.objects], dim = 0)
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        return torch.stack([p.tensor for p in self.polylines], dim=0)
+    
+    def to_detections(
+        self,
+        mask_size : Ints | None = None,
+        frame_size: Ints | None = None,
+    ) -> Tensor:
+        """
+        Returns a Detections representation of this instance whose bounding
+        boxes tightly enclose the polylines.
+        
+        If a `mask_size` is provided, an instance mask of the specified size
+        encoding the polyline's shape is included.
+       
+        Alternatively, if a `frame_size` is provided, the required mask size
+        is then computed based off of the polyline points and `frame_size`.
+        
+        Args:
+            mask_size (Ints): An optional shape at which to render an instance
+                mask for the polyline.
+            frame_size (None): Used when no `mask_size` is provided. An optional
+                shape of the frame containing this polyline that is used to
+                compute the required `mask_size`.
+        
+        Returns:
+            A Detections object.
+        """
+        pass
+    
+    def to_segmentation(
+        self,
+        mask      : Tensor | None = None,
+        frame_size: Ints   | None = None,
+        target    : int           = 255,
+        thickness : int           = 1,
+    ) -> Tensor:
+        """
+        Returns a Segmentation representation of this instance.
+        
+        You must provide either `mask` or `frame_size` to use this method.
+        
+        Args:
+            mask (Tensor | None): An optional 2D integer numpy array to use as
+                an initial mask to which to add this object. Defaults to None.
+            frame_size (Ints | None): The shape of the segmentation mask to
+                render. This parameter has no effect if a `mask` is provided.
+                Defaults to None.
+            target (int): The pixel value to use to render the object. If you
+                want color mask, just pass in the `id` attribute.
+                Defaults to 255.
+            thickness (int): The thickness, in pixels, at which to render
+                (non-filled) polylines. Defaults to 1.
+                
+        Returns:
+            A Segmentation object.
+        """
+        pass
+
+
+# H2: - Regression -------------------------------------------------------------
+
+class Regression(Label):
+    """
+    A regression value.
+    
+    Args:
+        value (float): The regression value.
+        confidence (float): A confidence in [0.0, 1.0] for the classification.
+            Defaults to 1.0.
+    """
+    
+    def __init__(
+        self,
+        value     : float,
+        confidence: float = 1.0,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.value = value
+        
+        assert_number_in_range(confidence, 0.0, 1.0)
+        self.confidence = confidence
+    
+    @property
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        return torch.FloatTensor([self.value])
+    
+
+# H2: - Segmentation -----------------------------------------------------------
+
+class Segmentation(Label):
+    """
+    A semantic segmentation for an image.
+
+    Args:
+        id (int): The id of the image. This can be an integer or a string.
+            This attribute is useful for batch processing where you want to keep
+            the objects in the correct frame sequence.
+        name (str | None): The name of the image. Defaults to None.
+        path (Path_ | None): The path to the image file. Defaults to None.
+        mask (Tensor[*, C, H, W] | None): The image with integer values
+            encoding the semantic labels. Defaults to None.
+        load_on_create (bool): If True, the image will be loaded into memory
+            when the object is created. Defaults to False.
+        keep_in_memory (bool): If True, the image will be loaded into memory
+            and kept there. Defaults to False.
+        backend (VisionBackend_): The backend to use for image processing.
+            Defaults to VISION_BACKEND.
+    """
+    
+    def __init__(
+        self,
+        id            : int            = uuid.uuid4().int,
+        name          : str    | None  = None,
+        path          : Path_  | None  = None,
+        mask          : Tensor | None  = None,
+        load_on_create: bool           = False,
+        keep_in_memory: bool           = False,
+        backend       : VisionBackend_ = VISION_BACKEND,
+        *args, **kwargs
+    ):
+        from one.vision.acquisition import get_image_shape
+        super().__init__(*args, **kwargs)
+        self.id             = id
+        self.image          = None
+        self.keep_in_memory = keep_in_memory
+        self.backend        = backend
+        
+        if path is not None:
+            path = Path(path)
+            assert_image_file(path)
+        self.path: Path = path
+        
+        if name is None:
+            name = str(Path(path).name) if is_image_file(path=path) else f"{id}"
+        self.name = name
+        
+        if load_on_create and mask is None:
+            mask = self.load()
+
+        self.shape = get_image_shape(mask) if mask is not None else None
+
+        if self.keep_in_memory:
+            self.mask = mask
+    
+    def load(
+        self, path: Path_ | None = None, keep_in_memory: bool = False,
+    ) -> Tensor:
+        """Load image into memory.
+        
+        Args:
+            path (Path_ | None):
+                The path to the image file. Defaults to None.
+            keep_in_memory (bool):
+                If True, the image will be loaded into memory and kept there.
+                Defaults to False.
+            
+        Returns:
+            Return image Tensor of shape [1, C, H, W] to caller.
+        """
+        from one.vision.acquisition import read_image
+        from one.vision.acquisition import get_image_shape
+    
+        self.keep_in_memory = keep_in_memory
+        
+        if is_image_file(path):
+            self.path = Path(path)
+        assert_image_file(path=self.path)
+        
+        mask       = read_image(path=self.path, backend=self.backend)
+        self.shape = get_image_shape(image=mask) if (mask is not None) else self.shape
+        
+        if self.keep_in_memory:
+            self.mask = mask
+        
+        return mask
+        
+    @property
+    def meta(self) -> dict:
+        """
+        It returns a dictionary of metadata about the object.
+        
+        Returns:
+            A dictionary with the id, name, path, and shape of the image.
+        """
+        return {
+            "id"   : self.id,
+            "name" : self.name,
+            "path" : self.path,
+            "shape": self.shape,
+        }
+    
+    @property
+    def tensor(self) -> Tensor:
+        """
+        Return the label in tensor format.
+        """
+        if self.mask is None:
+            self.load()
+        return self.mask
 
 
 # H1: - Dataset ----------------------------------------------------------------
@@ -1160,7 +1739,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         self.val              = None
         self.test             = None
         self.predict          = None
-        self.class_label      = None
+        self.classlabels      = None
        
     @property
     def devices(self) -> list:
@@ -1178,8 +1757,8 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         """
         Returns the number of classes in the dataset.
         """
-        if isinstance(self.class_label, ClassLabel):
-            return self.class_label.num_classes()
+        if isinstance(self.classlabels, ClassLabels):
+            return self.classlabels.num_classes()
         return 0
     
     @property
@@ -1300,7 +1879,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1315,9 +1894,9 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
         
@@ -1333,7 +1912,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         table.add_row("1", "train",        f"{len(self.train)              if self.train is not None else None}")
         table.add_row("2", "val",          f"{len(self.val)                if self.val   is not None else None}")
         table.add_row("3", "test",         f"{len(self.test)               if self.test  is not None else None}")
-        table.add_row("4", "class_labels", f"{self.class_label.num_classes if self.class_label is not None else None}")
+        table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
         table.add_row("5", "batch_size",   f"{self.batch_size}")
         table.add_row("6", "shape",        f"{self.shape}")
         table.add_row("7", "num_workers",  f"{self.num_workers}")
@@ -1429,9 +2008,8 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
                 respective transforms.
             Metadata of image.
         """
-        item  = self.images[index]
-        input = item.image if item.image is not None else item.load()
-        meta  = item.meta
+        input = self.images[index].tensor
+        meta  = self.images[index].meta
         
         if self.transform is not None:
             input, *_ = self.transform(input=input, target=None, dataset=self)
@@ -1610,7 +2188,8 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -1633,14 +2212,14 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1654,7 +2233,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             *args, **kwargs
         )
         self.backend     = VisionBackend.from_value(backend)
-        self.class_label = ClassLabel.from_value(class_label)
+        self.classlabels = ClassLabels.from_value(classlabels)
         self.images: list[Image] = []
         if not hasattr(self, "labels"):
             self.labels = []
@@ -1773,7 +2352,8 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -1796,14 +2376,14 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         self.labels: list[int] = []
@@ -1811,7 +2391,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -1836,10 +2416,9 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             Classification labels.
             Metadata of image.
         """
-        item   = self.images[index]
-        input  = item.image if item.image is not None else item.load()
+        input  = self.images[index].tensor
         target = self.labels[index]
-        meta   = item.meta
+        meta   = self.images[index].meta
         
         if self.transform is not None:
             input,  *_ = self.transform(input=input, target=None, dataset=self)
@@ -1906,7 +2485,8 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -1929,22 +2509,22 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_images    : bool               = False,
-        cache_data      : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_images    : bool                = False,
+        cache_data      : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
-        self.labels: list[DetectionLabel] = []
+        self.labels: list[Detections] = []
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -1969,10 +2549,9 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
             Bounding boxes of shape [N, 7].
             Metadata of image.
         """
-        item   = self.images[index]
-        input  = item.image if item.image is not None else item.load()
-        target = self.labels[index].bboxes
-        meta   = item.meta
+        input  = self.images[index].tensor
+        target = self.labels[index].tensor
+        meta   = self.images[index].meta
 
         if self.transform is not None:
             input,  *_ = self.transform(input=input, target=None, dataset=self)
@@ -2036,7 +2615,8 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -2059,21 +2639,21 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_images    : bool               = False,
-        cache_data      : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_images    : bool                = False,
+        cache_data      : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -2134,7 +2714,8 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -2157,21 +2738,21 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_images    : bool               = False,
-        cache_data      : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_images    : bool                = False,
+        cache_data      : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -2193,13 +2774,16 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
                 f"But got: {len(files)} != {len(self.labels)}"
             )
         
-        self.labels: list[VOCLabel] = []
+        self.labels: list[VOCDetections] = []
         with progress_bar() as pbar:
             for f in pbar.track(
                 files, description=f"[red]Listing {self.split} labels"
             ):
                 self.labels.append(
-                    VOCLabel(path=f, class_labels=self.class_label)
+                    VOCDetections.from_file(
+                        path        = f,
+                        classlabels = self.classlabels
+                    )
                 )
                 
     @abstractmethod
@@ -2219,7 +2803,8 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -2242,21 +2827,21 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_images    : bool               = False,
-        cache_data      : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_images    : bool                = False,
+        cache_data      : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -2278,14 +2863,13 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
                 f"But got: {len(files)} != {len(self.labels)}"
             )
         
-        self.labels: list[YOLOLabel] = []
+        self.labels: list[YOLODetections] = []
         with progress_bar() as pbar:
             for i, f in pbar.track(
                 enumerate(files),
                 description=f"[red]Listing {self.split} labels"
             ):
-                image_id = self.images[i].path.name
-                self.labels.append(YOLOLabel(path=f))
+                self.labels.append(YOLODetections.from_file(path=f))
         
     @abstractmethod
     def annotation_files(self) -> Paths_:
@@ -2306,7 +2890,8 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -2329,14 +2914,14 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         self.labels: list[Image] = []
@@ -2344,7 +2929,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -2370,10 +2955,8 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
                 respective transforms.
             Metadata of image.
         """
-        input  = self.images[index].image
-        target = self.labels[index].image
-        input  = self.images[index].load() if input  is None else input
-        target = self.labels[index].load() if target is None else target
+        input  = self.images[index].tensor
+        target = self.labels[index].tensor
         meta   = self.images[index].meta
         
         if self.transform is not None:
@@ -2448,7 +3031,8 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -2471,22 +3055,22 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         root            : Path_,
         split           : str,
         shape           : Ints,
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
-        self.labels: list[SegmentationMask] = []
+        self.labels: list[Segmentation] = []
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -2512,10 +3096,8 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
                 optionally transformed by the respective transforms.
             meta (Image): Metadata of image.
         """
-        input  = self.images[index].image
-        target = self.labels[index].image
-        input  = self.images[index].load() if input  is None else input
-        target = self.labels[index].load() if target is None else target
+        input  = self.images[index].tensor
+        target = self.labels[index].tensor
         meta   = self.images[index].meta
 
         if self.transform is not None:

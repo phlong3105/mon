@@ -166,7 +166,7 @@ class ImageClassificationDataset(VisionDataset, metaclass=ABCMeta):
 
         # NOTE: List files
         self.list_files()
-        # NOTE: Load class_labels
+        # NOTE: Load classlabels
         self.load_class_labels()
         # NOTE: Load (and cache) data
         self.load_data()

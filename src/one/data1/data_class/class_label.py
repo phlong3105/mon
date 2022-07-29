@@ -56,7 +56,7 @@ class ClassLabels:
 
     Attributes:
         class_labels (list):
-            List of all class_labels.
+            List of all classlabels.
     """
 
     # MARK: Magic Functions
@@ -69,23 +69,23 @@ class ClassLabels:
     @staticmethod
     def create_from_dict(label_dict: dict) -> ClassLabels:
         """Create a `ClassLabels` object from a dictionary that contains all
-        class_labels.
+        classlabels.
         """
-        if hasattr(label_dict, "class_labels"):
-            class_labels = label_dict.get("class_labels")
+        if hasattr(label_dict, "classlabels"):
+            class_labels = label_dict.get("classlabels")
             class_labels = Munch.fromDict(class_labels)
             return ClassLabels(class_labels=class_labels)
         else:
-            raise ValueError(f"`label_dict` must contain key `class_labels`. "
+            raise ValueError(f"`label_dict` must contain key `classlabels`. "
                              f"Cannot defined labels!")
     
     @staticmethod
     def create_from_file(label_path: str) -> ClassLabels:
         """Create a `ClassLabels` object from a file that contains all
-        class_labels.
+        classlabels.
         """
         labels_dict = load_file(path=label_path)
-        class_labels = labels_dict["class_labels"]
+        class_labels = labels_dict["classlabels"]
         class_labels = Munch.fromDict(class_labels)
         return ClassLabels(class_labels=class_labels)
         
@@ -199,7 +199,7 @@ class ClassLabels:
 
     @property
     def list(self) -> list:
-        """Alias to `class_labels()`."""
+        """Alias to `classlabels()`."""
         return self.class_labels
 
     @property
@@ -208,7 +208,7 @@ class ClassLabels:
         return {label["name"]: label for label in self.class_labels}
 
     def names(self, exclude_negative_key: bool = True, exclude_max_key: bool = True) -> list:
-        """Return the list of all class_labels' names.
+        """Return the list of all classlabels' names.
         
         Args:
             exclude_negative_key (bool):
@@ -255,14 +255,14 @@ class ClassLabels:
     # MARK: Custom Accessors
 
     def get_class_label(self, key: str = "id", value: Union[int, str, None] = None) -> Optional[dict]:
-        """Get the class_label based on the given (`key`, `value`) pair."""
+        """Get the classlabels based on the given (`key`, `value`) pair."""
         for class_label in self.class_labels:
             if hasattr(class_label, key) and (value == class_label[key]):
                 return class_label
         return None
     
     def get_class_label_by_name(self, name: str) -> Optional[dict]:
-        """Get the class_label based on the given `name`."""
+        """Get the classlabels based on the given `name`."""
         return self.get_class_label(key="name", value=name)
     
     def get_id(self, key: str = "id", value: Union[int, str, None] = None) -> Optional[int]:
@@ -276,7 +276,7 @@ class ClassLabels:
         return class_label["id"] if class_label is not None else None
     
     def get_name(self, key: str = "id", value: Union[int, str, None] = None) -> Optional[str]:
-        """Get the class_label's name based on the given (`key`, `value`) pair.
+        """Get the classlabels's name based on the given (`key`, `value`) pair.
         """
         class_label = self.get_class_label(key=key, value=value)
         return class_label["name"] if class_label is not None else None
@@ -297,7 +297,7 @@ class ClassLabels:
     # MARK: Print
     
     def print(self):
-        """Print all class_labels using `rich` package."""
+        """Print all classlabels using `rich` package."""
         if not (self.class_labels and len(self.class_labels) > 0):
             console.log("[yellow]No class-label is available.")
             return

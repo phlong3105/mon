@@ -46,6 +46,11 @@ Rules:
 		a) input / output
 		b)
 
+2022.07.29
+    Today I split some codes in the core module into constants module and data
+    module. The constants module is self-explainatory. The data module consists
+    of data storing related code such as labels, dataclasses, datasets,
+    dataloaders, serialization, etc.
 
 2022.07.23
     For years I have been finding a good organization to group  pieces of code

@@ -2,34 +2,23 @@
 # -*- coding: utf-8 -*-
 
 """
-Core module that defines all basic types, custom types, classes, helper
-functions, constants, and globals used throughout `One` package.
+Core module that defines all types, classes, and helper functions used
+throughout `One` package.
 
 Basically, this is just a one glorified utils package that reduce the
 complexity of import statements.
 
 Taxonomy:
     |
+    |__ Enum
     |__ Assertion
-    |__ Constant / Global
     |__ Conversion
-    |__ Dataclass
-    |__ Dataset
-    |     |__ Unlabeled
-    |     |__ Labeled
-    |     |__ Classification
-    |     |__ Detection
-    |     |__ Enhancement
-    |     |__ Segmentation
-    |     |__ Multitask
     |__ Device
     |__ Factory
     |__ File
     |__ Logging
-    |__ Serialization
     |__ Transform
     |__ Typing
-    |__ All
 """
 
 from __future__ import annotations
@@ -42,6 +31,7 @@ import itertools
 import logging
 import os
 import pathlib
+import random
 import shutil
 import time
 import types
@@ -105,6 +95,1542 @@ try:
     from yaml import CLoader as FullLoader, CDumper as Dumper
 except ImportError:
     from yaml import FullLoader, Dumper
+
+
+# H1: - Enum -------------------------------------------------------------------
+
+class AppleRGB(OrderedEnum):
+    """
+    Define 12 Apple colors.
+    """
+    GRAY   = (128, 128, 128)
+    RED    = (255,  59,  48)
+    GREEN  = ( 52, 199,  89)
+    BLUE   = (  0, 122, 255)
+    ORANGE = (255, 149,   5)
+    YELLOW = (255, 204,   0)
+    BROWN  = (162, 132,  94)
+    PINK   = (255,  45,  85)
+    PURPLE = ( 88,  86, 214)
+    TEAL   = ( 90, 200, 250)
+    INDIGO = ( 85, 190, 240)
+    BLACK  = (  0,   0,   0)
+    WHITE  = (255, 255, 255)
+
+    @classmethod
+    def random(cls) -> AppleRGB:
+        """
+        Return a random AppleRGB enum.
+        
+        Returns:
+            A random choice from the list of AppleRGB.
+        """
+        return random.choice(list(cls))
+    
+    @classmethod
+    def random_value(cls) -> Color:
+        """
+        Return a random color.
+        
+        Returns:
+            A random color from the list of AppleRGB.
+        """
+        return cls.random().value
+
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class BasicRGB(OrderedEnum):
+    """
+    Define 12 basic colors.
+    """
+    BLACK   = (  0,   0,   0)
+    WHITE   = (255, 255, 255)
+    RED     = (255,   0,   0)
+    LIME    = (  0, 255,   0)
+    BLUE    = (  0,   0, 255)
+    YELLOW  = (255, 255,   0)
+    CYAN    = (  0, 255, 255)
+    MAGENTA = (255,   0, 255)
+    SILVER  = (192, 192, 192)
+    GRAY    = (128, 128, 128)
+    MAROON  = (128,   0,   0)
+    OLIVE   = (128, 128,   0)
+    GREEN   = (  0, 128,   0)
+    PURPLE  = (128,   0, 128)
+    TEAL    = (  0, 128, 128)
+    NAVY    = (  0,   0, 128)
+    
+    @classmethod
+    def random(cls) -> BasicRGB:
+        """
+        Return a random BasicRGB value.
+        
+        Returns:
+            A random choice from the list of BasicRGB.
+        """
+        return random.choice(list(cls))
+    
+    @classmethod
+    def random_value(cls) -> Color:
+        """
+        Return a random color.
+        
+        Returns:
+            A random color from the list of BasicRGB.
+        """
+        return cls.random().value
+
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class BBoxFormat(Enum):
+    CXCYAR      = "cxcyar"
+    CXCYRH      = "cxcyrh"
+    CXCYWH      = "cxcywh"
+    CXCYWH_NORM = "cxcywh_norm"
+    XYXY        = "xyxy"
+    XYWH        = "xywh"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "cxcyar"     : cls.CXCYAR,
+            "cxcyrh"     : cls.CXCYRH,
+            "cxcywh"     : cls.CXCYWH,
+            "cxcywh_norm": cls.CXCYWH_NORM,
+            "xyxy"       : cls.XYXY,
+            "xywh"       : cls.XYWH,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.CXCYAR,
+            1: cls.CXCYRH,
+            2: cls.CXCYWH,
+            3: cls.CXCYWH_NORM,
+            4: cls.XYXY,
+            5: cls.XYWH,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> BBoxFormat:
+        """
+        It takes a string and returns an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> BBoxFormat:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Any) -> BBoxFormat | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, BBoxFormat):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `BBoxFormat`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+    
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class CFA(Enum):
+    """
+    Define the configuration of the color filter array.
+
+    So far only bayer images is supported and the enum sets the pixel order for
+    bayer. Note that this can change due to things like rotations and cropping
+    of images. Take care if including the translations in pipeline. This
+    implementations is optimized to be reasonably fast, look better than simple
+    nearest neighbour. On top of this care is taken to make it reversible going
+    raw -> rgb -> raw. the raw samples remain intact during conversion and only
+    unknown samples are interpolated.
+
+    Names are based on the OpenCV convention where the BG indicates pixel
+    1,1 (counting from 0,0) is blue and its neighbour to the right is green.
+    In that case the top left pixel is red. Other options are GB, RG and GR
+
+    Reference:
+        https://en.wikipedia.org/wiki/Color_filter_array
+    """
+    BG = 0
+    GB = 1
+    RG = 2
+    GR = 3
+
+
+class DistanceMetric(Enum):
+    BRAYCURTIS         = "braycurtis"
+    CANBERRA           = "canberra"
+    CHEBYSHEV          = "chebyshev"
+    CITYBLOCK          = "cityblock"
+    CORRELATION        = "correlation"
+    COSINE             = "cosine"
+    DICE               = "dice"
+    DIRECTED_HAUSDORFF = "directed_hausdorff"
+    EUCLIDEAN          = "euclidean"
+    HAMMING            = "hamming"
+    JACCARD            = "jaccard"
+    JENSENSHANNON      = "jensenshannon"
+    KULCZYNSKI1        = "kulczynski1"
+    KULSINSKI          = "kulsinski"
+    MAHALANOBIS        = "mahalanobis"
+    MINKOWSKI          = "minkowski"
+    ROGERSTANIMOTO     = "rogerstanimoto"
+    RUSSELLRAO         = "russellrao"
+    SEUCLIDEAN         = "seuclidean"
+    SOKALMICHENER      = "sokalmichener"
+    SOKALSNEATH        = "sokalsneath"
+    SQEUCLIDEAN        = "sqeuclidean"
+    YULE               = "yule"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "braycurtis"        : cls.BRAYCURTIS,
+            "canberra"          : cls.CANBERRA,
+            "chebyshev"         : cls.CHEBYSHEV,
+            "cityblock"         : cls.CITYBLOCK,
+            "correlation"       : cls.CORRELATION,
+            "cosine"            : cls.COSINE,
+            "dice"              : cls.DICE,
+            "directed_hausdorff": cls.DIRECTED_HAUSDORFF,
+            "euclidean"         : cls.EUCLIDEAN,
+            "hamming"           : cls.HAMMING,
+            "jaccard"           : cls.JACCARD,
+            "jensenshannon"     : cls.JENSENSHANNON,
+            "kulczynski1"       : cls.KULCZYNSKI1,
+            "kulsinski"         : cls.KULSINSKI,
+            "mahalanobis"       : cls.MAHALANOBIS,
+            "minkowski"         : cls.MINKOWSKI,
+            "rogerstanimoto"    : cls.ROGERSTANIMOTO,
+            "russellrao"        : cls.RUSSELLRAO,
+            "seuclidean"        : cls.SEUCLIDEAN,
+            "sokalmichener"     : cls.SOKALMICHENER,
+            "sokalsneath"       : cls.SOKALSNEATH,
+            "sqeuclidean"       : cls.SQEUCLIDEAN,
+            "yule"              : cls.YULE,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0 : cls.BRAYCURTIS,
+            1 : cls.CANBERRA,
+            2 : cls.CHEBYSHEV,
+            3 : cls.CITYBLOCK,
+            4 : cls.CORRELATION,
+            5 : cls.COSINE,
+            6 : cls.DICE,
+            7 : cls.DIRECTED_HAUSDORFF,
+            8 : cls.EUCLIDEAN,
+            9 : cls.HAMMING,
+            10: cls.JACCARD,
+            11: cls.JENSENSHANNON,
+            12: cls.KULCZYNSKI1,
+            13: cls.KULSINSKI,
+            14: cls.MAHALANOBIS,
+            15: cls.MINKOWSKI,
+            16: cls.ROGERSTANIMOTO,
+            17: cls.RUSSELLRAO,
+            18: cls.SEUCLIDEAN,
+            19: cls.SOKALMICHENER,
+            20: cls.SOKALSNEATH,
+            21: cls.SQEUCLIDEAN,
+            22: cls.YULE,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> DistanceMetric:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> DistanceMetric:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+    
+    @classmethod
+    def from_value(cls, value: Any) -> DistanceMetric | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, DistanceMetric):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `DistanceMetric`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+    
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+ 
+
+class ImageFormat(Enum):
+    ARW  = ".arw"
+    BMP  = ".bmp"
+    DNG	 = ".dng"
+    JPG  = ".jpg"
+    JPEG = ".jpeg"
+    PNG  = ".png"
+    PPM  = ".ppm"
+    RAF  = ".raf"
+    TIF  = ".tif"
+    TIFF = ".tiff"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "arw" : cls.ARW,
+            "bmp" : cls.BMP,
+            "dng" : cls.DNG,
+            "jpg" : cls.JPG,
+            "jpeg": cls.JPEG,
+            "png" : cls.PNG,
+            "ppm" : cls.PPM,
+            "raf" : cls.RAF,
+            "tif" : cls.TIF,
+            "tiff": cls.TIF,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.ARW,
+            1: cls.BMP,
+            2: cls.DNG,
+            3: cls.JPG,
+            4: cls.JPEG,
+            5: cls.PNG,
+            6: cls.PPM,
+            7: cls.RAF,
+            8: cls.TIF,
+            9: cls.TIF,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> ImageFormat:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> ImageFormat:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Enum_) -> ImageFormat | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Enum_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, ImageFormat):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+    
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class InterpolationMode(Enum):
+    BICUBIC       = "bicubic"
+    BILINEAR      = "bilinear"
+    NEAREST       = "nearest"
+    # For PIL compatibility
+    BOX           = "box"
+    HAMMING       = "hamming"
+    LANCZOS       = "lanczos"
+    # For opencv compatibility
+    AREA          = "area"
+    CUBIC         = "cubic"
+    LANCZOS4      = "lanczos4"
+    LINEAR        = "linear"
+    LINEAR_EXACT  = "linear_exact"
+    MAX           = "max"
+    NEAREST_EXACT = "nearest_exact"
+
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "bicubic"      : cls.BICUBIC,
+            "bilinear"     : cls.BILINEAR,
+            "nearest"      : cls.NEAREST,
+            "box"          : cls.BOX,
+            "hamming"      : cls.HAMMING,
+            "lanczos"      : cls.LANCZOS,
+            "area"         : cls.AREA,
+            "cubic"        : cls.CUBIC,
+            "lanczos4"     : cls.LANCZOS4,
+            "linear"       : cls.LINEAR,
+            "linear_exact" : cls.LINEAR_EXACT,
+            "max"          : cls.MAX,
+            "nearest_exact": cls.NEAREST_EXACT,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0 : cls.BICUBIC,
+            1 : cls.BILINEAR,
+            2 : cls.NEAREST,
+            3 : cls.BOX,
+            4 : cls.HAMMING,
+            5 : cls.LANCZOS,
+            6 : cls.AREA,
+            7 : cls.CUBIC,
+            8 : cls.LANCZOS4,
+            9 : cls.LINEAR,
+            10: cls.LINEAR_EXACT,
+            11: cls.MAX,
+            12: cls.NEAREST_EXACT,
+        }
+
+    @classmethod
+    def cv_modes_mapping(cls) -> dict:
+        """
+        It maps the `InterpolationMode` enum to the corresponding OpenCV
+        interpolation mode.
+        
+        Returns:
+            A dictionary of the different interpolation modes.
+        """
+        return {
+            cls.AREA    : cv2.INTER_AREA,
+            cls.CUBIC   : cv2.INTER_CUBIC,
+            cls.LANCZOS4: cv2.INTER_LANCZOS4,
+            cls.LINEAR  : cv2.INTER_LINEAR,
+            cls.MAX     : cv2.INTER_MAX,
+            cls.NEAREST : cv2.INTER_NEAREST,
+        }
+
+    @classmethod
+    def pil_modes_mapping(cls) -> dict:
+        """
+        It maps the `InterpolationMode` enum to the corresponding PIL
+        interpolation mode.
+        
+        Returns:
+            A dictionary with the keys being the InterpolationMode enum and the
+            values being the corresponding PIL interpolation mode.
+        """
+        return {
+            cls.NEAREST : 0,
+            cls.LANCZOS : 1,
+            cls.BILINEAR: 2,
+            cls.BICUBIC : 3,
+            cls.BOX     : 4,
+            cls.HAMMING : 5,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> InterpolationMode:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> InterpolationMode:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Enum_) -> InterpolationMode | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Enum_): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, InterpolationMode):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `InterpolationMode`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+        
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class MemoryUnit(Enum):
+    B  = "B"
+    KB = "KB"
+    MB = "MB"
+    GB = "GB"
+    TB = "TB"
+    PB = "PB"
+
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "b" : cls.B,
+            "kb": cls.KB,
+            "mb": cls.MB,
+            "gb": cls.GB,
+            "tb": cls.TB,
+            "pb": cls.PB,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.B,
+            1: cls.KB,
+            2: cls.MB,
+            3: cls.GB,
+            4: cls.TB,
+            5: cls.PB,
+        }
+    
+    @classmethod
+    def byte_conversion_mapping(cls):
+        """
+        It returns a dictionary that maps the MemoryUnit enum to the number of
+        bytes in that unit.
+        
+        Returns:
+            A dictionary with the keys being the MemoryUnit enum and the values
+            being the number of bytes in each unit.
+        """
+        return {
+            cls.B : 1024 ** 0,
+            cls.KB: 1024 ** 1,
+            cls.MB: 1024 ** 2,
+            cls.GB: 1024 ** 3,
+            cls.TB: 1024 ** 4,
+            cls.PB: 1024 ** 5,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> MemoryUnit:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(value: int) -> MemoryUnit:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(MemoryUnit.int_mapping, value)
+        return MemoryUnit.int_mapping()[value]
+    
+    @classmethod
+    def from_value(cls, value: Any) -> MemoryUnit | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, MemoryUnit):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `MemoryUnit`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+    
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class ModelPhase(Enum):
+    TRAINING  = "training"
+    # Produce predictions, calculate losses and metrics, update weights at
+    # the end of each epoch/step.
+    TESTING   = "testing"
+    # Produce predictions, calculate losses and metrics,
+    # DO NOT update weights at the end of each epoch/step.
+    INFERENCE = "inference"
+    # Produce predictions ONLY.
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "training" : cls.TRAINING,
+            "testing"  : cls.TESTING,
+            "inference": cls.INFERENCE,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.TRAINING,
+            1: cls.TESTING,
+            2: cls.INFERENCE,
+        }
+
+    @classmethod
+    def from_str(cls, value: str) -> ModelPhase:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> ModelPhase:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Any) -> ModelPhase | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, ModelPhase):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `ModelPhase`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class PaddingMode(Enum):
+    CONSTANT      = "constant"
+    # For torch compatibility
+    CIRCULAR      = "circular"
+    REFLECT       = "reflect"
+    REPLICATE     = "replicate"
+    # For numpy compatibility
+    EDGE          = "edge"
+    EMPTY         = "empty"
+    LINEAR_RAMP   = "linear_ramp"
+    MAXIMUM       = "maximum"
+    MEAN          = "mean"
+    MEDIAN        = "median"
+    MINIMUM       = "minimum"
+    SYMMETRIC     = "symmetric"
+    WRAP          = "wrap"
+
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "constant"   : cls.CONSTANT,
+            "circular"   : cls.CIRCULAR,
+            "reflect"    : cls.REFLECT,
+            "replicate"  : cls.REPLICATE,
+            "edge"       : cls.EDGE,
+            "empty"      : cls.EMPTY,
+            "linear_ramp": cls.LINEAR_RAMP,
+            "maximum"    : cls.MAXIMUM,
+            "mean"       : cls.MEAN,
+            "median"     : cls.MEDIAN,
+            "minimum"    : cls.MINIMUM,
+            "symmetric"  : cls.SYMMETRIC,
+            "wrap"       : cls.WRAP,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0 : cls.CONSTANT,
+            1 : cls.CIRCULAR,
+            2 : cls.REFLECT,
+            3 : cls.REPLICATE,
+            4 : cls.EDGE,
+            5 : cls.EMPTY,
+            6 : cls.LINEAR_RAMP,
+            7 : cls.MAXIMUM,
+            8 : cls.MEAN,
+            9 : cls.MEDIAN,
+            10: cls.MINIMUM,
+            11: cls.SYMMETRIC,
+            12: cls.WRAP,
+        }
+
+    @classmethod
+    def from_str(cls, value: str) -> PaddingMode:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value)
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> PaddingMode:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Any) -> PaddingMode | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, PaddingMode):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `PaddingMode`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+        
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
+class RGB(OrderedEnum):
+    """
+    Define 138 colors.
+    """
+    MAROON                  = (128,   0,   0)
+    DARK_RED                = (139,   0,   0)
+    BROWN                   = (165,  42,  42)
+    FIREBRICK               = (178,  34,  34)
+    CRIMSON                 = (220,  20,  60)
+    RED                     = (255,   0,   0)
+    TOMATO                  = (255,  99,  71)
+    CORAL                   = (255, 127,  80)
+    INDIAN_RED              = (205,  92,  92)
+    LIGHT_CORAL             = (240, 128, 128)
+    DARK_SALMON             = (233, 150, 122)
+    SALMON                  = (250, 128, 114)
+    LIGHT_SALMON            = (255, 160, 122)
+    ORANGE_RED              = (255,  69,   0)
+    DARK_ORANGE             = (255, 140,   0)
+    ORANGE                  = (255, 165,   0)
+    GOLD                    = (255, 215,   0)
+    DARK_GOLDEN_ROD         = (184, 134,  11)
+    GOLDEN_ROD              = (218, 165,  32)
+    PALE_GOLDEN_ROD         = (238, 232, 170)
+    DARK_KHAKI              = (189, 183, 107)
+    KHAKI                   = (240, 230, 140)
+    OLIVE                   = (128, 128,   0)
+    YELLOW                  = (255, 255,   0)
+    YELLOW_GREEN            = (154, 205,  50)
+    DARK_OLIVE_GREEN        = ( 85, 107,  47)
+    OLIVE_DRAB              = (107, 142,  35)
+    LAWN_GREEN              = (124, 252,   0)
+    CHART_REUSE             = (127, 255,   0)
+    GREEN_YELLOW            = (173, 255,  47)
+    DARK_GREEN              = (  0, 100,   0)
+    GREEN                   = (  0, 128,   0)
+    FOREST_GREEN            = ( 34, 139,  34)
+    LIME                    = (  0, 255,   0)
+    LIME_GREEN              = ( 50, 205,  50)
+    LIGHT_GREEN             = (144, 238, 144)
+    PALE_GREEN              = (152, 251, 152)
+    DARK_SEA_GREEN          = (143, 188, 143)
+    MEDIUM_SPRING_GREEN     = (  0, 250, 154)
+    SPRING_GREEN            = (  0, 255, 127)
+    SEA_GREEN               = ( 46, 139,  87)
+    MEDIUM_AQUA_MARINE      = (102, 205, 170)
+    MEDIUM_SEA_GREEN        = ( 60, 179, 113)
+    LIGHT_SEA_GREEN         = ( 32, 178, 170)
+    DARK_SLATE_GRAY         = ( 47,  79,  79)
+    TEAL                    = (  0, 128, 128)
+    DARK_CYAN               = (  0, 139, 139)
+    AQUA                    = (  0, 255, 255)
+    CYAN                    = (  0, 255, 255)
+    LIGHT_CYAN              = (224, 255, 255)
+    DARK_TURQUOISE          = (  0, 206, 209)
+    TURQUOISE               = ( 64, 224, 208)
+    MEDIUM_TURQUOISE        = ( 72, 209, 204)
+    PALE_TURQUOISE          = (175, 238, 238)
+    AQUA_MARINE             = (127, 255, 212)
+    POWDER_BLUE             = (176, 224, 230)
+    CADET_BLUE              = ( 95, 158, 160)
+    STEEL_BLUE              = ( 70, 130, 180)
+    CORN_FLOWER_BLUE        = (100, 149, 237)
+    DEEP_SKY_BLUE           = (  0, 191, 255)
+    DODGER_BLUE             = ( 30, 144, 255)
+    LIGHT_BLUE              = (173, 216, 230)
+    SKY_BLUE                = (135, 206, 235)
+    LIGHT_SKY_BLUE          = (135, 206, 250)
+    MIDNIGHT_BLUE           = ( 25,  25, 112)
+    NAVY                    = (  0,   0, 128)
+    DARK_BLUE               = (  0,   0, 139)
+    MEDIUM_BLUE             = (  0,   0, 205)
+    BLUE                    = (  0,   0, 255)
+    ROYAL_BLUE              = ( 65, 105, 225)
+    BLUE_VIOLET             = (138,  43, 226)
+    INDIGO                  = ( 75,   0, 130)
+    DARK_SLATE_BLUE         = ( 72,  61, 139)
+    SLATE_BLUE              = (106,  90, 205)
+    MEDIUM_SLATE_BLUE       = (123, 104, 238)
+    MEDIUM_PURPLE           = (147, 112, 219)
+    DARK_MAGENTA            = (139,   0, 139)
+    DARK_VIOLET             = (148,   0, 211)
+    DARK_ORCHID             = (153,  50, 204)
+    MEDIUM_ORCHID           = (186,  85, 211)
+    PURPLE                  = (128,   0, 128)
+    THISTLE                 = (216, 191, 216)
+    PLUM                    = (221, 160, 221)
+    VIOLET                  = (238, 130, 238)
+    MAGENTA                 = (255,   0, 255)
+    ORCHID                  = (218, 112, 214)
+    MEDIUM_VIOLET_RED       = (199,  21, 133)
+    PALE_VIOLET_RED         = (219, 112, 147)
+    DEEP_PINK               = (255,  20, 147)
+    HOT_PINK                = (255, 105, 180)
+    LIGHT_PINK              = (255, 182, 193)
+    PINK                    = (255, 192, 203)
+    ANTIQUE_WHITE           = (250, 235, 215)
+    BEIGE                   = (245, 245, 220)
+    BISQUE                  = (255, 228, 196)
+    BLANCHED_ALMOND         = (255, 235, 205)
+    WHEAT                   = (245, 222, 179)
+    CORN_SILK               = (255, 248, 220)
+    LEMON_CHIFFON           = (255, 250, 205)
+    LIGHT_GOLDEN_ROD_YELLOW = (250, 250, 210)
+    LIGHT_YELLOW            = (255, 255, 224)
+    SADDLE_BROWN            = (139,  69,  19)
+    SIENNA                  = (160,  82,  45)
+    CHOCOLATE               = (210, 105,  30)
+    PERU                    = (205, 133,  63)
+    SANDY_BROWN             = (244, 164,  96)
+    BURLY_WOOD              = (222, 184, 135)
+    TAN                     = (210, 180, 140)
+    ROSY_BROWN              = (188, 143, 143)
+    MOCCASIN                = (255, 228, 181)
+    NAVAJO_WHITE            = (255, 222, 173)
+    PEACH_PUFF              = (255, 218, 185)
+    MISTY_ROSE              = (255, 228, 225)
+    LAVENDER_BLUSH          = (255, 240, 245)
+    LINEN                   = (250, 240, 230)
+    OLD_LACE                = (253, 245, 230)
+    PAPAYA_WHIP             = (255, 239, 213)
+    SEA_SHELL               = (255, 245, 238)
+    MINT_CREAM              = (245, 255, 250)
+    SLATE_GRAY              = (112, 128, 144)
+    LIGHT_SLATE_GRAY        = (119, 136, 153)
+    LIGHT_STEEL_BLUE        = (176, 196, 222)
+    LAVENDER                = (230, 230, 250)
+    FLORAL_WHITE            = (255, 250, 240)
+    ALICE_BLUE              = (240, 248, 255)
+    GHOST_WHITE             = (248, 248, 255)
+    HONEYDEW                = (240, 255, 240)
+    IVORY                   = (255, 255, 240)
+    AZURE                   = (240, 255, 255)
+    SNOW                    = (255, 250, 250)
+    BLACK                   = (  0,   0,   0)
+    DIM_GRAY                = (105, 105, 105)
+    GRAY                    = (128, 128, 128)
+    DARK_GRAY               = (169, 169, 169)
+    SILVER                  = (192, 192, 192)
+    LIGHT_GRAY              = (211, 211, 211)
+    GAINSBORO               = (220, 220, 220)
+    WHITE_SMOKE             = (245, 245, 245)
+    WHITE                   = (255, 255, 255)
+    
+    @classmethod
+    def random(cls) -> RGB:
+        """
+        Return a random RGB enum.
+        
+        Returns:
+            A random choice from the list of RGB.
+        """
+        return random.choice(list(cls))
+    
+    @classmethod
+    def random_value(cls) -> Color:
+        """
+        Return a random RGB value.
+        
+        Returns:
+            A random choice from the list of RGB.
+        """
+        return cls.random().value
+
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+    
+
+class VideoFormat(Enum):
+    AVI  = ".avi"
+    M4V  = ".m4v"
+    MKV  = ".mkv"
+    MOV  = ".mov"
+    MP4  = ".mp4"
+    MPEG = ".mpeg"
+    MPG  = ".mpg"
+    WMV  = ".wmv"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "avi" : cls.AVI,
+            "m4v" : cls.M4V,
+            "mkv" : cls.MKV,
+            "mov" : cls.MOV,
+            "mp4" : cls.MP4,
+            "mpeg": cls.MPEG,
+            "mpg" : cls.MPG,
+            "wmv" : cls.WMV,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.AVI,
+            1: cls.M4V,
+            2: cls.MKV,
+            3: cls.MOV,
+            4: cls.MP4,
+            5: cls.MPEG,
+            6: cls.MPG,
+            7: cls.WMV,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> VideoFormat:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> VideoFormat:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Any) -> VideoFormat | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, VideoFormat):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        return None
+    
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+    
+
+class VisionBackend(Enum):
+    CV      = "cv"
+    FFMPEG  = "ffmpeg"
+    LIBVIPS = "libvips"
+    PIL     = "pil"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "cv"     : cls.CV,
+            "ffmpeg" : cls.FFMPEG,
+            "libvips": cls.LIBVIPS,
+            "pil"    : cls.PIL,
+        }
+    
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.CV,
+            1: cls.FFMPEG,
+            2: cls.LIBVIPS,
+            3: cls.PIL,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> VisionBackend:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value.lower())
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> VisionBackend:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+    
+    @classmethod
+    def from_value(cls, value: Any) -> VisionBackend:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, VisionBackend):
+            return value
+        if isinstance(value, int):
+            return cls.from_int(value)
+        if isinstance(value, str):
+            return cls.from_str(value)
+        error_console.log(
+            f"`value` must be `VisionBackend`, `dict`, `str`, or `Path`. "
+            f"But got: {type(value)}."
+        )
+        from one.constants import VISION_BACKEND
+        return VISION_BACKEND
+    
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list[str]:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
 
 
 # H1: - Assertion --------------------------------------------------------------
@@ -938,1452 +2464,6 @@ def assert_yaml_file(path: Path_ | None) -> bool:
     if not is_yaml_file(path):
         raise ValueError()
     
-    
-# H1: - Enum -------------------------------------------------------------------
-
-class AppleRGB(OrderedEnum):
-    """
-    Define 12 Apple colors.
-    """
-    GRAY   = (128, 128, 128)
-    RED    = (255, 59 , 48 )
-    GREEN  = ( 52, 199, 89 )
-    BLUE   = (  0, 122, 255)
-    ORANGE = (255, 149, 5  )
-    YELLOW = (255, 204, 0  )
-    BROWN  = (162, 132, 94 )
-    PINK   = (255, 45 , 85 )
-    PURPLE = ( 88, 86 , 214)
-    TEAL   = ( 90, 200, 250)
-    INDIGO = ( 85, 190, 240)
-    BLACK  = (  0, 0  , 0  )
-    WHITE  = (255, 255, 255)
-    
-    @staticmethod
-    def values() -> list:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in AppleRGB]
-
-
-class BasicRGB(OrderedEnum):
-    """
-    Define 12 basic colors.
-    """
-    BLACK   = (0  , 0  , 0  )
-    WHITE   = (255, 255, 255)
-    RED     = (255, 0  , 0  )
-    LIME    = (0  , 255, 0  )
-    BLUE    = (0  , 0  , 255)
-    YELLOW  = (255, 255, 0  )
-    CYAN    = (0  , 255, 255)
-    MAGENTA = (255, 0  , 255)
-    SILVER  = (192, 192, 192)
-    GRAY    = (128, 128, 128)
-    MAROON  = (128, 0  , 0  )
-    OLIVE   = (128, 128, 0  )
-    GREEN   = (0  , 128, 0  )
-    PURPLE  = (128, 0  , 128)
-    TEAL    = (0  , 128, 128)
-    NAVY    = (0  , 0  , 128)
-    
-    @staticmethod
-    def values() -> list:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in BasicRGB]
-
-
-class BBoxFormat(Enum):
-    CXCYAR      = "cxcyar"
-    CXCYRH      = "cxcyrh"
-    CXCYWH      = "cxcywh"
-    CXCYWH_NORM = "cxcywh_norm"
-    XYXY        = "xyxy"
-    XYWH        = "xywh"
-    
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "cxcyar"     : BBoxFormat.CXCYAR,
-            "cxcyrh"     : BBoxFormat.CXCYRH,
-            "cxcywh"     : BBoxFormat.CXCYWH,
-            "cxcywh_norm": BBoxFormat.CXCYWH_NORM,
-            "xyxy"       : BBoxFormat.XYXY,
-            "xywh"       : BBoxFormat.XYWH,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0: BBoxFormat.CXCYAR,
-            1: BBoxFormat.CXCYRH,
-            2: BBoxFormat.CXCYWH,
-            3: BBoxFormat.CXCYWH_NORM,
-            4: BBoxFormat.XYXY,
-            5: BBoxFormat.XYWH,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> BBoxFormat:
-        """
-        It takes a string and returns an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(BBoxFormat.str_mapping, value.lower())
-        return BBoxFormat.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> BBoxFormat:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(BBoxFormat.int_mapping, value)
-        return BBoxFormat.int_mapping()[value]
-
-    @staticmethod
-    def from_value(value: Any) -> BBoxFormat | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, BBoxFormat):
-            return value
-        if isinstance(value, str):
-            return BBoxFormat.from_str(value)
-        if isinstance(value, int):
-            return BBoxFormat.from_int(value)
-        error_console.log(
-            f"`value` must be `BBoxFormat`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-    
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [b for b in BBoxFormat]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [b.value for b in BBoxFormat]
-
-
-class CFA(Enum):
-    """
-    Define the configuration of the color filter array.
-
-    So far only bayer images is supported and the enum sets the pixel order for
-    bayer. Note that this can change due to things like rotations and cropping
-    of images. Take care if including the translations in pipeline. This
-    implementations is optimized to be reasonably fast, look better than simple
-    nearest neighbour. On top of this care is taken to make it reversible going
-    raw -> rgb -> raw. the raw samples remain intact during conversion and only
-    unknown samples are interpolated.
-
-    Names are based on the OpenCV convention where the BG indicates pixel
-    1,1 (counting from 0,0) is blue and its neighbour to the right is green.
-    In that case the top left pixel is red. Other options are GB, RG and GR
-
-    Reference:
-        https://en.wikipedia.org/wiki/Color_filter_array
-    """
-    BG = 0
-    GB = 1
-    RG = 2
-    GR = 3
-
-
-class DistanceMetric(Enum):
-    BRAYCURTIS         = "braycurtis"
-    CANBERRA           = "canberra"
-    CHEBYSHEV          = "chebyshev"
-    CITYBLOCK          = "cityblock"
-    CORRELATION        = "correlation"
-    COSINE             = "cosine"
-    DICE               = "dice"
-    DIRECTED_HAUSDORFF = "directed_hausdorff"
-    EUCLIDEAN          = "euclidean"
-    HAMMING            = "hamming"
-    JACCARD            = "jaccard"
-    JENSENSHANNON      = "jensenshannon"
-    KULCZYNSKI1        = "kulczynski1"
-    KULSINSKI          = "kulsinski"
-    MAHALANOBIS        = "mahalanobis"
-    MINKOWSKI          = "minkowski"
-    ROGERSTANIMOTO     = "rogerstanimoto"
-    RUSSELLRAO         = "russellrao"
-    SEUCLIDEAN         = "seuclidean"
-    SOKALMICHENER      = "sokalmichener"
-    SOKALSNEATH        = "sokalsneath"
-    SQEUCLIDEAN        = "sqeuclidean"
-    YULE               = "yule"
-    
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "braycurtis"        : DistanceMetric.BRAYCURTIS,
-            "canberra"          : DistanceMetric.CANBERRA,
-            "chebyshev"         : DistanceMetric.CHEBYSHEV,
-            "cityblock"         : DistanceMetric.CITYBLOCK,
-            "correlation"       : DistanceMetric.CORRELATION,
-            "cosine"            : DistanceMetric.COSINE,
-            "dice"              : DistanceMetric.DICE,
-            "directed_hausdorff": DistanceMetric.DIRECTED_HAUSDORFF,
-            "euclidean"         : DistanceMetric.EUCLIDEAN,
-            "hamming"           : DistanceMetric.HAMMING,
-            "jaccard"           : DistanceMetric.JACCARD,
-            "jensenshannon"     : DistanceMetric.JENSENSHANNON,
-            "kulczynski1"       : DistanceMetric.KULCZYNSKI1,
-            "kulsinski"         : DistanceMetric.KULSINSKI,
-            "mahalanobis"       : DistanceMetric.MAHALANOBIS,
-            "minkowski"         : DistanceMetric.MINKOWSKI,
-            "rogerstanimoto"    : DistanceMetric.ROGERSTANIMOTO,
-            "russellrao"        : DistanceMetric.RUSSELLRAO,
-            "seuclidean"        : DistanceMetric.SEUCLIDEAN,
-            "sokalmichener"     : DistanceMetric.SOKALMICHENER,
-            "sokalsneath"       : DistanceMetric.SOKALSNEATH,
-            "sqeuclidean"       : DistanceMetric.SQEUCLIDEAN,
-            "yule"              : DistanceMetric.YULE,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0 : DistanceMetric.BRAYCURTIS,
-            1 : DistanceMetric.CANBERRA,
-            2 : DistanceMetric.CHEBYSHEV,
-            3 : DistanceMetric.CITYBLOCK,
-            4 : DistanceMetric.CORRELATION,
-            5 : DistanceMetric.COSINE,
-            6 : DistanceMetric.DICE,
-            7 : DistanceMetric.DIRECTED_HAUSDORFF,
-            8 : DistanceMetric.EUCLIDEAN,
-            9 : DistanceMetric.HAMMING,
-            10: DistanceMetric.JACCARD,
-            11: DistanceMetric.JENSENSHANNON,
-            12: DistanceMetric.KULCZYNSKI1,
-            13: DistanceMetric.KULSINSKI,
-            14: DistanceMetric.MAHALANOBIS,
-            15: DistanceMetric.MINKOWSKI,
-            16: DistanceMetric.ROGERSTANIMOTO,
-            17: DistanceMetric.RUSSELLRAO,
-            18: DistanceMetric.SEUCLIDEAN,
-            19: DistanceMetric.SOKALMICHENER,
-            20: DistanceMetric.SOKALSNEATH,
-            21: DistanceMetric.SQEUCLIDEAN,
-            22: DistanceMetric.YULE,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> DistanceMetric:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(DistanceMetric.str_mapping, value.lower())
-        return DistanceMetric.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> DistanceMetric:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(DistanceMetric.int_mapping, value)
-        return DistanceMetric.int_mapping()[value]
-    
-    @staticmethod
-    def from_value(value: Any) -> DistanceMetric | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, DistanceMetric):
-            return value
-        if isinstance(value, str):
-            return DistanceMetric.from_str(value)
-        if isinstance(value, int):
-            return DistanceMetric.from_int(value)
-        error_console.log(
-            f"`value` must be `DistanceMetric`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-    
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in DistanceMetric]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in DistanceMetric]
- 
-
-class ImageFormat(Enum):
-    ARW  = ".arw"
-    BMP  = ".bmp"
-    DNG	 = ".dng"
-    JPG  = ".jpg"
-    JPEG = ".jpeg"
-    PNG  = ".png"
-    PPM  = ".ppm"
-    RAF  = ".raf"
-    TIF  = ".tif"
-    TIFF = ".tiff"
-    
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "arw" : ImageFormat.ARW,
-            "bmp" : ImageFormat.BMP,
-            "dng" : ImageFormat.DNG,
-            "jpg" : ImageFormat.JPG,
-            "jpeg": ImageFormat.JPEG,
-            "png" : ImageFormat.PNG,
-            "ppm" : ImageFormat.PPM,
-            "raf" : ImageFormat.RAF,
-            "tif" : ImageFormat.TIF,
-            "tiff": ImageFormat.TIF,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0: ImageFormat.ARW,
-            1: ImageFormat.BMP,
-            2: ImageFormat.DNG,
-            3: ImageFormat.JPG,
-            4: ImageFormat.JPEG,
-            5: ImageFormat.PNG,
-            6: ImageFormat.PPM,
-            7: ImageFormat.RAF,
-            8: ImageFormat.TIF,
-            9: ImageFormat.TIF,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> ImageFormat:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(ImageFormat.str_mapping, value.lower())
-        return ImageFormat.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> ImageFormat:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(ImageFormat.int_mapping, value)
-        return ImageFormat.int_mapping()[value]
-
-    @staticmethod
-    def from_value(value: Enum_) -> ImageFormat | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Enum_): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, ImageFormat):
-            return value
-        if isinstance(value, str):
-            return ImageFormat.from_str(value)
-        if isinstance(value, int):
-            return ImageFormat.from_int(value)
-        error_console.log(
-            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-    
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in ImageFormat]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in ImageFormat]
-
-
-class InterpolationMode(Enum):
-    BICUBIC       = "bicubic"
-    BILINEAR      = "bilinear"
-    NEAREST       = "nearest"
-    # For PIL compatibility
-    BOX           = "box"
-    HAMMING       = "hamming"
-    LANCZOS       = "lanczos"
-    # For opencv compatibility
-    AREA          = "area"
-    CUBIC         = "cubic"
-    LANCZOS4      = "lanczos4"
-    LINEAR        = "linear"
-    LINEAR_EXACT  = "linear_exact"
-    MAX           = "max"
-    NEAREST_EXACT = "nearest_exact"
-
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "bicubic"      : InterpolationMode.BICUBIC,
-            "bilinear"     : InterpolationMode.BILINEAR,
-            "nearest"      : InterpolationMode.NEAREST,
-            "box"          : InterpolationMode.BOX,
-            "hamming"      : InterpolationMode.HAMMING,
-            "lanczos"      : InterpolationMode.LANCZOS,
-            "area"         : InterpolationMode.AREA,
-            "cubic"        : InterpolationMode.CUBIC,
-            "lanczos4"     : InterpolationMode.LANCZOS4,
-            "linear"       : InterpolationMode.LINEAR,
-            "linear_exact" : InterpolationMode.LINEAR_EXACT,
-            "max"          : InterpolationMode.MAX,
-            "nearest_exact": InterpolationMode.NEAREST_EXACT,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0 : InterpolationMode.BICUBIC,
-            1 : InterpolationMode.BILINEAR,
-            2 : InterpolationMode.NEAREST,
-            3 : InterpolationMode.BOX,
-            4 : InterpolationMode.HAMMING,
-            5 : InterpolationMode.LANCZOS,
-            6 : InterpolationMode.AREA,
-            7 : InterpolationMode.CUBIC,
-            8 : InterpolationMode.LANCZOS4,
-            9 : InterpolationMode.LINEAR,
-            10: InterpolationMode.LINEAR_EXACT,
-            11: InterpolationMode.MAX,
-            12: InterpolationMode.NEAREST_EXACT,
-        }
-
-    @staticmethod
-    def cv_modes_mapping() -> dict:
-        """
-        It maps the `InterpolationMode` enum to the corresponding OpenCV
-        interpolation mode.
-        
-        Returns:
-            A dictionary of the different interpolation modes.
-        """
-        return {
-            InterpolationMode.AREA    : cv2.INTER_AREA,
-            InterpolationMode.CUBIC   : cv2.INTER_CUBIC,
-            InterpolationMode.LANCZOS4: cv2.INTER_LANCZOS4,
-            InterpolationMode.LINEAR  : cv2.INTER_LINEAR,
-            InterpolationMode.MAX     : cv2.INTER_MAX,
-            InterpolationMode.NEAREST : cv2.INTER_NEAREST,
-        }
-
-    @staticmethod
-    def pil_modes_mapping() -> dict:
-        """
-        It maps the `InterpolationMode` enum to the corresponding PIL
-        interpolation mode.
-        
-        Returns:
-            A dictionary with the keys being the InterpolationMode enum and the
-            values being the corresponding PIL interpolation mode.
-        """
-        return {
-            InterpolationMode.NEAREST : 0,
-            InterpolationMode.LANCZOS : 1,
-            InterpolationMode.BILINEAR: 2,
-            InterpolationMode.BICUBIC : 3,
-            InterpolationMode.BOX     : 4,
-            InterpolationMode.HAMMING : 5,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> InterpolationMode:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(InterpolationMode.str_mapping, value.lower())
-        return InterpolationMode.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> InterpolationMode:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(InterpolationMode.int_mapping, value)
-        return InterpolationMode.int_mapping()[value]
-
-    @staticmethod
-    def from_value(value: Enum_) -> InterpolationMode | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Enum_): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, InterpolationMode):
-            return value
-        if isinstance(value, str):
-            return InterpolationMode.from_str(value)
-        if isinstance(value, int):
-            return InterpolationMode.from_int(value)
-        error_console.log(
-            f"`value` must be `InterpolationMode`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-        
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in InterpolationMode]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in InterpolationMode]
-
-
-class MemoryUnit(Enum):
-    B  = "B"
-    KB = "KB"
-    MB = "MB"
-    GB = "GB"
-    TB = "TB"
-    PB = "PB"
-
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "b" : MemoryUnit.B,
-            "kb": MemoryUnit.KB,
-            "mb": MemoryUnit.MB,
-            "gb": MemoryUnit.GB,
-            "tb": MemoryUnit.TB,
-            "pb": MemoryUnit.PB,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0: MemoryUnit.B,
-            1: MemoryUnit.KB,
-            2: MemoryUnit.MB,
-            3: MemoryUnit.GB,
-            4: MemoryUnit.TB,
-            5: MemoryUnit.PB,
-        }
-    
-    @staticmethod
-    def byte_conversion_mapping():
-        """
-        It returns a dictionary that maps the MemoryUnit enum to the number of
-        bytes in that unit.
-        
-        Returns:
-            A dictionary with the keys being the MemoryUnit enum and the values
-            being the number of bytes in each unit.
-        """
-        return {
-            MemoryUnit.B : 1024 ** 0,
-            MemoryUnit.KB: 1024 ** 1,
-            MemoryUnit.MB: 1024 ** 2,
-            MemoryUnit.GB: 1024 ** 3,
-            MemoryUnit.TB: 1024 ** 4,
-            MemoryUnit.PB: 1024 ** 5,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> MemoryUnit:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(MemoryUnit.str_mapping, value.lower())
-        return MemoryUnit.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> MemoryUnit:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(MemoryUnit.int_mapping, value)
-        return MemoryUnit.int_mapping()[value]
-    
-    @staticmethod
-    def from_value(value: Any) -> MemoryUnit | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, MemoryUnit):
-            return value
-        if isinstance(value, str):
-            return MemoryUnit.from_str(value)
-        if isinstance(value, int):
-            return MemoryUnit.from_int(value)
-        error_console.log(
-            f"`value` must be `MemoryUnit`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-    
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in MemoryUnit]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in MemoryUnit]
-
-
-class ModelPhase(Enum):
-    TRAINING  = "training"
-    # Produce predictions, calculate losses and metrics, update weights at
-    # the end of each epoch/step.
-    TESTING   = "testing"
-    # Produce predictions, calculate losses and metrics,
-    # DO NOT update weights at the end of each epoch/step.
-    INFERENCE = "inference"
-    # Produce predictions ONLY.
-    
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "training" : ModelPhase.TRAINING,
-            "testing"  : ModelPhase.TESTING,
-            "inference": ModelPhase.INFERENCE,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0: ModelPhase.TRAINING,
-            1: ModelPhase.TESTING,
-            2: ModelPhase.INFERENCE,
-        }
-
-    @staticmethod
-    def from_str(value: str) -> ModelPhase:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(ModelPhase.str_mapping, value.lower())
-        return ModelPhase.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> ModelPhase:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(ModelPhase.int_mapping, value)
-        return ModelPhase.int_mapping()[value]
-
-    @staticmethod
-    def from_value(value: Any) -> ModelPhase | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, ModelPhase):
-            return value
-        if isinstance(value, str):
-            return ModelPhase.from_str(value)
-        if isinstance(value, int):
-            return ModelPhase.from_int(value)
-        error_console.log(
-            f"`value` must be `ModelPhase`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in ModelPhase]
-
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in ModelPhase]
-
-
-class PaddingMode(Enum):
-    CONSTANT      = "constant"
-    # For torch compatibility
-    CIRCULAR      = "circular"
-    REFLECT       = "reflect"
-    REPLICATE     = "replicate"
-    # For numpy compatibility
-    EDGE          = "edge"
-    EMPTY         = "empty"
-    LINEAR_RAMP   = "linear_ramp"
-    MAXIMUM       = "maximum"
-    MEAN          = "mean"
-    MEDIAN        = "median"
-    MINIMUM       = "minimum"
-    SYMMETRIC     = "symmetric"
-    WRAP          = "wrap"
-
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "constant"   : PaddingMode.CONSTANT,
-            "circular"   : PaddingMode.CIRCULAR,
-            "reflect"    : PaddingMode.REFLECT,
-            "replicate"  : PaddingMode.REPLICATE,
-            "edge"       : PaddingMode.EDGE,
-            "empty"      : PaddingMode.EMPTY,
-            "linear_ramp": PaddingMode.LINEAR_RAMP,
-            "maximum"    : PaddingMode.MAXIMUM,
-            "mean"       : PaddingMode.MEAN,
-            "median"     : PaddingMode.MEDIAN,
-            "minimum"    : PaddingMode.MINIMUM,
-            "symmetric"  : PaddingMode.SYMMETRIC,
-            "wrap"       : PaddingMode.WRAP,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0 : PaddingMode.CONSTANT,
-            1 : PaddingMode.CIRCULAR,
-            2 : PaddingMode.REFLECT,
-            3 : PaddingMode.REPLICATE,
-            4 : PaddingMode.EDGE,
-            5 : PaddingMode.EMPTY,
-            6 : PaddingMode.LINEAR_RAMP,
-            7 : PaddingMode.MAXIMUM,
-            8 : PaddingMode.MEAN,
-            9 : PaddingMode.MEDIAN,
-            10: PaddingMode.MINIMUM,
-            11: PaddingMode.SYMMETRIC,
-            12: PaddingMode.WRAP,
-        }
-
-    @staticmethod
-    def from_str(value: str) -> PaddingMode:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(PaddingMode.str_mapping, value)
-        return PaddingMode.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> PaddingMode:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(PaddingMode.int_mapping, value)
-        return PaddingMode.int_mapping()[value]
-
-    @staticmethod
-    def from_value(value: Any) -> PaddingMode | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, PaddingMode):
-            return value
-        if isinstance(value, str):
-            return PaddingMode.from_str(value)
-        if isinstance(value, int):
-            return PaddingMode.from_int(value)
-        error_console.log(
-            f"`value` must be `PaddingMode`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-        
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in PaddingMode]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in PaddingMode]
-
-
-class RGB(OrderedEnum):
-    """
-    Define 138 colors.
-    """
-    MAROON                  = (128, 0  , 0  )
-    DARK_RED                = (139, 0  , 0  )
-    BROWN                   = (165, 42 , 42 )
-    FIREBRICK               = (178, 34 , 34 )
-    CRIMSON                 = (220, 20 , 60 )
-    RED                     = (255, 0  , 0  )
-    TOMATO                  = (255, 99 , 71 )
-    CORAL                   = (255, 127, 80 )
-    INDIAN_RED              = (205, 92 , 92 )
-    LIGHT_CORAL             = (240, 128, 128)
-    DARK_SALMON             = (233, 150, 122)
-    SALMON                  = (250, 128, 114)
-    LIGHT_SALMON            = (255, 160, 122)
-    ORANGE_RED              = (255, 69 , 0  )
-    DARK_ORANGE             = (255, 140, 0  )
-    ORANGE                  = (255, 165, 0  )
-    GOLD                    = (255, 215, 0  )
-    DARK_GOLDEN_ROD         = (184, 134, 11 )
-    GOLDEN_ROD              = (218, 165, 32 )
-    PALE_GOLDEN_ROD         = (238, 232, 170)
-    DARK_KHAKI              = (189, 183, 107)
-    KHAKI                   = (240, 230, 140)
-    OLIVE                   = (128, 128, 0  )
-    YELLOW                  = (255, 255, 0  )
-    YELLOW_GREEN            = (154, 205, 50 )
-    DARK_OLIVE_GREEN        = (85 , 107, 47 )
-    OLIVE_DRAB              = (107, 142, 35 )
-    LAWN_GREEN              = (124, 252, 0  )
-    CHART_REUSE             = (127, 255, 0  )
-    GREEN_YELLOW            = (173, 255, 47 )
-    DARK_GREEN              = (0  , 100, 0  )
-    GREEN                   = (0  , 128, 0  )
-    FOREST_GREEN            = (34 , 139, 34 )
-    LIME                    = (0  , 255, 0  )
-    LIME_GREEN              = (50 , 205, 50 )
-    LIGHT_GREEN             = (144, 238, 144)
-    PALE_GREEN              = (152, 251, 152)
-    DARK_SEA_GREEN          = (143, 188, 143)
-    MEDIUM_SPRING_GREEN     = (0  , 250, 154)
-    SPRING_GREEN            = (0  , 255, 127)
-    SEA_GREEN               = (46 , 139, 87 )
-    MEDIUM_AQUA_MARINE      = (102, 205, 170)
-    MEDIUM_SEA_GREEN        = (60 , 179, 113)
-    LIGHT_SEA_GREEN         = (32 , 178, 170)
-    DARK_SLATE_GRAY         = (47 , 79 , 79 )
-    TEAL                    = (0  , 128, 128)
-    DARK_CYAN               = (0  , 139, 139)
-    AQUA                    = (0  , 255, 255)
-    CYAN                    = (0  , 255, 255)
-    LIGHT_CYAN              = (224, 255, 255)
-    DARK_TURQUOISE          = (0  , 206, 209)
-    TURQUOISE               = (64 , 224, 208)
-    MEDIUM_TURQUOISE        = (72 , 209, 204)
-    PALE_TURQUOISE          = (175, 238, 238)
-    AQUA_MARINE             = (127, 255, 212)
-    POWDER_BLUE             = (176, 224, 230)
-    CADET_BLUE              = (95 , 158, 160)
-    STEEL_BLUE              = (70 , 130, 180)
-    CORN_FLOWER_BLUE        = (100, 149, 237)
-    DEEP_SKY_BLUE           = (0  , 191, 255)
-    DODGER_BLUE             = (30 , 144, 255)
-    LIGHT_BLUE              = (173, 216, 230)
-    SKY_BLUE                = (135, 206, 235)
-    LIGHT_SKY_BLUE          = (135, 206, 250)
-    MIDNIGHT_BLUE           = (25 , 25 , 112)
-    NAVY                    = (0  , 0  , 128)
-    DARK_BLUE               = (0  , 0  , 139)
-    MEDIUM_BLUE             = (0  , 0  , 205)
-    BLUE                    = (0  , 0  , 255)
-    ROYAL_BLUE              = (65 , 105, 225)
-    BLUE_VIOLET             = (138, 43 , 226)
-    INDIGO                  = (75 , 0  , 130)
-    DARK_SLATE_BLUE         = (72 , 61 , 139)
-    SLATE_BLUE              = (106, 90 , 205)
-    MEDIUM_SLATE_BLUE       = (123, 104, 238)
-    MEDIUM_PURPLE           = (147, 112, 219)
-    DARK_MAGENTA            = (139, 0  , 139)
-    DARK_VIOLET             = (148, 0  , 211)
-    DARK_ORCHID             = (153, 50 , 204)
-    MEDIUM_ORCHID           = (186, 85 , 211)
-    PURPLE                  = (128, 0  , 128)
-    THISTLE                 = (216, 191, 216)
-    PLUM                    = (221, 160, 221)
-    VIOLET                  = (238, 130, 238)
-    MAGENTA                 = (255, 0  , 255)
-    ORCHID                  = (218, 112, 214)
-    MEDIUM_VIOLET_RED       = (199, 21 , 133)
-    PALE_VIOLET_RED         = (219, 112, 147)
-    DEEP_PINK               = (255, 20 , 147)
-    HOT_PINK                = (255, 105, 180)
-    LIGHT_PINK              = (255, 182, 193)
-    PINK                    = (255, 192, 203)
-    ANTIQUE_WHITE           = (250, 235, 215)
-    BEIGE                   = (245, 245, 220)
-    BISQUE                  = (255, 228, 196)
-    BLANCHED_ALMOND         = (255, 235, 205)
-    WHEAT                   = (245, 222, 179)
-    CORN_SILK               = (255, 248, 220)
-    LEMON_CHIFFON           = (255, 250, 205)
-    LIGHT_GOLDEN_ROD_YELLOW = (250, 250, 210)
-    LIGHT_YELLOW            = (255, 255, 224)
-    SADDLE_BROWN            = (139, 69 , 19 )
-    SIENNA                  = (160, 82 , 45 )
-    CHOCOLATE               = (210, 105, 30 )
-    PERU                    = (205, 133, 63 )
-    SANDY_BROWN             = (244, 164, 96 )
-    BURLY_WOOD              = (222, 184, 135)
-    TAN                     = (210, 180, 140)
-    ROSY_BROWN              = (188, 143, 143)
-    MOCCASIN                = (255, 228, 181)
-    NAVAJO_WHITE            = (255, 222, 173)
-    PEACH_PUFF              = (255, 218, 185)
-    MISTY_ROSE              = (255, 228, 225)
-    LAVENDER_BLUSH          = (255, 240, 245)
-    LINEN                   = (250, 240, 230)
-    OLD_LACE                = (253, 245, 230)
-    PAPAYA_WHIP             = (255, 239, 213)
-    SEA_SHELL               = (255, 245, 238)
-    MINT_CREAM              = (245, 255, 250)
-    SLATE_GRAY              = (112, 128, 144)
-    LIGHT_SLATE_GRAY        = (119, 136, 153)
-    LIGHT_STEEL_BLUE        = (176, 196, 222)
-    LAVENDER                = (230, 230, 250)
-    FLORAL_WHITE            = (255, 250, 240)
-    ALICE_BLUE              = (240, 248, 255)
-    GHOST_WHITE             = (248, 248, 255)
-    HONEYDEW                = (240, 255, 240)
-    IVORY                   = (255, 255, 240)
-    AZURE                   = (240, 255, 255)
-    SNOW                    = (255, 250, 250)
-    BLACK                   = (0  , 0  , 0  )
-    DIM_GRAY                = (105, 105, 105)
-    GRAY                    = (128, 128, 128)
-    DARK_GRAY               = (169, 169, 169)
-    SILVER                  = (192, 192, 192)
-    LIGHT_GRAY              = (211, 211, 211)
-    GAINSBORO               = (220, 220, 220)
-    WHITE_SMOKE             = (245, 245, 245)
-    WHITE                   = (255, 255, 255)
-    
-    @staticmethod
-    def values() -> list:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in RGB]
-    
-
-class VideoFormat(Enum):
-    AVI  = ".avi"
-    M4V  = ".m4v"
-    MKV  = ".mkv"
-    MOV  = ".mov"
-    MP4  = ".mp4"
-    MPEG = ".mpeg"
-    MPG  = ".mpg"
-    WMV  = ".wmv"
-    
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "avi" : VideoFormat.AVI,
-            "m4v" : VideoFormat.M4V,
-            "mkv" : VideoFormat.MKV,
-            "mov" : VideoFormat.MOV,
-            "mp4" : VideoFormat.MP4,
-            "mpeg": VideoFormat.MPEG,
-            "mpg" : VideoFormat.MPG,
-            "wmv" : VideoFormat.WMV,
-        }
-
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0: VideoFormat.AVI,
-            1: VideoFormat.M4V,
-            2: VideoFormat.MKV,
-            3: VideoFormat.MOV,
-            4: VideoFormat.MP4,
-            5: VideoFormat.MPEG,
-            6: VideoFormat.MPG,
-            7: VideoFormat.WMV,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> VideoFormat:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(VideoFormat.str_mapping, value.lower())
-        return VideoFormat.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> VideoFormat:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(VideoFormat.int_mapping, value)
-        return VideoFormat.int_mapping()[value]
-
-    @staticmethod
-    def from_value(value: Any) -> VideoFormat | None:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, VideoFormat):
-            return value
-        if isinstance(value, str):
-            return VideoFormat.from_str(value)
-        if isinstance(value, int):
-            return VideoFormat.from_int(value)
-        error_console.log(
-            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        return None
-    
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in VideoFormat]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in VideoFormat]
-    
-
-class VisionBackend(Enum):
-    CV      = "cv"
-    FFMPEG  = "ffmpeg"
-    LIBVIPS = "libvips"
-    PIL     = "pil"
-    
-    @staticmethod
-    def str_mapping() -> dict:
-        """
-        It returns a dictionary that maps strings to the corresponding enum.
-        
-        Returns:
-            A dictionary with the keys being the string representation of the
-                enum and the values being the enum itself.
-        """
-        return {
-            "cv"     : VisionBackend.CV,
-            "ffmpeg" : VisionBackend.FFMPEG,
-            "libvips": VisionBackend.LIBVIPS,
-            "pil"    : VisionBackend.PIL,
-        }
-    
-    @staticmethod
-    def int_mapping() -> dict:
-        """
-        It returns a dictionary that maps integers to the enum.
-        
-        Returns:
-            A dictionary with the keys being the integer values and the values
-                being the enum itself.
-        """
-        return {
-            0: VisionBackend.CV,
-            1: VisionBackend.FFMPEG,
-            2: VisionBackend.LIBVIPS,
-            3: VisionBackend.PIL,
-        }
-    
-    @staticmethod
-    def from_str(value: str) -> VisionBackend:
-        """
-        It takes a string and returns an enum.
-        
-        Args:
-            value (str): The string to convert to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(VisionBackend.str_mapping, value.lower())
-        return VisionBackend.str_mapping()[value]
-    
-    @staticmethod
-    def from_int(value: int) -> VisionBackend:
-        """
-        It takes an integer and returns an enum.
-        
-        Args:
-            value (int): The value to be converted to an enum.
-        
-        Returns:
-            The enum.
-        """
-        assert_dict_contain_key(VisionBackend.int_mapping, value)
-        return VisionBackend.int_mapping()[value]
-    
-    @staticmethod
-    def from_value(value: Any) -> VisionBackend:
-        """
-        It converts an arbitrary value to an enum.
-        
-        Args:
-            value (Any): The value to be converted.
-        
-        Returns:
-            The enum.
-        """
-        if isinstance(value, VisionBackend):
-            return value
-        if isinstance(value, int):
-            return VisionBackend.from_int(value)
-        if isinstance(value, str):
-            return VisionBackend.from_str(value)
-        error_console.log(
-            f"`value` must be `VisionBackend`, `dict`, `str`, or `Path`. "
-            f"But got: {type(value)}."
-        )
-        from one.constants import VISION_BACKEND
-        return VISION_BACKEND
-    
-    @staticmethod
-    def keys() -> list:
-        """
-        Return a list of all the keys of the enumeration.
-        
-        Returns:
-            A list of the keys of the enumeration.
-        """
-        return [e for e in VisionBackend]
-    
-    @staticmethod
-    def values() -> list[str]:
-        """
-        Return a list of all the values of the enumeration.
-        
-        Returns:
-            A list of the values of the enumeration.
-        """
-        return [e.value for e in VisionBackend]
-
 
 # H1: - Conversion -------------------------------------------------------------
 

@@ -21,11 +21,11 @@ from one.core import ModelPhase
 from one.core import ModelPhase_
 from one.core import progress_bar
 from one.core import Transforms_
-from one.core import UnlabeledImageDataset
 from one.core import VisionBackend_
-from one.data import ClassLabel_
+from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
+from one.data import UnlabeledImageDataset
 from one.plot import imshow
 from one.vision.transformation import Resize
 
@@ -41,7 +41,6 @@ class DCIM(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -64,7 +63,6 @@ class DCIM(UnlabeledImageDataset):
         root            : str,
         split           : str                = "train",
         shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
@@ -78,7 +76,6 @@ class DCIM(UnlabeledImageDataset):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -112,7 +109,6 @@ class LIME(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -135,7 +131,6 @@ class LIME(UnlabeledImageDataset):
         root            : str,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
@@ -149,7 +144,6 @@ class LIME(UnlabeledImageDataset):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -183,7 +177,6 @@ class LoL226(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -206,7 +199,6 @@ class LoL226(UnlabeledImageDataset):
         root            : str,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
@@ -220,7 +212,6 @@ class LoL226(UnlabeledImageDataset):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -255,7 +246,6 @@ class MEF(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -275,31 +265,29 @@ class MEF(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root: str,
-        split: str = "test",
-        shape: Ints = (3, 720, 1280),
-        class_label: ClassLabel_ | None = None,
-        transform: Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms: Transforms_ | None = None,
-        cache_data: bool = False,
-        cache_images: bool = False,
-        backend: VisionBackend_ = VISION_BACKEND,
-        verbose: bool = True,
+        root            : str,
+        split           : str                 = "test",
+        shape           : Ints                = (3, 720, 1280),
+        transform       : Transforms_ | None  = None,
+        target_transform: Transforms_ | None  = None,
+        transforms      : Transforms_ | None  = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
-            root=root,
-            split=split,
-            shape=shape,
-            class_label=class_label,
-            transform=transform,
-            target_transform=target_transform,
-            transforms=transforms,
-            cache_data=cache_data,
-            cache_images=cache_images,
-            backend=backend,
-            verbose=verbose,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
             *args, **kwargs
         )
     
@@ -326,7 +314,6 @@ class NPE(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -349,7 +336,6 @@ class NPE(UnlabeledImageDataset):
         root            : str,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
@@ -363,7 +349,6 @@ class NPE(UnlabeledImageDataset):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -398,7 +383,6 @@ class VIP(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -421,7 +405,6 @@ class VIP(UnlabeledImageDataset):
         root            : str,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
@@ -435,7 +418,6 @@ class VIP(UnlabeledImageDataset):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -469,7 +451,6 @@ class VV(UnlabeledImageDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -492,7 +473,6 @@ class VV(UnlabeledImageDataset):
         root            : str,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
@@ -506,7 +486,6 @@ class VV(UnlabeledImageDataset):
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -553,7 +532,7 @@ class DCIMDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -561,7 +540,7 @@ class DCIMDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -593,7 +572,7 @@ class DCIMDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -608,17 +587,17 @@ class DCIMDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -645,7 +624,7 @@ class LIMEDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -653,7 +632,7 @@ class LIMEDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -685,7 +664,7 @@ class LIMEDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -700,17 +679,17 @@ class LIMEDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -737,7 +716,7 @@ class LoL226DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -745,7 +724,7 @@ class LoL226DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -777,7 +756,7 @@ class LoL226DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -792,17 +771,17 @@ class LoL226DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -829,7 +808,7 @@ class MEFDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -837,7 +816,7 @@ class MEFDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -869,7 +848,7 @@ class MEFDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -884,17 +863,17 @@ class MEFDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -921,7 +900,7 @@ class NPEDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -929,7 +908,7 @@ class NPEDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -961,7 +940,7 @@ class NPEDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -976,17 +955,17 @@ class NPEDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1013,7 +992,7 @@ class VIPDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1021,7 +1000,7 @@ class VIPDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1053,7 +1032,7 @@ class VIPDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1068,17 +1047,17 @@ class VIPDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1105,7 +1084,7 @@ class VVDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1113,7 +1092,7 @@ class VVDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1145,7 +1124,7 @@ class VVDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1160,17 +1139,17 @@ class VVDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 

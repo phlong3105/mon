@@ -31,7 +31,7 @@ from one.core import ModelPhase_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
-from one.data import ClassLabel_
+from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
@@ -63,7 +63,8 @@ class RESIDEHSTS(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -84,23 +85,23 @@ class RESIDEHSTS(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -167,7 +168,8 @@ class RESIDEITS(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -188,23 +190,23 @@ class RESIDEITS(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -271,7 +273,8 @@ class RESIDEITSv2(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -292,23 +295,23 @@ class RESIDEITSv2(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -376,7 +379,8 @@ class RESIDEOTS(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -397,23 +401,23 @@ class RESIDEOTS(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -480,7 +484,8 @@ class RESIDESOTS(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -501,23 +506,23 @@ class RESIDESOTS(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -584,7 +589,8 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -605,23 +611,23 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -688,7 +694,8 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -709,23 +716,23 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -793,7 +800,7 @@ class RESIDEHSTSDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -801,7 +808,7 @@ class RESIDEHSTSDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -833,7 +840,7 @@ class RESIDEHSTSDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
         
         # Assign test datasets for use in dataloader(s)
@@ -848,17 +855,17 @@ class RESIDEHSTSDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
          
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -885,7 +892,7 @@ class RESIDEITSDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -893,7 +900,7 @@ class RESIDEITSDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -930,7 +937,7 @@ class RESIDEITSDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "class_labels", None)
+            self.class_label = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -945,17 +952,17 @@ class RESIDEITSDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -982,7 +989,7 @@ class RESIDEITSv2DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -990,7 +997,7 @@ class RESIDEITSv2DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1022,17 +1029,17 @@ class RESIDEITSv2DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
          
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1059,7 +1066,7 @@ class RESIDEOTSDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1067,7 +1074,7 @@ class RESIDEOTSDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1099,17 +1106,17 @@ class RESIDEOTSDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
          
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1136,7 +1143,7 @@ class RESIDESOTSDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1144,7 +1151,7 @@ class RESIDESOTSDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1176,7 +1183,7 @@ class RESIDESOTSDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
         
         # Assign test datasets for use in dataloader(s)
@@ -1191,17 +1198,17 @@ class RESIDESOTSDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
          
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1228,7 +1235,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1236,7 +1243,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1268,7 +1275,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
         
         # Assign test datasets for use in dataloader(s)
@@ -1283,17 +1290,17 @@ class RESIDESOTSIndoorDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
          
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1320,7 +1327,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1328,7 +1335,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1360,7 +1367,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
         
         # Assign test datasets for use in dataloader(s)
@@ -1375,17 +1382,17 @@ class RESIDESOTSOutdoorDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
          
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 

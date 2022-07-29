@@ -23,7 +23,7 @@ from one.core import Strs
 from one.core import Tensors
 from one.core import to_3d_tensor_list
 from one.core import to_list
-from one.data import ClassLabel
+from one.data import ClassLabels
 from one.vision.acquisition import to_image
 
 # mpl.use("wxAgg")
@@ -190,7 +190,7 @@ def imshow_cls_plt(
     preds	    : Arrays | None     = None,
     targets	    : Arrays | None     = None,
     labels	    : Strs | None       = None,
-    class_labels: ClassLabel | None = None,
+    class_labels: ClassLabels | None = None,
     top_k	    : int 				= 5,
     scale       : int               = 1,
     save_cfg    : dict | None       = None,

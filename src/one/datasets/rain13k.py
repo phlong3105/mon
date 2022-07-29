@@ -23,7 +23,7 @@ from one.core import ModelPhase_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
-from one.data import ClassLabel_
+from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
@@ -43,7 +43,8 @@ class Rain100(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -64,23 +65,23 @@ class Rain100(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "test",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "test",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -134,7 +135,8 @@ class Rain100H(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -155,23 +157,23 @@ class Rain100H(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -225,7 +227,8 @@ class Rain100L(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -246,23 +249,23 @@ class Rain100L(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -315,7 +318,8 @@ class Rain12(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -336,23 +340,23 @@ class Rain12(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -406,7 +410,8 @@ class Rain1200(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -427,23 +432,23 @@ class Rain1200(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -496,7 +501,8 @@ class Rain13K(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -517,23 +523,23 @@ class Rain13K(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -587,7 +593,8 @@ class Rain1400(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -608,23 +615,23 @@ class Rain1400(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -677,7 +684,8 @@ class Rain2800(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -698,23 +706,23 @@ class Rain2800(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -767,7 +775,8 @@ class Rain800(ImageEnhancementDataset):
         root (str): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
-        class_label (ClassLabel_ | None): ClassLabel object. Defaults to None.
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -788,23 +797,23 @@ class Rain800(ImageEnhancementDataset):
     def __init__(
         self,
         root            : str,
-        split           : str                = "train",
-        shape           : Ints               = (3, 720, 1280),
-        class_label     : ClassLabel_ | None = None,
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        cache_data      : bool               = False,
-        cache_images    : bool               = False,
-        backend         : VisionBackend_     = VISION_BACKEND,
-        verbose         : bool               = True,
+        split           : str                 = "train",
+        shape           : Ints                = (3, 720, 1280),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
         *args, **kwargs
     ):
         super().__init__(
             root             = root,
             split            = split,
             shape            = shape,
-            class_label      = class_label,
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -870,7 +879,7 @@ class Rain100DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -878,7 +887,7 @@ class Rain100DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -910,7 +919,7 @@ class Rain100DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -925,17 +934,17 @@ class Rain100DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -962,7 +971,7 @@ class Rain100LDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -970,7 +979,7 @@ class Rain100LDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1002,7 +1011,7 @@ class Rain100LDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1017,17 +1026,17 @@ class Rain100LDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1054,7 +1063,7 @@ class Rain100HDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1062,7 +1071,7 @@ class Rain100HDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1094,7 +1103,7 @@ class Rain100HDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1109,17 +1118,17 @@ class Rain100HDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1146,7 +1155,7 @@ class Rain12DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1154,7 +1163,7 @@ class Rain12DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1186,7 +1195,7 @@ class Rain12DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1201,17 +1210,17 @@ class Rain12DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1238,7 +1247,7 @@ class Rain1200DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1246,7 +1255,7 @@ class Rain1200DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1283,7 +1292,7 @@ class Rain1200DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "class_labels", None)
+            self.class_label = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1298,17 +1307,17 @@ class Rain1200DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
   
@@ -1335,7 +1344,7 @@ class Rain13KDataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1343,7 +1352,7 @@ class Rain13KDataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1380,7 +1389,7 @@ class Rain13KDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "class_labels", None)
+            self.class_label = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1395,17 +1404,17 @@ class Rain13KDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
   
@@ -1432,7 +1441,7 @@ class Rain1400DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1440,7 +1449,7 @@ class Rain1400DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1472,7 +1481,7 @@ class Rain1400DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1487,17 +1496,17 @@ class Rain1400DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
@@ -1524,7 +1533,7 @@ class Rain2800DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1532,7 +1541,7 @@ class Rain2800DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1564,7 +1573,7 @@ class Rain2800DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "class_labels", None)
+            self.class_label = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1579,17 +1588,17 @@ class Rain2800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
  
@@ -1616,7 +1625,7 @@ class Rain800DataModule(DataModule):
             - Tokenize.
         """
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1624,7 +1633,7 @@ class Rain800DataModule(DataModule):
 
         Todos:
             - Count number of classes.
-            - Build class_labels vocabulary.
+            - Build classlabels vocabulary.
             - Perform train/val/test splits.
             - Apply transforms (defined explicitly in your datamodule or
               assigned in init).
@@ -1661,7 +1670,7 @@ class Rain800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "class_labels", None)
+            self.class_label = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1676,17 +1685,17 @@ class Rain800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "class_labels", None)
+            self.class_label = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
         if self.class_label is None:
-            self.load_class_label()
+            self.load_classlabels()
 
         self.summarize()
         
-    def load_class_label(self):
+    def load_classlabels(self):
         """
-        Load ClassLabel.
+        Load ClassLabels.
         """
         pass
 
