@@ -280,7 +280,7 @@ class SateHaze1KDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -326,7 +326,7 @@ class SateHaze1KDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -341,10 +341,10 @@ class SateHaze1KDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -405,7 +405,7 @@ class SateHaze1KThinDataModule(SateHaze1KDataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -420,10 +420,10 @@ class SateHaze1KThinDataModule(SateHaze1KDataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -478,7 +478,7 @@ class SateHaze1KModerateDataModule(SateHaze1KDataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -493,10 +493,10 @@ class SateHaze1KModerateDataModule(SateHaze1KDataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -551,7 +551,7 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -566,10 +566,10 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -617,8 +617,8 @@ def test_satehaze1k():
     dm  = SateHaze1KDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -667,8 +667,8 @@ def test_satehaze1kmoderate():
     dm  = SateHaze1KModerateDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -717,8 +717,8 @@ def test_satehaze1kthick():
     dm  = SateHaze1KThickDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -767,8 +767,8 @@ def test_satehaze1kthick():
     dm  = SateHaze1KThinDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)

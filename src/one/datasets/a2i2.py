@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-GoPro dataset and datamodule.
+A2I2Haze dataset and datamodule.
 """
 
 from __future__ import annotations
@@ -33,12 +33,10 @@ from one.vision.transformation import Resize
 
 # MARK: - Module ---------------------------------------------------------------
 
-@DATASETS.register(name="gopro")
-class GoPro(ImageEnhancementDataset):
+@DATASETS.register(name="a2i2haze")
+class A2I2Haze(ImageEnhancementDataset):
     """
-    GOPRO_Large dataset is proposed for dynamic scene deblurring. All the sharp
-    images used to generate blurry images. You can generate new blurry images
-    by accumulating differing number of sharp frames.
+    A2I2-Haze dataset for image de-hazing.
     
     Args:
         root (str): Root directory of dataset.
@@ -69,9 +67,9 @@ class GoPro(ImageEnhancementDataset):
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_ | None  = None,
-        target_transform: Transforms_ | None  = None,
-        transforms      : Transforms_ | None  = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
         cache_data      : bool                = False,
         cache_images    : bool                = False,
         backend         : VisionBackend_      = VISION_BACKEND,
@@ -97,18 +95,18 @@ class GoPro(ImageEnhancementDataset):
         """
         List image files.
         """
-        if self.split not in ["train", "test"]:
+        if self.split not in ["train"]:
             console.log(
-                f"GoPro dataset only supports `split`: `train` or `test`. "
+                f"A2I2-Haze dataset only supports `split`: `train`. "
                 f"Get: {self.split}."
             )
             
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / self.split / "haze_images"
             for path in pbar.track(
-                list(pattern.rglob("blur/*.png")),
-                description=f"[bright_yellow]Listing GoPro {self.split} images"
+                list(pattern.rglob("*.jpg")),
+                description=f"[bright_yellow]Listing A2I2-Haze {self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -120,22 +118,22 @@ class GoPro(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing GoPro {self.split} labels"
+                description=f"[bright_yellow]Listing A2I2-Haze {self.split} labels"
             ):
-                path = Path(str(img.path).replace("blur", "sharp"))
+                path = Path(str(img.path).replace("haze_images", "clean_images"))
                 self.labels.append(Image(path=path, backend=self.backend))
-   
+                
 
-@DATAMODULES.register(name="gopro")
-class GoProDataModule(DataModule):
+@DATAMODULES.register(name="a2i2haze")
+class A2I2HazeDataModule(DataModule):
     """
-    GoPro DataModule.
+    A2I2Haze DataModule.
     """
     
     def __init__(
         self,
-        root: str = DATA_DIR / "gopro",
-        name: str = "gopro",
+        root: str = DATA_DIR / "a2i2" / "haze",
+        name: str = "a2i2haze",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -168,12 +166,12 @@ class GoProDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]GoPro[/red] datasets.")
+        console.log(f"Setup [red]A2I2-Haze[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = GoPro(
+            full_dataset = A2I2Haze(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -189,13 +187,13 @@ class GoProDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = GoPro(
+            self.test = A2I2Haze(
                 root             = self.root,
-                split            = "test",
+                split            = "train",
                 shape            = self.shape,
                 transform        = self.transform,
                 target_transform = self.target_transform,
@@ -220,11 +218,11 @@ class GoProDataModule(DataModule):
 
 # MARK: - Test -----------------------------------------------------------------
 
-def test():
+def test_a2i2haze():
     cfg = {
-        "root": DATA_DIR / "gopro",
+        "root": DATA_DIR / "a2i2" / "haze",
            # Root directory of dataset.
-        "name": "gopro",
+        "name": "a2i2haze",
             # Dataset's name.
         "shape": [3, 512, 512],
             # Image shape as [H, W, C], [H, W], or [S, S].
@@ -257,7 +255,7 @@ def test():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = GoProDataModule(**cfg)
+    dm  = A2I2HazeDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.classlabels:
@@ -273,4 +271,4 @@ def test():
 # MARK: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
-    test()
+    test_a2i2haze()

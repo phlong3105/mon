@@ -262,7 +262,7 @@ class RealBlurJDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -303,7 +303,7 @@ class RealBlurJDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -318,10 +318,10 @@ class RealBlurJDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -354,7 +354,7 @@ class RealBlurRDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -395,7 +395,7 @@ class RealBlurRDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -410,10 +410,10 @@ class RealBlurRDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -467,8 +467,8 @@ def test_realblurj():
     dm  = RealBlurJDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -517,8 +517,8 @@ def test_realblurr():
     dm  = RealBlurRDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)

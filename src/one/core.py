@@ -2395,7 +2395,7 @@ def assert_tensor_of_ndim_in_range(input: Any, start: int, end: int):
         raise ValueError(
             f"Require {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
         )
-    
+ 
 
 def assert_torch_saved_file(path: Path_ | None) -> bool:
     if not is_torch_saved_file(path):
@@ -4546,7 +4546,7 @@ class ComposeTransform(nn.Sequential):
         if isinstance(transforms, dict):
             transforms = [v for k, v in transforms.items()]
         if isinstance(transforms, list):
-            from one import TRANSFORMS
+            from one.constants import TRANSFORMS
             transforms = [
                 TRANSFORMS.build_from_dict(cfg=t)
                 if isinstance(t, dict) else t

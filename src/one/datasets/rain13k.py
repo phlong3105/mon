@@ -878,7 +878,7 @@ class Rain100DataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -919,7 +919,7 @@ class Rain100DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -934,10 +934,10 @@ class Rain100DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -970,7 +970,7 @@ class Rain100LDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1011,7 +1011,7 @@ class Rain100LDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1026,10 +1026,10 @@ class Rain100LDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1062,7 +1062,7 @@ class Rain100HDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1103,7 +1103,7 @@ class Rain100HDataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1118,10 +1118,10 @@ class Rain100HDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1154,7 +1154,7 @@ class Rain12DataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1195,7 +1195,7 @@ class Rain12DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1210,10 +1210,10 @@ class Rain12DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1246,7 +1246,7 @@ class Rain1200DataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1292,7 +1292,7 @@ class Rain1200DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1307,10 +1307,10 @@ class Rain1200DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1343,7 +1343,7 @@ class Rain13KDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1389,7 +1389,7 @@ class Rain13KDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1404,10 +1404,10 @@ class Rain13KDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1440,7 +1440,7 @@ class Rain1400DataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1481,7 +1481,7 @@ class Rain1400DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1496,10 +1496,10 @@ class Rain1400DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1532,7 +1532,7 @@ class Rain2800DataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1573,7 +1573,7 @@ class Rain2800DataModule(DataModule):
             self.train, self.val = random_split(
                 full_dataset, [train_size, val_size]
             )
-            self.class_label = getattr(full_dataset, "classlabels", None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1588,10 +1588,10 @@ class Rain2800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1624,7 +1624,7 @@ class Rain800DataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -1670,7 +1670,7 @@ class Rain800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -1685,10 +1685,10 @@ class Rain800DataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -1742,8 +1742,8 @@ def test_rain100():
     dm  = Rain100DataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -1792,8 +1792,8 @@ def test_rain100h():
     dm  = Rain100HDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -1842,8 +1842,8 @@ def test_rain100l():
     dm  = Rain100LDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -1892,8 +1892,8 @@ def test_rain12():
     dm  = Rain12DataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -1942,8 +1942,8 @@ def test_rain1200():
     dm  = Rain1200DataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -1992,8 +1992,8 @@ def test_rain13k():
     dm  = Rain13KDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -2042,8 +2042,8 @@ def test_rain1400():
     dm  = Rain1400DataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -2092,8 +2092,8 @@ def test_rain2800():
     dm  = Rain2800DataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
@@ -2142,8 +2142,8 @@ def test_rain800():
     dm  = Rain800DataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)

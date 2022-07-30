@@ -165,7 +165,7 @@ class DenseHazeDataModule(DataModule):
             - Download.
             - Tokenize.
         """
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
     
     def setup(self, phase: ModelPhase_ | None = None):
@@ -211,7 +211,7 @@ class DenseHazeDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.train, "classlabels", None)
+            self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",   None)
             
         # Assign test datasets for use in dataloader(s)
@@ -226,10 +226,10 @@ class DenseHazeDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.class_label = getattr(self.test, "classlabels", None)
+            self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",   None)
         
-        if self.class_label is None:
+        if self.classlabels is None:
             self.load_classlabels()
 
         self.summarize()
@@ -283,8 +283,8 @@ def test():
     dm  = DenseHazeDataModule(**cfg)
     dm.setup()
     # Visualize labels
-    if dm.class_label:
-        dm.class_label.print()
+    if dm.classlabels:
+        dm.classlabels.print()
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)

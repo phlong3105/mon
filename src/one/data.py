@@ -22,7 +22,6 @@ Taxonomy:
 from __future__ import annotations
 
 import json
-import os
 import pickle
 import uuid
 from abc import ABCMeta
@@ -39,8 +38,6 @@ import torch
 import torch.utils.data as data
 import xmltodict
 import yaml
-from joblib import delayed
-from joblib import Parallel
 from matplotlib import pyplot as plt
 from munch import Munch
 from rich.table import Table
@@ -59,13 +56,9 @@ from one.core import assert_json_file
 from one.core import assert_list
 from one.core import assert_list_of
 from one.core import assert_number_in_range
-from one.core import assert_sequence_of_length
-from one.core import assert_tensor_of_ndim
 from one.core import assert_txt_file
 from one.core import assert_xml_file
-from one.core import BBoxFormat
 from one.core import Callable
-from one.core import Color
 from one.core import ComposeTransform
 from one.core import console
 from one.core import Devices
@@ -76,14 +69,11 @@ from one.core import Ints
 from one.core import is_image_file
 from one.core import is_list_of
 from one.core import is_same_length
-from one.core import is_txt_file
-from one.core import is_xml_file
 from one.core import ModelPhase_
 from one.core import Path_
 from one.core import Paths_
 from one.core import print_table
 from one.core import progress_bar
-from one.core import RGB
 from one.core import to_list
 from one.core import TrainDataLoaders
 from one.core import Transforms_
@@ -104,8 +94,8 @@ class Label(metaclass=ABCMeta):
         for k, v in kwargs.items():
             self.__setattr__(k, v)
     
-    @abstractmethod
     @property
+    @abstractmethod
     def tensor(self):
         """
         Return the label in tensor format.
@@ -1123,9 +1113,10 @@ class Image(Label):
         """
         Return the label in tensor format.
         """
-        if self.image is None:
-            self.load()
-        return self.image
+        if self.keep_in_memory:
+            return self.image
+        else:
+            return self.load()
     
 
 # H2: - Keypoint ---------------------------------------------------------------
@@ -2386,7 +2377,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         verbose         : bool                = True,
         *args, **kwargs
     ):
-        self.labels: list[int] = []
+        self.labels: list[Classifications] = []
         super().__init__(
             root             = root,
             split            = split,
@@ -2417,7 +2408,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             Metadata of image.
         """
         input  = self.images[index].tensor
-        target = self.labels[index]
+        target = self.labels[index].tensor
         meta   = self.images[index].meta
         
         if self.transform is not None:
