@@ -19,6 +19,7 @@ from one.core import console
 from one.core import Ints
 from one.core import ModelPhase
 from one.core import ModelPhase_
+from one.core import Path_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
@@ -59,7 +60,7 @@ class DenseHaze(ImageEnhancementDataset):
     that there is still much room for improvement.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -83,7 +84,7 @@ class DenseHaze(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -152,8 +153,8 @@ class DenseHazeDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "ntire" / "densehaze",
-        name: str = "densehaze",
+        root: Path_ = DATA_DIR / "ntire" / "densehaze",
+        name: str   = "densehaze",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -212,7 +213,7 @@ class DenseHazeDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",   None)
+            self.collate_fn  = getattr(self.train, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -227,7 +228,7 @@ class DenseHazeDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -288,8 +289,8 @@ def test():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
 
 

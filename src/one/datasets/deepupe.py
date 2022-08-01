@@ -20,6 +20,7 @@ from one.core import console
 from one.core import Ints
 from one.core import ModelPhase
 from one.core import ModelPhase_
+from one.core import Path_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
@@ -39,7 +40,7 @@ class DeepUPE(ImageEnhancementDataset):
     DeepUPE dataset.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -63,7 +64,7 @@ class DeepUPE(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "test",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -132,8 +133,8 @@ class DeepUPEDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "deepupe",
-        name: str = "deepupe",
+        root: Path_ = DATA_DIR / "deepupe",
+        name: str   = "deepupe",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -187,7 +188,7 @@ class DeepUPEDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -202,7 +203,7 @@ class DeepUPEDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -263,8 +264,8 @@ def test():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
 
 

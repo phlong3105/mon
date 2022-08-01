@@ -19,6 +19,7 @@ from one.core import Ints
 from one.core import is_image_file
 from one.core import ModelPhase
 from one.core import ModelPhase_
+from one.core import Path_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
@@ -38,7 +39,7 @@ class DCIM(UnlabeledImageDataset):
     DCIM dataset consists of 64 low-light images only.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -60,7 +61,7 @@ class DCIM(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                = "train",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -106,7 +107,7 @@ class LIME(UnlabeledImageDataset):
     LIME dataset consists 10 low-light images only.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -128,7 +129,7 @@ class LIME(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -174,7 +175,7 @@ class LoL226(UnlabeledImageDataset):
     LoL226 dataset consists of 226 low-light images only.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -196,7 +197,7 @@ class LoL226(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -243,7 +244,7 @@ class MEF(UnlabeledImageDataset):
     MEF dataset consists 17 low-light images only.
 
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -265,7 +266,7 @@ class MEF(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "test",
         shape           : Ints                = (3, 720, 1280),
         transform       : Transforms_ | None  = None,
@@ -311,7 +312,7 @@ class NPE(UnlabeledImageDataset):
     NPE dataset consists 85 low-light images only.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -333,7 +334,7 @@ class NPE(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -380,7 +381,7 @@ class VIP(UnlabeledImageDataset):
     VIP dataset consists of 8 low-light images only.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -402,7 +403,7 @@ class VIP(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -448,7 +449,7 @@ class VV(UnlabeledImageDataset):
     VV dataset consists of 24 low-light images only.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -470,7 +471,7 @@ class VV(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -518,8 +519,8 @@ class DCIMDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "dcim",
-        name: str = "dcim",
+        root: Path_ = DATA_DIR / "lol226" / "dcim",
+        name: str   = "dcim",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -573,7 +574,7 @@ class DCIMDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -588,7 +589,7 @@ class DCIMDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -610,8 +611,8 @@ class LIMEDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "lime",
-        name: str = "lime",
+        root: Path_ = DATA_DIR / "lol226" / "lime",
+        name: str   = "lime",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -665,7 +666,7 @@ class LIMEDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -680,7 +681,7 @@ class LIMEDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -702,8 +703,8 @@ class LoL226DataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226",
-        name: str = "lol226",
+        root: Path_ = DATA_DIR / "lol226",
+        name: str   = "lol226",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -757,7 +758,7 @@ class LoL226DataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -772,7 +773,7 @@ class LoL226DataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -794,8 +795,8 @@ class MEFDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "mef",
-        name: str = "mef",
+        root: Path_ = DATA_DIR / "lol226" / "mef",
+        name: str   = "mef",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -849,7 +850,7 @@ class MEFDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -864,7 +865,7 @@ class MEFDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -886,8 +887,8 @@ class NPEDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "npe",
-        name: str = "mef",
+        root: Path_ = DATA_DIR / "lol226" / "npe",
+        name: str   = "mef",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -941,7 +942,7 @@ class NPEDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -956,7 +957,7 @@ class NPEDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -978,8 +979,8 @@ class VIPDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "vip",
-        name: str = "vip",
+        root: Path_ = DATA_DIR / "lol226" / "vip",
+        name: str   = "vip",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1033,7 +1034,7 @@ class VIPDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -1048,7 +1049,7 @@ class VIPDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -1070,8 +1071,8 @@ class VVDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "lol226" / "vv",
-        name: str = "vv",
+        root: Path_ = DATA_DIR / "lol226" / "vv",
+        name: str   = "vv",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1125,7 +1126,7 @@ class VVDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -1140,7 +1141,7 @@ class VVDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()

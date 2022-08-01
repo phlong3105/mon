@@ -28,6 +28,7 @@ from one.core import console
 from one.core import Ints
 from one.core import ModelPhase
 from one.core import ModelPhase_
+from one.core import Path_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
@@ -60,7 +61,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -84,7 +85,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -165,7 +166,7 @@ class RESIDEITS(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -189,7 +190,7 @@ class RESIDEITS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -270,7 +271,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -294,7 +295,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -376,7 +377,7 @@ class RESIDEOTS(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -400,7 +401,7 @@ class RESIDEOTS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -481,7 +482,7 @@ class RESIDESOTS(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -505,7 +506,7 @@ class RESIDESOTS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -586,7 +587,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -610,7 +611,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -691,7 +692,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
     future directions.
     
     Args:
-        root (str): Root directory of dataset.
+        root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
@@ -715,7 +716,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : str,
+        root            : Path_,
         split           : str                 = "train",
         shape           : Ints                = (3, 720, 1280),
         classlabels     : ClassLabels_ | None = None,
@@ -786,8 +787,8 @@ class RESIDEHSTSDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_hsts",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_hsts",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -841,7 +842,7 @@ class RESIDEHSTSDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
         
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -856,7 +857,7 @@ class RESIDEHSTSDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
          
         if self.classlabels is None:
             self.load_classlabels()
@@ -878,8 +879,8 @@ class RESIDEITSDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_its",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_its",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -938,7 +939,7 @@ class RESIDEITSDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",   None)
+            self.collate_fn  = getattr(self.train, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -953,7 +954,7 @@ class RESIDEITSDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.load_classlabels()
@@ -975,8 +976,8 @@ class RESIDEITSv2DataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_its_v2",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_its_v2",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1030,7 +1031,7 @@ class RESIDEITSv2DataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
          
         if self.classlabels is None:
             self.load_classlabels()
@@ -1052,8 +1053,8 @@ class RESIDEOTSDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_ots",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_ots",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1107,7 +1108,7 @@ class RESIDEOTSDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
          
         if self.classlabels is None:
             self.load_classlabels()
@@ -1129,8 +1130,8 @@ class RESIDESOTSDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_sots",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_sots",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1184,7 +1185,7 @@ class RESIDESOTSDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
         
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -1199,7 +1200,7 @@ class RESIDESOTSDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
          
         if self.classlabels is None:
             self.load_classlabels()
@@ -1221,8 +1222,8 @@ class RESIDESOTSIndoorDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_ots_indoor",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_ots_indoor",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1276,7 +1277,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
         
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -1291,7 +1292,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
          
         if self.classlabels is None:
             self.load_classlabels()
@@ -1313,8 +1314,8 @@ class RESIDESOTSOutdoorDataModule(DataModule):
     
     def __init__(
         self,
-        root: str = DATA_DIR / "reside",
-        name: str = "reside_ots_outdoor",
+        root: Path_ = DATA_DIR / "reside",
+        name: str   = "reside_ots_outdoor",
         *args, **kwargs
     ):
         super().__init__(root=root, name=name, *args, **kwargs)
@@ -1368,7 +1369,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
                 full_dataset, [train_size, val_size]
             )
             self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",   None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
         
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
@@ -1383,7 +1384,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
                 **self.dataset_kwargs
             )
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",   None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
          
         if self.classlabels is None:
             self.load_classlabels()
@@ -1444,8 +1445,8 @@ def test_reside_hsts():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
     
    
@@ -1494,8 +1495,8 @@ def test_reside_its():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
 
 
@@ -1544,8 +1545,8 @@ def test_reside_its_v2():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
     
 
@@ -1594,8 +1595,8 @@ def test_reside_ots():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
 
 
@@ -1644,8 +1645,8 @@ def test_reside_sots():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
     
 
@@ -1694,8 +1695,8 @@ def test_reside_sots_indoor():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
     
 
@@ -1744,8 +1745,8 @@ def test_reside_sots_outdoor():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input,  figure_num=0)
-    imshow(winname="target", image=target, figure_num=1)
+    imshow(winname="image",  image=input)
+    imshow(winname="target", image=target)
     plt.show(block=True)
     
     

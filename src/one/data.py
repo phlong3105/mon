@@ -2431,7 +2431,28 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
-
+    
+    @staticmethod
+    def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
+        """
+        Collate function used to fused input items together when using
+        `batch_size > 1`. This is used in the `DataLoader` wrapper.
+        
+        Args:
+            batch: a list of tuples of (input, target, meta).
+        """
+        input, target, meta = zip(*batch)  # Transposed
+        if all(i.ndim == 3 for i in input):
+            input = torch.stack(input,  0)
+        elif all(i.ndim == 4 for i in input):
+            input = torch.cat(input,  0)
+        else:
+            raise ValueError(
+                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+            )
+        target = torch.cat(target, 0)
+        return input, target, meta
+    
 
 class VideoClassificationDataset(LabeledVideoDataset, metaclass=ABCMeta):
     """
@@ -3241,10 +3262,9 @@ def load_from_file(
     path = Path(path)
     if file_format is None:
         file_format = path.suffix
-    assert_dict_contain_key(FILE_HANDLERS, file_format)
 
     handler: BaseFileHandler = FILE_HANDLERS.build(name=file_format)
-    if isinstance(path, str):
+    if isinstance(path, (str, Path)):
         data = handler.load_from_file(path, **kwargs)
     elif hasattr(path, "read"):
         data = handler.load_from_fileobj(path, **kwargs)
@@ -3361,7 +3381,7 @@ class BaseFileHandler(metaclass=ABCMeta):
             self.dump_to_fileobj(obj, f, **kwargs)
 
 
-@FILE_HANDLERS.register(name="json")
+@FILE_HANDLERS.register(name=".json")
 class JsonHandler(BaseFileHandler):
     """
     JSON file handler.
@@ -3398,7 +3418,6 @@ class JsonHandler(BaseFileHandler):
         Returns:
             The return value is a string, dictionary, or None.
         """
-        path = Path(path)
         return json.load(path)
 
     def dump_to_fileobj(self, obj, path: Path_, **kwargs):
@@ -3427,8 +3446,8 @@ class JsonHandler(BaseFileHandler):
         return json.dumps(obj, **kwargs)
 
 
-@FILE_HANDLERS.register(name="pickle")
-@FILE_HANDLERS.register(name="pkl")
+@FILE_HANDLERS.register(name=".pickle")
+@FILE_HANDLERS.register(name=".pkl")
 class PickleHandler(BaseFileHandler):
     """
     Pickle file handler.
@@ -3500,7 +3519,7 @@ class PickleHandler(BaseFileHandler):
         super().dump_to_file(obj, path, mode="wb", **kwargs)
 
 
-@FILE_HANDLERS.register(name="xml")
+@FILE_HANDLERS.register(name=".xml")
 class XmlHandler(BaseFileHandler):
     """
     XML file handler.
@@ -3549,8 +3568,8 @@ class XmlHandler(BaseFileHandler):
         return xmltodict.unparse(obj, pretty=True)
 
 
-@FILE_HANDLERS.register(name="yaml")
-@FILE_HANDLERS.register(name="yml")
+@FILE_HANDLERS.register(name=".yaml")
+@FILE_HANDLERS.register(name=".yml")
 class YamlHandler(BaseFileHandler):
     """
     YAML file handler.
