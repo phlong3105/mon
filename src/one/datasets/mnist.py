@@ -7,11 +7,9 @@ CIFAR datasets and datamodules.
 
 from __future__ import annotations
 
-import pickle
 from pathlib import Path
 from urllib.error import URLError
 
-import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from torch.utils.data import random_split
@@ -41,7 +39,6 @@ from one.data import ImageClassificationDataset
 from one.plot import imshow_cls
 from one.vision.acquisition import to_tensor
 from one.vision.transformation import Resize
-
 
 mnist_classlabels = [
     { "name": "0", "id": 0 },
