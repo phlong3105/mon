@@ -99,7 +99,7 @@ class Snow100K(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -108,7 +108,7 @@ class Snow100K(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -121,7 +121,7 @@ class Snow100K(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("synthetic", "gt"))
@@ -140,7 +140,7 @@ class Snow100KS(Snow100K):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -152,7 +152,7 @@ class Snow100KS(Snow100K):
                 pattern = self.root / self.split / "snow100k_s"
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -165,7 +165,7 @@ class Snow100KS(Snow100K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("synthetic", "gt"))
@@ -184,7 +184,7 @@ class Snow100KM(Snow100K):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -196,7 +196,7 @@ class Snow100KM(Snow100K):
                 pattern = self.root / self.split / "snow100k_m"
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -227,7 +227,7 @@ class Snow100KL(Snow100K):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -239,7 +239,7 @@ class Snow100KL(Snow100K):
                 pattern = self.root / self.split / "snow100k_l"
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -252,7 +252,7 @@ class Snow100KL(Snow100K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("synthetic", "gt"))
@@ -301,7 +301,7 @@ class Snow100KDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100K.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{Snow100K.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -375,7 +375,7 @@ class Snow100KSDataModule(Snow100KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100KS.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{Snow100KS.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -443,7 +443,7 @@ class Snow100KMDataModule(Snow100KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100KM.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{Snow100KM.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -511,7 +511,7 @@ class Snow100KLDataModule(Snow100KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100KL.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{Snow100KL.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

@@ -116,7 +116,7 @@ class OHaze(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -125,7 +125,7 @@ class OHaze(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("hazy/*.jpg")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -138,7 +138,7 @@ class OHaze(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("hazy", "gt"))
@@ -187,7 +187,7 @@ class OHazeDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{OHaze.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{OHaze.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

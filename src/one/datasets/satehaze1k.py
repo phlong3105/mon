@@ -115,7 +115,7 @@ class SateHaze1K(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -125,7 +125,7 @@ class SateHaze1K(ImageEnhancementDataset):
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob(f"{self.split}/input/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -138,7 +138,7 @@ class SateHaze1K(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
@@ -157,7 +157,7 @@ class SateHaze1KThin(SateHaze1K):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -166,7 +166,7 @@ class SateHaze1KThin(SateHaze1K):
             pattern = self.root / "thin" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -179,7 +179,7 @@ class SateHaze1KThin(SateHaze1K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
@@ -198,7 +198,7 @@ class SateHaze1KModerate(SateHaze1K):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -207,7 +207,7 @@ class SateHaze1KModerate(SateHaze1K):
             pattern = self.root / "moderate" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -220,7 +220,7 @@ class SateHaze1KModerate(SateHaze1K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
@@ -239,7 +239,7 @@ class SateHaze1KThick(SateHaze1K):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -248,7 +248,7 @@ class SateHaze1KThick(SateHaze1K):
             pattern = self.root / "thick" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -261,7 +261,7 @@ class SateHaze1KThick(SateHaze1K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
@@ -310,7 +310,7 @@ class SateHaze1KDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SateHaze1K.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1K.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -389,7 +389,7 @@ class SateHaze1KThinDataModule(SateHaze1KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SateHaze1KThin.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1KThin.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -462,7 +462,7 @@ class SateHaze1KModerateDataModule(SateHaze1KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SateHaze1KModerate.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1KModerate.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -535,7 +535,7 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SateHaze1KThick.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1KThick.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

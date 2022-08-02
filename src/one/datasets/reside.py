@@ -119,7 +119,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
         """
         if self.split not in ["test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`test`. Get: {self.split}."
             )
             
@@ -128,7 +128,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
             pattern = self.root / "sots" / "hsts"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -141,7 +141,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 dir  = img.path.parents[1]
@@ -226,7 +226,7 @@ class RESIDEITS(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `val`. Get: {self.split}."
             )
             
@@ -235,7 +235,7 @@ class RESIDEITS(ImageEnhancementDataset):
             pattern = self.root / "its" / self.split
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -248,7 +248,7 @@ class RESIDEITS(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 dir  = img.path.parents[1]
@@ -333,7 +333,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
         """
         if self.split not in ["train"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`. Get: {self.split}."
             )
             
@@ -342,7 +342,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
             pattern = self.root / "its_v2"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 print(path)
@@ -356,7 +356,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 dir  = img.path.parents[1]
@@ -441,7 +441,7 @@ class RESIDEOTS(ImageEnhancementDataset):
         """
         if self.split not in ["train"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train`. Get: {self.split}."
             )
             
@@ -450,7 +450,7 @@ class RESIDEOTS(ImageEnhancementDataset):
             pattern = self.root / "ots"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.jpg")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -463,7 +463,7 @@ class RESIDEOTS(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 dir  = img.path.parents[1]
@@ -548,7 +548,7 @@ class RESIDESOTS(ImageEnhancementDataset):
         """
         if self.split not in ["test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`test`. Get: {self.split}."
             )
             
@@ -557,7 +557,7 @@ class RESIDESOTS(ImageEnhancementDataset):
             pattern = self.root / "sots"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -570,7 +570,7 @@ class RESIDESOTS(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 dir  = img.path.parents[1]
@@ -655,7 +655,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
         """
         if self.split not in ["test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`test`. Get: {self.split}."
             )
             
@@ -664,7 +664,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
             pattern = self.root / "sots" / "indoor"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -677,7 +677,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 dir  = img.path.parents[1]
@@ -762,7 +762,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
         """
         if self.split not in ["test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`test`. Get: {self.split}."
             )
             
@@ -771,7 +771,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
             pattern = self.root / "sots" / "outdoor"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -834,7 +834,7 @@ class RESIDEHSTSDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDEHSTS.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDEHSTS.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders
@@ -926,7 +926,7 @@ class RESIDEITSDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDEITS.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDEITS.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -1023,7 +1023,7 @@ class RESIDEITSv2DataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDEITSv2.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDEITSv2.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -1100,7 +1100,7 @@ class RESIDEOTSDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDEOTS.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDEOTS.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders
@@ -1177,7 +1177,7 @@ class RESIDESOTSDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDESOTS.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDESOTS.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders
@@ -1269,7 +1269,7 @@ class RESIDESOTSIndoorDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDESOTSIndoor.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDESOTSIndoor.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders
@@ -1361,7 +1361,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RESIDESOTSOutdoor.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{RESIDESOTSOutdoor.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders

@@ -99,7 +99,7 @@ class SICE(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -108,7 +108,7 @@ class SICE(ImageEnhancementDataset):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -121,7 +121,7 @@ class SICE(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -141,7 +141,7 @@ class SICE1(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -150,7 +150,7 @@ class SICE1(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*1.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -163,7 +163,7 @@ class SICE1(SICE):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -183,7 +183,7 @@ class SICE2(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -192,7 +192,7 @@ class SICE2(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*2.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -205,7 +205,7 @@ class SICE2(SICE):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -225,7 +225,7 @@ class SICE3(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -234,7 +234,7 @@ class SICE3(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*3.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -247,7 +247,7 @@ class SICE3(SICE):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -267,7 +267,7 @@ class SICE4(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -276,7 +276,7 @@ class SICE4(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*4.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -289,7 +289,7 @@ class SICE4(SICE):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -309,7 +309,7 @@ class SICE5(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -318,7 +318,7 @@ class SICE5(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*5.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -350,7 +350,7 @@ class SICE6(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -359,7 +359,7 @@ class SICE6(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*6.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -372,7 +372,7 @@ class SICE6(SICE):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -392,7 +392,7 @@ class SICE7(SICE):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -401,7 +401,7 @@ class SICE7(SICE):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*7.JPG")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -414,7 +414,7 @@ class SICE7(SICE):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
@@ -482,7 +482,7 @@ class SICEUnsupervised(UnlabeledImageDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"{self.clsname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
 
@@ -491,7 +491,7 @@ class SICEUnsupervised(UnlabeledImageDataset):
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
-                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                description=f"[bright_yellow]Listing {self.clsname} "
                             f"images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -539,7 +539,7 @@ class SICEDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -613,7 +613,7 @@ class SICE1DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE1.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE1.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -681,7 +681,7 @@ class SICE2DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE2.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE2.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -749,7 +749,7 @@ class SICE3DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE3.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE3.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -817,7 +817,7 @@ class SICE4DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE4.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE4.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -885,7 +885,7 @@ class SICE5DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE5.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE5.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -953,7 +953,7 @@ class SICE6DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE6.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE6.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -1021,7 +1021,7 @@ class SICE7DataModule(SICEDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICE7.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICE7.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -1107,7 +1107,7 @@ class SICEUnsupervisedDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SICEUnsupervised.__class__.__name__}[/red] datasets.")
+        console.log(f"Setup [red]{SICEUnsupervised.absclsname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

@@ -100,7 +100,7 @@ def check_requirements(requirements='requirements.txt', exclude=()):
         if not file.exists():
             print(f"{prefix} {file.resolve()} not found, check failed.")
             return
-        requirements = [f'{x.name}{x.specifier}' for x in pkg.parse_requirements(file.open()) if x.name not in exclude]
+        requirements = [f'{x.clsname}{x.specifier}' for x in pkg.parse_requirements(file.open()) if x.clsname not in exclude]
     else:  # list or tuple of packages
         requirements = [x for x in requirements if x not in exclude]
 

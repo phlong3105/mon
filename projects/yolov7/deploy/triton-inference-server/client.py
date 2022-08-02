@@ -147,7 +147,7 @@ if __name__ == '__main__':
         # Model configuration
         try:
             config = triton_client.get_model_config(FLAGS.model)
-            if not (config.config.name == FLAGS.model):
+            if not (config.config.clsname == FLAGS.model):
                 print("FAILED: get_model_config")
                 sys.exit(1)
             print(config)

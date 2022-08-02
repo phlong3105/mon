@@ -124,7 +124,7 @@ class ClassLabels:
             color = color[::-1]
             cv2.putText(
                 img       = legend,
-                text      = label.name,
+                text      = label.clsname,
                 org       = (5, (i * row_height) + 17),
                 fontFace  = cv2.FONT_HERSHEY_SIMPLEX,
                 fontScale = 0.5,

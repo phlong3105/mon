@@ -94,6 +94,27 @@ class Label(metaclass=ABCMeta):
         for k, v in kwargs.items():
             self.__setattr__(k, v)
     
+    @classmethod
+    @property
+    def absclsname(cls) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+        
+        Returns:
+            The class name of the object.
+        """
+        return cls.__name__
+    
+    @property
+    def clsname(self) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+        
+        Returns:
+            The class name of the object.
+        """
+        return type(self).__name__
+    
     @property
     @abstractmethod
     def tensor(self):
@@ -1672,6 +1693,27 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
         """
         return ""
 
+    @classmethod
+    @property
+    def absclsname(cls) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+
+        Returns:
+            The class name of the object.
+        """
+        return cls.__name__
+    
+    @property
+    def clsname(self) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+
+        Returns:
+            The class name of the object.
+        """
+        return type(self).__name__
+    
 
 class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
     """
@@ -1731,7 +1773,28 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         self.test             = None
         self.predict          = None
         self.classlabels      = None
-       
+    
+    @classmethod
+    @property
+    def absclsname(cls) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+
+        Returns:
+            The class name of the object.
+        """
+        return cls.__name__
+    
+    @property
+    def clsname(self) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+
+        Returns:
+            The class name of the object.
+        """
+        return type(self).__name__
+    
     @property
     def devices(self) -> list:
         """
@@ -1742,7 +1805,7 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
     @devices.setter
     def devices(self, devices: Devices):
         self._devices = to_list(devices)
-    
+
     @property
     def num_classes(self) -> int:
         """
@@ -2056,7 +2119,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.split} images"
+                description=f"[red]Caching {self.clsname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2149,7 +2212,8 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 pattern.rglob("*"),
-                description=f"[bright_yellow]Listing {self.split} images"
+                description=f"[bright_yellow]Listing {self.clsname} "
+                            f"{self.split} images"
             ):
                 if is_image_file(path):
                     self.images.append(Image(path=path, backend=self.backend))
@@ -2427,7 +2491,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.split} images"
+                description=f"[red]Caching {self.clsname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2581,7 +2645,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.split} images"
+                description=f"[red]Caching {self.clsname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2789,7 +2853,8 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         self.labels: list[VOCDetections] = []
         with progress_bar() as pbar:
             for f in pbar.track(
-                files, description=f"[red]Listing {self.split} labels"
+                files,
+                description=f"[red]Listing {self.clsname} {self.split} labels"
             ):
                 self.labels.append(
                     VOCDetections.from_file(
@@ -2877,9 +2942,9 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         
         self.labels: list[YOLODetections] = []
         with progress_bar() as pbar:
-            for i, f in pbar.track(
-                enumerate(files),
-                description=f"[red]Listing {self.split} labels"
+            for f in pbar.track(
+                files,
+                description=f"[red]Listing {self.clsname} {self.split} labels"
             ):
                 self.labels.append(YOLODetections.from_file(path=f))
         
@@ -2987,7 +3052,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.split} images"
+                description=f"[red]Caching {self.clsname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2995,7 +3060,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
-                description=f"[red]Caching {self.split} labels"
+                description=f"[red]Caching {self.clsname} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
         console.log(f"Labels have been cached.")
@@ -3128,7 +3193,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.split} images"
+                description=f"[red]Caching {self.clsname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -3136,7 +3201,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
-                description=f"[red]Caching {self.split} labels"
+                description=f"[red]Caching {self.clsname} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
         console.log(f"Labels have been cached.")
