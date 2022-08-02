@@ -1,7 +1,16 @@
-from boundingbox import BoundingBox
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+"""
+
+from __future__ import annotations
 
 import cv2
 import numpy as np
+
+from boundingbox import BoundingBox
+
 
 def preprocess(img, input_shape, letter_box=True):
     if letter_box:
@@ -25,7 +34,17 @@ def preprocess(img, input_shape, letter_box=True):
     img /= 255.0
     return img
 
-def postprocess(num_dets, det_boxes, det_scores, det_classes, img_w, img_h, input_shape, letter_box=True):
+
+def postprocess(
+    num_dets,
+    det_boxes,
+    det_scores,
+    det_classes,
+    img_w,
+    img_h,
+    input_shape,
+    letter_box  = True
+):
     boxes = det_boxes[0, :num_dets[0][0]] / np.array([input_shape[0], input_shape[1], input_shape[0], input_shape[1]], dtype=np.float32)
     scores = det_scores[0, :num_dets[0][0]]
     classes = det_classes[0, :num_dets[0][0]].astype(np.int)

@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from common import Conv
-from ..utils.google_utils import attempt_download
+from one.vision.detection.yolov7.utils.google_utils import attempt_download
 
 
 class CrossConv(nn.Module):

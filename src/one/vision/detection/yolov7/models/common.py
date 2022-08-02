@@ -11,15 +11,15 @@ import torch.nn.functional as F
 from PIL import Image
 from torch.cuda import amp
 
-from ..utils.datasets import letterbox
-from ..utils.general import increment_path
-from ..utils.general import make_divisible
-from ..utils.general import non_max_suppression
-from ..utils.general import scale_coords
-from ..utils.general import xyxy2xywh
-from ..utils.plots import color_list
-from ..utils.plots import plot_one_box
-from ..utils.torch_utils import time_synchronized
+from one.vision.detection.yolov7.utils.datasets import letterbox
+from one.vision.detection.yolov7.utils.general import increment_path
+from one.vision.detection.yolov7.utils.general import make_divisible
+from one.vision.detection.yolov7.utils.general import non_max_suppression
+from one.vision.detection.yolov7.utils.general import scale_coords
+from one.vision.detection.yolov7.utils.general import xyxy2xywh
+from one.vision.detection.yolov7.utils.plots import color_list
+from one.vision.detection.yolov7.utils.plots import plot_one_box
+from one.vision.detection.yolov7.utils.torch_utils import time_synchronized
 
 
 ##### basic ####

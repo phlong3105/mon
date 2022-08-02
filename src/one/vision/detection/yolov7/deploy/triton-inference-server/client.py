@@ -1,16 +1,27 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+"""
+
+from __future__ import annotations
 
 import argparse
-import numpy as np
 import sys
-import cv2
 
+import cv2
+import numpy as np
 import tritonclient.grpc as grpcclient
 from tritonclient.utils import InferenceServerException
 
-from processing import preprocess, postprocess
-from render import render_box, render_filled_box, get_text_size, render_text, RAND_COLORS
 from labels import COCOLabels
+from processing import postprocess
+from processing import preprocess
+from render import get_text_size
+from render import RAND_COLORS
+from render import render_box
+from render import render_filled_box
+from render import render_text
 
 INPUT_NAMES = ["images"]
 OUTPUT_NAMES = ["num_dets", "det_boxes", "det_scores", "det_classes"]

@@ -1,4 +1,13 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+"""
+
+from __future__ import annotations
+
 from enum import Enum
+
 
 class COCOLabels(Enum):
     PERSON = 0

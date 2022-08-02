@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+"""
+
+from __future__ import annotations
+
+
 class BoundingBox:
     def __init__(self, classID, confidence, x1, x2, y1, y2, image_width, image_height):
         self.classID = classID

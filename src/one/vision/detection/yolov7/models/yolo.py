@@ -8,18 +8,18 @@ logger = logging.getLogger(__name__)
 
 from common import *
 from experimental import *
-from ..utils.autoanchor import check_anchor_order
-from ..utils.general import check_file
-from ..utils.general import make_divisible
-from ..utils.general import set_logging
-from ..utils.loss import SigmoidBin
-from ..utils.torch_utils import copy_attr
-from ..utils.torch_utils import fuse_conv_and_bn
-from ..utils.torch_utils import initialize_weights
-from ..utils.torch_utils import model_info
-from ..utils.torch_utils import scale_img
-from ..utils.torch_utils import select_device
-from ..utils.torch_utils import time_synchronized
+from one.vision.detection.yolov7.utils.autoanchor import check_anchor_order
+from one.vision.detection.yolov7.utils.general import check_file
+from one.vision.detection.yolov7.utils.general import make_divisible
+from one.vision.detection.yolov7.utils.general import set_logging
+from one.vision.detection.yolov7.utils.loss import SigmoidBin
+from one.vision.detection.yolov7.utils.torch_utils import copy_attr
+from one.vision.detection.yolov7.utils.torch_utils import fuse_conv_and_bn
+from one.vision.detection.yolov7.utils.torch_utils import initialize_weights
+from one.vision.detection.yolov7.utils.torch_utils import model_info
+from one.vision.detection.yolov7.utils.torch_utils import scale_img
+from one.vision.detection.yolov7.utils.torch_utils import select_device
+from one.vision.detection.yolov7.utils.torch_utils import time_synchronized
 
 try:
     import thop  # for FLOPS computation
