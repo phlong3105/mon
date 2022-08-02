@@ -40,7 +40,7 @@ def generate_train_val(
     train_list = img_list[val_size : ]
     json_data  = load_from_file(open(root / "trainval" / json_file))
     
-    # NOTE: Val set generation
+    # Val set generation
     create_dirs(paths=[val_path])
     for img in val_list:
         shutil.copy(os.path.join(src_path, img), val_path)
@@ -63,7 +63,7 @@ def generate_train_val(
         )
     print("Val labels are successfully generated.")
     
-    # NOTE: Train set generation
+    # Train set generation
     create_dirs(paths=[train_path])
     for img in train_list:
         shutil.copy(os.path.join(src_path, img), train_path)
