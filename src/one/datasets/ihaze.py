@@ -113,8 +113,8 @@ class IHaze(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"I-Haze dataset only supports `split`: `train`, `val`, or "
-                f"`test`. Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -122,7 +122,8 @@ class IHaze(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("hazy/*.jpg")),
-                description=f"[bright_yellow]Listing I-Haze {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -182,7 +183,7 @@ class IHazeDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]I-Haze[/red] datasets.")
+        console.log(f"Setup [red]{IHaze.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

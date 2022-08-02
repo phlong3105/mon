@@ -98,8 +98,8 @@ class CubePP(ImageEnhancementDataset):
         """
         if self.split not in ["train"]:
             console.log(
-                f"CubePP dataset only supports `split`: `train`. "
-                f"Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -107,7 +107,8 @@ class CubePP(ImageEnhancementDataset):
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob("png/*.png")),
-                description=f"[bright_yellow]Listing CubePP {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -119,7 +120,8 @@ class CubePP(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing CubePP {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("png", "jpg"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -189,8 +191,8 @@ class FusionCubePP(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"FusionCubePP dataset only supports `split`: `train` or `test`. "
-                f"Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train` or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -198,7 +200,8 @@ class FusionCubePP(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("png/*.png")),
-                description=f"[bright_yellow]Listing FusionCubePP {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -210,7 +213,8 @@ class FusionCubePP(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing FusionCubePP {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("png", "jpg"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -280,8 +284,8 @@ class SimpleCubePP(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"SimpleCubePP dataset only supports `split`: `train` or `test`. "
-                f"Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train` or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -289,7 +293,8 @@ class SimpleCubePP(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("png/*.png")),
-                description=f"[bright_yellow]Listing SimpleCubePP {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -301,7 +306,8 @@ class SimpleCubePP(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing SimpleCubePP {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("png", "jpg"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -349,7 +355,7 @@ class CubePPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]CubePP[/red] datasets.")
+        console.log(f"Setup [red]{CubePP.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -441,7 +447,7 @@ class FusionCubePPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]FusionCubePP[/red] datasets.")
+        console.log(f"Setup [red]{FusionCubePP.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -533,7 +539,7 @@ class SimpleCubePPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]SimpleCubePP[/red] datasets.")
+        console.log(f"Setup [red]{SimpleCubePP.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

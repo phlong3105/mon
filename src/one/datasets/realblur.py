@@ -109,8 +109,8 @@ class RealBlurJ(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"RealBlur-J dataset only supports `split`: `train` or `test`. "
-                f"Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train` or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -122,7 +122,8 @@ class RealBlurJ(ImageEnhancementDataset):
             lines = open(file, "r").readlines()
             for line in pbar.track(
                 lines,
-                description=f"[bright_yellow]Listing RealBlur-J {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 label_path, image_path = line.rstrip().split(" ")
                 image_path = self.root / image_path
@@ -214,8 +215,8 @@ class RealBlurR(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"RealBlur-R dataset only supports `split`: `train` or `test`. "
-                f"Get: {self.split}."
+                f"{self.__class__.__name__}dataset only supports `split`: "
+                f"`train` or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -227,7 +228,8 @@ class RealBlurR(ImageEnhancementDataset):
             lines = open(file, "r").readlines()
             for line in pbar.track(
                 lines,
-                description=f"[bright_yellow]Listing RealBlur-R {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 label_path, image_path = line.rstrip().split(" ")
                 image_path = self.root / image_path
@@ -284,7 +286,7 @@ class RealBlurJDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]RealBlur-J[/red] datasets.")
+        console.log(f"Setup [red]{RealBlurJ.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -376,7 +378,7 @@ class RealBlurRDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]RealBlur-R[/red] datasets.")
+        console.log(f"Setup [red]{RealBlurR.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

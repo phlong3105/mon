@@ -98,8 +98,8 @@ class DeepUPE(ImageEnhancementDataset):
         """
         if self.split not in ["test"]:
             console.log(
-                f"DeepUPE dataset only supports `split`: `test`. "
-                f"Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -107,7 +107,8 @@ class DeepUPE(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("low/*.jpg")),
-                description=f"[bright_yellow]Listing DeepUPE {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -119,7 +120,8 @@ class DeepUPE(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing DeepUPE {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("low", "expertc_high"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -167,7 +169,7 @@ class DeepUPEDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]DeepUPE[/red] datasets.")
+        console.log(f"Setup [red]{DeepUPE.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

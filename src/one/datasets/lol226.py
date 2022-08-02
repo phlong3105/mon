@@ -96,7 +96,8 @@ class DCIM(UnlabeledImageDataset):
             pattern = self.root / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.jpg")),
-                description=f"[bright_yellow]Listing DCIM images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
             
@@ -164,7 +165,8 @@ class LIME(UnlabeledImageDataset):
             pattern = self.root / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.bmp")),
-                description=f"[bright_yellow]Listing LIME images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
    
@@ -232,7 +234,8 @@ class LoL226(UnlabeledImageDataset):
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob("*")),
-                description=f"[bright_yellow]Listing LoL226 images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 if is_image_file(path):
                     self.images.append(Image(path=path, backend=self.backend))
@@ -301,7 +304,8 @@ class MEF(UnlabeledImageDataset):
             pattern = self.root / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing MEF images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
 
@@ -369,7 +373,8 @@ class NPE(UnlabeledImageDataset):
             pattern = self.root / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
-                description=f"[bright_yellow]Listing NPE images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 if is_image_file(path):
                     self.images.append(Image(path=path, backend=self.backend))
@@ -438,7 +443,8 @@ class VIP(UnlabeledImageDataset):
             pattern = self.root / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing VIP images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
   
@@ -506,7 +512,8 @@ class VV(UnlabeledImageDataset):
             pattern = self.root / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.jpg")),
-                description=f"[bright_yellow]Listing VV images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
   
@@ -553,7 +560,7 @@ class DCIMDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]DCIM[/red] datasets.")
+        console.log(f"Setup [red]{DCIM.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         # Assign train/val datasets for use in dataloaders
@@ -645,7 +652,7 @@ class LIMEDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]LIME[/red] datasets.")
+        console.log(f"Setup [red]{LIME.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -737,7 +744,7 @@ class LoL226DataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]LoL226[/red] datasets.")
+        console.log(f"Setup [red]{LoL226.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -829,7 +836,7 @@ class MEFDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]MEF[/red] datasets.")
+        console.log(f"Setup [red]{MEF.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -921,7 +928,7 @@ class NPEDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]NPE[/red] datasets.")
+        console.log(f"Setup [red]{NPE.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -1013,7 +1020,7 @@ class VIPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]VIP[/red] datasets.")
+        console.log(f"Setup [red]{VIP.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -1105,7 +1112,7 @@ class VVDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]VV[/red] datasets.")
+        console.log(f"Setup [red]{VV.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

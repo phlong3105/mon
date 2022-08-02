@@ -115,8 +115,8 @@ class SateHaze1K(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"SateHaze1K dataset only supports `split`: `train`, `val`, or "
-                f"`test`. Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
             
@@ -125,7 +125,8 @@ class SateHaze1K(ImageEnhancementDataset):
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob(f"{self.split}/input/*.png")),
-                description=f"[bright_yellow]Listing SateHaze1K {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -137,7 +138,8 @@ class SateHaze1K(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing SateHaze1K {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -155,8 +157,8 @@ class SateHaze1KThin(SateHaze1K):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"SateHaze1KThin dataset only supports `split`: `train`, `val`, or "
-                f"`test`. Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -164,7 +166,8 @@ class SateHaze1KThin(SateHaze1K):
             pattern = self.root / "thin" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
-                description=f"[bright_yellow]Listing SateHaze1KThin {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -176,7 +179,8 @@ class SateHaze1KThin(SateHaze1K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing SateHaze1KThin {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -194,8 +198,8 @@ class SateHaze1KModerate(SateHaze1K):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"SateHaze1KModerate dataset only supports `split`: `train`, `val`, or "
-                f"`test`. Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -203,7 +207,8 @@ class SateHaze1KModerate(SateHaze1K):
             pattern = self.root / "moderate" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
-                description=f"[bright_yellow]Listing SateHaze1KModerate {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -215,7 +220,8 @@ class SateHaze1KModerate(SateHaze1K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing SateHaze1KModerate {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -233,8 +239,8 @@ class SateHaze1KThick(SateHaze1K):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"SateHaze1KThick dataset only supports `split`: `train`, `val`, or "
-                f"`test`. Get: {self.split}."
+                f"{self.__class__.__name__} dataset only supports `split`: "
+                f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
@@ -242,7 +248,8 @@ class SateHaze1KThick(SateHaze1K):
             pattern = self.root / "thick" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
-                description=f"[bright_yellow]Listing SateHaze1KThick {self.split} images"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
     
@@ -254,7 +261,8 @@ class SateHaze1KThick(SateHaze1K):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing SateHaze1KThick {self.split} labels"
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("input", "target"))
                 self.labels.append(Image(path=path, backend=self.backend))
@@ -302,7 +310,7 @@ class SateHaze1KDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]SateHaze1K[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1K.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -381,7 +389,7 @@ class SateHaze1KThinDataModule(SateHaze1KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]SateHaze1KThin[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1KThin.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -454,7 +462,7 @@ class SateHaze1KModerateDataModule(SateHaze1KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]SateHaze1KModerate[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1KModerate.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -527,7 +535,7 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]SateHaze1KThick[/red] datasets.")
+        console.log(f"Setup [red]{SateHaze1KThick.__class__.__name__}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
