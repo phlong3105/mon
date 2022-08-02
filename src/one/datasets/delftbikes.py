@@ -36,8 +36,8 @@ def generate_train_val(
     train_path = root / "train"    / "images"
     val_path   = root / "val"      / "images"
     img_list   = os.listdir(src_path)
-    val_list   = img_list[: val_size]
-    train_list = img_list[val_size : ]
+    val_list   = img_list[:val_size]
+    train_list = img_list[val_size:]
     json_data  = load_from_file(open(root / "trainval" / json_file))
     
     # Val set generation
@@ -132,6 +132,10 @@ def generate_yolo_labels(root: Path_, json_file: Path_):
                     b = b.numpy()
                     f.write(f"{ids[i]} {b[0]} {b[1]} {b[2]} {b[3]} {confs[i]}\n")
         
+
+# H1: - Test -------------------------------------------------------------------
+
+
 
 # H1: - Main -------------------------------------------------------------------
 
