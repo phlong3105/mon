@@ -66,7 +66,7 @@ class LoL(ImageEnhancementDataset):
         self,
         root            : Path_,
         split           : str                 = "train",
-        shape           : Ints                = (3, 720, 1280),
+        shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
         transform       : Transforms_  | None = None,
         target_transform: Transforms_  | None = None,

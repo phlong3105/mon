@@ -34,7 +34,7 @@ RUN pip install --upgrade -e .
 # WORKDIR /projects/ug2
 # RUN pip install --upgrade -e .
 
-# WORKDIR /projects/vipriors
+# WORKDIR /projects/vipriors22
 # RUN pip install --upgrade -e .
 
 # NOTE: Back to root directory

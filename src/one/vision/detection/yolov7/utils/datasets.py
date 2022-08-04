@@ -1,4 +1,11 @@
-# Dataset utils and dataloaders
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Dataset utils and dataloaders
+"""
+
+from __future__ import annotations
 
 import glob
 import logging
@@ -35,14 +42,14 @@ from torch_utils import torch_distributed_zero_first
 # from pycocotools import mask as maskUtils
 
 # Parameters
-help_url = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
-img_formats = ['bmp', 'jpg', 'jpeg', 'png', 'tif', 'tiff', 'dng', 'webp', 'mpo']  # acceptable image suffixes
-vid_formats = ['mov', 'avi', 'mp4', 'mpg', 'mpeg', 'm4v', 'wmv', 'mkv']  # acceptable video suffixes
+help_url    = "https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data"
+img_formats = ["bmp", "jpg", "jpeg", "png", "tif", "tiff", "dng", "webp", "mpo"]  # acceptable image suffixes
+vid_formats = ["mov", "avi", "mp4", "mpg", "mpeg", "m4v", "wmv", "mkv"]  # acceptable video suffixes
 logger = logging.getLogger(__name__)
 
 # Get orientation exif tag
 for orientation in ExifTags.TAGS.keys():
-    if ExifTags.TAGS[orientation] == 'Orientation':
+    if ExifTags.TAGS[orientation] == "Orientation":
         break
 
 
@@ -497,7 +504,7 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                             l = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)), 1)  # (cls, xywh)
                         l = np.array(l, dtype=np.float32)
                     if len(l):
-                        assert l.shape[1] == 5, 'labels require 5 columns each'
+                        assert l.shape[1] >= 5, 'labels require >=5 columns each'
                         assert (l >= 0).all(), 'negative labels'
                         assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
                         assert np.unique(l, axis=0).shape[0] == l.shape[0], 'duplicate labels'
@@ -1218,6 +1225,7 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
                     image[ymin:ymin+r_h, xmin:xmin+r_w] = temp_crop
 
     return labels
+
 
 class Albumentations:
     # YOLOv5 Albumentations class (optional, only used if package is installed)

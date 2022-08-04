@@ -20,13 +20,15 @@ from one.core import VisionBackend
 
 # H1: - Directory --------------------------------------------------------------
 
-__current_file   = Path(__file__).absolute()        # "workspaces/one/src/one/constants.py"
-SOURCE_ROOT_DIR  = __current_file.parents[0]        # "workspaces/one/src/one"
-CONTENT_ROOT_DIR = __current_file.parents[2]        # "workspaces/one"
-PRETRAINED_DIR   = CONTENT_ROOT_DIR / "pretrained"  # "workspaces/one/pretrained"
-DATA_DIR         = os.getenv("DATA_DIR", None)      # In case we have set value in os.environ
+__current_file   = Path(__file__).absolute()         # "workspaces/one/src/one/constants.py"
+SOURCE_ROOT_DIR  = __current_file.parents[0]         # "workspaces/one/src/one"
+CONTENT_ROOT_DIR = __current_file.parents[2]         # "workspaces/one"
+PRETRAINED_DIR   = CONTENT_ROOT_DIR / "pretrained"   # "workspaces/one/pretrained"
+DATA_DIR         = os.getenv("DATA_DIR", None)       # In case we have set value in os.environ
 if DATA_DIR is None:
     DATA_DIR = Path("/data")                        # Run from Docker container
+else:
+    DATA_DIR = Path(DATA_DIR)
 if not DATA_DIR.is_dir():
     DATA_DIR = CONTENT_ROOT_DIR / "data"            # Run from `one` package
 if not DATA_DIR.is_dir():

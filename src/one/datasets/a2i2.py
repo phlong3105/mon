@@ -66,7 +66,7 @@ class A2I2Haze(ImageEnhancementDataset):
         self,
         root            : Path_,
         split           : str                 = "train",
-        shape           : Ints                = (3, 720, 1280),
+        shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
         transform       : Transforms_  | None = None,
         target_transform: Transforms_  | None = None,
@@ -125,7 +125,7 @@ class A2I2Haze(ImageEnhancementDataset):
             ):
                 path = Path(str(img.path).replace("haze_images", "clean_images"))
                 self.labels.append(Image(path=path, backend=self.backend))
-                
+
 
 @DATAMODULES.register(name="a2i2haze")
 class A2I2HazeDataModule(DataModule):

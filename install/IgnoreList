@@ -50,8 +50,7 @@ lost+found
 #recycle
 .!@#$recycle
 DfsrPrivate
-/datasets
+
 /data
-\datasets
 \data
 pycharm.env

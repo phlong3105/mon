@@ -271,7 +271,7 @@ class MEF(UnlabeledImageDataset):
         self,
         root            : Path_,
         split           : str                 = "test",
-        shape           : Ints                = (3, 720, 1280),
+        shape           : Ints                = (3, 512, 512),
         transform       : Transforms_ | None  = None,
         target_transform: Transforms_ | None  = None,
         transforms      : Transforms_ | None  = None,

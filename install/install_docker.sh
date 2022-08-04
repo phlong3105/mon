@@ -24,7 +24,7 @@ case "$OSTYPE" in
   linux*)
     echo "Linux / WSL"
     # Create `base` env
-    env_yml_path="${current_dir}/environment_docker.yml"
+    env_yml_path="${current_dir}/environment.yml"
     conda install python=3.9
     if { conda env list | grep 'base'; } >/dev/null 2>&1; then
       echo "Update 'base' environment:"
@@ -41,7 +41,7 @@ case "$OSTYPE" in
   darwin*)
     echo "MacOS"
     # Create `base` env
-    env_yml_path="${current_dir}/environment_macos.yml"
+    env_yml_path="${current_dir}/environment_mac.yml"
     if { conda env list | grep 'base'; } >/dev/null 2>&1; then
       echo "Update 'base' environment:"
       conda env update --name base -f "${env_yml_path}"
@@ -56,6 +56,20 @@ case "$OSTYPE" in
     ;;
   win*)
     echo "Windows"
+    # Create `one` env
+    env_yml_path="${current_dir}/environment.yml"
+    if { conda env list | grep 'one'; } >/dev/null 2>&1; then
+      echo "Update 'one' environment:"
+      conda env update --name one -f "${env_yml_path}"
+    else
+      echo "Create 'one' environment:"
+      conda env create -f "${env_yml_path}"
+    fi
+    eval "$(conda shell.bash hook)"
+    conda activate one
+    pip install --upgrade pip
+    # Remove `cv2/plugin` folder:
+    rm -rf $CONDA_PREFIX/lib/python3.9/site-packes/cv2/plugin
     ;;
   msys*)
     echo "MSYS / MinGW / Git Bash"

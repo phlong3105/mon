@@ -1,0 +1,92 @@
+# - Add conda-forge channel
+#   conda config --append channels conda-forge
+#
+# - Install:
+#   conda env create -f environment.yml
+# 
+# - Install cudatoolkit separately:
+#   conda install cudatoolkit=11.3
+#
+# - Install PyTorch separately:
+#   conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch -c conda-forge
+#
+# - Update:
+#   conda env update --name one --file environment.yml
+#
+# - Update all pip packages:
+#   pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
+#
+
+name: one
+
+channels:
+  - pytorch
+  - defaults
+  - conda-forge
+
+dependencies:
+  # Base Python
+  - cython
+  - filterpy
+  - git
+  - git-lfs
+  - librsvg
+  - libiconv
+  - libprotobuf
+  - markdown
+  - multipledispatch
+  - munch
+  - mypy
+  - ninja
+  - numpy
+  - pandas
+  - python=3.9
+  - pyupgrade
+  - pyqt
+  - pyyaml
+  - requests
+  - rich
+  - scipy
+  - scikit-learn
+  - sortedcontainers
+  - tqdm
+  - validators
+  - xmltodict
+
+  # CUDA
+  - cudatoolkit=11.3
+  # - cudatoolkit-dev=11.3
+  - cudnn
+  - pynvml
+
+  # Image
+  - ffmpeg-python
+  - pillow
+
+  # PyTorch
+  - pytorch
+  - torchvision
+  - torchaudio
+  - pretrainedmodels
+  - pycocotools
+  - pytorch-lightning
+  - pytorch-model-summary
+  - timm
+  - torchmetrics
+
+  # Plot
+  - matplotlib
+  - pydot
+  - seaborn
+  - tensorboard
+  - wandb
+
+  # Pip
+  - pip
+  - pip:
+      - label-studio
+      - opencv-python
+      - opencv-contrib-python
+      - mediapipe
+      - ptflops
+      - thop

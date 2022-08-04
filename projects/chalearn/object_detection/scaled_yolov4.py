@@ -526,7 +526,7 @@ def run_test(args: Namespace):
         new_args = vars(args) | pre_args
         args     = Namespace(**new_args)
     test.main(args)
-    
+
 
 def run_detect(args: Namespace):
     if args.pre_cfg in detect_test_configs:

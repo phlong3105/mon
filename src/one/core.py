@@ -59,7 +59,6 @@ import torch
 import validators
 from multipledispatch import dispatch
 from munch import Munch
-from ordered_enum import OrderedEnum
 from PIL import Image
 from pynvml import nvmlDeviceGetHandleByIndex
 from pynvml import nvmlDeviceGetMemoryInfo
@@ -99,7 +98,7 @@ except ImportError:
 
 # H1: - Enum -------------------------------------------------------------------
 
-class AppleRGB(OrderedEnum):
+class AppleRGB(Enum):
     """
     Define 12 Apple colors.
     """
@@ -158,7 +157,7 @@ class AppleRGB(OrderedEnum):
         return [e.value for e in cls]
 
 
-class BasicRGB(OrderedEnum):
+class BasicRGB(Enum):
     """
     Define 12 basic colors.
     """
@@ -1215,7 +1214,7 @@ class PaddingMode(Enum):
         return [e.value for e in cls]
 
 
-class RGB(OrderedEnum):
+class RGB(Enum):
     """
     Define 138 colors.
     """

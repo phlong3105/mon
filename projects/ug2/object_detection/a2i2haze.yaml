@@ -1,9 +1,0 @@
-# train and val datasets (image directory or *.txt file with image paths)
-# train: ../../../../../datasets/a2i2haze/extra/a2i2haze/trainvaldehaze/images
-train: a2i2haze/extra/a2i2haze/trainvaldehaze/images
-val  : a2i2haze/extra/a2i2haze/dryrun/images
-test : a2i2haze/extra/a2i2haze/dryrun/images
-
-# number of classes
-nc   : 1
-names: ["vehicle"]

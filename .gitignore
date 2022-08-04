@@ -16,5 +16,4 @@ __pycache__/
 /data/
 /pretrained/
 /third_party/
-/note/.sync/
-/projects/yolov7/runs/
+/projects/vipriors22/yolov7/runs

@@ -11,19 +11,17 @@ import argparse
 import json
 import os
 import shutil
-from abc import abstractmethod
 from pathlib import Path
 
 import torch
-from matplotlib import pyplot as plt
 
 from one.constants import DATA_DIR
 from one.constants import DATAMODULES
+from one.constants import DATASETS
 from one.constants import VISION_BACKEND
 from one.core import console
 from one.core import create_dirs
 from one.core import Ints
-from one.core import is_same_length
 from one.core import ModelPhase
 from one.core import ModelPhase_
 from one.core import Path_
@@ -31,19 +29,17 @@ from one.core import Paths_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
+from one.data import ClassLabels
 from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import load_from_file
 from one.data import YOLODetectionDataset
-from one.data import YOLODetections
-from one.plot import imshow
 from one.vision.shape import box_xyxy_to_cxcywh_norm
+from one.vision.transformation import Resize
 
 
 # H1: - Functional -------------------------------------------------------------
-from one.vision.transformation import Resize
-
 
 def generate_train_val(
     root       : Path_,
@@ -159,6 +155,33 @@ def generate_yolo_labels(
 
 # H1: - Module -----------------------------------------------------------------
 
+classlabels = [
+    {"id": 0 , "supercategory": "bike", "name": "back_hand_break", "color": [  0,   0,   0]},
+    {"id": 1 , "supercategory": "bike", "name": "back_handle"    , "color": [ 81, 120, 228]},
+    {"id": 2 , "supercategory": "bike", "name": "back_light"     , "color": [138, 183,  33]},
+    {"id": 3 , "supercategory": "bike", "name": "back_mudguard"  , "color": [ 49,   3, 150]},
+    {"id": 4 , "supercategory": "bike", "name": "back_pedal"     , "color": [122,  35,   2]},
+    {"id": 5 , "supercategory": "bike", "name": "back_reflector" , "color": [165, 168, 193]},
+    {"id": 6 , "supercategory": "bike", "name": "back_wheel"     , "color": [140,  24, 143]},
+    {"id": 7 , "supercategory": "bike", "name": "bell"           , "color": [179, 165, 212]},
+    {"id": 8 , "supercategory": "bike", "name": "chain"          , "color": [ 72, 153, 152]},
+    {"id": 9 , "supercategory": "bike", "name": "dress_guard"    , "color": [ 19,  64,  83]},
+    {"id": 10, "supercategory": "bike", "name": "dynamo"         , "color": [122,  40,  57]},
+    {"id": 11, "supercategory": "bike", "name": "front_handbreak", "color": [219,  42, 205]},
+    {"id": 12, "supercategory": "bike", "name": "front_handle"   , "color": [ 15,  90, 125]},
+    {"id": 13, "supercategory": "bike", "name": "front_light"    , "color": [187,  80,  10]},
+    {"id": 14, "supercategory": "bike", "name": "front_mudguard" , "color": [ 76, 226, 142]},
+    {"id": 15, "supercategory": "bike", "name": "front_pedal"    , "color": [ 24,  56,  34]},
+    {"id": 16, "supercategory": "bike", "name": "front_wheel"    , "color": [ 41, 174, 251]},
+    {"id": 17, "supercategory": "bike", "name": "gear_case"      , "color": [ 21,   8, 251]},
+    {"id": 18, "supercategory": "bike", "name": "kickstand"      , "color": [106, 128, 177]},
+    {"id": 19, "supercategory": "bike", "name": "lock"           , "color": [147,  90, 131]},
+    {"id": 20, "supercategory": "bike", "name": "saddle"         , "color": [ 65, 159, 189]},
+    {"id": 21, "supercategory": "bike", "name": "steer"          , "color": [129,  70,  30]},
+]
+
+
+@DATASETS.register(name="delftbikes_yolo")
 class DelftBikesYOLO(YOLODetectionDataset):
     """
     
@@ -348,7 +371,7 @@ class DelftBikesYOLODataModule(DataModule):
         """
         Load ClassLabels.
         """
-        pass
+        self.classlabels = ClassLabels(classlabels)
 
 
 # H1: - Test -------------------------------------------------------------------

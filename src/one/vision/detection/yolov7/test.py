@@ -33,28 +33,30 @@ from utils.torch_utils import time_synchronized
 from utils.torch_utils import TracedModel
 
 
-def test(data,
-         weights=None,
-         batch_size=32,
-         imgsz=640,
-         conf_thres=0.001,
-         iou_thres=0.6,  # for NMS
-         save_json=False,
-         single_cls=False,
-         augment=False,
-         verbose=False,
-         model=None,
-         dataloader=None,
-         save_dir=Path(''),  # for saving images
-         save_txt=False,  # for auto-labelling
-         save_hybrid=False,  # for hybrid auto-labelling
-         save_conf=False,  # save auto-label confidences
-         plots=True,
-         wandb_logger=None,
-         compute_loss=None,
-         half_precision=True,
-         trace=False,
-         is_coco=False):
+def test(
+    data,
+    weights        = None,
+    batch_size     = 32,
+    imgsz          = 640,
+    conf_thres     = 0.001,
+    iou_thres      = 0.6,       # for NMS
+    save_json      = False,     
+    single_cls     = False,     
+    augment        = False,     
+    verbose        = False,     
+    model          = None,      
+    dataloader     = None,      
+    save_dir       = Path(""),  # for saving images
+    save_txt       = False   ,  # for auto-labelling
+    save_hybrid    = False   ,  # for hybrid auto-labelling
+    save_conf      = False   ,  # save auto-label confidences
+    plots          = True,
+    wandb_logger   = None,
+    compute_loss   = None,
+    half_precision = True,
+    trace          = False,
+    is_coco        = False
+):
     # Initialize/load model and set device
     training = model is not None
     if training:  # called by train.py
@@ -298,7 +300,7 @@ def test(data,
     return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='test.py')
     parser.add_argument('--weights', nargs='+', type=str, default='yolov7.pt', help='model.pt path(s)')
     parser.add_argument('--data', type=str, default='data/coco.yaml', help='*.data path')

@@ -34,7 +34,7 @@ from one.core import upcast
 """
 
 
-# MARK: - CXCYAR ---------------------------------------------------------------
+# H1: - CXCYAR -----------------------------------------------------------------
 
 def box_cxcyar_to_cxcyrh(box: Tensor) -> Tensor:
     """
@@ -168,7 +168,7 @@ def box_cxcyar_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
     
 
-# MARK: - CXCYRH ---------------------------------------------------------------
+# H1: - CXCYRH -----------------------------------------------------------------
 
 def box_cxcyrh_to_cxcyar(box: Tensor) -> Tensor:
     """
@@ -299,7 +299,7 @@ def box_cxcyrh_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
    
 
-# MARK: - CXCYWH ---------------------------------------------------------------
+# H1: - CXCYWH -----------------------------------------------------------------
 
 def box_cxcywh_to_cxcyar(box: Tensor) -> Tensor:
     """
@@ -426,7 +426,7 @@ def box_cxcywh_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
     
 
-# MARK: - CXCYWH Norm ----------------------------------------------------------
+# H1: - CXCYWH Norm ------------------------------------------------------------
 
 def box_cxcywh_norm_to_cxcyar(box: Tensor, height: int, width: int) -> Tensor:
     """
@@ -583,7 +583,7 @@ def box_cxcywh_norm_to_xyxy(box: Tensor, height: int, width: int) -> Tensor:
     return torch.stack((x1, y1, x2, y2), -1)
 
 
-# MARK: - XYWH -----------------------------------------------------------------
+# H1: - XYWH -------------------------------------------------------------------
 
 def box_xywh_to_cxcyar(box: Tensor) -> Tensor:
     """
@@ -713,7 +713,7 @@ def box_xywh_to_xyxy(box: Tensor) -> Tensor:
     return torch.stack((x, y, x2, y2), -1)
    
 
-# MARK: - XYXY -----------------------------------------------------------------
+# H1: - XYXY -------------------------------------------------------------------
 
 def box_xyxy_to_cxcyar(box: Tensor) -> Tensor:
     """
