@@ -98,7 +98,7 @@ class CubePP(ImageEnhancementDataset):
         """
         if self.split not in ["train"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train`. Get: {self.split}."
             )
             
@@ -107,7 +107,7 @@ class CubePP(ImageEnhancementDataset):
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob("png/*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -120,7 +120,7 @@ class CubePP(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("png", "jpg"))
@@ -191,7 +191,7 @@ class FusionCubePP(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -200,7 +200,7 @@ class FusionCubePP(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("png/*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -213,7 +213,7 @@ class FusionCubePP(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("png", "jpg"))
@@ -284,7 +284,7 @@ class SimpleCubePP(ImageEnhancementDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
             
@@ -293,7 +293,7 @@ class SimpleCubePP(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("png/*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -306,7 +306,7 @@ class SimpleCubePP(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
                 path = Path(str(img.path).replace("png", "jpg"))
@@ -355,7 +355,7 @@ class CubePPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{CubePP.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{CubePP.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -447,7 +447,7 @@ class FusionCubePPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{FusionCubePP.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{FusionCubePP.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -539,7 +539,7 @@ class SimpleCubePPDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{SimpleCubePP.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{SimpleCubePP.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

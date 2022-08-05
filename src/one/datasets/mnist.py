@@ -151,7 +151,7 @@ class MNIST(ImageClassificationDataset):
         """
         if self.split not in ["train", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
         
@@ -183,7 +183,7 @@ class MNIST(ImageClassificationDataset):
         pass
     
     def _check_legacy_exist(self):
-        processed_folder = self.root / self.clsname / "processed"
+        processed_folder = self.root / self.__class__.classname / "processed"
         if not processed_folder.exists():
             return False
 
@@ -210,7 +210,7 @@ class MNIST(ImageClassificationDataset):
         if self._check_exists():
             return
 
-        raw_folder = self.root / self.clsname / "raw"
+        raw_folder = self.root / self.__class__.classname / "raw"
         create_dirs([raw_folder])
 
         # Download files

@@ -102,7 +102,7 @@ class REDS(ImageEnhancementDataset):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -111,7 +111,7 @@ class REDS(ImageEnhancementDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -124,7 +124,7 @@ class REDS(ImageEnhancementDataset):
         with progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
                 if "blur" in str(img.path):
@@ -147,7 +147,7 @@ class REDSBlur(REDS):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -156,7 +156,7 @@ class REDSBlur(REDS):
             pattern = self.root / self.split / "blur"
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -171,7 +171,7 @@ class REDSBlurCompress(REDS):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -180,7 +180,7 @@ class REDSBlurCompress(REDS):
             pattern = self.root / self.split / "blur_comp"
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -195,7 +195,7 @@ class REDSLowRes(REDS):
         """
         if self.split not in ["train", "val", "test"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
@@ -204,7 +204,7 @@ class REDSLowRes(REDS):
             pattern = self.root / self.split / "blur_bicubic" / "x4"
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -249,7 +249,7 @@ class REDSDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{REDS.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{REDS.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -333,7 +333,7 @@ class REDSBlurDataModule(REDSDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{REDSBlur.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{REDSBlur.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -411,7 +411,7 @@ class REDSBlurCompressDataModule(REDSDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{REDSBlurCompress.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{REDSBlurCompress.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -489,7 +489,7 @@ class REDSLowResDataModule(REDSDataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{REDSLowRes.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{REDSLowRes.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders

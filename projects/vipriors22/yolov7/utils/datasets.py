@@ -18,6 +18,13 @@ import torch
 import torch.nn.functional as F
 from PIL import Image, ExifTags
 from torch.utils.data import Dataset
+from torchvision.transforms import ColorJitter
+from torchvision.transforms import RandomAdjustSharpness
+from torchvision.transforms import RandomAutocontrast
+from torchvision.transforms import RandomEqualize
+from torchvision.transforms import RandomInvert
+from torchvision.transforms import RandomPosterize
+from torchvision.transforms import RandomSolarize
 from tqdm import tqdm
 
 import pickle
@@ -364,6 +371,35 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         self.path = path        
         #self.albumentations = Albumentations() if augment else None
 
+        self.color_jitter = None
+        if "brightness" in hyp and "contrast" in hyp and \
+            "saturation" in hyp and "hue" in hyp:
+            self.color_jitter = ColorJitter(
+                brightness=hyp['brightness'],
+                contrast=hyp['contrast'],
+                saturation=hyp['saturation'],
+                hue=hyp['hue']
+                )
+
+        self.random_invert = None
+        if "invert" in hyp and hyp["invert"] is True:
+            self.random_invert = RandomInvert()
+        
+        if "posterize" in hyp:
+            self.random_posterize = RandomPosterize(hyp["posterize"])
+        
+        if "solarize" in hyp:
+            self.random_solarize = RandomSolarize(hyp["solarize"])
+        
+        if "sharpness" in hyp:
+            self.random_adjust_sharpness = RandomAdjustSharpness(hyp["sharpness"])
+        
+        if "autocontrast" in hyp and hyp["autocontrast"] is True:
+            self.random_autocontrast = RandomAutocontrast()
+        
+        if "equalize" in hyp and hyp["equalize"] is True:
+            self.random_equalize = RandomEqualize()
+            
         try:
             f = []  # image files
             for p in path if isinstance(path, list) else [path]:
@@ -626,8 +662,38 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         # Convert
         img = img[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
         img = np.ascontiguousarray(img)
-
-        return torch.from_numpy(img), labels_out, self.img_files[index], shapes
+        img = torch.from_numpy(img)
+        
+        if self.augment:
+            # Color Jitter
+            if self.color_jitter is not None:
+                img = self.color_jitter(img)
+    
+            # Random Invert
+            if self.random_invert is not None:
+                img = self.random_invert(img)
+    
+            # Random Posterize
+            if self.random_posterize is not None:
+                img = self.random_posterize(img)
+    
+            # Random Solerize
+            if self.random_solarize is not None:
+                img = self.random_solarize(img)
+    
+            # Random Adjust Sharpness
+            if self.random_adjust_sharpness is not None:
+                img = self.random_adjust_sharpness(img)
+    
+            # Random Autocontrast
+            if self.random_autocontrast is not None:
+                img = self.random_autocontrast(img)
+    
+            # Random Equalize
+            if self.random_equalize is not None:
+                img = self.random_equalize(img)
+        
+        return img, labels_out, self.img_files[index], shapes
 
     @staticmethod
     def collate_fn(batch):

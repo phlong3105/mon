@@ -96,7 +96,7 @@ class Label(metaclass=ABCMeta):
     
     @classmethod
     @property
-    def absclsname(cls) -> str:
+    def classname(cls) -> str:
         """
         Returns the name of the class of the object passed to it.
         
@@ -104,16 +104,6 @@ class Label(metaclass=ABCMeta):
             The class name of the object.
         """
         return cls.__name__
-    
-    @property
-    def clsname(self) -> str:
-        """
-        Returns the name of the class of the object passed to it.
-        
-        Returns:
-            The class name of the object.
-        """
-        return type(self).__name__
     
     @property
     @abstractmethod
@@ -182,6 +172,22 @@ class ClassLabels(Label):
         self.classlabels = classlabels
 
     @classmethod
+    def from_list(cls, l: list[dict]) -> ClassLabels:
+        """
+        It takes a list of dictionary and returns a ClassLabels object.
+        
+        Args:
+            l (list[dict]): List of dictionary.
+        
+        Returns:
+            A ClassLabels object.
+        """
+        assert_list(l)
+        if is_list_of(l, item_type=dict):
+            l = [ClassLabel(**c) for c in l]
+        return cls(classlabels=l)
+    
+    @classmethod
     def from_dict(cls, d: dict) -> ClassLabels:
         """
         It takes a dictionary and returns a ClassLabels object.
@@ -193,11 +199,7 @@ class ClassLabels(Label):
             A ClassLabels object.
         """
         assert_dict_contain_key(d, "classlabels")
-        classlabels = d["classlabels"]
-        assert_list(classlabels)
-        if is_list_of(classlabels, item_type=dict):
-            classlabels = [ClassLabel(**c) for c in classlabels]
-        return cls(classlabels=classlabels)
+        return cls.from_list(d["classlabels"])
         
     @classmethod
     def from_file(cls, path: Path_) -> ClassLabels:
@@ -228,6 +230,8 @@ class ClassLabels(Label):
             return value
         if isinstance(value, (dict, Munch)):
             return cls.from_dict(value)
+        if isinstance(value, list):
+            return cls.from_list(value)
         if isinstance(value, (str, Path)):
             return cls.from_file(value)
         error_console.log(
@@ -529,7 +533,7 @@ class ClassLabels(Label):
             console.log("[yellow]No class is available.")
             return
         
-        console.log("[red]Classlabel:")
+        console.log("Classlabel:")
         print_table(self.classes)
 
 
@@ -1695,7 +1699,7 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
 
     @classmethod
     @property
-    def absclsname(cls) -> str:
+    def classname(cls) -> str:
         """
         Returns the name of the class of the object passed to it.
 
@@ -1703,16 +1707,6 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             The class name of the object.
         """
         return cls.__name__
-    
-    @property
-    def clsname(self) -> str:
-        """
-        Returns the name of the class of the object passed to it.
-
-        Returns:
-            The class name of the object.
-        """
-        return type(self).__name__
     
 
 class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
@@ -2119,7 +2113,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.clsname} {self.split} images"
+                description=f"Caching {self.__class__.classname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2212,7 +2206,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 pattern.rglob("*"),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"[bright_yellow]Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 if is_image_file(path):
@@ -2379,6 +2373,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             "labels": self.labels,
         }
         torch.save(cache, str(path))
+        console.log(f"Cache data to: {path}")
     
     @abstractmethod
     def cache_images(self):
@@ -2491,7 +2486,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.clsname} {self.split} images"
+                description=f"Caching {self.__class__.classname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2645,7 +2640,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.clsname} {self.split} images"
+                description=f"Caching {self.__class__.classname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -2854,7 +2849,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         with progress_bar() as pbar:
             for f in pbar.track(
                 files,
-                description=f"[red]Listing {self.clsname} {self.split} labels"
+                description=f"Listing {self.__class__.classname} {self.split} labels"
             ):
                 self.labels.append(
                     VOCDetections.from_file(
@@ -2944,7 +2939,7 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         with progress_bar() as pbar:
             for f in pbar.track(
                 files,
-                description=f"[red]Listing {self.clsname} {self.split} labels"
+                description=f"Listing {self.__class__.classname} {self.split} labels"
             ):
                 self.labels.append(YOLODetections.from_file(path=f))
         
@@ -3052,7 +3047,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.clsname} {self.split} images"
+                description=f"Caching {self.__class__.classname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -3060,7 +3055,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
-                description=f"[red]Caching {self.clsname} {self.split} labels"
+                description=f"Caching {self.__class__.classname} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
         console.log(f"Labels have been cached.")
@@ -3193,7 +3188,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"[red]Caching {self.clsname} {self.split} images"
+                description=f"Caching {self.__class__.classname} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
@@ -3201,7 +3196,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         with download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
-                description=f"[red]Caching {self.clsname} {self.split} labels"
+                description=f"Caching {self.__class__.classname} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
         console.log(f"Labels have been cached.")

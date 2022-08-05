@@ -3404,7 +3404,7 @@ def select_device(
                 s = " " * len(s)
             console.log(
                 "%sdevice%g _CudaDeviceProperties(name='%s', total_memory=%dMB)" %
-                  (s, i, x[i].clsname, x[i].total_memory / bytes_to_mb)
+                  (s, i, x[i].name, x[i].total_memory / bytes_to_mb)
             )
     else:
         console.log("Using CPU")
@@ -3468,7 +3468,7 @@ def select_device_old(
         
         for i, d in enumerate(device.split(",") if device else range(n)):
             p = torch.cuda.get_device_properties(i)
-            s += f"{'' if i == 0 else space}CUDA:{d} ({p.clsname}, {p.total_memory / 1024 ** 2}MB)\n"  # bytes to MB
+            s += f"{'' if i == 0 else space}CUDA:{d} ({p.name}, {p.total_memory / 1024 ** 2}MB)\n"  # bytes to MB
     else:
         s += "CPU\n"
     
@@ -3688,7 +3688,7 @@ class Factory(Registry):
         assert_dict_contain_key(self.registry, name)
         instance = self.registry[name](*args, **kwargs)
         if not hasattr(instance, "name"):
-            instance.clsname = name
+            instance.classname = name
         return instance
     
     def build_from_dict(self, cfg: dict | None, **kwargs) -> object | None:

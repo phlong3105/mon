@@ -14,41 +14,62 @@ pip install seaborn thop
 cd /yolov7
 
 
-python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
-    --weights 'runs/train/yolov7-e6e-delftbikes-1536/weights/last.pt' \
+python -m torch.distributed.launch --nproc_per_node 1 --master_port 9527 train_aux.py \
+    --weights '' \
+    --cfg cfg/training/yolov7-w6.yaml \
+    --data data/delftbikes.yaml \
+    --hyp data/hyp.scratch.delftbikes.yaml \
+    --epochs 200 \
+    --batch-size 8 \
+    --img 1280 1280 \
+    --device 0 \
+    --sync-bn \
+    --workers 8 \
+    --name yolov7-w6-delftbikes-1280 \
+    --exist-ok
+
+
+python -m torch.distributed.launch --nproc_per_node 1 --master_port 9527 train_aux.py \
+    --weights '' \
     --cfg cfg/training/yolov7-e6e.yaml \
     --data data/delftbikes.yaml \
-    --hyp data/hyp.scratch.p6.yaml \
-    --epochs 100 \
+    --hyp data/hyp.scratch.delftbikes.yaml \
+    --epochs 200 \
+    --batch-size 2 \
+    --img 1280 1280 \
+    --device 0 \
+    --sync-bn \
+    --workers 8 \
+    --name yolov7-e6e-delftbikes-1280-03 \
+    --exist-ok
+
+
+python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
+    --weights '' \
+    --cfg cfg/training/yolov7-e6e.yaml \
+    --data data/delftbikes.yaml \
+    --hyp data/hyp.scratch.delftbikes.yaml \
+    --epochs 200 \
     --batch-size 4 \
     --img 1536 1536 \
     --device 0,1 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-e6e-delftbikes-1536-02 \
-    --exist-ok
-
-
-python -m torch.distributed.launch --nproc_per_node 1 --master_port 9527 train_aux.py \
-    --weights 'runs/train/yolov7-e6e-delftbikes-1280/weights/last.pt' \
-    --cfg cfg/training/yolov7-e6e.yaml \
-    --data data/delftbikes.yaml \
-    --hyp data/hyp.scratch.p6.yaml \
-    --epochs 100 \
-    --batch-size 4 \
-    --img 1280 1280 \
-    --device 0 \
-    --sync-bn \
-    --workers 8 \
-    --name yolov7-e6e-delftbikes-1280-02 \
+    --name yolov7-e6e-delftbikes-1536-03 \
     --exist-ok
 
 
 python detect.py  \
-    --weights 'runs/train/yolov7-e6e-delftbikes-1536/weights/best.pt' \
+    --weights \
+      'runs/train/yolov7-e6e-delftbikes-1536-02/weights/best.pt' \
+      'runs/train/yolov7-e6e-delftbikes-1280-02/weights/best.pt' \
     --source /coco/delftbikes/test/images \
-    --img-size 1280 \
-    --conf-thres 0.01 \
+    --img-size 2160 \
+    --conf-thres 0.05 \
+    --iou-thres 0.5 \
+    --device 0 \
     --save-txt \
     --save-conf \
+    --augment \
     --name yolov7-e6e-delftbikes-1536 \
+    --no-trace

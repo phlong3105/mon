@@ -11,7 +11,10 @@ import argparse
 import json
 import os
 import shutil
+import time
 from pathlib import Path
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 import torch
 
@@ -244,7 +247,7 @@ class DelftBikesYOLO(YOLODetectionDataset):
         """
         if self.split not in ["train", "val"]:
             console.log(
-                f"{self.clsname} dataset only supports `split`: "
+                f"{self.__class__.classname} dataset only supports `split`: "
                 f"`train` or `test`. Get: {self.split}."
             )
         
@@ -253,7 +256,7 @@ class DelftBikesYOLO(YOLODetectionDataset):
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("images/*.jpg")),
-                description=f"[bright_yellow]Listing {self.clsname} "
+                description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
@@ -319,7 +322,7 @@ class DelftBikesYOLODataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{DelftBikesYOLO.absclsname}[/red] datasets.")
+        console.log(f"Setup [red]{DelftBikesYOLO.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
@@ -371,7 +374,7 @@ class DelftBikesYOLODataModule(DataModule):
         """
         Load ClassLabels.
         """
-        self.classlabels = ClassLabels(classlabels)
+        self.classlabels = ClassLabels.from_value(classlabels)
 
 
 # H1: - Test -------------------------------------------------------------------
@@ -419,10 +422,14 @@ def test_delftbikes_yolo():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
+    
     data_iter           = iter(dm.train_dataloader)
+    start = time.time()
     input, target, meta = next(data_iter)
-    print(target)
-    print(target[0].shape)
+    end = time.time()
+    console.log(end - start)
+    # print(target)
+    # print(target[0].shape)
     # imshow(winname="image", image=input)
     # plt.show(block=True)
 

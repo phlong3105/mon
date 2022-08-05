@@ -38,20 +38,26 @@ def generate_submission(args: dict | Munch | argparse.Namespace):
             range(len(file_list)),
             description=f"[bright_yellow]Processing files"
         ):
-            path     = file_list[i]
-            image_id = str(path.name).replace(".txt", ".jpg")
-            lines    = open(path, "r").read().splitlines()
+            path  = file_list[i]
+            lines = open(path, "r").read().splitlines()
+            data  = []
             for l in lines:
                 d = l.split(" ")
-                output_data.append(
+                data.append(
                     {
                         "image_id"   : i,
                         "category_id": int(d[0]) + 1,
-                        "bbox"       : [float(d[1]), float(d[2]), float(d[3]) - float(d[1]), float(d[4]) - float(d[2])],
+                        "bbox"       : [float(d[1]),
+                                        float(d[2]),
+                                        float(d[3]) - float(d[1]),
+                                        float(d[4]) - float(d[2])],
                         "score"      : float(d[5])
                     }
                 )
-    
+            data = sorted(data, key=lambda x: x["score"], reverse=True)
+
+            output_data.extend(data)
+            
     with open(output_file, "w") as f:
         json.dump(output_data, f)
     
@@ -60,7 +66,7 @@ def generate_submission(args: dict | Munch | argparse.Namespace):
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source",      default=CURRENT_DIR/"runs"/"detect"/"yolov7-e6e-delftbikes-1280", type=str, help="Directory containing YOLO results .txt")
+    parser.add_argument("--source",      default=CURRENT_DIR/"runs"/"detect"/"yolov7-e6e-delftbikes-15363", type=str, help="Directory containing YOLO results .txt")
     parser.add_argument("--output-file", default=CURRENT_DIR/"runs"/"detect"/"submission.json",            type=str, help="Submission .json file")
     args   = parser.parse_args()
     return args
