@@ -15,10 +15,16 @@
       <excludeFolder url="file://$MODULE_DIR$/docs/.sync" />
       <excludeFolder url="file://$MODULE_DIR$/docs/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/src/one/data1/datasets" />
+      <excludeFolder url="file://$MODULE_DIR$/src/one/nn_old" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.9 (one)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="phlong3105.github.io" />
+  </component>
+  <component name="PackageRequirementsSettings">
+    <option name="versionSpecifier" value="Don't specify version" />
+    <option name="removeUnused" value="true" />
+    <option name="modifyBaseFiles" value="true" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="GOOGLE" />

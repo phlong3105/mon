@@ -267,7 +267,7 @@ def imshow(
     for idx, img in enumerate(image):
         i   = int(idx / nrow)
         j   = int(idx % nrow)
-        img = to_image(image=img, keep_dims=False, denormalize=denormalize)
+        img = to_image(image=img, keepdim=False, denormalize=denormalize)
         axs[i, j].imshow(np.asarray(img))
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         if label is not None:
@@ -400,7 +400,7 @@ def imshow_cls(
             ax.tick_params(axis="x", direction="in", pad=-10)
             ax.tick_params(axis="y", direction="in", pad=-10)
         # Image
-        img = to_image(image=img, keep_dims=False, denormalize=denormalize)
+        img = to_image(image=img, keepdim=False, denormalize=denormalize)
         axs[0].imshow(np.asarray(img), aspect="auto")
         # Classlabels
         pps = axs[1].barh(y_pos, scores, align="center", color="deepskyblue")

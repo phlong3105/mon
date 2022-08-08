@@ -385,18 +385,23 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         if "invert" in hyp and hyp["invert"] is True:
             self.random_invert = RandomInvert()
         
+        self.random_posterize = None
         if "posterize" in hyp:
             self.random_posterize = RandomPosterize(hyp["posterize"])
         
+        self.random_solarize = None
         if "solarize" in hyp:
             self.random_solarize = RandomSolarize(hyp["solarize"])
         
+        self.random_adjust_sharpness = None
         if "sharpness" in hyp:
             self.random_adjust_sharpness = RandomAdjustSharpness(hyp["sharpness"])
         
+        self.random_autocontrast = None
         if "autocontrast" in hyp and hyp["autocontrast"] is True:
             self.random_autocontrast = RandomAutocontrast()
         
+        self.random_equalize = None
         if "equalize" in hyp and hyp["equalize"] is True:
             self.random_equalize = RandomEqualize()
             

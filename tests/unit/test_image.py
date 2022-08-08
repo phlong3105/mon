@@ -23,7 +23,7 @@ def test_video_loader_ffmpeg():
     video_loader = VideoLoaderFFmpeg(data="data/demo.mp4")
     for images, indexes, files, rel_paths in video_loader:
         for img in images:
-            img = to_image(image=img, keep_dims=False, denormalize=True)
+            img = to_image(image=img, keepdim=False, denormalize=True)
             cv2.imshow("Image", img)
             if cv2.waitKey(1) == 27:
                 video_loader.close()
@@ -45,7 +45,7 @@ def test_video_writer_ffmpeg():
     for images, indexes, files, rel_paths in video_loader:
         for img in images:
             video_writer.write(img)
-            img = to_image(image=img, keep_dims=False, denormalize=True)
+            img = to_image(image=img, keepdim=False, denormalize=True)
             cv2.imshow("Image", img)
             if cv2.waitKey(1) == 27:
                 video_loader.close()

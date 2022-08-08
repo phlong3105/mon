@@ -1,0 +1,38 @@
+# COCO 2017 dataset http://cocodataset.org
+
+# download command/URL (optional)
+# download: bash ./scripts/get_coco.sh
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: /coco/delftbikes/kfold/set2/train
+val  : /coco/delftbikes/kfold/set2/val
+test : /coco/delftbikes/test
+
+# number of classes
+nc: 22
+
+# class names
+names : [
+"back_hand_break",
+"back_handle",
+"back_light",
+"back_mudguard",
+"back_pedal",
+"back_reflector",
+"back_wheel",
+"bell",
+"chain",
+"dress_guard",
+"dynamo",
+"front_handbreak",
+"front_handle",
+"front_light",
+"front_mudguard",
+"front_pedal",
+"front_wheel",
+"gear_case",
+"kickstand",
+"lock",
+"saddle",
+"steer",
+]

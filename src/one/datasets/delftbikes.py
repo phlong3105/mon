@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import random
 import shutil
 import time
 from pathlib import Path
@@ -154,6 +155,38 @@ def generate_yolo_labels(
                 for i, b in enumerate(boxes):
                     b = b.numpy()
                     f.write(f"{ids[i]} {b[0]} {b[1]} {b[2]} {b[3]} {confs[i]}\n")
+
+
+def split_4subsets(root: Path_, *args, **kwargs ):
+    """
+    Split the original train-val set into 4-fold subsets of 6000 train and
+    2000 val.
+    """
+    root         = Path(root)
+    trainval_dir = root / "trainval"
+    kfold_dir    = root / "kfold"
+    subsets      = ["set1", "set2", "set3", "set4"]
+    
+    images = sorted(list(trainval_dir.rglob("images/*.jpg")))
+    labels = sorted(list(trainval_dir.rglob("yolo_labels/*.txt")))
+    data   = [[i, l] for i, l in zip(images, labels)]
+    random.shuffle(data)
+    data_kfold = [
+        data[0:2000],
+        data[2000:4000],
+        data[4000:6000],
+        data[6000:8000]
+    ]
+    
+    with progress_bar() as pbar:
+        for i in pbar.track(range(4), description=f"Splitting subsets"):
+            new_images_dir = kfold_dir / subsets[i] / "images"
+            new_labels_dir = kfold_dir / subsets[i] / "yolo_labels"
+            create_dirs([new_images_dir, new_labels_dir])
+            for data in data_kfold[i]:
+                shutil.copy2(data[0], new_images_dir)
+                shutil.copy2(data[1], new_labels_dir)
+                
 
 
 # H1: - Module -----------------------------------------------------------------
@@ -438,11 +471,11 @@ def test_delftbikes_yolo():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task"       , type = str , default = "test_delftbikes_yolo"  , help = "The task to run")
-    parser.add_argument("--root"       , type = str , default = DATA_DIR / "delftbikes" , help = "Root of the dataset")
-    parser.add_argument("--json-file"  , type = str , default = "train_annotations.json", help = "JSON file")
-    parser.add_argument("--val_size"   , type = int , default = 1000                    , help = "Size of the validation set to split")
-    parser.add_argument("--yolo_labels", type = bool, default = True                    , help = "Generate YOLO label when splitting train-val set")
+    parser.add_argument("--task"       , type=str , default="split_4subsets"        , help="The task to run")
+    parser.add_argument("--root"       , type=str , default=DATA_DIR / "delftbikes" , help="Root of the dataset")
+    parser.add_argument("--json-file"  , type=str , default="train_annotations.json", help="JSON file")
+    parser.add_argument("--val_size"   , type=int , default=1000                    , help="Size of the validation set to split")
+    parser.add_argument("--yolo_labels", type=bool, default=True                    , help="Generate YOLO label when splitting train-val set")
     args = parser.parse_args()
     return args
 
@@ -453,5 +486,7 @@ if __name__ == "__main__":
         generate_train_val(**args.__dict__)
     elif args.task == "generate_yolo_labels":
         generate_yolo_labels(**args.__dict__)
+    elif args.task == "split_4subsets":
+        split_4subsets(**args.__dict__)
     elif args.task == "test_delftbikes_yolo":
         test_delftbikes_yolo()

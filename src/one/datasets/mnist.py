@@ -165,7 +165,7 @@ class MNIST(ImageClassificationDataset):
         
         self.images: list[Image] = [
             Image(
-                image          = to_tensor(img, keep_dims=False, normalize=True),
+                image          = to_tensor(img, keepdim=False, normalize=True),
                 keep_in_memory = True
             )
             for img in data

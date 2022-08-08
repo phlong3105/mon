@@ -14,50 +14,41 @@ pip install seaborn thop
 cd /yolov7
 
 
+# H1: - LP-LabDesktop01-Ubuntu -------------------------------------------------
+
 python -m torch.distributed.launch --nproc_per_node 1 --master_port 9527 train_aux.py \
     --weights '' \
     --cfg cfg/training/yolov7-w6.yaml \
-    --data data/delftbikes.yaml \
+    --data data/delftbikes2.yaml \
     --hyp data/hyp.scratch.delftbikes.yaml \
-    --epochs 200 \
+    --epochs 50 \
     --batch-size 8 \
     --img 1280 1280 \
     --device 0 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-w6-delftbikes-1280 \
+    --name yolov7-w6-delftbikes-1280-02 \
     --exist-ok
 
 
-python -m torch.distributed.launch --nproc_per_node 1 --master_port 9527 train_aux.py \
-    --weights '' \
-    --cfg cfg/training/yolov7-e6e.yaml \
-    --data data/delftbikes.yaml \
-    --hyp data/hyp.scratch.delftbikes.yaml \
-    --epochs 200 \
-    --batch-size 2 \
-    --img 1280 1280 \
-    --device 0 \
-    --sync-bn \
-    --workers 8 \
-    --name yolov7-e6e-delftbikes-1280-03 \
-    --exist-ok
-
+# H1: - VSW-WS02 ---------------------------------------------------------------
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
     --weights '' \
     --cfg cfg/training/yolov7-e6e.yaml \
-    --data data/delftbikes.yaml \
+    --data data/delftbikes2.yaml \
     --hyp data/hyp.scratch.delftbikes.yaml \
-    --epochs 200 \
-    --batch-size 4 \
-    --img 1536 1536 \
+    --epochs 50 \
+    --batch-size 8 \
+    --img 1280 1280 \
     --device 0,1 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-e6e-delftbikes-1536-03 \
+    --name yolov7-e6e-delftbikes-1280-02 \
     --exist-ok
 
+
+# H1: - Detect -----------------------------------------------------------------
 
 python detect.py  \
     --weights \

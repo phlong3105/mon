@@ -136,7 +136,7 @@ def is_channel_last(image: Tensor) -> bool:
 # MARK: - Conversion -----------------------------------------------------------
 
 def to_channel_first(
-    image: Tensor, keep_dims: bool = True, inplace: bool = False
+    image: Tensor, keepdim: bool = True, inplace: bool = False
 ) -> Tensor:
     """
     It takes a tensor of any shape and returns a tensor of the same shape,
@@ -144,7 +144,7 @@ def to_channel_first(
     
     Args:
         image (Tensor): The image to convert.
-        keep_dims (bool): If True, the dimension will be kept. Defaults to True.
+        keepdim (bool): If True, the dimension will be kept. Defaults to True.
         inplace (bool): If True, the operation will be done in-place.
             Defaults to False.
     
@@ -162,15 +162,15 @@ def to_channel_first(
         image     = image.permute(2, 0, 1)
     elif image.ndim == 4:
         image     = image.permute(0, 3, 1, 2)
-        keep_dims = True
+        keepdim = True
     elif image.ndim == 5:
         image     = image.permute(0, 1, 4, 2, 3)
-        keep_dims = True
-    return image.unsqueeze(0) if not keep_dims else image
+        keepdim = True
+    return image.unsqueeze(0) if not keepdim else image
 
 
 def to_channel_last(
-    image: Tensor, keep_dims: bool = True, inplace: bool = False
+    image: Tensor, keepdim: bool = True, inplace: bool = False
 ) -> Tensor:
     """
     It takes a tensor of any shape and returns a tensor of the same shape,
@@ -178,7 +178,7 @@ def to_channel_last(
     
     Args:
         image (Tensor): The image to convert.
-        keep_dims (bool): If True, the dimension will be kept.
+        keepdim (bool): If True, the dimension will be kept.
             Defaults to True
         inplace (bool): If True, the operation will be done in-place.
             Defaults to False
@@ -203,13 +203,13 @@ def to_channel_last(
             image = image.permute(1, 2, 0)
     elif image.ndim == 4:  # [..., C, H, W] -> [..., H, W, C]
         image = image.permute(0, 2, 3, 1)
-        if input_shape[0] == 1 and not keep_dims:
+        if input_shape[0] == 1 and not keepdim:
             image = image.squeeze(0)
         if input_shape[1] == 1:
             image = image.squeeze(-1)
     elif image.ndim == 5:
         image = image.permute(0, 1, 3, 4, 2)
-        if input_shape[0] == 1 and not keep_dims:
+        if input_shape[0] == 1 and not keepdim:
             image = image.squeeze(0)
         if input_shape[2] == 1:
             image = image.squeeze(-1)
@@ -218,7 +218,7 @@ def to_channel_last(
 
 def to_image(
     image      : Tensor,
-    keep_dims  : bool = True,
+    keepdim    : bool = True,
     denormalize: bool = False,
     inplace    : bool = False,
 ) -> np.ndarray:
@@ -227,7 +227,7 @@ def to_image(
     
     Args:
         image (Tensor): Tensor
-        keep_dims (bool): If True, the function will keep the dimensions of
+        keepdim (bool): If True, the function will keep the dimensions of
             the input tensor. Defaults to True.
         denormalize (bool): If True, the image will be denormalized to [0, 255].
             Defaults to False.
@@ -244,7 +244,7 @@ def to_image(
     image = image.detach()
     image = to_3d_tensor(image)
     image = t.denormalize(image) if denormalize else image
-    image = to_channel_last(image, keep_dims=keep_dims)
+    image = to_channel_last(image, keepdim=keepdim)
     image = image.numpy()
     return image.astype(np.uint8)
 
@@ -269,7 +269,7 @@ def to_pil_image(image: Tensor | np.ndarray) -> PIL.Image:
 
 def to_tensor(
     image    : Tensor | np.ndarray | PIL.Image,
-    keep_dims: bool = True,
+    keepdim  : bool = True,
     normalize: bool = False,
     inplace  : bool = False,
 ) -> Tensor:
@@ -279,7 +279,7 @@ def to_tensor(
     
     Args:
         image (Tensor | np.ndarray | PIL.Image): The image to be converted.
-        keep_dims (bool): If True, the channel dimension will be kept. If False
+        keepdim (bool): If True, the channel dimension will be kept. If False
             unsqueeze the image to match the shape [..., C, H, W].
             Defaults to True
         normalize (bool): If True, normalize the image to [0, 1].
@@ -321,7 +321,7 @@ def to_tensor(
         image = torch.from_numpy(image).contiguous()
     
     # Channel first format
-    image = to_channel_first(image, keep_dims=keep_dims)
+    image = to_channel_first(image, keepdim=keepdim)
    
     # Normalize
     if normalize:
@@ -343,7 +343,7 @@ class ToImage(Transform):
     it will be copied back to CPU.
 
     Args:
-        keep_dims (bool): If False squeeze the input image to match the shape
+        keepdim (bool): If False squeeze the input image to match the shape
             [H, W, C] or [H, W]. Else, keep the original dimension.
             Defaults to True.
         denormalize (bool): If True, converts the image in the range [0.0, 1.0]
@@ -352,12 +352,12 @@ class ToImage(Transform):
     
     def __init__(
         self,
-        keep_dims  : bool = True,
+        keepdim    : bool = True,
         denormalize: bool = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.keep_dims   = keep_dims
+        self.keepdim     = keepdim
         self.denormalize = denormalize
         
     def forward(
@@ -369,12 +369,12 @@ class ToImage(Transform):
         return \
             to_image(
                 image       = input,
-                keep_dims   = self.keep_dims,
+                keepdim= self.keepdim,
                 denormalize = self.denormalize
             ), \
             to_image(
                 image       = target,
-                keep_dims   = self.keep_dims,
+                keepdim= self.keepdim,
                 denormalize = self.denormalize
             ) if target is not None else None
 
@@ -385,7 +385,7 @@ class ToTensor(Transform):
     Convert a `PIL Image` or `np.ndarray` image to a 4D tensor.
     
     Args:
-        keep_dims (bool): If False unsqueeze the image to match the shape
+        keepdim (bool): If False unsqueeze the image to match the shape
             [..., C, H, W]. Else, keep the original dimension. Defaults to True.
         normalize (bool): If True, converts the tensor in the range [0, 255]
             to the range [0.0, 1.0]. Defaults to False.
@@ -393,12 +393,12 @@ class ToTensor(Transform):
     
     def __init__(
         self,
-        keep_dims: bool = False,
+        keepdim  : bool = False,
         normalize: bool = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.keep_dims = keep_dims
+        self.keepdim   = keepdim
         self.normalize = normalize
         
     def forward(
@@ -410,12 +410,12 @@ class ToTensor(Transform):
         return \
             to_tensor(
                 image     = input,
-                keep_dims = self.keep_dims,
+                keepdim   = self.keepdim,
                 normalize = self.normalize
             ), \
             to_tensor(
                 image     = input,
-                keep_dims = self.keep_dims,
+                keepdim   = self.keepdim,
                 normalize = self.normalize
             ) if target is not None else None
     
@@ -556,7 +556,7 @@ def read_image_cv(path: Path_) -> Tensor:
     """
     image = cv2.imread(str(path))  # BGR
     image = image[:, :, ::-1]      # BGR -> RGB
-    image = to_tensor(image=image, keep_dims=False, normalize=True)
+    image = to_tensor(image=image, keepdim=False, normalize=True)
     return image
 
 '''
@@ -581,7 +581,7 @@ def read_image_pil(path: Path_) -> Tensor:
         A tensor of shape [1, C, H, W].
     """
     image = Image.open(path)                                         # PIL Image
-    image = to_tensor(image=image, keep_dims=False, normalize=True)  # Tensor[C, H, W]
+    image = to_tensor(image=image, keepdim=False, normalize=True)  # Tensor[C, H, W]
     return image
 
 
@@ -632,7 +632,7 @@ def read_video_ffmpeg(process, height: int, width: int) -> Tensor:
                 .frombuffer(in_bytes, np.uint8)
                 .reshape([height, width, 3])
         )  # Numpy
-        image = to_tensor(image=image, keep_dims=False, normalize=True)
+        image = to_tensor(image=image, keepdim=False, normalize=True)
     return image
   
         
@@ -808,7 +808,7 @@ def write_video_ffmpeg(process, image: Tensor | None, denormalize: bool = True):
             [0, 255]. Defaults to True.
     """
     if isinstance(image, Tensor):
-        image = to_image(image=image, keep_dims=False, denormalize=denormalize)
+        image = to_image(image=image, keepdim=False, denormalize=denormalize)
         process.stdin.write(
             image
                 .astype(np.uint8)
@@ -1156,7 +1156,7 @@ class ImageWriter(BaseWriter):
                 [0, 255]. Defaults to True.
         """
         """
-        image = to_image(image=image, keep_dims=False, denormalize=denormalize)
+        image = to_image(image=image, keepdim=False, denormalize=denormalize)
         if image_file is not None:
             image_file = (image_file[1:] if image_file.startswith("\\")
                           else image_file)
@@ -1354,7 +1354,7 @@ class VideoLoaderCV(VideoLoader):
                 if image is None:
                     continue
                 image = image[:, :, ::-1]  # BGR to RGB
-                image = to_tensor(image=image, keep_dims=False)
+                image = to_tensor(image=image, keepdim=False)
                 
                 images.append(image)
                 indexes.append(self.index)
@@ -1746,7 +1746,7 @@ class VideoWriterCV(VideoWriter):
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
-        image = to_image(image=image, keep_dims=False, denormalize=denormalize)
+        image = to_image(image=image, keepdim=False, denormalize=denormalize)
         
         if self.save_image:
             if isinstance(image_file, (Path, str)):
@@ -1886,7 +1886,7 @@ class VideoWriterFFmpeg(VideoWriter):
             else:
                 raise ValueError(f"`image_file` must be given.")
             create_dirs(paths=[image_file.parent])
-            image = to_image(image=image, keep_dims=False, denormalize=denormalize)
+            image = to_image(image=image, keepdim=False, denormalize=denormalize)
             cv2.imwrite(str(image_file), image)
         
         write_video_ffmpeg(
