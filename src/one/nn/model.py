@@ -313,6 +313,80 @@ def match_state_dicts(
     return model_dict
 
 
+# H1: - Distribution -----------------------------------------------------------
+
+def get_distributed_info() -> tuple[int, int]:
+    """
+    If distributed is available, return the rank and world size, otherwise
+    return 0 and 1
+    
+    Returns:
+        The rank and world size of the current process.
+    """
+    if dist.is_available():
+        initialized = dist.is_initialized()
+    else:
+        initialized = False
+    if initialized:
+        rank       = dist.get_rank()
+        world_size = dist.get_world_size()
+    else:
+        rank       = 0
+        world_size = 1
+    return rank, world_size
+
+
+def is_parallel(model: nn.Module) -> bool:
+    """
+    If the model is a parallel model, then it returns True, otherwise it returns
+    False
+    
+    Args:
+        model (nn.Module): The model to check.
+    
+    Returns:
+        A boolean value.
+    """
+    return type(model) in (
+        nn.parallel.DataParallel,
+        nn.parallel.DistributedDataParallel
+    )
+
+
+def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
+    """
+    If you're running on Windows, set the distributed backend to gloo. If you're
+    running on Linux, set the distributed backend to nccl
+    
+    Args:
+        strategy (str | Callable): The distributed strategy to use. One of
+            ["ddp", "ddp2"]
+        cudnn (bool): Whether to use cuDNN or not. Defaults to True.
+    """
+    if torch.backends.cudnn.is_available():
+        torch.backends.cudnn.enabled = cudnn
+        console.log(
+            f"cuDNN available: [bright_green]True[/bright_green], "
+            f"used:" + "[bright_green]True" if cudnn else "[red]False"
+        )
+    else:
+        console.log(f"cuDNN available: [red]False")
+    
+    if strategy in ["ddp", "ddp2"] or isinstance(strategy, (DDPPlugin, DDP2Plugin)):
+        if platform.system() == "Windows":
+            os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
+            console.log(
+                "Running on a Windows machine, set torch distributed backend "
+                "to gloo."
+            )
+        elif platform.system() == "Linux":
+            os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "nccl"
+            console.log(
+                "Running on a Unix machine, set torch distributed backend "
+                "to nccl."
+            )
+
+
 # H1: - Model ------------------------------------------------------------------
 
 def find_modules(model, mclass=nn.Conv2d) -> list[int]:
@@ -388,80 +462,6 @@ def strip_optimizer(weight_file: str, new_file: str = ""):
         "Optimizer stripped from %s,%s %.1fMB"
         % (weight_file, (" saved as %s," % new_file) if new_file else "", mb)
     )
-    
-
-# H1: - Parallel ---------------------------------------------------------------
-
-def get_dist_info() -> tuple[int, int]:
-    """
-    If distributed is available, return the rank and world size, otherwise
-    return 0 and 1
-    
-    Returns:
-        The rank and world size of the current process.
-    """
-    if dist.is_available():
-        initialized = dist.is_initialized()
-    else:
-        initialized = False
-    if initialized:
-        rank       = dist.get_rank()
-        world_size = dist.get_world_size()
-    else:
-        rank       = 0
-        world_size = 1
-    return rank, world_size
-
-
-def is_parallel(model: nn.Module) -> bool:
-    """
-    If the model is a parallel model, then it returns True, otherwise it returns
-    False
-    
-    Args:
-        model (nn.Module): The model to check.
-    
-    Returns:
-        A boolean value.
-    """
-    return type(model) in (
-        nn.parallel.DataParallel,
-        nn.parallel.DistributedDataParallel
-    )
-
-
-def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
-    """
-    If you're running on Windows, set the distributed backend to gloo. If you're
-    running on Linux, set the distributed backend to nccl
-    
-    Args:
-        strategy (str | Callable): The distributed strategy to use. One of
-            ["ddp", "ddp2"]
-        cudnn (bool): Whether to use cuDNN or not. Defaults to True.
-    """
-    if torch.backends.cudnn.is_available():
-        torch.backends.cudnn.enabled = cudnn
-        console.log(
-            f"cuDNN available: [bright_green]True[/bright_green], "
-            f"used:" + "[bright_green]True" if cudnn else "[red]False"
-        )
-    else:
-        console.log(f"cuDNN available: [red]False")
-    
-    if strategy in ["ddp", "ddp2"] or isinstance(strategy, (DDPPlugin, DDP2Plugin)):
-        if platform.system() == "Windows":
-            os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
-            console.log(
-                "Running on a Windows machine, set torch distributed backend "
-                "to gloo."
-            )
-        elif platform.system() == "Linux":
-            os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "nccl"
-            console.log(
-                "Running on a Unix machine, set torch distributed backend "
-                "to nccl."
-            )
 
 
 # H1: - Trainer ----------------------------------------------------------------
