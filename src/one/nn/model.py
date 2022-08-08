@@ -364,7 +364,7 @@ class Trainer(pl.Trainer):
         num_hpus = self.num_devices if isinstance(self.accelerator, HPUAccelerator) else 0
         console.log(f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs")
 
-        # TODO: Integrate MPS Accelerator here, once gpu maps to both
+        # Integrate MPS Accelerator here, once gpu maps to both
         if CUDAAccelerator.is_available() and not isinstance(self.accelerator, CUDAAccelerator):
             console.log(
                 "GPU available but not used. Set `accelerator` and `devices` using"

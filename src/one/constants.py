@@ -37,7 +37,7 @@ if not DATA_DIR.is_dir():
 
 # H1: - Factory-----------------------------------------------------------------
 
-# Model
+# one.nn
 BACKBONES       = Factory(name="backbones")
 CALLBACKS       = Factory(name="callbacks")
 LAYERS          = Factory(name="layers")
@@ -46,7 +46,6 @@ LOSSES          = Factory(name="losses")
 METRICS         = Factory(name="metrics")
 MODELS          = Factory(name="models")
 MODULE_WRAPPERS = Factory(name="module_wrappers")
-NECKS 	        = Factory(name="necks")
 OPTIMIZERS      = OptimizerFactory(name="optimizers")
 SCHEDULERS      = SchedulerFactory(name="schedulers")
 # Misc
