@@ -7,6 +7,8 @@ Model and training-related components.
 
 from __future__ import annotations
 
+import os
+import platform
 from pathlib import Path
 
 import pytorch_lightning as pl
@@ -16,16 +18,18 @@ from pytorch_lightning.accelerators import HPUAccelerator
 from pytorch_lightning.accelerators import IPUAccelerator
 from pytorch_lightning.accelerators import MPSAccelerator
 from pytorch_lightning.accelerators import TPUAccelerator
+from pytorch_lightning.plugins import DDP2Plugin
+from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning.utilities import _HPU_AVAILABLE
 from pytorch_lightning.utilities import _IPU_AVAILABLE
 from pytorch_lightning.utilities import _TPU_AVAILABLE
+from torch import distributed as dist
 from torch import nn
 from torch.hub import load_state_dict_from_url
-from torch.nn import DataParallel
-from torch.nn.parallel import DistributedDataParallel
 
-from one.constants import MODULE_WRAPPERS
 from one.core import assert_ckpt_file
+from one.core import assert_weights_file
+from one.core import Callable
 from one.core import console
 from one.core import create_dirs
 from one.core import error_console
@@ -310,6 +314,154 @@ def match_state_dicts(
 
 
 # H1: - Model ------------------------------------------------------------------
+
+def find_modules(model, mclass=nn.Conv2d) -> list[int]:
+    """
+    Finds layer indices matching module class `mclass`.
+    """
+    return [i for i, m in enumerate(model.module_list) if isinstance(m, mclass)]
+
+
+def named_apply(
+    fn          : Callable,
+    module      : nn.Module,
+    name        : str  = "",
+    depth_first : bool = True,
+    include_root: bool = False,
+) -> nn.Module:
+    if not depth_first and include_root:
+        fn(module=module, name=name)
+    for child_name, child_module in module.named_children():
+        child_name = ".".join((name, child_name)) if name else child_name
+        named_apply(
+            fn=fn, module=child_module, name=child_name,
+            depth_first=depth_first, include_root=True
+        )
+    if depth_first and include_root:
+        fn(module=module, name=name)
+    return module
+
+
+def prune(model: nn.Module, amount: float = 0.3):
+    """
+    Prune model to requested global sparsity.
+    """
+    import torch.nn.utils.prune as prune
+    console.log("Pruning model... ", end="")
+    for name, m in model.named_modules():
+        if isinstance(m, nn.Conv2d):
+            prune.l1_unstructured(m, name="weight", amount=amount)  # prune
+            prune.remove(m, "weight")  # make permanent
+    console.log(" %.3g global sparsity" % sparsity(model))
+
+
+def sparsity(model: nn.Module) -> float:
+    """
+    Return global model sparsity.
+    """
+    a = 0.0
+    b = 0.0
+    for p in model.parameters():
+        a += p.numel()
+        b += (p == 0).sum()
+    return b / a
+
+
+def strip_optimizer(weight_file: str, new_file: str = ""):
+    """
+    Strip optimizer from saved weight file to finalize training.
+    Optionally save as `new_file`.
+    """
+    assert_weights_file(weight_file)
+    
+    x = torch.load(weight_file, map_location=torch.device("cpu"))
+    x["optimizer"]        = None
+    x["training_results"] = None
+    x["epoch"]            = -1
+    x["model"].half()  # to FP16
+    for p in x["model"].parameters():
+        p.requires_grad = False
+        
+    torch.save(x, new_file or weight_file)
+    mb = os.path.getsize(new_file or weight_file) / 1E6  # filesize
+    console.log(
+        "Optimizer stripped from %s,%s %.1fMB"
+        % (weight_file, (" saved as %s," % new_file) if new_file else "", mb)
+    )
+    
+
+# H1: - Parallel ---------------------------------------------------------------
+
+def get_dist_info() -> tuple[int, int]:
+    """
+    If distributed is available, return the rank and world size, otherwise
+    return 0 and 1
+    
+    Returns:
+        The rank and world size of the current process.
+    """
+    if dist.is_available():
+        initialized = dist.is_initialized()
+    else:
+        initialized = False
+    if initialized:
+        rank       = dist.get_rank()
+        world_size = dist.get_world_size()
+    else:
+        rank       = 0
+        world_size = 1
+    return rank, world_size
+
+
+def is_parallel(model: nn.Module) -> bool:
+    """
+    If the model is a parallel model, then it returns True, otherwise it returns
+    False
+    
+    Args:
+        model (nn.Module): The model to check.
+    
+    Returns:
+        A boolean value.
+    """
+    return type(model) in (
+        nn.parallel.DataParallel,
+        nn.parallel.DistributedDataParallel
+    )
+
+
+def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
+    """
+    If you're running on Windows, set the distributed backend to gloo. If you're
+    running on Linux, set the distributed backend to nccl
+    
+    Args:
+        strategy (str | Callable): The distributed strategy to use. One of
+            ["ddp", "ddp2"]
+        cudnn (bool): Whether to use cuDNN or not. Defaults to True.
+    """
+    if torch.backends.cudnn.is_available():
+        torch.backends.cudnn.enabled = cudnn
+        console.log(
+            f"cuDNN available: [bright_green]True[/bright_green], "
+            f"used:" + "[bright_green]True" if cudnn else "[red]False"
+        )
+    else:
+        console.log(f"cuDNN available: [red]False")
+    
+    if strategy in ["ddp", "ddp2"] or isinstance(strategy, (DDPPlugin, DDP2Plugin)):
+        if platform.system() == "Windows":
+            os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
+            console.log(
+                "Running on a Windows machine, set torch distributed backend "
+                "to gloo."
+            )
+        elif platform.system() == "Linux":
+            os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "nccl"
+            console.log(
+                "Running on a Unix machine, set torch distributed backend "
+                "to nccl."
+            )
 
 
 # H1: - Trainer ----------------------------------------------------------------

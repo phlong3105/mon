@@ -3450,8 +3450,6 @@ class SkipUpsample(Module):
             `trilinear`. Defaults to True.
     """
     
-    # MARK: Magic Functions
-
     def __init__(
         self,
         in_channels  : int,

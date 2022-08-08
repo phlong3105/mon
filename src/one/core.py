@@ -4093,6 +4093,38 @@ def get_latest_file(path: Path_, recursive: bool = True) -> Path | None:
     return None
 
 
+def get_next_version(root_dir: str) -> int:
+    """
+    Get the next experiment version number.
+    
+    Args:
+        root_dir (str): Path to the folder that contains all experiment folders.
+
+    Returns:
+         Next version number.
+    """
+    try:
+        listdir_info = os.listdir(root_dir)
+    except OSError:
+        # console.log(f"Missing folder: {root_dir}")
+        return 0
+    
+    existing_versions = []
+    for listing in listdir_info:
+        if isinstance(listing, str):
+            d = listing
+        else:
+            d = listing["name"]
+        bn = os.path.basename(d)
+        if bn.startswith("version_"):
+            dir_ver = bn.split("_")[1].replace("/", "")
+            existing_versions.append(int(dir_ver))
+    if len(existing_versions) == 0:
+        return 0
+    
+    return max(existing_versions) + 1
+
+
 def has_subdir(path: Path_, name: str) -> bool:
     """
     Return True if the directory at the given path has a subdirectory with the
