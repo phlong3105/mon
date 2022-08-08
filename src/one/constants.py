@@ -45,7 +45,6 @@ LOGGERS         = Factory(name="loggers")
 LOSSES          = Factory(name="losses")
 METRICS         = Factory(name="metrics")
 MODELS          = Factory(name="models")
-MODULE_WRAPPERS = Factory(name="module_wrappers")
 OPTIMIZERS      = OptimizerFactory(name="optimizers")
 SCHEDULERS      = SchedulerFactory(name="schedulers")
 # Misc

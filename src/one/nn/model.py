@@ -311,20 +311,6 @@ def match_state_dicts(
 
 # H1: - Model ------------------------------------------------------------------
 
-def is_module_wrapper(module: nn.Module):
-    """
-    Check if a module is a module wrapper. Following 3 modules (and their
-    subclasses) are regarded as module wrappers: DataParallel,
-    DistributedDataParallel. You may add you own module wrapper by registering
-    it to MODULE_WRAPPERS.
-    """
-    module_wrappers = tuple(MODULE_WRAPPERS.registry.values())
-    return isinstance(module, module_wrappers)
-
-
-MODULE_WRAPPERS.register(name="dp",  module=DataParallel)
-MODULE_WRAPPERS.register(name="ddp", module=DistributedDataParallel)
-
 
 # H1: - Trainer ----------------------------------------------------------------
 
