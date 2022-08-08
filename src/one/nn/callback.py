@@ -7,7 +7,16 @@
 from __future__ import annotations
 
 from pytorch_lightning import callbacks
+from pytorch_lightning.callbacks import BackboneFinetuning
+from pytorch_lightning.callbacks import DeviceStatsMonitor
+from pytorch_lightning.callbacks import EarlyStopping
+from pytorch_lightning.callbacks import GradientAccumulationScheduler
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelPruning
 from pytorch_lightning.callbacks import ModelSummary
+from pytorch_lightning.callbacks import QuantizationAwareTraining
+from pytorch_lightning.callbacks import StochasticWeightAveraging
 from pytorch_lightning.callbacks.progress.rich_progress import \
     BatchesProcessedColumn
 from pytorch_lightning.callbacks.progress.rich_progress import CustomBarColumn
@@ -173,15 +182,15 @@ class RichProgressBar(callbacks.RichProgressBar):
         ]
 
 
-CALLBACKS.register(name="backbone_finetuning",             module=callbacks.BackboneFinetuning)
-CALLBACKS.register(name="device_stats_monitor",            module=callbacks.DeviceStatsMonitor)
-CALLBACKS.register(name="early_stopping",                  module=callbacks.EarlyStopping)
-CALLBACKS.register(name="gradient_accumulation_scheduler", module=callbacks.GradientAccumulationScheduler)
-CALLBACKS.register(name="learning_rate_monitor",           module=callbacks.LearningRateMonitor)
-CALLBACKS.register(name="model_checkpoint",                module=callbacks.ModelCheckpoint)
-CALLBACKS.register(name="model_pruning",                   module=callbacks.ModelPruning)
-CALLBACKS.register(name="model_summary",                   module=callbacks.ModelSummary)
-CALLBACKS.register(name="quantization_aware_training",     module=callbacks.QuantizationAwareTraining)
+CALLBACKS.register(name="backbone_finetuning",             module=BackboneFinetuning)
+CALLBACKS.register(name="device_stats_monitor",            module=DeviceStatsMonitor)
+CALLBACKS.register(name="early_stopping",                  module=EarlyStopping)
+CALLBACKS.register(name="gradient_accumulation_scheduler", module=GradientAccumulationScheduler)
+CALLBACKS.register(name="learning_rate_monitor",           module=LearningRateMonitor)
+CALLBACKS.register(name="model_checkpoint",                module=ModelCheckpoint)
+CALLBACKS.register(name="model_pruning",                   module=ModelPruning)
+CALLBACKS.register(name="model_summary",                   module=ModelSummary)
+CALLBACKS.register(name="quantization_aware_training",     module=QuantizationAwareTraining)
 CALLBACKS.register(name="rich_model_summary",              module=RichModelSummary)
 CALLBACKS.register(name="rich_progress_bar",               module=RichProgressBar)
-CALLBACKS.register(name="stochastic_weight_averaging",     module=callbacks.StochasticWeightAveraging)
+CALLBACKS.register(name="stochastic_weight_averaging",     module=StochasticWeightAveraging)
