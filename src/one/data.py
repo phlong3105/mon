@@ -617,6 +617,7 @@ class Classifications(Label):
 
 # H2: - Detection -----------------------------------------------------------
 
+# noinspection PyDefaultArgument
 class Detection(Label):
     """
     An object detection.
@@ -734,8 +735,9 @@ class Detection(Label):
             A Segmentation object.
         """
         pass
-    
 
+
+# noinspection PyDefaultArgument
 class Detections(Label):
     """
     A list of object detections in an image.
@@ -816,7 +818,7 @@ class TemporalDetection(Label):
     """
 
     @property
-    def tensor(self):
+    def tensor(self) -> Tensor:
         pass
 
 
@@ -832,6 +834,7 @@ class KITTIDetections(Detections):
     pass
 
 
+# noinspection PyDefaultArgument
 class VOCDetections(Detections):
     """
     VOCDetections object consists of several bounding boxes.
@@ -1022,7 +1025,7 @@ class Heatmap(Label):
     """
 
     @property
-    def tensor(self):
+    def tensor(self) -> Tensor:
         pass
 
 
@@ -1146,6 +1149,7 @@ class Image(Label):
 
 # H2: - Keypoint ---------------------------------------------------------------
 
+# noinspection PyDefaultArgument
 class Keypoint(Label):
     """
     A list of keypoints in an image.
@@ -1188,8 +1192,9 @@ class Keypoint(Label):
         Return the label in tensor format.
         """
         pass
-    
 
+
+# noinspection PyDefaultArgument
 class Keypoints(Label):
     """
     A list of Keypoint objects in an image.
@@ -1224,6 +1229,7 @@ class COCOKeypoints(Keypoints):
 
 # H2: - Polyline ---------------------------------------------------------------
 
+# noinspection PyDefaultArgument
 class Polyline(Label):
     """
     A set of semantically related polylines or polygons.
@@ -1356,8 +1362,9 @@ class Polyline(Label):
             A Segmentation object.
         """
         pass
-    
 
+
+# noinspection PyDefaultArgument
 class Polylines(Label):
     """
     A list of polylines or polygons in an image.
@@ -1767,10 +1774,10 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         self.test             = None
         self.predict          = None
         self.classlabels      = None
-    
+
     @classmethod
     @property
-    def absclsname(cls) -> str:
+    def classname(cls) -> str:
         """
         Returns the name of the class of the object passed to it.
 
@@ -1778,16 +1785,6 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
             The class name of the object.
         """
         return cls.__name__
-    
-    @property
-    def clsname(self) -> str:
-        """
-        Returns the name of the class of the object passed to it.
-
-        Returns:
-            The class name of the object.
-        """
-        return type(self).__name__
     
     @property
     def devices(self) -> list:
@@ -2060,7 +2057,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         meta  = self.images[index].meta
         
         if self.transform is not None:
-            input, *_ = self.transform(input=input, target=None, dataset=self)
+            input, *_ = self.transform(input=input,  target=None, dataset=self)
         if self.transforms is not None:
             input, *_ = self.transforms(input=input, target=None, dataset=self)
         return input, meta
@@ -2471,9 +2468,9 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         meta   = self.images[index].meta
         
         if self.transform is not None:
-            input,  *_ = self.transform(input=input, target=None, dataset=self)
+            input,  *_    = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
-            target, *_ = self.target_transform(input=target, target=None, dataset=self)
+            target, *_    = self.target_transform(input=target, target=None, dataset=self)
         if self.transforms is not None:
             input, target = self.transforms(input=input, target=target, dataset=self)
         return input, target, meta
@@ -2739,9 +2736,9 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         """
         List label files.
         """
-        json = self.annotation_file()
-        assert_json_file(json)
-        json_data = load_from_file(json)
+        json_file = self.annotation_file()
+        assert_json_file(json_file)
+        json_data = load_from_file(json_file)
         assert_dict(json_data)
         
         info	    = json_data.get("info", 	   None)

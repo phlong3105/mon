@@ -117,7 +117,7 @@ class AppleRGB(Enum):
     WHITE  = (255, 255, 255)
 
     @classmethod
-    def random(cls) -> AppleRGB:
+    def random(cls):
         """
         Return a random AppleRGB enum.
         
@@ -127,7 +127,7 @@ class AppleRGB(Enum):
         return random.choice(list(cls))
     
     @classmethod
-    def random_value(cls) -> Color:
+    def random_value(cls):
         """
         Return a random color.
         
@@ -179,7 +179,7 @@ class BasicRGB(Enum):
     NAVY    = (  0,   0, 128)
     
     @classmethod
-    def random(cls) -> BasicRGB:
+    def random(cls):
         """
         Return a random BasicRGB value.
         
@@ -189,7 +189,7 @@ class BasicRGB(Enum):
         return random.choice(list(cls))
     
     @classmethod
-    def random_value(cls) -> Color:
+    def random_value(cls):
         """
         Return a random color.
         
@@ -306,7 +306,7 @@ class BBoxFormat(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `BBoxFormat`, `dict`, `str`, or `Path`. "
+            f"`value` must be `BBoxFormat`, `dict`, or `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -322,7 +322,7 @@ class BBoxFormat(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -498,7 +498,7 @@ class DistanceMetric(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `DistanceMetric`, `dict`, `str`, or `Path`. "
+            f"`value` must be `DistanceMetric`, `dict`, or `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -514,7 +514,7 @@ class DistanceMetric(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -626,7 +626,7 @@ class ImageFormat(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
+            f"`value` must be `ImageFormat`, `dict`, or `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -642,7 +642,7 @@ class ImageFormat(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -802,7 +802,7 @@ class InterpolationMode(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `InterpolationMode`, `dict`, `str`, or `Path`. "
+            f"`value` must be `InterpolationMode`, `dict`, or  `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -818,7 +818,7 @@ class InterpolationMode(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -906,7 +906,7 @@ class MemoryUnit(Enum):
         return cls.str_mapping()[value]
     
     @classmethod
-    def from_int(value: int) -> MemoryUnit:
+    def from_int(cls, value: int) -> MemoryUnit:
         """
         It takes an integer and returns an enum.
         
@@ -937,7 +937,7 @@ class MemoryUnit(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `MemoryUnit`, `dict`, `str`, or `Path`. "
+            f"`value` must be `MemoryUnit`, `dict`, or  `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -953,7 +953,7 @@ class MemoryUnit(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -1049,7 +1049,7 @@ class ModelPhase(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `ModelPhase`, `dict`, `str`, or `Path`. "
+            f"`value` must be `ModelPhase`, `dict`, or `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -1065,7 +1065,7 @@ class ModelPhase(Enum):
         return [e for e in cls]
 
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -1188,7 +1188,7 @@ class PaddingMode(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `PaddingMode`, `dict`, `str`, or `Path`. "
+            f"`value` must be `PaddingMode`, `dict`, or `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -1204,7 +1204,7 @@ class PaddingMode(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -1213,6 +1213,116 @@ class PaddingMode(Enum):
         """
         return [e.value for e in cls]
 
+
+class Reduction(Enum):
+    NONE         = "none"
+    MEAN         = "mean"
+    SUM          = "sum"
+    WEIGHTED_SUM = "weighted_sum"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "none"        : cls.NONE,
+            "mean"        : cls.MEAN,
+            "sum"         : cls.SUM,
+            "weighted_sum": cls.WEIGHTED_SUM
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0: cls.NONE,
+            1: cls.MEAN,
+            2: cls.SUM,
+            3: cls.WEIGHTED_SUM,
+        }
+
+    @classmethod
+    def from_str(cls, value: str) -> Reduction:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value)
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> Reduction:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Any) -> Reduction | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, Reduction):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `Reduction`, `dict`, `str`.  "
+            f"But got: {type(value)}."
+        )
+        return None
+        
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+    
 
 class RGB(Enum):
     """
@@ -1359,7 +1469,7 @@ class RGB(Enum):
     WHITE                   = (255, 255, 255)
     
     @classmethod
-    def random(cls) -> RGB:
+    def random(cls):
         """
         Return a random RGB enum.
         
@@ -1369,7 +1479,7 @@ class RGB(Enum):
         return random.choice(list(cls))
     
     @classmethod
-    def random_value(cls) -> Color:
+    def random_value(cls):
         """
         Return a random RGB value.
         
@@ -1495,7 +1605,7 @@ class VideoFormat(Enum):
         if isinstance(value, int):
             return cls.from_int(value)
         error_console.log(
-            f"`value` must be `ImageFormat`, `dict`, `str`, or `Path`. "
+            f"`value` must be `ImageFormat`, `dict`, or  `str`. "
             f"But got: {type(value)}."
         )
         return None
@@ -1511,7 +1621,7 @@ class VideoFormat(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -1605,7 +1715,7 @@ class VisionBackend(Enum):
         if isinstance(value, str):
             return cls.from_str(value)
         error_console.log(
-            f"`value` must be `VisionBackend`, `dict`, `str`, or `Path`. "
+            f"`value` must be `VisionBackend`, `dict`, or  `str`. "
             f"But got: {type(value)}."
         )
         from one.constants import VISION_BACKEND
@@ -1622,7 +1732,7 @@ class VisionBackend(Enum):
         return [e for e in cls]
     
     @classmethod
-    def values(cls) -> list[str]:
+    def values(cls) -> list:
         """
         Return a list of all the values of the enumeration.
         
@@ -2165,7 +2275,7 @@ def assert_bmp_file(path: Path_ | None):
         raise ValueError()
 
 
-def assert_basename(path: Path_ | None) -> bool:
+def assert_basename(path: Path_ | None):
     if not is_basename(path):
         raise ValueError()
 
@@ -2241,12 +2351,12 @@ def assert_list(input: Any):
         raise TypeError(f"`input` must be a `list`. But got: {type(input)}.")
 
 
-def assert_list_of(input: Any, item_type: type) -> bool:
+def assert_list_of(input: Any, item_type: type):
     if not is_list_of(input, item_type):
         raise TypeError()
 
 
-def assert_name(path: Path_ | None) -> bool:
+def assert_name(path: Path_ | None):
     if not is_name(path):
         raise ValueError()
 
@@ -2276,7 +2386,7 @@ def assert_number_in_range(input: Any, start: Number, end: Number):
         )
 
 
-def assert_numpy(input: Any) -> bool:
+def assert_numpy(input: Any):
     if not is_numpy(input):
         raise TypeError(
             f"`input` must be a `np.ndarray`. But got: {type(input)}."
@@ -2317,7 +2427,7 @@ def assert_positive_number(input: Any):
         raise ValueError(f"`input` must be positive. But got: {input}.")
     
 
-def assert_same_length(input1: Sequence, input2: Sequence) -> bool:
+def assert_same_length(input1: Sequence, input2: Sequence):
     if not is_same_length(input1, input2):
         raise ValueError(
             f"`input1` and `input2` must have the same length. "
@@ -2333,7 +2443,7 @@ def assert_same_shape(input1: Tensor | np.ndarray, input2: Tensor | np.ndarray):
         )
   
     
-def assert_sequence(input: Any) -> bool:
+def assert_sequence(input: Any):
     if not is_sequence(input):
         raise TypeError(
             f"`input` must be a `Sequence`. But got: {type(input)}."
@@ -2353,7 +2463,7 @@ def assert_sequence_of_length(input: Any, length: int):
         )
     
 
-def assert_stem(path: Path_ | None) -> bool:
+def assert_stem(path: Path_ | None):
     if not is_stem(path):
         raise ValueError()
 
@@ -2396,7 +2506,7 @@ def assert_tensor_of_ndim_in_range(input: Any, start: int, end: int):
         )
  
 
-def assert_torch_saved_file(path: Path_ | None) -> bool:
+def assert_torch_saved_file(path: Path_ | None):
     if not is_torch_saved_file(path):
         raise ValueError()
     
@@ -2411,17 +2521,17 @@ def assert_tuple_of(input: Any, item_type: type):
         raise TypeError()
 
 
-def assert_txt_file(path: Path_ | None) -> bool:
+def assert_txt_file(path: Path_ | None):
     if not is_txt_file(path):
         raise ValueError()
 
 
-def assert_url(path: Path_ | None) -> bool:
+def assert_url(path: Path_ | None):
     if not is_url(path):
         raise ValueError()
 
 
-def assert_url_or_file(path: Path_ | None) -> bool:
+def assert_url_or_file(path: Path_ | None):
     if not is_url_or_file(path):
         raise ValueError()
 
@@ -2439,27 +2549,27 @@ def assert_value_in_collection(input: Any, collection: Any):
         )
     
     
-def assert_video_file(path: Path_ | None) -> bool:
+def assert_video_file(path: Path_ | None):
     if not is_video_file(path):
         raise ValueError()
 
 
-def assert_video_stream(path: Path_ | None) -> bool:
+def assert_video_stream(path: Path_ | None):
     if not is_video_stream(path):
         raise ValueError()
 
 
-def assert_weights_file(path: Path_ | None) -> bool:
+def assert_weights_file(path: Path_ | None):
     if not is_weights_file(path):
         raise ValueError()
 
 
-def assert_xml_file(path: Path_ | None) -> bool:
+def assert_xml_file(path: Path_ | None):
     if not is_xml_file(path):
         raise ValueError()
 
 
-def assert_yaml_file(path: Path_ | None) -> bool:
+def assert_yaml_file(path: Path_ | None):
     if not is_yaml_file(path):
         raise ValueError()
     
@@ -2578,7 +2688,7 @@ def _to_5d_array(input: np.ndarray) -> np.ndarray:
     elif input.ndim == 5:  # [*, B, H, W, C]
         pass
     elif input.ndim == 6 and input.shape[0] == 1:
-        input = np.squeeze(input, axis=0) # [1, *, B, H, W, C] -> [*, B, H, W, C]
+        input = np.squeeze(input, axis=0)  # [1, *, B, H, W, C] -> [*, B, H, W, C]
     return input
 
 
@@ -2868,7 +2978,7 @@ def to_3d_array_list(input: Any) -> list[np.ndarray]:
         input = [i.detach().cpu().numpy() for i in input]                       # list[Tensor any dimensions] -> list[np.ndarray any dimensions]
         
     if isinstance(input, list) and is_list_of(input, np.ndarray):
-        return _to_3d_array(input)                                              # list[np.ndarray any dimensions] -> list[3D np.ndarray]
+        return input                                                            # list[np.ndarray any dimensions] -> list[3D np.ndarray]
     raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
 
 
@@ -4113,8 +4223,10 @@ def get_next_version(root_dir: str) -> int:
     for listing in listdir_info:
         if isinstance(listing, str):
             d = listing
-        else:
+        elif isinstance(listing, dict):
             d = listing["name"]
+        else:
+            d = ""
         bn = os.path.basename(d)
         if bn.startswith("version_"):
             dir_ver = bn.split("_")[1].replace("/", "")
@@ -4706,6 +4818,7 @@ TrainDataLoaders    = Union[DataLoader,
 InterpolationMode_  = Union[InterpolationMode, str, int]
 ModelPhase_         = Union[ModelPhase,        str, int]
 PaddingMode_        = Union[PaddingMode,       str, int]
+Reduction_          = Union[Reduction,         str, int]
 VisionBackend_      = Union[VisionBackend,     str, int]
 # Model Building Types
 Losses_             = ScalarOrCollectionT[Union[_Loss,     dict]]
