@@ -1801,6 +1801,14 @@ def is_class(input: Any) -> bool:
 
 def is_collection(input: Any) -> bool:
     return isinstance(input, Collection)
+
+
+def is_collection_contain_item(input: Any, item: Any) -> bool:
+    assert_collection(input)
+    if item in input:
+        return True
+    else:
+        return False
     
 
 def is_dict(input: Any) -> bool:
@@ -1812,7 +1820,7 @@ def is_dict_contain_key(input: Any, key: Any) -> bool:
     if key in input:
         return True
     else:
-        raise ValueError(f"`input` dict must contain the key `{key}`.")
+        return False
 
 
 def is_dict_of(input: dict, item_type: type) -> bool:
@@ -1848,6 +1856,11 @@ def is_dir(path: Path_ | None) -> bool:
     path = Path(path)
     return path.is_dir()
     
+    
+def is_even_number(input: Any) -> bool:
+    assert_number(input)
+    return input % 2 == 0.0
+
 
 def is_float(input: Any) -> bool:
     return isinstance(input, float)
@@ -1893,6 +1906,18 @@ def is_json_file(path: Path_ | None) -> bool:
         return False
     path = Path(path)
     return path.is_file() and path.suffix.lower() in [".json"]
+
+
+def is_larger_than(input: Number, value: Number) -> bool:
+    assert_number(input)
+    assert_number(value)
+    return input > value
+
+
+def is_larger_or_equal_than(input: Number, value: Number) -> bool:
+    assert_number(input)
+    assert_number(value)
+    return input >= value
 
 
 def is_list(input: Any) -> bool:
@@ -1986,6 +2011,11 @@ def is_numpy_of_ndim_in_range(input: Any, start: int, end: int) -> bool:
     return start <= input.ndim <= end
 
 
+def is_odd_number(input: Any) -> bool:
+    assert_number(input)
+    return input % 2 != 0.0
+
+
 def is_positive_number(input: Any) -> bool:
     assert_number(input)
     return input >= 0.0
@@ -2039,6 +2069,18 @@ def is_sequence_of_length(input: Any, length: int) -> bool:
     assert_sequence(input)
     assert_int(length)
     return len(input) == length
+
+
+def is_smaller_than(input: Number, value: Number) -> bool:
+    assert_number(input)
+    assert_number(value)
+    return input < value
+
+
+def is_smaller_or_equal_than(input: Number, value: Number) -> bool:
+    assert_number(input)
+    assert_number(value)
+    return input <= value
 
 
 def is_stem(path: Path_ | None) -> bool:
@@ -2137,8 +2179,21 @@ def is_tuple_of(input: Any, item_type: type) -> bool:
     return is_sequence_of(input=input, item_type=item_type, seq_type=tuple)
 
 
-def is_valid_type(input: Any) -> bool:
-    return isinstance(input, type)
+def is_txt_file(path: Path_ | None) -> bool:
+    """
+    If the path is a file and the file extension is txt, return True, otherwise
+    return False.
+
+    Args:
+        path (Path_ | None): The path to the file.
+    
+    Returns:
+        A boolean value.
+    """
+    if path is None:
+        return False
+    path = Path(path)
+    return path.is_file() and path.suffix.lower() in [".txt"]
 
 
 def is_url(path: Path_ | None) -> bool:
@@ -2173,21 +2228,8 @@ def is_url_or_file(path: Path_ | None) -> bool:
            not isinstance(validators.url(path), validators.ValidationFailure)
 
 
-def is_txt_file(path: Path_ | None) -> bool:
-    """
-    If the path is a file and the file extension is txt, return True, otherwise
-    return False.
-
-    Args:
-        path (Path_ | None): The path to the file.
-    
-    Returns:
-        A boolean value.
-    """
-    if path is None:
-        return False
-    path = Path(path)
-    return path.is_file() and path.suffix.lower() in [".txt"]
+def is_valid_type(input: Any) -> bool:
+    return isinstance(input, type)
 
 
 def is_value_in_collection(input: Any, collection: Any) -> bool:
@@ -2272,17 +2314,23 @@ def is_yaml_file(path: Path_ | None) -> bool:
 
 def assert_bmp_file(path: Path_ | None):
     if not is_bmp_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a bmp image file. But got: {path}.")
 
 
 def assert_basename(path: Path_ | None):
     if not is_basename(path):
-        raise ValueError()
+        raise ValueError(
+            f"`path` must be a basename, i.e., name without file extension. "
+            f"But got: {path}."
+        )
 
 
 def assert_ckpt_file(path: Path_ | None):
     if not is_ckpt_file(path):
-        raise ValueError()
+        raise ValueError(
+            f"`path` must be a checkpoint file, i.e., .ckpt "
+            f"But got: {path}."
+        )
     
     
 def assert_class(input: Any):
@@ -2299,6 +2347,14 @@ def assert_collection(input: Any):
         )
 
 
+def assert_collection_contain_item(input: Any, item: Any) -> bool:
+    if not is_collection_contain_item(input, item):
+        raise ValueError(
+            f"`input` collection must contain the item `{item}`. "
+            f"But got: {item} not in {input}."
+        )
+    
+
 def assert_dict(input: Any):
     if not is_dict(input):
         raise TypeError(f"`input` must be a `dict`. But got: {type(input)}.")
@@ -2306,32 +2362,49 @@ def assert_dict(input: Any):
 
 def assert_dict_contain_key(input: Any, key: Any):
     if not is_dict_contain_key(input, key):
-        raise ValueError(f"`input` dict must contain the key `{key}`.")
+        raise ValueError(
+            f"`input` collection must contain the item `{key}`. "
+            f"But got: {key} not in {input.keys()}."
+        )
 
 
 def assert_dict_of(input: dict, item_type: type):
     if not is_dict_of(input, item_type):
-        raise TypeError()
+        raise TypeError(
+            f"`input` must be a `dict` of {item_type}. "
+            f"But got: {type(input)}."
+        )
 
 
 def assert_dir(path: Path_ | None):
     if not is_dir(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a directory. But got: {path}.")
+
+
+def assert_even_number(input: Any) -> bool:
+    if not is_even_number(input):
+        raise ValueError(
+            f"`input` must be an even number. But got: {input}."
+        )
 
 
 def assert_float(input: Any):
     if not is_float(input):
-        raise TypeError(f"`input` must be a `float`. But got: {type(input)}.")
+        raise TypeError(
+            f"`input` must be a `float` number. But got: {type(input)}."
+        )
 
 
 def assert_image_file(path: Path_ | None):
     if not is_image_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be an image file. But got: {path}.")
     
     
 def assert_int(input: Any):
     if not is_int(input):
-        raise TypeError(f"`input` must be an `int`. But got: {type(input)}.")
+        raise TypeError(
+            f"`input` must be an `int` number. But got: {type(input)}."
+        )
 
 
 def assert_iterable(input: Any):
@@ -2343,7 +2416,21 @@ def assert_iterable(input: Any):
 
 def assert_json_file(path: Path_ | None):
     if not is_json_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a json file. But got: {path}.")
+
+
+def assert_larger_than(input: Number, value: Number) -> bool:
+    if not is_larger_than(input, value):
+        raise ValueError(
+            f"Require `input` > `value`. But got: {input} > {value}."
+        )
+
+
+def assert_larger_or_equal_than(input: Number, value: Number) -> bool:
+    if not is_larger_or_equal_than(input, value):
+        raise ValueError(
+            f"Require `input` >= `value`. But got: {input} > {value}."
+        )
 
 
 def assert_list(input: Any):
@@ -2353,21 +2440,26 @@ def assert_list(input: Any):
 
 def assert_list_of(input: Any, item_type: type):
     if not is_list_of(input, item_type):
-        raise TypeError()
+        raise TypeError(
+            f"`input` must be a `list` of {item_type}. But got: {type(input)}"
+        )
 
 
 def assert_name(path: Path_ | None):
     if not is_name(path):
-        raise ValueError()
+        raise ValueError(
+            f"`path` must be a name, i.e., name with file extension. "
+            f"But got: {path}."
+        )
 
 
 def assert_negative_number(input: Any):
     if not is_negative_number(input):
-        raise ValueError(f"`input` must be negative. But got: {input}.")
+        raise ValueError(f"`input` must be negative number. But got: {input}.")
 
 
 def assert_number(input: Any):
-    if not is_number(input=input):
+    if not is_number(input):
         raise TypeError(f"`input` must be a `Number`. But got: {type(input)}.")
     
 
@@ -2422,9 +2514,16 @@ def assert_numpy_of_ndim_in_range(input: Any, start: int, end: int):
         )
 
 
+def assert_odd_number(input: Any) -> bool:
+    if not is_odd_number(input):
+        raise ValueError(
+            f"`input` must be an odd number. But got: {input}."
+        )
+
+
 def assert_positive_number(input: Any):
     if not is_positive_number(input):
-        raise ValueError(f"`input` must be positive. But got: {input}.")
+        raise ValueError(f"`input` must be positive number. But got: {input}.")
     
 
 def assert_same_length(input1: Sequence, input2: Sequence):
@@ -2462,10 +2561,27 @@ def assert_sequence_of_length(input: Any, length: int):
             f"But got: {len(input)}."
         )
     
+    
+def assert_smaller_than(input: Number, value: Number) -> bool:
+    if not is_smaller_than(input, value):
+        raise ValueError(
+            f"Require `input` < `value`. But got: {input} > {value}."
+        )
+
+
+def assert_smaller_or_equal_than(input: Number, value: Number) -> bool:
+    if not is_smaller_or_equal_than(input, value):
+        raise ValueError(
+            f"Require `input` <= `value`. But got: {input} > {value}."
+        )
+
 
 def assert_stem(path: Path_ | None):
     if not is_stem(path):
-        raise ValueError()
+        raise ValueError(
+            f"`path` must be a name, i.e., name without file extension. "
+            f"But got: {path}."
+        )
 
     
 def assert_str(input: Any):
@@ -2508,7 +2624,10 @@ def assert_tensor_of_ndim_in_range(input: Any, start: int, end: int):
 
 def assert_torch_saved_file(path: Path_ | None):
     if not is_torch_saved_file(path):
-        raise ValueError()
+        raise ValueError(
+            f"`path` must be a torch saved file, i.e., .pth or .ckpt. "
+            f"But got: {path}."
+        )
     
     
 def assert_tuple(input: Any):
@@ -2518,22 +2637,25 @@ def assert_tuple(input: Any):
     
 def assert_tuple_of(input: Any, item_type: type):
     if not is_tuple_of(input, item_type):
-        raise TypeError()
+        raise TypeError(
+            f"`input` must be a `tuple` of {item_type}. "
+            f"But got: {type(input)}."
+        )
 
 
 def assert_txt_file(path: Path_ | None):
     if not is_txt_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a txt file. But got: {path}.")
 
 
 def assert_url(path: Path_ | None):
     if not is_url(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be an url. But got: {path}.")
 
 
 def assert_url_or_file(path: Path_ | None):
     if not is_url_or_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be an url or a file. But got: {path}.")
 
 
 def assert_valid_type(input: Any):
@@ -2551,27 +2673,29 @@ def assert_value_in_collection(input: Any, collection: Any):
     
 def assert_video_file(path: Path_ | None):
     if not is_video_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a video file. But got: {path}.")
 
 
 def assert_video_stream(path: Path_ | None):
     if not is_video_stream(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a video stream. But got: {path}.")
 
 
 def assert_weights_file(path: Path_ | None):
     if not is_weights_file(path):
-        raise ValueError()
+        raise ValueError(
+            f"`path` must be a weight file, i.e., .pth file. But got: {path}."
+        )
 
 
 def assert_xml_file(path: Path_ | None):
     if not is_xml_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a xml file. But got: {path}.")
 
 
 def assert_yaml_file(path: Path_ | None):
     if not is_yaml_file(path):
-        raise ValueError()
+        raise ValueError(f"`path` must be a yaml file. But got: {path}.")
     
 
 # H1: - Conversion -------------------------------------------------------------
