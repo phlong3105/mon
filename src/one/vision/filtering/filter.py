@@ -16,6 +16,9 @@ from one.core import assert_str
 from one.core import assert_tensor_of_ndim
 from one.core import BorderType
 from one.core import BorderType_
+from one.core import Floats
+from one.core import Ints
+from one.core import to_2tuple
 from one.vision.filtering.kernel import get_binary_kernel2d
 from one.vision.filtering.kernel import get_box_kernel2d
 from one.vision.filtering.kernel import get_canny_nms_kernel
@@ -54,11 +57,12 @@ def _compute_padding(kernel_size: list[int]) -> list[int]:
     return out_padding
 
 
-def _compute_zero_padding(kernel_size: tuple[int, int]) -> tuple[int, int]:
+def _compute_zero_padding(kernel_size: Ints) -> tuple[int, int]:
     """
     Utility function that computes zero padding tuple.
     """
-    computed = [(k - 1) // 2 for k in kernel_size]
+    kernel_size = to_2tuple(kernel_size)
+    computed    = [(k - 1) // 2 for k in kernel_size]
     return computed[0], computed[1]
 
 
@@ -425,7 +429,7 @@ def blur_pool2d(input: Tensor, kernel_size: int, stride: int = 2):
 
 def box_blur(
     input      : Tensor,
-    kernel_size: tuple[int, int],
+    kernel_size: Ints,
     border_type: BorderType_ = "reflect",
     normalized : bool        = True
 ) -> Tensor:
@@ -444,7 +448,7 @@ def box_blur(
     
     Args:
         input (Tensor): The image of shape [B, C, H, W].
-        kernel_size (tuple[int, int]): The blurring kernel size.
+        kernel_size (Ints): The blurring kernel size.
         border_type (BorderType_): The padding mode to be applied before
             convolving. One of: [`constant`, `reflect`, `replicate`, `circular`].
             Defaults to reflect.
@@ -460,7 +464,8 @@ def box_blur(
         >>> output.shape
         torch.Size([2, 4, 5, 7])
     """
-    kernel = get_box_kernel2d(kernel_size)
+    kernel_size = to_2tuple(kernel_size)
+    kernel      = get_box_kernel2d(kernel_size)
     if normalized:
         kernel = normalize_kernel2d(kernel)
     return filter2d(input=input, kernel=kernel, border_type=border_type)
@@ -468,8 +473,8 @@ def box_blur(
 
 def gaussian_blur2d(
     input      : Tensor,
-    kernel_size: tuple[int,   int  ],
-    sigma      : tuple[float, float],
+    kernel_size: Ints,
+    sigma      : Floats,
     border_type: BorderType_ = "reflect",
     separable  : bool        = True,
 ) -> Tensor:
@@ -481,8 +486,8 @@ def gaussian_blur2d(
     
     Args:
         input (Tensor): The image of shape [B, C, H, W].
-        kernel_size (tuple[int, int]): The blurring kernel size.
-        sigma (tuple[float, float]): The standard deviation of the kernel.
+        kernel_size (Ints): The blurring kernel size.
+        sigma (Floats): The standard deviation of the kernel.
         border_type (BorderType_): The padding mode to be applied before
             convolving. One of: [`constant`, `reflect`, `replicate`, `circular`].
             Defaults to reflect.
@@ -499,6 +504,8 @@ def gaussian_blur2d(
         torch.Size([2, 4, 5, 5])
     """
     assert_tensor_of_ndim(input, 4)
+    kernel_size = to_2tuple(kernel_size)
+    sigma       = to_2tuple(sigma)
     if separable:
         kernel_x = get_gaussian_kernel1d(kernel_size[1], sigma[1])
         kernel_y = get_gaussian_kernel1d(kernel_size[0], sigma[0])
@@ -593,13 +600,13 @@ def max_blur_pool2d(
     )
 
 
-def median_blur(input: Tensor, kernel_size: tuple[int, int]) -> Tensor:
+def median_blur(input: Tensor, kernel_size: Ints) -> Tensor:
     """
     Blur an image using the median filter.
    
     Args:
         input (Tensor): Image of shape [B, C, H, W].
-        kernel_size (tuple[int, int]): Kernel size for max pooling.
+        kernel_size (Ints): Kernel size for max pooling.
     
     Returns:
         The blurred input image of shape [B, C, H, W].
@@ -612,10 +619,11 @@ def median_blur(input: Tensor, kernel_size: tuple[int, int]) -> Tensor:
     """
     assert_tensor_of_ndim(input, 4)
     padding = _compute_zero_padding(kernel_size)
-
+    
     # Prepare kernel
-    kernel     = get_binary_kernel2d(kernel_size).to(input)
-    b, c, h, w = input.shape
+    kernel_size = to_2tuple(kernel_size)
+    kernel      = get_binary_kernel2d(kernel_size).to(input)
+    b, c, h, w  = input.shape
 
     # Map the local window to single vector
     features = F.conv2d(
@@ -828,7 +836,7 @@ class BoxBlur(nn.Module):
     kernel:
     
     Args:
-        kernel_size (tuple[int, int]): The blurring kernel size.
+        kernel_size (Ints): The blurring kernel size.
         border_type (BorderType_): The padding mode to be applied before
             convolving. One of: [`constant`, `reflect`, `replicate`, `circular`].
             Defaults to reflect.
@@ -838,12 +846,12 @@ class BoxBlur(nn.Module):
 
     def __init__(
         self, 
-        kernel_size: tuple[int, int],
+        kernel_size: Ints,
         border_type: BorderType_ = "reflect",
         normalized : bool        = True
     ):
         super().__init__()
-        self.kernel_size = kernel_size
+        self.kernel_size = to_2tuple(kernel_size)
         self.border_type = border_type
         self.normalized  = normalized
 
@@ -877,8 +885,8 @@ class GaussianBlur2d(nn.Module):
     it to each channel. It supports batched operation.
     
     Arguments:
-        kernel_size (tuple[int, int]): The blurring kernel size.
-        sigma (tuple[float, float]): The standard deviation of the kernel.
+        kernel_size (Ints): The blurring kernel size.
+        sigma (Floats): The standard deviation of the kernel.
         border_type (BorderType_): The padding mode to be applied before
             convolving. One of: [`constant`, `reflect`, `replicate`, `circular`].
             Defaults to reflect.
@@ -888,14 +896,14 @@ class GaussianBlur2d(nn.Module):
 
     def __init__(
         self,
-        kernel_size: tuple[int,   int  ],
-        sigma      : tuple[float, float],
+        kernel_size: Ints,
+        sigma      : Floats,
         border_type: BorderType_ = "reflect",
         separable  : bool        = True,
     ):
         super().__init__()
-        self.kernel_size = kernel_size
-        self.sigma       = sigma
+        self.kernel_size = to_2tuple(kernel_size)
+        self.sigma       = to_2tuple(sigma)
         self.border_type = border_type
         self.separable   = separable
 
@@ -1028,9 +1036,9 @@ class MedianBlur(nn.Module):
         kernel_size (tuple[int, int]): Kernel size for max pooling.
     """
 
-    def __init__(self, kernel_size: tuple[int, int]):
+    def __init__(self, kernel_size: Ints):
         super().__init__()
-        self.kernel_size = kernel_size
+        self.kernel_size = to_2tuple(kernel_size)
 
     def forward(self, input: Tensor) -> Tensor:
         return median_blur(input=input, kernel_size=self.kernel_size)
@@ -1150,12 +1158,12 @@ class SpatialGradient3d(nn.Module):
 
 def canny(
     input         : Tensor,
-    low_threshold : float               = 0.1,
-    high_threshold: float               = 0.2,
-    kernel_size   : tuple[int,   int  ] = (5, 5),
-    sigma         : tuple[float, float] = (1, 1),
-    hysteresis    : bool                = True,
-    eps           : float               = 1e-6,
+    low_threshold : float  = 0.1,
+    high_threshold: float  = 0.2,
+    kernel_size   : Ints   = (5, 5),
+    sigma         : Floats = (1, 1),
+    hysteresis    : bool   = True,
+    eps           : float  = 1e-6,
 ) -> tuple[Tensor, Tensor]:
     """
     Find edges of the input image and filters them using the Canny algorithm.
@@ -1166,9 +1174,9 @@ def canny(
             Defaults to 0.1.
         high_threshold (float): Upper threshold for the hysteresis procedure.
             Defaults to 0.2.
-        kernel_size (tuple[int, int]): Kernel size for the gaussian blur.
+        kernel_size (Ints): Kernel size for the gaussian blur.
             Defaults to (5, 5).
-        sigma (tuple[float, float]): Standard deviation of the kernel for the
+        sigma (Floats): Standard deviation of the kernel for the
             gaussian blur. Defaults to (1, 1).
         hysteresis: If True, applies the hysteresis edge tracking. Otherwise,
             the edges are divided between weak (0.5) and strong (1) edges.
@@ -1182,7 +1190,9 @@ def canny(
             shape [B, 1, H, W].
     """
     assert_tensor_of_ndim(input, 4)
-
+    kernel_size = to_2tuple(kernel_size)
+    sigma       = to_2tuple(sigma)
+    
     if low_threshold > high_threshold:
         raise ValueError(
             f"Expect `low_threshold` < `high_threshold`. "
@@ -1291,9 +1301,9 @@ class Canny(nn.Module):
             Defaults to 0.1.
         high_threshold (float): Upper threshold for the hysteresis procedure.
             Defaults to 0.2.
-        kernel_size (tuple[int, int]): Kernel size for the gaussian blur.
+        kernel_size (Ints): Kernel size for the gaussian blur.
             Defaults to (5, 5).
-        sigma (tuple[float, float]): Standard deviation of the kernel for the
+        sigma (Floats): Standard deviation of the kernel for the
             gaussian blur. Defaults to (1, 1).
         hysteresis: If True, applies the hysteresis edge tracking. Otherwise,
             the edges are divided between weak (0.5) and strong (1) edges.
@@ -1304,12 +1314,12 @@ class Canny(nn.Module):
 
     def __init__(
         self,
-        low_threshold : float               = 0.1,
-        high_threshold: float               = 0.2,
-        kernel_size   : tuple[int,   int  ] = (5, 5),
-        sigma         : tuple[float, float] = (1, 1),
-        hysteresis    : bool                = True,
-        eps           : float               = 1e-6,
+        low_threshold : float  = 0.1,
+        high_threshold: float  = 0.2,
+        kernel_size   : Ints   = (5, 5),
+        sigma         : Floats = (1, 1),
+        hysteresis    : bool   = True,
+        eps           : float  = 1e-6,
     ):
         super().__init__()
         if low_threshold > high_threshold:
@@ -1328,8 +1338,8 @@ class Canny(nn.Module):
                 f"But got: {high_threshold}."
             )
         # Gaussian blur parameters
-        self.kernel_size = kernel_size
-        self.sigma       = sigma
+        self.kernel_size = to_2tuple(kernel_size)
+        self.sigma       = to_2tuple(sigma)
         # Double threshold
         self.low_threshold  = low_threshold
         self.high_threshold = high_threshold
@@ -1364,8 +1374,8 @@ class Canny(nn.Module):
 
 def unsharp_mask(
     input      : Tensor,
-    kernel_size: tuple[int,   int  ],
-    sigma      : tuple[float, float],
+    kernel_size: Ints,
+    sigma      : Floats,
     border_type: BorderType_ = "reflect"
 ) -> Tensor:
     """
@@ -1374,8 +1384,8 @@ def unsharp_mask(
    
     Args:
         input (Tensor): Input image of shape [B, C, H, W].
-        kernel_size (tuple[int, int]): The size of the kernel.
-        sigma (tuple[float, float]): The standard deviation of the kernel.
+        kernel_size (Ints): The size of the kernel.
+        sigma (Floats): The standard deviation of the kernel.
         border_type (BorderType_): The padding mode to be applied before
             convolving. One of: [`constant`, `reflect`, `replicate`, `circular`].
             Defaults to reflect.
@@ -1389,6 +1399,8 @@ def unsharp_mask(
         >>> output.shape
         torch.Size([2, 4, 5, 5])
     """
+    kernel_size = to_2tuple(kernel_size)
+    sigma       = to_2tuple(sigma)
     data_blur      = gaussian_blur2d(input, kernel_size, sigma, border_type)
     data_sharpened = input + (input - data_blur)
     return data_sharpened
@@ -1399,8 +1411,8 @@ class UnsharpMask(nn.Module):
     Create an operator that sharpens image with: out = 2 * image - gaussian_blur2d(image).
     
     Args:
-        kernel_size (tuple[int, int]): The size of the kernel.
-        sigma (tuple[float, float]): The standard deviation of the kernel.
+        kernel_size (Ints): The size of the kernel.
+        sigma (Floats): The standard deviation of the kernel.
         border_type (BorderType_): The padding mode to be applied before
             convolving. One of: [`constant`, `reflect`, `replicate`, `circular`].
             Defaults to reflect.
@@ -1408,13 +1420,13 @@ class UnsharpMask(nn.Module):
 
     def __init__(
         self,
-        kernel_size: tuple[int,   int  ],
-        sigma      : tuple[float, float],
+        kernel_size: Ints,
+        sigma      : Floats,
         border_type: BorderType_ = "reflect"
     ):
         super().__init__()
-        self.kernel_size = kernel_size
-        self.sigma       = sigma
+        self.kernel_size = to_2tuple(kernel_size)
+        self.sigma       = to_2tuple(sigma)
         self.border_type = border_type
 
     def forward(self, input: Tensor) -> Tensor:
