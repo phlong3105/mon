@@ -18,6 +18,9 @@ from one.core import assert_positive_number
 from one.core import assert_sequence_of_length
 from one.core import assert_tensor_of_atleast_ndim
 from one.core import assert_tuple
+from one.core import Floats
+from one.core import Ints
+from one.core import to_2tuple
 
 
 def _get_sobel_kernel_5x5_2nd_order_xy() -> Tensor:
@@ -166,7 +169,8 @@ def get_box_kernel2d(kernel_size: tuple[int, int]) -> Tensor:
 
 
 def get_canny_nms_kernel(
-    device=torch.device("cpu"), dtype=torch.float
+    device = torch.device("cpu"),
+    dtype  = torch.float
 ) -> Tensor:
     """
     Utility function that returns 3x3 kernels for the Canny Non-maximal
@@ -202,7 +206,10 @@ def get_diff_kernel2d_2nd_order() -> Tensor:
     return torch.stack([gxx, gxy, gyy])
 
 
-def get_diff_kernel3d(device=torch.device("cpu"), dtype=torch.float) -> Tensor:
+def get_diff_kernel3d(
+    device = torch.device("cpu"),
+    dtype  = torch.float
+) -> Tensor:
     """
     Utility function that returns a first order derivative kernel of 3x3x3.
     """
@@ -231,7 +238,8 @@ def get_diff_kernel3d(device=torch.device("cpu"), dtype=torch.float) -> Tensor:
 
 
 def get_diff_kernel3d_2nd_order(
-    device=torch.device("cpu"), dtype=torch.float
+    device = torch.device("cpu"),
+    dtype  = torch.float
 ) -> Tensor:
     """
     Utility function that returns a first order derivative kernel of 3x3x3.
@@ -386,18 +394,17 @@ def get_gaussian_kernel1d(
 
 
 def get_gaussian_kernel2d(
-    kernel_size: tuple[int,   int],
-    sigma      : tuple[float, float],
+    kernel_size: Ints,
+    sigma      : Floats,
     force_even : bool = False
 ) -> Tensor:
     """
     Function that returns Gaussian filter matrix coefficients.
     
     Args:
-        kernel_size (tuple[int, int]): Filter sizes in the x and y direction.
+        kernel_size (Ints): Filter sizes in the x and y direction.
             Sizes should be odd and positive.
-        sigma (tuple[float, float]): Gaussian standard deviation in the x and y
-            direction.
+        sigma (Floats): Gaussian standard deviation in the x and y direction.
         force_even (bool): Overrides requirement for odd kernel size.
     
     Returns:
@@ -413,6 +420,8 @@ def get_gaussian_kernel2d(
                 [0.0462, 0.0899, 0.1123, 0.0899, 0.0462],
                 [0.0370, 0.0720, 0.0899, 0.0720, 0.0370]])
     """
+    kernel_size = to_2tuple(kernel_size)
+    sigma       = to_2tuple(sigma)
     assert_tuple(kernel_size, tuple)
     assert_sequence_of_length(kernel_size, 2)
     assert_tuple(sigma, tuple)
@@ -426,7 +435,9 @@ def get_gaussian_kernel2d(
 
 
 def get_hanning_kernel1d(
-    kernel_size: int, device=torch.device("cpu"), dtype=torch.float
+    kernel_size: int,
+    device      = torch.device("cpu"),
+    dtype       = torch.float
 ) -> Tensor:
     """
     Returns Hanning (also known as Hann) kernel, used in signal processing and
@@ -436,8 +447,10 @@ def get_hanning_kernel1d(
     See further in numpy docs https://numpy.org/doc/stable/reference/generated/numpy.hanning.html
     
     Args:
-        kernel_size: The size the of the kernel. It should be positive.
-    
+        kernel_size (int): The size the of the kernel. It should be positive.
+        device ():
+        dtype ():
+        
     Returns:
         1D tensor with Hanning filter coefficients.
             .. math::  w(n) = 0.5 - 0.5cos\\left(\\frac{2\\pi{n}}{M-1}\\right)
@@ -453,19 +466,24 @@ def get_hanning_kernel1d(
 
 
 def get_hanning_kernel2d(
-    kernel_size: tuple[int, int], device=torch.device("cpu"), dtype=torch.float
+    kernel_size: Ints,
+    device      = torch.device("cpu"),
+    dtype       = torch.float
 ) -> Tensor:
     """
     Returns 2d Hanning kernel, used in signal processing and KCF tracker.
     
     Args:
-        kernel_size (tuple[int, int]): The size of the kernel for the filter.
+        kernel_size (Ints): The size of the kernel for the filter.
             It should be positive.
-    
+        device ():
+        dtype ():
+        
     Returns:
         2D tensor with Hanning filter coefficients.
             .. math::  w(n) = 0.5 - 0.5cos\\left(\\frac{2\\pi{n}}{M-1}\\right)
     """
+    kernel_size = to_2tuple(kernel_size)
     assert_positive_number(kernel_size, 2)
     ky = get_hanning_kernel1d(kernel_size[0], device, dtype)[None].T
     kx = get_hanning_kernel1d(kernel_size[1], device, dtype)[None]
@@ -474,7 +492,8 @@ def get_hanning_kernel2d(
 
 
 def get_hysteresis_kernel(
-    device=torch.device("cpu"), dtype=torch.float
+    device = torch.device("cpu"),
+    dtype  = torch.float
 ) -> Tensor:
     """
     Utility function that returns the 3x3 kernels for the Canny hysteresis.
@@ -681,7 +700,10 @@ def get_spatial_gradient_kernel2d(mode: str, order: int) -> Tensor:
 
 
 def get_spatial_gradient_kernel3d(
-    mode: str, order: int, device=torch.device("cpu"), dtype=torch.float
+    mode  : str,
+    order : int,
+    device = torch.device("cpu"),
+    dtype  = torch.float
 ) -> Tensor:
     """
     Function that returns kernel for 1st or 2nd order scale pyramid gradients,

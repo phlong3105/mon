@@ -42,6 +42,7 @@ from one.core import to_4tuple
 
 # H1: - Activation -------------------------------------------------------------
 
+@LAYERS.register(name="argmax")
 class ArgMax(Module):
     """
     Find the indices of the maximum value of all elements in the input
@@ -60,6 +61,7 @@ class ArgMax(Module):
         return torch.argmax(input, dim=self.dim)
 
 
+@LAYERS.register(name="clamp")
 class Clamp(Module):
     """
     Clamp the feature value within [min, max]. More details can be found in
@@ -79,6 +81,7 @@ class Clamp(Module):
         return torch.clamp(input, min=self.min, max=self.max)
 
 
+@LAYERS.register(name="frelu")
 class FReLU(Module):
     
     def __init__(self, c1: int, k: Ints = 3):
@@ -92,12 +95,10 @@ class FReLU(Module):
 
 
 Clip = Clamp
-LAYERS.register(name="argmax",              module=ArgMax)
+
 LAYERS.register(name="celu",                module=CELU)
-LAYERS.register(name="clamp",               module=Clamp)
 LAYERS.register(name="clip",                module=Clip)
 LAYERS.register(name="elu",                 module=ELU)
-LAYERS.register(name="frelu",               module=FReLU)
 LAYERS.register(name="gelu",                module=GELU)
 LAYERS.register(name="glu",                 module=GLU)
 LAYERS.register(name="hard_shrink",         module=Hardshrink)
@@ -431,6 +432,7 @@ LAYERS.register(name="sam", module=SAM)
 
 # H1: - Bottleneck -------------------------------------------------------------
 
+@LAYERS.register(name="bottleneck")
 class Bottleneck(Module):
     """
     Standard bottleneck.
@@ -474,6 +476,7 @@ class Bottleneck(Module):
         return output
 
 
+@LAYERS.register(name="bottleneck_csp")
 class BottleneckCSP(Module):
     """
     CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -545,6 +548,7 @@ class BottleneckCSP(Module):
         return output
 
 
+@LAYERS.register(name="bottleneck_csp2")
 class BottleneckCSP2(Module):
     """
     CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -607,6 +611,7 @@ class BottleneckCSP2(Module):
         return self.conv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@LAYERS.register(name="vov_csp")
 class VoVCSP(Module):
     """
     CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
@@ -657,12 +662,6 @@ class VoVCSP(Module):
         return output
 
 
-LAYERS.register(name="bottleneck",      module=Bottleneck)
-LAYERS.register(name="bottleneck_csp",  module=BottleneckCSP)
-LAYERS.register(name="bottleneck_csp2", module=BottleneckCSP2)
-LAYERS.register(name="vov_csp",         module=VoVCSP)
-
-
 # H1: - Convolution ------------------------------------------------------------
 
 def conv2d_same(
@@ -695,6 +694,7 @@ def conv2d_same(
     )
 
 
+@LAYERS.register(name="cond_act2d")
 class ConvAct2d(Module):
     """
     Conv2d + Act.
@@ -739,6 +739,7 @@ class ConvAct2d(Module):
         return self.act(self.conv(input))
         
 
+@LAYERS.register(name="cond_bn_mish2d")
 class ConvBnMish2d(Module):
     """
     Conv2d + BN + Mish.
@@ -786,6 +787,7 @@ class ConvBnMish2d(Module):
         return self.act(self.conv(input))
     
 
+@LAYERS.register(name="cond_bn_relu2d")
 class ConvBnReLU2d(Module):
     """
     Conv2d + BN + ReLU.
@@ -830,7 +832,8 @@ class ConvBnReLU2d(Module):
     def forward(self, input: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(input)))
     
-
+    
+@LAYERS.register(name="cond_bn_relu62d")
 class ConvBnReLU62d(Module):
     """
     Conv2d + BN + ReLU6.
@@ -875,7 +878,8 @@ class ConvBnReLU62d(Module):
     def forward(self, input: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(input)))
     
-        
+
+@LAYERS.register(name="cond_mish2d")
 class ConvMish2d(Module):
     """
     Conv2d + Mish.
@@ -918,6 +922,7 @@ class ConvMish2d(Module):
         return self.act(self.conv(input))
     
 
+@LAYERS.register(name="cond_relu2d")
 class ConvReLU2d(Module):
     """
     Conv2d + ReLU.
@@ -960,6 +965,7 @@ class ConvReLU2d(Module):
         return self.act(self.conv(input))
 
  
+@LAYERS.register(name="conv_same2d")
 class ConvSame2d(Conv2d):
     """
     Tensorflow like `SAME` convolution wrapper for 2D convolutions.
@@ -1006,6 +1012,7 @@ class ConvSame2d(Conv2d):
         )
     
 
+@LAYERS.register(name="conv_sigmoid2d")
 class ConvSigmoid2d(Module):
     """
     Conv2d + Sigmoid.
@@ -1048,6 +1055,7 @@ class ConvSigmoid2d(Module):
         return self.act(self.conv(input))
 
 
+@LAYERS.register(name="conv_tf2d")
 class ConvTF2d(Conv2d):
     """
     Implementation of 2D convolution in TensorFlow with `padding` as "same",
@@ -1115,6 +1123,7 @@ class ConvTF2d(Conv2d):
         return output
 
 
+@LAYERS.register(name="conv_transpose_act2d")
 class ConvTransposeAct2d(Module):
     """
     ConvTranspose2d + Act.
@@ -1159,7 +1168,8 @@ class ConvTransposeAct2d(Module):
     def forward(self, input: Tensor) -> Tensor:
         return self.act(self.conv(input))
 
-        
+
+@LAYERS.register(name="cross_conv2d")
 class CrossConv2d(Module):
     """
     Cross Convolution Downsample.
@@ -1216,6 +1226,7 @@ class CrossConv2d(Module):
             else self.cv2(self.cv1(input))
 
 
+@LAYERS.register(name="cross_conv_csp")
 class CrossConvCSP(Module):
     """
     Cross Convolution CSP.
@@ -1280,6 +1291,7 @@ class CrossConvCSP(Module):
         return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
 
 
+@LAYERS.register(name="depthwise_conv2d")
 class DepthwiseConv2d(Conv2d):
     """
     Depthwise Conv2d with 3x3 kernel size, 1 stride, and groups == out_channels.
@@ -1311,6 +1323,7 @@ class DepthwiseConv2d(Conv2d):
         )
 
 
+@LAYERS.register(name="depthwise_conv_bn_mish2d")
 class DepthwiseConvBnMish2d(ConvBnMish2d):
     """
     Depthwise Conv2d + Bn + Mish.
@@ -1347,6 +1360,7 @@ class DepthwiseConvBnMish2d(ConvBnMish2d):
         )
 
 
+@LAYERS.register(name="pointwise_conv2d")
 class PointwiseConv2d(Conv2d):
     """
     Pointwise Conv2d with 1x1 kernel size, 1 stride, and groups == 1.
@@ -1377,6 +1391,7 @@ class PointwiseConv2d(Conv2d):
         )
         
 
+@LAYERS.register(name="scaled_std_conv2d")
 class ScaledStdConv2d(Conv2d):
     """
     Conv2d layer with Scaled Weight Standardization.
@@ -1454,6 +1469,7 @@ class ScaledStdConv2d(Conv2d):
         )
 
 
+@LAYERS.register(name="std_conv2d")
 class StdConv2d(Conv2d):
     """
     Conv2d with Weight Standardization. Used for BiT ResNet-V2 models.
@@ -1521,26 +1537,18 @@ class StdConv2d(Conv2d):
         )
 
 
-LAYERS.register(name="conv1d",                   module=Conv1d)
-LAYERS.register(name="conv2d",                   module=Conv2d)
-LAYERS.register(name="conv3d",                   module=Conv3d)
-LAYERS.register(name="cond_act2d",               module=ConvAct2d)
-LAYERS.register(name="cond_bn_mish2d",           module=ConvBnMish2d)
-LAYERS.register(name="cond_bn_relu2d",           module=ConvBnReLU2d)
-LAYERS.register(name="cond_bn_relu62d",          module=ConvBnReLU62d)
-LAYERS.register(name="cond_mish2d",              module=ConvMish2d)
-LAYERS.register(name="cond_relu2d",              module=ConvReLU2d)
-LAYERS.register(name="conv_same2d",              module=ConvSame2d)
-LAYERS.register(name="conv_sigmoid2d",           module=ConvSigmoid2d)
-LAYERS.register(name="conv_tf2d",                module=ConvTF2d)
-LAYERS.register(name="conv_transpose_act2d",     module=ConvTransposeAct2d)
-LAYERS.register(name="cross_conv2d",             module=CrossConv2d)
-LAYERS.register(name="cross_conv_csp",           module=CrossConvCSP)
-LAYERS.register(name="depthwise_conv2d",         module=DepthwiseConv2d)
-LAYERS.register(name="depthwise_conv_bn_mish2d", module=DepthwiseConvBnMish2d)
-LAYERS.register(name="pointwise_conv2d",         module=PointwiseConv2d)
-LAYERS.register(name="scaled_std_conv2d",        module=ScaledStdConv2d)
-LAYERS.register(name="std_conv2d",               module=StdConv2d)
+LAYERS.register(name="conv1d",                module=Conv1d)
+LAYERS.register(name="conv2d",                module=Conv2d)
+LAYERS.register(name="conv3d",                module=Conv3d)
+LAYERS.register(name="conv_transpose1d",      module=ConvTranspose1d)
+LAYERS.register(name="conv_transpose2d",      module=ConvTranspose2d)
+LAYERS.register(name="conv_transpose3d",      module=ConvTranspose3d)
+LAYERS.register(name="lazy_conv1d",           module=LazyConv1d)
+LAYERS.register(name="lazy_conv2d",           module=LazyConv2d)
+LAYERS.register(name="lazy_conv3d",           module=LazyConv3d)
+LAYERS.register(name="lazy_conv_transpose1d", module=LazyConvTranspose1d)
+LAYERS.register(name="lazy_conv_transpose2d", module=LazyConvTranspose2d)
+LAYERS.register(name="lazy_conv_transpose3d", module=LazyConvTranspose3d)
 
 
 # H1: - Drop -------------------------------------------------------------------
@@ -1697,6 +1705,7 @@ def drop_path(
     return output
 
 
+@LAYERS.register(name="drop_block2d")
 class DropBlock2d(Module):
     """
     DropBlock.
@@ -1746,6 +1755,7 @@ class DropBlock2d(Module):
             )
 
 
+@LAYERS.register(name="drop_path")
 class DropPath(Module):
     """
     Drop paths (Stochastic Depth) per sample.
@@ -1767,17 +1777,16 @@ class DropPath(Module):
 
 
 LAYERS.register(name="alpha_dropout",         module=AlphaDropout)
-LAYERS.register(name="drop_block2d",          module=DropBlock2d)
 LAYERS.register(name="dropout",               module=Dropout)
 LAYERS.register(name="dropout1d",             module=Dropout1d)
 LAYERS.register(name="dropout2d",             module=Dropout2d)
 LAYERS.register(name="dropout3d",             module=Dropout3d)
-LAYERS.register(name="drop_path",             module=DropPath)
 LAYERS.register(name="feature_alpha_dropout", module=FeatureAlphaDropout)
 
 
 # H1: - Embedding --------------------------------------------------------------
 
+@LAYERS.register(name="patch_embedding")
 class PatchEmbedding(Module):
     """
     2D Image to Patch Embedding.
@@ -1823,6 +1832,7 @@ class PatchEmbedding(Module):
         return output
 
 
+@LAYERS.register(name="rotary_embedding")
 class RotaryEmbedding(Module):
     """
     Rotary position embedding.
@@ -1872,10 +1882,6 @@ class RotaryEmbedding(Module):
         sin = emb.sin().reshape(n, -1).repeat_interleave(2, -1)
         cos = emb.cos().reshape(n, -1).repeat_interleave(2, -1)
         return sin, cos
-    
-
-LAYERS.register(name="patch_embedding",  module=PatchEmbedding)
-LAYERS.register(name="rotary_embedding", module=RotaryEmbedding)
 
 
 # H1: - Linear -----------------------------------------------------------------
@@ -1888,6 +1894,7 @@ LAYERS.register(name="linear",      module=Linear)
 
 # H1: - MLP --------------------------------------------------------------------
 
+@LAYERS.register(name="conv_mlp")
 class ConvMlp(Module):
     """
     MLP using 1x1 Convs that keeps spatial dims.
@@ -1930,6 +1937,7 @@ class ConvMlp(Module):
         return output
 
 
+@LAYERS.register(name="glu_mlp")
 class GluMlp(Module):
     """
     MLP w/ GLU style gating. See:
@@ -1974,6 +1982,7 @@ class GluMlp(Module):
         return output
 
 
+@LAYERS.register(name="gated_mlp")
 class GatedMlp(Module):
     """
     MLP as used in gMLP.
@@ -2017,6 +2026,7 @@ class GatedMlp(Module):
         return output
 
 
+@LAYERS.register(name="mlp")
 class Mlp(Module):
     """
     MLP as used in Vision Transformer, MLP-Mixer and related networks.
@@ -2050,14 +2060,9 @@ class Mlp(Module):
         return output
 
 
-LAYERS.register(name="conv_mlp",  module=ConvMlp)
-LAYERS.register(name="glu_mlp",   module=GluMlp)
-LAYERS.register(name="gated_mlp", module=GatedMlp)
-LAYERS.register(name="mlp",       module=Mlp)
-
-
 # H1: - Normalization ----------------------------------------------------------
 
+@LAYERS.register(name="batch_norm_act2d")
 class BatchNormAct2d(BatchNorm2d):
     """
     BatchNorm2d + Activation.
@@ -2099,6 +2104,7 @@ class BatchNormAct2d(BatchNorm2d):
         return output
 
 
+@LAYERS.register(name="batch_norm_relu2d")
 class BatchNormReLU2d(BatchNormAct2d):
     """
     BatchNorm2d + ReLU.
@@ -2135,6 +2141,7 @@ class BatchNormReLU2d(BatchNormAct2d):
         )
         
 
+@LAYERS.register(name="fraction_instance_norm2d")
 class FractionInstanceNorm2d(InstanceNorm2d):
     """
     Fractional Instance Normalization is a generalization of Half Instance
@@ -2235,6 +2242,7 @@ class FractionInstanceNorm2d(InstanceNorm2d):
             return torch.cat([out1, out2], dim=1)
 
 
+@LAYERS.register(name="group_norm_act")
 class GroupNormAct(GroupNorm):
     """
     GroupNorm + Activation.
@@ -2277,6 +2285,7 @@ class GroupNormAct(GroupNorm):
         return self.act(output)
 
 
+@LAYERS.register(name="half_group_norm")
 class HalfGroupNorm(GroupNorm):
 
     def __init__(
@@ -2310,6 +2319,7 @@ class HalfGroupNorm(GroupNorm):
         return torch.cat([out_1, out_2], dim=1)
 
 
+@LAYERS.register(name="half_instance_norm2d")
 class HalfInstanceNorm2d(InstanceNorm2d):
     """
     Half instance normalization layer proposed in paper:
@@ -2353,6 +2363,7 @@ class HalfInstanceNorm2d(InstanceNorm2d):
         return torch.cat([out_1, out_2], dim=1)
 
 
+@LAYERS.register(name="half_layer_norm")
 class HalfLayerNorm(LayerNorm):
 
     def __init__(
@@ -2384,6 +2395,7 @@ class HalfLayerNorm(LayerNorm):
         return torch.cat([out_1, out_2], dim=1)
 
 
+@LAYERS.register(name="layer_norm2d")
 class LayerNorm2d(LayerNorm):
     """
     LayerNorm for channels of 2D spatial [B, C, H, W] tensors.
@@ -2419,16 +2431,8 @@ class LayerNorm2d(LayerNorm):
 LAYERS.register(name="batch_norm1d",             module=BatchNorm1d)
 LAYERS.register(name="batch_norm2d",             module=BatchNorm2d)
 LAYERS.register(name="batch_norm3d",             module=BatchNorm3d)
-LAYERS.register(name="batch_norm_act2d",         module=BatchNormAct2d)
-LAYERS.register(name="batch_norm_relu2d",        module=BatchNormReLU2d)
-LAYERS.register(name="fraction_instance_norm2d", module=FractionInstanceNorm2d)
 LAYERS.register(name="group_norm",               module=GroupNorm)
-LAYERS.register(name="group_norm_act",           module=GroupNormAct)
-LAYERS.register(name="half_group_norm",          module=HalfGroupNorm)
-LAYERS.register(name="half_instance_norm2d",     module=HalfInstanceNorm2d)
-LAYERS.register(name="half_layer_norm",          module=HalfLayerNorm)
 LAYERS.register(name="layer_norm",               module=LayerNorm)
-LAYERS.register(name="layer_norm2d",             module=LayerNorm2d)
 LAYERS.register(name="lazy_batch_norm1d",        module=LazyBatchNorm1d)
 LAYERS.register(name="lazy_batch_norm2d",        module=LazyBatchNorm2d)
 LAYERS.register(name="lazy_batch_norm3d",        module=LazyBatchNorm3d)
@@ -2610,6 +2614,7 @@ def max_pool_same2d(
     )
 
 
+@LAYERS.register(name="adaptive_avg_max_pool2d")
 class AdaptiveAvgMaxPool2d(Module):
 
     def __init__(self, output_size: int = 1):
@@ -2623,6 +2628,7 @@ class AdaptiveAvgMaxPool2d(Module):
         )
 
 
+@LAYERS.register(name="adaptive_cat_avg_max_pool2d")
 class AdaptiveCatAvgMaxPool2d(Module):
 
     def __init__(self, output_size: int = 1):
@@ -2636,6 +2642,59 @@ class AdaptiveCatAvgMaxPool2d(Module):
         )
 
 
+@LAYERS.register(name="adaptive_pool2d")
+class AdaptivePool2d(Module):
+    """
+    Selectable global pooling layer with dynamic input kernel size.
+    """
+
+    def __init__(
+        self,
+        output_size: int  = 1,
+        pool_type  : str  = "fast",
+        flatten    : bool = False
+    ):
+        super().__init__()
+        self.pool_type = pool_type or ""
+        self.flatten   = Flatten(1) if flatten else Identity()
+        if pool_type == "":
+            self.pool = Identity()  # pass through
+        elif pool_type == "fast":
+            if output_size != 1:
+                raise ValueError()
+            self.pool    = FastAdaptiveAvgPool2d(flatten)
+            self.flatten = Identity()
+        elif pool_type == "avg":
+            self.pool = AdaptiveAvgPool2d(output_size)
+        elif pool_type == "avg_max":
+            self.pool = AdaptiveAvgMaxPool2d(output_size)
+        elif pool_type == "cat_avg_max":
+            self.pool = AdaptiveCatAvgMaxPool2d(output_size)
+        elif pool_type == "max":
+            self.pool = AdaptiveMaxPool2d(output_size)
+        elif True:
+            raise ValueError("Invalid pool type: %s" % pool_type)
+
+    def __repr__(self):
+        return (self.__class__.__name__ + " (pool_type=" + self.pool_type +
+                ", flatten=" + str(self.flatten) + ")")
+
+    def is_identity(self) -> bool:
+        return not self.pool_type
+
+    def forward(self, input: Tensor) -> Tensor:
+        output = self.pool(input)
+        output = self.flatten(output)
+        return output
+
+    def feat_mult(self):
+        if self.pool_type == "cat_avg_max":
+            return 2
+        else:
+            return 1
+        
+
+@LAYERS.register(name="avg_pool_same2d")
 class AvgPoolSame2d(AvgPool2d):
     """
     Tensorflow like 'same' wrapper for 2D average pooling.
@@ -2675,6 +2734,7 @@ class AvgPoolSame2d(AvgPool2d):
         )
 
 
+@LAYERS.register(name="fast_adaptive_avg_pool2d")
 class FastAdaptiveAvgPool2d(Module):
 
     def __init__(self, flatten: bool = False):
@@ -2685,6 +2745,7 @@ class FastAdaptiveAvgPool2d(Module):
         return input.mean((2, 3), keepdim=not self.flatten)
     
 
+@LAYERS.register(name="max_pool_same2d")
 class MaxPoolSame2d(MaxPool2d):
     """
     Tensorflow like `same` wrapper for 2D max pooling.
@@ -2726,6 +2787,7 @@ class MaxPoolSame2d(MaxPool2d):
         )
 
 
+@LAYERS.register(name="median_pool2d")
 class MedianPool2d(Module):
     """
     Median pool (usable as median filter when stride=1) module.
@@ -2780,57 +2842,7 @@ class MedianPool2d(Module):
         return output
 
 
-class AdaptivePool2d(Module):
-    """
-    Selectable global pooling layer with dynamic input kernel size.
-    """
-
-    def __init__(
-        self,
-        output_size: int  = 1,
-        pool_type  : str  = "fast",
-        flatten    : bool = False
-    ):
-        super().__init__()
-        self.pool_type = pool_type or ""
-        self.flatten   = Flatten(1) if flatten else Identity()
-        if pool_type == "":
-            self.pool = Identity()  # pass through
-        elif pool_type == "fast":
-            if output_size != 1:
-                raise ValueError()
-            self.pool    = FastAdaptiveAvgPool2d(flatten)
-            self.flatten = Identity()
-        elif pool_type == "avg":
-            self.pool = AdaptiveAvgPool2d(output_size)
-        elif pool_type == "avg_max":
-            self.pool = AdaptiveAvgMaxPool2d(output_size)
-        elif pool_type == "cat_avg_max":
-            self.pool = AdaptiveCatAvgMaxPool2d(output_size)
-        elif pool_type == "max":
-            self.pool = AdaptiveMaxPool2d(output_size)
-        elif True:
-            raise ValueError("Invalid pool type: %s" % pool_type)
-
-    def __repr__(self):
-        return (self.__class__.__name__ + " (pool_type=" + self.pool_type +
-                ", flatten=" + str(self.flatten) + ")")
-
-    def is_identity(self) -> bool:
-        return not self.pool_type
-
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.pool(input)
-        output = self.flatten(output)
-        return output
-
-    def feat_mult(self):
-        if self.pool_type == "cat_avg_max":
-            return 2
-        else:
-            return 1
-        
-
+@LAYERS.register(name="spatial_pyramid_pooling")
 class SpatialPyramidPooling(Module):
     """
     Spatial Pyramid Pooling layer used in YOLOv3-SPP.
@@ -2852,13 +2864,13 @@ class SpatialPyramidPooling(Module):
         hidden_channels = in_channels // 2  # Hidden channels
         in_channels2    = hidden_channels * (len(kernel_size) + 1)
 
-        self.conv1 = ConvBnMish(
+        self.conv1 = ConvBnMish2d(
             in_channels  = in_channels,
             out_channels = hidden_channels,
             kernel_size  = 1,
             stride       = 1
         )
-        self.conv2 = ConvBnMish(
+        self.conv2 = ConvBnMish2d(
             in_channels  = in_channels2,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -2875,6 +2887,7 @@ class SpatialPyramidPooling(Module):
         return output
 
 
+@LAYERS.register(name="spatial_pyramid_pooling_csp")
 class SpatialPyramidPoolingCSP(Module):
     """
     Cross Stage Partial Spatial Pyramid Pooling layer used in YOLOv3-SPP.
@@ -2902,7 +2915,7 @@ class SpatialPyramidPoolingCSP(Module):
     ):
         super().__init__()
         hidden_channels = int(2 * out_channels * expansion)  # Hidden channels
-        self.conv1 = ConvBnMish(
+        self.conv1 = ConvBnMish2d(
             in_channels  = in_channels,
             out_channels = hidden_channels,
             kernel_size  = 1,
@@ -2915,13 +2928,13 @@ class SpatialPyramidPoolingCSP(Module):
             stride       = (1, 1),
             bias         = False
         )
-        self.conv3 = ConvBnMish(
+        self.conv3 = ConvBnMish2d(
             in_channels  = hidden_channels,
             out_channels = hidden_channels,
             kernel_size  = 3,
             stride       = 1
         )
-        self.conv4 = ConvBnMish(
+        self.conv4 = ConvBnMish2d(
             in_channels  = hidden_channels,
             out_channels = hidden_channels,
             kernel_size  = 1,
@@ -2931,13 +2944,13 @@ class SpatialPyramidPoolingCSP(Module):
             MaxPool2d(kernel_size=input, stride=(1, 1), padding=input // 2)
             for input in kernel_size
         ])
-        self.conv5 = ConvBnMish(
+        self.conv5 = ConvBnMish2d(
             in_channels  = 4 * hidden_channels,
             out_channels = hidden_channels,
             kernel_size  = 1,
             stride       = 1
         )
-        self.conv6 = ConvBnMish(
+        self.conv6 = ConvBnMish2d(
             in_channels  = hidden_channels,
             out_channels = hidden_channels,
             kernel_size  = 3,
@@ -2945,7 +2958,7 @@ class SpatialPyramidPoolingCSP(Module):
         )
         self.bn    = BatchNorm2d(2 * hidden_channels)
         self.act   = Mish()
-        self.conv7 = ConvBnMish(
+        self.conv7 = ConvBnMish2d(
             in_channels  = 2 * hidden_channels,
             out_channels = hidden_channels,
             kernel_size  = 1,
@@ -2963,17 +2976,12 @@ class SpatialPyramidPoolingCSP(Module):
 LAYERS.register(name="adaptive_avg_pool1d",         module=AdaptiveAvgPool1d)
 LAYERS.register(name="adaptive_avg_pool2d",         module=AdaptiveAvgPool2d)
 LAYERS.register(name="adaptive_avg_pool3d",         module=AdaptiveAvgPool3d)
-LAYERS.register(name="adaptive_avg_max_pool2d",     module=AdaptiveAvgMaxPool2d)
-LAYERS.register(name="adaptive_cat_avg_max_pool2d", module=AdaptiveCatAvgMaxPool2d)
 LAYERS.register(name="adaptive_max_pool1d",         module=AdaptiveMaxPool1d)
 LAYERS.register(name="adaptive_max_pool2d",         module=AdaptiveMaxPool2d)
 LAYERS.register(name="adaptive_max_pool3d",         module=AdaptiveMaxPool3d)
-LAYERS.register(name="adaptive_pool2d",             module=AdaptivePool2d)
 LAYERS.register(name="avg_pool1d",		            module=AvgPool1d)
 LAYERS.register(name="avg_pool2d",		            module=AvgPool2d)
 LAYERS.register(name="avg_pool3d", 		            module=AvgPool3d)
-LAYERS.register(name="avg_pool_same2d",             module=AvgPoolSame2d)
-LAYERS.register(name="fast_adaptive_avg_pool2d",    module=FastAdaptiveAvgPool2d)
 LAYERS.register(name="fractional_max_pool2d",       module=FractionalMaxPool2d)
 LAYERS.register(name="fractional_max_pool3d",       module=FractionalMaxPool3d)
 LAYERS.register(name="lp_pool_1d", 			        module=LPPool1d)
@@ -2981,17 +2989,14 @@ LAYERS.register(name="lp_pool_2d", 			        module=LPPool2d)
 LAYERS.register(name="max_pool1d", 		            module=MaxPool1d)
 LAYERS.register(name="max_pool2d", 		            module=MaxPool2d)
 LAYERS.register(name="max_pool3d", 		            module=MaxPool3d)
-LAYERS.register(name="max_pool_same2d",             module=MaxPoolSame2d)
 LAYERS.register(name="max_unpool1d", 		        module=MaxUnpool1d)
 LAYERS.register(name="max_unpool2d", 		        module=MaxUnpool2d)
 LAYERS.register(name="max_unpool3d", 		        module=MaxUnpool3d)
-LAYERS.register(name="median_pool2d",               module=MedianPool2d)
-LAYERS.register(name="spatial_pyramid_pooling",     module=SpatialPyramidPooling)
-LAYERS.register(name="spatial_pyramid_pooling_csp", module=SpatialPyramidPoolingCSP)
 
 
 # H1: - Residual ---------------------------------------------------------------
 
+@LAYERS.register(name="residual_conv_act2d")
 class ResidualConvAct2d(Module):
     """
     Basic Residual Conv2d + Act block.
@@ -3038,6 +3043,7 @@ class ResidualConvAct2d(Module):
         return torch.cat([input, self.act(self.conv(input))], 1)
 
 
+@LAYERS.register(name="residual_dense_block")
 class ResidualDenseBlock(Module):
     """
     Densely-Connected Residual block with activation layer.
@@ -3139,6 +3145,7 @@ class ResidualDenseBlock(Module):
         return input + self.residual_scale * self.lff(self.layers(input))
 
 
+@LAYERS.register(name="residual_dense_block_5Conv_lrelu")
 class ResidualDenseBlock5ConvLReLU(ResidualDenseBlock):
     """
     Densely-Connected Residual block with 5 convolution layers + Leaky ReLU.
@@ -3212,8 +3219,9 @@ class ResidualDenseBlock5ConvLReLU(ResidualDenseBlock):
                 elif isinstance(m, BatchNorm2d):
                     init.constant_(m.weight, 1)
                     init.constant_(m.bias.data, 0.0)
-
-
+                    
+                    
+@LAYERS.register(name="residual_in_residual_dense_block")
 class ResidualInResidualDenseBlock(Module):
     """
     Residual in Residual Dense Block with 3 Residual Dense Blocks.
@@ -3257,6 +3265,7 @@ class ResidualInResidualDenseBlock(Module):
         return output * self.residual_scale + input
 
 
+@LAYERS.register(name="residual_wide_activation_block")
 class ResidualWideActivationBlock(Module):
     """
     Conv2d + BN + Act + Conv2d + BN.
@@ -3331,6 +3340,7 @@ RDB5ConvLReLu   = ResidualDenseBlock5ConvLReLU
 ResidualConvAct = ResidualConvAct2d
 RRDB            = ResidualInResidualDenseBlock
 RWAB            = ResidualWideActivationBlock
+
 LAYERS.register(name="rdb",               module=RDB)
 LAYERS.register(name="rdb_5conv_lrelu"  , module=RDB5ConvLReLu)
 LAYERS.register(name="residual_conv_act", module=ResidualConvAct)
@@ -3340,6 +3350,7 @@ LAYERS.register(name="rwab",              module=RWAB)
 
 # H1: - Sampling ---------------------------------------------------------------
 
+@LAYERS.register(name="downsample")
 class Downsample(Module):
     """
     
@@ -3380,6 +3391,7 @@ class Downsample(Module):
         return self.conv(self.upsample(input))
         
 
+@LAYERS.register(name="inverse_pixel_shuffle")
 class InversePixelShuffle(Module):
     
     def __init__(self, scale_factor: int = 2):
@@ -3400,6 +3412,7 @@ class InversePixelShuffle(Module):
         )
 
 
+@LAYERS.register(name="pixel_shuffle")
 class PixelShuffle(Module):
     """
     Pixel Shuffle upsample layer. This module packs `F.pixel_shuffle()`
@@ -3436,6 +3449,7 @@ class PixelShuffle(Module):
         return output
 
 
+@LAYERS.register(name="skip_upsample")
 class SkipUpsample(Module):
     """
 
@@ -3481,6 +3495,7 @@ class SkipUpsample(Module):
         return output
 
 
+@LAYERS.register(name="upsample")
 class Upsample(Module):
     """
 
@@ -3520,17 +3535,11 @@ class Upsample(Module):
         
     def forward(self, input: Tensor) -> Tensor:
         return self.conv(self.upsample(input))
-    
-
-LAYERS.register(name="downsample",            module=Downsample)
-LAYERS.register(name="inverse_pixel_shuffle", module=InversePixelShuffle)
-LAYERS.register(name="pixel_shuffle",         module=PixelShuffle)
-LAYERS.register(name="skip_upsample",         module=SkipUpsample)
-LAYERS.register(name="upsample",              module=Upsample)
 
 
 # H1: - Misc -------------------------------------------------------------------
 
+@LAYERS.register(name="concat")
 class Concat(Module):
     """
     Concatenate a list of tensors along dimension.
@@ -3547,6 +3556,7 @@ class Concat(Module):
         return torch.cat(input, dim=self.dim)
 
 
+@LAYERS.register(name="concat_pad")
 class ConcatPad(Module):
     """
     Concatenate 2 tensors with different [H, W] (resolution) along dimension.
@@ -3580,7 +3590,8 @@ class ConcatPad(Module):
                            diff_y // 2, diff_y - diff_y//2))
         return torch.cat((x, y), dim=self.dim)
     
-
+    
+@LAYERS.register(name="context_block")
 class ContextBlock(Module):
     """
     ContextBlock module in GCNet. See 'GCNet: Non-local Networks Meet
@@ -3710,6 +3721,7 @@ class ContextBlock(Module):
         return context
 
 
+@LAYERS.register(name="flatten")
 class Flatten(Module):
     """
     Flatten the image. Commonly used after `AdaptiveAvgPool2d(1)` to remove
@@ -3728,6 +3740,7 @@ class Flatten(Module):
         return pred
 
 
+@LAYERS.register(name="mean")
 class Mean(Module):
     """
     Calculate mean of the image.
@@ -3750,6 +3763,7 @@ class Mean(Module):
         return input.mean(dim=self.dim, keepdim=self.keepdim)
 
 
+@LAYERS.register(name="original_resolution_block")
 class OriginalResolutionBlock(Module):
     """
     Original Resolution Block.
@@ -3804,6 +3818,7 @@ class OriginalResolutionBlock(Module):
         return output
 
 
+@LAYERS.register(name="scale")
 class Scale(Module):
     """
     A learnable scale parameter. This layer scales the input by a learnable
@@ -3822,6 +3837,7 @@ class Scale(Module):
         return input * self.scale
 
 
+@LAYERS.register(name="squeeze_and_excite_layer")
 class SqueezeAndExciteLayer(Module):
     
     def __init__(self, channel: int, reduction: int = 16):
@@ -3841,6 +3857,7 @@ class SqueezeAndExciteLayer(Module):
         return input * y.expand_as(input)
 
 
+@LAYERS.register(name="sum")
 class Sum(Module):
     """
     Weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070.
@@ -3871,14 +3888,6 @@ class Sum(Module):
 
 ORS     = OriginalResolutionBlock
 SELayer = SqueezeAndExciteLayer
-LAYERS.register(name="concat",                    module=Concat)
-LAYERS.register(name="concat_pad",                module=ConcatPad)
-LAYERS.register(name="context_block",             module=ContextBlock)
-LAYERS.register(name="flatten",                   module=Flatten)
-LAYERS.register(name="mean",                      module=Mean)
-LAYERS.register(name="ors",                       module=ORS)
-LAYERS.register(name="original_resolution_block", module=OriginalResolutionBlock)
-LAYERS.register(name="scale",                     module=Scale)
-LAYERS.register(name="se_layer",                  module=SELayer)
-LAYERS.register(name="squeeze_and_excite_layer",  module=SqueezeAndExciteLayer)
-LAYERS.register(name="sum",                       module=Sum)
+
+LAYERS.register(name="ors",      module=ORS)
+LAYERS.register(name="se_layer", module=SELayer)

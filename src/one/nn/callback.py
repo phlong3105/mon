@@ -56,6 +56,7 @@ if _RICH_AVAILABLE:
     from rich.table import Table
 
 
+@CALLBACKS.register(name="checkpoint_callback")
 class CheckpointCallback(callbacks.Callback):
     """
     Checkpointing is a mechanism to store the state of a computation so that
@@ -921,6 +922,7 @@ class CheckpointCallback(callbacks.Callback):
         return trainer.training_type_plugin.broadcast(exists)
 
 
+@CALLBACKS.register(name="rich_model_summary")
 class RichModelSummary(ModelSummary):
     """Generates a summary of all layers in a
     :class:`~pytorch_lightning.core.lightning.LightningModule` with `rich text
@@ -1011,6 +1013,7 @@ class RichModelSummary(ModelSummary):
         console.log(grid)
 
 
+@CALLBACKS.register(name="rich_progress_bar")
 class RichProgressBar(callbacks.RichProgressBar):
     """
     Override `pytorch_lightning.callbacks.progress.rich_progress` to add some
@@ -1065,7 +1068,6 @@ class RichProgressBar(callbacks.RichProgressBar):
 
 
 CALLBACKS.register(name="backbone_finetuning",             module=BackboneFinetuning)
-CALLBACKS.register(name="checkpoint_callback",             module=CheckpointCallback)
 CALLBACKS.register(name="device_stats_monitor",            module=DeviceStatsMonitor)
 CALLBACKS.register(name="early_stopping",                  module=EarlyStopping)
 CALLBACKS.register(name="gradient_accumulation_scheduler", module=GradientAccumulationScheduler)
@@ -1074,6 +1076,4 @@ CALLBACKS.register(name="model_checkpoint",                module=ModelCheckpoin
 CALLBACKS.register(name="model_pruning",                   module=ModelPruning)
 CALLBACKS.register(name="model_summary",                   module=ModelSummary)
 CALLBACKS.register(name="quantization_aware_training",     module=QuantizationAwareTraining)
-CALLBACKS.register(name="rich_model_summary",              module=RichModelSummary)
-CALLBACKS.register(name="rich_progress_bar",               module=RichProgressBar)
 CALLBACKS.register(name="stochastic_weight_averaging",     module=StochasticWeightAveraging)

@@ -151,6 +151,8 @@ def _get_rank() -> int:
 rank_zero_only.rank = getattr(rank_zero_only, "rank", _get_rank())
 
 
+@LOGGERS.register(name="tensorboard")
+@LOGGERS.register(name="tensorboard_logger")
 class TensorBoardLogger(pl.loggers.TensorBoardLogger):
     
     @property
@@ -181,7 +183,5 @@ LOGGERS.register(name="mlflow",             module=loggers.MLFlowLogger)
 LOGGERS.register(name="mlflow_logger",      module=loggers.MLFlowLogger)
 LOGGERS.register(name="neptune",            module=loggers.NeptuneLogger)
 LOGGERS.register(name="neptune_logger",     module=loggers.NeptuneLogger)
-LOGGERS.register(name="tensorboard",        module=TensorBoardLogger)
-LOGGERS.register(name="tensorboard_logger", module=TensorBoardLogger)
 LOGGERS.register(name="wandb",              module=loggers.WandbLogger)
 LOGGERS.register(name="wandb_logger",       module=loggers.WandbLogger)

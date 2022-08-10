@@ -171,6 +171,8 @@ def ssim(
     return num / (den + eps)
 
 
+@METRICS.register(name="psnr_y")
+@METRICS.register(name="peak_signal_noise_ratio_y")
 class PeakSignalNoiseRatioY(Metric):
     """
     Computes `Computes Peak Signal-to-Noise Ratio` (PSNR) on Y channel only :
@@ -313,6 +315,8 @@ class PeakSignalNoiseRatioY(Metric):
         )
 
 
+@METRICS.register(name="ssim2")
+@METRICS.register(name="structural_similarity_index_measure2")
 class SSIM(nn.Module):
     """
     SSIM.
@@ -345,21 +349,16 @@ class SSIM(nn.Module):
         )
 
 
-METRICS.register(name="error_relative_global_dimensionless_synthesis",
-                 module=ErrorRelativeGlobalDimensionlessSynthesis)
-METRICS.register(name="multi_scale_ssim",
-                 module=MultiScaleStructuralSimilarityIndexMeasure)
-METRICS.register(name="multi_scale_structural_similarity_index_measure",
-                 module=MultiScaleStructuralSimilarityIndexMeasure)
-METRICS.register(name="psnr",                                module=PeakSignalNoiseRatio)
-METRICS.register(name="psnr_y",                              module=PeakSignalNoiseRatioY)
-METRICS.register(name="peak_signal_noise_ratio",             module=PeakSignalNoiseRatio)
-METRICS.register(name="peak_signal_noise_ratio_y",           module=PeakSignalNoiseRatioY)
-METRICS.register(name="spectral_angle_mapper",               module=SpectralAngleMapper)
-METRICS.register(name="spectral_distortion_index",           module=SpectralDistortionIndex)
-METRICS.register(name="ssim",                                module=StructuralSimilarityIndexMeasure)
-METRICS.register(name="structural_similarity_index_measure", module=StructuralSimilarityIndexMeasure)
-METRICS.register(name="universal_image_quality_index",       module=UniversalImageQualityIndex)
+METRICS.register(name="error_relative_global_dimensionless_synthesis",   module=ErrorRelativeGlobalDimensionlessSynthesis)
+METRICS.register(name="multi_scale_ssim",                                module=MultiScaleStructuralSimilarityIndexMeasure)
+METRICS.register(name="multi_scale_structural_similarity_index_measure", module=MultiScaleStructuralSimilarityIndexMeasure)
+METRICS.register(name="psnr",                                            module=PeakSignalNoiseRatio)
+METRICS.register(name="peak_signal_noise_ratio",                         module=PeakSignalNoiseRatio)
+METRICS.register(name="spectral_angle_mapper",                           module=SpectralAngleMapper)
+METRICS.register(name="spectral_distortion_index",                       module=SpectralDistortionIndex)
+METRICS.register(name="ssim",                                            module=StructuralSimilarityIndexMeasure)
+METRICS.register(name="structural_similarity_index_measure",             module=StructuralSimilarityIndexMeasure)
+METRICS.register(name="universal_image_quality_index",                   module=UniversalImageQualityIndex)
 
 
 # H1: - Regression -------------------------------------------------------------

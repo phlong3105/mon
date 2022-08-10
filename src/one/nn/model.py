@@ -43,7 +43,8 @@ from one.core import Path_
 # H1: - Checkpoint -------------------------------------------------------------
 
 def extract_weights_from_checkpoint(
-    ckpt: Path_, weight_file: Path_ | None = None,
+    ckpt       : Path_,
+    weight_file: Path_ | None = None,
 ):
     """
     Extract and save model's weights from checkpoint file.
