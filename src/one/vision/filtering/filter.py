@@ -35,7 +35,7 @@ def _compute_padding(kernel_size: list[int]) -> list[int]:
     """
     Compute padding tuple.
     """
-    # 4 or 6 ints: (padding_left, padding_right,padding_top,padding_bottom)
+    # 4 or 6 ints: (padding_left, padding_right, padding_top, padding_bottom)
     # https://pytorch.org/docs/stable/nn.html#torch.nn.functional.pad
     if len(kernel_size) < 2:
         raise AssertionError(kernel_size)
@@ -164,9 +164,9 @@ def filter2d_separable(
     input      : Tensor,
     kernel_x   : Tensor,
     kernel_y   : Tensor,
-    border_type: str    = "reflect",
-    normalized : bool   = False,
-    padding    : str    = "same",
+    border_type: BorderType_ = "reflect",
+    normalized : bool        = False,
+    padding    : str         = "same",
 ) -> Tensor:
     """
     Convolve a tensor with two 1d kernels, in x and y directions.
@@ -229,8 +229,8 @@ def filter2d_separable(
 def filter3d(
     input      : Tensor,
     kernel     : Tensor,
-    border_type: str  = "replicate",
-    normalized : bool = False
+    border_type: BorderType_ = "replicate",
+    normalized : bool        = False
 ) -> Tensor:
     """
     Convolve a tensor with a 3d kernel.
@@ -468,7 +468,7 @@ def box_blur(
 
 def gaussian_blur2d(
     input      : Tensor,
-    kernel_size: tuple[int, int],
+    kernel_size: tuple[int,   int  ],
     sigma      : tuple[float, float],
     border_type: BorderType_ = "reflect",
     separable  : bool        = True,
@@ -888,7 +888,7 @@ class GaussianBlur2d(nn.Module):
 
     def __init__(
         self,
-        kernel_size: tuple[int, int],
+        kernel_size: tuple[int,   int  ],
         sigma      : tuple[float, float],
         border_type: BorderType_ = "reflect",
         separable  : bool        = True,
@@ -1152,7 +1152,7 @@ def canny(
     input         : Tensor,
     low_threshold : float               = 0.1,
     high_threshold: float               = 0.2,
-    kernel_size   : tuple[int, int]     = (5, 5),
+    kernel_size   : tuple[int,   int  ] = (5, 5),
     sigma         : tuple[float, float] = (1, 1),
     hysteresis    : bool                = True,
     eps           : float               = 1e-6,
@@ -1306,7 +1306,7 @@ class Canny(nn.Module):
         self,
         low_threshold : float               = 0.1,
         high_threshold: float               = 0.2,
-        kernel_size   : tuple[int, int]     = (5, 5),
+        kernel_size   : tuple[int,   int  ] = (5, 5),
         sigma         : tuple[float, float] = (1, 1),
         hysteresis    : bool                = True,
         eps           : float               = 1e-6,
@@ -1364,7 +1364,7 @@ class Canny(nn.Module):
 
 def unsharp_mask(
     input      : Tensor,
-    kernel_size: tuple[int, int],
+    kernel_size: tuple[int,   int  ],
     sigma      : tuple[float, float],
     border_type: BorderType_ = "reflect"
 ) -> Tensor:
@@ -1408,7 +1408,7 @@ class UnsharpMask(nn.Module):
 
     def __init__(
         self,
-        kernel_size: tuple[int, int],
+        kernel_size: tuple[int,   int  ],
         sigma      : tuple[float, float],
         border_type: BorderType_ = "reflect"
     ):
