@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Los Functions
+Loss Functions
 """
 
 from __future__ import annotations

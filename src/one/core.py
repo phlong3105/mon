@@ -332,6 +332,116 @@ class BBoxFormat(Enum):
         return [e.value for e in cls]
 
 
+class BorderType(Enum):
+    CONSTANT      = "constant"
+    CIRCULAR      = "circular"
+    REFLECT       = "reflect"
+    REPLICATE     = "replicate"
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps strings to the corresponding enum.
+        
+        Returns:
+            A dictionary with the keys being the string representation of the
+                enum and the values being the enum itself.
+        """
+        return {
+            "constant"   : cls.CONSTANT,
+            "circular"   : cls.CIRCULAR,
+            "reflect"    : cls.REFLECT,
+            "replicate"  : cls.REPLICATE,
+        }
+
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """
+        It returns a dictionary that maps integers to the enum.
+        
+        Returns:
+            A dictionary with the keys being the integer values and the values
+                being the enum itself.
+        """
+        return {
+            0 : cls.CONSTANT,
+            1 : cls.CIRCULAR,
+            2 : cls.REFLECT,
+            3 : cls.REPLICATE,
+        }
+
+    @classmethod
+    def from_str(cls, value: str) -> BorderType:
+        """
+        It takes a string and returns an enum.
+        
+        Args:
+            value (str): The string to convert to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.str_mapping, value)
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> BorderType:
+        """
+        It takes an integer and returns an enum.
+        
+        Args:
+            value (int): The value to be converted to an enum.
+        
+        Returns:
+            The enum.
+        """
+        assert_dict_contain_key(cls.int_mapping, value)
+        return cls.int_mapping()[value]
+
+    @classmethod
+    def from_value(cls, value: Any) -> BorderType | None:
+        """
+        It converts an arbitrary value to an enum.
+        
+        Args:
+            value (Any): The value to be converted.
+        
+        Returns:
+            The enum.
+        """
+        if isinstance(value, BorderType):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        error_console.log(
+            f"`value` must be `BorderType`, `dict`, or `str`. "
+            f"But got: {type(value)}."
+        )
+        return None
+        
+    @classmethod
+    def keys(cls) -> list:
+        """
+        Return a list of all the keys of the enumeration.
+        
+        Returns:
+            A list of the keys of the enumeration.
+        """
+        return [e for e in cls]
+    
+    @classmethod
+    def values(cls) -> list:
+        """
+        Return a list of all the values of the enumeration.
+        
+        Returns:
+            A list of the values of the enumeration.
+        """
+        return [e.value for e in cls]
+
+
 class CFA(Enum):
     """
     Define the configuration of the color filter array.
@@ -4939,6 +5049,7 @@ TrainDataLoaders    = Union[DataLoader,
                             dict[str, dict[str, DataLoader]],
                             dict[str, Sequence[DataLoader]]]
 # Enum Types
+BorderType_         = Union[BorderType,        str, int]
 InterpolationMode_  = Union[InterpolationMode, str, int]
 ModelPhase_         = Union[ModelPhase,        str, int]
 PaddingMode_        = Union[PaddingMode,       str, int]
