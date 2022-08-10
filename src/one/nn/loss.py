@@ -14,9 +14,9 @@ from abc import abstractmethod
 import numpy as np
 import torch
 from torch import FloatTensor
-from torch.nn import functional
 from torch import nn
 from torch import Tensor
+from torch.nn import functional
 from torch.nn import functional as F
 from torch.nn.modules.loss import _Loss
 
@@ -27,9 +27,12 @@ from one.core import Ints
 from one.core import Reduction
 from one.core import Reduction_
 from one.core import Tensors
+from one.nn.metric import psnr
+from one.nn.metric import ssim
 
 
 # H1: - Helper Functions -------------------------------------------------------
+
 
 def reduce_loss(
     loss     : Tensor,
@@ -399,6 +402,24 @@ def non_blurry_loss(input: Tensor, target: None = None, **_) -> Tensor:
 
 
 @weighted_loss
+def psnr_loss(
+    input: Tensor, target: Tensor, max_val: float = 1.0, **_
+) -> Tensor:
+    """
+    PSNR loss. Modified from BasicSR: https://github.com/xinntao/BasicSR
+    
+    Args:
+        input (Tensor): The input tensor of shape [B, C, H, W].
+        target (Tensor): The target tensor of shape [B, C, H, W].
+        max_val (float): Dynamic range of the images. Defaults to 1.0.
+        
+    Returns:
+        The loss tensor of shape [B].
+    """
+    return -1.0 * psnr(input=input, target=target, max_val=max_val)
+
+
+@weighted_loss
 def smooth_mae_loss(
     input: Tensor, target: Tensor, beta: float = 1.0, **_
 ) -> Tensor:
@@ -419,6 +440,41 @@ def smooth_mae_loss(
         beta      = beta,
         reduction = "none"
     )
+
+
+@weighted_loss
+def ssim_loss(
+    input      : Tensor,
+    target     : Tensor,
+    window_size: int,
+    max_val    : float = 1.0,
+    eps        : float = 1e-12,
+    **_
+) -> Tensor:
+    """
+    PSNR loss. Modified from BasicSR: https://github.com/xinntao/BasicSR
+    
+    Args:
+        input (Tensor): The input tensor of shape [B, C, H, W].
+        target (Tensor): The target tensor of shape [B, C, H, W].
+        window_size (int): Size of the gaussian kernel to smooth the images.
+        max_val (float): Dynamic range of the images. Defaults to 1.0.
+        eps (float): Small value for numerically stability when dividing.
+            Defaults to 1e-12.
+        
+    Returns:
+        The loss tensor of shape [B].
+    """
+    # Compute the ssim map
+    ssim_map = ssim(
+        input       = input,
+        target      = target,
+        window_size = window_size,
+        max_val     = max_val,
+        eps         = eps
+    )
+    # Compute and reduce the loss
+    return torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
 
 
 @weighted_loss
@@ -837,6 +893,104 @@ class PerceptualLoss(BaseLoss):
         )
 
 
+class PSNRLoss(BaseLoss):
+    """
+    PSNR Loss.
+    """
+    
+    def __init__(self, max_val: float = 1.0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name    = "psnr_loss"
+        self.max_val = max_val
+     
+    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
+        return self.weight * psnr_loss(
+            input              = input,
+            target             = target,
+            max_val            = self.max_val,
+            input_weight       = self.input_weight,
+            elementwise_weight = self.elementwise_weight,
+            reduction          = self.reduction,
+        )
+
+
+class SmoothMAELoss(BaseLoss):
+    """
+    Smooth MAE (Mean Absolute Error or L1) loss.
+    """
+    
+    def __init__(self, beta: float = 1.0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = "smooth_mae_loss"
+        self.beta = beta
+     
+    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
+        return self.weight * smooth_mae_loss(
+            input              = input,
+            target             = target,
+            beta               = self.beta,
+            input_weight       = self.input_weight,
+            elementwise_weight = self.elementwise_weight,
+            reduction          = self.reduction,
+        )
+
+
+class SpatialConsistencyLoss(BaseLoss):
+    """
+    Spatial Consistency Loss (SPA) Loss.
+    """
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = "spatial_consistency_loss"
+     
+    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
+        return self.weight * spatial_consistency_loss(
+            input              = input,
+            target             = target,
+            input_weight       = self.input_weight,
+            elementwise_weight = self.elementwise_weight,
+            reduction          = self.reduction,
+        )
+
+
+class SSIMLoss(BaseLoss):
+    """
+    SSIM Loss.
+    
+    Args:
+        window_size (int): Size of the gaussian kernel to smooth the images.
+        max_val (float): Dynamic range of the images. Defaults to 1.0.
+        eps (float): Small value for numerically stability when dividing.
+            Defaults to 1e-12.
+    """
+    
+    def __init__(
+        self,
+        window_size: int,
+        max_val    : float = 1.0,
+        eps        : float = 1e-12,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.name        = "ssim_loss"
+        self.window_size = window_size
+        self.max_val     = max_val
+        self.eps         = eps
+    
+    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
+        return self.weight * ssim_loss(
+            input              = input,
+            target             = target,
+            window_size        = self.window_size,
+            max_val            = self.max_val,
+            eps                = self.eps,
+            input_weight       = self.input_weight,
+            elementwise_weight = self.elementwise_weight,
+            reduction          = self.reduction,
+        )
+
+
 class StdLoss(BaseLoss):
     """
     Loss on the variance of the image. Works in the grayscale. If the image is
@@ -890,46 +1044,6 @@ class StdLoss(BaseLoss):
         )
 
 
-class SmoothMAELoss(BaseLoss):
-    """
-    Smooth MAE (Mean Absolute Error or L1) loss.
-    """
-    
-    def __init__(self, beta: float = 1.0, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = "smooth_mae_loss"
-        self.beta = beta
-     
-    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * smooth_mae_loss(
-            input              = input,
-            target             = target,
-            beta               = self.beta,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
-        )
-
-
-class SpatialConsistencyLoss(BaseLoss):
-    """
-    Spatial Consistency Loss (SPA) Loss.
-    """
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = "spatial_consistency_loss"
-     
-    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * spatial_consistency_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
-        )
-    
-
 L1Loss       = MAELoss
 L2Loss       = MSELoss
 SmoothL1Loss = SmoothMAELoss
@@ -966,10 +1080,12 @@ LOSSES.register(name="non_blurry_loss",   	   		      module=NonBlurryLoss)
 LOSSES.register(name="perceptual_l1_loss",   	          module=PerceptualL1Loss)
 LOSSES.register(name="perceptual_loss",   	              module=PerceptualLoss)
 LOSSES.register(name="poisson_nll_loss",   	              module=nn.PoissonNLLLoss)
-LOSSES.register(name="std_loss",   	                      module=StdLoss)
+LOSSES.register(name="psnr_loss",   	                  module=PSNRLoss)
 LOSSES.register(name="smooth_l1_loss",   	              module=SmoothL1Loss)
 LOSSES.register(name="smooth_mae_loss",   	              module=SmoothMAELoss)
 LOSSES.register(name="soft_margin_loss",   	              module=nn.SoftMarginLoss)
 LOSSES.register(name="spatial_consistency_loss",   	      module=SpatialConsistencyLoss)
+LOSSES.register(name="ssim_loss",   	                  module=SSIMLoss)
+LOSSES.register(name="std_loss",   	                      module=StdLoss)
 LOSSES.register(name="triplet_margin_loss",               module=nn.TripletMarginLoss)
 LOSSES.register(name="triplet_margin_with_distance_Loss", module=nn.TripletMarginWithDistanceLoss)

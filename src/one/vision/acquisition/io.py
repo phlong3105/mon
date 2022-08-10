@@ -301,7 +301,7 @@ def to_tensor(
     if ((F._is_numpy(image) or torch.is_tensor(image))
         and not (2 <= image.ndim <= 4)):
         raise ValueError(
-            f"Require 2 <= `image.ndim` <= 4. But got: {image.ndim}."
+            f"Expect 2 <= `image.ndim` <= 4. But got: {image.ndim}."
         )
 
     # Handle PIL Image

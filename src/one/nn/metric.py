@@ -11,6 +11,7 @@ from typing import Any
 from typing import Sequence
 
 import torch
+from torch import nn
 from torch import tensor
 from torch import Tensor
 from torch.nn.functional import mse_loss as mse
@@ -21,7 +22,11 @@ from torchmetrics.functional.image.psnr import _psnr_update
 from torchmetrics.utilities import rank_zero_warn
 
 from one.constants import METRICS
+from one.core import assert_float
+from one.core import assert_tensor_of_ndim
 from one.core import Ints
+from one.vision.filtering import filter2d
+from one.vision.filtering import get_gaussian_kernel2d
 from one.vision.transformation import rgb_to_yuv
 
 
@@ -94,6 +99,76 @@ def psnr(input: Tensor, target: Tensor, max_val: float) -> Tensor:
     return 10.0 * torch.log10(
         max_val ** 2 / mse(input, target, reduction="mean")
     )
+
+
+def ssim(
+    input      : Tensor,
+    target     : Tensor,
+    window_size: int,
+    max_val    : float = 1.0,
+    eps        : float = 1e-12
+) -> Tensor:
+    """
+    Function that computes the Structural Similarity (SSIM) index map between
+    two images. Measures the (SSIM) index between each element in the input and
+    target.
+
+    Index can be described as:
+    .. math::
+      \text{SSIM}(x, y) = \frac{(2\mu_x\mu_y+c_1)(2\sigma_{xy}+c_2)}
+      {(\mu_x^2+\mu_y^2+c_1)(\sigma_x^2+\sigma_y^2+c_2)}
+    where:
+      - :math:`c_1=(k_1 L)^2` and :math:`c_2=(k_2 L)^2` are two variables to
+        stabilize the division with weak denominator.
+      - :math:`L` is the dynamic range of the pixel-values (typically this is
+        :math:`2^{\#\text{bits per pixel}}-1`).
+
+    Args:
+        input (Tensor): First input image of shape [B, C, H, W].
+        target (Tensor): Second input image of shape [B, C, H, W].
+        window_size (int): Size of the gaussian kernel to smooth the images.
+        max_val (float): Dynamic range of the images. Defaults to 1.0.
+        eps (float): Small value for numerically stability when dividing.
+            Defaults to 1e-12.
+
+    Returns:
+       SSIM index map of shape [B, C, H, W].
+
+    Examples:
+        >>> input1   = torch.rand(1, 4, 5, 5)
+        >>> input2   = torch.rand(1, 4, 5, 5)
+        >>> ssim_map = ssim(input1, input2, 5)  # [1, 4, 5, 5]
+    """
+    assert_tensor_of_ndim(input,  4)
+    assert_tensor_of_ndim(target, 4)
+    assert_float(max_val)
+   
+    # Prepare kernel
+    kernel = get_gaussian_kernel2d(
+        (window_size, window_size), (1.5, 1.5)
+    ).unsqueeze(0)
+
+    # Compute coefficients
+    c1 = (0.01 * max_val) ** 2
+    c2 = (0.03 * max_val) ** 2
+
+    # Compute local mean per channel
+    mu1     = filter2d(input,  kernel)
+    mu2     = filter2d(target, kernel)
+    mu1_sq  = mu1 ** 2
+    mu2_sq  = mu2 ** 2
+    mu1_mu2 = mu1 * mu2
+
+    # Compute local sigma per channel
+    sigma1_sq = filter2d(input  ** 2,    kernel) - mu1_sq
+    sigma2_sq = filter2d(target ** 2,    kernel) - mu2_sq
+    sigma12   = filter2d(input * target, kernel) - mu1_mu2
+
+    # Compute the similarity index map
+    num = (2.0 * mu1_mu2 + c1) * (2.0 * sigma12 + c2)
+    den = (mu1_sq + mu2_sq + c1) * (sigma1_sq + sigma2_sq + c2)
+
+    return num / (den + eps)
 
 
 class PeakSignalNoiseRatioY(Metric):
@@ -235,6 +310,38 @@ class PeakSignalNoiseRatioY(Metric):
         return _psnr_compute(
             sum_squared_error, total, data_range, base=self.base,
             reduction=self.reduction
+        )
+
+
+class SSIM(nn.Module):
+    """
+    SSIM.
+
+    Args:
+        window_size (int): Size of the gaussian kernel to smooth the images.
+        max_val (float): Dynamic range of the images. Defaults to 1.0.
+        eps (float): Small value for numerically stability when dividing.
+            Defaults to 1e-12.
+    """
+    
+    def __init__(
+        self,
+        window_size: int,
+        max_val    : float = 1.0,
+        eps        : float = 1e-12
+    ):
+        super().__init__()
+        self.window_size = window_size
+        self.max_val     = max_val
+        self.eps         = eps
+        
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        return ssim(
+            input       = input,
+            target      = target,
+            window_size = self.window_size,
+            max_val     = self.max_val,
+            eps         = self.eps
         )
 
 

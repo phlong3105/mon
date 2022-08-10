@@ -2130,7 +2130,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         elif all(i.ndim == 4 for i in input):
             input = torch.cat(input, 0)
         else:
-            raise ValueError(f"Require 3 <= `input.ndim` <= 4.")
+            raise ValueError(f"Expect 3 <= `input.ndim` <= 4.")
         return input, meta
 
 
@@ -2504,7 +2504,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             input = torch.cat(input,  0)
         else:
             raise ValueError(
-                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+                f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
         target = torch.cat(target, 0)
         return input, target, meta
@@ -2658,7 +2658,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
             input  = torch.cat(input,  0)
         else:
             raise ValueError(
-                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+                f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
         for i, l in enumerate(target):
             l[:, 0] = i  # add target image index for build_targets()
@@ -3084,7 +3084,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             target = torch.cat(target, 0)
         else:
             raise ValueError(
-                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+                f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
         return input, target, meta
     
@@ -3213,7 +3213,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
             target = torch.cat(target, 0)
         else:
             raise ValueError(
-                f"Require 3 <= `input.ndim` and `target.ndim` <= 4."
+                f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
         return input, target, meta
 

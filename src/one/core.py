@@ -2244,7 +2244,15 @@ def is_tensor_of_ndim_in_range(input: Any, start: int, end: int) -> bool:
     assert_int(start)
     assert_int(end)
     return start <= input.ndim <= end
-    
+
+
+def is_tensor_of_shape(input: Any, shape: Ints) -> bool:
+    assert_tensor(input)
+    assert_list(shape)
+    s = list(input.shape)
+    assert_same_length(s, shape)
+    return all(s1 == s2 for s1, s2 in zip(s, shape))
+   
 
 def is_torch_saved_file(path: Path_ | None) -> bool:
     """
@@ -2532,14 +2540,14 @@ def assert_json_file(path: Path_ | None):
 def assert_larger_than(input: Number, value: Number) -> bool:
     if not is_larger_than(input, value):
         raise ValueError(
-            f"Require `input` > `value`. But got: {input} > {value}."
+            f"Expect `input` > `value`. But got: {input} > {value}."
         )
 
 
 def assert_larger_or_equal_than(input: Number, value: Number) -> bool:
     if not is_larger_or_equal_than(input, value):
         raise ValueError(
-            f"Require `input` >= `value`. But got: {input} > {value}."
+            f"Expect `input` >= `value`. But got: {input} > {value}."
         )
 
 
@@ -2584,7 +2592,7 @@ def assert_number_divisible_to(input: Any, k: int):
 def assert_number_in_range(input: Any, start: Number, end: Number):
     if not is_number_in_range(input, start, end):
         raise ValueError(
-            f"Require {start} <= `input` <= {end}. But got: {input}."
+            f"Expect {start} <= `input` <= {end}. But got: {input}."
         )
 
 
@@ -2613,14 +2621,14 @@ def assert_numpy_of_channels(input: Any, channels: Ints):
 def assert_numpy_of_ndim(input: Any, ndim: int):
     if not is_numpy_of_ndim(input, ndim):
         raise ValueError(
-            f"Require `input.ndim` == {ndim}. But got: {input.ndim}."
+            f"Expect `input.ndim` == {ndim}. But got: {input.ndim}."
         )
 
 
 def assert_numpy_of_ndim_in_range(input: Any, start: int, end: int):
     if not is_numpy_of_ndim_in_range(input, start, end):
         raise ValueError(
-            f"Require {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
+            f"Expect {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
         )
 
 
@@ -2675,14 +2683,14 @@ def assert_sequence_of_length(input: Any, length: int):
 def assert_smaller_than(input: Number, value: Number) -> bool:
     if not is_smaller_than(input, value):
         raise ValueError(
-            f"Require `input` < `value`. But got: {input} > {value}."
+            f"Expect `input` < `value`. But got: {input} > {value}."
         )
 
 
 def assert_smaller_or_equal_than(input: Number, value: Number) -> bool:
     if not is_smaller_or_equal_than(input, value):
         raise ValueError(
-            f"Require `input` <= `value`. But got: {input} > {value}."
+            f"Expect `input` <= `value`. But got: {input} > {value}."
         )
 
 
@@ -2728,9 +2736,16 @@ def assert_tensor_of_ndim(input: Any, ndim: int):
 def assert_tensor_of_ndim_in_range(input: Any, start: int, end: int):
     if not is_tensor_of_ndim_in_range(input, start, end):
         raise ValueError(
-            f"Require {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
+            f"Expect {start} <= `input.ndim` <= {end}. But got: {input.ndim}."
         )
- 
+
+
+def assert_tensor_of_shape(input: Any, shape: Ints) -> bool:
+    if not is_tensor_of_shape(input, shape):
+        raise ValueError(
+            f"`input` must be of shape {shape}. But got: {list(input.shape)}."
+        )
+
 
 def assert_torch_saved_file(path: Path_ | None):
     if not is_torch_saved_file(path):
@@ -3006,7 +3021,7 @@ def eye_like(n: int, input: Tensor) -> Tensor:
         A tensor of shape (input.shape[0], n, n).
     """
     if not n > 0:
-        raise ValueError(f"Require `n` > 0. But got: {n}.")
+        raise ValueError(f"Expect `n` > 0. But got: {n}.")
     assert_tensor_of_atleast_ndim(input, 1)
     identity = torch.eye(n, device=input.device, dtype=input.dtype)
     return identity[None].repeat(input.shape[0], 1, 1)
@@ -3175,7 +3190,7 @@ def to_3d_array(input) -> np.ndarray:
         if all(i.ndim == 2 for i in input):
             input = np.stack(input)                                             # list[2D np.ndarray] -> 3D np.ndarray
         else:
-            raise ValueError(f"Require `input.ndim` == 2.")
+            raise ValueError(f"Expect `input.ndim` == 2.")
     if isinstance(input, Tensor):
         input = input.detach().cpu().numpy()                                    # Tensor -> np.ndarray any dimensions
     if isinstance(input, np.ndarray):
@@ -3206,7 +3221,7 @@ def to_3d_array_list(input: Any) -> list[np.ndarray]:
             input = list(input)                                                 # np.ndarray -> list[3D np.ndarray]
         else:
             raise ValueError(
-                f"Require 3 <= `input.ndim` <= 4. But got: {input.ndim}."
+                f"Expect 3 <= `input.ndim` <= 4. But got: {input.ndim}."
             )
     if isinstance(input, list) and is_list_of(input, Tensor):
         input = [i.detach().cpu().numpy() for i in input]                       # list[Tensor any dimensions] -> list[np.ndarray any dimensions]
@@ -3236,7 +3251,7 @@ def to_3d_tensor(input: Any) -> Tensor:
         if all(i.ndim == 2 for i in input):
             input = torch.stack(input, dim=0)                                   # list[2D Tensor] -> 3D Tensor
         else:
-            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")
+            raise ValueError(f"Expect 2 <= `input.ndim` <= 3.")
     if isinstance(input, np.ndarray):
         input = torch.from_numpy(input)                                         # np.ndarray -> Tensor any dimensions
     if isinstance(input, Tensor):
@@ -3267,7 +3282,7 @@ def to_3d_tensor_list(input: Any) -> list[Tensor]:
             input = list(input)                                                 # Tensor -> list[3D Tensor]
         else:
             raise ValueError(
-                f"Require 3 <= `input.ndim` <= 4. But got: {input.ndim}."
+                f"Expect 3 <= `input.ndim` <= 4. But got: {input.ndim}."
             )
     if isinstance(input, list) and is_list_of(input, np.ndarray):
         input = [torch.from_numpy(i) for i in input]                            # list[np.ndarray] -> list[Tensor any dimensions]
@@ -3299,7 +3314,7 @@ def to_4d_array(input) -> np.ndarray:
         if all(i.ndim == 3 for i in input):
             input = np.stack(input)                                             # list[3D np.ndarray] -> 4D np.ndarray
         else:
-            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")
+            raise ValueError(f"Expect 2 <= `input.ndim` <= 3.")
     if isinstance(input, Tensor):
         input = input.detach().cpu().numpy()                                    # Tensor -> np.ndarray any dimensions
     if isinstance(input, np.ndarray):
@@ -3331,7 +3346,7 @@ def to_4d_array_list(input) -> list[np.ndarray]:
         elif input.ndim == 5:
             input = list(input)                                                 # np.ndarray -> list[4D np.ndarray]
         else:
-            raise ValueError(f"Require 3 <= `input.ndim` <= 5.")
+            raise ValueError(f"Expect 3 <= `input.ndim` <= 5.")
     if isinstance(input, list) and is_list_of(input, Tensor):
         input = [i.detach().cpu().numpy() for i in input]                       # list[Tensor] -> list[np.ndarray any dimensions]
     
@@ -3362,7 +3377,7 @@ def to_4d_tensor(input: Any) -> Tensor:
         if all(i.ndim == 3 for i in input):
             input = torch.stack(input, dim=0)                                   # list[3D Tensor] -> 4D Tensor
         else:
-            raise ValueError(f"Require 2 <= `input.ndim` <= 3.")
+            raise ValueError(f"Expect 2 <= `input.ndim` <= 3.")
     if isinstance(input, np.ndarray):
         input = torch.from_numpy(input)                                         # np.ndarray -> Tensor any dimensions
     if isinstance(input, Tensor):
@@ -3394,7 +3409,7 @@ def to_4d_tensor_list(input) -> list[Tensor]:
         elif input.ndim == 5:
             input = list(input)                                                 # Tensor -> list[4D Tensor]
         else:
-            raise ValueError(f"Require 3 <= `input.ndim` <= 5.")
+            raise ValueError(f"Expect 3 <= `input.ndim` <= 5.")
     if isinstance(input, list) and is_list_of(input, np.ndarray):
         input = [torch.from_numpy(i) for i in input]                            # list[np.ndarray] -> list[Tensor any dimensions]
     
@@ -3425,7 +3440,7 @@ def to_5d_array(input) -> np.ndarray:
         if all(3 <= i.ndim <= 4 for i in input):
             input = np.stack(input)                                             # list[3D np.ndarray] -> 4D np.ndarray
         else:
-            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")
+            raise ValueError(f"Expect 2 <= `input.ndim` <= 4.")
     if isinstance(input, Tensor):
         input = input.detach().cpu().numpy()                                    # Tensor -> np.ndarray any dimensions
     if isinstance(input, np.ndarray):
@@ -3455,7 +3470,7 @@ def to_5d_tensor(input: Any) -> Tensor:
         if all(3 <= i.ndim <= 4 for i in input):
             input = torch.stack(input, dim=0)                                   # list[3D Tensor] -> 4D Tensor
         else:
-            raise ValueError(f"Require 2 <= `input.ndim` <= 4.")
+            raise ValueError(f"Expect 2 <= `input.ndim` <= 4.")
     if isinstance(input, np.ndarray):
         input = torch.from_numpy(input)                                         # np.ndarray -> Tensor any dimensions
     if isinstance(input, Tensor):
@@ -3599,7 +3614,7 @@ def vec_like(n: int, input: Tensor) -> Tensor:
         A tensor of zeros with the same shape as the input tensor.
     """
     if not n > 0:
-        raise ValueError(f"Require `n` > 0. But got: {n}.")
+        raise ValueError(f"Expect `n` > 0. But got: {n}.")
     assert_tensor_of_atleast_ndim(input, 1)
     vec = torch.zeros(n, 1, device=input.device, dtype=input.dtype)
     return vec[None].repeat(input.shape[0], 1, 1)
