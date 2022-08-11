@@ -9,11 +9,9 @@ References:
 
 from __future__ import annotations
 
-import torch
 from torch import Tensor
 
-from one.core import assert_tensor_of_ndim
-from one.core import upcast
+from one.core import *
 
 """Coordination of bounding box's points.
 

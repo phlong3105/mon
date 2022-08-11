@@ -5,25 +5,6 @@
 """
 
 from __future__ import annotations
-
-import argparse
-from copy import deepcopy
-from pathlib import Path
-
-from one.vision.detection.scaled_yolov4.models.common import *
-from one.vision.detection.scaled_yolov4.models.experimental import C3
-from one.vision.detection.scaled_yolov4.models.experimental import CrossConv
-from one.vision.detection.scaled_yolov4.models.experimental import MixConv2d
-from one.vision.detection.scaled_yolov4.utils.general import check_anchor_order
-from one.vision.detection.scaled_yolov4.utils.general import check_file
-from one.vision.detection.scaled_yolov4.utils.general import make_divisible
-from one.vision.detection.scaled_yolov4.utils.torch_utils import fuse_conv_and_bn
-from one.vision.detection.scaled_yolov4.utils.torch_utils import initialize_weights
-from one.vision.detection.scaled_yolov4.utils.torch_utils import model_info
-from one.vision.detection.scaled_yolov4.utils.torch_utils import scale_img
-from one.vision.detection.scaled_yolov4.utils.torch_utils import select_device
-from one.vision.detection.scaled_yolov4.utils.torch_utils import time_synchronized
-
 from __future__ import annotations
 
 import argparse

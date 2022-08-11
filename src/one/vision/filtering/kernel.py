@@ -5,22 +5,12 @@
 Filter kernels.
 """
 
+from __future__ import annotations
+
 import math
 from math import sqrt
 
-import torch
-from torch import Tensor
-
-from one.core import assert_collection_contain_item
-from one.core import assert_larger_than
-from one.core import assert_odd_number
-from one.core import assert_positive_number
-from one.core import assert_sequence_of_length
-from one.core import assert_tensor_of_atleast_ndim
-from one.core import assert_tuple
-from one.core import Floats
-from one.core import Ints
-from one.core import to_2tuple
+from one.core import *
 
 
 def _get_sobel_kernel_5x5_2nd_order_xy() -> Tensor:
