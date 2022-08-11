@@ -23,7 +23,6 @@ from one.core import Path_
 from one.core import progress_bar
 from one.core import Transforms_
 from one.core import VisionBackend_
-from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import UnlabeledImageDataset

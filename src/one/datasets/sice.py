@@ -7,8 +7,6 @@ SICE dataset and datamodule.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 

@@ -13,7 +13,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from one.vision.detection.yolov5_v6_1.utils.general import colorstr
 from one.vision.detection.yolov5_v6_1.utils.general import emojis
-from one.vision.detection.yolov5_v6_1.utils.loggers.wandb.wandb_utils import WandbLogger
+from one.vision.detection.yolov5_v6_1.utils.loggers.wandb.wandb_utils import \
+    WandbLogger
 from one.vision.detection.yolov5_v6_1.utils.plots import plot_images
 from one.vision.detection.yolov5_v6_1.utils.plots import plot_results
 from one.vision.detection.yolov5_v6_1.utils.torch_utils import de_parallel

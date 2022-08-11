@@ -8,7 +8,6 @@ Plotting functions.
 from __future__ import annotations
 
 import math
-from typing import Any
 
 import matplotlib
 import numpy as np
@@ -18,7 +17,6 @@ from matplotlib import pyplot as plt
 from torch import Tensor
 
 import one.vision.transformation as t
-from one.core import Arrays
 from one.core import assert_same_length
 from one.core import assert_tensor_of_ndim
 from one.core import Ints

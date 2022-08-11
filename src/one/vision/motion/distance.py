@@ -28,7 +28,6 @@ from scipy.spatial.distance import euclidean
 from scipy.spatial.distance import hamming
 from scipy.spatial.distance import jaccard
 from scipy.spatial.distance import jensenshannon
-from scipy.spatial.distance import kulczynski1
 from scipy.spatial.distance import kulsinski
 from scipy.spatial.distance import mahalanobis
 from scipy.spatial.distance import minkowski

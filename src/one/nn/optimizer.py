@@ -13,7 +13,6 @@ from torch.optim.lr_scheduler import *
 from one.constants import OPTIMIZERS
 from one.constants import SCHEDULERS
 
-
 # H1: - Optimizer --------------------------------------------------------------
 
 OPTIMIZERS.register(name="adadelta",    module=Adadelta)

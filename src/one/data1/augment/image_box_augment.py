@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import numpy as np
 import torch
+from one.data1.data_class import ObjectAnnotation
 from torch import Tensor
 
 from one.core import AUGMENTS
 from one.data1.augment.base import BaseAugment
 from one.data1.augment.utils import apply_transform_op
-from one.data1.data_class import ObjectAnnotation
 
 __all__ = [
     "ImageBoxAugment",

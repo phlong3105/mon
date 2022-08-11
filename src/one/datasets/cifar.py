@@ -36,7 +36,6 @@ from one.plot import imshow_cls
 from one.vision.acquisition import to_tensor
 from one.vision.transformation import Resize
 
-
 cifar10_classlabels = [
     { "name": "airplane",   "id": 0 },
     { "name": "automobile", "id": 1 },

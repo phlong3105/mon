@@ -12,6 +12,15 @@ import torch
 
 from one.vision.detection.scaled_yolov4.utils.google_utils import attempt_download
 
+from __future__ import annotations
+
+import argparse
+
+import torch
+
+from one.vision.detection.scaled_yolov4.utils.google_utils import \
+    attempt_download
+
 # MARK: - Main
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import logging
 import math
 import os
 import random
+import test  # import test.py to get mAP after each epoch
 import time
 from copy import deepcopy
 from pathlib import Path
@@ -30,7 +31,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
-import test  # import test.py to get mAP after each epoch
 from models.experimental import attempt_load
 from models.yolo import Model
 from utils.autoanchor import check_anchors

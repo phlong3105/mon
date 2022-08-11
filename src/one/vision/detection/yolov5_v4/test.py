@@ -12,7 +12,6 @@ import os
 import sys
 from pathlib import Path
 from threading import Thread
-from typing import Union
 
 import numpy as np
 import torch

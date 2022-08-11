@@ -26,7 +26,6 @@ from one.core import assert_float
 from one.core import assert_tensor_of_ndim
 from one.core import Ints
 
-
 # H1: - Classification ---------------------------------------------------------
 
 METRICS.register(name="accuracy",                         module=Accuracy)

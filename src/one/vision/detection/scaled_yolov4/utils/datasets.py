@@ -23,7 +23,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from one.vision.detection.scaled_yolov4.utils.general import torch_distributed_zero_first
+from one.vision.detection.scaled_yolov4.utils.general import \
+    torch_distributed_zero_first
 from one.vision.detection.scaled_yolov4.utils.general import xywh2xyxy
 from one.vision.detection.scaled_yolov4.utils.general import xyxy2xywh
 
