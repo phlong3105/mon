@@ -238,7 +238,7 @@ def imshow(
             of items in a row will be the same as the number of items in the
             list. Defaults to 8.
         wait_time (float): Wait some time (in seconds) to display the figure
-            then reset. Defaults to 0.
+            then reset. Defaults to 0.01.
     """
     # Prepare image and label
     image = to_3d_tensor_list(image)

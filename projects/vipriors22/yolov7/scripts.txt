@@ -17,35 +17,37 @@ cd /yolov7
 # H1: - LP-LabDesktop01-Ubuntu -------------------------------------------------
 
 python -m torch.distributed.launch --nproc_per_node 1 --master_port 9527 train_aux.py \
-    --weights '' \
+    --weights 'runs/train/yolov7-w6-delftbikes-1280-01/weights/best.pt' \
     --cfg cfg/training/yolov7-w6.yaml \
-    --data data/delftbikes2.yaml \
-    --hyp data/hyp.scratch.delftbikes.yaml \
-    --epochs 50 \
-    --batch-size 8 \
+    --data data/delftbikes.yaml \
+    --hyp data/hyp.scratch.p6.yaml \
+    --epochs 30 \
+    --batch-size 4 \
     --img 1280 1280 \
+    --multi-scale \
     --device 0 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-w6-delftbikes-1280-02 \
+    --name yolov7-w6-delftbikes-multiscale-01 \
     --exist-ok
 
 
 # H1: - VSW-WS02 ---------------------------------------------------------------
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
-    --weights '' \
+    --weights 'runs/train/yolov7-e6e-delftbikes-1280-01/weights/best.pt' \
     --cfg cfg/training/yolov7-e6e.yaml \
-    --data data/delftbikes2.yaml \
-    --hyp data/hyp.scratch.delftbikes.yaml \
-    --epochs 50 \
+    --data data/delftbikes.yaml \
+    --hyp data/hyp.scratch.p6.yaml \
+    --epochs 30 \
     --batch-size 8 \
     --img 1280 1280 \
+    --multi-scale \
     --device 0,1 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-e6e-delftbikes-1280-02 \
-    --exist-ok
+    --name yolov7-e6e-delftbikes-multiscale-01 \
+    --exist-ok 
 
 
 # H1: - Detect -----------------------------------------------------------------

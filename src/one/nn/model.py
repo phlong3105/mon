@@ -9,10 +9,14 @@ from __future__ import annotations
 
 import os
 import platform
+from abc import ABCMeta
+from abc import abstractmethod
 from pathlib import Path
+from typing import Any
 
 import pytorch_lightning as pl
 import torch
+from munch import Munch
 from pytorch_lightning.accelerators import CUDAAccelerator
 from pytorch_lightning.accelerators import HPUAccelerator
 from pytorch_lightning.accelerators import IPUAccelerator
@@ -25,19 +29,42 @@ from pytorch_lightning.utilities import _IPU_AVAILABLE
 from pytorch_lightning.utilities import _TPU_AVAILABLE
 from torch import distributed as dist
 from torch import nn
+from torch import Tensor
 from torch.hub import load_state_dict_from_url
+from torch.nn.modules.loss import _Loss
+from torchmetrics import Metric
 
+from one.constants import LOSSES
+from one.constants import METRICS
+from one.constants import OPTIMIZERS
+from one.constants import PRETRAINED_DIR
+from one.constants import RUNS_DIR
+from one.constants import SCHEDULERS
 from one.core import assert_ckpt_file
 from one.core import assert_weights_file
 from one.core import Callable
 from one.core import console
 from one.core import create_dirs
+from one.core import EpochOutput
 from one.core import error_console
 from one.core import get_latest_file
 from one.core import intersect_weight_dicts
+from one.core import Ints
+from one.core import is_list_of
 from one.core import is_torch_saved_file
 from one.core import is_url
+from one.core import is_url_or_file
+from one.core import Losses_
+from one.core import Metrics_
+from one.core import ModelPhase
+from one.core import ModelPhase_
+from one.core import Optimizers_
 from one.core import Path_
+from one.core import Pretrained
+from one.core import StepOutput
+from one.core import Tensors
+from one.data import ClassLabels
+from one.data import ClassLabels_
 
 
 # H1: - Checkpoint -------------------------------------------------------------
@@ -241,11 +268,6 @@ def load_state_dict_from_path(
             verify the contents of the file. Defaults to False.
         filename (str | None): Name for the downloaded file. Filename from
             `url` will be used if not set.
-
-    Example:
-        >>> state_dict = load_state_dict_from_path(
-        >>> 	'https://s3.amazonaws.com/pytorch/models/resnet18-5c106cde.pth'
-        >>> )
     """
     if path is None:
         raise ValueError()
@@ -463,6 +485,1073 @@ def strip_optimizer(weight_file: str, new_file: str = ""):
         "Optimizer stripped from %s,%s %.1fMB"
         % (weight_file, (" saved as %s," % new_file) if new_file else "", mb)
     )
+
+
+class BaseModel(pl.LightningModule, metaclass=ABCMeta):
+    """
+    Base model for all models. Base model only provides access to the
+    attributes. In the model, each head is responsible for generating the
+    appropriate output with accommodating loss and metric (obviously, we can
+    only calculate specific loss and metric with specific output type). So we
+    define the loss functions and metrics in the head implementation instead of
+    the model.
+    
+    Args:
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        basename (str | None): Model base name. In case None is given, it
+            will be `self.__class__.__name__`. Defaults to None.
+        name (str | None): Model name in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.basename`. Defaults to None.
+        shape (Ints | None): Input shape as [C, H, W]. Defaults to None.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        out_indexes (Ints): List of output tensors taken from specific layers'
+            indexes.
+            - If >= 0, return the ith layer's output.
+            - If -1, return the final layer's output.
+            Defaults to -1.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+    """
+    
+    model_zoo = {}  # A dictionary of all pretrained weights.
+    
+    def __init__(
+        self,
+        root       : Path_               = RUNS_DIR,
+        basename   : str  | None         = None,
+        name       : str  | None         = None,
+        shape      : Ints | None         = None,
+        num_classes: int  | None 		 = None,
+        classlabels: ClassLabels_ | None = None,
+        out_indexes: Ints     			 = -1,
+        phase      : ModelPhase_         = "training",
+        pretrained : Pretrained			 = False,
+        loss   	   : Losses_      | None = None,
+        metrics	   : Metrics_     | None = None,
+        optimizers : Optimizers_  | None = None,
+        debug      : dict | Munch | None = None,
+        verbose    : bool                = False,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.root          = root
+        self.basename      = basename
+        self.name          = name
+        self.shape         = shape
+        self.num_classes   = num_classes
+        self.classlabels   = ClassLabels.from_value(classlabels)
+        self.out_indexes   = out_indexes
+        self.phase         = phase
+        self.pretrained    = pretrained
+        self.loss          = loss
+        self.train_metrics = None
+        self.val_metrics   = None
+        self.test_metrics  = None
+        self.optims        = optimizers
+        self.debug         = debug
+        self.verbose       = verbose
+        self.epoch_step    = 0
+        
+        if self.classlabels is not None and \
+            num_classes != self.classlabels.num_classes():
+            self.num_classes = self.classlabels.num_classes()
+            
+        self.init_metrics(metrics=metrics)
+     
+    @property
+    def basename(self) -> str:
+        return self._basename
+
+    @basename.setter
+    def basename(self, basename: str | None = None):
+        """
+        Assign the model's basename. For example: `scaled_yolov4-p7-coco`, the
+        basename is `scaled_yolov4`.
+        
+        Args:
+            basename (str | None): Model base name. In case None is given, it
+                will be `self.__class__.__name__`. Defaults to None.
+		"""
+        self._basename = basename \
+            if (basename is not None and basename != "") \
+            else self.__class__.__name__.lower()
+    
+    @property
+    def debug(self) -> Munch | None:
+        return self._debug
+        
+    @debug.setter
+    def debug(self, debug: dict | Munch | None):
+        if debug is None:
+            self._debug = None
+        else:
+            if isinstance(debug, dict):
+                debug = Munch.fromDict(debug)
+            self._debug = debug
+        
+            if "every_n_epochs" not in self._debug:
+                self._debug.every_n_epochs = 1
+            if "save_to_subdir" not in self._debug:
+                self._debug.save_to_subdir = True
+            if "image_quality" not in self._debug:
+                self._debug.image_quality = 95
+            if "max_n" not in self._debug:
+                self._debug.max_n = 8
+            if "nrow" not in self._debug:
+                self._debug.nrow = 8
+            if "wait_time" not in self._debug:
+                self._debug.wait_time = 0.01
+            if "verbose" not in self._debug:
+                self._debug.verbose = False
+        
+    @property
+    def debug_dir(self) -> Path:
+        if self._debug_dir is None:
+            self._debug_dir = self.root / "debug"
+        return self._debug_dir
+        
+    @property
+    def debug_subdir(self) -> Path:
+        """
+        Return the debug subdir path located at: <debug_dir>/<phase>_<epoch>.
+        """
+        debug_dir = self.debug_dir / \
+                    f"{self.phase.value}_{(self.current_epoch + 1):03d}"
+        create_dirs(paths=[debug_dir])
+        return debug_dir
+    
+    @property
+    def debug_image_filepath(self) -> Path:
+        """
+        Return the debug image filepath located at: <debug_dir>/
+        """
+        save_dir = self.debug_subdir \
+            if self.debug.save_to_subdir \
+            else self.debug_dir
+            
+        return save_dir / f"{self.phase.value}_" \
+                          f"{(self.current_epoch + 1):03d}_" \
+                          f"{(self.epoch_step + 1):06}.jpg"
+
+    @property
+    def dim(self) -> int | None:
+        """
+        Return the number of dimensions.
+        """
+        return None if self.size is None else len(self.size)
+    
+    @property
+    def loss(self) -> _Loss | None:
+        return self._loss
+    
+    @loss.setter
+    def loss(self, loss: Losses_ | None):
+        if isinstance(loss, (_Loss, nn.Module)):
+            self._loss = loss
+        elif isinstance(loss, dict):
+            self._loss = LOSSES.build_from_dict(cfg=loss)
+        else:
+            self._loss = None
+        
+        # Move to device
+        """
+        if self._loss:
+            self._loss.cuda()
+        """
+        
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @name.setter
+    def name(self, name: str | None = None):
+        """
+        Assign the model name in the following format:
+        {name}-{data_name}-{postfix}. For example: `yolov5-coco-1920`
+ 
+        Args:
+            name (str | None): Model name. In case None is given, it will be
+                `self.basename`. Defaults to None.
+        """
+        self._name = name \
+            if (name is not None and name != "") \
+            else self.__class__.__name__.lower()
+    
+    @property
+    def ndim(self) -> int | None:
+        """
+        Alias of `self.dim()`.
+        """
+        return self.dim
+     
+    @property
+    def phase(self) -> ModelPhase:
+        return self._phase
+    
+    @phase.setter
+    def phase(self, phase: ModelPhase_ = "training"):
+        """
+        Assign the model's running phase.
+        """
+        self._phase = ModelPhase.from_value(phase)
+        if self._phase is ModelPhase.TRAINING:
+            self.unfreeze()
+        else:
+            self.freeze()
+    
+    @property
+    def pretrained(self) -> dict | None:
+        """
+        Returns the model's pretrained metadata.
+        """
+        return self._pretrained
+    
+    @pretrained.setter
+    def pretrained(self, pretrained: Pretrained = False):
+        """
+        Assign model's pretrained.
+        
+        Args:
+            pretrained (Pretrained): Initialize weights from pretrained.
+                - If True, use the original pretrained described by the
+                  author (usually, ImageNet or COCO). By default, it is the
+                  first element in the `model_zoo` dictionary.
+                - If str and is a file/path, then load weights from saved
+                  file.
+                - In each inherited model, `pretrained` can be a dictionary's
+                  key to get the corresponding local file or url of the weight.
+        """
+        if pretrained is True and len(self.model_zoo):
+            self._pretrained = list(self.model_zoo.values())[0]
+        elif pretrained in self.model_zoo:
+            self._pretrained = self.model_zoo[pretrained]
+        else:
+            self._pretrained = None
+        
+        # Update num_classes if it is currently None.
+        if self._pretrained and self.num_classes is None \
+            and "num_classes" in self._pretrained:
+            self.num_classes = self._pretrained["num_classes"]
+
+    @property
+    def pretrained_dir(self) -> Path:
+        return PRETRAINED_DIR / self.basename
+        
+    @property
+    def root(self) -> Path:
+        return self._root
+    
+    @root.setter
+    def root(self, root: Path_):
+        """
+        Assign the root directory of the model.
+        
+        Args:
+            root (Path_): The root directory of the model.
+        """
+        root = Path(root)
+        if not root.is_dir():
+            root = RUNS_DIR
+        self._root = root
+        if self._root.name != self.name:
+            self._root = self._root / self.name
+
+        self._debug_dir   = self._root / "debugs"
+        self._weights_dir = self._root / "weights"
+        
+    @property
+    def size(self) -> Ints | None:
+        """
+        Return the input size as [C, H, W].
+        """
+        return None if self.shape is None else self.shape
+    
+    @property
+    def test_metrics(self) -> list[Metric] | None:
+        return self._test_metrics
+    
+    @test_metrics.setter
+    def test_metrics(self, metrics: Metrics_ | None):
+        self._test_metrics = self.create_metrics(metrics)
+        # This is a simple hack since LightningModule require the
+        # metric to be defined with self.<metric>. Here we dynamically
+        # add the metric attribute to the class.
+        if self._test_metrics:
+            for metric in self._test_metrics:
+                name = f"test_{metric.name}"
+                setattr(self, name, metric)
+                
+    @property
+    def train_metrics(self) -> list[Metric] | None:
+        return self._train_metrics
+    
+    @train_metrics.setter
+    def train_metrics(self, metrics: Metrics_ | None):
+        self._train_metrics = self.create_metrics(metrics)
+        # This is a simple hack since LightningModule require the
+        # metric to be defined with self.<metric>. Here we dynamically
+        # add the metric attribute to the class.
+        if self._train_metrics:
+            for metric in self._train_metrics:
+                name = f"train_{metric.name}"
+                setattr(self, name, metric)
+       
+    @property
+    def val_metrics(self) -> list[Metric] | None:
+        return self._val_metrics
+    
+    @val_metrics.setter
+    def val_metrics(self, metrics: Metrics_ | None):
+        self._val_metrics = self.create_metrics(metrics)
+        # This is a simple hack since LightningModule require the
+        # metric to be defined with self.<metric>. Here we dynamically
+        # add the metric attribute to the class
+        if self._val_metrics:
+            for metric in self._val_metrics:
+                name = f"val_{metric.name}"
+                setattr(self, name, metric)
+    
+    @property
+    def weights_dir(self) -> Path:
+        if self._weights_dir is None:
+            self._weights_dir = self.root / "weights"
+        return self._weights_dir
+    
+    def init_metrics(self, metrics: Metrics_ | None):
+        """
+        Initialize all metrics used in the model.
+        
+        Args:
+            One of the 2 options:
+            
+            - Common metrics for train_/val_/test_metrics:
+                "metrics": dict(name="accuracy")
+              or,
+                "metrics": [dict(name="accuracy"), torchmetrics.Accuracy(),]
+            
+            - Define train_/val_/test_metrics separately:
+                "metrics": {
+                    "train": [dict(name="accuracy"), dict(name="f1")]
+                    "val":   torchmetrics.Accuracy(),
+                    "test":  None,
+                }
+        """
+        if metrics is None:
+            self.train_metrics = None
+            self.val_metrics   = None
+            self.test_metrics  = None
+        elif (isinstance(metrics, dict) and
+              "train" in metrics or "val" in metrics or "test" in metrics):
+            self.train_metrics = metrics.get("train", None)
+            self.val_metrics   = metrics.get("val",   None)
+            self.test_metrics  = metrics.get("test",  None)
+        else:
+            self.train_metrics = metrics
+            self.val_metrics   = metrics
+            self.test_metrics  = metrics
+            
+    @staticmethod
+    def create_metrics(metrics: Metrics_ | None) -> list[Metric] | None:
+        if isinstance(metrics, Metric):
+            return [metrics]
+        elif isinstance(metrics, dict):
+            return [METRICS.build_from_dict(cfg=metrics)]
+        elif isinstance(metrics, list):
+            return [METRICS.build_from_dict(cfg=m)
+                    if isinstance(m, dict)
+                    else m for m in metrics]
+        else:
+            return None
+    
+    def load_pretrained(self):
+        """
+        Load pretrained weights. It only loads the intersection layers of
+        matching keys and shapes between current model and pretrained.
+        """
+        if self.pretrained:
+            create_dirs([self.pretrained_dir])
+            load_pretrained(
+                module	  = self,
+                model_dir = self.pretrained_dir,
+                strict	  = False,
+                **self.pretrained
+            )
+            if self.verbose:
+                console.log(f"Load pretrained from: {self.pretrained}!")
+        elif is_url_or_file(self.pretrained):
+            """load_pretrained(
+                self,
+                path 	  = self.pretrained,
+                model_dir = models_zoo_dir,
+                strict	  = False
+            )"""
+            raise NotImplementedError("This function has not been implemented.")
+        else:
+            error_console.log(f"[yellow]Cannot load from pretrained: "
+                              f"{self.pretrained}!")
+            
+    def configure_optimizers(self):
+        """
+        Choose what optimizers and learning-rate schedulers to use in your
+        optimization. Normally you’d need one. But in the case of GANs or
+        similar you might have multiple.
+
+        Returns:
+            Any of these 6 options:
+                - Single optimizer.
+                - List or Tuple of optimizers.
+                - Two lists - First list has multiple optimizers, and the
+                  second has multiple LR schedulers (or multiple
+                  lr_scheduler_config).
+                - Dictionary, with an "optimizer" key, and (optionally) a
+                  "lr_scheduler" key whose value is a single LR scheduler or
+                  lr_scheduler_config.
+                - Tuple of dictionaries as described above, with an optional
+                  "frequency" key.
+                - None - Fit will run without any optimizer.
+        """
+        optims = self.optims
+
+        if optims is None:
+            console.log(f"[yellow]No optimizers have been defined! Consider "
+                        f"subclassing this function to manually define the "
+                        f"optimizers.")
+            return None
+        if isinstance(optims, dict):
+            optims = [optims]
+
+        # List through a list of optimizers
+        if not is_list_of(optims, dict):
+            raise ValueError(f"`optims` must be a `dict`. But got: {type(optims)}.")
+        
+        for optim in optims:
+            # Define optimizer measurement
+            optimizer = optim.get("optimizer", None)
+            if optimizer is None:
+                raise ValueError(f"`optimizer` must be defined.")
+            if isinstance(optimizer, dict):
+                optimizer = OPTIMIZERS.build_from_dict(net=self, cfg=optimizer)
+            optim["optimizer"] = optimizer
+
+            # Define learning rate scheduler
+            lr_scheduler = optim.get("lr_scheduler", None)
+            if "lr_scheduler" in optim and lr_scheduler is None:
+                optim.pop("lr_scheduler")
+            elif lr_scheduler is not None:
+                scheduler = lr_scheduler.get("scheduler", None)
+                if scheduler is None:
+                    raise ValueError(f"`scheduler` must be defined.")
+                if isinstance(scheduler, dict):
+                    scheduler = SCHEDULERS.build_from_dict(
+                        optimizer = optim["optimizer"],
+                        cfg       = scheduler
+                    )
+                lr_scheduler["scheduler"] = scheduler
+            
+            # Define optimizer frequency
+            frequency = optim.get("frequency", None)
+            if "frequency" in optim and frequency is None:
+                optim.pop("frequency")
+        
+        # Re-assign optims
+        self.optims = optims
+        return self.optims
+    
+    def forward_loss(
+        self,
+        input : Tensor,
+        target: Tensor,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor | None]:
+        """
+        Forward pass with loss value. Loss function may require more arguments
+        beside the ground-truth and prediction values. For calculating the
+        metrics, we only need the final predictions and ground-truth.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            target (Tensor): Ground-truth of shape [B, C, H, W].
+            
+        Returns:
+            Predictions and loss value.
+        """
+        pred = self.forward(input=input, *args, **kwargs)
+        loss = self.loss(pred, target) if self.loss else None
+        return pred, loss
+    
+    @abstractmethod
+    def forward(
+        self, input: Tensor, augment: bool = False, *args, **kwargs
+    ) -> Tensor:
+        """
+        Forward pass. This is the primary `forward` function of the model.
+        It supports augmented inference.
+        
+        In this function, we perform test-time augmentation and pass the
+        transformed input to `forward_once()`.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            augment (bool): Augmented inference. Defaults to False.
+                
+        Returns:
+            Predictions.
+        """
+        pass
+
+    @abstractmethod
+    def forward_once(self, input: Tensor, *args, **kwargs) -> Tensor:
+        """
+        Forward pass once. Implement the logic for a single forward pass.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            
+        Returns:
+            Predictions
+        """
+        pass
+    
+    @abstractmethod
+    def forward_features(
+        self,
+        input      : Tensor,
+        out_indexes: Ints | None = None
+    ) -> Tensors:
+        """
+        Forward pass for features extraction. Commonly used in backbone models.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            out_indexes (Ints | None): List of layers' indexes to extract
+                features. This is called in `forward_features()` and is useful
+                when the model is used as a subnetwork in another model.
+                - If tuple or list, return an array of tensors.
+                - If int, return only the tensor from the layer's index.
+                - If -1, return the last layer's output.
+                Defaults to None.
+        """
+        pass
+        
+    def on_fit_start(self):
+        """
+        Called at the very beginning of fit.
+        """
+        create_dirs(
+            paths = [
+                self.root,
+                self.weights_dir,
+                self.debug_dir
+            ]
+        )
+    
+    def on_train_epoch_start(self):
+        """
+        Called in the training loop at the very beginning of the epoch.
+        """
+        self.epoch_step = 0
+    
+    def training_step(
+        self,
+        batch    : Any,
+        batch_idx: int,
+        *args, **kwargs
+    ) -> StepOutput | None:
+        """
+        Training step.
+
+        Args:
+            batch (Any): Batch of inputs. It can be a tuple of
+                (input, target, extra).
+            batch_idx (int):
+                Batch index.
+
+        Returns:
+            Outputs:
+                - A single loss tensor.
+                - A dictionary with the first key must be the loss.
+                - None, training will skip to the next batch.
+        """
+        input, target, extra = batch[0], batch[1], batch[2:]
+        pred, loss = self.forward_loss(
+            input  = input,
+            target = target,
+            *args, **kwargs
+        )
+        return {
+            "loss"  : loss,
+            "input" : input,
+            "target": target,
+            "pred"  : pred
+        }
+    
+    def training_step_end(
+        self,
+        outputs: StepOutput | None,
+        *args, **kwargs
+    ) -> StepOutput | None:
+        """
+        Use this when training with dp or ddp2 because training_step() will
+        operate on only part of the batch. However, this is still optional and
+        only needed for things like softmax or NCE loss.
+        
+        Note:
+            If you later switch to ddp or some other mode, this will still be
+            called so that you don't have to change your code.
+        """
+        if not isinstance(outputs, dict):
+            return None
+        
+        # Gather results
+        # For DDP strategy, gather outputs from multiple devices
+        if self.trainer.num_processes > 1:
+            outputs = self.all_gather(outputs)
+        
+        loss   = outputs["loss"]    # losses from each device
+        input  = outputs["input"]   # images from each device
+        target = outputs["target"]  # ground-truths from each device
+        pred   = outputs["pred"]    # predictions from each device
+        
+        # Tensors
+        if self.trainer.num_processes > 1:
+            input  = input.flatten(start_dim=0,  end_dim=1)
+            target = target.flatten(start_dim=0, end_dim=1)
+            pred   = pred.flatten(start_dim=0,   end_dim=1)
+        
+        # Loss
+        loss = loss.mean() if loss is not None else None
+        self.ckpt_log_scalar(f"checkpoint/loss/train_step", loss)
+        # self.tb_log(f"{loss_tag}", loss, "step")
+       
+        # Metrics
+        if self.with_train_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                value = metric(pred, target)
+                self.ckpt_log_scalar(
+                    f"checkpoint/{metric.name}/train_step", value, True
+                )
+                # self.tb_log(f"{metric.name}/train_step", value, "step")
+        
+        self.epoch_step += 1
+        return {"loss": loss}
+    
+    def training_epoch_end(self, outputs: EpochOutput):
+        # Loss
+        loss = torch.stack([x["loss"] for x in outputs]).mean()
+        self.ckpt_log_scalar(f"checkpoint/loss/train_epoch", loss)
+        self.tb_log_scalar(f"loss/train_epoch", loss, "epoch")
+        
+        # Metrics
+        if self.with_train_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                value = metric.compute()
+                self.ckpt_log_scalar(f"checkpoint/{metric.name}/train_epoch", value)
+                self.tb_log_scalar(f"{metric.name}/train_epoch", value, "epoch")
+                metric.reset()
+    
+    def on_validation_epoch_start(self):
+        """
+        Called in the validation loop at the very beginning of the epoch.
+        """
+        self.epoch_step = 0
+        
+    def validation_step(
+        self,
+        batch    : Any,
+        batch_idx: int,
+        *args, **kwargs
+    ) -> StepOutput | None:
+        """
+        Validation step.
+
+        Args:
+            batch (Any): Batch of inputs. It can be a tuple of
+                (input, target, extra).
+            batch_idx (int): Batch index.
+
+        Returns:
+            Outputs:
+                - A single loss image.
+                - A dictionary with the first key must be the loss.
+                - None, training will skip to the next batch.
+        """
+        input, target, extra = batch[0], batch[1], batch[2:]
+        pred, loss = self.forward_loss(
+            input  = input,
+            target = target,
+            *args, **kwargs
+        )
+        return {
+            "loss"  : loss,
+            "input" : input,
+            "target": target,
+            "pred"  : pred
+        }
+        
+    def validation_step_end(
+        self,
+        outputs: StepOutput | None,
+        *args, **kwargs
+    ) -> StepOutput | None:
+        """
+        Use this when validating with dp or ddp2 because `validation_step`
+        will operate on only part of the batch. However, this is still optional
+        and only needed for things like softmax or NCE loss.
+
+        Note:
+            If you later switch to ddp or some other mode, this will still be
+            called so that you don't have to change your code.
+        """
+        if not isinstance(outputs, dict):
+            return None
+        
+        # Gather results
+        # For DDP strategy, gather outputs from multiple devices.
+        if self.trainer.num_processes > 1:
+            outputs = self.all_gather(outputs)
+        
+        loss   = outputs["loss"]    # losses from each device
+        input  = outputs["input"]   # images from each device
+        target = outputs["target"]  # ground-truths from each device
+        pred   = outputs["pred"]    # predictions from each device
+        
+        # Tensors
+        if self.trainer.num_processes > 1:
+            input  = input.flatten(start_dim=0,  end_dim=1)
+            target = target.flatten(start_dim=0, end_dim=1)
+            pred   = pred.flatten(start_dim=0,   end_dim=1)
+            
+        # Debugging
+        epoch = self.current_epoch + 1
+        if self.debug and \
+            epoch % self.debug.every_n_epochs == 0 and \
+            self.epoch_step < self.debug.max_n:
+            if self.trainer.is_global_zero:
+                self.show_results(
+                    input    = input,
+                    target   = target,
+                    pred     = pred,
+                    filepath = self.debug_image_filepath,
+                    **self.debug
+                )
+
+        # Loss
+        loss = loss.mean() if loss is not None else None
+        self.ckpt_log_scalar(f"checkpoint/loss/val_step", loss)
+        # self.tb_log(f"{loss_tag}", loss, "step")
+        
+        # Metrics
+        if self.with_val_metrics:
+            for i, metric in enumerate(self.val_metrics):
+                value = metric(pred, target)
+                self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_step", value)
+                # self.tb_log(f"{metric.name}/val_step", value, "step")
+            
+        self.epoch_step += 1
+        return {"loss": loss}
+
+    def validation_epoch_end(self, outputs: EpochOutput):
+        # Loss
+        loss = torch.stack([x["loss"] for x in outputs]).mean()
+        self.ckpt_log_scalar(f"checkpoint/loss/val_epoch", loss)
+        self.tb_log_scalar(f"loss/val_epoch", loss, "epoch")
+        
+        # Metrics
+        if self.with_val_metrics:
+            for i, metric in enumerate(self.val_metrics):
+                value = metric.compute()
+                self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_epoch", value)
+                self.tb_log_scalar(f"{metric.name}/val_epoch", value, "epoch")
+                metric.reset()
+                
+    def on_test_start(self) -> None:
+        """
+        Called at the very beginning of testing.
+        """
+        create_dirs(
+            paths=[
+                self.root,
+                self.weights_dir,
+                self.debug_dir
+            ]
+        )
+        
+    def on_test_epoch_start(self):
+        """
+        Called in the test loop at the very beginning of the epoch.
+        """
+        self.epoch_step = 0
+    
+    def test_step(
+        self,
+        batch    : Any,
+        batch_idx: int,
+        *args, **kwargs
+    ) -> StepOutput | None:
+        """
+        Test step.
+
+        Args:
+            batch (Any): Batch of inputs. It can be a tuple of
+                (input, target, extra).
+            batch_idx (int): Batch index.
+
+        Returns:
+            Outputs:
+                - A single loss image.
+                - A dictionary with the first key must be the loss.
+                - None, training will skip to the next batch.
+        """
+        input, target, extra = batch[0], batch[1], batch[2:]
+        pred, loss = self.forward_loss(
+            input  = input,
+            target = target,
+            *args, **kwargs
+        )
+        return {
+            "loss"  : loss,
+            "input" : input,
+            "target": target,
+            "pred"  : pred
+        }
+    
+    def test_step_end(
+        self,
+        outputs: StepOutput | None,
+        *args, **kwargs
+    ) -> StepOutput | None:
+        """
+        Use this when testing with dp or ddp2 because `test_step` will
+        operate on only part of the batch. However, this is still optional and
+        only needed for things like softmax or NCE loss.
+
+        Note:
+            If you later switch to ddp or some other mode, this will still be
+            called so that you don't have to change your code.
+        """
+        if not isinstance(outputs, dict):
+            return None
+        
+        # Gather results
+        # For DDP strategy, gather outputs from multiple devices.
+        if self.trainer.num_processes > 1:
+            outputs = self.all_gather(outputs)
+        
+        loss   = outputs["loss"]    # losses from each GPU
+        input  = outputs["input"]   # images from each GPU
+        target = outputs["target"]  # ground-truths from each GPU
+        pred   = outputs["pred"]    # predictions from each GPU
+        
+        # Tensors
+        if self.trainer.num_processes > 1:
+            input  = input.flatten(start_dim=0,  end_dim=1)
+            target = target.flatten(start_dim=0, end_dim=1)
+            pred   = pred.flatten(start_dim=0,   end_dim=1)
+        
+        # Loss
+        loss = loss.mean() if loss is not None else None
+        self.ckpt_log_scalar(f"checkpoint/loss/test_step", loss)
+        # self.tb_log(f"loss/test_step", loss, "step")
+        
+        # Metrics
+        if self.with_test_metrics:
+            for i, metric in enumerate(self.test_metrics):
+                value = metric(pred, target)
+                self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_step", value)
+                # self.tb_log(f"{metric.name}/test_step", value, "step")
+        
+        self.epoch_step += 1
+        return {"loss": loss}
+
+    def test_epoch_end(self, outputs: EpochOutput):
+        # Loss
+        loss = torch.stack([x["loss"] for x in outputs]).mean()
+        self.ckpt_log_scalar(f"checkpoint/loss/test_epoch", loss)
+        self.tb_log_scalar(f"loss/test_epoch", loss, "epoch")
+
+        # Metrics
+        if self.with_test_metrics:
+            for i, metric in enumerate(self.test_metrics):
+                value = metric.compute()
+                self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_epoch", value)
+                self.tb_log_scalar(f"{metric.name}/test_epoch", value, "epoch")
+                metric.reset()
+        
+    def export_to_onnx(
+        self,
+        input_dims   : Ints  | None = None,
+        filepath     : Path_ | None = None,
+        export_params: bool         = True
+    ):
+        """
+        Export the model to `onnx` format.
+
+        Args:
+            input_dims (Ints | None): Input dimensions. Defaults to None.
+            filepath (Path_ | None): Path to save the model. If None or empty,
+                then save to root. Defaults to None.
+            export_params (bool): Should export parameters also?
+                Defaults to True.
+        """
+        # Check filepath
+        if filepath in [None, ""]:
+            filepath = self.root / f"{self.fullname}.onnx"
+        if ".onnx" not in str(filepath):
+            filepath = Path(str(filepath) + ".onnx")
+        
+        if input_dims is not None:
+            input_sample = torch.randn(input_dims)
+        elif self.dims is not None:
+            input_sample = torch.randn(self.dims)
+        else:
+            raise ValueError(f"`input_dims` must be defined.")
+        
+        self.to_onnx(
+            filepath      = filepath,
+            input_sample  = input_sample,
+            export_params = export_params
+        )
+    
+    def export_to_torchscript(
+        self,
+        input_dims: Ints  | None = None,
+        filepath  : Path_ | None = None,
+        method    : str          = "script"
+    ):
+        """Export the model to `TorchScript` format.
+
+        Args:
+            input_dims (Ints | None): Input dimensions. Defaults to None.
+            filepath (Path_ | None): Path to save the model. If None or empty,
+                then save to root. Defaults to None.
+            method (str):
+                Whether to use TorchScript's `script` or `trace` method.
+                Default: `script`
+        """
+        # Check filepath
+        if filepath in [None, ""]:
+            filepath = self.root / f"{self.fullname}.pt"
+        if ".pt" not in str(filepath):
+            filepath = Path(str(filepath) + ".pt")
+            
+        if input_dims is not None:
+            input_sample = torch.randn(input_dims)
+        elif self.dims is not None:
+            input_sample = torch.randn(self.dims)
+        else:
+            raise ValueError(f"`input_dims` must be defined.")
+        
+        script = self.to_torchscript(method=method, example_inputs=input_sample)
+        torch.jit.save(script, filepath)
+    
+    @abstractmethod
+    def show_results(
+        self,
+        input        : Tensor | None = None,
+        target	     : Tensor | None = None,
+        pred		 : Tensor | None = None,
+        filepath     : Path_  | None = None,
+        image_quality: int           = 95,
+        max_n        : int | None    = 8,
+        nrow         : int | None    = 8,
+        wait_time    : float         = 0.01,
+        verbose      : bool          = False,
+        *args, **kwargs
+    ):
+        """
+        Show results.
+
+        Args:
+            input (Tensor | None): Input.
+            target (Tensor | None): Ground-truth.
+            pred (Tensor | None): Predictions.
+            filepath (Path_ | None): File path to save the debug result.
+            image_quality (int): Image quality to be saved. Defaults to 95.
+            max_n (int | None): Show max n images if `image` has a batch size
+                of more than `max_n` images. Defaults to None means show all.
+            nrow (int | None): The maximum number of items to display in a row.
+                The final grid size is (n / nrow, nrow). If None, then the
+                number of items in a row will be the same as the number of
+                items in the list. Defaults to 8.
+            wait_time (float): Wait some time (in seconds) to display the
+                figure then reset. Defaults to 0.01.
+            verbose (bool): If True shows the results on the screen.
+                Defaults to False.
+        """
+        pass
+    
+    def tb_log_scalar(
+        self,
+        tag : str,
+        data: Any | None,
+        step: str | int = "step"
+    ):
+        """
+        Log scalar values using tensorboard.
+        """
+        if data is None:
+            return
+        if isinstance(step, str):
+            step = self.current_epoch if step == "epoch" else self.global_step
+        if self.trainer.is_global_zero:
+            self.logger.experiment.add_scalar(tag, data, step)
+    
+    def tb_log_class_metrics(
+        self,
+        tag : str,
+        data: Any | None,
+        step: str | int = "step"
+    ):
+        """
+        Log class metrics using tensorboard.
+        """
+        if data is None:
+            return
+        if self.classlabels is None:
+            return
+        if isinstance(step, str):
+            step = self.current_epoch if step == "epoch" else self.global_step
+        if self.trainer.is_global_zero:
+            for n, a in zip(self.classlabels.names(), data):
+                n = f"{tag}/{n}"
+                self.logger.experiment.add_scalar(n, a, step)
+        
+    def ckpt_log_scalar(
+        self,
+        tag     : str,
+        data    : Any | None,
+        prog_bar: bool = False
+    ):
+        """
+        Log for model checkpointing.
+        """
+        if data is None:
+            return
+        if self.trainer.is_global_zero:
+            self.log(
+                name           = tag,
+                value          = data,
+                prog_bar       = prog_bar,
+                sync_dist      = True,
+                rank_zero_only = True
+            )
 
 
 # H1: - Trainer ----------------------------------------------------------------

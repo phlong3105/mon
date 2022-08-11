@@ -5054,6 +5054,8 @@ TensorOrArray       = Union[Tensor, np.ndarray]
 Tensors             = ScalarOrCollectionT[Tensor]
 Transforms_         = Union[ScalarOrCollectionT[Union[Transform, dict]],
                             ComposeTransform]
+StepOutput          = Union[Tensor, dict[str, Any]]
+EpochOutput         = list[StepOutput]
 # DataLoader Types
 EvalDataLoaders     = ScalarOrSequenceT[DataLoader]
 TrainDataLoaders    = Union[DataLoader,
