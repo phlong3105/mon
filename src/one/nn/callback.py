@@ -17,24 +17,8 @@ from typing import Any
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning import callbacks
-from pytorch_lightning.callbacks import BackboneFinetuning
-from pytorch_lightning.callbacks import DeviceStatsMonitor
-from pytorch_lightning.callbacks import EarlyStopping
-from pytorch_lightning.callbacks import GradientAccumulationScheduler
-from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.callbacks import ModelCheckpoint
-from pytorch_lightning.callbacks import ModelPruning
-from pytorch_lightning.callbacks import ModelSummary
-from pytorch_lightning.callbacks import QuantizationAwareTraining
-from pytorch_lightning.callbacks import StochasticWeightAveraging
-from pytorch_lightning.callbacks.progress.rich_progress import \
-    BatchesProcessedColumn
-from pytorch_lightning.callbacks.progress.rich_progress import CustomBarColumn
-from pytorch_lightning.callbacks.progress.rich_progress import CustomProgress
-from pytorch_lightning.callbacks.progress.rich_progress import MetricsTextColumn
-from pytorch_lightning.callbacks.progress.rich_progress import \
-    ProcessingSpeedColumn
+from pytorch_lightning.callbacks import *
+from pytorch_lightning.callbacks.progress import rich_progress
 from pytorch_lightning.utilities.imports import _RICH_AVAILABLE
 from pytorch_lightning.utilities.model_summary import get_human_readable_count
 from rich.progress import SpinnerColumn
@@ -57,7 +41,7 @@ if _RICH_AVAILABLE:
 
 
 @CALLBACKS.register(name="checkpoint_callback")
-class CheckpointCallback(callbacks.Callback):
+class CheckpointCallback(Callback):
     """
     Checkpointing is a mechanism to store the state of a computation so that
     it can be retrieved at a later point in time and continued. Process of
@@ -1014,7 +998,7 @@ class RichModelSummary(ModelSummary):
 
 
 @CALLBACKS.register(name="rich_progress_bar")
-class RichProgressBar(callbacks.RichProgressBar):
+class RichProgressBar(RichProgressBar):
     """
     Override `pytorch_lightning.callbacks.progress.rich_progress` to add some
     customizations.
@@ -1026,11 +1010,11 @@ class RichProgressBar(callbacks.RichProgressBar):
             self._console = console
             # self._console: Console = Console(**self._console_kwargs)
             self._console.clear_live()
-            self._metric_component = MetricsTextColumn(
+            self._metric_component = rich_progress.MetricsTextColumn(
                 trainer = trainer,
                 style   = self.theme.metrics
             )
-            self.progress = CustomProgress(
+            self.progress = rich_progress.CustomProgress(
                 *self.configure_columns(trainer),
                 self._metric_component,
                 auto_refresh = False,
@@ -1038,7 +1022,7 @@ class RichProgressBar(callbacks.RichProgressBar):
                 console      = self._console,
             )
             self.progress.start()
-            # progress has started
+            # Progress has started
             self._progress_stopped = False
             
     def configure_columns(self, trainer) -> list:
@@ -1049,16 +1033,16 @@ class RichProgressBar(callbacks.RichProgressBar):
                 style   = "log.time"
             ),
             TextColumn("[progress.description][{task.description}]"),
-            CustomBarColumn(
+            rich_progress.CustomBarColumn(
                 complete_style = self.theme.progress_bar,
                 finished_style = self.theme.progress_bar_finished,
                 pulse_style    = self.theme.progress_bar_pulse,
             ),
-            BatchesProcessedColumn(style="progress.download"),
+            rich_progress.BatchesProcessedColumn(style="progress.download"),
             "•",
             GPUMemoryUsageColumn(),
             "•",
-            ProcessingSpeedColumn(style="progress.data.speed"),
+            rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
             "•",
             TimeRemainingColumn(),
             ">",

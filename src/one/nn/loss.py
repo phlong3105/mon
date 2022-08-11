@@ -17,7 +17,7 @@ from torch import FloatTensor
 from torch import nn
 from torch import Tensor
 from torch.nn import functional
-from torch.nn import functional as F
+from torch.nn.modules.loss import *
 from torch.nn.modules.loss import _Loss
 
 from one.constants import LOSSES
@@ -31,8 +31,7 @@ from one.nn.metric import psnr
 from one.nn.metric import ssim
 
 
-# H1: - Helper Functions -------------------------------------------------------
-
+# H1: - Base Loss --------------------------------------------------------------
 
 def reduce_loss(
     loss     : Tensor,
@@ -127,8 +126,6 @@ def weighted_loss(f: Callable):
 
     return wrapper
     
-    
-# H1: - Base Loss --------------------------------------------------------------
 
 class BaseLoss(_Loss, metaclass=ABCMeta):
     """
@@ -540,6 +537,7 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
     return loss
 
 
+@LOSSES.register(name="charbonnier_loss")
 class CharbonnierLoss(BaseLoss):
     
     def __init__(self, eps: float = 1e-3, *args, **kwargs):
@@ -558,6 +556,7 @@ class CharbonnierLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="charbonnier_edge_loss")
 class CharbonnierEdgeLoss(BaseLoss):
     """
     Implementation of the loss function proposed in the paper "Multi-Stage
@@ -594,6 +593,7 @@ class CharbonnierEdgeLoss(BaseLoss):
             )
 
 
+@LOSSES.register(name="color_constancy_loss")
 class ColorConstancyLoss(BaseLoss):
     
     def __init__(self, *args, **kwargs):
@@ -610,6 +610,7 @@ class ColorConstancyLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="edge_loss")
 class EdgeLoss(BaseLoss):
     
     def __init__(self, eps: float = 1e-3, *args, **kwargs):
@@ -628,6 +629,7 @@ class EdgeLoss(BaseLoss):
         )
     
     
+@LOSSES.register(name="exposure_control_loss")
 class ExposureControlLoss(BaseLoss):
     """
     Exposure Control Loss.
@@ -651,6 +653,7 @@ class ExposureControlLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="gradient_loss")
 class GradientLoss(BaseLoss):
     """
     L1 loss on the gradient of the image.
@@ -685,6 +688,7 @@ class GradientLoss(BaseLoss):
         )
         
 
+@LOSSES.register(name="gray_loss")
 class GrayLoss(BaseLoss):
     """
     Gray Loss.
@@ -704,6 +708,7 @@ class GrayLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="grayscale_loss")
 class GrayscaleLoss(BaseLoss):
     """
     Grayscale Loss.
@@ -732,6 +737,7 @@ class GrayscaleLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="illumination_smoothness_loss")
 class IlluminationSmoothnessLoss(BaseLoss):
     
     def __init__(self, tv_loss_weight: int = 1, *args, **kwargs):
@@ -749,7 +755,9 @@ class IlluminationSmoothnessLoss(BaseLoss):
             reduction          = self.reduction,
         )
 
-    
+
+@LOSSES.register(name="mae_loss")
+@LOSSES.register(name="l1_loss")
 class MAELoss(BaseLoss):
     """
     MAE (Mean Absolute Error or L1) loss.
@@ -769,6 +777,8 @@ class MAELoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="mse_loss")
+@LOSSES.register(name="l2_loss")
 class MSELoss(BaseLoss):
     """
     MSE (Mean Squared Error or L2) loss.
@@ -788,6 +798,7 @@ class MSELoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="non_blurry_loss")
 class NonBlurryLoss(BaseLoss):
     """
     MSELoss on the distance to 0.5
@@ -807,6 +818,7 @@ class NonBlurryLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="perceptual_l1_loss")
 class PerceptualL1Loss(BaseLoss):
     """
     Loss = weights[0] * Perceptual Loss + weights[1] * L1 Loss.
@@ -854,6 +866,7 @@ class PerceptualL1Loss(BaseLoss):
             )
 
 
+@LOSSES.register(name="perceptual_loss")
 class PerceptualLoss(BaseLoss):
     """
     Perceptual Loss.
@@ -893,6 +906,7 @@ class PerceptualLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="psnr_loss")
 class PSNRLoss(BaseLoss):
     """
     PSNR Loss.
@@ -914,6 +928,8 @@ class PSNRLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="smooth_mae_loss")
+@LOSSES.register(name="smooth_l1_loss")
 class SmoothMAELoss(BaseLoss):
     """
     Smooth MAE (Mean Absolute Error or L1) loss.
@@ -935,6 +951,7 @@ class SmoothMAELoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="spatial_consistency_loss")
 class SpatialConsistencyLoss(BaseLoss):
     """
     Spatial Consistency Loss (SPA) Loss.
@@ -954,6 +971,7 @@ class SpatialConsistencyLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="ssim_loss")
 class SSIMLoss(BaseLoss):
     """
     SSIM Loss.
@@ -991,6 +1009,7 @@ class SSIMLoss(BaseLoss):
         )
 
 
+@LOSSES.register(name="std_loss")
 class StdLoss(BaseLoss):
     """
     Loss on the variance of the image. Works in the grayscale. If the image is
@@ -1048,44 +1067,22 @@ L1Loss       = MAELoss
 L2Loss       = MSELoss
 SmoothL1Loss = SmoothMAELoss
 
-LOSSES.register(name="bce_loss", 			              module=nn.BCELoss)
-LOSSES.register(name="bce_with_logits_loss",              module=nn.BCEWithLogitsLoss)
-LOSSES.register(name="charbonnier_loss",                  module=CharbonnierLoss)
-LOSSES.register(name="charbonnier_edge_loss",             module=CharbonnierEdgeLoss)
-LOSSES.register(name="color_constancy_loss",              module=ColorConstancyLoss)
-LOSSES.register(name="cosine_embedding_loss",             module=nn.CosineEmbeddingLoss)
-LOSSES.register(name="cross_entropy_loss",	              module=nn.CrossEntropyLoss)
-LOSSES.register(name="ctc_loss",	  		              module=nn.CTCLoss)
-LOSSES.register(name="edge_loss",	  		              module=EdgeLoss)
-LOSSES.register(name="exposure_control_loss",	  		  module=ExposureControlLoss)
-LOSSES.register(name="gaussian_nll_loss",                 module=nn.GaussianNLLLoss)
-LOSSES.register(name="gradient_loss",                     module=GradientLoss)
-LOSSES.register(name="gray_loss",                         module=GrayLoss)
-LOSSES.register(name="grayscale_loss",                    module=GrayscaleLoss)
-LOSSES.register(name="hinge_embedding_loss",              module=nn.HingeEmbeddingLoss)
-LOSSES.register(name="huber_loss",                        module=nn.HuberLoss)
-LOSSES.register(name="illumination_smoothness_loss",      module=IlluminationSmoothnessLoss)
-LOSSES.register(name="kl_div_loss",	  		              module=nn.KLDivLoss)
-LOSSES.register(name="l1_loss",	  		                  module=L1Loss)
-LOSSES.register(name="l2_loss",	  		                  module=L2Loss)
-LOSSES.register(name="margin_ranking_loss",	              module=nn.MarginRankingLoss)
-LOSSES.register(name="mae_loss",	  		              module=MAELoss)
-LOSSES.register(name="mse_loss",	  		              module=MSELoss)
-LOSSES.register(name="multi_label_margin_loss",           module=nn.MultiLabelMarginLoss)
-LOSSES.register(name="multi_label_soft_margin_loss",      module=nn.MultiLabelSoftMarginLoss)
-LOSSES.register(name="multi_margin_loss",                 module=nn.MultiMarginLoss)
-LOSSES.register(name="nll_loss",   	   		              module=nn.NLLLoss)
-LOSSES.register(name="nll_loss2d",   	   		          module=nn.NLLLoss2d)
-LOSSES.register(name="non_blurry_loss",   	   		      module=NonBlurryLoss)
-LOSSES.register(name="perceptual_l1_loss",   	          module=PerceptualL1Loss)
-LOSSES.register(name="perceptual_loss",   	              module=PerceptualLoss)
-LOSSES.register(name="poisson_nll_loss",   	              module=nn.PoissonNLLLoss)
-LOSSES.register(name="psnr_loss",   	                  module=PSNRLoss)
-LOSSES.register(name="smooth_l1_loss",   	              module=SmoothL1Loss)
-LOSSES.register(name="smooth_mae_loss",   	              module=SmoothMAELoss)
-LOSSES.register(name="soft_margin_loss",   	              module=nn.SoftMarginLoss)
-LOSSES.register(name="spatial_consistency_loss",   	      module=SpatialConsistencyLoss)
-LOSSES.register(name="ssim_loss",   	                  module=SSIMLoss)
-LOSSES.register(name="std_loss",   	                      module=StdLoss)
-LOSSES.register(name="triplet_margin_loss",               module=nn.TripletMarginLoss)
-LOSSES.register(name="triplet_margin_with_distance_Loss", module=nn.TripletMarginWithDistanceLoss)
+LOSSES.register(name="bce_loss", 			              module=BCELoss)
+LOSSES.register(name="bce_with_logits_loss",              module=BCEWithLogitsLoss)
+LOSSES.register(name="cosine_embedding_loss",             module=CosineEmbeddingLoss)
+LOSSES.register(name="cross_entropy_loss",	              module=CrossEntropyLoss)
+LOSSES.register(name="ctc_loss",	  		              module=CTCLoss)
+LOSSES.register(name="gaussian_nll_loss",                 module=GaussianNLLLoss)
+LOSSES.register(name="hinge_embedding_loss",              module=HingeEmbeddingLoss)
+LOSSES.register(name="huber_loss",                        module=HuberLoss)
+LOSSES.register(name="kl_div_loss",	  		              module=KLDivLoss)
+LOSSES.register(name="margin_ranking_loss",	              module=MarginRankingLoss)
+LOSSES.register(name="multi_label_margin_loss",           module=MultiLabelMarginLoss)
+LOSSES.register(name="multi_label_soft_margin_loss",      module=MultiLabelSoftMarginLoss)
+LOSSES.register(name="multi_margin_loss",                 module=MultiMarginLoss)
+LOSSES.register(name="nll_loss",   	   		              module=NLLLoss)
+LOSSES.register(name="nll_loss2d",   	   		          module=NLLLoss2d)
+LOSSES.register(name="poisson_nll_loss",   	              module=PoissonNLLLoss)
+LOSSES.register(name="soft_margin_loss",   	              module=SoftMarginLoss)
+LOSSES.register(name="triplet_margin_loss",               module=TripletMarginLoss)
+LOSSES.register(name="triplet_margin_with_distance_Loss", module=TripletMarginWithDistanceLoss)

@@ -62,6 +62,7 @@ class ArgMax(Module):
 
 
 @LAYERS.register(name="clamp")
+@LAYERS.register(name="clip")
 class Clamp(Module):
     """
     Clamp the feature value within [min, max]. More details can be found in
@@ -97,7 +98,6 @@ class FReLU(Module):
 Clip = Clamp
 
 LAYERS.register(name="celu",                module=CELU)
-LAYERS.register(name="clip",                module=Clip)
 LAYERS.register(name="elu",                 module=ELU)
 LAYERS.register(name="gelu",                module=GELU)
 LAYERS.register(name="glu",                 module=GLU)
@@ -149,6 +149,7 @@ def to_act_layer(
 # H1: - Attention --------------------------------------------------------------
 
 @LAYERS.register(name="channel_attention_layer")
+@LAYERS.register(name="cal")
 class ChannelAttentionLayer(Module):
     """
     Channel Attention Layer.
@@ -214,6 +215,7 @@ class ChannelAttentionLayer(Module):
  
     
 @LAYERS.register(name="channel_attention_block")
+@LAYERS.register(name="cab")
 class ChannelAttentionBlock(Module):
     """
     Channel Attention Block.
@@ -278,6 +280,7 @@ class ChannelAttentionBlock(Module):
 
 
 @LAYERS.register(name="pixel_attention_layer")
+@LAYERS.register(name="pal")
 class PixelAttentionLayer(Module):
     """
     Pixel Attention Layer.
@@ -339,6 +342,7 @@ class PixelAttentionLayer(Module):
 
 
 @LAYERS.register(name="supervised_attention_module")
+@LAYERS.register(name="sam")
 class SupervisedAttentionModule(Module):
     """
     Supervised Attention Module.
@@ -423,11 +427,6 @@ CAB = ChannelAttentionBlock
 CAL = ChannelAttentionLayer
 PAL = PixelAttentionLayer
 SAM = SupervisedAttentionModule
-
-LAYERS.register(name="cab", module=CAB)
-LAYERS.register(name="cal", module=CAL)
-LAYERS.register(name="pal", module=PAL)
-LAYERS.register(name="sam", module=SAM)
 
 
 # H1: - Bottleneck -------------------------------------------------------------
@@ -778,7 +777,7 @@ class ConvBnMish2d(Module):
             dtype        = dtype,
         )
         self.bn   = BatchNorm2d(out_channels)
-        self.act  = Mish() 
+        self.act  = Mish()
     
     def forward(self, input: Tensor) -> Tensor:
         return self.act(self.bn(self.conv(input)))
@@ -2520,19 +2519,15 @@ def pad_same(
     return input
 
 
-LAYERS.register(name="constant_pad",      module=ConstantPad2d)
 LAYERS.register(name="constant_pad1d",    module=ConstantPad1d)
 LAYERS.register(name="constant_pad2d",    module=ConstantPad2d)
 LAYERS.register(name="constant_pad3d",    module=ConstantPad3d)
-LAYERS.register(name="reflection_pad",    module=ReflectionPad2d)
 LAYERS.register(name="reflection_pad1d",  module=ReflectionPad1d)
 LAYERS.register(name="reflection_pad2d",  module=ReflectionPad2d)
 LAYERS.register(name="reflection_pad3d",  module=ReflectionPad3d)
-LAYERS.register(name="replication_pad",   module=ReplicationPad2d)
 LAYERS.register(name="replication_pad1d", module=ReplicationPad1d)
 LAYERS.register(name="replication_pad2d", module=ReplicationPad2d)
 LAYERS.register(name="replication_pad3d", module=ReplicationPad3d)
-LAYERS.register(name="zero_pad",          module=ZeroPad2d)
 LAYERS.register(name="zero_pad2d",        module=ZeroPad2d)
 
 
@@ -3044,6 +3039,7 @@ class ResidualConvAct2d(Module):
 
 
 @LAYERS.register(name="residual_dense_block")
+@LAYERS.register(name="rdb")
 class ResidualDenseBlock(Module):
     """
     Densely-Connected Residual block with activation layer.
@@ -3056,7 +3052,7 @@ class ResidualDenseBlock(Module):
         in_channels (int): Number of channels in the input image.
         growth_channels (int): Growth channel, i.e. intermediate channels.
         kernel_size (Ints): Size of the convolving kernel.
-        lff_kernel_size (Ints): Size of the convolving kernel for the last 
+        lff_kernel_size (Ints): Size of the convolving kernel for the last
             conv layer.
         stride (Ints): Stride of the convolution. Default: `(1, 1)`.
         lff_stride (Ints):
@@ -3146,6 +3142,7 @@ class ResidualDenseBlock(Module):
 
 
 @LAYERS.register(name="residual_dense_block_5Conv_lrelu")
+@LAYERS.register(name="rdb_5conv_lrelu")
 class ResidualDenseBlock5ConvLReLU(ResidualDenseBlock):
     """
     Densely-Connected Residual block with 5 convolution layers + Leaky ReLU.
@@ -3222,6 +3219,7 @@ class ResidualDenseBlock5ConvLReLU(ResidualDenseBlock):
                     
                     
 @LAYERS.register(name="residual_in_residual_dense_block")
+@LAYERS.register(name="rrdb")
 class ResidualInResidualDenseBlock(Module):
     """
     Residual in Residual Dense Block with 3 Residual Dense Blocks.
@@ -3266,6 +3264,7 @@ class ResidualInResidualDenseBlock(Module):
 
 
 @LAYERS.register(name="residual_wide_activation_block")
+@LAYERS.register(name="rwab")
 class ResidualWideActivationBlock(Module):
     """
     Conv2d + BN + Act + Conv2d + BN.
@@ -3337,15 +3336,8 @@ class ResidualWideActivationBlock(Module):
 
 RDB             = ResidualDenseBlock
 RDB5ConvLReLu   = ResidualDenseBlock5ConvLReLU
-ResidualConvAct = ResidualConvAct2d
 RRDB            = ResidualInResidualDenseBlock
 RWAB            = ResidualWideActivationBlock
-
-LAYERS.register(name="rdb",               module=RDB)
-LAYERS.register(name="rdb_5conv_lrelu"  , module=RDB5ConvLReLu)
-LAYERS.register(name="residual_conv_act", module=ResidualConvAct)
-LAYERS.register(name="rrdb",              module=RRDB)
-LAYERS.register(name="rwab",              module=RWAB)
 
 
 # H1: - Sampling ---------------------------------------------------------------
@@ -3357,11 +3349,11 @@ class Downsample(Module):
     Args:
         in_channels (int): Number of input channels.
         scale_factor (int): Scale factor. Defaults to 0.
-        mode (str): Upsampling algorithm. One of: [`nearest`, `linear`, 
+        mode (str): Upsampling algorithm. One of: [`nearest`, `linear`,
             `bilinear`, `bicubic`, `trilinear`]. Defaults to bilinear.
         align_corners (bool): If True, the corner pixels of the input and output
-            tensors are aligned, and thus preserving the values at those pixels. 
-            This only has effect when `mode` is `linear`, `bilinear`, or 
+            tensors are aligned, and thus preserving the values at those pixels.
+            This only has effect when `mode` is `linear`, `bilinear`, or
             `trilinear`. Defaults to True.
     """
     
@@ -3764,6 +3756,7 @@ class Mean(Module):
 
 
 @LAYERS.register(name="original_resolution_block")
+@LAYERS.register(name="ors")
 class OriginalResolutionBlock(Module):
     """
     Original Resolution Block.
@@ -3838,6 +3831,7 @@ class Scale(Module):
 
 
 @LAYERS.register(name="squeeze_and_excite_layer")
+@LAYERS.register(name="se_layer")
 class SqueezeAndExciteLayer(Module):
     
     def __init__(self, channel: int, reduction: int = 16):
@@ -3888,6 +3882,3 @@ class Sum(Module):
 
 ORS     = OriginalResolutionBlock
 SELayer = SqueezeAndExciteLayer
-
-LAYERS.register(name="ors",      module=ORS)
-LAYERS.register(name="se_layer", module=SELayer)

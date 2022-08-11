@@ -37,5 +37,7 @@ def init_seeds(seed: int = 0):
 
 
 def make_divisible(x: Any, divisor: int):
-    """Returns x evenly divisible by divisor."""
+    """
+    Returns x evenly divisible by divisor.
+    """
     return math.ceil(x / divisor) * divisor

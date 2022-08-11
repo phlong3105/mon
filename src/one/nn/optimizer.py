@@ -9,11 +9,10 @@ from __future__ import annotations
 
 from torch.optim import *
 from torch.optim.lr_scheduler import *
-# noinspection PyUnresolvedReferences
-from torch.optim.lr_scheduler import _LRScheduler
 
 from one.constants import OPTIMIZERS
 from one.constants import SCHEDULERS
+
 
 # H1: - Optimizer --------------------------------------------------------------
 

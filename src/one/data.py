@@ -2776,7 +2776,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     """
     A labeled dataset consisting of images and their associated object
     detections saved in `PASCAL VOC format
-    <http://host.robots.ox.ac.uk/pascal/VOC>`.
+    <https://host.robots.ox.ac.uk/pascal/VOC>`.
     
     Args:
         root (Path_): Root directory of dataset.

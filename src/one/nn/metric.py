@@ -25,9 +25,6 @@ from one.constants import METRICS
 from one.core import assert_float
 from one.core import assert_tensor_of_ndim
 from one.core import Ints
-from one.vision.filtering import filter2d
-from one.vision.filtering import get_gaussian_kernel2d
-from one.vision.transformation import rgb_to_yuv
 
 
 # H1: - Classification ---------------------------------------------------------
@@ -139,6 +136,8 @@ def ssim(
         >>> input2   = torch.rand(1, 4, 5, 5)
         >>> ssim_map = ssim(input1, input2, 5)  # [1, 4, 5, 5]
     """
+    from one.vision.filtering import get_gaussian_kernel2d
+    from one.vision.filtering import filter2d
     assert_tensor_of_ndim(input,  4)
     assert_tensor_of_ndim(target, 4)
     assert_float(max_val)
@@ -275,6 +274,7 @@ class PeakSignalNoiseRatioY(Metric):
             preds (Tensor): Predictions from model.
             target (Tensor): Ground truth values.
         """
+        from one.vision.transformation import rgb_to_yuv
         preds_yuv  = rgb_to_yuv(preds)
         target_yuv = rgb_to_yuv(target)
         preds_y    = preds_yuv[..., 0, :, :]

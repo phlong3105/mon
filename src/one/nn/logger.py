@@ -14,7 +14,11 @@ from typing import Any
 from typing import Optional
 
 import pytorch_lightning as pl
-from pytorch_lightning import loggers
+from pytorch_lightning.loggers import CometLogger
+from pytorch_lightning.loggers import CSVLogger
+from pytorch_lightning.loggers import MLFlowLogger
+from pytorch_lightning.loggers import NeptuneLogger
+from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.loggers.base import rank_zero_experiment
 from tensorboard.compat import tf
 from tensorboard.compat.proto import event_pb2
@@ -28,6 +32,19 @@ from torch.utils import tensorboard
 from one.constants import LOGGERS
 from one.core import Callable
 
+LOGGERS.register(name="csv",            module=CSVLogger)
+LOGGERS.register(name="csv_logger",     module=CSVLogger)
+LOGGERS.register(name="comet",          module=CometLogger)
+LOGGERS.register(name="comet_logger",   module=CometLogger)
+LOGGERS.register(name="mlflow",         module=MLFlowLogger)
+LOGGERS.register(name="mlflow_logger",  module=MLFlowLogger)
+LOGGERS.register(name="neptune",        module=NeptuneLogger)
+LOGGERS.register(name="neptune_logger", module=NeptuneLogger)
+LOGGERS.register(name="wandb",          module=WandbLogger)
+LOGGERS.register(name="wandb_logger",   module=WandbLogger)
+
+
+# H1: - Tensorboard ------------------------------------------------------------
 
 class EventFileWriter(event_file_writer.EventFileWriter):
     
@@ -173,15 +190,3 @@ class TensorBoardLogger(pl.loggers.TensorBoardLogger):
             self._fs.makedirs(self.root_dir, exist_ok=True)
         self._experiment = SummaryWriter(log_dir=self.log_dir, **self._kwargs)
         return self._experiment
-
-
-LOGGERS.register(name="csv",                module=loggers.CSVLogger)
-LOGGERS.register(name="csv_logger",         module=loggers.CSVLogger)
-LOGGERS.register(name="comet",              module=loggers.CometLogger)
-LOGGERS.register(name="comet_logger",       module=loggers.CometLogger)
-LOGGERS.register(name="mlflow",             module=loggers.MLFlowLogger)
-LOGGERS.register(name="mlflow_logger",      module=loggers.MLFlowLogger)
-LOGGERS.register(name="neptune",            module=loggers.NeptuneLogger)
-LOGGERS.register(name="neptune_logger",     module=loggers.NeptuneLogger)
-LOGGERS.register(name="wandb",              module=loggers.WandbLogger)
-LOGGERS.register(name="wandb_logger",       module=loggers.WandbLogger)
