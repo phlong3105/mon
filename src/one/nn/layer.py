@@ -22,22 +22,13 @@ output
 from __future__ import annotations
 
 import math
-import random
-import types
-from typing import Any
-from typing import Sequence
 
-import torch
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import *
 
-from one.constants import LAYERS
-from one.core import Callable
-from one.core import Ints
-from one.core import Strs
-from one.core import to_2tuple
-from one.core import to_4tuple
+from one.constants import *
+from one.core import *
 
 
 # H1: - Activation -------------------------------------------------------------

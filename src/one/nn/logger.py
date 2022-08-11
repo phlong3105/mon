@@ -6,12 +6,8 @@
 
 from __future__ import annotations
 
-import os
 import socket
-import time
 from functools import wraps
-from typing import Any
-from typing import Optional
 
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import CometLogger
@@ -29,8 +25,8 @@ from tensorboard.summary.writer.event_file_writer import _AsyncWriter
 from tensorboard.summary.writer.record_writer import RecordWriter
 from torch.utils import tensorboard
 
-from one.constants import LOGGERS
-from one.core import Callable
+from one.constants import *
+from one.core import *
 
 LOGGERS.register(name="csv",            module=CSVLogger)
 LOGGERS.register(name="csv_logger",     module=CSVLogger)
@@ -145,7 +141,7 @@ class SummaryWriter(tensorboard.SummaryWriter):
 
 def rank_zero_only(fn: Callable) -> Callable:
     @wraps(fn)
-    def wrapped_fn(*args: Any, **kwargs: Any) -> Optional[Any]:
+    def wrapped_fn(*args: Any, **kwargs: Any) -> Any | None:
         if rank_zero_only.rank == 0:
             return fn(*args, **kwargs)
         return None

@@ -10,8 +10,7 @@ from __future__ import annotations
 from torch.optim import *
 from torch.optim.lr_scheduler import *
 
-from one.constants import OPTIMIZERS
-from one.constants import SCHEDULERS
+from one.constants import *
 
 # H1: - Optimizer --------------------------------------------------------------
 

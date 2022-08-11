@@ -7,10 +7,8 @@ CIFAR datasets and datamodules.
 
 from __future__ import annotations
 
-from pathlib import Path
 from urllib.error import URLError
 
-import torch
 from matplotlib import pyplot as plt
 from torch.utils.data import random_split
 from torchvision.datasets.mnist import read_image_file
@@ -18,18 +16,8 @@ from torchvision.datasets.mnist import read_label_file
 from torchvision.datasets.utils import check_integrity
 from torchvision.datasets.utils import download_and_extract_archive
 
-from one.constants import DATA_DIR
-from one.constants import DATAMODULES
-from one.constants import DATASETS
-from one.constants import VISION_BACKEND
-from one.core import console
-from one.core import create_dirs
-from one.core import Ints
-from one.core import ModelPhase
-from one.core import ModelPhase_
-from one.core import Path_
-from one.core import Transforms_
-from one.core import VisionBackend_
+from one.constants import *
+from one.core import *
 from one.data import Classification
 from one.data import ClassLabels
 from one.data import ClassLabels_
@@ -52,7 +40,6 @@ mnist_classlabels = [
     { "name": "8", "id": 8 },
     { "name": "9", "id": 9 }
 ]
-
 
 fashionmnist_classlabels = [
     { "name": "T-shirt/top", "id": 0 },
