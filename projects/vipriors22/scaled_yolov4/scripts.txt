@@ -1,0 +1,47 @@
+
+# H1: - LP-LabDesktop01-Ubuntu -------------------------------------------------
+
+sudo nvidia-docker run --name yolov4_csp -it \
+-v /mnt/workspaces/one/data/:/coco/ \
+-v /mnt/workspaces/one/projects/vipriors22/scaled_yolov4/:/scaled_yolov4 \
+--shm-size=64g nvcr.io/nvidia/pytorch:22.01-py3
+
+cd /
+git clone https://github.com/JunnYu/mish-cuda
+cd mish-cuda
+python setup.py build install
+
+
+python -m torch.distributed.launch --nproc_per_node 1 train.py \
+    --weights '' \
+    --cfg models/yolov4-p5.yaml \
+    --data data/delftbikes2.yaml \
+    --hyp data/hyp.scratch.yaml \
+    --epochs 50 \
+    --batch-size 4 \
+    --img-size 896 896 \
+    --device 0 \
+    --sync-bn \
+    --name scaled_yolov4-p5-delftbikes-896-02
+
+
+# H1: - VSW-WS02 ---------------------------------------------------------------
+
+
+
+# H1: - Detect -----------------------------------------------------------------
+
+python detect.py  \
+    --weights \
+      'runs/train/yolov7-e6e-delftbikes-1536-02/weights/best.pt' \
+      'runs/train/yolov7-e6e-delftbikes-1280-02/weights/best.pt' \
+    --source /coco/delftbikes/test/images \
+    --img-size 2160 \
+    --conf-thres 0.05 \
+    --iou-thres 0.5 \
+    --device 0 \
+    --save-txt \
+    --save-conf \
+    --augment \
+    --name yolov7-e6e-delftbikes-1536 \
+    --no-trace

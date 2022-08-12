@@ -100,6 +100,7 @@ def affine(
     
     if not isinstance(interpolation, InterpolationMode):
         interpolation = InterpolationMode.from_value(interpolation)
+    interpolation_value = interpolation.value
     
     if not inplace:
         image = image.clone()
@@ -142,7 +143,7 @@ def affine(
         img           = image,
         matrix        = matrix,
         interpolation = interpolation.value,
-        fill          = fill
+        fill          = to_list(fill)
     )
 
 
@@ -999,7 +1000,8 @@ def pad(
             f"`padding` must be an int or a 1, 2, or 4 element tuple. "
             f"But got: {len(padding)}."
         )
-    padding = F_t._parse_pad_padding(padding)
+    
+    padding = F_t._parse_pad_padding(to_list(padding))
 
     if not isinstance(padding_mode, PaddingMode):
         padding_mode = PaddingMode.from_value(value=padding_mode)
@@ -1225,7 +1227,7 @@ def resize(
         Resized image of shape [..., C, H, W].
     """
     assert_tensor(image)
-    size = to_size(size)  # H, W
+    size = (to_size(size))  # H, W
     
     if not inplace:
         image = image.clone()
@@ -1237,7 +1239,7 @@ def resize(
     
     return F_t.resize(
         img           = image,
-        size          = size,  # H, W
+        size          = to_list(size),  # H, W
         interpolation = interpolation.value,
         max_size      = max_size,
         antialias     = antialias

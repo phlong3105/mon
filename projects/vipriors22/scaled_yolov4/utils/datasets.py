@@ -376,9 +376,9 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
         for i, file in enumerate(pbar):
             l = self.labels[i]  # label
             if l.shape[0]:
-                assert l.shape[1] == 5, '> 5 label columns: %s' % file
-                assert (l >= 0).all(), 'negative labels: %s' % file
-                assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels: %s' % file
+                assert l.shape[1] >= 5, '> 5 label columns: %s' % file
+                # assert (l >= 0).all(), 'negative labels: %s' % file
+                # assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels: %s' % file
                 if np.unique(l, axis=0).shape[0] < l.shape[0]:  # duplicate rows
                     nd += 1  # print('WARNING: duplicate rows in %s' % self.label_files[i])  # duplicate rows
                 if single_cls:
@@ -545,7 +545,8 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                 img = np.fliplr(img)
                 if nL:
                     labels[:, 1] = 1 - labels[:, 1]
-
+	
+        labels     = labels[:, 0:5]
         labels_out = torch.zeros((nL, 6))
         if nL:
             labels_out[:, 1:] = torch.from_numpy(labels)

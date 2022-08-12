@@ -3,6 +3,14 @@
 
 """
 Model and training-related components.
+
+Notes:
+    Each layer should have the following attributes:
+        - f: from, i.e., the current layer receive output from the f-th layer.
+          For example: -1 means from previous layer; -2 means from 2 previous
+          layers. This attribute is used in forward pass.
+        - n: number of the same layer to build the model. If given, this layer
+          will be repeated n times.
 """
 
 from __future__ import annotations
@@ -30,6 +38,8 @@ from torch.nn.modules.loss import _Loss
 
 from one.constants import *
 from one.core import *
+from one.data import ClassLabels
+from one.data import ClassLabels_
 
 
 # H1: - Checkpoint -------------------------------------------------------------
@@ -473,11 +483,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             detection tasks. Defaults to None.
         classlabels (ClassLabels | None): ClassLabels object that contains all
             labels in the dataset. Defaults to None.
-        out_indexes (Ints): List of output tensors taken from specific layers'
-            indexes.
-            - If >= 0, return the ith layer's output.
-            - If -1, return the final layer's output.
-            Defaults to -1.
         phase (ModelPhase_): Model's running phase. Defaults to training.
         pretrained (Pretrained): Initialize weights from pretrained.
             - If True, use the original pretrained described by the author
@@ -505,7 +510,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         shape      : Ints | None         = None,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
-        out_indexes: Ints     			 = -1,
         phase      : ModelPhase_         = "training",
         pretrained : Pretrained			 = False,
         loss   	   : Losses_      | None = None,
@@ -522,7 +526,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.shape         = shape
         self.num_classes   = num_classes
         self.classlabels   = ClassLabels.from_value(classlabels)
-        self.out_indexes   = out_indexes
         self.phase         = phase
         self.pretrained    = pretrained
         self.loss          = loss
@@ -539,11 +542,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             self.num_classes = self.classlabels.num_classes()
             
         self.init_metrics(metrics=metrics)
-     
+    
     @property
     def basename(self) -> str:
         return self._basename
-
+    
     @basename.setter
     def basename(self, basename: str | None = None):
         """
@@ -561,7 +564,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     @property
     def debug(self) -> Munch | None:
         return self._debug
-        
+    
     @debug.setter
     def debug(self, debug: dict | Munch | None):
         if debug is None:
@@ -585,13 +588,13 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 self._debug.wait_time = 0.01
             if "verbose" not in self._debug:
                 self._debug.verbose = False
-        
+    
     @property
     def debug_dir(self) -> Path:
         if self._debug_dir is None:
             self._debug_dir = self.root / "debug"
         return self._debug_dir
-        
+    
     @property
     def debug_subdir(self) -> Path:
         """
@@ -614,7 +617,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         return save_dir / f"{self.phase.value}_" \
                           f"{(self.current_epoch + 1):03d}_" \
                           f"{(self.epoch_step + 1):06}.jpg"
-
+    
     @property
     def dim(self) -> int | None:
         """
@@ -640,7 +643,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         if self._loss:
             self._loss.cuda()
         """
-        
+    
     @property
     def name(self) -> str:
         return self._name
@@ -714,11 +717,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         if self._pretrained and self.num_classes is None \
             and "num_classes" in self._pretrained:
             self.num_classes = self._pretrained["num_classes"]
-
+    
     @property
     def pretrained_dir(self) -> Path:
         return PRETRAINED_DIR / self.basename
-        
+    
     @property
     def root(self) -> Path:
         return self._root
@@ -740,7 +743,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
 
         self._debug_dir   = self._root / "debugs"
         self._weights_dir = self._root / "weights"
-        
+    
     @property
     def size(self) -> Ints | None:
         """
@@ -762,7 +765,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             for metric in self._test_metrics:
                 name = f"test_{metric.name}"
                 setattr(self, name, metric)
-                
+        
     @property
     def train_metrics(self) -> list[Metric] | None:
         return self._train_metrics
@@ -777,7 +780,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             for metric in self._train_metrics:
                 name = f"train_{metric.name}"
                 setattr(self, name, metric)
-       
+    
     @property
     def val_metrics(self) -> list[Metric] | None:
         return self._val_metrics
@@ -871,7 +874,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         else:
             error_console.log(f"[yellow]Cannot load from pretrained: "
                               f"{self.pretrained}!")
-            
+    
     def configure_optimizers(self):
         """
         Choose what optimizers and learning-rate schedulers to use in your
@@ -963,7 +966,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     
     @abstractmethod
     def forward(
-        self, input: Tensor, augment: bool = False, *args, **kwargs
+        self,
+        input  : Tensor,
+        augment: bool = False,
+        profile: bool = False,
+        *args, **kwargs
     ) -> Tensor:
         """
         Forward pass. This is the primary `forward` function of the model.
@@ -974,44 +981,30 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
 
         Args:
             input (Tensor): Input of shape [B, C, H, W].
-            augment (bool): Augmented inference. Defaults to False.
-                
+            augment (bool): Perform test-time augmentation. Defaults to False.
+            profile (bool): Measure processing time. Defaults to False.
+            
         Returns:
             Predictions.
         """
         pass
-
+    
     @abstractmethod
-    def forward_once(self, input: Tensor, *args, **kwargs) -> Tensor:
+    def forward_once(
+        self,
+        input  : Tensor,
+        profile: bool = False,
+        *args, **kwargs
+    ) -> Tensor:
         """
         Forward pass once. Implement the logic for a single forward pass.
 
         Args:
             input (Tensor): Input of shape [B, C, H, W].
+            profile (bool): Measure processing time. Defaults to False.
             
         Returns:
-            Predictions
-        """
-        pass
-    
-    @abstractmethod
-    def forward_features(
-        self,
-        input      : Tensor,
-        out_indexes: Ints | None = None
-    ) -> Tensors:
-        """
-        Forward pass for features extraction. Commonly used in backbone models.
-
-        Args:
-            input (Tensor): Input of shape [B, C, H, W].
-            out_indexes (Ints | None): List of layers' indexes to extract
-                features. This is called in `forward_features()` and is useful
-                when the model is used as a subnetwork in another model.
-                - If tuple or list, return an array of tensors.
-                - If int, return only the tensor from the layer's index.
-                - If -1, return the last layer's output.
-                Defaults to None.
+            Predictions.
         """
         pass
         
@@ -1136,7 +1129,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Called in the validation loop at the very beginning of the epoch.
         """
         self.epoch_step = 0
-        
+    
     def validation_step(
         self,
         batch    : Any,
@@ -1169,7 +1162,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             "target": target,
             "pred"  : pred
         }
-        
+    
     def validation_step_end(
         self,
         outputs: StepOutput | None,
@@ -1231,7 +1224,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             
         self.epoch_step += 1
         return {"loss": loss}
-
+    
     def validation_epoch_end(self, outputs: EpochOutput):
         # Loss
         loss = torch.stack([x["loss"] for x in outputs]).mean()
@@ -1245,7 +1238,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_epoch", value)
                 self.tb_log_scalar(f"{metric.name}/val_epoch", value, "epoch")
                 metric.reset()
-                
+        
     def on_test_start(self) -> None:
         """
         Called at the very beginning of testing.
@@ -1257,7 +1250,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 self.debug_dir
             ]
         )
-        
+    
     def on_test_epoch_start(self):
         """
         Called in the test loop at the very beginning of the epoch.
@@ -1344,7 +1337,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         
         self.epoch_step += 1
         return {"loss": loss}
-
+    
     def test_epoch_end(self, outputs: EpochOutput):
         # Loss
         loss = torch.stack([x["loss"] for x in outputs]).mean()
@@ -1358,7 +1351,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_epoch", value)
                 self.tb_log_scalar(f"{metric.name}/test_epoch", value, "epoch")
                 metric.reset()
-        
+    
     def export_to_onnx(
         self,
         input_dims   : Ints  | None = None,
@@ -1497,7 +1490,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             for n, a in zip(self.classlabels.names(), data):
                 n = f"{tag}/{n}"
                 self.logger.experiment.add_scalar(n, a, step)
-        
+    
     def ckpt_log_scalar(
         self,
         tag     : str,
@@ -1519,6 +1512,71 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             )
 
 
+class ImageEnhancementModel(BaseModel):
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.model: nn.Module
+    
+    def forward(
+        self,
+        input  : Tensor,
+        augment: bool = False,
+        profile: bool = False,
+        *args, **kwargs
+    ) -> Tensor:
+        """
+        Forward pass. This is the primary `forward` function of the model.
+        It supports augmented inference.
+        
+        In this function, we perform test-time augmentation and pass the
+        transformed input to `forward_once()`.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            augment (bool): Perform test-time augmentation. Defaults to False.
+            profile (bool): Measure processing time. Defaults to False.
+            
+        Returns:
+            Predictions.
+        """
+        if augment:
+            # For now just forward the input. Later, we will implement the
+            # test-time augmentation.
+            return self.forward_once(
+                input   = input,
+                profile = profile,
+                *args, **kwargs
+            )
+        else:
+            return self.forward_once(
+                input   = input,
+                profile = profile,
+                *args, **kwargs
+            )
+    
+    def forward_once(
+        self,
+        input  : Tensor,
+        profile: bool = False,
+        *args, **kwargs
+    ) -> Tensor:
+        """
+        Forward pass once. Implement the logic for a single forward pass.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            profile (bool): Measure processing time. Defaults to False.
+            
+        Returns:
+            Predictions.
+        """
+        x, y, dt = input, [], []
+        for m in self.model:
+            if m.f != -1:
+                pass
+    
+    
 # H1: - Trainer ----------------------------------------------------------------
 
 class Trainer(pl.Trainer):

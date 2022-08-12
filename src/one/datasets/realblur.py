@@ -126,8 +126,8 @@ class RealBlurJ(ImageEnhancementDataset):
         List label files.
         """
         pass
-   
-
+    
+    
 @DATASETS.register(name="realblurr")
 class RealBlurR(ImageEnhancementDataset):
     """
@@ -232,8 +232,8 @@ class RealBlurR(ImageEnhancementDataset):
         List label files.
         """
         pass
-   
-   
+    
+    
 @DATAMODULES.register(name="realblurj")
 class RealBlurJDataModule(DataModule):
     """
@@ -324,8 +324,8 @@ class RealBlurJDataModule(DataModule):
         Load ClassLabels.
         """
         pass
-
-
+    
+    
 @DATAMODULES.register(name="realblurr")
 class RealBlurRDataModule(DataModule):
     """
@@ -416,8 +416,8 @@ class RealBlurRDataModule(DataModule):
         Load ClassLabels.
         """
         pass
-
-
+    
+    
 # MARK: - Test -----------------------------------------------------------------
 
 def test_realblurj():
@@ -468,8 +468,8 @@ def test_realblurj():
     imshow(winname="image",  image=input)
     imshow(winname="target", image=target)
     plt.show(block=True)
-
-
+    
+    
 def test_realblurr():
     cfg = {
         "root": DATA_DIR / "realblur",
@@ -518,8 +518,8 @@ def test_realblurr():
     imshow(winname="image",  image=input)
     imshow(winname="target", image=target)
     plt.show(block=True)
-
-
+    
+    
 # MARK: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
