@@ -3,14 +3,6 @@
 
 """
 Model and training-related components.
-
-Notes:
-    Each layer should have the following attributes:
-        - f: from, i.e., the current layer receive output from the f-th layer.
-          For example: -1 means from previous layer; -2 means from 2 previous
-          layers. This attribute is used in forward pass.
-        - n: number of the same layer to build the model. If given, this layer
-          will be repeated n times.
 """
 
 from __future__ import annotations
@@ -387,45 +379,7 @@ def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
 
 # H1: - Model ------------------------------------------------------------------
 
-def find_modules(model, mclass=nn.Conv2d) -> list[int]:
-    """
-    Finds layer indices matching module class `mclass`.
-    """
-    return [i for i, m in enumerate(model.module_list) if isinstance(m, mclass)]
-
-
-def named_apply(
-    fn          : Callable,
-    module      : nn.Module,
-    name        : str  = "",
-    depth_first : bool = True,
-    include_root: bool = False,
-) -> nn.Module:
-    if not depth_first and include_root:
-        fn(module=module, name=name)
-    for child_name, child_module in module.named_children():
-        child_name = ".".join((name, child_name)) if name else child_name
-        named_apply(
-            fn=fn, module=child_module, name=child_name,
-            depth_first=depth_first, include_root=True
-        )
-    if depth_first and include_root:
-        fn(module=module, name=name)
-    return module
-
-
-def prune(model: nn.Module, amount: float = 0.3):
-    """
-    Prune model to requested global sparsity.
-    """
-    import torch.nn.utils.prune as prune
-    console.log("Pruning model... ", end="")
-    for name, m in model.named_modules():
-        if isinstance(m, nn.Conv2d):
-            prune.l1_unstructured(m, name="weight", amount=amount)  # prune
-            prune.remove(m, "weight")  # make permanent
-    console.log(" %.3g global sparsity" % sparsity(model))
-
+# H2: - Base -------------------------------------------------------------------
 
 def sparsity(model: nn.Module) -> float:
     """
@@ -529,20 +483,23 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.phase         = phase
         self.pretrained    = pretrained
         self.loss          = loss
-        self.train_metrics = None
-        self.val_metrics   = None
-        self.test_metrics  = None
+        self.train_metrics = metrics
+        self.val_metrics   = metrics
+        self.test_metrics  = metrics
         self.optims        = optimizers
         self.debug         = debug
         self.verbose       = verbose
         self.epoch_step    = 0
         
+        # num_classes
         if self.classlabels is not None and \
             num_classes != self.classlabels.num_classes():
             self.num_classes = self.classlabels.num_classes()
             
-        self.init_metrics(metrics=metrics)
-    
+        # Define model
+        self.model, self.save = self.parse_model()
+        self.init_weights()
+        
     @property
     def basename(self) -> str:
         return self._basename
@@ -752,26 +709,31 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         return None if self.shape is None else self.shape
     
     @property
-    def test_metrics(self) -> list[Metric] | None:
-        return self._test_metrics
-    
-    @test_metrics.setter
-    def test_metrics(self, metrics: Metrics_ | None):
-        self._test_metrics = self.create_metrics(metrics)
-        # This is a simple hack since LightningModule require the
-        # metric to be defined with self.<metric>. Here we dynamically
-        # add the metric attribute to the class.
-        if self._test_metrics:
-            for metric in self._test_metrics:
-                name = f"test_{metric.name}"
-                setattr(self, name, metric)
-        
-    @property
     def train_metrics(self) -> list[Metric] | None:
         return self._train_metrics
     
     @train_metrics.setter
     def train_metrics(self, metrics: Metrics_ | None):
+        """
+        Assign train metrics.
+        
+        Args:
+            metrics (Metrics_): One of the 2 options:
+                - Common metrics for train_/val_/test_metrics:
+                    "metrics": dict(name="accuracy")
+                  or,
+                    "metrics": [dict(name="accuracy"), torchmetrics.Accuracy(),]
+                
+                - Define train_/val_/test_metrics separately:
+                    "metrics": {
+                        "train": [dict(name="accuracy"), dict(name="f1")]
+                        "val":   torchmetrics.Accuracy(),
+                        "test":  None,
+                    }
+        """
+        if isinstance(metrics, dict) and "train" in metrics:
+            metrics = metrics.get("train", metrics)
+            
         self._train_metrics = self.create_metrics(metrics)
         # This is a simple hack since LightningModule require the
         # metric to be defined with self.<metric>. Here we dynamically
@@ -787,6 +749,26 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     
     @val_metrics.setter
     def val_metrics(self, metrics: Metrics_ | None):
+        """
+        Assign val metrics.
+        
+        Args:
+            metrics (Metrics_): One of the 2 options:
+                - Common metrics for train_/val_/test_metrics:
+                    "metrics": dict(name="accuracy")
+                  or,
+                    "metrics": [dict(name="accuracy"), torchmetrics.Accuracy(),]
+                
+                - Define train_/val_/test_metrics separately:
+                    "metrics": {
+                        "train": [dict(name="accuracy"), dict(name="f1")]
+                        "val":   torchmetrics.Accuracy(),
+                        "test":  None,
+                    }
+        """
+        if isinstance(metrics, dict) and "val" in metrics:
+            metrics = metrics.get("val", metrics)
+            
         self._val_metrics = self.create_metrics(metrics)
         # This is a simple hack since LightningModule require the
         # metric to be defined with self.<metric>. Here we dynamically
@@ -797,44 +779,46 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 setattr(self, name, metric)
     
     @property
+    def test_metrics(self) -> list[Metric] | None:
+        return self._test_metrics
+    
+    @test_metrics.setter
+    def test_metrics(self, metrics: Metrics_ | None):
+        """
+        Assign test metrics.
+        
+        Args:
+            metrics (Metrics_): One of the 2 options:
+                - Common metrics for train_/val_/test_metrics:
+                    "metrics": dict(name="accuracy")
+                  or,
+                    "metrics": [dict(name="accuracy"), torchmetrics.Accuracy(),]
+                
+                - Define train_/val_/test_metrics separately:
+                    "metrics": {
+                        "train": [dict(name="accuracy"), dict(name="f1")]
+                        "val":   torchmetrics.Accuracy(),
+                        "test":  None,
+                    }
+        """
+        if isinstance(metrics, dict) and "test" in metrics:
+            metrics = metrics.get("test", metrics)
+            
+        self._test_metrics = self.create_metrics(metrics)
+        # This is a simple hack since LightningModule require the
+        # metric to be defined with self.<metric>. Here we dynamically
+        # add the metric attribute to the class.
+        if self._test_metrics:
+            for metric in self._test_metrics:
+                name = f"test_{metric.name}"
+                setattr(self, name, metric)
+        
+    @property
     def weights_dir(self) -> Path:
         if self._weights_dir is None:
             self._weights_dir = self.root / "weights"
         return self._weights_dir
-    
-    def init_metrics(self, metrics: Metrics_ | None):
-        """
-        Initialize all metrics used in the model.
         
-        Args:
-            One of the 2 options:
-            
-            - Common metrics for train_/val_/test_metrics:
-                "metrics": dict(name="accuracy")
-              or,
-                "metrics": [dict(name="accuracy"), torchmetrics.Accuracy(),]
-            
-            - Define train_/val_/test_metrics separately:
-                "metrics": {
-                    "train": [dict(name="accuracy"), dict(name="f1")]
-                    "val":   torchmetrics.Accuracy(),
-                    "test":  None,
-                }
-        """
-        if metrics is None:
-            self.train_metrics = None
-            self.val_metrics   = None
-            self.test_metrics  = None
-        elif (isinstance(metrics, dict) and
-              "train" in metrics or "val" in metrics or "test" in metrics):
-            self.train_metrics = metrics.get("train", None)
-            self.val_metrics   = metrics.get("val",   None)
-            self.test_metrics  = metrics.get("test",  None)
-        else:
-            self.train_metrics = metrics
-            self.val_metrics   = metrics
-            self.test_metrics  = metrics
-            
     @staticmethod
     def create_metrics(metrics: Metrics_ | None) -> list[Metric] | None:
         if isinstance(metrics, Metric):
@@ -847,6 +831,49 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                     else m for m in metrics]
         else:
             return None
+    
+    @abstractmethod
+    def parse_model(
+        self,
+        d : dict      | None = None,
+        ch: list[int] | None = None
+    ) -> tuple[nn.Sequential, list[int]]:
+        """
+        Build the model. You have 2 options to build a model: (1) define each
+        layer manually, or (2) build model automatically from a config
+        dictionary.
+        
+        Either way each layer should have the following attributes:
+            - i (int): index of the layer.
+            - f (int | list[int]): from, i.e., the current layer receive output
+              from the f-th layer. For example: -1 means from previous layer;
+              -2 means from 2 previous layers; [99, 101] means from the 99th
+              and 101st layers. This attribute is used in forward pass.
+            - t: type of the layer using this script:
+              t = str(m)[8:-2].replace("__main__.", "")
+            - np (int): number of parameters using the following script:
+              np = sum([x.numel() for x in m.parameters()])
+        
+        Args:
+            d (dict | None): Model definition dictionary. Default to None means
+                building the model manually.
+            ch (list[int] | None): The first layer's input channels. If given,
+                it will be used to further calculate the next layer's input
+                channels. Defaults to None means defines each layer in_ and
+                out_channels manually.
+        
+        Returns:
+            A nn.Sequential model.
+            A list of layer index to save the features during forward pass.
+        """
+        pass
+
+    @abstractmethod
+    def init_weights(self):
+        """
+        Initialize model's weights.
+        """
+        pass
     
     def load_pretrained(self):
         """
@@ -989,7 +1016,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         """
         pass
     
-    @abstractmethod
     def forward_once(
         self,
         input  : Tensor,
@@ -1006,7 +1032,20 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Returns:
             Predictions.
         """
-        pass
+        x     = input
+        y, dt =  [], []
+        for m in self.model:
+            if m.f != -1:  # Get features from previous layer
+                if isinstance(m.f, int):
+                    x = y[m.f]  # From directly previous layer
+                else:
+                    x = [x if j == -1 else y[j] for j in m.f]  # From earlier layers
+            
+            x = m(x)  # pass features through current layer
+            y.append(x if m.i in self.save else None)
+        
+        output = x
+        return output
         
     def on_fit_start(self):
         """
@@ -1512,11 +1551,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             )
 
 
-class ImageEnhancementModel(BaseModel):
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.model: nn.Module
+# H2: - Enhancement ------------------------------------------------------------
+
+class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
     
     def forward(
         self,
@@ -1544,37 +1581,47 @@ class ImageEnhancementModel(BaseModel):
             # For now just forward the input. Later, we will implement the
             # test-time augmentation.
             return self.forward_once(
-                input   = input,
-                profile = profile,
-                *args, **kwargs
+                input=input, profile=profile, *args, **kwargs
             )
         else:
             return self.forward_once(
-                input   = input,
-                profile = profile,
-                *args, **kwargs
+                input=input, profile=profile, *args, **kwargs
             )
     
-    def forward_once(
+    def show_results(
         self,
-        input  : Tensor,
-        profile: bool = False,
+        input        : Tensor | None = None,
+        target	     : Tensor | None = None,
+        pred		 : Tensor | None = None,
+        filepath     : Path_  | None = None,
+        image_quality: int           = 95,
+        max_n        : int | None    = 8,
+        nrow         : int | None    = 8,
+        wait_time    : float         = 0.01,
+        verbose      : bool          = False,
         *args, **kwargs
-    ) -> Tensor:
+    ):
         """
-        Forward pass once. Implement the logic for a single forward pass.
+        Show results.
 
         Args:
-            input (Tensor): Input of shape [B, C, H, W].
-            profile (bool): Measure processing time. Defaults to False.
-            
-        Returns:
-            Predictions.
+            input (Tensor | None): Input.
+            target (Tensor | None): Ground-truth.
+            pred (Tensor | None): Predictions.
+            filepath (Path_ | None): File path to save the debug result.
+            image_quality (int): Image quality to be saved. Defaults to 95.
+            max_n (int | None): Show max n images if `image` has a batch size
+                of more than `max_n` images. Defaults to None means show all.
+            nrow (int | None): The maximum number of items to display in a row.
+                The final grid size is (n / nrow, nrow). If None, then the
+                number of items in a row will be the same as the number of
+                items in the list. Defaults to 8.
+            wait_time (float): Wait some time (in seconds) to display the
+                figure then reset. Defaults to 0.01.
+            verbose (bool): If True shows the results on the screen.
+                Defaults to False.
         """
-        x, y, dt = input, [], []
-        for m in self.model:
-            if m.f != -1:
-                pass
+        pass
     
     
 # H1: - Trainer ----------------------------------------------------------------

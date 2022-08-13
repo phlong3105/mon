@@ -295,6 +295,7 @@ class Model(nn.Module):
 
         # Init weights, biases
         initialize_weights(self)
+        print(self.save)
         self.info()
         logger.info('')
 
@@ -447,6 +448,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
     no = na * (nc + 5)  # number of outputs = anchors * (classes + 5)
 
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
+    prints = []
     for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
         m = eval(m) if isinstance(m, str) else m  # eval strings
         for j, a in enumerate(args):
@@ -512,11 +514,15 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
         np = sum([x.numel() for x in m_.parameters()])  # number params
         m_.i, m_.f, m_.type, m_.np = i, f, t, np  # attach index, 'from' index, type, number params
         logger.info('%3s%18s%3s%10.0f  %-40s%-30s' % (i, f, n, np, t, args))  # print
-        save.extend(x % i for x in ([f] if isinstance(f, int) else f) if x != -1)  # append to savelist
+        sa = [x % i for x in ([f] if isinstance(f, int) else f) if x != -1]
+        save.extend(sa)  # append to savelist
+        prints.append(sa)
         layers.append(m_)
         if i == 0:
             ch = []
         ch.append(c2)
+    
+    print(prints)
     return nn.Sequential(*layers), sorted(save)
 
 
