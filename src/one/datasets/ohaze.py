@@ -15,11 +15,11 @@ from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
-from one.plot import imshow
+from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="ohaze")
 class OHaze(ImageEnhancementDataset):
@@ -105,7 +105,7 @@ class OHaze(ImageEnhancementDataset):
         if self.split not in ["train", "val", "test"]:
             console.log(
                 f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train`, `val`, or `test`. Get: {self.split}."
+                f"`train`, `val`, or `test`. Get: {self.split}.",
             )
             
         self.images: list[Image] = []
@@ -230,7 +230,7 @@ class OHazeDataModule(DataModule):
         pass
 
 
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test():
     cfg = {
@@ -251,7 +251,7 @@ def test():
         ],
             # Functions/transforms that takes in an input and a target and
             # returns the transformed versions of both.
-        "cache_data": False,
+        "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
@@ -277,12 +277,13 @@ def test():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test()

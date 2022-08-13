@@ -22,7 +22,7 @@ from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageClassificationDataset
-from one.plot import imshow_cls
+from one.plot import imshow_classification
 from one.vision.acquisition import to_tensor
 from one.vision.transformation import Resize
 
@@ -143,7 +143,7 @@ cifar100_classlabels = [
   ]
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="cifar10")
 class CIFAR10(ImageClassificationDataset):
@@ -514,7 +514,7 @@ class CIFAR100DataModule(DataModule):
         self.classlabels = ClassLabels(cifar100_classlabels)
 
 
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test_cifar10():
     cfg = {
@@ -561,7 +561,7 @@ def test_cifar10():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow_cls(
+    imshow_classification(
         winname     = "image",
         image       = input,
         target      = target,
@@ -615,7 +615,7 @@ def test_cifar100():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow_cls(
+    imshow_classification(
         winname     = "image",
         image       = input,
         target      = target,
@@ -624,7 +624,7 @@ def test_cifar100():
     plt.show(block=True)
 
 
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test_cifar100()

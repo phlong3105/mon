@@ -1913,13 +1913,13 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Desc")
         
-        table.add_row("1", "train",        f"{len(self.train)              if self.train is not None else None}")
-        table.add_row("2", "val",          f"{len(self.val)                if self.val   is not None else None}")
-        table.add_row("3", "test",         f"{len(self.test)               if self.test  is not None else None}")
+        table.add_row("1", "train",       f"{len(self.train)              if self.train is not None else None}")
+        table.add_row("2", "val",         f"{len(self.val)                if self.val   is not None else None}")
+        table.add_row("3", "test",        f"{len(self.test)               if self.test  is not None else None}")
         table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
-        table.add_row("5", "batch_size",   f"{self.batch_size}")
-        table.add_row("6", "shape",        f"{self.shape}")
-        table.add_row("7", "num_workers",  f"{self.num_workers}")
+        table.add_row("5", "batch_size",  f"{self.batch_size}")
+        table.add_row("6", "shape",       f"{self.shape}")
+        table.add_row("7", "num_workers", f"{self.num_workers}")
         console.log(table)
 
 

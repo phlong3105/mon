@@ -15,7 +15,7 @@ from one.vision.detection.yolov5_v4.models.common import DWConv
 from one.vision.detection.yolov5_v4.utils.google_utils import attempt_download
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def attempt_load(weights, map_location=None):
     # Loads an ensemble of models weights=[a,b,c] or a single model weights=[a] or weights=a
@@ -41,7 +41,7 @@ def attempt_load(weights, map_location=None):
         return model  # return ensemble
 
 
-# MARK: - Modules
+# H1: - Modules
 
 class CrossConv(nn.Module):
     # Cross Convolution Downsample

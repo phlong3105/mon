@@ -16,7 +16,7 @@ import numpy as np
 import torch
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def fitness(x):
     # Model fitness as a weighted combination of metrics
@@ -263,7 +263,7 @@ def plot_mc_curve(px, py, save_dir="mc_curve.png", names=(), xlabel="Confidence"
     plt.close()
 
 
-# MARK: - Modules
+# H1: - Modules
 
 class ConfusionMatrix:
     # Updated version of https://github.com/kaanakan/object_detection_confusion_matrix

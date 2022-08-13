@@ -32,7 +32,7 @@ for orientation in ExifTags.TAGS.keys():
         break
 
 
-# MARK: - Assertion ------------------------------------------------------------
+# H1: - Assertion ------------------------------------------------------------
 
 def check_image_size(size: Ints, stride: int = 32) -> int:
     """
@@ -106,7 +106,7 @@ def is_channel_last(image: Tensor) -> bool:
     return not is_channel_first(image)
 
 
-# MARK: - Conversion -----------------------------------------------------------
+# H1: - Conversion -----------------------------------------------------------
 
 def to_channel_first(
     image: Tensor, keepdim: bool = True, inplace: bool = False
@@ -393,7 +393,7 @@ class ToTensor(Transform):
             ) if target is not None else None
     
 
-# MARK: - Image Property -------------------------------------------------------
+# H1: - Image Property -------------------------------------------------------
 
 def get_exif_size(image: PIL.Image) -> Ints:
     """
@@ -512,7 +512,7 @@ def get_num_channels(image: Tensor) -> int:
     return 0
 
 
-# MARK: - IO -------------------------------------------------------------------
+# H1: - IO -------------------------------------------------------------------
 
 # H2: - Functional -------------------------------------------------------------
 

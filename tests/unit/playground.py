@@ -1,5 +1,8 @@
+from one.core import *
 
-a = 1
-b = 10
-c = a or b
-print(c)
+console.log("asdsadsadsadasdsadsa")
+console.log("asdsadsadsadasdsadsa")
+console.log("asdsadsadsadasdsadsa")
+console.log("asdsadsadsadasdsadsa")
+console.log("asdsadsadsadasdsadsa")
+console.log("asdsadsadsadasdsadsa")

@@ -132,8 +132,9 @@ def draw_rectangle(
 
 def get_grid_size(n: int, nrow: int | None = 8) -> tuple[int, int]:
     """
-    It takes a number of items and a maximum number of items per row, and returns
-    the number of rows and columns needed to display the items in a grid.
+    It takes a number of items and a maximum number of items per row, and
+    returns the number of rows and columns needed to display the items in a
+    grid.
     
     Args:
         n (int): The number of items to be plotted.
@@ -214,8 +215,8 @@ def imshow(
         winname (str): The name of the window to display the image in.
         image (Tensor): The images to be displayed. Can be a 3D tensor
             [C, H, W] or 4D tensor of shape [B, C, H, W].
-        label (Strs | None): Sequence of images' labels string. Defaults to
-            None.
+        label (Strs | None): Sequence of images' labels string.
+            Defaults to None.
         denormalize (bool): If True, the image will be denormalized to
             [0, 255]. Defaults to True.
         scale (int): Scale the size of matplotlib figure. Defaults to 1 means
@@ -258,7 +259,7 @@ def imshow(
         i   = int(idx / nrow)
         j   = int(idx % nrow)
         img = to_image(image=img, keepdim=False, denormalize=denormalize)
-        axs[i, j].imshow(np.asarray(img))
+        axs[i, j].imshow(np.asarray(img), aspect="auto")
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         if label is not None:
             axs[i, j].set_title(label[i])
@@ -275,7 +276,7 @@ def imshow(
     plt.pause(wait_time)
     
 
-def imshow_cls(
+def imshow_classification(
     winname    : str,
     image 	   : Tensor,
     pred	   : Tensor | None      = None,
@@ -300,13 +301,14 @@ def imshow_cls(
         pred (Tensor | None): Predicted classes probabilities. Can be a tensor
             of shape [B, N] where N is the total number of all classes in the
             dataset. Defaults to None.
-        target (Tensor | None): A sequence of ground-truths id. Defaults to None.
-        label (Strs | None): Sequence of images' labels string. Defaults to
-            None.
+        target (Tensor | None): A sequence of ground-truths id.
+            Defaults to None.
+        label (Strs | None): Sequence of images' labels string.
+            Defaults to None.
         classlabels (ClassLabels | None): ClassLabels objects that contains all
             class labels in the datasets. Defaults to None.
         top_k (int | None): Show only the top k classes' probabilities. If None
-            then show all. Defaults to 5.
+            then shows all. Defaults to 5.
         denormalize (bool): If True, the image will be denormalized to
             [0, 255]. Defaults to True.
         scale (int): Scale the size of matplotlib figure. Defaults to 1 means
@@ -414,5 +416,92 @@ def imshow_cls(
         filepath = save_cfg.pop("filepath")
         plt.savefig(filepath, **save_cfg)
 
+    plt.show()
+    plt.pause(wait_time)
+
+
+def imshow_enhancement(
+    winname    : str,
+    image 	   : Collection,
+    label	   : Strs | None = None,
+    denormalize: bool        = True,
+    scale      : int         = 1,
+    save_cfg   : dict | None = None,
+    max_n      : int  | None = None,
+    nrow       : int  | None = 8,
+    wait_time  : float       = 0.01,
+):
+    """
+    Show image enhancement results using matplotlib.
+    
+    Args:
+        winname (str): The name of the window to display the image in.
+        image (Collection): A collection of images to be displayed. Each item
+            is a 4D tensor of shape [B, C, H, W] represented an image type
+            (i.e, input, pred, target, enhanced image, ...). If given a
+            dictionary, the key will be used as the column label.
+        label (Strs | None): Sequence of images' labels string.
+            Defaults to None.
+        denormalize (bool): If True, the image will be denormalized to
+            [0, 255]. Defaults to True.
+        scale (int): Scale the size of matplotlib figure. Defaults to 1 means
+            size x 1.
+        save_cfg (dict | None): Save figure config. Defaults to None.
+        max_n (int | None): Show max n images if `image` has a batch size
+            of more than `max_n` images. Defaults to None means show all.
+        nrow (int | None): The maximum number of items to display in a row.
+            The final grid size is (n / nrow, nrow). If None, then the number
+            of items in a row will be the same as the number of items in the
+            list. Defaults to 8.
+        wait_time (float): Wait some time (in seconds) to display the figure
+            then reset. Defaults to 0.
+    """
+    # Prepare image and label
+    if isinstance(image, dict):
+        header = list(image.keys())
+    else:
+        header = ["" for _ in range(len(image))]
+        
+    image = to_4d_tensor_list(image)
+    image = [to_3d_tensor_list(i) for i in image]
+    max_n = max_n if isinstance(max_n, int) else len(image[0])
+    image = [i[: max_n] for i in image]
+
+    assert_same_length(image, header)
+    if label is not None:
+        label = to_list(label)
+        label = label[:max_n]
+        assert_same_length(image[0], label)
+
+    # Draw figure
+    ncols    = len(image)
+    nrows    = max_n
+    fig, axs = plt.subplots(
+        nrows   = nrows,
+        ncols   = ncols,
+        figsize = [ncols * scale, nrows  * scale],
+        num     = abs(hash(winname)) % (10 ** 8),
+        squeeze = False,
+        clear   = True
+    )
+    move_figure(x=0, y=0)
+    
+    [ax.set_title(l) for ax, l in zip(axs[0], header)]
+    for i, img in enumerate(image):
+        for j, im in enumerate(img):
+            im = to_image(image=im, keepdim=False, denormalize=denormalize)
+            axs[j, i].imshow(np.asarray(im), aspect="auto")
+            axs[j, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+        # if label is not None:
+        #     axs[i].set_title(label[i])
+    plt.get_current_fig_manager().set_window_title(winname)
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.0, hspace=0.0)
+    
+    # Save figure
+    if save_cfg:
+        filepath = save_cfg.pop("filepath")
+        plt.savefig(filepath, **save_cfg)
+    
     plt.show()
     plt.pause(wait_time)

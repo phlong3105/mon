@@ -19,7 +19,7 @@ import requests
 import torch
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def gsutil_getsize(url=""):
     # gs://bucket/file size https://cloud.google.com/storage/docs/gsutil/commands/du

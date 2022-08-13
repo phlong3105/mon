@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 
-# MARK: - Modules
+# H1: - Modules
 
 class Callbacks:
     """"Handles all registered callbacks for YOLOv5 Hooks."""

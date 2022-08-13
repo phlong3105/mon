@@ -21,7 +21,7 @@ from one.vision.shape import horizontal_flip_box
 from one.vision.shape import vertical_flip_box
 
 
-# MARK: - Affine ---------------------------------------------------------------
+# H1: - Affine ---------------------------------------------------------------
 
 def affine(
     image        : Tensor,
@@ -339,7 +339,7 @@ class Affine(Transform):
             ) if target is not None else None
 
 
-# MARK: - Crop -----------------------------------------------------------------
+# H1: - Crop -----------------------------------------------------------------
 
 def center_crop(image: Tensor, output_size: Ints, inplace: bool = False) -> Tensor:
     """
@@ -721,7 +721,7 @@ class TenCrop(Transform):
                    if target is not None else None
     
     
-# MARK: - Flip -----------------------------------------------------------------
+# H1: - Flip -----------------------------------------------------------------
 
 def horizontal_flip(image: Tensor, inplace: bool = False) -> Tensor:
     """
@@ -931,7 +931,7 @@ class VerticalFlipImageBox(Transform):
         )
 
 
-# MARK: - Pad ------------------------------------------------------------------
+# H1: - Pad ------------------------------------------------------------------
 
 def pad(
     image       : Tensor,
@@ -1114,7 +1114,7 @@ class Pad(Transform):
             ) if target is not None else None
 
 
-# MARK: - Resize ---------------------------------------------------------------
+# H1: - Resize ---------------------------------------------------------------
 
 def letterbox_resize(
     image     : np.ndarray,
@@ -1426,7 +1426,7 @@ class ResizedCrop(Transform):
             ) if target is not None else None
 
 
-# MARK: - Rotate ---------------------------------------------------------------
+# H1: - Rotate ---------------------------------------------------------------
 
 def rotate(
     image        : Tensor,
@@ -1918,7 +1918,7 @@ class RotateVerticalFlip(Transform):
             ) if target is not None else None
     
     
-# MARK: - Shear ----------------------------------------------------------------
+# H1: - Shear ----------------------------------------------------------------
 
 def horizontal_shear(
     image        : Tensor,
@@ -2424,7 +2424,7 @@ class VerticalShear(Transform):
             ) if target is not None else None
 
     
-# MARK: - Translate ------------------------------------------------------------
+# H1: - Translate ------------------------------------------------------------
 
 def horizontal_translate(
     image        : Tensor,

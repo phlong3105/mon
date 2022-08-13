@@ -19,7 +19,7 @@ from one.plot import imshow
 from one.vision.transformation import Resize
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="dcim")
 class DCIM(UnlabeledImageDataset):
@@ -1150,7 +1150,7 @@ class VVDataModule(DataModule):
         pass
 
 
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test_dcim():
     cfg = {
@@ -1197,7 +1197,7 @@ def test_dcim():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
     
 
@@ -1246,7 +1246,7 @@ def test_lime():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
     
@@ -1295,7 +1295,7 @@ def test_lol226():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
 
@@ -1344,7 +1344,7 @@ def test_mef():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
 
@@ -1393,7 +1393,7 @@ def test_npe():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
 
@@ -1442,7 +1442,7 @@ def test_vip():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
 
@@ -1491,11 +1491,11 @@ def test_vv():
     # Visualize one sample
     data_iter   = iter(dm.test_dataloader)
     input, meta = next(data_iter)
-    imshow(winname="image", image=input, figure_num=0)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
 
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test_lol226()

@@ -16,7 +16,7 @@ from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
-from one.plot import imshow
+from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 class_labels = [
@@ -24,7 +24,7 @@ class_labels = [
 ]
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="a2i2haze")
 class A2I2Haze(ImageEnhancementDataset):
@@ -211,7 +211,7 @@ class A2I2HazeDataModule(DataModule):
         pass
 
 
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test_a2i2haze():
     cfg = {
@@ -258,12 +258,13 @@ def test_a2i2haze():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image": input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test_a2i2haze()

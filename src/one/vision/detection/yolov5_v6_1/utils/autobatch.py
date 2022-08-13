@@ -17,7 +17,7 @@ from one.vision.detection.yolov5_v6_1.utils.general import LOGGER
 from one.vision.detection.yolov5_v6_1.utils.torch_utils import profile
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def check_train_batch_size(model, imgsz=640):
     # Check YOLOv5 training batch size

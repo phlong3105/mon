@@ -18,7 +18,7 @@ import torch.nn.functional as F
 import torchvision.models as models
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def init_seeds(seed=0):
     torch.manual_seed(seed)

@@ -34,7 +34,7 @@ except ImportError:
     thop = None
 
 
-# MARK: - Modules
+# H1: - Modules
 
 class Detect(nn.Module):
     stride = None  # strides computed during build
@@ -267,7 +267,7 @@ def parse_model(d, ch):  # model_dict, input_channels(3)
     return nn.Sequential(*layers), sorted(save)
 
 
-# MARK: - Main
+# H1: - Main
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

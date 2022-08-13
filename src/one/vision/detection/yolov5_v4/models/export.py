@@ -27,7 +27,7 @@ from one.vision.detection.yolov5_v4.utils.general import set_logging
 from one.vision.detection.yolov5_v4.utils.torch_utils import select_device
 
 
-# MARK: - Main
+# H1: - Main
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

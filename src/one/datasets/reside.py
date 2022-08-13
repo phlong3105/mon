@@ -26,11 +26,11 @@ from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
-from one.plot import imshow
+from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 
 @DATASETS.register(name="reside_hsts")
@@ -1401,7 +1401,7 @@ class RESIDESOTSOutdoorDataModule(DataModule):
         pass
 
 
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test_reside_hsts():
     cfg = {
@@ -1448,8 +1448,9 @@ def test_reside_hsts():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
    
@@ -1498,8 +1499,9 @@ def test_reside_its():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result = {"image" : input, "target": target}
+    label  = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -1548,8 +1550,9 @@ def test_reside_its_v2():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result = {"image" : input, "target": target}
+    label  = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1598,8 +1601,9 @@ def test_reside_ots():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result = {"image" : input, "target": target}
+    label  = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -1648,8 +1652,9 @@ def test_reside_sots():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result = {"image" : input, "target": target}
+    label  = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1698,8 +1703,9 @@ def test_reside_sots_indoor():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result = {"image" : input, "target": target}
+    label  = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1748,12 +1754,13 @@ def test_reside_sots_outdoor():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result = {"image" : input, "target": target}
+    label  = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
     
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test_reside_ots()

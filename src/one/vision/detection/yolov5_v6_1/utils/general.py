@@ -53,7 +53,7 @@ cv2.setNumThreads(0)  # prevent OpenCV from multithreading (incompatible with Py
 os.environ["NUMEXPR_MAX_THREADS"] = str(NUM_THREADS)  # NumExpr max threads
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def is_kaggle():
     # Is environment a Kaggle Notebook?

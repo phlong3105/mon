@@ -18,10 +18,11 @@ from one.data import Image
 from one.data import ImageEnhancementDataset
 from one.data import UnlabeledImageDataset
 from one.plot import imshow
+from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="sice")
 class SICE(ImageEnhancementDataset):
@@ -1145,7 +1146,7 @@ class SICEUnsupervisedDataModule(DataModule):
         pass
     
 
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test_sice():
     cfg = {
@@ -1192,8 +1193,9 @@ def test_sice():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -1242,8 +1244,9 @@ def test_sice1():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1292,8 +1295,9 @@ def test_sice2():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1342,8 +1346,9 @@ def test_sice3():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -1392,8 +1397,9 @@ def test_sice4():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1442,8 +1448,9 @@ def test_sice5():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1492,8 +1499,9 @@ def test_sice6():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -1542,8 +1550,9 @@ def test_sice7():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
     
 
@@ -1596,7 +1605,7 @@ def test_sice_unsupervised():
     plt.show(block=True)
     
     
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test_sice_unsupervised()

@@ -38,7 +38,7 @@ RANK                  = int(os.getenv("RANK", -1))
 WANDB_ARTIFACT_PREFIX = "wandb-artifact://"
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def remove_prefix(from_string, prefix=WANDB_ARTIFACT_PREFIX):
     return from_string[len(prefix):]
@@ -129,7 +129,7 @@ def all_logging_disabled(highest_level=logging.CRITICAL):
         logging.disable(previous_level)
         
 
-# MARK: - Module
+# H1: - Module
 
 class WandbLogger():
     """Log training runs, datasets, models, and predictions to Weights & Biases.

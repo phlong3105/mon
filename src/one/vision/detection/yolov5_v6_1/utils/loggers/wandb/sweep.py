@@ -23,7 +23,7 @@ from onedetection.models.yolov5_v6_1.utils.general import increment_path
 from onedetection.models.yolov5_v6_1.utils.torch_utils import select_device
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def sweep():
     wandb.init()
@@ -48,7 +48,7 @@ def sweep():
     train(hyp_dict, opt, device, callbacks=Callbacks())
 
 
-# MARK: - Main
+# H1: - Main
 
 if __name__ == "__main__":
     sweep()

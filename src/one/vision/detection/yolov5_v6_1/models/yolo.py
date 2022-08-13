@@ -43,7 +43,7 @@ except ImportError:
     thop = None
 
 
-# MARK: - Modules
+# H1: - Modules
 
 class Detect(nn.Module):
     stride = None  # strides computed during build

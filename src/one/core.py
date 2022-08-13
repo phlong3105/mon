@@ -2465,7 +2465,7 @@ def assert_collection(input: Any):
         )
 
 
-def assert_collection_contain_item(input: Any, item: Any) -> bool:
+def assert_collection_contain_item(input: Any, item: Any):
     if not is_collection_contain_item(input, item):
         raise ValueError(
             f"`input` collection must contain the item `{item}`. "
@@ -2499,7 +2499,7 @@ def assert_dir(path: Path_ | None):
         raise ValueError(f"`path` must be a directory. But got: {path}.")
 
 
-def assert_even_number(input: Any) -> bool:
+def assert_even_number(input: Any):
     if not is_even_number(input):
         raise ValueError(
             f"`input` must be an even number. But got: {input}."
@@ -2537,14 +2537,14 @@ def assert_json_file(path: Path_ | None):
         raise ValueError(f"`path` must be a json file. But got: {path}.")
 
 
-def assert_larger_than(input: Number, value: Number) -> bool:
+def assert_larger_than(input: Number, value: Number):
     if not is_larger_than(input, value):
         raise ValueError(
             f"Expect `input` > `value`. But got: {input} > {value}."
         )
 
 
-def assert_larger_or_equal_than(input: Number, value: Number) -> bool:
+def assert_larger_or_equal_than(input: Number, value: Number):
     if not is_larger_or_equal_than(input, value):
         raise ValueError(
             f"Expect `input` >= `value`. But got: {input} > {value}."
@@ -2632,7 +2632,7 @@ def assert_numpy_of_ndim_in_range(input: Any, start: int, end: int):
         )
 
 
-def assert_odd_number(input: Any) -> bool:
+def assert_odd_number(input: Any):
     if not is_odd_number(input):
         raise ValueError(
             f"`input` must be an odd number. But got: {input}."
@@ -2680,14 +2680,14 @@ def assert_sequence_of_length(input: Any, length: int):
         )
     
     
-def assert_smaller_than(input: Number, value: Number) -> bool:
+def assert_smaller_than(input: Number, value: Number):
     if not is_smaller_than(input, value):
         raise ValueError(
             f"Expect `input` < `value`. But got: {input} > {value}."
         )
 
 
-def assert_smaller_or_equal_than(input: Number, value: Number) -> bool:
+def assert_smaller_or_equal_than(input: Number, value: Number):
     if not is_smaller_or_equal_than(input, value):
         raise ValueError(
             f"Expect `input` <= `value`. But got: {input} > {value}."
@@ -2740,7 +2740,7 @@ def assert_tensor_of_ndim_in_range(input: Any, start: int, end: int):
         )
 
 
-def assert_tensor_of_shape(input: Any, shape: Ints) -> bool:
+def assert_tensor_of_shape(input: Any, shape: Ints):
     if not is_tensor_of_shape(input, shape):
         raise ValueError(
             f"`input` must be of shape {shape}. But got: {list(input.shape)}."
@@ -4567,14 +4567,14 @@ rich_console_theme = Theme(
 )
 
 console = Console(
-    color_system    = "windows",
+    color_system    = "auto",
     log_time_format = "[%x %H:%M:%S:%f]",
     soft_wrap       = True,
     theme           = rich_console_theme,
 )
 
 error_console = Console(
-    color_system    = "windows",
+    color_system    = "auto",
     log_time_format = "[%x %H:%M:%S:%f]",
     soft_wrap       = True,
     stderr          = True,

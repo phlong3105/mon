@@ -26,7 +26,7 @@ from one.vision.detection.yolov5_v4.utils.plots import plot_one_box
 from one.vision.detection.yolov5_v4.utils.torch_utils import time_synchronized
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def autopad(k, p=None):  # kernel, padding
     # Pad to 'same'
@@ -35,7 +35,7 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
-# MARK: - Modules
+# H1: - Modules
 
 def DWConv(c1, c2, k=1, s=1, act=True):
     # Depthwise convolution

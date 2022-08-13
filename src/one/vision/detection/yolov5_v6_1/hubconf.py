@@ -13,7 +13,7 @@ Usage:
 import torch
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def _create(name, pretrained=True, channels=3, classes=80, autoshape=True, verbose=True, device=None):
     """Creates or loads a YOLOv5 model

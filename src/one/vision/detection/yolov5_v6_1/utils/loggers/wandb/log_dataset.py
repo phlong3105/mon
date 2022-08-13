@@ -15,7 +15,7 @@ from wandb_utils import WandbLogger
 WANDB_ARTIFACT_PREFIX = 'wandb-artifact://'
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def create_dataset_artifact(opt):
     logger = WandbLogger(opt, None, job_type='Dataset Creation')  # TODO: return value unused
@@ -23,7 +23,7 @@ def create_dataset_artifact(opt):
         LOGGER.info("install wandb using `pip install wandb` to log the dataset")
 
 
-# MARK: - Main
+# H1: - Main
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

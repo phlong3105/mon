@@ -15,11 +15,11 @@ from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
-from one.plot import imshow
+from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# MARK: - Module ---------------------------------------------------------------
+# H1: - Module ---------------------------------------------------------------
 
 @DATASETS.register(name="satehaze1k")
 class SateHaze1K(ImageEnhancementDataset):
@@ -572,7 +572,7 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
         self.summarize()
   
   
-# MARK: - Test -----------------------------------------------------------------
+# H1: - Test -----------------------------------------------------------------
 
 def test_satehaze1k():
     cfg = {
@@ -619,8 +619,9 @@ def test_satehaze1k():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -669,8 +670,9 @@ def test_satehaze1kmoderate():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -719,8 +721,9 @@ def test_satehaze1kthick():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
@@ -769,12 +772,13 @@ def test_satehaze1kthick():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow(winname="image",  image=input)
-    imshow(winname="target", image=target)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
     plt.show(block=True)
 
 
-# MARK: - Main -----------------------------------------------------------------
+# H1: - Main -----------------------------------------------------------------
 
 if __name__ == "__main__":
     test_satehaze1k()

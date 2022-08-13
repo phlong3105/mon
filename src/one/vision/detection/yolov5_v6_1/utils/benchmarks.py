@@ -48,7 +48,7 @@ from one.vision.detection.yolov5_v6_1.utils.general import LOGGER
 from one.vision.detection.yolov5_v6_1.utils.general import print_args
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def run(
     weights    = ROOT / "yolov5s.pt",         # weights path
@@ -95,7 +95,7 @@ def main(opt):
     run(**vars(opt))
 
 
-# MARK: - Main
+# H1: - Main
 
 if __name__ == "__main__":
     opt = parse_opt()

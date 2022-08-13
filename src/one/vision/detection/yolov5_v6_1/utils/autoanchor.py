@@ -21,7 +21,7 @@ from one.vision.detection.yolov5_v6_1.utils.general import LOGGER
 PREFIX = colorstr("AutoAnchor: ")
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def check_anchor_order(m):
     # Check anchor order against stride order for YOLOv5 Detect() module m, and correct if necessary

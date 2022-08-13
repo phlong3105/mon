@@ -69,7 +69,7 @@ for orientation in ExifTags.TAGS.keys():
         break
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def get_hash(paths):
     # Returns a single hash value of a list of paths (files or dirs)

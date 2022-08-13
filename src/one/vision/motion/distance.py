@@ -86,7 +86,7 @@ __all__ = [
 ]
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def compute_distance(
 	x,
@@ -317,7 +317,7 @@ def pairwise_squared_distance(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 	return r2
 
 
-# MARK: - Modules
+# H1: - Modules
 
 @DISTANCES.register(name="chebyshev")
 class ChebyshevDistance:

@@ -16,7 +16,7 @@ import torch
 from torch.backends import cudnn
 
 
-# MARK: - Random ---------------------------------------------------------------
+# H1: - Random ---------------------------------------------------------------
 
 def init_seeds(seed: int = 0):
     random.seed(seed)

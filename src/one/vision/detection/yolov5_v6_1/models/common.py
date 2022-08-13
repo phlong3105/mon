@@ -46,7 +46,7 @@ from one.vision.detection.yolov5_v6_1.utils.torch_utils import copy_attr
 from one.vision.detection.yolov5_v6_1.utils.torch_utils import time_sync
 
 
-# MARK: - Functional
+# H1: - Functional
 
 def autopad(k, p=None):  # kernel, padding
     # Pad to 'same'
@@ -55,7 +55,7 @@ def autopad(k, p=None):  # kernel, padding
     return p
 
 
-# MARK: - Modules
+# H1: - Modules
 
 class Conv(nn.Module):
     # Standard convolution

@@ -22,7 +22,7 @@ from one.vision.transformation.color import rgb_to_grayscale
 from one.vision.transformation.color import rgb_to_hsv
 
 
-# MARK: - Adjust ---------------------------------------------------------------
+# H1: - Adjust ---------------------------------------------------------------
 
 def add_weighted(
     image1: Tensor,
@@ -1474,7 +1474,7 @@ class Solarize(Transform):
                    if target is not None else None
     
     
-# MARK: - Assertion ------------------------------------------------------------
+# H1: - Assertion ------------------------------------------------------------
 
 def is_integer_image(image: Tensor) -> bool:
     """
