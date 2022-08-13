@@ -32,6 +32,7 @@ from one.constants import *
 from one.core import *
 from one.data import ClassLabels
 from one.data import ClassLabels_
+from one.plot import imshow_enhancement
 
 
 # H1: - Checkpoint -------------------------------------------------------------
@@ -543,8 +544,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 self._debug.nrow = 8
             if "wait_time" not in self._debug:
                 self._debug.wait_time = 0.01
-            if "verbose" not in self._debug:
-                self._debug.verbose = False
     
     @property
     def debug_dir(self) -> Path:
@@ -1621,7 +1620,27 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
             verbose (bool): If True shows the results on the screen.
                 Defaults to False.
         """
-        pass
+        result = {}
+        if input is not None:
+            result["input"]  = input
+        if target is not None:
+            result["target"] = target
+        if pred is not None:
+            result["pred"]   = pred
+        
+        save_cfg = {
+            "filepath"  : filepath or self.debug_image_filepath ,
+            "pil_kwargs": dict(quality=image_quality)
+        }
+        imshow_enhancement(
+            winname   = self.phase.value,
+            image     = result,
+            scale     = 2,
+            save_cfg  = save_cfg,
+            max_n     = self.debug.max_n,
+            nrow      = self.debug.nrow,
+            wait_time = self.debug.wait_time,
+        )
     
     
 # H1: - Trainer ----------------------------------------------------------------

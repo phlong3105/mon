@@ -69,7 +69,7 @@ dependencies:
   - torchaudio
   - pretrainedmodels
   - pycocotools
-  - pytorch-lightning
+  - pytorch-lightning=1.7.0
   - pytorch-model-summary
   - timm
   - torchmetrics
