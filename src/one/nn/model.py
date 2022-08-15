@@ -32,6 +32,7 @@ from one.constants import *
 from one.core import *
 from one.data import ClassLabels
 from one.data import ClassLabels_
+from one.plot import imshow_classification
 from one.plot import imshow_enhancement
 
 
@@ -1549,6 +1550,93 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 rank_zero_only = True
             )
 
+
+# H2: - Classification ---------------------------------------------------------
+
+class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
+    
+    def forward(
+        self,
+        input  : Tensor,
+        augment: bool = False,
+        profile: bool = False,
+        *args, **kwargs
+    ) -> Tensor:
+        """
+        Forward pass. This is the primary `forward` function of the model.
+        It supports augmented inference.
+        
+        In this function, we perform test-time augmentation and pass the
+        transformed input to `forward_once()`.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            augment (bool): Perform test-time augmentation. Defaults to False.
+            profile (bool): Measure processing time. Defaults to False.
+            
+        Returns:
+            Predictions.
+        """
+        if augment:
+            # For now just forward the input. Later, we will implement the
+            # test-time augmentation.
+            return self.forward_once(
+                input=input, profile=profile, *args, **kwargs
+            )
+        else:
+            return self.forward_once(
+                input=input, profile=profile, *args, **kwargs
+            )
+    
+    def show_results(
+        self,
+        input        : Tensor | None = None,
+        target	     : Tensor | None = None,
+        pred		 : Tensor | None = None,
+        filepath     : Path_  | None = None,
+        image_quality: int           = 95,
+        max_n        : int | None    = 8,
+        nrow         : int | None    = 8,
+        wait_time    : float         = 0.01,
+        verbose      : bool          = False,
+        *args, **kwargs
+    ):
+        """
+        Show results.
+
+        Args:
+            input (Tensor | None): Input.
+            target (Tensor | None): Ground-truth.
+            pred (Tensor | None): Predictions.
+            filepath (Path_ | None): File path to save the debug result.
+            image_quality (int): Image quality to be saved. Defaults to 95.
+            max_n (int | None): Show max n images if `image` has a batch size
+                of more than `max_n` images. Defaults to None means show all.
+            nrow (int | None): The maximum number of items to display in a row.
+                The final grid size is (n / nrow, nrow). If None, then the
+                number of items in a row will be the same as the number of
+                items in the list. Defaults to 8.
+            wait_time (float): Wait some time (in seconds) to display the
+                figure then reset. Defaults to 0.01.
+            verbose (bool): If True shows the results on the screen.
+                Defaults to False.
+        """
+        save_cfg = {
+            "filepath"  : filepath or self.debug_image_filepath ,
+            "pil_kwargs": dict(quality=image_quality)
+        }
+        imshow_classification(
+            winname   = self.phase.value,
+            image     = input,
+            pred      = pred,
+            target    = target,
+            scale     = 2,
+            save_cfg  = save_cfg,
+            max_n     = self.debug.max_n,
+            nrow      = self.debug.nrow,
+            wait_time = self.debug.wait_time,
+        )
+        
 
 # H2: - Enhancement ------------------------------------------------------------
 
