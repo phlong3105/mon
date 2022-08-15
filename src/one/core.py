@@ -1933,6 +1933,15 @@ def is_dict_contain_key(input: Any, key: Any) -> bool:
         return False
 
 
+def is_dict_contain_keys(input: Any, keys: Sequence) -> bool:
+    assert_dict(input)
+    assert_sequence(keys)
+    for k in keys:
+        if k not in input:
+            return False
+    return False
+
+
 def is_dict_of(input: dict, item_type: type) -> bool:
     """Check whether `input` is a dictionary of some type.
     
@@ -2483,6 +2492,14 @@ def assert_dict_contain_key(input: Any, key: Any):
         raise ValueError(
             f"`input` collection must contain the item `{key}`. "
             f"But got: {key} not in {input.keys()}."
+        )
+
+
+def assert_dict_contain_keys(input: Any, keys: Sequence):
+    if not is_dict_contain_keys(input, keys):
+        raise ValueError(
+            f"`input` collection must contain the items `{keys}`. "
+            f"But got: {keys} not in {input.keys()}."
         )
 
 

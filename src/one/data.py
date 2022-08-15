@@ -42,6 +42,8 @@ from one.core import *
 
 # H1: - Label ------------------------------------------------------------------
 
+# H2: - Base Label -------------------------------------------------------------
+
 class Label(metaclass=ABCMeta):
     """
     Base class for labels. Label instances represent a logical collection of
@@ -73,7 +75,7 @@ class Label(metaclass=ABCMeta):
         pass
 
 
-# H2: - Class Label ------------------------------------------------------------
+# H2: - ClassLabel -------------------------------------------------------------
 
 def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
     """
@@ -1554,6 +1556,7 @@ class Segmentation(Label):
 
 # H1: - Dataset ----------------------------------------------------------------
 
+# H2: - Base Dataset -----------------------------------------------------------
 
 class Dataset(data.Dataset, metaclass=ABCMeta):
     """
@@ -3249,12 +3252,9 @@ def load_config(cfg: Path_ | dict | Munch) -> Munch:
         raise TypeError(
             f"`cfg` must be a `dict` or a path to config file. But got: {cfg}."
         )
-    
     if d is None:
         raise IOError(f"No configuration is found at: {cfg}.")
-    
-    cfg = Munch.fromDict(d)
-    return cfg
+    return Munch.fromDict(d)
 
 
 def load_from_file(

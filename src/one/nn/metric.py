@@ -18,6 +18,7 @@ from torchmetrics.utilities import rank_zero_warn
 from one.constants import *
 from one.core import *
 
+
 # H1: - Classification ---------------------------------------------------------
 
 METRICS.register(name="accuracy",                         module=Accuracy)

@@ -28,10 +28,10 @@ from torch import Tensor
 from torch.hub import load_state_dict_from_url
 from torch.nn.modules.loss import _Loss
 
-from one.constants import *
-from one.core import *
 from one.data import ClassLabels
 from one.data import ClassLabels_
+from one.data import load_config
+from one.nn.layer import *
 from one.plot import imshow_classification
 from one.plot import imshow_enhancement
 
@@ -378,10 +378,78 @@ def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
                 "to nccl."
             )
 
+  
+# H1: - Trainer ----------------------------------------------------------------
+
+class Trainer(pl.Trainer):
+    """
+    Override `pytorch_lightning.Trainer` with several methods and properties.
+    """
+    
+    @pl.Trainer.current_epoch.setter
+    def current_epoch(self, current_epoch: int):
+        self.fit_loop.current_epoch = current_epoch
+    
+    @pl.Trainer.global_step.setter
+    def global_step(self, global_step: int):
+        self.fit_loop.global_step = global_step
+        
+    def _log_device_info(self):
+        if CUDAAccelerator.is_available():
+            gpu_available = True
+            gpu_type      = " (cuda)"
+        elif MPSAccelerator.is_available():
+            gpu_available = True
+            gpu_type      = " (mps)"
+        else:
+            gpu_available = False
+            gpu_type      = ""
+
+        gpu_used = isinstance(self.accelerator, (CUDAAccelerator, MPSAccelerator))
+        console.log(f"GPU available: {gpu_available}{gpu_type}, used: {gpu_used}")
+
+        num_tpu_cores = self.num_devices if isinstance(self.accelerator, TPUAccelerator) else 0
+        console.log(f"TPU available: {_TPU_AVAILABLE}, using: {num_tpu_cores} TPU cores")
+
+        num_ipus = self.num_devices if isinstance(self.accelerator, IPUAccelerator) else 0
+        console.log(f"IPU available: {_IPU_AVAILABLE}, using: {num_ipus} IPUs")
+
+        num_hpus = self.num_devices if isinstance(self.accelerator, HPUAccelerator) else 0
+        console.log(f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs")
+
+        # Integrate MPS Accelerator here, once gpu maps to both
+        if CUDAAccelerator.is_available() and not isinstance(self.accelerator, CUDAAccelerator):
+            console.log(
+                "GPU available but not used. Set `accelerator` and `devices` using"
+                f" `Trainer(accelerator='gpu', devices={CUDAAccelerator.auto_device_count()})`.",
+            )
+
+        if _TPU_AVAILABLE and not isinstance(self.accelerator, TPUAccelerator):
+            console.log(
+                "TPU available but not used. Set `accelerator` and `devices` using"
+                f" `Trainer(accelerator='tpu', devices={TPUAccelerator.auto_device_count()})`."
+            )
+
+        if _IPU_AVAILABLE and not isinstance(self.accelerator, IPUAccelerator):
+            console.log(
+                "IPU available but not used. Set `accelerator` and `devices` using"
+                f" `Trainer(accelerator='ipu', devices={IPUAccelerator.auto_device_count()})`."
+            )
+
+        if _HPU_AVAILABLE and not isinstance(self.accelerator, HPUAccelerator):
+            console.log(
+                "HPU available but not used. Set `accelerator` and `devices` using"
+                f" `Trainer(accelerator='hpu', devices={HPUAccelerator.auto_device_count()})`."
+            )
+
+        if MPSAccelerator.is_available() and not isinstance(self.accelerator, MPSAccelerator):
+            console.log(
+                "MPS available but not used. Set `accelerator` and `devices` using"
+                f" `Trainer(accelerator='mps', devices={MPSAccelerator.auto_device_count()})`."
+            )
+
 
 # H1: - Model ------------------------------------------------------------------
-
-# H2: - Base -------------------------------------------------------------------
 
 def sparsity(model: nn.Module) -> float:
     """
@@ -418,6 +486,8 @@ def strip_optimizer(weight_file: str, new_file: str = ""):
     )
 
 
+# H2: - Base Model -------------------------------------------------------------
+
 class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     """
     Base model for all models. Base model only provides access to the
@@ -434,7 +504,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         name (str | None): Model name in the following format:
             {name}-{data_name}-{postfix}. In case None is given, it will be
             `self.basename`. Defaults to None.
-        shape (Ints | None): Input shape as [C, H, W]. Defaults to None.
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        channels (int): Input channel. Defaults to 3.
         num_classes (int | None): Number of classes for classification or
             detection tasks. Defaults to None.
         classlabels (ClassLabels | None): ClassLabels object that contains all
@@ -463,11 +536,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         root       : Path_               = RUNS_DIR,
         basename   : str  | None         = None,
         name       : str  | None         = None,
-        shape      : Ints | None         = None,
+        cfg        : dict | Path_ | None = None,
+        channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
-        phase      : ModelPhase_         = "training",
         pretrained : Pretrained			 = False,
+        phase      : ModelPhase_         = "training",
         loss   	   : Losses_      | None = None,
         metrics	   : Metrics_     | None = None,
         optimizers : Optimizers_  | None = None,
@@ -479,9 +553,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.root          = root
         self.basename      = basename
         self.name          = name
-        self.shape         = shape
-        self.num_classes   = num_classes
-        self.classlabels   = ClassLabels.from_value(classlabels)
         self.phase         = phase
         self.pretrained    = pretrained
         self.loss          = loss
@@ -493,13 +564,21 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.verbose       = verbose
         self.epoch_step    = 0
         
-        # num_classes
-        if self.classlabels is not None and \
-            num_classes != self.classlabels.num_classes():
-            self.num_classes = self.classlabels.num_classes()
-            
         # Define model
-        self.model, self.save = self.parse_model()
+        self.cfg         = load_config(cfg=cfg)
+        self.channels    = self.cfg["channels"] = self.cfg.get("channels", channels)
+        self.classlabels = ClassLabels.from_value(classlabels)
+        num_classes      = num_classes or self.classlabels.num_classes()
+        if num_classes and num_classes != self.cfg.get("num_classes", None):
+            console.log(
+                f"Overriding model.yaml num_classes={self.cfg['num_classes']} "
+                f"with num_classes={num_classes}."
+            )
+            self.cfg["num_classes"] = num_classes
+        self.num_classes = num_classes
+        assert_dict_contain_keys(self.cfg, ["channels", "num_classes"])
+        
+        self.model, self.save = self.parse_model(d=self.cfg, ch=[self.channels])
         self.init_weights()
         
     @property
@@ -702,13 +781,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self._weights_dir = self._root / "weights"
     
     @property
-    def size(self) -> Ints | None:
-        """
-        Return the input size as [C, H, W].
-        """
-        return None if self.shape is None else self.shape
-    
-    @property
     def train_metrics(self) -> list[Metric] | None:
         return self._train_metrics
     
@@ -842,6 +914,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Build the model. You have 2 options to build a model: (1) define each
         layer manually, or (2) build model automatically from a config
         dictionary.
+        
+        We inherit the same idea of model parsing in YOLOv5.
         
         Either way each layer should have the following attributes:
             - i (int): index of the layer.
@@ -1642,6 +1716,55 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
 
 class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
     
+    def parse_model(
+        self,
+        d : dict      | None = None,
+        ch: list[int] | None = None
+    ) -> tuple[nn.Sequential, list[int]]:
+        layers = []      # layers
+        save   = []      # savelist
+        c2     = ch[-1]  # out_channels
+        table  = []      # print data as table
+        for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):
+            # index, (from, number, module, args)
+            if m in [
+                Conv2d,
+                ConvAct2d,
+                ConvReLU2d,
+            ]:
+                c1, c2 = ch[f], args[0]
+            elif m is BatchNorm2d:
+                args = [ch[f]]
+            elif m is Concat:
+                c2 = sum([ch[x] for x in f])
+            else:
+                c2 = ch[f]
+            
+            # Append c2 as c1 for next layers
+            if i == 0:
+                ch = []
+            ch.append(c2)
+            
+            m_    = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
+            m_.i  = i
+            m_.f  = f
+            m_.t  = t  = str(m)[8:-2].replace("__main__.", "")      # module type
+            m_.np = np = sum([x.numel() for x in m_.parameters()])  # number params
+            sa    = [x % i for x in ([f] if isinstance(f, int) else f) if x != -1]
+            save.extend(sa)  # append to savelist
+            layers.append(m_)
+            table.append({
+                "index"    : i,
+                "from"     : f,
+                "n"        : n,
+                "params"   : np,
+                "module"   : t,
+                "arguments": args
+            })
+        
+        print_table(table)
+        return nn.Sequential(*layers), sorted(save)
+    
     def forward(
         self,
         input  : Tensor,
@@ -1729,73 +1852,3 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
             nrow      = self.debug.nrow,
             wait_time = self.debug.wait_time,
         )
-    
-    
-# H1: - Trainer ----------------------------------------------------------------
-
-class Trainer(pl.Trainer):
-    """
-    Override `pytorch_lightning.Trainer` with several methods and properties.
-    """
-    
-    @pl.Trainer.current_epoch.setter
-    def current_epoch(self, current_epoch: int):
-        self.fit_loop.current_epoch = current_epoch
-    
-    @pl.Trainer.global_step.setter
-    def global_step(self, global_step: int):
-        self.fit_loop.global_step = global_step
-        
-    def _log_device_info(self):
-        if CUDAAccelerator.is_available():
-            gpu_available = True
-            gpu_type      = " (cuda)"
-        elif MPSAccelerator.is_available():
-            gpu_available = True
-            gpu_type      = " (mps)"
-        else:
-            gpu_available = False
-            gpu_type      = ""
-
-        gpu_used = isinstance(self.accelerator, (CUDAAccelerator, MPSAccelerator))
-        console.log(f"GPU available: {gpu_available}{gpu_type}, used: {gpu_used}")
-
-        num_tpu_cores = self.num_devices if isinstance(self.accelerator, TPUAccelerator) else 0
-        console.log(f"TPU available: {_TPU_AVAILABLE}, using: {num_tpu_cores} TPU cores")
-
-        num_ipus = self.num_devices if isinstance(self.accelerator, IPUAccelerator) else 0
-        console.log(f"IPU available: {_IPU_AVAILABLE}, using: {num_ipus} IPUs")
-
-        num_hpus = self.num_devices if isinstance(self.accelerator, HPUAccelerator) else 0
-        console.log(f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs")
-
-        # Integrate MPS Accelerator here, once gpu maps to both
-        if CUDAAccelerator.is_available() and not isinstance(self.accelerator, CUDAAccelerator):
-            console.log(
-                "GPU available but not used. Set `accelerator` and `devices` using"
-                f" `Trainer(accelerator='gpu', devices={CUDAAccelerator.auto_device_count()})`.",
-            )
-
-        if _TPU_AVAILABLE and not isinstance(self.accelerator, TPUAccelerator):
-            console.log(
-                "TPU available but not used. Set `accelerator` and `devices` using"
-                f" `Trainer(accelerator='tpu', devices={TPUAccelerator.auto_device_count()})`."
-            )
-
-        if _IPU_AVAILABLE and not isinstance(self.accelerator, IPUAccelerator):
-            console.log(
-                "IPU available but not used. Set `accelerator` and `devices` using"
-                f" `Trainer(accelerator='ipu', devices={IPUAccelerator.auto_device_count()})`."
-            )
-
-        if _HPU_AVAILABLE and not isinstance(self.accelerator, HPUAccelerator):
-            console.log(
-                "HPU available but not used. Set `accelerator` and `devices` using"
-                f" `Trainer(accelerator='hpu', devices={HPUAccelerator.auto_device_count()})`."
-            )
-
-        if MPSAccelerator.is_available() and not isinstance(self.accelerator, MPSAccelerator):
-            console.log(
-                "MPS available but not used. Set `accelerator` and `devices` using"
-                f" `Trainer(accelerator='mps', devices={MPSAccelerator.auto_device_count()})`."
-            )

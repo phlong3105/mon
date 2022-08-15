@@ -161,6 +161,17 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
                 f"But got: {self.reduction}."
             )
     
+    @classmethod
+    @property
+    def classname(cls) -> str:
+        """
+        Returns the name of the class of the object passed to it.
+        
+        Returns:
+            The class name of the object.
+        """
+        return cls.__name__
+    
     @abstractmethod
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
         pass
