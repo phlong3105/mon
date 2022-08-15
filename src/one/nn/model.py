@@ -576,7 +576,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             )
             self.cfg["num_classes"] = num_classes
         self.num_classes = num_classes
-        assert_dict_contain_keys(self.cfg, ["channels", "num_classes"])
+        assert_dict_contain_keys(
+            input = self.cfg,
+            keys  = ["channels", "num_classes", "backbone", "head"]
+        )
         
         self.model, self.save = self.parse_model(d=self.cfg, ch=[self.channels])
         self.init_weights()
@@ -1710,7 +1713,7 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
             nrow      = self.debug.nrow,
             wait_time = self.debug.wait_time,
         )
-        
+
 
 # H2: - Enhancement ------------------------------------------------------------
 

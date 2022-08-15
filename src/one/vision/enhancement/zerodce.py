@@ -75,8 +75,7 @@ class CombinedLoss(BaseLoss):
 
 cfgs = {
     "zerodce": {
-        "channels"   : 3,
-        "kernel_size": 32,
+        "channels": 3,
         "backbone": [
             # [from,  number, module,        args(out_channels, ...)]
             [-1,      1,      Identity,      []],              # 0  (x)
