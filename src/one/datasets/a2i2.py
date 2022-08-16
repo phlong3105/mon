@@ -19,7 +19,8 @@ from one.data import ImageEnhancementDataset
 from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
-class_labels = [
+
+classlabels = [
     { "name": "vehicle", "id": 0, "color": [  0,   0, 142] }
 ]
 

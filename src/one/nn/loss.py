@@ -122,8 +122,8 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
     Base Loss class.
     
     Args:
-        weight (Tensor | None): Some loss function is the combination of other
-            loss functions. This provides weight for each loss component.
+        weight (Tensor): Some loss function is the combination of other loss
+            functions. This provides weight for each loss component.
             Defaults to [1.0].
         input_weight (Tensor | None): A manual scaling weight given to each
             tensor in `input`. If specified, it must have the length equals
@@ -146,12 +146,30 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
     
     def __init__(
         self,
-        weight            : Tensor | None = Tensor([1.0]),
+        weight            : Tensor        = Tensor([1.0]),
         input_weight      : Tensor | None = None,
         elementwise_weight: Tensor | None = None,
         reduction         : str           = "mean",
+        *args, **kwargs
     ):
         super().__init__(reduction=reduction)
+        weight = weight or 1.0
+        if weight and not isinstance(weight, Tensor):
+            weight = Tensor(
+                weight if isinstance(weight, Sequence) else [weight]
+            )
+        if input_weight and not isinstance(input_weight, Tensor):
+            input_weight = Tensor(
+                input_weight
+                if isinstance(input_weight, Sequence)
+                else [input_weight]
+            )
+        if elementwise_weight and not isinstance(elementwise_weight, Tensor):
+            elementwise_weight = Tensor(
+                elementwise_weight
+                if isinstance(elementwise_weight, Sequence)
+                else [elementwise_weight]
+            )
         self.weight             = weight
         self.input_weight       = input_weight
         self.elementwise_weight = elementwise_weight
@@ -541,8 +559,22 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
 @LOSSES.register(name="charbonnier_loss")
 class CharbonnierLoss(BaseLoss):
     
-    def __init__(self, eps: float = 1e-3, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        eps               : float         = 1e-3,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.eps  = eps
         self.name = "charbonnier_loss"
      
@@ -566,11 +598,20 @@ class CharbonnierEdgeLoss(BaseLoss):
     
     def __init__(
         self,
-        eps   : float = 1e-3,
-        weight: Tensor = Tensor([1.0, 0.05]),
+        eps               : float         = 1e-3,
+        weight            : Tensor        = Tensor([1.0, 0.05]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
         *args, **kwargs
     ):
-        super().__init__(weight=weight, *args, **kwargs)
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.eps  = eps
         self.name = "charbonnier_edge_loss"
      
@@ -597,8 +638,21 @@ class CharbonnierEdgeLoss(BaseLoss):
 @LOSSES.register(name="color_constancy_loss")
 class ColorConstancyLoss(BaseLoss):
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "color_constancy_loss"
      
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
@@ -614,8 +668,22 @@ class ColorConstancyLoss(BaseLoss):
 @LOSSES.register(name="edge_loss")
 class EdgeLoss(BaseLoss):
     
-    def __init__(self, eps: float = 1e-3, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        eps               : float         = 1e-3,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.eps  = eps
         self.name = "edge_loss"
      
@@ -636,8 +704,23 @@ class ExposureControlLoss(BaseLoss):
     Exposure Control Loss.
     """
     
-    def __init__(self, patch_size : Ints, mean_val: float, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        patch_size        : Ints,
+        mean_val          : float,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name       = "exposure_control_loss"
         self.patch_size = patch_size
         self.mean_val   = mean_val
@@ -660,8 +743,21 @@ class GradientLoss(BaseLoss):
     L1 loss on the gradient of the image.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "gradient_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
@@ -695,8 +791,21 @@ class GrayLoss(BaseLoss):
     Gray Loss.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "gray_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
@@ -715,8 +824,21 @@ class GrayscaleLoss(BaseLoss):
     Grayscale Loss.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "grayscale_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
@@ -741,8 +863,22 @@ class GrayscaleLoss(BaseLoss):
 @LOSSES.register(name="illumination_smoothness_loss")
 class IlluminationSmoothnessLoss(BaseLoss):
     
-    def __init__(self, tv_loss_weight: int = 1, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        tv_loss_weight    : int           = 1,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name           = "illumination_smoothness_loss"
         self.tv_loss_weight = tv_loss_weight
      
@@ -764,8 +900,21 @@ class MAELoss(BaseLoss):
     MAE (Mean Absolute Error or L1) loss.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "mae_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
@@ -785,8 +934,21 @@ class MSELoss(BaseLoss):
     MSE (Mean Squared Error or L2) loss.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "mse_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
@@ -805,8 +967,21 @@ class NonBlurryLoss(BaseLoss):
     MSELoss on the distance to 0.5
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "non_blurry_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
@@ -827,11 +1002,20 @@ class PerceptualL1Loss(BaseLoss):
     
     def __init__(
         self,
-        vgg   : nn.Module,
-        weight: Tensor = Tensor([1.0, 1.0]),
+        vgg               : nn.Module,
+        weight            : Tensor        = Tensor([1.0, 1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
         *args, **kwargs
     ):
-        super().__init__(weight=weight, *args, **kwargs)
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name     = "perceptual_Loss"
         self.per_loss = PerceptualLoss(vgg=vgg, *args, **kwargs)
         self.l1_loss  = L1Loss(*args, **kwargs)
@@ -873,8 +1057,22 @@ class PerceptualLoss(BaseLoss):
     Perceptual Loss.
     """
     
-    def __init__(self, vgg: nn.Module, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        vgg               : nn.Module,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "perceptual_Loss"
         self.vgg  = vgg
         self.vgg.freeze()
@@ -913,8 +1111,22 @@ class PSNRLoss(BaseLoss):
     PSNR Loss.
     """
     
-    def __init__(self, max_val: float = 1.0, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        max_val           : float         = 1.0,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name    = "psnr_loss"
         self.max_val = max_val
      
@@ -936,8 +1148,22 @@ class SmoothMAELoss(BaseLoss):
     Smooth MAE (Mean Absolute Error or L1) loss.
     """
     
-    def __init__(self, beta: float = 1.0, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        beta              : float         = 1.0,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "smooth_mae_loss"
         self.beta = beta
      
@@ -958,8 +1184,21 @@ class SpatialConsistencyLoss(BaseLoss):
     Spatial Consistency Loss (SPA) Loss.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "spatial_consistency_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
@@ -987,11 +1226,21 @@ class SSIMLoss(BaseLoss):
     def __init__(
         self,
         window_size: int,
-        max_val    : float = 1.0,
-        eps        : float = 1e-12,
+        max_val           : float         = 1.0,
+        eps               : float         = 1e-12,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name        = "ssim_loss"
         self.window_size = window_size
         self.max_val     = max_val
@@ -1017,8 +1266,21 @@ class StdLoss(BaseLoss):
     smooth, gets zero.
     """
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        weight            : Tensor        = Tensor([1.0]),
+        input_weight      : Tensor | None = None,
+        elementwise_weight: Tensor | None = None,
+        reduction         : str           = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight             = weight,
+            input_weight       = input_weight,
+            elementwise_weight = elementwise_weight,
+            reduction          = reduction,
+            *args, **kwargs
+        )
         self.name = "std_loss"
         
         blur        = (1 / 25) * np.ones((5, 5))

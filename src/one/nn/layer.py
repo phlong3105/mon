@@ -79,7 +79,7 @@ class FReLU(Module):
     def __init__(self, c1: int, k: Ints = 3):
         super().__init__()
         k         = to_2tuple(k)
-        self.conv = Conv2d(c1, c1, k, (1, 1), 1, groups=c1)
+        self.conv = Conv2d(c1, c1, k, 1, 1, groups=c1)
         self.bn   = BatchNorm2d(c1)
         
     def forward(self, input: Tensor) -> Tensor:
@@ -155,8 +155,8 @@ class ChannelAttentionLayer(Module):
         self,
         channels    : int,
         reduction   : int  = 16,
-        stride      : Ints = (1, 1),
-        dilation    : Ints = (1, 1),
+        stride      : Ints = 1,
+        dilation    : Ints = 1,
         groups      : int  = 1,
         bias        : bool = False,
         padding_mode: str  = "zeros",
@@ -172,7 +172,7 @@ class ChannelAttentionLayer(Module):
             Conv2d(
                 in_channels  = channels,
                 out_channels = channels // reduction,
-                kernel_size  = (1, 1),
+                kernel_size  = 1,
                 stride       = stride,
                 padding      = 0,
                 dilation     = dilation,
@@ -186,7 +186,7 @@ class ChannelAttentionLayer(Module):
             Conv2d(
                 in_channels  = channels // reduction,
                 out_channels = channels,
-                kernel_size  = (1, 1),
+                kernel_size  = 1,
                 stride       = stride,
                 padding      = 0,
                 dilation     = dilation,
@@ -217,8 +217,8 @@ class ChannelAttentionBlock(Module):
         channels    : int,
         reduction   : int,
         kernel_size : Ints,
-        stride      : Ints            = (1, 1),
-        dilation    : Ints            = (1, 1),
+        stride      : Ints            = 1,
+        dilation    : Ints            = 1,
         groups      : int             = 1,
         bias        : bool            = True,
         padding_mode: str             = "zeros",
@@ -284,8 +284,8 @@ class PixelAttentionLayer(Module):
         self,
         channels    : int,
         reduction   : int  = 16,
-        stride      : Ints = (1, 1),
-        dilation    : Ints = (1, 1),
+        stride      : Ints = 1,
+        dilation    : Ints = 1,
         groups      : int  = 1,
         bias        : bool = False,
         padding_mode: str  = "zeros",
@@ -300,7 +300,7 @@ class PixelAttentionLayer(Module):
             Conv2d(
                 in_channels  = channels,
                 out_channels = channels // reduction,
-                kernel_size  = (1, 1),
+                kernel_size  = 1,
                 stride       = stride,
                 padding      = 0,
                 dilation     = dilation,
@@ -314,7 +314,7 @@ class PixelAttentionLayer(Module):
             Conv2d(
                 in_channels  = channels // reduction,
                 out_channels = 1,
-                kernel_size  = (1, 1),
+                kernel_size  = 1,
                 stride       = stride,
                 padding      = 0,
                 dilation     = dilation,
@@ -343,7 +343,7 @@ class SupervisedAttentionModule(Module):
         self,
         channels    : int,
         kernel_size : Ints,
-        dilation    : Ints = (1, 1),
+        dilation    : Ints = 1,
         groups      : int  = 1,
         bias        : bool = False,
         padding_mode: str  = "zeros",
@@ -353,7 +353,7 @@ class SupervisedAttentionModule(Module):
     ):
         super().__init__()
         kernel_size = to_2tuple(kernel_size)
-        stride      = (1, 1)
+        stride      = 1
         padding     = kernel_size[0] // 2
         dilation    = to_2tuple(dilation)
         self.conv1  = Conv2d(
@@ -500,15 +500,15 @@ class BottleneckCSP(Module):
         self.conv2 = Conv2d(
             in_channels  = in_channels,
             out_channels = hidden_channels,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             bias         = False
         )
         self.conv3 = Conv2d(
             in_channels  = hidden_channels,
             out_channels = hidden_channels,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             bias         = False
         )
         self.conv4 = ConvBnMish2d(
@@ -571,8 +571,8 @@ class BottleneckCSP2(Module):
         self.conv2 = Conv2d(
             in_channels  = hidden_channels,
             out_channels = hidden_channels,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             bias         = False
         )
         self.conv3 = ConvBnMish2d(
@@ -658,9 +658,9 @@ def conv2d_same(
     input   : Tensor,
     weight  : Tensor,
     bias    : Tensor | None     = None,
-    stride  : Ints              = (1, 1),
+    stride  : Ints              = 1,
     padding : str | Ints | None = 0,
-    dilation: Ints              = (1, 1),
+    dilation: Ints              = 1,
     groups  : int               = 1,
     **_
 ):
@@ -1239,15 +1239,15 @@ class CrossConvCSP(Module):
         self.cv2 = Conv2d(
             in_channels  = in_channels,
             out_channels = c,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             bias         = False
         )
         self.cv3 = Conv2d(
             in_channels  = c,
             out_channels = c,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             bias         = False
         )
         self.cv4 = ConvBnMish2d(
@@ -1366,8 +1366,8 @@ class PointwiseConv2d(Conv2d):
         super().__init__(
             in_channels  = in_channels,
             out_channels = out_channels,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             padding      = padding,
             groups       = 1,
             bias         = bias,
@@ -1508,9 +1508,9 @@ class StdConv2d(Conv2d):
             input        = self.weight.reshape(1, self.out_channels, -1),
             running_mean = None,
             running_var  = None,
-            weight       = True,
-            training     = 0.0,
-            momentum     = self.eps
+            training     = True,
+            momentum     = 0.0,
+            eps          = self.eps
         ).reshape_as(self.weight)
         return F.conv2d(
             input    = x,
@@ -1756,7 +1756,7 @@ class DropPath(Module):
         
     def forward(self, input: Tensor) -> Tensor:
         return drop_path(
-            x         = input,
+            input     = input,
             drop_prob = self.drop_prob,
             training  = self.training
         )
@@ -1870,6 +1870,57 @@ class RotaryEmbedding(Module):
         return sin, cos
 
 
+# H1: - Fusion -----------------------------------------------------------------
+
+@LAYERS.register(name="concat")
+class Concat(Module):
+    """
+    Concatenate a list of tensors along dimension.
+    
+    Args:
+        dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
+    """
+    
+    def __init__(self, dim: str | ellipsis | None = 1):
+        super().__init__()
+        self.dim = dim
+        
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        return torch.cat(to_list(input), dim=self.dim)
+
+
+@LAYERS.register(name="softmax_fusion")
+class SoftmaxFusion(Module):
+    """
+    Weighted sum of multiple layers https://arxiv.org/abs/1911.09070. Apply
+    softmax to each weight, such that all weights are normalized to be a
+    probability with value range from 0 to 1, representing the importance of
+    each input
+    
+    Args:
+        n (int): Number of inputs.
+    """
+
+    def __init__(self, n: int, weight: bool = False):
+        super().__init__()
+        self.weight = weight  # Apply weights boolean
+        self.iter 	= range(n - 1)  # iter object
+        if weight:
+            # Layer weights
+            self.w = Parameter(-torch.arange(1.0, n) / 2, requires_grad=True)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        output = input[0]
+        if self.weight:
+            w = torch.sigmoid(self.w) * 2
+            for i in self.iter:
+                output = output + input[i + 1] * w[i]
+        else:
+            for i in self.iter:
+                output = output + input[i + 1]
+        return output
+
+
 # H1: - Linear -----------------------------------------------------------------
 
 LAYERS.register(name="bilinear",    module=Bilinear)
@@ -1899,7 +1950,7 @@ class ConvMlp(Module):
         out_features    = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1  = Conv2d(
-            in_features  = in_features,
+            in_channels  = in_features,
             out_channels = hidden_features,
             kernel_size  = (1, 1),
             bias         = True
@@ -1907,7 +1958,7 @@ class ConvMlp(Module):
         self.norm = norm(hidden_features) if norm else Identity()
         self.act  = to_act_layer(act=act)
         self.fc2  = Conv2d(
-            in_features  = hidden_features,
+            in_channels  = hidden_features,
             out_channels = out_features,
             kernel_size  = (1, 1),
             bias         = True
@@ -2557,7 +2608,7 @@ def avg_pool_same2d(
     input            : Tensor,
     kernel_size      : Ints,
     stride           : Ints,
-    padding          : Ints = (0, 0),
+    padding          : Ints = 0,
     ceil_mode        : bool = False,
     count_include_pad: bool = True
 ) -> Tensor:
@@ -2576,8 +2627,8 @@ def max_pool_same2d(
     input      : Tensor,
     kernel_size: Ints,
     stride     : Ints,
-    padding    : Ints = (0, 0),
-    dilation   : Ints = (1, 1),
+    padding    : Ints = 0,
+    dilation   : Ints = 1,
     ceil_mode  : bool = False
 ) -> Tensor:
     input = pad_same(
@@ -2745,11 +2796,11 @@ class MaxPoolSame2d(MaxPool2d):
         stride      = to_2tuple(stride)
         dilation    = to_2tuple(dilation)
         super().__init__(
-            kernel_size       = kernel_size,
-            stride            = stride,
-            padding           = padding,
-            ceil_mode         = dilation,
-            count_include_pad = ceil_mode
+            kernel_size = kernel_size,
+            stride      = stride,
+            padding     = padding,
+            dilation    = dilation,
+            ceil_mode   = ceil_mode
         )
 
     def forward(self, input: Tensor) -> Tensor:
@@ -3327,8 +3378,8 @@ RWAB            = ResidualWideActivationBlock
 
 # H1: - Sampling ---------------------------------------------------------------
 
-@LAYERS.register(name="downsample")
-class Downsample(Module):
+@LAYERS.register(name="downsample_conv2d")
+class DownsampleConv2d(Module):
     """
     
     Args:
@@ -3350,7 +3401,7 @@ class Downsample(Module):
         align_corners: bool = False
     ):
         super().__init__()
-        self.upsample = Upsample(
+        self.upsample = UpsampleConv2d(
             scale_factor  = 0.5,
             mode          = mode,
             align_corners = align_corners
@@ -3426,8 +3477,27 @@ class PixelShuffle(Module):
         return output
 
 
-@LAYERS.register(name="skip_upsample")
-class SkipUpsample(Module):
+@LAYERS.register(name="scale")
+class Scale(Module):
+    """
+    A learnable scale parameter. This layer scales the input by a learnable
+    factor. It multiplies a learnable scale parameter of shape (1,) with
+    input of any shape.
+    
+    Args:
+        scale (float): Initial value of scale factor. Defaults to 1.0.
+    """
+    
+    def __init__(self, scale: float = 1.0):
+        super().__init__()
+        self.scale = scale
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return input * self.scale
+
+
+@LAYERS.register(name="skip_upsample_conv2d")
+class SkipUpsampleConv2d(Module):
     """
 
     Args:
@@ -3451,7 +3521,7 @@ class SkipUpsample(Module):
         
         super().__init__()
         self.up = Sequential(
-            Upsample(
+            UpsampleConv2d(
                 scale_factor  = 2.0,
                 mode          = mode,
                 align_corners = align_corners
@@ -3472,8 +3542,8 @@ class SkipUpsample(Module):
         return output
 
 
-@LAYERS.register(name="upsample")
-class Upsample(Module):
+@LAYERS.register(name="upsample_conv2d")
+class UpsampleConv2d(Module):
     """
 
     Args:
@@ -3496,7 +3566,7 @@ class Upsample(Module):
     ):
         
         super().__init__()
-        self.upsample = Upsample(
+        self.upsample = UpsampleConv2d(
             scale_factor  = 2.0,
             mode          = mode,
             align_corners = align_corners
@@ -3504,8 +3574,8 @@ class Upsample(Module):
         self.conv = Conv2d(
             in_channels  = in_channels + scale_factor,
             out_channels = in_channels,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
+            kernel_size  = 1,
+            stride       = 1,
             padding      = 0,
             bias         = False
         )
@@ -3514,60 +3584,36 @@ class Upsample(Module):
         return self.conv(self.upsample(input))
 
 
-# H1: - Misc -------------------------------------------------------------------
+# H1: - Model Specific Layers --------------------------------------------------
 
-@LAYERS.register(name="concat")
-class Concat(Module):
-    """
-    Concatenate a list of tensors along dimension.
-    
-    Args:
-        dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
-    """
-    
-    def __init__(self, dim: str | ellipsis | None = 1):
-        super().__init__()
-        self.dim = dim
-        
-    def forward(self, input: tuple[Tensor] | list[Tensor]) -> Tensor:
-        return torch.cat(input, dim=self.dim)
+# H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
 
-
-@LAYERS.register(name="concat_pad")
-class ConcatPad(Module):
+@LAYERS.register(name="le_curve")
+class LECurve(Module):
     """
-    Concatenate 2 tensors with different [H, W] (resolution) along dimension.
-    To do this, pad the smaller tensor so that it has the same [H, W] with the
-    bigger one. Hence, the name `ConcatPadding`.
-    
-    Args:
-        dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
+    Light-Enhancement Curve used in ZeroDCE model.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 1):
-        super().__init__()
-        self.dim = dim
-        
-    def forward(self, x: Tensor, y: Tensor) -> Tensor:
-        """
-        Run forward pass.
+    def forward(self, input: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        # Split
+        x   = input[0]
+        x_r = input[1]
+        r1, r2, r3, r4, r5, r6, r7, r8 = torch.split(x_r, 3, dim=1)
+        # Merge
+        x  = x  + r1 * (torch.pow(x,  2) - x)
+        x  = x  + r2 * (torch.pow(x,  2) - x)
+        x  = x  + r3 * (torch.pow(x,  2) - x)
+        x1 = x  + r4 * (torch.pow(x,  2) - x)
+        x  = x1 + r5 * (torch.pow(x1, 2) - x1)
+        x  = x  + r6 * (torch.pow(x,  2) - x)
+        x  = x  + r7 * (torch.pow(x,  2) - x)
+        x2 = x  + r8 * (torch.pow(x,  2) - x)
+        x  = torch.cat([r1, r2, r3, r4, r5, r6, r7, r8], 1)
+        return x, x1, x2
 
-        Args:
-            x (Tensor): The tensor with larger [H, W].
-            y (Tensor): The tensor with smaller [H, W].
 
-        Returns:
-            Concat image.
-        """
-        _, _, xh, xw = x.size()
-        _, _, yh, yw = y.size()
-        diff_y = xh - yh
-        diff_x = xw - yw
-        y      = F.pad(y, (diff_x // 2, diff_x - diff_x//2,
-                           diff_y // 2, diff_y - diff_y//2))
-        return torch.cat((x, y), dim=self.dim)
-    
-    
+# H2: - Misc -------------------------------------------------------------------
+
 @LAYERS.register(name="context_block")
 class ContextBlock(Module):
     """
@@ -3713,8 +3759,8 @@ class Flatten(Module):
         self.channels = channels
         
     def forward(self, input: Tensor) -> Tensor:
-        pred = input.view(input.shape[0], self.channels)
-        return pred
+        output = input.view(input.shape[0], self.channels)
+        return output
 
 
 @LAYERS.register(name="mean")
@@ -3796,25 +3842,6 @@ class OriginalResolutionBlock(Module):
         return output
 
 
-@LAYERS.register(name="scale")
-class Scale(Module):
-    """
-    A learnable scale parameter. This layer scales the input by a learnable
-    factor. It multiplies a learnable scale parameter of shape (1,) with
-    input of any shape.
-    
-    Args:
-        scale (float): Initial value of scale factor. Defaults to 1.0.
-    """
-    
-    def __init__(self, scale: float = 1.0):
-        super().__init__()
-        self.scale = Parameter(torch.tensor(scale, dtype=torch.float))
-        
-    def forward(self, input: Tensor) -> Tensor:
-        return input * self.scale
-
-
 @LAYERS.register(name="squeeze_and_excite_layer")
 @LAYERS.register(name="se_layer")
 class SqueezeAndExciteLayer(Module):
@@ -3834,35 +3861,6 @@ class SqueezeAndExciteLayer(Module):
         y          = self.avg_pool(input).view(b, c)
         y          = self.fc(y).view(b, c, 1, 1)
         return input * y.expand_as(input)
-
-
-@LAYERS.register(name="sum")
-class Sum(Module):
-    """
-    Weighted sum of 2 or more layers https://arxiv.org/abs/1911.09070.
-    
-    Args:
-        n (int): Number of inputs.
-    """
-
-    def __init__(self, n: int, weight: bool = False):
-        super().__init__()
-        self.weight = weight  # Apply weights boolean
-        self.iter 	= range(n - 1)  # iter object
-        if weight:
-            # Layer weights
-            self.w = Parameter(-torch.arange(1.0, n) / 2, requires_grad=True)
-    
-    def forward(self, input: Tensor) -> Tensor:
-        output = input[0]
-        if self.weight:
-            w = torch.sigmoid(self.w) * 2
-            for i in self.iter:
-                output = output + input[i + 1] * w[i]
-        else:
-            for i in self.iter:
-                output = output + input[i + 1]
-        return output
 
 
 ORS     = OriginalResolutionBlock

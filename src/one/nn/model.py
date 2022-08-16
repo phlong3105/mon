@@ -8,9 +8,7 @@ Model and training-related components.
 from __future__ import annotations
 
 import platform
-from abc import ABCMeta
 
-import pytorch_lightning as pl
 from munch import Munch
 from pytorch_lightning.accelerators import CUDAAccelerator
 from pytorch_lightning.accelerators import HPUAccelerator
@@ -23,14 +21,11 @@ from pytorch_lightning.utilities import _HPU_AVAILABLE
 from pytorch_lightning.utilities import _IPU_AVAILABLE
 from pytorch_lightning.utilities import _TPU_AVAILABLE
 from torch import distributed as dist
-from torch import nn
 from torch import Tensor
 from torch.hub import load_state_dict_from_url
 from torch.nn.modules.loss import _Loss
 
-from one.data import ClassLabels
-from one.data import ClassLabels_
-from one.data import load_config
+from one.data import *
 from one.nn.layer import *
 from one.plot import imshow_classification
 from one.plot import imshow_enhancement
@@ -125,7 +120,7 @@ def get_latest_checkpoint(dirpath: Path_) -> str | None:
 
 
 def load_pretrained(
-    module	  	: nn.Module,
+    module	  	: Module,
     path  		: Path_,
     model_dir   : Path_ | None = None,
     map_location: str   | None = torch.device("cpu"),
@@ -134,14 +129,14 @@ def load_pretrained(
     filename	: str   | None = None,
     strict		: bool		   = False,
     **_
-) -> nn.Module:
+) -> Module:
     """
     Load pretrained weights. This is a very convenient function to load the
     state dict from saved pretrained weights or checkpoints. Filter out mismatch
     keys and then load the layers' weights.
     
     Args:
-        module (nn.Module): Module to load pretrained.
+        module (Module): Module to load pretrained.
         path (Path_): The weights or checkpoints file to load. If it is a URL,
             it will be downloaded.
         model_dir (Path_ | None): Directory to save the weights or checkpoint
@@ -159,7 +154,7 @@ def load_pretrained(
             `url` will be used if not set.
         strict (bool): Whether to strictly enforce that the keys in `state_dict`
             match the keys returned by this module's
-            `~torch.nn.Module.state_dict` function. Defaults to False.
+            `~torch.Module.state_dict` function. Defaults to False.
     """
     state_dict = load_state_dict_from_path(
         path         = path,
@@ -178,21 +173,21 @@ def load_pretrained(
 
 
 def load_state_dict(
-    module	  : nn.Module,
+    module	  : Module,
     state_dict: dict,
     strict    : bool = False,
     **_
-) -> nn.Module:
+) -> Module:
     """
-    Load the module state dict. This is an extension of `nn.Module.load_state_dict()`.
+    Load the module state dict. This is an extension of `Module.load_state_dict()`.
     We add an extra snippet to drop missing keys between module's state_dict
     and pretrained state_dict, which will cause an error.
 
     Args:
-        module (nn.Module): Module to load state dict.
+        module (Module): Module to load state dict.
         state_dict (dict): A dict containing parameters and persistent buffers.
         strict (bool): Whether to strictly enforce that the keys in `state_dict`
-            match the keys returned by this module's `~torch.nn.Module.state_dict`
+            match the keys returned by this module's `~torch.Module.state_dict`
             function. Defaults to False.
 
     Returns:
@@ -328,20 +323,20 @@ def get_distributed_info() -> tuple[int, int]:
     return rank, world_size
 
 
-def is_parallel(model: nn.Module) -> bool:
+def is_parallel(model: Module) -> bool:
     """
     If the model is a parallel model, then it returns True, otherwise it returns
     False
     
     Args:
-        model (nn.Module): The model to check.
+        model (Module): The model to check.
     
     Returns:
         A boolean value.
     """
     return type(model) in (
-        nn.parallel.DataParallel,
-        nn.parallel.DistributedDataParallel
+        parallel.DataParallel,
+        parallel.DistributedDataParallel
     )
 
 
@@ -451,7 +446,7 @@ class Trainer(pl.Trainer):
 
 # H1: - Model ------------------------------------------------------------------
 
-def sparsity(model: nn.Module) -> float:
+def sparsity(model: Module) -> float:
     """
     Return global model sparsity.
     """
@@ -550,9 +545,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.root          = root
         self.basename      = basename
         self.name          = name
+        self.root          = root
         self.phase         = phase
         self.pretrained    = pretrained
         self.loss          = loss
@@ -565,25 +560,36 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.epoch_step    = 0
         
         # Define model
-        self.cfg         = load_config(cfg=cfg)
-        self.channels    = self.cfg["channels"] = self.cfg.get("channels", channels)
+        self.cfg = load_config(cfg=cfg)
+        assert_dict(self.cfg)
+        
+        self.channels    = self.cfg.get("channels", channels)
         self.classlabels = ClassLabels.from_value(classlabels)
-        num_classes      = num_classes or self.classlabels.num_classes()
-        if num_classes and num_classes != self.cfg.get("num_classes", None):
+        self.num_classes = num_classes or self.classlabels.num_classes() \
+                           if self.classlabels else num_classes
+        
+        if self.num_classes and self.num_classes != self.cfg.get("num_classes", None):
             console.log(
                 f"Overriding model.yaml num_classes={self.cfg['num_classes']} "
-                f"with num_classes={num_classes}."
+                f"with num_classes={self.num_classes}."
             )
-            self.cfg["num_classes"] = num_classes
-        self.num_classes = num_classes
-        assert_dict_contain_keys(
-            input = self.cfg,
-            keys  = ["channels", "num_classes", "backbone", "head"]
+            self.cfg["num_classes"] = self.num_classes
+        self.cfg["channels"] = self.channels
+        assert_dict_contain_keys(input=self.cfg, keys=["backbone", "head"])
+        
+        # Actual model, save list during forward, layer's info
+        self.model, self.save, self.info = self.parse_model(
+            d=self.cfg, ch=[self.channels]
         )
+        if self.pretrained:
+            self.load_pretrained()
+        else:
+            self.init_weights()
         
-        self.model, self.save = self.parse_model(d=self.cfg, ch=[self.channels])
-        self.init_weights()
-        
+        if self.verbose:
+            print_table(self.info)
+            console.log(f"Save indexes: {self.save}")
+    
     @property
     def basename(self) -> str:
         return self._basename
@@ -670,7 +676,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     
     @loss.setter
     def loss(self, loss: Losses_ | None):
-        if isinstance(loss, (_Loss, nn.Module)):
+        if isinstance(loss, (_Loss, Module)):
             self._loss = loss
         elif isinstance(loss, dict):
             self._loss = LOSSES.build_from_dict(cfg=loss)
@@ -912,7 +918,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self,
         d : dict      | None = None,
         ch: list[int] | None = None
-    ) -> tuple[nn.Sequential, list[int]]:
+    ) -> tuple[Sequential, list[int], list[dict]]:
         """
         Build the model. You have 2 options to build a model: (1) define each
         layer manually, or (2) build model automatically from a config
@@ -940,8 +946,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 out_channels manually.
         
         Returns:
-            A nn.Sequential model.
+            A Sequential model.
             A list of layer index to save the features during forward pass.
+            A list of layer's info for debugging.
         """
         pass
 
@@ -1723,9 +1730,41 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
         self,
         d : dict      | None = None,
         ch: list[int] | None = None
-    ) -> tuple[nn.Sequential, list[int]]:
+    ) -> tuple[Sequential, list[int], list[dict]]:
+        """
+        Build the model. You have 2 options to build a model: (1) define each
+        layer manually, or (2) build model automatically from a config
+        dictionary.
+        
+        We inherit the same idea of model parsing in YOLOv5.
+        
+        Either way each layer should have the following attributes:
+            - i (int): index of the layer.
+            - f (int | list[int]): from, i.e., the current layer receive output
+              from the f-th layer. For example: -1 means from previous layer;
+              -2 means from 2 previous layers; [99, 101] means from the 99th
+              and 101st layers. This attribute is used in forward pass.
+            - t: type of the layer using this script:
+              t = str(m)[8:-2].replace("__main__.", "")
+            - np (int): number of parameters using the following script:
+              np = sum([x.numel() for x in m.parameters()])
+        
+        Args:
+            d (dict | None): Model definition dictionary. Default to None means
+                building the model manually.
+            ch (list[int] | None): The first layer's input channels. If given,
+                it will be used to further calculate the next layer's input
+                channels. Defaults to None means defines each layer in_ and
+                out_channels manually.
+        
+        Returns:
+            A Sequential model.
+            A list of layer index to save the features during forward pass.
+            A list of layer's info (dict) for debugging.
+        """
         layers = []      # layers
         save   = []      # savelist
+        ch     = ch or [3]
         c2     = ch[-1]  # out_channels
         table  = []      # print data as table
         for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):
@@ -1736,9 +1775,10 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
                 ConvReLU2d,
             ]:
                 c1, c2 = ch[f], args[0]
+                args   = [c1, c2, *args[1:]]
             elif m is BatchNorm2d:
                 args = [ch[f]]
-            elif m is Concat:
+            elif m in [Concat, LECurve]:
                 c2 = sum([ch[x] for x in f])
             else:
                 c2 = ch[f]
@@ -1748,7 +1788,7 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
                 ch = []
             ch.append(c2)
             
-            m_    = nn.Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
+            m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
             m_.i  = i
             m_.f  = f
             m_.t  = t  = str(m)[8:-2].replace("__main__.", "")      # module type
@@ -1764,9 +1804,8 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
                 "module"   : t,
                 "arguments": args
             })
-        
-        print_table(table)
-        return nn.Sequential(*layers), sorted(save)
+            
+        return Sequential(*layers), sorted(save), table
     
     def forward(
         self,

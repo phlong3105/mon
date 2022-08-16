@@ -271,7 +271,7 @@ class BBoxFormat(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -285,7 +285,7 @@ class BBoxFormat(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -381,7 +381,7 @@ class BorderType(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value)
+        assert_dict_contain_key(cls.str_mapping(), value)
         return cls.str_mapping()[value]
     
     @classmethod
@@ -395,7 +395,7 @@ class BorderType(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -573,7 +573,7 @@ class DistanceMetric(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -587,7 +587,7 @@ class DistanceMetric(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
     
     @classmethod
@@ -701,7 +701,7 @@ class ImageFormat(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -715,7 +715,7 @@ class ImageFormat(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -877,7 +877,7 @@ class InterpolationMode(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -891,7 +891,7 @@ class InterpolationMode(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -1012,7 +1012,7 @@ class MemoryUnit(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -1026,8 +1026,8 @@ class MemoryUnit(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(MemoryUnit.int_mapping, value)
-        return MemoryUnit.int_mapping()[value]
+        assert_dict_contain_key(cls.int_mapping(), value)
+        return cls.int_mapping()[value]
     
     @classmethod
     def from_value(cls, value: Any) -> MemoryUnit | None:
@@ -1124,7 +1124,7 @@ class ModelPhase(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -1138,7 +1138,7 @@ class ModelPhase(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -1277,7 +1277,7 @@ class PaddingMode(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -1387,7 +1387,7 @@ class Reduction(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -1680,7 +1680,7 @@ class VideoFormat(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -1694,7 +1694,7 @@ class VideoFormat(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
 
     @classmethod
@@ -1790,7 +1790,7 @@ class VisionBackend(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value.lower())
+        assert_dict_contain_key(cls.str_mapping(), value.lower())
         return cls.str_mapping()[value]
     
     @classmethod
@@ -1939,7 +1939,7 @@ def is_dict_contain_keys(input: Any, keys: Sequence) -> bool:
     for k in keys:
         if k not in input:
             return False
-    return False
+    return True
 
 
 def is_dict_of(input: dict, item_type: type) -> bool:
@@ -2154,6 +2154,22 @@ def is_same_shape(
 
 def is_sequence(input: Any) -> bool:
     return isinstance(input, Sequence)
+
+
+def is_sequence_contain_item(input: Any, item: Sequence) -> bool:
+    assert_dict(input)
+    if item not in input:
+        return False
+    return True
+
+
+def is_sequence_contain_items(input: Any, items: Sequence) -> bool:
+    assert_dict(input)
+    assert_sequence(items)
+    for k in items:
+        if k not in input:
+            return False
+    return True
 
 
 def is_sequence_of(input: Sequence, item_type: type, seq_type: Any = None) -> bool:
@@ -2490,7 +2506,7 @@ def assert_dict(input: Any):
 def assert_dict_contain_key(input: Any, key: Any):
     if not is_dict_contain_key(input, key):
         raise ValueError(
-            f"`input` collection must contain the item `{key}`. "
+            f"`input` dictionary must contain the item `{key}`. "
             f"But got: {key} not in {input.keys()}."
         )
 
@@ -2498,7 +2514,7 @@ def assert_dict_contain_key(input: Any, key: Any):
 def assert_dict_contain_keys(input: Any, keys: Sequence):
     if not is_dict_contain_keys(input, keys):
         raise ValueError(
-            f"`input` collection must contain the items `{keys}`. "
+            f"`input` dictionary must contain the items `{keys}`. "
             f"But got: {keys} not in {input.keys()}."
         )
 
@@ -2681,6 +2697,22 @@ def assert_sequence(input: Any):
     if not is_sequence(input):
         raise TypeError(
             f"`input` must be a `Sequence`. But got: {type(input)}."
+        )
+
+
+def assert_sequence_contain_item(input: Any, item: Sequence):
+    if not is_sequence_contain_item(input, item):
+        raise ValueError(
+            f"`input` sequence must contain the item `{item}`. "
+            f"But got: {item} not in {input.keys()}."
+        )
+
+
+def assert_sequence_contain_items(input: Any, items: Sequence):
+    if not is_sequence_contain_items(input, items):
+        raise ValueError(
+            f"`input` sequence must contain items `{items}`. "
+            f"But got: {items} not in {input.keys()}."
         )
 
 
@@ -4587,6 +4619,7 @@ console = Console(
     color_system    = "auto",
     log_time_format = "[%x %H:%M:%S:%f]",
     soft_wrap       = True,
+    width           = 200,
     theme           = rich_console_theme,
 )
 
@@ -4594,6 +4627,7 @@ error_console = Console(
     color_system    = "auto",
     log_time_format = "[%x %H:%M:%S:%f]",
     soft_wrap       = True,
+    width           = 200,
     stderr          = True,
     style           = "bold red",
     theme           = rich_console_theme,
@@ -4700,7 +4734,6 @@ def print_dict(data: dict, title: str = ""):
     """
     if isinstance(data, Munch):
         data = data.toDict()
-        
     pretty = Pretty(
         data,
         expand_all    = True,
@@ -4721,14 +4754,15 @@ def print_table(data: list[dict]):
         data (list[dict]): A list of dictionary.
     """
     assert_list_of(data, dict)
-    table = Table(show_header=True, header_style="bold magenta")
+    table = Table(
+        show_header  = True,
+        header_style = "bold magenta",
+    )
     for k, v in data[0].items():
-        table.add_column(k)
-    
+        table.add_column(k, no_wrap=True)
     for d in data:
         row = [f"{v}" for v in d.values()]
         table.add_row(*row)
-    
     console.log(table)
 
 
@@ -4744,11 +4778,9 @@ def print_table(data: dict):
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("Key")
     table.add_column("Value")
-
     for k, v in data.items():
         row = [f"{k}", f"{v}"]
         table.add_row(*row)
-
     console.log(table)
 
 
@@ -4761,7 +4793,7 @@ class GPUMemoryUsageColumn(ProgressColumn):
         table_column (Column | None): The column in the table that this field
             is associated with.
     """
-
+    
     def __init__(
         self,
         unit        : MemoryUnit    = MemoryUnit.GB,

@@ -41,18 +41,18 @@ pip install seaborn thop
 cd /yolov7
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
-    --weights 'runs/train/yolov7-e6e-delftbikes-1280-01/weights/best.pt' \
-    --cfg cfg/training/yolov7-e6e.yaml \
+    --weights 'runs/train/yolov7-e6-delftbikes-1280-01/weights/best.pt' \
+    --cfg cfg/training/yolov7-e6.yaml \
     --data data/delftbikes.yaml \
     --hyp data/hyp.scratch.p6.yaml \
     --epochs 30 \
-    --batch-size 8 \
+    --batch-size 4 \
     --img 1280 1280 \
     --multi-scale \
     --device 0,1 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-e6e-delftbikes-multiscale-01 \
+    --name yolov7-e6-delftbikes-multiscale-01 \
     --exist-ok 
 
 
