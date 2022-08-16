@@ -31,7 +31,7 @@ from one.core import *
 
 
 # H1: - STANDARD ---------------------------------------------------------------
-# Standard and well-known layers (in torch.nn) and combinations of them.
+
 
 # H2: - Activation -------------------------------------------------------------
 
@@ -137,6 +137,521 @@ def to_act_layer(
     if act is None:
         act = Identity()
     return act
+
+
+# H1: - Attention --------------------------------------------------------------
+
+@LAYERS.register(name="channel_attention_layer")
+@LAYERS.register(name="cal")
+class ChannelAttentionLayer(Module):
+    """
+    Channel Attention Layer.
+    
+    Args:
+        channels (int): Number of input and output channels.
+        reduction (int): Reduction factor. Defaults to 16.
+        bias (bool): Defaults to False.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        reduction   : int  = 16,
+        stride      : Ints = 1,
+        dilation    : Ints = 1,
+        groups      : int  = 1,
+        bias        : bool = False,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
+        **_
+    ):
+        super().__init__()
+        # Global average pooling: feature --> point
+        self.avg_pool = AdaptiveAvgPool2d(1)
+        # Feature channel downscale and upscale --> channel weight
+        self.ca = Sequential(
+            Conv2d(
+                in_channels  = channels,
+                out_channels = channels // reduction,
+                kernel_size  = 1,
+                stride       = stride,
+                padding      = 0,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            ReLU(inplace=True),
+            Conv2d(
+                in_channels  = channels // reduction,
+                out_channels = channels,
+                kernel_size  = 1,
+                stride       = stride,
+                padding      = 0,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            Sigmoid()
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        output = self.avg_pool(input)
+        output = self.ca(output)
+        return input * output
+
+
+@LAYERS.register(name="channel_attention_block")
+@LAYERS.register(name="cab")
+class ChannelAttentionBlock(Module):
+    """
+    Channel Attention Block.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        reduction   : int,
+        kernel_size : Ints,
+        stride      : Ints            = 1,
+        dilation    : Ints            = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        act         : Callable | None = ReLU(),
+        **_
+    ):
+        super().__init__()
+        kernel_size = to_2tuple(kernel_size)
+        stride      = to_2tuple(stride)
+        dilation    = to_2tuple(dilation)
+        padding     = kernel_size[0] // 2
+        self.cal    = ChannelAttentionLayer(channels, reduction, bias)
+        self.body   = Sequential(
+            Conv2d(
+                in_channels  = channels,
+                out_channels = channels,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = padding,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            to_act_layer(act=act),
+            Conv2d(
+                in_channels  = channels,
+                out_channels = channels,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = padding,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        output = self.body(input)
+        output = self.cal(output)
+        output += input
+        return output
+
+
+@LAYERS.register(name="pixel_attention_layer")
+@LAYERS.register(name="pal")
+class PixelAttentionLayer(Module):
+    """
+    Pixel Attention Layer.
+    
+    Args:
+        reduction (int): Reduction factor. Defaults to 16.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        reduction   : int  = 16,
+        stride      : Ints = 1,
+        dilation    : Ints = 1,
+        groups      : int  = 1,
+        bias        : bool = False,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
+        **_
+    ):
+        super().__init__()
+        stride   = to_2tuple(stride)
+        dilation = to_2tuple(dilation)
+        self.pa  = Sequential(
+            Conv2d(
+                in_channels  = channels,
+                out_channels = channels // reduction,
+                kernel_size  = 1,
+                stride       = stride,
+                padding      = 0,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            ReLU(inplace=True),
+            Conv2d(
+                in_channels  = channels // reduction,
+                out_channels = 1,
+                kernel_size  = 1,
+                stride       = stride,
+                padding      = 0,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            Sigmoid()
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        output = self.pa(input)
+        return input * output
+
+
+@LAYERS.register(name="supervised_attention_module")
+@LAYERS.register(name="sam")
+class SupervisedAttentionModule(Module):
+    """
+    Supervised Attention Module.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        kernel_size : Ints,
+        dilation    : Ints = 1,
+        groups      : int  = 1,
+        bias        : bool = False,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
+        **_
+    ):
+        super().__init__()
+        kernel_size = to_2tuple(kernel_size)
+        stride      = 1
+        padding     = kernel_size[0] // 2
+        dilation    = to_2tuple(dilation)
+        self.conv1  = Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv2  = Conv2d(
+            in_channels  = channels,
+            out_channels = 3,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv3  = Conv2d(
+            in_channels  = 3,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(
+        self, prev_output: Tensor, input: Tensor
+    ) -> tuple[Tensor, Tensor]:
+        """
+        Run forward pass.
+
+        Args:
+            prev_output (Tensor): Output from previous steps.
+            input (Tensor): Current step input.
+        """
+        pred     = self.conv1(prev_output)
+        output   = self.conv2(prev_output) + input
+        sigmoid  = torch.sigmoid(self.conv3(output))
+        pred    *= sigmoid
+        pred    += prev_output
+        return pred, output
+
+
+CAB = ChannelAttentionBlock
+CAL = ChannelAttentionLayer
+PAL = PixelAttentionLayer
+SAM = SupervisedAttentionModule
+
+
+# H1: - Bottleneck -------------------------------------------------------------
+
+@LAYERS.register(name="bottleneck")
+class Bottleneck(Module):
+    """
+    Standard bottleneck.
+    
+    Args:
+        in_channels (int): Number of channels in the input image.
+        out_channels (int): Number of channels produced by the convolution.
+        shortcut (bool): Use shortcut connection?. Defaults to True.
+        groups (int): Defaults to 1.
+        expansion (float): Defaults to 0.5.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        shortcut    : bool  = True,
+        groups      : int   = 1,
+        expansion   : float = 0.5,
+    ):
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # Hidden channels
+        self.conv1 = ConvBnMish2d(
+            in_channels  = in_channels,
+            out_channels = hidden_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        self.conv2 = ConvBnMish2d(
+            in_channels  = hidden_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            stride       = 1,
+            groups       = groups
+        )
+        self.add = shortcut and in_channels == out_channels
+        
+    def forward(self, input: Tensor) -> Tensor:
+        output = ((input + self.conv2(self.conv1(input))) if self.add
+                  else self.conv2(self.conv1(input)))
+        return output
+
+
+@LAYERS.register(name="bottleneck_csp")
+class BottleneckCSP(Module):
+    """
+    CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+
+    Args:
+        in_channels (int): Number of channels in the input image.
+        out_channels (int): Number of channels produced by the convolution.
+        number (int): Number of bottleneck layers to use. Defaults to 1.
+        shortcut (bool): Use shortcut connection?. Defaults to True.
+        groups (int): Defaults to 1.
+        expansion (float): Defaults to 0.5.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        number      : int   = 1,
+        shortcut    : bool  = True,
+        groups      : int   = 1,
+        expansion   : float = 0.5,
+    ):
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)  # Hidden channels
+        self.conv1 = ConvBnMish2d(
+            in_channels  = in_channels,
+            out_channels = hidden_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        self.conv2 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = hidden_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False
+        )
+        self.conv3 = Conv2d(
+            in_channels  = hidden_channels,
+            out_channels = hidden_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False
+        )
+        self.conv4 = ConvBnMish2d(
+            in_channels  = 2 * hidden_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        # Applied to cat(cv2, cv3)
+        self.bn    = BatchNorm2d(2 * hidden_channels)
+        self.act   = Mish()
+        self.m     = Sequential(*[
+            Bottleneck(
+                in_channels  = hidden_channels,
+                out_channels = hidden_channels,
+                shortcut     = shortcut,
+                groups       = groups,
+                expansion    = 1.0
+            )
+            for _ in range(number)
+        ])
+        
+    def forward(self, input: Tensor) -> Tensor:
+        y1     = self.conv3(self.m(self.conv1(input)))
+        y2     = self.conv2(input)
+        output = self.conv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+        return output
+
+
+@LAYERS.register(name="bottleneck_csp2")
+class BottleneckCSP2(Module):
+    """
+    CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+
+    Args:
+        in_channels (int): Number of channels in the input image.
+        out_channels (int): Number of channels produced by the convolution.
+        number (int): Number of bottleneck layers to use. Defaults to 1.
+        groups (int): Defaults to 1.
+        expansion (float):  Defaults to 0.5.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        number      : int   = 1,
+        shortcut    : bool  = False,
+        groups      : int   = 1,
+        expansion   : float = 0.5,
+    ):
+        super().__init__()
+        hidden_channels = int(out_channels)  # Hidden channels
+        self.conv1 = ConvBnMish2d(
+            in_channels  = in_channels,
+            out_channels = hidden_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        self.conv2 = Conv2d(
+            in_channels  = hidden_channels,
+            out_channels = hidden_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False
+        )
+        self.conv3 = ConvBnMish2d(
+            in_channels  = 2 * hidden_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        self.bn    = BatchNorm2d(2 * hidden_channels)
+        self.act   = Mish()
+        self.m     = Sequential(*[
+            Bottleneck(
+                in_channels  = hidden_channels,
+                out_channels = hidden_channels,
+                shortcut     = shortcut,
+                groups       = groups,
+                expansion    = 1.0
+            )
+            for _ in range(number)
+        ])
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x1 = self.conv1(input)
+        y1 = self.m(x1)
+        y2 = self.conv2(x1)
+        return self.conv3(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+
+@LAYERS.register(name="vov_csp")
+class VoVCSP(Module):
+    """
+    CSP Bottleneck https://github.com/WongKinYiu/CrossStagePartialNetworks
+
+    Args:
+        in_channels (int): Number of channels in the input image.
+        out_channels (int): Number of channels produced by the convolution.
+        number (int): Number of bottleneck layers to use.
+        groups (int): Defaults to 1.
+        expansion (float): Defaults to 0.5.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        number      : int   = 1,
+        shortcut    : bool  = True,
+        groups      : int   = 1,
+        expansion   : float = 0.5,
+    ):
+        super().__init__()
+        hidden_channels = int(out_channels)  # Hidden channels
+        self.conv1 = ConvBnMish2d(
+            in_channels  = in_channels // 2,
+            out_channels = hidden_channels // 2,
+            kernel_size  = 3,
+            stride       = 1
+        )
+        self.conv2 = ConvBnMish2d(
+            in_channels  = hidden_channels // 2,
+            out_channels = hidden_channels // 2,
+            kernel_size  = 3,
+            stride       = 1
+        )
+        self.conv3       = ConvBnMish2d(
+            in_channels  = hidden_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        _, x1  = input.chunk(2, dim=1)
+        x1     = self.conv1(x1)
+        x2     = self.conv2(x1)
+        output = self.conv3(torch.cat((x1, x2), dim=1))
+        return output
 
 
 # H2: - Convolution ------------------------------------------------------------
@@ -642,6 +1157,128 @@ class ConvTransposeAct2d(Module):
         return self.act(self.conv(input))
 
 
+@LAYERS.register(name="cross_conv2d")
+class CrossConv2d(Module):
+    """
+    Cross Convolution Downsample.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : int               = 3,
+        stride      : int               = 1,
+        padding     : str | Ints | None = 0,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = True,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        expansion   : float             = 1.0,
+        shortcut    : bool              = False,
+        **_
+    ):
+        super().__init__()
+        c = int(out_channels * expansion)  # Hidden channels
+        self.cv1 = ConvBnMish2d(
+            in_channels  = in_channels,
+            out_channels = c,
+            kernel_size  = (1, kernel_size),
+            stride       = (1, stride),
+            padding      = padding,
+            dilation     = dilation,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.cv2 = ConvBnMish2d(
+            in_channels  = c,
+            out_channels = out_channels,
+            kernel_size  = (kernel_size, 1),
+            stride       = (stride     , 1),
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.add = shortcut and in_channels == out_channels
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return input + self.cv2(self.cv1(input)) if self.add \
+            else self.cv2(self.cv1(input))
+
+
+@LAYERS.register(name="cross_conv_csp")
+class CrossConvCSP(Module):
+    """
+    Cross Convolution CSP.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        number      : int   = 1,
+        groups      : int   = 1,
+        expansion   : float = 0.5,
+        shortcut    : bool  = True,
+        **_
+    ):
+        super().__init__()
+        c        = int(out_channels * expansion)  # Hidden channels
+        self.cv1 = ConvBnMish2d(
+            in_channels  = in_channels,
+            out_channels = c,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        self.cv2 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = c,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False
+        )
+        self.cv3 = Conv2d(
+            in_channels  = c,
+            out_channels = c,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False
+        )
+        self.cv4 = ConvBnMish2d(
+            in_channels  = 2 * c,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1
+        )
+        self.bn  = BatchNorm2d(2 * c)  # Applied to cat(cv2, cv3)
+        self.act = LeakyReLU(0.1, inplace=True)
+        self.m   = Sequential(*[
+            CrossConv2d(
+                in_channels  = c,
+                out_channels = c,
+                kernel_size  = 3,
+                stride       = 1,
+                groups       = groups,
+                expansion    = 1.0,
+                shortcut     = shortcut
+            )
+            for _ in range(number)
+        ])
+        
+    def forward(self, input: Tensor) -> Tensor:
+        y1 = self.cv3(self.m(self.cv1(input)))
+        y2 = self.cv2(input)
+        return self.cv4(self.act(self.bn(torch.cat((y1, y2), dim=1))))
+
+
 @LAYERS.register(name="depthwise_conv2d")
 class DepthwiseConv2d(Conv2d):
     """
@@ -739,6 +1376,152 @@ class PointwiseConv2d(Conv2d):
             padding_mode = padding_mode,
             device       = device,
             dtype        = dtype,
+        )
+        
+
+@LAYERS.register(name="scaled_std_conv2d")
+class ScaledStdConv2d(Conv2d):
+    """
+    Conv2d layer with Scaled Weight Standardization.
+
+    Paper: `Characterizing signal propagation to close the performance gap in
+    un-normalized ResNets` - https://arxiv.org/abs/2101.08692
+
+    The operations used in this impl differ slightly from the DeepMind Haiku
+    implementation impact is minor.
+    """
+
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : Ints,
+        stride      : Ints              = 1,
+        padding     : str | Ints | None = 0,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = True,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        gamma       : float             = 1.0,
+        eps         : float             = 1e-6,
+        gain_init   : float             = 1.0
+    ):
+        kernel_size = to_2tuple(kernel_size)
+        stride      = to_2tuple(stride)
+        dilation    = to_2tuple(dilation)
+        if padding is None:
+            padding = get_symmetric_padding(
+                kernel_size = kernel_size[0],
+                stride      = stride[0],
+                dilation    = dilation[0]
+            )
+            
+        super().__init__(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.gain  = Parameter(torch.full((self.out_channels, 1, 1, 1), gain_init))
+        # gamma * 1 / sqrt(fan-in)
+        self.scale = gamma * self.weight[0].numel() ** -0.5
+        self.eps   = eps
+
+    def forward(self, input: Tensor) -> Tensor:
+        weight = F.batch_norm(
+            input        = self.weight.reshape(1, self.out_channels, -1),
+            running_mean = None,
+            running_var  = None,
+            weight       = (self.gain * self.scale).view(-1),
+            training     = True,
+            momentum     = 0.0,
+            eps          = self.eps
+        ).reshape_as(self.weight)
+        return F.conv2d(
+            input    = input,
+            weight   = weight,
+            bias     = self.bias,
+            stride   = self.stride,
+            padding  = self.padding,
+            dilation = self.dilation,
+            groups   = self.groups
+        )
+
+
+@LAYERS.register(name="std_conv2d")
+class StdConv2d(Conv2d):
+    """
+    Conv2d with Weight Standardization. Used for BiT ResNet-V2 models.
+
+    Paper: `Micro-Batch Training with Batch-Channel Normalization and Weight
+    Standardization` - https://arxiv.org/abs/1903.10520v2
+    """
+
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : Ints,
+        stride      : Ints              = 1,
+        padding     : str | Ints | None = 0,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = True,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        eps         : float             = 1e-6
+    ):
+        kernel_size = to_2tuple(kernel_size)
+        stride      = to_2tuple(stride)
+        dilation    = to_2tuple(dilation)
+        if padding is None:
+            padding = get_symmetric_padding(
+                kernel_size = kernel_size[0],
+                stride      = stride[0],
+                dilation    = dilation[0]
+            )
+        super().__init__(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.eps = eps
+
+    def forward(self, x: Tensor) -> Tensor:
+        weight = F.batch_norm(
+            input        = self.weight.reshape(1, self.out_channels, -1),
+            running_mean = None,
+            running_var  = None,
+            training     = True,
+            momentum     = 0.0,
+            eps          = self.eps
+        ).reshape_as(self.weight)
+        return F.conv2d(
+            input    = x,
+            weight   = weight,
+            bias     = self.bias,
+            stride   = self.stride,
+            padding  = self.padding,
+            dilation = self.dilation,
+            groups   = self.groups
         )
 
 
@@ -987,6 +1770,106 @@ LAYERS.register(name="dropout1d",             module=Dropout1d)
 LAYERS.register(name="dropout2d",             module=Dropout2d)
 LAYERS.register(name="dropout3d",             module=Dropout3d)
 LAYERS.register(name="feature_alpha_dropout", module=FeatureAlphaDropout)
+
+
+# H1: - Embedding --------------------------------------------------------------
+
+@LAYERS.register(name="patch_embedding")
+class PatchEmbedding(Module):
+    """
+    2D Image to Patch Embedding.
+    """
+
+    def __init__(
+        self,
+        img_size   : Ints            = 224,
+        patch_size : Ints            = 16,
+        in_channels: int             = 3,
+        embed_dim  : int             = 768,
+        norm_layer : Callable | None = None,
+        flatten    : bool            = True
+    ):
+        super().__init__()
+        img_size         = to_2tuple(img_size)
+        patch_size       = to_2tuple(patch_size)
+        self.img_size    = img_size
+        self.patch_size  = patch_size
+        self.grid_size   = (img_size[0] // patch_size[0],
+                            img_size[1] // patch_size[1])
+        self.num_patches = self.grid_size[0] * self.grid_size[1]
+        self.flatten     = flatten
+        self.proj = Conv2d(
+            in_channels  = in_channels,
+            out_channels = embed_dim,
+            kernel_size  = patch_size,
+            stride       = patch_size
+        )
+        self.norm = (norm_layer(embed_dim) if norm_layer else Identity())
+
+    def forward(self, input: Tensor) -> Tensor:
+        b, c, h, w = input.shape
+        if h != self.img_size[0] or w != self.img_size[1]:
+            raise ValueError(
+                f"Input image size ({h}*{w}) doesn't match model "
+                f"input size ({self.img_size[0]}*{self.img_size[1]})."
+            )
+        output = self.proj(input)
+        if self.flatten:
+            output = output.flatten(2).transpose(1, 2)  # BCHW -> BNC
+        output = self.norm(output)
+        return output
+
+
+@LAYERS.register(name="rotary_embedding")
+class RotaryEmbedding(Module):
+    """
+    Rotary position embedding.
+
+    This is my initial attempt at impl rotary embedding for spatial use, it
+    has not been well tested, and will  likely change. It will be moved to
+    its own file.
+
+    Following impl/resources were referenced for this impl:
+        https://github.com/lucidrains/vit-pytorch/blob/6f3a5fcf0bca1c5ec33a35ef48d97213709df4ba/vit_pytorch/rvt.py
+        https://blog.eleuther.ai/rotary-embeddings/
+    """
+
+    def __init__(self, dim: int, max_freq: int = 4):
+        super().__init__()
+        self.dim = dim
+        self.register_buffer(
+            name       = "bands",
+            tensor     = 2 ** torch.linspace(0., max_freq - 1, self.dim // 4),
+            persistent = False
+        )
+
+    def forward(self, input: Tensor) -> Tensor:
+        # Assuming channel-first image where spatial dim are >= 2
+        sin_emb, cos_emb = self.get_embed(input.shape[2:])
+        rot = torch.stack([-input[..., 1::2], input[..., ::2]], -1).reshape(input.shape)
+        return input * cos_emb + rot * sin_emb
+
+    def get_embed(
+        self,
+        shape : torch.Size,
+        device: torch.device = None,
+        dtype : torch.dtype  = None
+    ):
+        device = device or self.bands.device
+        dtype  = dtype  or self.bands.dtype
+        if not isinstance(shape, torch.Size):
+            shape = torch.Size(shape)
+        n    = shape.numel()
+        grid = torch.stack(
+            torch.meshgrid(
+                [torch.linspace(-1.0, 1.0, steps=s, device=device, dtype=dtype)
+                 for s in shape]
+            ), dim=-1
+        ).unsqueeze(-1)
+        emb = grid * math.pi * self.bands
+        sin = emb.sin().reshape(n, -1).repeat_interleave(2, -1)
+        cos = emb.cos().reshape(n, -1).repeat_interleave(2, -1)
+        return sin, cos
 
 
 # H2: - Fusion -----------------------------------------------------------------

@@ -1778,7 +1778,7 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
                 args   = [c1, c2, *args[1:]]
             elif m is BatchNorm2d:
                 args = [ch[f]]
-            elif m in [Concat, LECurve]:
+            elif m in [Concat, PixelwiseCurve8]:
                 c2 = sum([ch[x] for x in f])
             else:
                 c2 = ch[f]
