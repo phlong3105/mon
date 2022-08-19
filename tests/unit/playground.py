@@ -3,6 +3,6 @@ from torch import tensor
 
 from one.core import *
 
-a = [19]
-a = Tensor(a if isinstance(a, Sequence) else [a])
-print(a)
+a = [3]
+b = Tensor([3, 10, 10])
+print(a == list(b.size()))

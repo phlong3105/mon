@@ -3270,7 +3270,7 @@ def load_from_file(
         file_format (str | None): If not specified, the file format will be
             inferred from the file extension, otherwise use the specified one.
             Currently, supported formats include "json", "yaml/yml" and
-            "pickle/pkl". Default: `None`.
+            "pickle/pkl". Defaults to None.
     
     Returns:
         The data from the file.
@@ -3601,7 +3601,6 @@ class YamlHandler(BaseFileHandler):
         Returns:
             The return value is a string, dictionary, or None.
         """
-        path = Path(path)
         kwargs.setdefault("Loader", FullLoader)
         return yaml.load(path, **kwargs)
 

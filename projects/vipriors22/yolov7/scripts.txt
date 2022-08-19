@@ -9,6 +9,7 @@ sudo nvidia-docker run --name yolov7 -it \
 apt update
 apt install -y zip htop screen libgl1-mesa-glx
 pip install seaborn thop
+pip install ensemble-boxes
 cd /yolov7
 
 
@@ -38,6 +39,7 @@ sudo nvidia-docker run --name yolov7 -it \
 apt update
 apt install -y zip htop screen libgl1-mesa-glx
 pip install seaborn thop
+pip install ensemble-boxes
 cd /yolov7
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \

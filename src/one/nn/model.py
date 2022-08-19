@@ -446,6 +446,119 @@ class Trainer(pl.Trainer):
 
 # H1: - Model ------------------------------------------------------------------
 
+def parse_model(
+    d : dict      | None = None,
+    ch: list[int] | None = None
+) -> tuple[Sequential, list[int], list[dict]]:
+    """
+    Build the model. We inherit the same idea of model parsing in YOLOv5.
+    
+    Each layer should have the following attributes:
+        - i (int): index of the layer.
+        - f (int | list[int]): from, i.e., the current layer receive output
+          from the f-th layer. For example: -1 means from previous layer;
+          -2 means from 2 previous layers; [99, 101] means from the 99th
+          and 101st layers. This attribute is used in forward pass.
+        - t: type of the layer using this script:
+          t = str(m)[8:-2].replace("__main__.", "")
+        - np (int): number of parameters using the following script:
+          np = sum([x.numel() for x in m.parameters()])
+    
+    Args:
+        d (dict | None): Model definition dictionary. Default to None means
+            building the model manually.
+        ch (list[int] | None): The first layer's input channels. If given,
+            it will be used to further calculate the next layer's input
+            channels. Defaults to None means defines each layer in_ and
+            out_channels manually.
+    
+    Returns:
+        A Sequential model.
+        A list of layer index to save the features during forward pass.
+        A list of layer's info (dict) for debugging.
+    """
+    anchors = d.get("anchors",        None)
+    nc      = d.get("num_classes",    None)
+    gd      = d.get("depth_multiple", 1)
+    gw      = d.get("width_multiple", 1)
+    
+    layers = []      # layers
+    save   = []      # savelist
+    ch     = ch or [3]
+    c2     = ch[-1]  # out_channels
+    info   = []      # print data as table
+    for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):
+        # Convert string class name into class
+        m = eval(m) if isinstance(m, str) else m  # eval strings
+        for j, a in enumerate(args):
+            try:
+                args[j] = eval(a) if isinstance(a, str) else a  # eval strings
+            except:
+                pass
+        
+        if m in [
+            Conv2d,
+            ConvAct2d,
+            ConvReLU2d,
+            DepthwiseSeparableConvReLU2d,
+            EnhancementModule,
+            FFAPostProcess,
+            FFAPreProcess,
+        ]:
+            c1, c2 = ch[f], args[0]
+            args   = [c1, c2, *args[1:]]
+        elif m in [
+            ChannelAttentionLayer,
+            FFABlock,
+            FFAGroup,
+            PixelAttentionLayer,
+        ]:
+            c2   = ch[f]
+            args = [c2, *args[0:]]
+        elif m is FFA:
+            c1 = c2 = ch[f[-1]]
+            args    = [c1, *args[0:]]
+        elif m is BatchNorm2d:
+            args = [ch[f]]
+        elif m is Foldcut:
+            c2 = ch[f] // 2
+        elif m in [Chuncat, Concat]:
+            c2 = sum([ch[x] for x in f])
+        elif m in [
+            PixelwiseHigherOrderLECurve,
+            Shortcut,
+            Sum
+        ]:
+            c2 = ch[f[-1]]
+        else:
+            c2 = ch[f]
+        
+        # Append c2 as c1 for next layers
+        if i == 0:
+            ch = []
+        ch.append(c2)
+        
+        print(m, n, args)
+        m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
+        m_.i  = i
+        m_.f  = f
+        m_.t  = t  = str(m)[8:-2].replace("__main__.", "")      # module type
+        m_.np = np = sum([x.numel() for x in m_.parameters()])  # number params
+        sa    = [x % i for x in ([f] if isinstance(f, int) else f) if x != -1]
+        save.extend(sa)  # append to savelist
+        layers.append(m_)
+        info.append({
+            "index"    : i,
+            "from"     : f,
+            "n"        : n,
+            "params"   : np,
+            "module"   : t,
+            "arguments": args
+        })
+        
+    return Sequential(*layers), sorted(save), info
+
+
 def sparsity(model: Module) -> float:
     """
     Return global model sparsity.
@@ -587,6 +700,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             self.init_weights()
         
         if self.verbose:
+            console.log(f"[red]{self.name}")
             print_table(self.info)
             console.log(f"Save indexes: {self.save}")
     
@@ -1762,50 +1876,7 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
             A list of layer index to save the features during forward pass.
             A list of layer's info (dict) for debugging.
         """
-        layers = []      # layers
-        save   = []      # savelist
-        ch     = ch or [3]
-        c2     = ch[-1]  # out_channels
-        table  = []      # print data as table
-        for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):
-            # index, (from, number, module, args)
-            if m in [
-                Conv2d,
-                ConvAct2d,
-                ConvReLU2d,
-            ]:
-                c1, c2 = ch[f], args[0]
-                args   = [c1, c2, *args[1:]]
-            elif m is BatchNorm2d:
-                args = [ch[f]]
-            elif m in [Concat, PixelwiseCurve8]:
-                c2 = sum([ch[x] for x in f])
-            else:
-                c2 = ch[f]
-            
-            # Append c2 as c1 for next layers
-            if i == 0:
-                ch = []
-            ch.append(c2)
-            
-            m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
-            m_.i  = i
-            m_.f  = f
-            m_.t  = t  = str(m)[8:-2].replace("__main__.", "")      # module type
-            m_.np = np = sum([x.numel() for x in m_.parameters()])  # number params
-            sa    = [x % i for x in ([f] if isinstance(f, int) else f) if x != -1]
-            save.extend(sa)  # append to savelist
-            layers.append(m_)
-            table.append({
-                "index"    : i,
-                "from"     : f,
-                "n"        : n,
-                "params"   : np,
-                "module"   : t,
-                "arguments": args
-            })
-            
-        return Sequential(*layers), sorted(save), table
+        return parse_model(d=d, ch=ch)
     
     def forward(
         self,

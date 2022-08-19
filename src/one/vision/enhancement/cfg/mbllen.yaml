@@ -1,0 +1,30 @@
+channels: 3
+
+backbone: [
+  # [from,    number, module,     args(out_channels, ...)]
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 0  (fem1)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 1  (fem2)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 2  (fem3)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 3  (fem4)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 4  (fem5)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 5  (fem6)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 6  (fem7)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 7  (fem8)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 8  (fem9)
+  [-1,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 9  (fem10)
+  [ 0,        1,      EM,         [8, 3, 5]],                               # 10 (em1)
+  [ 1,        1,      EM,         [8, 3, 5]],                               # 11 (em2)
+  [ 2,        1,      EM,         [8, 3, 5]],                               # 12 (em3)
+  [ 3,        1,      EM,         [8, 3, 5]],                               # 13 (em4)
+  [ 4,        1,      EM,         [8, 3, 5]],                               # 14 (em5)
+  [ 5,        1,      EM,         [8, 3, 5]],                               # 15 (em6)
+  [ 6,        1,      EM,         [8, 3, 5]],                               # 16 (em7)
+  [ 7,        1,      EM,         [8, 3, 5]],                               # 17 (em8)
+  [ 8,        1,      EM,         [8, 3, 5]],                               # 18 (em9)
+  [ 9,        1,      EM,         [8, 3, 5]],                               # 19 (em10)
+  [[10, 11, 12, 13, 14, 15, 16, 17, 18, 19], 1, Concat, []],                # 20
+]
+
+head: [
+  [20,        1,      ConvReLU2d, [32, 3, 1, 1, 1, 1, True, "replicate"]],  # 21
+]

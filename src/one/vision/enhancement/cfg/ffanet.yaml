@@ -1,0 +1,16 @@
+channels: 3
+
+backbone: [
+  # [from,    number, module,              args(out_channels, ...)]
+  [-1,        1,      Identity,            []],         # 0  (x)
+  [-1,        1,      FFAPreProcess,       [64, 3]],    # 1  (x1)
+  [-1,        1,      FFAGroup,            [3, 20]],    # 2  (g1)
+  [-1,        1,      FFAGroup,            [3, 20]],    # 3  (g2)
+  [-1,        1,      FFAGroup,            [3, 20]],    # 4  (g3)
+  [[2, 3, 4], 1,      FFA,                 [3]],        # 5
+  [-1,        1,      FFAPostProcess,      [3, 3]],     # 6
+]
+
+head: [
+  [[0, 6],    1,      Sum,                 []],         # 8
+]

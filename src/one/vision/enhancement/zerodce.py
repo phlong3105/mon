@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from one.nn import *
 
+CURRENT_DIR = Path(__file__).resolve().parent
+CFG_DIR     = CURRENT_DIR / "cfg"
+
 
 # H1: - Loss -------------------------------------------------------------------
 
@@ -43,7 +46,7 @@ class CombinedLoss(BaseLoss):
                + self.loss_exp(input=enhance) \
                + self.loss_col(input=enhance) \
                + self.loss_tv(input=r)
-    
+
 
 # H1: - Model ------------------------------------------------------------------
 
@@ -52,26 +55,27 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from,  number, module,     args(out_channels, ...)]
-            [-1,      1,      Identity,   []],             # 0  (x)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],  # 1  (x1)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],  # 2  (x2)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],  # 3  (x3)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],  # 4  (x4)
-            [[3, 4],  1,      Concat,     []],             # 5
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],  # 6  (x5)
-            [[2, 6],  1,      Concat,     []],             # 7
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],  # 8  (x6)
-            [[1, 8],  1,      Concat,     []],             # 9
-            [-1,      1,      ConvReLU2d, [24, 3, 1, 1]],  # 10 (x_r)
-            [-1,      1,      Tanh,       []],             # 11
-        ],                                
-        "head": [                         
-            [[0, 11], 1, PixelwiseCurve8, []],             # 12
+            [-1,      1,      Identity,   []],                    # 0  (x)
+            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 1  (x1)
+            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 2  (x2)
+            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 3  (x3)
+            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 4  (x4)
+            [[3, 4],  1,      Concat,     []],                    # 5
+            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 6  (x5)
+            [[2, 6],  1,      Concat,     []],                    # 7
+            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 8  (x6)
+            [[1, 8],  1,      Concat,     []],                    # 9
+            [-1,      1,      ConvReLU2d, [24, 3, 1, 1]],         # 10 (x_r)
+            [-1,      1,      Tanh,       []],                    # 11
+        ],
+        "head": [
+            [[0, 11], 1,      PixelwiseHigherOrderLECurve, [8]],  # 12
         ]
-    }
+    },
 }
 
 
+@MODELS.register(name="zerodce")
 class ZeroDCE(ImageEnhancementModel):
     """
     
@@ -84,13 +88,13 @@ class ZeroDCE(ImageEnhancementModel):
         root       : Path_               = RUNS_DIR,
         basename   : str  | None         = "zerodce",
         name       : str  | None         = "zerodce",
-        cfg        : dict | Path_ | None = None,
+        cfg        : dict | Path_ | None = "zerodce.yaml",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
-        loss   	   : Losses_      | None = None,
+        loss   	   : Losses_      | None = CombinedLoss(tv_weight=Tensor([200.0])),
         metrics	   : Metrics_     | None = None,
         optimizers : Optimizers_  | None = None,
         debug      : dict | Munch | None = None,
@@ -100,6 +104,9 @@ class ZeroDCE(ImageEnhancementModel):
         cfg = cfg or "zerodce"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
+        elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
+            cfg = CFG_DIR / cfg
+
         super().__init__(
             root        = root,
             basename    = basename,

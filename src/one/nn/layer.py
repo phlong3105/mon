@@ -46,7 +46,7 @@ class ArgMax(Module):
             Defaults to None.
     """
     
-    def __init__(self, dim: int | None = None):
+    def __init__(self, dim: int | None = None, *args, **kwargs):
         super().__init__()
         self.dim = dim
         
@@ -66,7 +66,7 @@ class Clamp(Module):
         max (float): Upper-bound of the range to be clamped to. Defaults to -1.0
     """
     
-    def __init__(self, min: float = -1.0, max: float = 1.0):
+    def __init__(self, min: float = -1.0, max: float = 1.0, *args, **kwargs):
         super().__init__()
         self.min = min
         self.max = max
@@ -78,7 +78,7 @@ class Clamp(Module):
 @LAYERS.register(name="frelu")
 class FReLU(Module):
     
-    def __init__(self, c1: int, k: Ints = 3):
+    def __init__(self, c1: int, k: Ints = 3, *args, **kwargs):
         super().__init__()
         k         = to_2tuple(k)
         self.conv = Conv2d(c1, c1, k, 1, 1, groups=c1)
@@ -124,7 +124,7 @@ LAYERS.register(name="threshold",           module=Threshold)
 def to_act_layer(
     act    : Callable | None = ReLU(),
     inplace: bool            = True,
-    **_
+    *args, **kwargs
 ) -> Module:
     """
     Create activation layer.
@@ -139,6 +139,137 @@ def to_act_layer(
     return act
 
 
+# H2: - Attention --------------------------------------------------------------
+
+@LAYERS.register(name="channel_attention_layer")
+@LAYERS.register(name="cal")
+class ChannelAttentionLayer(Module):
+    """
+    Channel Attention Layer.
+    
+    Args:
+        channels (int): Number of input and output channels.
+        reduction (int): Reduction factor.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        reduction   : int,
+        kernel_size : Ints,
+        stride      : Ints              = 1,
+        padding     : str | Ints | None = 0,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = True,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        # Global average pooling: feature -> point
+        self.avg_pool = AdaptiveAvgPool2d(1)
+        # Feature channel downscale and upscale -> channel weight
+        self.ca = Sequential(
+            Conv2d(
+                in_channels  = channels,
+                out_channels = channels // reduction,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = padding,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            ReLU(inplace=True),
+            Conv2d(
+                in_channels  = channels // reduction,
+                out_channels = channels,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = padding,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            Sigmoid()
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        y = self.avg_pool(x)
+        y = self.ca(y)
+        return x * y
+
+
+@LAYERS.register(name="pixel_attention_layer")
+@LAYERS.register(name="pal")
+class PixelAttentionLayer(Module):
+    """
+    Pixel Attention Layer.
+    
+    Args:
+        reduction (int): Reduction factor.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        reduction   : int,
+        kernel_size : Ints,
+        stride      : Ints              = 1,
+        padding     : str | Ints | None = 0,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = True,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.pa = Sequential(
+            Conv2d(
+                in_channels  = channels,
+                out_channels = channels // reduction,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = padding,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            ReLU(inplace=True),
+            Conv2d(
+                in_channels  = channels // reduction,
+                out_channels = 1,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = padding,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = bias,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            Sigmoid()
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return input * self.pa(input)
+
+
 # H2: - Convolution ------------------------------------------------------------
 
 def conv2d_same(
@@ -149,7 +280,7 @@ def conv2d_same(
     padding : str | Ints | None = 0,
     dilation: Ints              = 1,
     groups  : int               = 1,
-    **_
+    *args, **kwargs
 ):
     """
     Functional interface for Same Padding Convolution 2D.
@@ -192,7 +323,7 @@ class ConvAct2d(Module):
         dtype       : Any               = None,
         act         : Callable | None   = ReLU(),
         inplace     : bool              = True,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         self.conv = Conv2d(
@@ -233,7 +364,7 @@ class ConvBnMish2d(Module):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         kernel_size = to_2tuple(kernel_size)
@@ -282,7 +413,7 @@ class ConvBnReLU2d(Module):
         device      : Any               = None,
         dtype       : Any               = None,
         apply_act   : bool              = True,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         kernel_size = to_2tuple(kernel_size)
@@ -328,7 +459,7 @@ class ConvBnReLU62d(Module):
         device      : Any               = None,
         dtype       : Any               = None,
         apply_act   : bool              = True,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         kernel_size = to_2tuple(kernel_size)
@@ -373,7 +504,7 @@ class ConvMish2d(Module):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         kernel_size = to_2tuple(kernel_size)
@@ -416,7 +547,7 @@ class ConvReLU2d(Module):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         self.conv = Conv2d(
@@ -457,7 +588,7 @@ class ConvSame2d(Conv2d):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -504,7 +635,7 @@ class ConvSigmoid2d(Module):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         kernel_size = to_2tuple(kernel_size)
@@ -551,7 +682,7 @@ class ConvTF2d(Conv2d):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -617,7 +748,7 @@ class ConvTransposeAct2d(Module):
         dtype       : Any               = None,
         act         : Callable | None   = ReLU(),
         inplace     : bool              = True,
-        **_
+        *args, **kwargs
     ):
         super().__init__()
         act   = to_act_layer(act=act, inplace=inplace)
@@ -658,7 +789,7 @@ class DepthwiseConv2d(Conv2d):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -693,7 +824,7 @@ class DepthwiseConvBnMish2d(ConvBnMish2d):
         device      : Any               = None,
         dtype       : Any               = None,
         apply_act   : bool              = True,
-        **_
+        *args, **kwargs
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -711,6 +842,119 @@ class DepthwiseConvBnMish2d(ConvBnMish2d):
         )
 
 
+@LAYERS.register(name="depthwise_separable_conv2d")
+class DepthwiseSeparableConv2d(Module):
+    """
+    Depthwise Separable Conv2d.
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        dw_kernel_size: Ints,
+        pw_kernel_size: Ints,
+        dw_stride     : Ints              = 1,
+        dw_padding    : str | Ints | None = 0,
+        pw_stride     : Ints              = 1,
+        pw_padding    : str | Ints | None = 0,
+        dilation      : Ints              = 1,
+        groups        : int               = 1,
+        bias          : bool              = True,
+        padding_mode  : str               = "zeros",
+        device        : Any               = None,
+        dtype         : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.dw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = dw_kernel_size,
+            stride       = dw_stride,
+            padding      = dw_padding,
+            dilation     = dilation,
+            groups       = in_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = pw_kernel_size,
+            stride       = pw_stride,
+            padding      = pw_padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return self.pw_conv(self.dw_conv(input))
+
+
+@LAYERS.register(name="depthwise_separable_conv_relu2d")
+class DepthwiseSeparableConvReLU2d(Module):
+    """
+    Depthwise Separable Conv2d ReLU.
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        dw_kernel_size: Ints,
+        pw_kernel_size: Ints,
+        dw_stride     : Ints              = 1,
+        pw_stride     : Ints              = 1,
+        dw_padding    : str | Ints | None = 0,
+        pw_padding    : str | Ints | None = 0,
+        dilation      : Ints              = 1,
+        groups        : int               = 1,
+        bias          : bool              = True,
+        padding_mode  : str               = "zeros",
+        device        : Any               = None,
+        dtype         : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.dw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = dw_kernel_size,
+            stride       = dw_stride,
+            padding      = dw_padding,
+            dilation     = dilation,
+            groups       = in_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = pw_kernel_size,
+            stride       = pw_stride,
+            padding      = pw_padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act = ReLU(inplace=True)
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return self.act(self.pw_conv(self.dw_conv(input)))
+        
+
 @LAYERS.register(name="pointwise_conv2d")
 class PointwiseConv2d(Conv2d):
     """
@@ -726,7 +970,7 @@ class PointwiseConv2d(Conv2d):
         padding_mode: str               = "zeros",
         device      : Any               = None,
         dtype       : Any               = None,
-        **_
+        *args, **kwargs
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -765,7 +1009,8 @@ def drop_block_2d(
     gamma_scale: float = 1.0,
     with_noise : bool  = False,
     inplace    : bool  = False,
-    batchwise  : bool  = False
+    batchwise  : bool  = False, 
+    *args, **kwargs
 ) -> Tensor:
     """
     DropBlock with an experimental gaussian noise option. This layer has been
@@ -836,7 +1081,8 @@ def drop_block_fast_2d(
     gamma_scale: float = 1.0,
     with_noise : bool  = False,
     inplace    : bool  = False,
-    batchwise  : bool  = False
+    batchwise  : bool  = False,
+    *args, **kwargs
 ) -> Tensor:
     """
     DropBlock with an experimental gaussian noise option. Simplified from
@@ -887,7 +1133,8 @@ def drop_block_fast_2d(
 def drop_path(
     input    : Tensor,
     drop_prob: float = 0.0,
-    training : bool  = False
+    training : bool  = False,
+    *args, **kwargs
 ) -> Tensor:
     """
     Drop paths (Stochastic Depth) per sample (when applied in main path of
@@ -924,7 +1171,8 @@ class DropBlock2d(Module):
         with_noise : bool  = False,
         inplace    : bool  = False,
         batchwise  : bool  = False,
-        fast       : bool  = True
+        fast       : bool  = True,
+        *args, **kwargs
     ):
         super().__init__()
         self.drop_prob   = drop_prob
@@ -969,7 +1217,7 @@ class DropPath(Module):
         drop_prob (float): Probability of the path to be zeroed. Defaults to 0.1.
     """
     
-    def __init__(self, drop_prob: float = 0.1):
+    def __init__(self, drop_prob: float = 0.1, *args, **kwargs):
         super().__init__()
         self.drop_prob = drop_prob
         
@@ -989,6 +1237,28 @@ LAYERS.register(name="dropout3d",             module=Dropout3d)
 LAYERS.register(name="feature_alpha_dropout", module=FeatureAlphaDropout)
 
 
+# H2: - Extract ----------------------------------------------------------------
+
+@LAYERS.register(name="extract_item")
+class ExtractItem(Module):
+    """
+    Extract a feature item at `index` among a sequence of tensors.
+    
+    Args:
+        index (int): Extract the item at index among the feature sequence.
+    """
+    
+    def __init__(self, index: int, *args, **kwargs):
+        super().__init__()
+        self.index = index
+    
+    def forward(self, input: Tensors) -> Tensor:
+        if isinstance(input, Tensor):
+            return input
+        elif isinstance(input, (list, tuple)):
+            return input[self.index]
+    
+
 # H2: - Fusion -----------------------------------------------------------------
 
 @LAYERS.register(name="concat")
@@ -1000,12 +1270,67 @@ class Concat(Module):
         dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 1):
+    def __init__(self, dim: str | ellipsis | None = 1, *args, **kwargs):
         super().__init__()
         self.dim = dim
         
     def forward(self, input: Sequence[Tensor]) -> Tensor:
         return torch.cat(to_list(input), dim=self.dim)
+
+
+@LAYERS.register(name="chuncat")
+class Chuncat(Module):
+    """
+    
+    Args:
+        dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
+    """
+    
+    def __init__(self, dim: str | ellipsis | None = 1, *args, **kwargs):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        x1 = []
+        x2 = []
+        for x_i in input:
+            x_i_1, x_i_2 = x_i.chunk(2, self.dim)
+            x1.append(x_i_1)
+            x2.append(x_i_2)
+        return torch.cat(x1 + x2, dim=self.dim)
+
+
+@LAYERS.register(name="foldcut")
+class Foldcut(nn.Module):
+    """
+    
+    Args:
+        dim (str | ellipsis | None): Dimension to concat to. Defaults to 0.
+    """
+    
+    def __init__(self, dim: str | ellipsis | None = 0, *args, **kwargs):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, input: Tensor) -> Tensor:
+        x1, x2 = input.chunk(2, dim=self.dim)
+        return x1 + x2
+
+ 
+@LAYERS.register(name="shortcut")
+class Shortcut(Module):
+    """
+    
+    Args:
+        dim (str | ellipsis | None): Dimension to concat to. Defaults to 0.
+    """
+    
+    def __init__(self, dim: str | ellipsis | None = 0, *args, **kwargs):
+        super().__init__()
+        self.dim = dim
+
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        return input[0] + input[1]
 
 
 @LAYERS.register(name="softmax_fusion")
@@ -1020,7 +1345,7 @@ class SoftmaxFusion(Module):
         n (int): Number of inputs.
     """
 
-    def __init__(self, n: int, weight: bool = False):
+    def __init__(self, n: int, weight: bool = False, *args, **kwargs):
         super().__init__()
         self.weight = weight  # Apply weights boolean
         self.iter 	= range(n - 1)  # iter object
@@ -1040,180 +1365,24 @@ class SoftmaxFusion(Module):
         return output
 
 
+@LAYERS.register(name="sum")
+class Sum(Module):
+    """
+    """
+    
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        output = input[0]
+        for i in range(1, len(input)):
+            output += input[i]
+        return output
+
+
 # H2: - Linear -----------------------------------------------------------------
 
 LAYERS.register(name="bilinear",    module=Bilinear)
 LAYERS.register(name="identity",    module=Identity)
 LAYERS.register(name="lazy_linear", module=LazyLinear)
 LAYERS.register(name="linear",      module=Linear)
-
-
-# H1: - MLP --------------------------------------------------------------------
-
-@LAYERS.register(name="conv_mlp")
-class ConvMlp(Module):
-    """
-    MLP using 1x1 Convs that keeps spatial dims.
-    """
-    
-    def __init__(
-        self,
-        in_features    : int,
-        hidden_features: int | None      = None,
-        out_features   : int | None      = None,
-        act            : Callable        = ReLU,
-        norm           : Callable | None = None,
-        drop           : float           = 0.0
-    ):
-        super().__init__()
-        out_features    = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1  = Conv2d(
-            in_channels  = in_features,
-            out_channels = hidden_features,
-            kernel_size  = (1, 1),
-            bias         = True
-        )
-        self.norm = norm(hidden_features) if norm else Identity()
-        self.act  = to_act_layer(act=act)
-        self.fc2  = Conv2d(
-            in_channels  = hidden_features,
-            out_channels = out_features,
-            kernel_size  = (1, 1),
-            bias         = True
-        )
-        self.drop = Dropout(drop)
-        
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.fc1(input)
-        output = self.norm(output)
-        output = self.act(output)
-        output = self.drop(output)
-        output = self.fc2(output)
-        return output
-
-
-@LAYERS.register(name="glu_mlp")
-class GluMlp(Module):
-    """
-    MLP w/ GLU style gating. See:
-        https://arxiv.org/abs/1612.08083,
-        https://arxiv.org/abs/2002.05202
-    """
-
-    def __init__(
-        self,
-        in_features    : int,
-        hidden_features: int | None = None,
-        out_features   : int | None = None,
-        act            : Callable   = Sigmoid,
-        drop           : float      = 0.0
-    ):
-        super().__init__()
-        out_features    = out_features    or in_features
-        hidden_features = hidden_features or in_features
-        if hidden_features % 2 != 0:
-            raise ValueError
-        drop_probs = to_2tuple(drop)
-
-        self.fc1   = Linear(in_features, hidden_features)
-        self.act   = to_act_layer(act=act)
-        self.drop1 = Dropout(drop_probs[0])
-        self.fc2   = Linear(hidden_features // 2, out_features)
-        self.drop2 = Dropout(drop_probs[1])
-
-    def init_weights(self):
-        # override init of fc1 w/ gate portion set to weight near zero, bias=1
-        fc1_mid = self.fc1.bias.shape[0] // 2
-        init.ones_(self.fc1.bias[fc1_mid:])
-        init.normal_(self.fc1.weight[fc1_mid:], std=1e-6)
-
-    def forward(self, input: Tensor) -> Tensor:
-        output        = self.fc1(input)
-        output, gates = output.chunk(2, dim=-1)
-        output        = output * self.act(gates)
-        output        = self.drop1(output)
-        output        = self.fc2(output)
-        output        = self.drop2(output)
-        return output
-
-
-@LAYERS.register(name="gated_mlp")
-class GatedMlp(Module):
-    """
-    MLP as used in gMLP.
-    """
-
-    def __init__(
-        self,
-        in_features    : int,
-        hidden_features: int | None      = None,
-        out_features   : int | None      = None,
-        act            : Callable        = GELU,
-        gate           : Callable | None = None,
-        drop           : float           = 0.0
-    ):
-        super().__init__()
-        out_features    = out_features    or in_features
-        hidden_features = hidden_features or in_features
-        drop_probs      = to_2tuple(drop)
-
-        self.fc1   = Linear(in_features, hidden_features)
-        self.act   = to_act_layer(act=act)
-        self.drop1 = Dropout(drop_probs[0])
-        if gate is not None:
-            if hidden_features % 2 != 0:
-                raise ValueError
-            self.gate = gate(hidden_features)
-            # FIXME base reduction on gate property?
-            hidden_features = hidden_features // 2
-        else:
-            self.gate = Identity()
-        self.fc2   = Linear(hidden_features, out_features)
-        self.drop2 = Dropout(drop_probs[1])
-
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.fc1(input)
-        output = self.act(output)
-        output = self.drop1(output)
-        output = self.gate(output)
-        output = self.fc2(output)
-        output = self.drop2(output)
-        return output
-
-
-@LAYERS.register(name="mlp")
-class Mlp(Module):
-    """
-    MLP as used in Vision Transformer, MLP-Mixer and related networks.
-    """
-    
-    def __init__(
-        self,
-        in_features    : int,
-        hidden_features: int | None = None,
-        out_features   : int | None = None,
-        act            : Callable   = GELU,
-        drop           : float      = 0.0
-    ):
-        super().__init__()
-        out_features    = out_features or in_features
-        hidden_features = hidden_features or in_features
-        drop_probs      = to_2tuple(drop)
-        
-        self.fc1   = Linear(in_features, hidden_features)
-        self.act   = to_act_layer(act=act)
-        self.drop1 = Dropout(drop_probs[0])
-        self.fc2   = Linear(hidden_features, out_features)
-        self.drop2 = Dropout(drop_probs[1])
-        
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.fc1(input)
-        output = self.act(output)
-        output = self.drop1(output)
-        output = self.fc2(output)
-        output = self.drop2(output)
-        return output
 
 
 # H2: - Normalization ----------------------------------------------------------
@@ -1418,7 +1587,8 @@ class GroupNormAct(GroupNorm):
         dtype       : Any             = None,
         act         : Callable | None = ReLU,
         inplace     : bool            = True,
-        drop_block  : Callable | None = None
+        drop_block  : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__(
             num_groups   = num_groups,
@@ -1622,6 +1792,7 @@ def get_symmetric_padding(
     kernel_size: int,
     stride     : int = 1,
     dilation   : int = 1,
+    *args, **kwargs
 ) -> int:
     """
     Calculate symmetric padding for a convolution.
@@ -1632,6 +1803,7 @@ def get_symmetric_padding(
 def to_same_padding(
     kernel_size: Ints,
     padding    : Ints | None = None,
+    *args, **kwargs
 ) -> int | list | None:
     """
     It takes a kernel size and a padding, and if the padding is None, it returns
@@ -1657,7 +1829,8 @@ def pad_same(
     kernel_size: Ints,
     stride     : Ints,
     dilation   : Ints  = (1, 1),
-    value      : float = 0
+    value      : float = 0,
+    *args, **kwargs
 ):
     """
     Dynamically pad input tensor with 'same' padding for conv with specified
@@ -1690,13 +1863,21 @@ LAYERS.register(name="zero_pad2d",        module=ZeroPad2d)
 
 # H2: - Pooling ----------------------------------------------------------------
 
-def adaptive_avg_max_pool2d(input: Tensor, output_size: int = 1) -> Tensor:
+def adaptive_avg_max_pool2d(
+    input      : Tensor,
+    output_size: int = 1,
+    *args, **kwargs
+) -> Tensor:
     avg = F.adaptive_avg_pool2d(input, output_size)
     max = F.adaptive_max_pool2d(input, output_size)
     return 0.5 * (avg + max)
 
 
-def adaptive_cat_avg_max_pool2d(input: Tensor, output_size: int = 1) -> Tensor:
+def adaptive_cat_avg_max_pool2d(
+    input      : Tensor,
+    output_size: int = 1,
+    *args, **kwargs
+) -> Tensor:
     avg = F.adaptive_avg_pool2d(input, output_size)
     max = F.adaptive_max_pool2d(input, output_size)
     return torch.cat((avg, max), 1)
@@ -1705,7 +1886,8 @@ def adaptive_cat_avg_max_pool2d(input: Tensor, output_size: int = 1) -> Tensor:
 def adaptive_pool2d(
     input      : Tensor,
     pool_type  : str = "avg",
-    output_size: int = 1
+    output_size: int = 1,
+    *args, **kwargs
 ) -> Tensor:
     """
     Selectable global pooling function with dynamic input kernel size.
@@ -1729,7 +1911,8 @@ def avg_pool_same2d(
     stride           : Ints,
     padding          : Ints = 0,
     ceil_mode        : bool = False,
-    count_include_pad: bool = True
+    count_include_pad: bool = True,
+    *args, **kwargs
 ) -> Tensor:
     input = pad_same(input=input, kernel_size=kernel_size, stride=stride)
     return F.avg_pool2d(
@@ -1748,7 +1931,8 @@ def max_pool_same2d(
     stride     : Ints,
     padding    : Ints = 0,
     dilation   : Ints = 1,
-    ceil_mode  : bool = False
+    ceil_mode  : bool = False,
+    *args, **kwargs
 ) -> Tensor:
     input = pad_same(
         input       = input,
@@ -1804,7 +1988,8 @@ class AdaptivePool2d(Module):
         self,
         output_size: int  = 1,
         pool_type  : str  = "fast",
-        flatten    : bool = False
+        flatten    : bool = False,
+        *args, **kwargs
     ):
         super().__init__()
         self.pool_type = pool_type or ""
@@ -1858,7 +2043,8 @@ class AvgPoolSame2d(AvgPool2d):
         stride           : Ints | None = None,
         padding          : Ints | None = 0,
         ceil_mode        : bool        = False,
-        count_include_pad: bool        = True
+        count_include_pad: bool        = True,
+        *args, **kwargs
     ):
         kernel_size = to_2tuple(kernel_size)
         stride      = to_2tuple(stride)
@@ -1889,7 +2075,7 @@ class AvgPoolSame2d(AvgPool2d):
 @LAYERS.register(name="fast_adaptive_avg_pool2d")
 class FastAdaptiveAvgPool2d(Module):
 
-    def __init__(self, flatten: bool = False):
+    def __init__(self, flatten: bool = False, *args, **kwargs):
         super().__init__()
         self.flatten = flatten
 
@@ -1909,7 +2095,8 @@ class MaxPoolSame2d(MaxPool2d):
         stride     : Ints | None = None,
         padding    : Ints | None = (0, 0),
         dilation   : Ints        = (1, 1),
-        ceil_mode  : bool        = False
+        ceil_mode  : bool        = False,
+        *args, **kwargs
     ):
         kernel_size = to_2tuple(kernel_size)
         stride      = to_2tuple(stride)
@@ -1958,7 +2145,8 @@ class MedianPool2d(Module):
         kernel_size: Ints,
         stride     : Ints    	       = (1, 1),
         padding    : str | Ints | None = 0,
-        same	   : bool			   = False
+        same	   : bool			   = False,
+        *args, **kwargs
     ):
         super().__init__()
         self.kernel_size = to_2tuple(kernel_size)
@@ -1994,137 +2182,6 @@ class MedianPool2d(Module):
         return output
 
 
-@LAYERS.register(name="spatial_pyramid_pooling")
-class SpatialPyramidPooling(Module):
-    """
-    Spatial Pyramid Pooling layer used in YOLOv3-SPP.
-    
-    Args:
-        in_channels (int): Number of channels in the input image.
-        out_channels (int): Number of channels produced by the convolution.
-        kernel_size (tuple): Sizes of several convolving kernels.
-            Defaults to (5, 9, 13).
-    """
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : tuple = (5, 9, 13),
-    ):
-        super().__init__()
-        hidden_channels = in_channels // 2  # Hidden channels
-        in_channels2    = hidden_channels * (len(kernel_size) + 1)
-
-        self.conv1 = ConvBnMish2d(
-            in_channels  = in_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 1,
-            stride       = 1
-        )
-        self.conv2 = ConvBnMish2d(
-            in_channels  = in_channels2,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1
-        )
-        self.m = ModuleList([
-            MaxPool2d(kernel_size=input, stride=1, padding=input // 2)
-            for input in kernel_size
-        ])
-        
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.conv1(input)
-        output = self.conv2(torch.cat([output] + [m(output) for m in self.m], 1))
-        return output
-
-
-@LAYERS.register(name="spatial_pyramid_pooling_csp")
-class SpatialPyramidPoolingCSP(Module):
-    """
-    Cross Stage Partial Spatial Pyramid Pooling layer used in YOLOv3-SPP.
-    
-    Args:
-        in_channels (int): Number of channels in the input image.
-        out_channels (int): Number of channels produced by the convolution.
-        number (int): Number of bottleneck layers to use.
-        shortcut (bool): Use shortcut connection?. Defaults to True.
-        groups (int): Defaults to 1.
-        expansion (float): Defaults to 0.5.
-        kernel_size (tuple): Sizes of several convolving kernels.
-            Defaults to (5, 9, 13).
-    """
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        number      : int   = 1,
-        shortcut    : bool  = False,
-        groups      : int   = 1,
-        expansion   : float = 0.5,
-        kernel_size : tuple = (5, 9, 13),
-    ):
-        super().__init__()
-        hidden_channels = int(2 * out_channels * expansion)  # Hidden channels
-        self.conv1 = ConvBnMish2d(
-            in_channels  = in_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 1,
-            stride       = 1
-        )
-        self.conv2 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = hidden_channels,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
-            bias         = False
-        )
-        self.conv3 = ConvBnMish2d(
-            in_channels  = hidden_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 3,
-            stride       = 1
-        )
-        self.conv4 = ConvBnMish2d(
-            in_channels  = hidden_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 1,
-            stride       = 1
-        )
-        self.m = ModuleList([
-            MaxPool2d(kernel_size=input, stride=(1, 1), padding=input // 2)
-            for input in kernel_size
-        ])
-        self.conv5 = ConvBnMish2d(
-            in_channels  = 4 * hidden_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 1,
-            stride       = 1
-        )
-        self.conv6 = ConvBnMish2d(
-            in_channels  = hidden_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 3,
-            stride       = 1
-        )
-        self.bn    = BatchNorm2d(2 * hidden_channels)
-        self.act   = Mish()
-        self.conv7 = ConvBnMish2d(
-            in_channels  = 2 * hidden_channels,
-            out_channels = hidden_channels,
-            kernel_size  = 1,
-            stride       = 1
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x1     = self.conv4(self.conv3(self.conv1(input)))
-        y1     = self.conv6(self.conv5(torch.cat([x1] + [m(x1) for m in self.m], 1)))
-        y2     = self.conv2(input)
-        output = self.conv7(self.act(self.bn(torch.cat((y1, y2), dim=1))))
-        return output
-
-
 LAYERS.register(name="adaptive_avg_pool1d",   module=AdaptiveAvgPool1d)
 LAYERS.register(name="adaptive_avg_pool2d",   module=AdaptiveAvgPool2d)
 LAYERS.register(name="adaptive_avg_pool3d",   module=AdaptiveAvgPool3d)
@@ -2146,456 +2203,86 @@ LAYERS.register(name="max_unpool2d", 		  module=MaxUnpool2d)
 LAYERS.register(name="max_unpool3d", 		  module=MaxUnpool3d)
 
 
-# H1: - Residual ---------------------------------------------------------------
+# H2: - Scaling ----------------------------------------------------------------
 
-@LAYERS.register(name="residual_conv_act2d")
-class ResidualConvAct2d(Module):
+@LAYERS.register(name="downsample")
+class Downsample(Module):
     """
-    Basic Residual Conv2d + Act block.
-    """
-    
-    def __init__(
-        self,
-        in_channels   : int,
-        out_channels  : int,
-        kernel_size   : Ints,
-        stride        : Ints              = 1,
-        padding       : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
-        act           : Callable | None   = ReLU,
-        inplace       : bool              = True,
-        **_
-    ):
-        super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        dilation    = to_2tuple(dilation)
-        self.conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype
-        )
-        self.act = to_act_layer(act=act, inplace=inplace)
-        
-    def forward(self, input: Tensor) -> Tensor:
-        return torch.cat([input, self.act(self.conv(input))], 1)
+    Downsample a given multi-channel 1D (temporal), 2D (spatial) or 3D
+    (volumetric) data.
 
+    The input data is assumed to be of the form
+    `minibatch x channels x [optional depth] x [optional height] x width`.
+    Hence, for spatial inputs, we expect a 4D Tensor and for volumetric inputs,
+    we expect a 5D Tensor.
 
-@LAYERS.register(name="residual_dense_block")
-@LAYERS.register(name="rdb")
-class ResidualDenseBlock(Module):
-    """
-    Densely-Connected Residual block with activation layer.
-    
-    This is a more generalize version of:
-    https://github.com/xinntao/ESRGAN/blob/master/RRDBNet_arch.py
+    The algorithms available for upsampling are nearest neighbor and linear,
+    bilinear, bicubic and trilinear for 3D, 4D and 5D input Tensor,
+    respectively.
+
+    One can either give a :attr:`scale_factor` or the target output :attr:`size` to
+    calculate the output size. (You cannot give both, as it is ambiguous)
 
     Args:
-        num_layers (int): Number of conv layers in the residual block.
-        in_channels (int): Number of channels in the input image.
-        growth_channels (int): Growth channel, i.e. intermediate channels.
-        kernel_size (Ints): Size of the convolving kernel.
-        lff_kernel_size (Ints): Size of the convolving kernel for the last
-            conv layer.
-        stride (Ints): Stride of the convolution. Default: `(1, 1)`.
-        lff_stride (Ints):
-            Stride of the convolution of the last layer. Default: `(1, 1)`.
-        padding (str | Ints | None, optional):
-            Padding added to both sides of the input. Defaults to 0.
-        lff_padding:
-            Padding added to both sides of the input of the last conv layer.
-            Defaults to 0.
-        dilation (Ints): Defaults to (1, 1).
-        groups (int): Defaults to 1.
-        bias (bool): Defaults to True.
-        padding_mode (str): Defaults to zeros.
-        device (Any): Defaults to None.
-        dtype (Any): Defaults: None.
-        apply_act (bool): Should use activation layer. Defaults to True.
-        act (Callable | None): Activation layer or the name to build the
-            activation layer.
-        inplace (bool): Perform in-place activation. Defaults to True.
-        residual_scale (float): It scales down the residuals by multiplying a
-            constant between 0 and 1 before adding them to the main path to
-            prevent instability. Defaults to 0.2.
-    """
-
-    def __init__(
-        self,
-        num_layers     : int,
-        in_channels    : int,
-        growth_channels: int,
-        kernel_size    : Ints,
-        lff_kernel_size: Ints,
-        stride         : Ints              = 1,
-        lff_stride     : Ints              = 1,
-        padding        : str | Ints | None = 0,
-        lff_padding    : str | Ints | None = 0,
-        dilation       : Ints              = 1,
-        groups         : int               = 1,
-        bias           : bool              = True,
-        padding_mode   : str               = "zeros",
-        device         : Any               = None,
-        dtype          : Any               = None,
-        act            : Callable | None   = ReLU(),
-        inplace        : bool              = True,
-        residual_scale : float             = 0.2,
-        **_
-    ):
-        super().__init__()
-        self.num_layers     = num_layers
-        self.residual_scale = residual_scale
-        self.layers = Sequential(
-            *[
-                ResidualConvAct2d(
-                    in_channels  = in_channels + i * growth_channels,
-                    out_channels = growth_channels,
-                    kernel_size  = kernel_size,
-                    stride       = stride,
-                    padding      = padding,
-                    dilation     = dilation,
-                    groups       = groups,
-                    bias         = bias,
-                    padding_mode = padding_mode,
-                    device       = device,
-                    dtype        = dtype,
-                    act_layer    = act,
-                    inplace      = inplace,
-                )
-                for i in range(num_layers)
-            ]
-        )
-        #  local feature fusion
-        self.lff = Conv2d(
-            in_channels  = in_channels + num_layers * growth_channels,
-            out_channels = growth_channels,
-            kernel_size  = lff_kernel_size,
-            stride       = lff_stride,
-            padding      = lff_padding,
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
- 
-    def forward(self, input: Tensor) -> Tensor:
-        return input + self.residual_scale * self.lff(self.layers(input))
-
-
-@LAYERS.register(name="residual_dense_block_5Conv_lrelu")
-@LAYERS.register(name="rdb_5conv_lrelu")
-class ResidualDenseBlock5ConvLReLU(ResidualDenseBlock):
-    """
-    Densely-Connected Residual block with 5 convolution layers + Leaky ReLU.
-    
-    References:
-        https://github.com/xinntao/ESRGAN/blob/master/RRDBNet_arch.py
-    """
-
-    def __init__(
-        self,
-        in_channels    : int               = 64,
-        growth_channels: int               = 32,
-        kernel_size    : Ints              = 3,
-        lff_kernel_size: Ints              = 3,
-        stride         : Ints              = 1,
-        lff_stride     : Ints              = 1,
-        padding        : str | Ints | None = 0,
-        lff_padding    : str | Ints | None = 0,
-        dilation       : Ints              = 1,
-        groups         : int               = 1,
-        bias           : bool              = True,
-        padding_mode   : str               = "zeros",
-        device         : Any               = None,
-        dtype          : Any               = None,
-        apply_act      : bool              = True,
-        inplace        : bool              = True,
-        residual_scale : float             = 0.2,
-        **_
-    ):
-        super().__init__(
-            num_layers      = 4,
-            in_channels     = in_channels,
-            growth_channels = growth_channels,
-            kernel_size     = kernel_size,
-            lff_kernel_size = lff_kernel_size,
-            stride          = stride,
-            lff_stride      = lff_stride,
-            padding         = padding,
-            lff_padding     = lff_padding,
-            dilation        = dilation,
-            groups          = groups,
-            bias            = bias,
-            padding_mode    = padding_mode,
-            device          = device,
-            dtype           = dtype,
-            apply_act       = apply_act,
-            act             = LeakyReLU(0.2, inplace=True),
-            inplace         = inplace,
-            residual_scale  = residual_scale,
-        )
-        self.initialize_weights([self.layers, self.lff], 0.1)
-    
-    # noinspection PyMethodMayBeStatic
-    def initialize_weights(self, net_l: list | Module, scale: float = 1.0):
-        if not isinstance(net_l, list):
-            net_l = [net_l]
-       
-        for net in net_l:
-            for m in net.modules():
-                if isinstance(m, Conv2d):
-                    init.kaiming_normal_(m.weight, a=0, mode="fan_in")
-                    m.weight.data *= scale  # For residual block
-                    if m.bias is not None:
-                        m.bias.data.zero_()
-                elif isinstance(m, Linear):
-                    init.kaiming_normal_(m.weight, a=0, mode="fan_in")
-                    m.weight.data *= scale
-                    if m.bias is not None:
-                        m.bias.data.zero_()
-                elif isinstance(m, BatchNorm2d):
-                    init.constant_(m.weight, 1)
-                    init.constant_(m.bias.data, 0.0)
-                    
-                    
-@LAYERS.register(name="residual_in_residual_dense_block")
-@LAYERS.register(name="rrdb")
-class ResidualInResidualDenseBlock(Module):
-    """
-    Residual in Residual Dense Block with 3 Residual Dense Blocks.
-    
-    References:
-        https://github.com/xinntao/ESRGAN/blob/master/RRDBNet_arch.py
+        size (Ints | None): Output spatial sizes
+        scale_factor (Floats | None): Multiplier for spatial size. Has to match
+            input size if it is a tuple.
+        mode (str): The upsampling algorithm. One of [`nearest`, `linear`,
+            `bilinear`, `bicubic`, `trilinear`]. Defaults to `nearest`.
+        align_corners (bool): If True, the corner pixels of the input and
+            output tensors are aligned, and thus preserving the values at
+            those pixels. This only has effect when `mode` is `linear`,
+            `bilinear`, `bicubic`, or `trilinear`. Defaults to False.
+        recompute_scale_factor (bool): Recompute the scale_factor for use in
+            the interpolation calculation.
+            - If `recompute_scale_factor` is True, then `scale_factor` must be
+              passed in and `scale_factor` is used to compute the output `size`.
+              The computed output `size` will be used  to infer new scales for
+              the interpolation. Note that when `scale_factor` is
+              floating-point, it may differ from the recomputed `scale_factor`
+              due to rounding and precision issues.
+            - If `recompute_scale_factor` is False, then `size` or
+              `scale_factor` will be used directly for interpolation.
+            Defaults to False.
     """
     
     def __init__(
         self,
-        in_channels    : int,
-        growth_channels: int   = 32,
-        residual_scale : float = 0.2,
+        size                  : Ints   | None = None,
+        scale_factor          : Floats | None = None,
+        mode                  : str           = "nearest",
+        align_corners         : bool          = False,
+        recompute_scale_factor: bool          = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.residual_scale = residual_scale
-        self.rdb1 = ResidualDenseBlock5ConvLReLU(
-            in_channels     = in_channels,
-            growth_channels = growth_channels,
-            residual_scale  = 0.2,
-            *args, **kwargs
-        )
-        self.rdb2 = ResidualDenseBlock5ConvLReLU(
-            in_channels     = in_channels,
-            growth_channels = growth_channels,
-            residual_scale  = 0.2,
-            *args, **kwargs
-        )
-        self.rdb3 = ResidualDenseBlock5ConvLReLU(
-            in_channels     = in_channels,
-            growth_channels = growth_channels,
-            residual_scale  = 0.2,
-            *args, **kwargs
-        )
+        self.name = type(self).__name__
+        self.size = size
+        if isinstance(scale_factor, tuple):
+            self.scale_factor = tuple(float(1.0 / factor) for factor in scale_factor)
+        else:
+            self.scale_factor = float(1.0 / scale_factor) if scale_factor else None
+        self.mode                   = mode
+        self.align_corners          = align_corners
+        self.recompute_scale_factor = recompute_scale_factor
     
     def forward(self, input: Tensor) -> Tensor:
-        output = self.rdb1(input)
-        output = self.rdb2(output)
-        output = self.rdb3(output)
-        return output * self.residual_scale + input
-
-
-@LAYERS.register(name="residual_wide_activation_block")
-@LAYERS.register(name="rwab")
-class ResidualWideActivationBlock(Module):
-    """
-    Conv2d + BN + Act + Conv2d + BN.
-    """
-
-    def __init__(
-        self,
-        in_channels    : int,
-        expand         : int             = 4,
-        kernel_size    : Ints            = 3,
-        stride         : Ints            = 1,
-        padding        : str | Ints      = 1,
-        dilation       : Ints            = 1,
-        groups         : int             = 1,
-        bias           : bool            = False,
-        padding_mode   : str             = "zeros",
-        device         : Any             = None,
-        dtype          : Any             = None,
-        act            : Callable | None = ReLU(inplace=True),
-        inplace        : bool            = True,
-        residual_scale : float           = 0.2,
-        **_
-    ):
-        super().__init__()
-        kernel_size         = to_2tuple(kernel_size)
-        stride              = to_2tuple(stride)
-        dilation            = to_2tuple(dilation)
-        self.residual_scale = residual_scale
-        
-        self.conv1 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = in_channels * expand,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
+        if self.size and self.size == list(input[2:]):
+            return input
+        if self.scale_factor \
+            and (self.scale_factor == 1.0
+                 or all(s == 1.0 for s in self.scale_factor)):
+            return input
+        return F.interpolate(
+            input                  = input,
+            size                   = self.size,
+            scale_factor           = self.scale_factor,
+            mode                   = self.mode,
+            align_corners          = self.align_corners,
+            recompute_scale_factor = self.recompute_scale_factor
         )
-        self.bn1   = BatchNorm2d(in_channels * expand)
-        self.act   = to_act_layer(act=act, inplace=inplace)
-        self.conv2 = Conv2d(
-            in_channels  = in_channels * expand,
-            out_channels = in_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.bn12  = BatchNorm2d(in_channels)
-
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.conv1(input)
-        output = self.bn1(output)
-        output = self.act(output)
-        output = self.conv2(output)
-        output = self.bn1(output)
-        output = output * self.residual_scale + input
-        return output
-
-
-RDB             = ResidualDenseBlock
-RDB5ConvLReLu   = ResidualDenseBlock5ConvLReLU
-RRDB            = ResidualInResidualDenseBlock
-RWAB            = ResidualWideActivationBlock
-
-
-# H1: - Sampling ---------------------------------------------------------------
-
-@LAYERS.register(name="downsample_conv2d")
-class DownsampleConv2d(Module):
-    """
     
-    Args:
-        in_channels (int): Number of input channels.
-        scale_factor (int): Scale factor. Defaults to 0.
-        mode (str): Upsampling algorithm. One of: [`nearest`, `linear`,
-            `bilinear`, `bicubic`, `trilinear`]. Defaults to bilinear.
-        align_corners (bool): If True, the corner pixels of the input and output
-            tensors are aligned, and thus preserving the values at those pixels.
-            This only has effect when `mode` is `linear`, `bilinear`, or
-            `trilinear`. Defaults to True.
-    """
     
-    def __init__(
-        self,
-        in_channels  : int,
-        scale_factor : int  = 0,
-        mode         : str  = "bilinear",
-        align_corners: bool = False
-    ):
-        super().__init__()
-        self.upsample = UpsampleConv2d(
-            scale_factor  = 0.5,
-            mode          = mode,
-            align_corners = align_corners
-        )
-        self.conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = in_channels + scale_factor,
-            kernel_size  = (1, 1),
-            stride       = (1, 1),
-            padding      = 0,
-            bias         = False
-        )
-
-    def forward(self, input: Tensor) -> Tensor:
-        return self.conv(self.upsample(input))
-        
-
-@LAYERS.register(name="inverse_pixel_shuffle")
-class InversePixelShuffle(Module):
-    
-    def __init__(self, scale_factor: int = 2):
-        super().__init__()
-        self.scale_factor = scale_factor
-        
-    def forward(self, input: Tensor) -> Tensor:
-        ratio = self.scale_factor
-        b     = input.size(0)
-        c     = input.size(1)
-        h     = input.size(2)
-        w     = input.size(3)
-        return (
-            input.view(b, c, h // ratio, ratio, w // ratio, ratio)
-                .permute(0, 1, 3, 5, 2, 4)
-                .contiguous()
-                .view(b, -1, h // ratio, w // ratio)
-        )
-
-
-@LAYERS.register(name="pixel_shuffle")
-class PixelShuffle(Module):
-    """
-    Pixel Shuffle upsample layer. This module packs `F.pixel_shuffle()`
-    and a Conv2d module together to achieve a simple upsampling with pixel
-    shuffle.
-    
-    Args:
-        in_channels (int): Number of input channels.
-        out_channels (int): Number of output channels.
-        scale_factor (int): Upsample ratio.
-        upsample_kernel (Ints): Kernel size of the conv layer to expand the
-            channels.
-    """
-    
-    def __init__(
-        self,
-        in_channels    : int,
-        out_channels   : int,
-        scale_factor   : int,
-        upsample_kernel: Ints,
-    ):
-        super().__init__()
-        self.upsample_conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels * scale_factor * scale_factor,
-            kernel_size  = upsample_kernel,
-            padding      = (upsample_kernel - 1) // 2
-        )
-        self.init_weights()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        output = self.upsample_conv(input)
-        output = F.pixel_shuffle(output, self.scale_factor)
-        return output
-
-
 @LAYERS.register(name="scale")
 class Scale(Module):
     """
@@ -2615,373 +2302,649 @@ class Scale(Module):
         return input * self.scale
 
 
-@LAYERS.register(name="skip_upsample_conv2d")
-class SkipUpsampleConv2d(Module):
+@LAYERS.register(name="upsample")
+class Upsample(Module):
     """
+    Upsample a given multi-channel 1D (temporal), 2D (spatial) or 3D
+    (volumetric) data.
+
+    The input data is assumed to be of the form
+    `minibatch x channels x [optional depth] x [optional height] x width`.
+    Hence, for spatial inputs, we expect a 4D Tensor and for volumetric inputs,
+    we expect a 5D Tensor.
+
+    The algorithms available for upsampling are nearest neighbor and linear,
+    bilinear, bicubic and trilinear for 3D, 4D and 5D input Tensor,
+    respectively.
+
+    One can either give a :attr:`scale_factor` or the target output :attr:`size` to
+    calculate the output size. (You cannot give both, as it is ambiguous)
 
     Args:
-        in_channels (int): Number of input channels.
-        scale_factor (int): Scale factor. Defaults to 0.
-        mode (str): Upsampling algorithm. One of: [`nearest`, `linear`,
-            `bilinear`, `bicubic`, `trilinear`]. Defaults to bilinear.
-        align_corners (bool): If True, the corner pixels of the input and output
-            tensors are aligned, and thus preserving the values at those pixels.
-            This only has effect when :attr:`mode` is `linear`, `bilinear`, or
-            `trilinear`. Defaults to True.
-    """
-    
-    def __init__(
-        self,
-        in_channels  : int,
-        scale_factor : int  = 0,
-        mode         : str  = "bilinear",
-        align_corners: bool = False
-    ):
-        
-        super().__init__()
-        self.up = Sequential(
-            UpsampleConv2d(
-                scale_factor  = 2.0,
-                mode          = mode,
-                align_corners = align_corners
-            ),
-            Conv2d(
-                in_channels  = in_channels + scale_factor,
-                out_channels = in_channels,
-                kernel_size  = (1, 1),
-                stride       = (1, 1),
-                padding      = 0,
-                bias         = False
-            )
-        )
-        
-    def forward(self, input: Tensor, skip: Tensor) -> Tensor:
-        output  = self.up(input)
-        output += skip
-        return output
-
-
-@LAYERS.register(name="upsample_conv2d")
-class UpsampleConv2d(Module):
-    """
-
-    Args:
-        in_channels (int): Number of input channels.
-        scale_factor (int): Scale factor. Defaults to 0.
-        mode (str): Upsampling algorithm. One of: [`nearest`, `linear`,
-            `bilinear`, `bicubic`, `trilinear`]. Defaults to bilinear.
+        size (Ints | None): Output spatial sizes
+        scale_factor (Floats | None): Multiplier for spatial size. Has to match
+            input size if it is a tuple.
+        mode (str): The upsampling algorithm. One of [`nearest`, `linear`,
+            `bilinear`, `bicubic`, `trilinear`]. Defaults to `nearest`.
         align_corners (bool): If True, the corner pixels of the input and
-            output tensors are aligned, and thus preserving the values at those
-            pixels. This only has effect when :attr:`mode` is `linear`,
-            `bilinear`, or `trilinear`. Defaults to False.
+            output tensors are aligned, and thus preserving the values at
+            those pixels. This only has effect when `mode` is `linear`,
+            `bilinear`, `bicubic`, or `trilinear`. Defaults to False.
+        recompute_scale_factor (bool): Recompute the scale_factor for use in
+            the interpolation calculation.
+            - If `recompute_scale_factor` is True, then `scale_factor` must be
+              passed in and `scale_factor` is used to compute the output `size`.
+              The computed output `size` will be used  to infer new scales for
+              the interpolation. Note that when `scale_factor` is
+              floating-point, it may differ from the recomputed `scale_factor`
+              due to rounding and precision issues.
+            - If `recompute_scale_factor` is False, then `size` or
+              `scale_factor` will be used directly for interpolation.
+            Defaults to False.
     """
     
     def __init__(
         self,
-        in_channels  : int,
-        scale_factor : int  = 0,
-        mode         : str  = "bilinear",
-        align_corners: bool = False
+        size                  : Ints   | None = None,
+        scale_factor          : Floats | None = None,
+        mode                  : str           = "nearest",
+        align_corners         : bool          = False,
+        recompute_scale_factor: bool          = False,
+        *args, **kwargs
     ):
-        
         super().__init__()
-        self.upsample = UpsampleConv2d(
-            scale_factor  = 2.0,
-            mode          = mode,
-            align_corners = align_corners
-        )
-        self.conv = Conv2d(
-            in_channels  = in_channels + scale_factor,
-            out_channels = in_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            bias         = False
-        )
-        
+        self.name = type(self).__name__
+        self.size = size
+        if isinstance(scale_factor, tuple):
+            self.scale_factor = tuple(float(factor) for factor in scale_factor)
+        else:
+            self.scale_factor = float(scale_factor) if scale_factor else None
+        self.mode                   = mode
+        self.align_corners          = align_corners
+        self.recompute_scale_factor = recompute_scale_factor
+    
     def forward(self, input: Tensor) -> Tensor:
-        return self.conv(self.upsample(input))
+        if self.size and self.size == list(input[2:]):
+            return input
+        if self.scale_factor \
+            and (self.scale_factor == 1.0
+                 or all(s == 1.0 for s in self.scale_factor)):
+            return input
+        return F.interpolate(
+            input                  = input,
+            size                   = self.size,
+            scale_factor           = self.scale_factor,
+            mode                   = self.mode,
+            align_corners          = self.align_corners,
+            recompute_scale_factor = self.recompute_scale_factor
+        )
+
+
+LAYERS.register(name="upsampling_nearest2d",  module=UpsamplingNearest2d)
+LAYERS.register(name="upsampling_bilinear2d", module=UpsamplingBilinear2d)
 
 
 # H1: - EXPERIMENTAL -----------------------------------------------------------
 
-# H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
+# H2: - FFANet -----------------------------------------------------------------
 
-@LAYERS.register(name="le_curve")
-class PixelwiseCurve8(Module):
+@LAYERS.register(name="ffa")
+class FFA(Module):
     """
-    Light-Enhancement Curve used in ZeroDCE model:
-        LEn(x) = LEn−1(x) + An(x)LEn−1(x)(1 − LEn−1(x))
-    """
+    This is the main feature in FFA-Net, the Feature Fusion Attention.
     
-    def forward(self, input: list[Tensor]) -> tuple[Tensor, Tensor, Tensor]:
-        # Split
-        input = input[0]  # Input image
-        a     = input[1]  # Trainable curve parameter
-        a1, a2, a3, a4, a5, a6, a7, a8 = torch.split(a, 3, dim=1)
-        # Merge
-        input  = input  + a1 * (torch.pow(input,  2) - input)
-        input  = input  + a2 * (torch.pow(input,  2) - input)
-        input  = input  + a3 * (torch.pow(input,  2) - input)
-        x1     = input  + a4 * (torch.pow(input,  2) - input)
-        input  = x1 + a5 * (torch.pow(x1, 2) - x1)
-        input  = input  + a6 * (torch.pow(input,  2) - input)
-        input  = input  + a7 * (torch.pow(input,  2) - input)
-        x2     = input  + a8 * (torch.pow(input,  2) - input)
-        input  = torch.cat([a1, a2, a3, a4, a5, a6, a7, a8], 1)
-        return input, x1, x2
-
-
-# H2: - Misc -------------------------------------------------------------------
-
-@LAYERS.register(name="context_block")
-class ContextBlock(Module):
-    """
-    ContextBlock module in GCNet. See 'GCNet: Non-local Networks Meet
-    Squeeze-Excitation Networks and Beyond' (https://arxiv.org/abs/1904.11492)
-    for details.
+    We concatenate all feature maps output by G Group Architectures in the
+    channel direction. Furthermore, We fuse features by multiplying the adaptive
+    learning weights which are obtained by Feature Attention (FA) mechanism.
     
     Args:
-        in_channels (int): Channels of the input feature map.
-        ratio (float): Ratio of channels of transform bottleneck
-        pooling_type (str): Pooling method for context modeling.
-            One of: [`att`, `avg`]. `att` stands for attention pooling and
-            `avg` stands for average pooling. Defaults to `att`.
-        fusion_types (Strs):
-            Fusion method for feature fusion, One of: [`channels_add`,
-            `channel_mul`]. `channels_add` stands for channel-wise addition
-            and `channel_mul` stands for multiplication.
-            Defaults to (`channel_add`,).
+        num_groups (int): Number of groups used in FFA-Net.
     """
     
     def __init__(
         self,
-        in_channels : int,
-        ratio       : float,
-        pooling_type: str  = "att",
-        fusion_types: Strs = ("channel_add", ),
+        channels  : int,
+        num_groups: int,
         *args, **kwargs
     ):
         super().__init__()
+        self.channels   = channels
+        self.num_groups = num_groups
+        self.ca         = nn.Sequential(*[
+            AdaptiveAvgPool2d(1),
+            Conv2d(
+                in_channels  = self.channels * self.num_groups,
+                out_channels = self.channels // 16,
+                kernel_size  = 1,
+                padding      = 0,
+                bias         = True,
+            ),
+            ReLU(inplace=True),
+            Conv2d(
+                in_channels  = self.channels // 16,
+                out_channels = self.channels * self.num_groups,
+                kernel_size  = 1,
+                padding      = 0,
+                bias         = True
+            ),
+            Sigmoid()
+        ])
+        self.pa = PixelAttentionLayer(
+            channels    = self.channels,
+            reduction   = 8,
+            kernel_size = 1,
+        )
         
-        if pooling_type not in ["avg", "att"]:
-            raise ValueError
-        if not isinstance(fusion_types, (list, tuple)):
-            raise ValueError
-        
-        valid_fusion_types = ["channel_add", "channel_mul"]
-        if not all([f in valid_fusion_types for f in fusion_types]):
-            raise ValueError
-        if len(fusion_types) <= 0:
-            raise ValueError("At least one fusion should be used.")
-        
-        planes = int(in_channels * ratio)
-        
-        if pooling_type == "att":
-            self.conv_mask = Conv2d(
-                in_channels  = in_channels,
-                out_channels = 1,
-                kernel_size  = (1, 1)
-            )
-            self.softmax = Softmax(dim=2)
-        else:
-            self.avg_pool = AdaptiveAvgPool2d(1)
-        
-        if "channel_add" in fusion_types:
-            self.channel_add_conv = Sequential(
-                Conv2d(
-                    in_channels  = in_channels,
-                    out_channels = planes,
-                    kernel_size  = (1, 1)
-                ),
-                LayerNorm(normalized_shape=[planes, 1, 1]),
-                ReLU(inplace=True),
-                Conv2d(
-                    in_channels  = planes,
-                    out_channels = in_channels,
-                    kernel_size  = (1, 1)
-                )
-            )
-        else:
-            self.channel_add_conv = None
-        
-        if "channel_mul" in fusion_types:
-            self.channel_mul_conv = Sequential(
-                Conv2d(
-                    in_channels  = in_channels,
-                    out_channels = planes,
-                    kernel_size  = (1, 1)
-                ),
-                LayerNorm(normalized_shape=[planes, 1, 1]),
-                ReLU(inplace=True),
-                Conv2d(
-                    in_channels  = planes,
-                    out_channels = in_channels,
-                    kernel_size  = (1, 1)
-                )
-            )
-        else:
-            self.channel_mul_conv = None
-        self.reset_parameters()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        # [N, C, 1, 1]
-        context = self.spatial_pool(input=input)
-        yhat    = input
-        if self.channel_mul_conv is not None:
-            # [N, C, 1, 1]
-            channel_mul_term  = torch.sigmoid(self.channel_mul_conv(context))
-            yhat             *= channel_mul_term
-        if self.channel_add_conv is not None:
-            # [N, C, 1, 1]
-            channel_add_term = self.channel_add_conv(context)
-            yhat             = yhat + channel_add_term
-        return yhat
-    
-    def spatial_pool(self, input: Tensor) -> Tensor:
-        b, c, h, w = input.size()
-        if self.pooling_type == "att":
-            input_x = input
-            # [N, C, H * W]
-            input_x = input_x.view(b, c, h * w)
-            # [N, 1, C, H * W]
-            input_x = input_x.unsqueeze(1)
-            # [N, 1, H, W]
-            context_mask = self.conv_mask(input)
-            # [N, 1, H * W]
-            context_mask = context_mask.view(b, 1, h * w)
-            # [N, 1, H * W]
-            context_mask = self.softmax(context_mask)
-            # [N, 1, H * W, 1]
-            context_mask = context_mask.unsqueeze(-1)
-            # [N, 1, C, 1]
-            context = torch.matmul(input_x, context_mask)
-            # [N, C, 1, 1]
-            context = context.view(b, c, 1, 1)
-        else:
-            # [N, C, 1, 1]
-            context = self.avg_pool(input)
-        return context
-
-
-@LAYERS.register(name="flatten")
-class Flatten(Module):
-    """
-    Flatten the image. Commonly used after `AdaptiveAvgPool2d(1)` to remove
-    last 2 dimensions.
-    
-    Args:
-        channels (int): Channels to flatten the features to. Default: `-1`.
-    """
-    
-    def __init__(self, channels: int = -1):
-        super().__init__()
-        self.channels = channels
-        
-    def forward(self, input: Tensor) -> Tensor:
-        output = input.view(input.shape[0], self.channels)
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        assert_sequence_of_length(input, self.num_groups)
+        w      = self.ca(torch.cat(to_list(input), dim=1))
+        w      = w.view(-1, self.num_groups, self.channels)[:, :, :, None, None]
+        output = w[:, 0, ::] * input[0]
+        for i in range(1, len(input)):
+            output += w[:, i, ::] * input[i]
         return output
 
 
-@LAYERS.register(name="mean")
-class Mean(Module):
+@LAYERS.register(name="ffa_block")
+class FFABlock(Module):
     """
-    Calculate mean of the image.
-    
-    Attributes:
-        dim: Specify the dimension to calculate mean. Defaults to None.
-        keepdim (bool): Defaults to False.
-    """
-    
-    def __init__(
-        self,
-        dim    : Sequence[str | ellipsis | None] = None,
-        keepdim: bool                            = False,
-    ):
-        super().__init__()
-        self.dim     = dim
-        self.keepdim = keepdim
-        
-    def forward(self, input: Tensor) -> Tensor:
-        return input.mean(dim=self.dim, keepdim=self.keepdim)
-
-
-@LAYERS.register(name="original_resolution_block")
-@LAYERS.register(name="ors")
-class OriginalResolutionBlock(Module):
-    """
-    Original Resolution Block.
-    
-    Args:
-        channels (int): Number of input and output channels.
-        kernel_size (Ints): Kernel size of the convolution layer.
-        reduction (int): Reduction factor. Defaults to 16.
-        bias (bool): Defaults to False.
-        act (Callable): Activation function.
-        num_cab (int): Number of CAB modules used.
+    A basic block structure in FFA-Net that consists of:
+        input --> Conv2d --> ReLU --> Conv2d --> Channel Attention --> Pixel Attention --> output
+          |                       ^                                                          ^
+          |_______________________|__________________________________________________________|
     """
     
     def __init__(
         self,
         channels   : int,
         kernel_size: Ints,
-        reduction  : int,
-        bias       : bool,
-        act        : Callable,
-        num_cab    : int,
+        *args, **kwargs
     ):
         super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        padding 	= kernel_size[0] // 2
-        act         = to_act_layer(act)
-        body = [
-            CAB(
-                channels    = channels,
-                reduction   = reduction,
-                kernel_size = kernel_size,
-                bias        = bias,
-                act         = act
-            )
-            for _ in range(num_cab)
+        self.conv1 = Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            padding      = (kernel_size // 2),
+            bias         = True
+        )
+        self.act1  = ReLU(inplace=True)
+        self.conv2 = Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            padding      = (kernel_size // 2),
+            bias         = True
+        )
+        self.calayer = ChannelAttentionLayer(
+            channels    = channels,
+            reduction   = 8,
+            kernel_size = 1,
+            stride      = 1,
+            padding     = 0,
+            bias        = True,
+        )
+        self.palayer = PixelAttentionLayer(
+            channels     = channels,
+            reduction    = 8,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            bias         = True,
+        )
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x  = input
+        y  = self.act1(self.conv1(x))
+        y  = y + x
+        y  = self.conv2(y)
+        y  = self.calayer(y)
+        y  = self.palayer(y)
+        y += x
+        return y
+
+
+@LAYERS.register(name="ffa_group")
+class FFAGroup(Module):
+    """
+    Our Group Architecture combines B Basic Block structures with skip
+    connections module. Continuous B blocks increase the depth and
+    expressiveness of the FFA-Net. And skip connections make FFA-Net get around
+    training difficulty. At the end of the FFA-Net, we add a recovery part
+    using a two-layer convolutional network implementation and a long shortcut
+    global residual learning module. Finally, we restore our desired haze-free
+    image.
+    """
+    
+    def __init__(
+        self,
+        channels   : int,
+        kernel_size: Ints,
+        num_blocks : int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        m: list[Module] = [
+            FFABlock(channels=channels, kernel_size=kernel_size)
+            for _ in range(num_blocks)
         ]
-        body.append(
+        m.append(
             Conv2d(
                 in_channels  = channels,
                 out_channels = channels,
                 kernel_size  = kernel_size,
-                stride       = (1, 1),
-                padding      = padding,
-                bias         = bias
+                padding      = (kernel_size // 2),
+                bias         = True
             )
         )
-        self.body = Sequential(*body)
-        
-    def forward(self, input: Tensor) -> Tensor:
-        output  = self.body(input)
-        output += input
-        return output
-
-
-@LAYERS.register(name="squeeze_and_excite_layer")
-@LAYERS.register(name="se_layer")
-class SqueezeAndExciteLayer(Module):
+        self.gp = nn.Sequential(*m)
     
-    def __init__(self, channel: int, reduction: int = 16):
+    def forward(self, input: Tensor) -> Tensor:
+        x  = input
+        y  = self.gp(x)
+        y += x
+        return y
+
+
+@LAYERS.register(name="ffa_post_process")
+class FFAPostProcess(Module):
+    """
+    Post-process module in FFA-Net.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int  = 64,
+        out_channels: int  = 3,
+        kernel_size : Ints = 3,
+        *args, **kwargs
+    ):
         super().__init__()
-        self.avg_pool = AdaptiveAvgPool2d(1)
-        self.fc       = Sequential(
-            Linear(channel, int(channel / reduction), bias=False),
-            ReLU(inplace=True),
-            Linear(int(channel / reduction), channel, bias=False),
-            Sigmoid()
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = kernel_size,
+            padding      = (kernel_size // 2),
+            bias         = True
+        )
+        self.conv2 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            padding      = (kernel_size // 2),
+            bias         = True
         )
     
     def forward(self, input: Tensor) -> Tensor:
-        b, c, _, _ = input.size()
-        y          = self.avg_pool(input).view(b, c)
-        y          = self.fc(y).view(b, c, 1, 1)
-        return input * y.expand_as(input)
+        return self.conv2(self.conv1(input))
 
 
-ORS     = OriginalResolutionBlock
-SELayer = SqueezeAndExciteLayer
+@LAYERS.register(name="ffa_pre_process")
+class FFAPreProcess(Module):
+    """
+    Pre-process module in FFA-Net.
+    """
+
+    def __init__(
+        self,
+        in_channels : int  = 3,
+        out_channels: int  = 64,
+        kernel_size : Ints = 3,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = 1,
+            padding      = (kernel_size // 2),
+            dilation     = 1,
+            groups       = 1,
+            bias         = True,
+            padding_mode = "zeros",
+            device       = None,
+            dtype        = None
+        )
+    
+    def forward(self, input: Tensor) -> Tensor:
+        return self.conv(input)
+
+
+# H2: - HINet ------------------------------------------------------------------
+
+@LAYERS.register(name="hinet_conv_block")
+class HINetConvBlock(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        downsample  : bool,
+        relu_slope  : float,
+        use_csff    : bool = False,
+        use_hin     : bool = False,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.downsample = downsample
+        self.use_csff   = use_csff
+        
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            padding      = 1,
+            bias         = True
+        )
+        self.relu1 = LeakyReLU(relu_slope, inplace=False)
+        self.conv2 = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            padding      = 1,
+            bias         = True
+        )
+        self.relu2    = LeakyReLU(relu_slope, inplace=False)
+        self.identity = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+        )
+        
+        if downsample and use_csff:
+            self.csff_enc = Conv2d(
+                in_channels  = out_channels,
+                out_channels = out_channels,
+                kernel_size  = 3,
+                stride       = 1,
+                padding      = 1,
+            )
+            self.csff_dec = Conv2d(
+                in_channels  = out_channels,
+                out_channels = out_channels,
+                kernel_size  = 3,
+                stride       = 1,
+                padding      = 1,
+            )
+        
+        self.use_hin = use_hin
+        if self.use_hin:
+            self.norm = InstanceNorm2d(out_channels // 2, affine=True)
+
+        if downsample:
+            self.downsample = Conv2d(
+                in_channels  = out_channels,
+                out_channels = out_channels,
+                kernel_size  = 4,
+                stride       = 2,
+                padding      = 1,
+                bias         = False
+            )
+    
+    def forward(self, input: Tensors) -> tuple[Tensor, Tensor | None]:
+        """
+        
+        Args:
+            input (Tensors): A single tensor for the first UNet or a list of 3
+                tensors for the second UNet.
+
+        Returns:
+            Output tensors.
+        """
+        enc = dec = None
+        if isinstance(input, Tensor):
+            x = input
+        elif isinstance(input, Sequence):
+            x = input[0]  # Input
+            if len(input) == 2:
+                enc = input[1]  # Encode path
+            if len(input) == 3:
+                dec = input[2]  # Decode path
+      
+        y   = self.conv1(input)
+        if self.use_hin:
+            y1, y2 = torch.chunk(y, 2, dim=1)
+            y      = torch.cat([self.norm(y1), y2], dim=1)
+        y  = self.relu1(y)
+        
+        y  = self.relu2(self.conv2(y))
+        y += self.identity(input)
+        
+        if enc is not None and dec is not None:
+            if not self.use_csff:
+                raise ValueError()
+            y = y + self.csff_enc(enc) + self.csff_dec(dec)
+       
+        if self.downsample:
+            y_down = self.downsample(y)
+            return y, y_down
+        else:
+            return y, None
+    
+
+@LAYERS.register(name="hinet_up_block")
+class HINetUpBlock(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        relu_slope  : float,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.up = ConvTranspose2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 2,
+            stride       = 2,
+            bias         = True,
+        )
+        self.conv = HINetConvBlock(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            downsample   = False,
+            relu_slope   = relu_slope,
+        )
+    
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        assert_sequence_of_length(input, 2)
+        x    = input[0]
+        skip = input[1]
+        
+        x_up = self.up(x)
+        y    = torch.cat([x_up, skip], 1)
+        y    = self.conv(y)
+        return y
+
+
+@LAYERS.register(name="hinet_skip_block")
+class HINetSkipBlock(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        mid_channels: int = 128,
+        repeat_num  : int = 1,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.repeat_num = repeat_num
+        self.shortcut   = nn.Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            bias         = True
+        )
+        
+        blocks = []
+        blocks.append(
+            HINetConvBlock(
+                in_channels  = in_channels,
+                out_channels = mid_channels,
+                downsample   = False,
+                relu_slope   = 0.2
+            )
+        )
+        for i in range(self.repeat_num - 2):
+            blocks.append(
+                HINetConvBlock(
+                    in_channels  = mid_channels,
+                    out_channels = mid_channels,
+                    downsample   = False,
+                    relu_slope   = 0.2
+                )
+            )
+        blocks.append(
+            HINetConvBlock(
+                in_channels  = mid_channels,
+                out_channels = out_channels,
+                downsample   = False,
+                relu_slope   = 0.2
+            )
+        )
+        self.blocks = Sequential(*blocks)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        shortcut = self.shortcut(input)
+        input    = self.blocks(input)
+        return input + shortcut
+    
+
+# H2: - MBLLEN -----------------------------------------------------------------
+
+@LAYERS.register(name="enhancement_module")
+@LAYERS.register(name="em")
+class EnhancementModule(Module):
+    """
+    Enhancement regression (EM) has a symmetric structure to first apply
+    convolutions and then deconvolutions.
+    
+    Args:
+        in_channels (int): Number of input channels. Defaults to 32.
+        mid_channels (int): Number of input and output channels for middle
+            Conv2d layers used in each EM block. Defaults to 8.
+        out_channels (int): Number of output channels. Defaults to 3.
+        kernel_size (Ints): Kernel size for Conv2d layers used in each EM block.
+            Defaults to 5.
+    """
+    
+    def __init__(
+        self,
+        in_channels : int  = 32,
+        mid_channels: int  = 8,
+        out_channels: int  = 3,
+        kernel_size : Ints = 5,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.convs = Sequential(
+            Conv2d(
+                in_channels  = in_channels,
+                out_channels = mid_channels,
+                kernel_size  = 3,
+                padding      = 1,
+                padding_mode = "replicate"
+            ),
+            ReLU(),
+            Conv2d(
+                in_channels  = mid_channels,
+                out_channels = mid_channels,
+                kernel_size  = kernel_size
+            ),
+            ReLU(),
+            Conv2d(
+                in_channels  = mid_channels,
+                out_channels = mid_channels * 2,
+                kernel_size  = kernel_size
+            ),
+            ReLU(),
+            Conv2d(
+                in_channels  = mid_channels * 2,
+                out_channels = mid_channels * 4,
+                kernel_size  = kernel_size
+            ),
+            ReLU()
+        )
+        self.deconvs = Sequential(
+            ConvTranspose2d(
+                in_channels  = mid_channels * 4,
+                out_channels = mid_channels * 2,
+                kernel_size  = kernel_size,
+            ),
+            ReLU(),
+            ConvTranspose2d(
+                in_channels  = mid_channels * 2,
+                out_channels = mid_channels,
+                kernel_size  = kernel_size
+            ),
+            ReLU(),
+            Conv2d(
+                in_channels  = mid_channels,
+                out_channels = out_channels,
+                kernel_size  = kernel_size
+            ),
+            ReLU(),
+        )
+    
+    def forward(self, input: Tensor) -> Tensor:
+        return self.deconvs(self.convs(input))
+
+
+EM = EnhancementModule
+
+
+# H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
+
+@LAYERS.register(name="pixelwise_higher_order_le_curve")
+class PixelwiseHigherOrderLECurve(Module):
+    """
+    Pixelwise Light-Enhancement Curve is a higher-order curves that can be
+    applied iteratively to enable more versatile adjustment to cope with
+    challenging low-light conditions:
+        LE_{n}(x) = LE_{n−1}(x) + A_{n}(x) * LE_{n−1}(x)(1 − LE_{n−1}(x)),
+        
+        where `A` is a parameter map with the same size as the given image, and
+        `n` is the number of iteration, which controls the curvature.
+    
+    This module is designed to accompany both:
+        - ZeroDCE   (estimate 3*n curve parameter maps)
+        - ZeroDCE++ (estimate 3   curve parameter maps)
+    
+    Args:
+        n (int): Number of iterations.
+    """
+    
+    def __init__(self, n: int):
+        super().__init__()
+        self.n = n
+    
+    def forward(self, input: list[Tensor]) -> tuple[Tensor, Tensor]:
+        # Split
+        input = input[0]  # Input image
+        a     = input[1]  # Trainable curve parameter
+        
+        # Prepare curve parameter
+        _, c1, _, _ = input.shape  # Should be 3
+        _, c2, _, _ = a.shape      # Should be 3*n
+        if c2 == c1 * self.n:
+            a = torch.split(a, c1, dim=1)
+        elif c2 == 3:
+            pass
+        else:
+            raise ValueError(
+                f"Curve parameter maps `a` must be `3` or `3 * {self.n}`. "
+                f"But got: {c2}."
+            )
+
+        # Estimate curve parameter
+        for i in range(self.n):
+            a_i   = a if isinstance(a, int) else a[i]
+            input = input + a * (torch.pow(input,  2) - input)
+        
+        a = torch.cat(a, dim=1) if isinstance(a, list) else a
+        return input, a
