@@ -69,7 +69,7 @@ cfgs = {
             [-1,      1,      Tanh,       []],                    # 11
         ],
         "head": [
-            [[0, 11], 1,      PixelwiseHigherOrderLECurve, [8]],  # 12
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],  # 12
         ]
     },
 }

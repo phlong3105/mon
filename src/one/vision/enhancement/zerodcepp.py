@@ -35,7 +35,7 @@ cfgs = {
             [-1,      1,      UpsamplingBilinear2d,         [None, 1]],               # 12
         ],
         "head": [
-            [[0, 12], 1,      PixelwiseHigherOrderLECurve,  [8]],                     # 13
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                     # 13
         ]
     }
 }

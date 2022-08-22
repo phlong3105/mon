@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 
+from ensemble_boxes import weighted_boxes_fusion
 from munch import Munch
 
 from one.core import progress_bar
@@ -70,28 +71,33 @@ def generate_ensemble_submission(args: dict | Munch | argparse.Namespace):
     output_file = Path(args.output_file)
     output_data = []
     dirs        = [
-        RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-01",
-        RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-02",
-        RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-03",
-        RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-04",
+        # RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-01",
+        # RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-02",
+        # RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-03",
+        # RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale-04",
+        # 
+        # RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-01",
+        # RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-02",
+        # RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-03",
+        # RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-04",
+        # 
+        # RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-01",
+        # RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-02",
+        # RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-03",
+        # RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-04",
+        # 
+        # RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-01",
+        # RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-02",
+        # RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-03",
+        # RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-04",
         
-        RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-01",
-        RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-02",
-        RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-03",
-        RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale-04",
-        
-        RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-01",
-        RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-02",
-        RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-03",
-        RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale-04",
-        
-        RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-01",
-        RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-02",
-        RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-03",
-        RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale-04",
+        RUNS_DIR / "detect" / "yolov7-d6-delftbikes-multiscale",
+        RUNS_DIR / "detect" / "yolov7-e6-delftbikes-multiscale",
+        RUNS_DIR / "detect" / "yolov7-e6e-delftbikes-multiscale",
+        RUNS_DIR / "detect" / "yolov7-w6-delftbikes-multiscale",
     ]
     
-    txts = [list(d.rglob(".txt")) for d in dirs]
+    txts = [list(d.rglob("labels/*.txt")) for d in dirs]
     n    = len(txts[0])
     if not all(n == len(t) for t in txts):
         raise ValueError(f"Number of .txt files among folders does not match.")
@@ -104,16 +110,16 @@ def generate_ensemble_submission(args: dict | Munch | argparse.Namespace):
             boxes_list  = []
             scores_list = []
             labels_list = []
-            c, h, w     = 0, 0, 0
+            h, w, c     = 0, 0, 0
             for j in range(len(txts)):
                 boxes  = []
                 scores = []
                 labels = []
-                p      = txts[i][j]
+                p      = txts[j][i]
                 lines  = open(p, "r").read().splitlines()
                 for l in lines:
                     d       = l.split(" ")
-                    c, h, w = int(d[6]), int(d[7]), int(d[8])
+                    h, w, c = int(d[6]), int(d[7]), int(d[8])
                     x1 = float(d[1]) / w
                     y1 = float(d[2]) / h
                     x2 = float(d[3]) / w
@@ -126,9 +132,9 @@ def generate_ensemble_submission(args: dict | Munch | argparse.Namespace):
                 scores_list.append(scores)
                 labels_list.append(labels)
     
-            weights      = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            weights      = [1, 1, 1, 1]
             iou_thr      = 0.5
-            skip_box_thr = 0.0001
+            skip_box_thr = 0.001
             sigma        = 0.1
             boxes, scores, labels = weighted_boxes_fusion(
                 boxes_list   = boxes_list,
@@ -142,19 +148,19 @@ def generate_ensemble_submission(args: dict | Munch | argparse.Namespace):
             data = []
             for k in range(len(boxes)):
                 b    = boxes[k]
-                b[1] = b[1] * w
-                b[2] = b[2] * h
-                b[3] = b[3] * w
-                b[4] = b[4] * h
+                b[0] = b[0] * w
+                b[1] = b[1] * h
+                b[2] = b[2] * w
+                b[3] = b[3] * h
                 data.append(
                     {
                         "image_id": i,
                         "category_id": int(labels[k] + 1),
                         "bbox": [
+                            b[0],
                             b[1],
-                            b[2],
-                            b[3] - b[1],
-                            b[4] - b[2]
+                            b[2] - b[0],
+                            b[3] - b[1]
                         ],
                         "score": float(scores[k])
                     }
@@ -170,8 +176,8 @@ def generate_ensemble_submission(args: dict | Munch | argparse.Namespace):
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--run",         default="generate_submission",                                     type=str)
-    parser.add_argument("--source",      default=CURRENT_DIR/"runs"/"detect"/"yolov7-e6e-delftbikes-15363", type=str, help="Directory containing YOLO results .txt")
+    parser.add_argument("--run",         default="generate_ensemble",                                     type=str)
+    parser.add_argument("--source",      default=CURRENT_DIR/"runs"/"detect"/"yolov7-e6e-delftbikes-multiscale", type=str, help="Directory containing YOLO results .txt")
     parser.add_argument("--output-file", default=CURRENT_DIR/"runs"/"detect"/"submission.json",             type=str, help="Submission .json file")
     args   = parser.parse_args()
     return args

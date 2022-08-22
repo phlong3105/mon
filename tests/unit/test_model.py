@@ -17,6 +17,10 @@ class TestModel(unittest.TestCase):
     def test_ffanet(self):
         ffanet = FFANet(verbose=True)
         self.assertIsNotNone(ffanet)
+    
+    def test_hinet(self):
+        hinet = HINet(verbose=True)
+        self.assertIsNotNone(hinet)
         
     def test_mbllen(self):
         mbllen = MBLLEN(verbose=True)

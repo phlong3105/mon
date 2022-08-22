@@ -270,6 +270,96 @@ class PixelAttentionLayer(Module):
         return input * self.pa(input)
 
 
+@LAYERS.register(name="supervised_attention_module")
+@LAYERS.register(name="sam")
+class SupervisedAttentionModule(Module):
+    """
+    Supervised Attention Module.
+    """
+    
+    def __init__(
+        self,
+        channels    : int,
+        kernel_size : Ints,
+        stride      : int  = 1,
+        dilation    : Ints = 1,
+        groups      : int  = 1,
+        bias        : bool = True,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
+        **_
+    ):
+        super().__init__()
+        padding = kernel_size[0] // 2 \
+            if isinstance(kernel_size, Sequence) \
+            else kernel_size // 2
+
+        self.conv1 = Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv2  = Conv2d(
+            in_channels  = channels,
+            out_channels = 3,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv3  = Conv2d(
+            in_channels  = 3,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act = Sigmoid()
+        
+    def forward(self, input: Sequence[Tensor]) -> tuple[Tensor, Tensor]:
+        """
+        Run forward pass.
+
+        Args:
+            input (Sequence[Tensor]): A list of 2 tensors. The first tensor is
+                the output from previous layer. The second tensor is the
+                current step input.
+            
+        Returns:
+            Supervised attention features.
+            Output feature for the next layer.
+        """
+        assert_sequence_of_length(input, 2)
+        prev_output   = input[0]
+        current_input = input[1]
+
+        features  = self.conv1(prev_output)
+        output    = self.conv2(prev_output) + current_input
+        features *= self.act(self.conv3(output))
+        features += prev_output
+        return features, output
+    
+
 # H2: - Convolution ------------------------------------------------------------
 
 def conv2d_same(
@@ -1242,10 +1332,10 @@ LAYERS.register(name="feature_alpha_dropout", module=FeatureAlphaDropout)
 @LAYERS.register(name="extract_item")
 class ExtractItem(Module):
     """
-    Extract a feature item at `index` among a sequence of tensors.
+    Extract an item (feature) at `index` in a sequence of tensors.
     
     Args:
-        index (int): Extract the item at index among the feature sequence.
+        index (int): The index of the item to extract.
     """
     
     def __init__(self, index: int, *args, **kwargs):
@@ -1257,6 +1347,35 @@ class ExtractItem(Module):
             return input
         elif isinstance(input, (list, tuple)):
             return input[self.index]
+        else:
+            raise TypeError(
+                f"`input` must be a list or tuple of tensors. "
+                f"But got: {type(input)}."
+            )
+    
+
+@LAYERS.register(name="extract_items")
+class ExtractItems(Module):
+    """
+    Extract a list of items (features) at `indexes` in a sequence of tensors.
+    
+    Args:
+        indexes (Sequence[int]): The indexes of the items to extract.
+    """
+    
+    def __init__(self, indexes: Sequence[int], *args, **kwargs):
+        super().__init__()
+        self.indexes = indexes
+    
+    def forward(self, input: Tensors) -> list[Tensor]:
+        if isinstance(input, Tensor):
+            return [input]
+        elif isinstance(input, (list, tuple)):
+            return [input[i] for i in self.indexes]
+        raise TypeError(
+            f"`input` must be a list or tuple of tensors. "
+            f"But got: {type(input)}."
+        )
     
 
 # H2: - Fusion -----------------------------------------------------------------
@@ -1316,7 +1435,17 @@ class Foldcut(nn.Module):
         x1, x2 = input.chunk(2, dim=self.dim)
         return x1 + x2
 
- 
+
+@LAYERS.register(name="join")
+class Join(Module):
+    """
+    Join multiple features and return a list tensors.
+    """
+    
+    def forward(self, input: Sequence[Tensor]) -> list[Tensor]:
+        return to_list(input)
+    
+
 @LAYERS.register(name="shortcut")
 class Shortcut(Module):
     """
@@ -2684,7 +2813,7 @@ class HINetConvBlock(Module):
                 bias         = False
             )
     
-    def forward(self, input: Tensors) -> tuple[Tensor, Tensor | None]:
+    def forward(self, input: Tensors) -> tuple[Tensor | None, Tensor]:
         """
         
         Args:
@@ -2720,9 +2849,9 @@ class HINetConvBlock(Module):
        
         if self.downsample:
             y_down = self.downsample(y)
-            return y, y_down
+            return y_down, y
         else:
-            return y, None
+            return None, y
     
 
 @LAYERS.register(name="hinet_up_block")
@@ -2925,12 +3054,12 @@ class PixelwiseHigherOrderLECurve(Module):
     
     def forward(self, input: list[Tensor]) -> tuple[Tensor, Tensor]:
         # Split
-        input = input[0]  # Input image
-        a     = input[1]  # Trainable curve parameter
+        a      = input[0]  # Trainable curve parameter learned from previous layer
+        output = input[1]  # Original input image
         
         # Prepare curve parameter
-        _, c1, _, _ = input.shape  # Should be 3
-        _, c2, _, _ = a.shape      # Should be 3*n
+        _, c1, _, _ = output.shape  # Should be 3
+        _, c2, _, _ = a.shape       # Should be 3*n
         if c2 == c1 * self.n:
             a = torch.split(a, c1, dim=1)
         elif c2 == 3:
@@ -2943,8 +3072,8 @@ class PixelwiseHigherOrderLECurve(Module):
 
         # Estimate curve parameter
         for i in range(self.n):
-            a_i   = a if isinstance(a, int) else a[i]
-            input = input + a * (torch.pow(input,  2) - input)
+            a_i    = a if isinstance(a, int) else a[i]
+            output = output + a * (torch.pow(output, 2) - output)
         
         a = torch.cat(a, dim=1) if isinstance(a, list) else a
-        return input, a
+        return a, output

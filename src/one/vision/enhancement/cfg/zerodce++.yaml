@@ -18,5 +18,5 @@ backbone: [
 ]
 
 head: [
-  [[0, 12], 1,      PixelwiseHigherOrderLECurve,  [8]],                     # 13
+  [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                     # 13
 ]

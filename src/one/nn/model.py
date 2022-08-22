@@ -495,6 +495,7 @@ def parse_model(
                 args[j] = eval(a) if isinstance(a, str) else a  # eval strings
             except:
                 pass
+        # print(f, n, m, args)
         
         if m in [
             Conv2d,
@@ -504,32 +505,40 @@ def parse_model(
             EnhancementModule,
             FFAPostProcess,
             FFAPreProcess,
+            HINetConvBlock,
+            HINetUpBlock,
         ]:
-            c1, c2 = ch[f], args[0]
-            args   = [c1, c2, *args[1:]]
+            if isinstance(f, (list, tuple)):
+                c1, c2 = ch[f[0]], args[0]
+            else:
+                c1, c2 = ch[f], args[0]
+            args = [c1, c2, *args[1:]]
         elif m in [
             ChannelAttentionLayer,
+            FFA,
             FFABlock,
             FFAGroup,
             PixelAttentionLayer,
+            SupervisedAttentionModule,
         ]:
-            c2   = ch[f]
-            args = [c2, *args[0:]]
-        elif m is FFA:
-            c1 = c2 = ch[f[-1]]
-            args    = [c1, *args[0:]]
+            if isinstance(f, (list, tuple)):
+                c1 = c2 = ch[f[0]]
+            else:
+                c1 = c2 = ch[f]
+            args = [c1, *args[0:]]
         elif m is BatchNorm2d:
             args = [ch[f]]
+        elif m in [
+            Join,
+            PixelwiseHigherOrderLECurve,
+            Shortcut,
+            Sum,
+        ]:
+            c2 = ch[f[-1]]
         elif m is Foldcut:
             c2 = ch[f] // 2
         elif m in [Chuncat, Concat]:
             c2 = sum([ch[x] for x in f])
-        elif m in [
-            PixelwiseHigherOrderLECurve,
-            Shortcut,
-            Sum
-        ]:
-            c2 = ch[f[-1]]
         else:
             c2 = ch[f]
         
@@ -538,7 +547,6 @@ def parse_model(
             ch = []
         ch.append(c2)
         
-        print(m, n, args)
         m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
         m_.i  = i
         m_.f  = f
@@ -1185,7 +1193,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Returns:
             Predictions and loss value.
         """
-        pred = self.forward(input=input, *args, **kwargs)
+        pred     = self.forward(input=input, *args, **kwargs)
+        features = None
+        if isinstance(pred, (list, tuple)):
+            features = pred[0:-1]
+            pred     = pred[-1]
         loss = self.loss(pred, target) if self.loss else None
         return pred, loss
     
