@@ -523,7 +523,7 @@ def test_cifar10():
         "name": "cifar10",
             # Dataset's name.
         "shape": [3, 32, 32],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
             Resize(size=[3, 32, 32])
         ],
@@ -577,7 +577,7 @@ def test_cifar100():
         "name": "cifar100",
             # Dataset's name.
         "shape": [3, 32, 32],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
             Resize(size=[3, 32, 32])
         ],

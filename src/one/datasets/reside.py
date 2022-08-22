@@ -53,7 +53,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -160,7 +160,7 @@ class RESIDEITS(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -267,7 +267,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -375,7 +375,7 @@ class RESIDEOTS(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -482,7 +482,7 @@ class RESIDESOTS(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -589,7 +589,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -696,7 +696,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -1410,7 +1410,7 @@ def test_reside_hsts():
         "name": "reside_hsts",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1461,7 +1461,7 @@ def test_reside_its():
         "name": "reside_its",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1512,7 +1512,7 @@ def test_reside_its_v2():
         "name": "reside_its_v2",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1563,7 +1563,7 @@ def test_reside_ots():
         "name": "reside_ots",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1614,7 +1614,7 @@ def test_reside_sots():
         "name": "reside_sots",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1665,7 +1665,7 @@ def test_reside_sots_indoor():
         "name": "reside_sots_indoor",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1716,7 +1716,7 @@ def test_reside_sots_outdoor():
         "name": "reside_sots_outdoor",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.

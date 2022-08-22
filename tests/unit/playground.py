@@ -2,5 +2,10 @@ from torch import FloatTensor
 from torch import tensor
 
 from one.core import *
-for i in range(5):
-    print(2 ** i * 64)
+
+a = {
+    "a": 1
+}
+
+b = a | {"a": 2}
+print(b)

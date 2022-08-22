@@ -455,7 +455,7 @@ def test_mnist():
         "name": "mnist",
             # Dataset's name.
         "shape": [3, 32, 32],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
             Resize(size=[3, 32, 32])
         ],
@@ -509,7 +509,7 @@ def test_fashionmnist():
         "name": "fashionmnist",
             # Dataset's name.
         "shape": [3, 32, 32],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
             Resize(size=[3, 32, 32])
         ],

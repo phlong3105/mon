@@ -397,7 +397,7 @@ def test_delftbikes_yolo():
         "name": "delftbikes_yolo",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
             Resize(size=[3, 512, 512]),
         ],

@@ -376,9 +376,169 @@ def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
   
 # H1: - Trainer ----------------------------------------------------------------
 
+# noinspection PyUnresolvedReferences
 class Trainer(pl.Trainer):
     """
     Override `pytorch_lightning.Trainer` with several methods and properties.
+    
+    Args:
+        accumulate_grad_batches (int | dict | None): Accumulates grads every k
+            batches or as set up in the dict. Defaults to None.
+        amp_backend (str): The mixed precision backend to use ("native" or
+            "apex"). Defaults to "native".
+        amp_level (str | None): The optimization level to use (O1, O2, etc...).
+            By default it will be set to "O2" if `amp_backend='apex'`.
+        auto_lr_find (bool | str): If set to True, will make `trainer.tune()`
+            run a learning rate finder, trying to optimize initial learning for
+            faster convergence. `trainer.tune()` method will set the suggested
+            learning rate in `self.lr` or `self.learning_rate` in the
+            `LightningModule`. To use a different key set a string instead of
+            True with the key name. Defaults to False.
+        auto_scale_batch_size (bool | str): If set to True, will `initially`
+            run a batch size finder trying to find the largest batch size that
+            fits into memory. The result will be stored in `self.batch_size` in
+            the `LightningModule`. Additionally, can be set to either `power`
+            that estimates the batch size through a power search or `binsearch`
+            that estimates the batch size through a binary search.
+            Defaults to False.
+        auto_select_gpus (bool): If enabled and `gpus` or `devices` is an
+            integer, pick available gpus automatically. This is especially
+            useful when GPUs are configured to be in "exclusive mode", such
+            that only one process at a time can access them. Defaults to False.
+        benchmark (bool | None): The value (True or False) to set
+            `torch.backends.cudnn.benchmark` to. The value for
+            `torch.backends.cudnn.benchmark` set in the current session will be
+            used (False if not manually set). If `deterministic` is set to True,
+            this will default to False. Override to manually set a different
+            value. Defaults to None.
+        callbacks (list[Callback] | Callback | None): Add a callback or list of
+            callbacks. Defaults to None.
+        check_val_every_n_epoch (int | None): Perform a validation loop every
+            after every n training epochs. If None, validation will be done
+            solely based on the number of training batches, requiring
+            `val_check_interval` to be an integer value. Defaults to 1.
+        default_root_dir (str | None): Default path for logs and weights when
+            no logger/ckpt_callback passed. Can be remote file paths such as
+            `s3://mybucket/path` or 'hdfs://path/'. Defaults to os.getcwd().
+        detect_anomaly (bool): Enable anomaly detection for the autograd engine.
+            Defaults to False.
+        deterministic (bool | str | None): If True, sets whether PyTorch
+            operations must use deterministic algorithms. Set to "warn" to use
+            deterministic algorithms whenever possible, throwing warnings on
+            operations that don't support deterministic mode (requires PyTorch
+            1.11+). If not set, defaults to False. Defaults to None.
+        devices (list | int | str | None): Will be mapped to either gpus,
+            tpu_cores, num_processes or ipus, based on the accelerator type.
+        enable_checkpointing (bool): If True, enable checkpointing. It will
+            configure a default `ModelCheckpoint` callback if there is no
+            user-defined `ModelCheckpoint` in `callbacks`. Defaults to True.
+        enable_model_summary (bool): Whether to enable model summarization by
+            default. Defaults to True.
+        enable_progress_bar (bool): Whether to enable to progress bar by
+            default. Defaults to True.
+        fast_dev_run (int | bool): Runs n if set to `n` (int) else 1 if set to
+            True batch(es) of train, val and test to find any bugs (ie: a sort
+            of unit test). Defaults to False.
+        gradient_clip_val (int | float | None): The value at which to clip
+            gradients. Passing `gradient_clip_val=None` disables gradient
+            clipping. If using Automatic Mixed Precision (AMP), the gradients
+            will be unscaled before. Defaults to None.
+        gradient_clip_algorithm (str | None): The gradient clipping algorithm
+            to use. Pass `gradient_clip_algorithm="value"` to clip by value,
+            and `gradient_clip_algorithm="norm"` to clip by norm. By default,
+            it will be set to "norm".
+        limit_train_batches (int | float | None): How much of training dataset
+            to check (float = fraction, int = num_batches). Defaults to 1.0.
+        limit_val_batches (int | float | None): How much of validation dataset
+            to check (float = fraction, int = num_batches). Defaults to 1.0.
+        limit_test_batches (int | float | None): How much of test dataset to
+            check (float = fraction, int = num_batches). Defaults to 1.0.
+        limit_predict_batches (int | float | None): How much of prediction
+            dataset to check (float = fraction, int = num_batches).
+            Defaults to 1.0.
+        logger (Logger | list[Logger] | None): Logger (or iterable collection
+            of loggers) for experiment tracking.
+            - If True uses the default `TensorBoardLogger`.
+            - If False will disable logging.
+            - If multiple loggers are provided and the `save_dir` property of
+              that logger is not set, local files (checkpoints, profiler traces,
+              etc.) are saved in `default_root_dir` rather than in the `log_dir`
+              of the individual loggers.
+            Defaults to True.
+        log_every_n_steps (int): How often to log within steps. Defaults to 50.
+        max_epochs (int | None): Stop training once this number of epochs is
+            reached. Disabled by default (None).
+            - If both `max_epochs` and `max_steps` are not specified, defaults
+              to `max_epochs=1000`.
+            - To enable infinite training, set `max_epochs=-1`.
+        min_epochs (int | None): Force training for at least these many epochs.
+            Disabled by default (None).
+        max_steps (int): Stop training after this number of steps. Disabled by
+            default (-1).
+            - If `max_steps= 1` and `max_epochs=None`, will default  to
+              `max_epochs = 1000`.
+            - To enable infinite training, set `max_epochs=-1`.
+        min_steps (int | None): Force training for at least these number of
+            steps. Disabled by default (None).
+        max_time (str | timedelta | dict[str, int] | None): Stop training after
+            this amount of time has passed. Disabled by default (None).
+            The time duration can be specified in the format DD:HH:MM:SS
+            (days, hours, minutes seconds), as a :class:`datetime.timedelta`,
+            or a dictionary with keys that will be passed to
+            :class:`datetime.timedelta`.
+        move_metrics_to_cpu (bool): Whether to force internal logged metrics to
+            be moved to cpu. This can save some gpu memory, but can make
+            training slower. Use with attention. Defaults to False.
+        multiple_trainloader_mode (str): How to loop over the datasets when
+            there are multiple train loaders.
+            - In `max_size_cycle` mode, the trainer ends one epoch when the
+              largest dataset is traversed, and smaller datasets reload when
+              running out of their data.
+            - In `min_size` mode, all the datasets reload when reaching the
+              minimum length of datasets.
+            Defaults to "max_size_cycle".
+        num_nodes (int): Number of GPU nodes for distributed training.
+            Defaults to 1.
+        num_sanity_val_steps (int): Sanity check runs n validation batches
+            before starting the training routine. Set it to -1 to run all
+            batches in all validation dataloaders. Defaults to 2.
+        overfit_batches (int | float): Over-fit a fraction of training/validation
+            data (float) or a set number of batches (int). Defaults to 0.0.
+        plugins: Plugins allow modification of core behavior like ddp and amp,
+            and enable custom lightning plugins. Defaults to None.
+        precision (int | str): Double precision (64), full precision (32),
+            half precision (16) or bfloat16 precision (bf16). Can be used on
+            CPU, GPU, TPUs, HPUs or IPUs. Defaults to 32.
+        profiler (Profiler | str | None): To profile individual steps during
+            training and assist in identifying bottlenecks. Defaults to None.
+        reload_dataloaders_every_n_epochs (int): Set to a non-negative integer
+            to reload dataloaders every n epochs. Defaults to 0.
+        replace_sampler_ddp (bool): Explicitly enables or disables sampler
+            replacement. If not specified this will toggle automatically when
+            DDP is used. By default, it will add `shuffle=True` for train
+            sampler and `shuffle=False` for val/test sampler. If you want to
+            customize it, you can set `replace_sampler_ddp=False` and add your
+            own distributed sampler.
+        strategy (str | Strategy | None): Supports different training
+            strategies with aliases as well custom strategies. Defaults to None.
+        sync_batchnorm (bool): Synchronize batch norm layers between process
+            groups/whole world. Defaults to False.
+        track_grad_norm (int | float | str):
+            - -1 no tracking. Otherwise tracks that p-norm.
+            - May be set to 'inf' infinity-norm.
+            - If using Automatic Mixed Precision (AMP), the gradients will be
+              unscaled before logging them.
+            Defaults to -1.
+        val_check_interval (int | float | None): How often to check the
+            validation set.
+            - Pass a `float` in the range [0.0, 1.0] to check after a fraction
+              of the training epoch.
+            - Pass an `int` to check after a fixed number of training batches.
+              An `int` value can only be higher than the number of training
+              batches when `check_val_every_n_epoch=None`, which validates
+              after every `N` training batches across epochs or during
+              iteration-based training.
+            Defaults to 1.0.
     """
     
     @pl.Trainer.current_epoch.setter
@@ -615,11 +775,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     
     Args:
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
-        basename (str | None): Model base name. In case None is given, it
-            will be `self.__class__.__name__`. Defaults to None.
-        name (str | None): Model name in the following format:
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
             {name}-{data_name}-{postfix}. In case None is given, it will be
-            `self.basename`. Defaults to None.
+            `self.name`. Defaults to None.
         cfg (dict | Path_ | None): Model's layers configuration. It can be an
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
@@ -628,7 +788,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             detection tasks. Defaults to None.
         classlabels (ClassLabels | None): ClassLabels object that contains all
             labels in the dataset. Defaults to None.
-        phase (ModelPhase_): Model's running phase. Defaults to training.
         pretrained (Pretrained): Initialize weights from pretrained.
             - If True, use the original pretrained described by the author
               (usually, ImageNet or COCO). By default, it is the first element
@@ -636,6 +795,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             - If str and is a file/path, then load weights from saved file.
             - In each inherited model, `pretrained` can be a dictionary's
               key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
         loss (Losses_ | None): Loss function for training model.
             Defaults to None.
         metrics (Metrics_ | None): Metric(s) for validating and testing model.
@@ -650,8 +810,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     def __init__(
         self,
         root       : Path_               = RUNS_DIR,
-        basename   : str  | None         = None,
         name       : str  | None         = None,
+        fullname   : str  | None         = None,
         cfg        : dict | Path_ | None = None,
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
@@ -666,8 +826,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.basename      = basename
         self.name          = name
+        self.fullname      = fullname
         self.root          = root
         self.phase         = phase
         self.pretrained    = pretrained
@@ -708,27 +868,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             self.init_weights()
         
         if self.verbose:
-            console.log(f"[red]{self.name}")
+            console.log(f"[red]{self.fullname}")
             print_table(self.info)
             console.log(f"Save indexes: {self.save}")
-    
-    @property
-    def basename(self) -> str:
-        return self._basename
-    
-    @basename.setter
-    def basename(self, basename: str | None = None):
-        """
-        Assign the model's basename. For example: `scaled_yolov4-p7-coco`, the
-        basename is `scaled_yolov4`.
-        
-        Args:
-            basename (str | None): Model base name. In case None is given, it
-                will be `self.__class__.__name__`. Defaults to None.
-		"""
-        self._basename = basename \
-            if (basename is not None and basename != "") \
-            else self.__class__.__name__.lower()
     
     @property
     def debug(self) -> Munch | None:
@@ -793,6 +935,24 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         return None if self.size is None else len(self.size)
     
     @property
+    def fullname(self) -> str:
+        return self._fullname
+    
+    @fullname.setter
+    def fullname(self, fullname: str | None = None):
+        """
+        Assign the model full name in the following format:
+        {name}-{data_name}-{postfix}. For example: `yolov5-coco-1920`
+ 
+        Args:
+            fullname (str | None): Model fullname. In case None is given, it
+                will be `self.name`. Defaults to None.
+        """
+        self._fullname = fullname \
+            if (fullname is not None and fullname != "") \
+            else self.name
+    
+    @property
     def loss(self) -> _Loss | None:
         return self._loss
     
@@ -818,13 +978,14 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     @name.setter
     def name(self, name: str | None = None):
         """
-        Assign the model name in the following format:
-        {name}-{data_name}-{postfix}. For example: `yolov5-coco-1920`
- 
+        Assign the model's name.
+        
+        For example: `yolov7-e6-coco`, the name is `yolov7`.
+        
         Args:
             name (str | None): Model name. In case None is given, it will be
-                `self.basename`. Defaults to None.
-        """
+            `self.__class__.__name__`. Defaults to None.
+		"""
         self._name = name \
             if (name is not None and name != "") \
             else self.__class__.__name__.lower()
@@ -887,7 +1048,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     
     @property
     def pretrained_dir(self) -> Path:
-        return PRETRAINED_DIR / self.basename
+        return PRETRAINED_DIR / self.name
     
     @property
     def root(self) -> Path:
@@ -905,8 +1066,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         if not root.is_dir():
             root = RUNS_DIR
         self._root = root
-        if self._root.name != self.name:
-            self._root = self._root / self.name
+        if self._root.name != self.fullname:
+            self._root = self._root / self.fullname
 
         self._debug_dir   = self._root / "debugs"
         self._weights_dir = self._root / "weights"
@@ -1131,17 +1292,15 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         optims = self.optims
 
         if optims is None:
-            console.log(f"[yellow]No optimizers have been defined! Consider "
-                        f"subclassing this function to manually define the "
-                        f"optimizers.")
+            console.log(
+                f"[yellow]No optimizers have been defined! Consider subclassing "
+                f"this function to manually define the optimizers."
+            )
             return None
         if isinstance(optims, dict):
             optims = [optims]
-
-        # List through a list of optimizers
-        if not is_list_of(optims, dict):
-            raise ValueError(f"`optims` must be a `dict`. But got: {type(optims)}.")
-        
+        assert_list_of(optims, dict)
+      
         for optim in optims:
             # Define optimizer measurement
             optimizer = optim.get("optimizer", None)
@@ -1691,8 +1850,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             pred (Tensor | None): Predictions.
             filepath (Path_ | None): File path to save the debug result.
             image_quality (int): Image quality to be saved. Defaults to 95.
-            max_n (int | None): Show max n images if `image` has a batch size
-                of more than `max_n` images. Defaults to None means show all.
+            max_n (int | None): Show max n items if `input` has a batch size
+                of more than `max_n` items. Defaults to None means show all.
             nrow (int | None): The maximum number of items to display in a row.
                 The final grid size is (n / nrow, nrow). If None, then the
                 number of items in a row will be the same as the number of

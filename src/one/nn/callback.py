@@ -912,7 +912,7 @@ class ModelCheckpoint(Checkpoint):
 
     Args:
         root (Path_): Root directory to save checkpoint files. By default, root
-            is RUNS_DIR and will be set at runtim to the location specified by
+            is RUNS_DIR and will be set at runtime to the location specified by
             :class:`~pytorch_lightning.trainer.trainer.Trainer`'s
             :paramref:`~pytorch_lightning.trainer.trainer.Trainer.default_root_dir`
             or :paramref:`~pytorch_lightning.trainer.trainer.Trainer.weights_save_path`
@@ -932,16 +932,16 @@ class ModelCheckpoint(Checkpoint):
               monitored will be saved.
             - If `save_top_k == 0`, no models are saved.
             - If `save_top_k == -1`, all models are saved. Please note that the
-              monitors are checked every ``every_n_epochs`` epochs.
+              monitors are checked every `every_n_epochs` epochs.
             - If `save_top_k >= 2` and the callback is called multiple times
               inside an epoch, the name of the saved file will be appended with
               a version count starting with `v1`.
         save_on_train_epoch_end (bool): Whether to run checkpointing at the end
             of the training epoch. If this is False, then the check runs at the
-            end of the validation.
+            end of the validation. Defaults to False.
         save_weights_only (bool): If True, then only the model's weights will
             be saved. Otherwise, the optimizer states, lr-scheduler states,
-            etc. are added in the checkpoint too.
+            etc. are added in the checkpoint too. Defaults to False.
         mode (str): One of {min, max}. If `save_top_k != 0`, the decision to
             overwrite the current save file is made based on either the
             maximization or the minimization of the monitored quantity.
@@ -1006,7 +1006,7 @@ class ModelCheckpoint(Checkpoint):
         monitor                : str   | None     = None,
         save_last              : bool             = None,
         save_top_k             : int              = 1,
-        save_on_train_epoch_end: bool             = None,
+        save_on_train_epoch_end: bool             = False,
         save_weights_only      : bool             = False,
         mode                   : str              = "min",
         every_n_train_steps    : int | None       = None,

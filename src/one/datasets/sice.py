@@ -32,7 +32,7 @@ class SICE(ImageEnhancementDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
             None.
         transform (Transforms_ | None): Functions/transforms that takes in an
@@ -419,7 +419,7 @@ class SICEUnsupervised(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -1155,7 +1155,7 @@ def test_sice():
         "name": "sice",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1206,7 +1206,7 @@ def test_sice1():
         "name": "sice1",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1257,7 +1257,7 @@ def test_sice2():
         "name": "sice2",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1308,7 +1308,7 @@ def test_sice3():
         "name": "sice3",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1359,7 +1359,7 @@ def test_sice4():
         "name": "sice4",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1410,7 +1410,7 @@ def test_sice5():
         "name": "sice5",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1461,7 +1461,7 @@ def test_sice6():
         "name": "sice6",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1512,7 +1512,7 @@ def test_sice7():
         "name": "sice7",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1563,7 +1563,7 @@ def test_sice_unsupervised():
         "name": "sice_unsupervised",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.

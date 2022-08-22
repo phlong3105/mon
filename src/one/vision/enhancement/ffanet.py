@@ -42,8 +42,8 @@ class FFANet(ImageEnhancementModel):
     def __init__(
         self,
         root       : Path_               = RUNS_DIR,
-        basename   : str  | None         = "ffanet",
         name       : str  | None         = "ffanet",
+        fullname   : str  | None         = "ffanet",
         cfg        : dict | Path_ | None = "ffanet.yaml",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
@@ -65,8 +65,8 @@ class FFANet(ImageEnhancementModel):
 
         super().__init__(
             root        = root,
-            basename    = basename,
             name        = name,
+            fullname    = fullname,
             cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,

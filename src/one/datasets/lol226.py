@@ -29,7 +29,7 @@ class DCIM(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -98,7 +98,7 @@ class LIME(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -167,7 +167,7 @@ class LoL226(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -237,7 +237,7 @@ class MEF(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -306,7 +306,7 @@ class NPE(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -376,7 +376,7 @@ class VIP(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -445,7 +445,7 @@ class VV(UnlabeledImageDataset):
     Args:
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
-        shape (Ints): Image shape as [H, W, C], [H, W], or [S, S].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
             E.g, `transforms.RandomCrop`.
@@ -1159,7 +1159,7 @@ def test_dcim():
         "name": "dcim",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1208,7 +1208,7 @@ def test_lime():
         "name": "lime",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1257,7 +1257,7 @@ def test_lol226():
         "name": "lol226",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1306,7 +1306,7 @@ def test_mef():
         "name": "mef",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1355,7 +1355,7 @@ def test_npe():
         "name": "mef",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1404,7 +1404,7 @@ def test_vip():
         "name": "vip",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.
@@ -1453,7 +1453,7 @@ def test_vv():
         "name": "vv",
             # Dataset's name.
         "shape": [3, 512, 512],
-            # Image shape as [H, W, C], [H, W], or [S, S].
+            # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
             # Functions/transforms that takes in an input sample and returns a
             # transformed version.

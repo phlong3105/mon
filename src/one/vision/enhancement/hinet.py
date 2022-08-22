@@ -96,8 +96,8 @@ class HINet(ImageEnhancementModel):
     def __init__(
         self,
         root       : Path_               = RUNS_DIR,
-        basename   : str  | None         = "hinet",
         name       : str  | None         = "hinet",
+        fullname   : str  | None         = "hinet",
         cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
@@ -119,8 +119,8 @@ class HINet(ImageEnhancementModel):
 
         super().__init__(
             root        = root,
-            basename    = basename,
             name        = name,
+            fullname    = fullname,
             cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,

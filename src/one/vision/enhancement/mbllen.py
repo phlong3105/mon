@@ -268,8 +268,8 @@ class MBLLEN(ImageEnhancementModel):
     def __init__(
         self,
         root       : Path_               = RUNS_DIR,
-        basename   : str  | None         = "mbllen",
         name       : str  | None         = "mbllen",
+        fullname   : str  | None         = "mbllen",
         cfg        : dict | Path_ | None = "mbllen.yaml",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
@@ -291,8 +291,8 @@ class MBLLEN(ImageEnhancementModel):
 
         super().__init__(
             root        = root,
-            basename    = basename,
             name        = name,
+            fullname    = fullname,
             cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
