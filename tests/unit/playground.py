@@ -1,11 +1,5 @@
-from torch import FloatTensor
-from torch import tensor
+import importlib
 
-from one.core import *
-
-a = {
-    "a": 1
-}
-
-b = a | {"a": 2}
-print(b)
+module = importlib.import_module("one.cfg.zerodce_lime")
+print(module.__file__)
+print(module.data)

@@ -1263,7 +1263,7 @@ class PaddingMode(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value)
+        assert_dict_contain_key(cls.str_mapping(), value)
         return cls.str_mapping()[value]
     
     @classmethod
@@ -1373,7 +1373,7 @@ class Reduction(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.str_mapping, value)
+        assert_dict_contain_key(cls.str_mapping(), value)
         return cls.str_mapping()[value]
     
     @classmethod
@@ -1804,7 +1804,7 @@ class VisionBackend(Enum):
         Returns:
             The enum.
         """
-        assert_dict_contain_key(cls.int_mapping, value)
+        assert_dict_contain_key(cls.int_mapping(), value)
         return cls.int_mapping()[value]
     
     @classmethod
@@ -4401,6 +4401,18 @@ class SchedulerFactory(Registry):
 
 # H1: - File -------------------------------------------------------------------
 
+def clear_cache(path: Path_, recursive: bool = True):
+    """
+    Clear .cache files in directory and it's subdirectories.
+    
+    Args:
+        path (Path_): The directory path.
+        recursive (bool): If True, the pattern “**” will match any files and
+            zero or more directories and subdirectories. Defaults to True.
+    """
+    delete_files([path], extension=".cache", recursive=recursive)
+
+
 def copy_file_to(file: Path_, dst: Path_):
     """
     Copy a file to a destination directory.
@@ -4410,6 +4422,7 @@ def copy_file_to(file: Path_, dst: Path_):
         dst (str): The destination directory where the file will be copied to.
     """
     create_dirs(paths=[dst])
+    file = Path(file)
     shutil.copyfile(file, dst / file.name)
 
 
@@ -4461,7 +4474,10 @@ def delete_files(
     dirs      = unique(dirs)
     extension = f".{extension}" if "." not in extension else extension
     for d in dirs:
-        files += list(d.rglob(*{extension}))
+        if recursive:
+            files += list(d.rglob(*{extension}))
+        else:
+            files += list(d.glob(extension))
     for f in files:
         console.log(f"Deleting {f}.")
         f.unlink()
@@ -4489,7 +4505,7 @@ def get_latest_file(path: Path_, recursive: bool = True) -> Path | None:
     Args:
         path (Path_): The path to the directory you want to search.
         recursive (bool): If True, the pattern “**” will match any files and
-            zero or more directories and subdirectories. Defaults to True
+            zero or more directories and subdirectories. Defaults to True.
     
     Returns:
         The latest file in the path.

@@ -27,8 +27,6 @@ from torch.nn.modules.loss import _Loss
 
 from one.data import *
 from one.nn.layer import *
-from one.plot import imshow_classification
-from one.plot import imshow_enhancement
 
 
 # H1: - Checkpoint -------------------------------------------------------------
@@ -60,45 +58,47 @@ def extract_weights_from_checkpoint(
     torch.save(state_dict, str(weight_file))
 
 
-def get_epoch(ckpt: Path_) -> int:
+def get_epoch(ckpt: Path_ | None) -> int:
     """
     Get the current epoch from the saved weights file.
 
     Args:
-        ckpt (Path_): Checkpoint path.
+        ckpt (Path_ | None): Checkpoint path.
 
     Returns:
         Current epoch.
     """
-    ckpt = Path(ckpt)
-    assert_ckpt_file(ckpt)
+    if ckpt is None:
+        return 0
     
     epoch = 0
+    ckpt  = Path(ckpt)
+    assert_ckpt_file(ckpt)
     if is_torch_saved_file(ckpt):
         ckpt  = torch.load(ckpt)
         epoch = ckpt.get("epoch", 0)
-    
     return epoch
 
 
-def get_global_step(ckpt: Path_) -> int:
+def get_global_step(ckpt: Path_ | None) -> int:
     """
     Get the global step from the saved weights file.
 
     Args:
-        ckpt (Path_): Checkpoint path.
+        ckpt (Path_ | None): Checkpoint path.
 
     Returns:
         Global step.
     """
-    ckpt = Path(ckpt)
-    assert_ckpt_file(ckpt)
+    if ckpt is None:
+        return 0
 
     global_step = 0
+    ckpt        = Path(ckpt)
+    assert_ckpt_file(ckpt)
     if is_torch_saved_file(ckpt):
         ckpt        = torch.load(ckpt)
         global_step = ckpt.get("global_step", 0)
-    
     return global_step
 
 
@@ -965,11 +965,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         else:
             self._loss = None
         
-        # Move to device
-        """
         if self._loss:
-            self._loss.cuda()
-        """
+            self._loss.requires_grad = True
+            # self._loss.cuda()
     
     @property
     def name(self) -> str:
@@ -1507,7 +1505,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         # self.tb_log(f"{loss_tag}", loss, "step")
        
         # Metrics
-        if self.with_train_metrics:
+        if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
                 value = metric(pred, target)
                 self.ckpt_log_scalar(
@@ -1525,7 +1523,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.tb_log_scalar(f"loss/train_epoch", loss, "epoch")
         
         # Metrics
-        if self.with_train_metrics:
+        if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
                 value = metric.compute()
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/train_epoch", value)
@@ -1624,7 +1622,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         # self.tb_log(f"{loss_tag}", loss, "step")
         
         # Metrics
-        if self.with_val_metrics:
+        if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
                 value = metric(pred, target)
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_step", value)
@@ -1640,7 +1638,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.tb_log_scalar(f"loss/val_epoch", loss, "epoch")
         
         # Metrics
-        if self.with_val_metrics:
+        if self.val_metrics:
             for i, metric in enumerate(self.val_metrics):
                 value = metric.compute()
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_epoch", value)
@@ -1737,7 +1735,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         # self.tb_log(f"loss/test_step", loss, "step")
         
         # Metrics
-        if self.with_test_metrics:
+        if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
                 value = metric(pred, target)
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_step", value)
@@ -1753,7 +1751,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.tb_log_scalar(f"loss/test_epoch", loss, "epoch")
 
         # Metrics
-        if self.with_test_metrics:
+        if self.test_metrics:
             for i, metric in enumerate(self.test_metrics):
                 value = metric.compute()
                 self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_epoch", value)
@@ -1990,6 +1988,7 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
             verbose (bool): If True shows the results on the screen.
                 Defaults to False.
         """
+        from one.plot import imshow_classification
         save_cfg = {
             "filepath"  : filepath or self.debug_image_filepath ,
             "pil_kwargs": dict(quality=image_quality)
@@ -2115,14 +2114,19 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
             verbose (bool): If True shows the results on the screen.
                 Defaults to False.
         """
+        from one.plot import imshow_enhancement
+
         result = {}
         if input is not None:
             result["input"]  = input
         if target is not None:
             result["target"] = target
         if pred is not None:
-            result["pred"]   = pred
-        
+            if isinstance(pred, (tuple, list)):
+                result["pred"] = pred[-1]
+            else:
+                result["pred"] = pred
+                
         save_cfg = {
             "filepath"  : filepath or self.debug_image_filepath ,
             "pil_kwargs": dict(quality=image_quality)

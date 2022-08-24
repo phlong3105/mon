@@ -178,6 +178,9 @@ debug = {
 
 
 trainer = {
+	"accelerator": "auto",
+		# Supports passing different accelerator types ("cpu", "gpu", "tpu",
+		# "ipu", "hpu", "mps", "auto") as well as custom accelerator instances.
 	"accumulate_grad_batches": None,
         # Accumulates grads every k batches or as set up in the dict.
         # Defaults to None.

@@ -3054,12 +3054,12 @@ class PixelwiseHigherOrderLECurve(Module):
     
     def forward(self, input: list[Tensor]) -> tuple[Tensor, Tensor]:
         # Split
-        a      = input[0]  # Trainable curve parameter learned from previous layer
-        output = input[1]  # Original input image
+        a = input[0]  # Trainable curve parameter learned from previous layer
+        x = input[1]  # Original input image
         
         # Prepare curve parameter
-        _, c1, _, _ = output.shape  # Should be 3
-        _, c2, _, _ = a.shape       # Should be 3*n
+        _, c1, _, _ = x.shape  # Should be 3
+        _, c2, _, _ = a.shape  # Should be 3*n
         if c2 == c1 * self.n:
             a = torch.split(a, c1, dim=1)
         elif c2 == 3:
@@ -3072,8 +3072,9 @@ class PixelwiseHigherOrderLECurve(Module):
 
         # Estimate curve parameter
         for i in range(self.n):
-            a_i    = a if isinstance(a, int) else a[i]
-            output = output + a * (torch.pow(output, 2) - output)
+            a_i = a if isinstance(a, int) else a[i]
+            x   = x + a_i * (torch.pow(x, 2) - x)
         
         a = torch.cat(a, dim=1) if isinstance(a, list) else a
-        return a, output
+        print(x)
+        return a, x

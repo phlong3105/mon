@@ -40,12 +40,16 @@ class CombinedLoss(BaseLoss):
         self.loss_col = ColorConstancyLoss(weight=col_weight)
         self.loss_tv  = IlluminationSmoothnessLoss(weight=tv_weight)
      
-    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        r, enhance = target[0], target[-1]
+    def forward(self, input: Tensors, target: Sequence[Tensor], **_) -> Tensor:
+        if isinstance(target, tuple):
+            a       = target[0]
+            enhance = target[-1]
+        else:
+            raise TypeError()
         return self.loss_spa(input=input, target=enhance) \
                + self.loss_exp(input=enhance) \
                + self.loss_col(input=enhance) \
-               + self.loss_tv(input=r)
+               + self.loss_tv(input=a)
 
 
 # H1: - Model ------------------------------------------------------------------
@@ -132,3 +136,25 @@ class ZeroDCE(ImageEnhancementModel):
                     m.conv.weight.data.normal_(0.0, 0.02)
                 else:
                     m.weight.data.normal_(0.0, 0.02)
+    
+    def forward_loss(
+        self,
+        input : Tensor,
+        target: Tensor,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor | None]:
+        """
+        Forward pass with loss value. Loss function may require more arguments
+        beside the ground-truth and prediction values. For calculating the
+        metrics, we only need the final predictions and ground-truth.
+
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            target (Tensor): Ground-truth of shape [B, C, H, W].
+            
+        Returns:
+            Predictions and loss value.
+        """
+        pred = self.forward(input=input, *args, **kwargs)
+        loss = self.loss(input, pred) if self.loss else None
+        return pred[-1], loss

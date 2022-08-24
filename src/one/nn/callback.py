@@ -1030,9 +1030,9 @@ class ModelCheckpoint(Checkpoint):
         self.current_score    : Tensor | None = None
         self.best_model_score : Tensor | None = None
         self.best_k_models    : dict[str, Tensor] = {}
-        self.kth_best_model_path = Path()
-        self.best_model_path     = Path()
-        self.last_model_path     = Path()
+        self.kth_best_model_path = None
+        self.best_model_path     = None
+        self.last_model_path     = None
         
         if mode not in self.mode_dict:
             raise ValueError(
@@ -1282,6 +1282,7 @@ class ModelCheckpoint(Checkpoint):
     def state_dict(self) -> dict[str, Any]:
         return {
             "root"                  : self.root,
+            "ckpt_dir"              : self.ckpt_dir,
             "last_epoch_saved"      : self.last_epoch_saved,
             "last_global_step_saved": self.last_global_step_saved,
             "monitor"               : self.monitor,
@@ -1377,7 +1378,7 @@ class ModelCheckpoint(Checkpoint):
         self.last_model_path = filepath
         self._save_checkpoint(trainer=trainer, filepath=filepath)
         if previous and previous != filepath:
-            trainer.strategy.remove_checkpoint(previous)
+            trainer.strategy.remove_checkpoint(str(previous))
 
     def save_monitor_checkpoint(
         self,
@@ -1469,7 +1470,7 @@ class ModelCheckpoint(Checkpoint):
                     f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
                     f"{self.monitor!r} reached {current:10.6f}"
                     f" (best {self.best_model_score:10.6f}). "
-                    f"Saving model to {filepath!r} as top {k}"
+                    f"Saving model to {str(filepath)!r} as top {k}"
                 )
         self._save_checkpoint(trainer=trainer, filepath=filepath)
 
@@ -1571,7 +1572,7 @@ class ModelCheckpoint(Checkpoint):
         if ver is not None:
             filename = self.checkpoint_join_char.join((filename, f"v{ver}"))
         ckpt_name = f"{filename}{self.file_extension}"
-        return (self.root / ckpt_name) if self.root else ckpt_name
+        return (self.ckpt_dir / ckpt_name) if self.ckpt_dir else ckpt_name
     
     @classmethod
     def _format_checkpoint_name(
@@ -1613,8 +1614,8 @@ class ModelCheckpoint(Checkpoint):
         """
         best_k = {k: v.item() for k, v in self.best_k_models.items()}
         if filepath is None:
-            assert self.root
-            filepath = os.path.join(self.root, "best_k_models.yaml")
+            assert self.ckpt_dir
+            filepath = os.path.join(self.ckpt_dir, "best_k_models.yaml")
         with self.fs.open(filepath, "w") as fp:
             yaml.dump(best_k, fp)
     
@@ -1755,30 +1756,52 @@ class RichProgressBar(callbacks.RichProgressBar):
             self._progress_stopped = False
             
     def configure_columns(self, trainer) -> list:
-        return [
-            TextColumn(
-                console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
-                justify = "left",
-                style   = "log.time"
-            ),
-            TextColumn("[progress.description][{task.description}]"),
-            rich_progress.CustomBarColumn(
-                complete_style = self.theme.progress_bar,
-                finished_style = self.theme.progress_bar_finished,
-                pulse_style    = self.theme.progress_bar_pulse,
-            ),
-            rich_progress.BatchesProcessedColumn(style="progress.download"),
-            "•",
-            GPUMemoryUsageColumn(),
-            "•",
-            rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
-            "•",
-            TimeRemainingColumn(),
-            ">",
-            TimeElapsedColumn(),
-            SpinnerColumn(),
-        ]
-
+        if torch.cuda.is_available():
+            return [
+                TextColumn(
+                    console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
+                    justify = "left",
+                    style   = "log.time"
+                ),
+                TextColumn("[progress.description][{task.description}]"),
+                rich_progress.CustomBarColumn(
+                    complete_style = self.theme.progress_bar,
+                    finished_style = self.theme.progress_bar_finished,
+                    pulse_style    = self.theme.progress_bar_pulse,
+                ),
+                rich_progress.BatchesProcessedColumn(style="progress.download"),
+                "•",
+                GPUMemoryUsageColumn(),
+                "•",
+                rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
+                "•",
+                TimeRemainingColumn(),
+                ">",
+                TimeElapsedColumn(),
+                SpinnerColumn(),
+            ]
+        else:
+            return [
+                TextColumn(
+                    console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
+                    justify = "left",
+                    style   = "log.time"
+                ),
+                TextColumn("[progress.description][{task.description}]"),
+                rich_progress.CustomBarColumn(
+                    complete_style = self.theme.progress_bar,
+                    finished_style = self.theme.progress_bar_finished,
+                    pulse_style    = self.theme.progress_bar_pulse,
+                ),
+                rich_progress.BatchesProcessedColumn(style="progress.download"),
+                "•",
+                rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
+                "•",
+                TimeRemainingColumn(),
+                ">",
+                TimeElapsedColumn(),
+                SpinnerColumn(),
+            ]
 
 CALLBACKS.register(name="backbone_finetuning",             module=BackboneFinetuning)
 CALLBACKS.register(name="device_stats_monitor",            module=DeviceStatsMonitor)

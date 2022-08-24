@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from abc import ABCMeta
 
-from torch import FloatTensor
 from torch import Tensor
 from torch.nn import functional
 from torch.nn.modules.loss import *
@@ -100,7 +99,7 @@ def weighted_loss(f: Callable):
             input = list(input.values())
         assert_sequence(input)
         
-        losses = torch.FloatTensor([
+        losses = Tensor([
             reduce_loss(
                 loss      = f(input=i, target=target, *args, **kwargs),
                 weight    = elementwise_weight,
@@ -108,11 +107,13 @@ def weighted_loss(f: Callable):
             ) for i in input
         ])
         
-        return reduce_loss(
+        loss = reduce_loss(
             loss      = losses,
             weight    = input_weight,
             reduction = Reduction.WEIGHTED_SUM if input_weight else Reduction.SUM,
         )
+        loss.requires_grad = True
+        return loss
 
     return wrapper
     
@@ -511,15 +512,15 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
     Returns:
         The loss tensor of shape [B].
     """
-    kernel_left  = FloatTensor([[0,  0, 0], [-1, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
-    kernel_right = FloatTensor([[0,  0, 0], [ 0, 1, -1], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
-    kernel_up    = FloatTensor([[0, -1, 0], [ 0, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
-    kernel_down  = FloatTensor([[0,  0, 0], [ 0, 1,  0], [0, -1, 0]]).unsqueeze(0).unsqueeze(0)
+    kernel_left  = Tensor([[0,  0, 0], [-1, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
+    kernel_right = Tensor([[0,  0, 0], [ 0, 1, -1], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
+    kernel_up    = Tensor([[0, -1, 0], [ 0, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
+    kernel_down  = Tensor([[0,  0, 0], [ 0, 1,  0], [0, -1, 0]]).unsqueeze(0).unsqueeze(0)
     
-    weight_left  = nn.Parameter(data=kernel_left,  requires_grad=False)
-    weight_right = nn.Parameter(data=kernel_right, requires_grad=False)
-    weight_up    = nn.Parameter(data=kernel_up,    requires_grad=False)
-    weight_down  = nn.Parameter(data=kernel_down,  requires_grad=False)
+    weight_left  = nn.Parameter(data=kernel_left,  requires_grad=True)
+    weight_right = nn.Parameter(data=kernel_right, requires_grad=True)
+    weight_up    = nn.Parameter(data=kernel_up,    requires_grad=True)
+    weight_down  = nn.Parameter(data=kernel_down,  requires_grad=True)
     pool         = nn.AvgPool2d(4)
     
     if weight_left.device != input.device:
@@ -533,7 +534,7 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
     
     input_mean      = torch.mean(input,  1, keepdim=True)
     target_mean     = torch.mean(target, 1, keepdim=True)
-
+    
     input_pool      = pool(input_mean)
     target_pool     = pool(target_mean)
 
@@ -552,7 +553,6 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
     d_up            = torch.pow(d_org_up    - d_enhance_up,    2)
     d_down          = torch.pow(d_org_down  - d_enhance_down,  2)
     loss            = d_left + d_right + d_up + d_down
-    
     return loss
 
 

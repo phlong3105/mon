@@ -14,8 +14,10 @@ from one.core import *
 __current_file   = Path(__file__).absolute()         # "workspaces/one/src/one/constants.py"
 SOURCE_ROOT_DIR  = __current_file.parents[0]         # "workspaces/one/src/one"
 CONTENT_ROOT_DIR = __current_file.parents[2]         # "workspaces/one"
+CFG_DIR          = SOURCE_ROOT_DIR  / "cfg"          # "workspaces/one/src/one/cfg"
 PRETRAINED_DIR   = CONTENT_ROOT_DIR / "pretrained"   # "workspaces/one/pretrained"
 RUNS_DIR         = CONTENT_ROOT_DIR / "runs"         # "workspaces/one/runs"
+
 DATA_DIR         = os.getenv("DATA_DIR", None)       # In case we have set value in os.environ
 if DATA_DIR is None:
     DATA_DIR = Path("/data")                         # Run from Docker container

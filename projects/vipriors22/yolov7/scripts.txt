@@ -48,13 +48,13 @@ python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_a
     --data data/delftbikes.yaml \
     --hyp data/hyp.scratch.p6.yaml \
     --epochs 100 \
-    --batch-size 4 \
-    --img 1280 1280 \
+    --batch-size 16 \
+    --img 640 640 \
     --multi-scale \
     --device 0,1 \
     --sync-bn \
     --workers 8 \
-    --name yolov7-e6e-delftbikes-multiscale \
+    --name yolov7-e6e-delftbikes-640 \
     --exist-ok 
 
 
