@@ -306,5 +306,5 @@ class MBLLEN(ImageEnhancementModel):
             *args, **kwargs
         )
    
-    def init_weights(self):
+    def init_weights(self, m: Module):
         pass

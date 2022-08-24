@@ -92,6 +92,12 @@ hosts = {
 		"devices"    :  1,
 		"strategy"   : None,
 	},
+    "lp-macbookpro.local": {
+		"cfg"        : "zerodce_lol226",
+        "accelerator": "cpu",
+		"devices"    :  1,
+		"strategy"   : None,
+	},
 }
 
 

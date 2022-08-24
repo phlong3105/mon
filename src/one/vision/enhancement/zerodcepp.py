@@ -90,15 +90,14 @@ class ZeroDCEPP(ImageEnhancementModel):
             *args, **kwargs
         )
    
-    def init_weights(self):
-        for m in self.model.children():
-            classname = m.__class__.__name__
-            if classname.find("Conv") != -1:
-                if hasattr(m, "conv"):
-                    m.conv.weight.data.normal_(0.0, 0.02)
-                elif hasattr(m, "dw_conv"):
-                    m.dw_conv.weight.data.normal_(0.0, 0.02)
-                elif hasattr(m, "pw_conv"):
-                    m.pw_conv.weight.data.normal_(0.0, 0.02)
-                else:
-                    m.weight.data.normal_(0.0, 0.02)
+    def init_weights(self, m: Module):
+        classname = m.__class__.__name__
+        if classname.find("Conv") != -1:
+            if hasattr(m, "conv"):
+                m.conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "dw_conv"):
+                m.dw_conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "pw_conv"):
+                m.pw_conv.weight.data.normal_(0.0, 0.02)
+            else:
+                m.weight.data.normal_(0.0, 0.02)

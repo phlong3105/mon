@@ -865,7 +865,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         if self.pretrained:
             self.load_pretrained()
         else:
-            self.init_weights()
+            self.apply(self.init_weights)
         
         if self.verbose:
             console.log(f"[red]{self.fullname}")
@@ -1234,7 +1234,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def init_weights(self):
+    def init_weights(self, m: Module):
         """
         Initialize model's weights.
         """
