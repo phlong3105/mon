@@ -109,13 +109,11 @@ def range_scale(input: Tensor) -> Tensor:
 
 # noinspection PyMethodMayBeStatic
 @LOSSES.register(name="mbllen_loss")
-class MBLLENLoss(nn.Module):
+class MBLLENLoss(Module):
     """
     Implementation of loss function defined in the paper "MBLLEN: Low-light
     Image/Video Enhancement Using CNNs".
     """
-    
-    # MARK: Magic Functions
     
     def __init__(self):
         super().__init__()
@@ -124,8 +122,6 @@ class MBLLENLoss(nn.Module):
         # self.vgg = VGG19(out_indexes=26, pretrained=True)
         # self.vgg.freeze()
         
-    # MARK: Forward Pass
-
     def forward(self, input: Tensor, target: Tensor, **_) -> Tensor:
         """
         Mbllen_loss = (structure_loss + (context_loss / 3.0) + 3 +

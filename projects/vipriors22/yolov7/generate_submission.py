@@ -177,7 +177,7 @@ def generate_ensemble_submission(args: dict | Munch | argparse.Namespace):
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run",         default="generate_submission",                               type=str)
-    parser.add_argument("--source",      default=CURRENT_DIR/"runs"/"detect"/"yolov7-delftbikes-640", type=str, help="Directory containing YOLO results .txt")
+    parser.add_argument("--source",      default=CURRENT_DIR/"runs"/"detect"/"yolov7-delftbikes-multiscale2", type=str, help="Directory containing YOLO results .txt")
     parser.add_argument("--output-file", default=CURRENT_DIR/"runs"/"detect"/"submission.json",       type=str, help="Submission .json file")
     args   = parser.parse_args()
     return args

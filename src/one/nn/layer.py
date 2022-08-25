@@ -1496,14 +1496,47 @@ class SoftmaxFusion(Module):
 
 @LAYERS.register(name="sum")
 class Sum(Module):
-    """
-    """
     
     def forward(self, input: Sequence[Tensor]) -> Tensor:
         output = input[0]
         for i in range(1, len(input)):
             output += input[i]
         return output
+
+
+# H2: - Head -------------------------------------------------------------------
+
+@LAYERS.register(name="alexnet_classifier")
+class AlexNetClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.drop1        = Dropout()
+        self.linear1      = Linear(in_features=in_channels * 6 * 6, out_features=4096)
+        self.act1         = ReLU(inplace=True)
+        self.drop2        = Dropout()
+        self.linear2      = Linear(in_features=4096, out_features=4096)
+        self.act2         = ReLU(inplace=True)
+        self.linear3      = Linear(in_features=4096, out_features=out_channels)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = torch.flatten(input, 1)
+            x = self.drop1(x)
+            x = self.act1(self.linear1(x))
+            x = self.drop2(x)
+            x = self.act2(self.linear2(x))
+            x = self.act3(self.linear3(x))
+            return x
+        else:
+            x = torch.flatten(input, 1)
+            return x
 
 
 # H2: - Linear -----------------------------------------------------------------
@@ -2832,15 +2865,17 @@ class HINetConvBlock(Module):
                 enc = input[1]  # Encode path
             if len(input) == 3:
                 dec = input[2]  # Decode path
-      
-        y   = self.conv1(input)
+        else:
+            raise TypeError()
+        
+        y   = self.conv1(x)
         if self.use_hin:
             y1, y2 = torch.chunk(y, 2, dim=1)
             y      = torch.cat([self.norm(y1), y2], dim=1)
         y  = self.relu1(y)
         
         y  = self.relu2(self.conv2(y))
-        y += self.identity(input)
+        y += self.identity(x)
         
         if enc is not None and dec is not None:
             if not self.use_csff:
@@ -2883,11 +2918,11 @@ class HINetUpBlock(Module):
         assert_sequence_of_length(input, 2)
         x    = input[0]
         skip = input[1]
-        
+
         x_up = self.up(x)
-        y    = torch.cat([x_up, skip], 1)
+        y    = torch.cat([x_up, skip], dim=1)
         y    = self.conv(y)
-        return y
+        return y[-1]
 
 
 @LAYERS.register(name="hinet_skip_block")

@@ -9,11 +9,20 @@ from __future__ import annotations
 
 import unittest
 
-from one.vision.enhancement import *
+from one.vision.classification.alexnet import AlexNet
+from one.vision.enhancement.ffanet import FFANet
+from one.vision.enhancement.hinet import HINet
+from one.vision.enhancement.mbllen import MBLLEN
+from one.vision.enhancement.zerodce import ZeroDCE
+from one.vision.enhancement.zerodcepp import ZeroDCEPP
 
 
 class TestModel(unittest.TestCase):
     
+    def test_alexnet(self):
+        alexnet = AlexNet(pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(alexnet)
+        
     def test_ffanet(self):
         ffanet = FFANet(verbose=True)
         self.assertIsNotNone(ffanet)

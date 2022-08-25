@@ -93,7 +93,7 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-macbookpro.local": {
-		"cfg"        : "zerodce_lol226",
+		"cfg"        : "hinet_ihaze",
         "accelerator": "cpu",
 		"devices"    :  1,
 		"strategy"   : None,

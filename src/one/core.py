@@ -2351,7 +2351,7 @@ def is_url(path: Path_ | None) -> bool:
     """
     if path is None:
         return False
-    return not isinstance(validators.url(path), validators.ValidationFailure)
+    return not isinstance(validators.url(str(path)), validators.ValidationFailure)
 
 
 def is_url_or_file(path: Path_ | None) -> bool:
@@ -2453,6 +2453,12 @@ def is_yaml_file(path: Path_ | None) -> bool:
         return False
     path = Path(path)
     return path.is_file() and path.suffix.lower() in [".yaml", ".yml"]
+
+
+def are_same_state_dicts(input1: dict, input2: dict) -> bool:
+    d1 = input1.values()
+    d2 = input2.values()
+    return all(torch.equal(i, j) for i, j in zip(d1, d2))
 
 
 def assert_bmp_file(path: Path_ | None):
@@ -2691,7 +2697,14 @@ def assert_same_shape(input1: Tensor | np.ndarray, input2: Tensor | np.ndarray):
             f"`input1` and `input2` must have the same shape. "
             f"But got: {input1.shape} != {input2.shape}."
         )
-  
+
+
+def assert_same_state_dicts(input1: dict, input2: dict):
+    if not are_same_state_dicts(input1, input2):
+        raise ValueError(
+            f"`input1` and `input2` must have the same values. "
+        )
+
     
 def assert_sequence(input: Any):
     if not is_sequence(input):
@@ -4096,7 +4109,7 @@ class Factory(Registry):
         assert_dict_contain_key(self.registry, name)
         instance = self.registry[name](*args, **kwargs)
         if not hasattr(instance, "name"):
-            instance.classname = name
+            instance.name = name
         return instance
     
     def build_from_dict(self, cfg: dict | None, **kwargs) -> object | None:

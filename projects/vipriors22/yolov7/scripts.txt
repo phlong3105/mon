@@ -66,20 +66,23 @@ python detect.py  \
       'runs/train/yolov7-e6e-delftbikes-multiscale-02/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-multiscale-03/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-multiscale-04/weights/best.pt' \
+      'runs/train/yolov7-e6e-delftbikes-640/weights/best.pt' \
       'runs/train/yolov7-e6-delftbikes-multiscale-01/weights/best.pt' \
       'runs/train/yolov7-e6-delftbikes-multiscale-02/weights/best.pt' \
       'runs/train/yolov7-e6-delftbikes-multiscale-03/weights/best.pt' \
       'runs/train/yolov7-e6-delftbikes-multiscale-04/weights/best.pt' \
+      'runs/train/yolov7-e6-delftbikes-640/weights/best.pt' \
       'runs/train/yolov7-d6-delftbikes-multiscale-01/weights/best.pt' \
       'runs/train/yolov7-d6-delftbikes-multiscale-02/weights/best.pt' \
       'runs/train/yolov7-d6-delftbikes-multiscale-03/weights/best.pt' \
       'runs/train/yolov7-d6-delftbikes-multiscale-04/weights/best.pt' \
+      'runs/train/yolov7-d6-delftbikes-640/weights/best.pt' \
       'runs/train/yolov7-w6-delftbikes-multiscale-01/weights/best.pt' \
       'runs/train/yolov7-w6-delftbikes-multiscale-02/weights/best.pt' \
       'runs/train/yolov7-w6-delftbikes-multiscale-03/weights/best.pt' \
       'runs/train/yolov7-w6-delftbikes-multiscale-04/weights/best.pt' \
     --source /coco/delftbikes/test/images \
-    --img-size 2560 \
+    --img-size 640 \
     --conf-thres 0.05 \
     --iou-thres 0.5 \
     --device 0 \

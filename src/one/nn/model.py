@@ -242,11 +242,12 @@ def load_state_dict_from_path(
     if not is_torch_saved_file(path) and \
         (model_dir is None or not model_dir.is_dir()):
         raise ValueError(f"`model_dir` must be defined. But got: {model_dir}.")
-    
-    state_dict = None
-    if is_torch_saved_file(path):
+
+    state_dict  = None
+    save_weight = model_dir / filename
+    if is_torch_saved_file(save_weight):
         # Can be either the weight file or the weights file.
-        state_dict = torch.load(str(path), map_location=map_location)
+        state_dict = torch.load(str(save_weight), map_location=map_location)
     elif is_url(path):
         state_dict = load_state_dict_from_url(
             url          = str(path),
@@ -257,9 +258,9 @@ def load_state_dict_from_path(
             file_name    = filename
         )
     
-    if "model_state_dict" in state_dict:
+    if state_dict and "model_state_dict" in state_dict:
         state_dict = state_dict["model_state_dict"]
-    if "state_dict" in state_dict:
+    if state_dict and "state_dict" in state_dict:
         state_dict = state_dict["model_state_dict"]
     return state_dict
 
@@ -686,6 +687,15 @@ def parse_model(
             else:
                 c1 = c2 = ch[f]
             args = [c1, *args[0:]]
+        elif m in [
+            AlexNetClassifier,
+        ]:
+            if isinstance(f, (list, tuple)):
+                c1 = ch[f[0]]
+            else:
+                c1 = ch[f]
+            c2   = nc
+            args = [c1, c2, *args[0:]]
         elif m is BatchNorm2d:
             args = [ch[f]]
         elif m in [
@@ -829,7 +839,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.name          = name
         self.fullname      = fullname
         self.root          = root
-        self.phase         = phase
+        self.num_classes   = num_classes
         self.pretrained    = pretrained
         self.loss          = loss
         self.train_metrics = metrics
@@ -844,18 +854,25 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.cfg = load_config(cfg=cfg)
         assert_dict(self.cfg)
         
-        self.channels    = self.cfg.get("channels", channels)
-        self.classlabels = ClassLabels.from_value(classlabels)
-        self.num_classes = num_classes or self.classlabels.num_classes() \
-                           if self.classlabels else num_classes
-        
-        if self.num_classes and self.num_classes != self.cfg.get("num_classes", None):
-            console.log(
-                f"Overriding model.yaml num_classes={self.cfg['num_classes']} "
-                f"with num_classes={self.num_classes}."
-            )
-            self.cfg["num_classes"] = self.num_classes
+        self.channels        = self.cfg.get("channels", channels)
         self.cfg["channels"] = self.channels
+        
+        self.classlabels = ClassLabels.from_value(classlabels)
+        if is_dict(pretrained) and "num_classes" in self.pretrained:
+            num_classes = num_classes or self.pretrained["num_classes"]
+        if self.classlabels:
+            num_classes = num_classes or self.classlabels.num_classes()
+        self.num_classes = num_classes
+        
+        if self.num_classes:
+            nc = self.cfg.get("num_classes", None)
+            if self.num_classes != nc:
+                console.log(
+                    f"Overriding model.yaml num_classes={nc} "
+                    f"with num_classes={self.num_classes}."
+                )
+                self.cfg["num_classes"] = self.num_classes
+        
         assert_dict_contain_keys(input=self.cfg, keys=["backbone", "head"])
         
         # Actual model, save list during forward, layer's info
@@ -866,11 +883,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             self.load_pretrained()
         else:
             self.apply(self.init_weights)
+
+        # Set phase to freeze or unfreeze layers
+        self.phase = phase
         
-        if self.verbose:
-            console.log(f"[red]{self.fullname}")
-            print_table(self.info)
-            console.log(f"Save indexes: {self.save}")
+        self.print_info()
     
     @property
     def debug(self) -> Munch | None:
@@ -1007,42 +1024,13 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self._phase = ModelPhase.from_value(phase)
         if self._phase is ModelPhase.TRAINING:
             self.unfreeze()
+            freeze = self.cfg.get("freeze", None)
+            if is_list(freeze):
+                for k, v in self.model.named_parameters():
+                    if any(x in k for x in freeze):
+                        v.requires_grad = False
         else:
             self.freeze()
-    
-    @property
-    def pretrained(self) -> dict | None:
-        """
-        Returns the model's pretrained metadata.
-        """
-        return self._pretrained
-    
-    @pretrained.setter
-    def pretrained(self, pretrained: Pretrained = False):
-        """
-        Assign model's pretrained.
-        
-        Args:
-            pretrained (Pretrained): Initialize weights from pretrained.
-                - If True, use the original pretrained described by the
-                  author (usually, ImageNet or COCO). By default, it is the
-                  first element in the `model_zoo` dictionary.
-                - If str and is a file/path, then load weights from saved
-                  file.
-                - In each inherited model, `pretrained` can be a dictionary's
-                  key to get the corresponding local file or url of the weight.
-        """
-        if pretrained is True and len(self.model_zoo):
-            self._pretrained = list(self.model_zoo.values())[0]
-        elif pretrained in self.model_zoo:
-            self._pretrained = self.model_zoo[pretrained]
-        else:
-            self._pretrained = None
-        
-        # Update num_classes if it is currently None.
-        if self._pretrained and self.num_classes is None \
-            and "num_classes" in self._pretrained:
-            self.num_classes = self._pretrained["num_classes"]
     
     @property
     def pretrained_dir(self) -> Path:
@@ -1232,7 +1220,31 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             A list of layer's info for debugging.
         """
         pass
-
+    
+    @classmethod
+    def init_pretrained(cls, pretrained: Pretrained = False):
+        """
+        Assign model's pretrained.
+        
+        Args:
+            pretrained (Pretrained): Initialize weights from pretrained.
+                - If True, use the original pretrained described by the
+                  author (usually, ImageNet or COCO). By default, it is the
+                  first element in the `model_zoo` dictionary.
+                - If str and is a file/path, then load weights from saved
+                  file.
+                - In each inherited model, `pretrained` can be a dictionary's
+                  key to get the corresponding local file or url of the weight.
+        """
+        if is_dict(pretrained):
+            return pretrained
+        if pretrained is True and len(cls.model_zoo):
+            return list(cls.model_zoo.values())[0]
+        elif pretrained in cls.model_zoo:
+            return cls.model_zoo[pretrained]
+        else:
+            return None
+    
     @abstractmethod
     def init_weights(self, m: Module):
         """
@@ -1246,9 +1258,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         matching keys and shapes between current model and pretrained.
         """
         if self.pretrained:
-            create_dirs([self.pretrained_dir])
+            create_dirs(paths=[self.pretrained_dir])
             load_pretrained(
-                module	  = self,
+                module	  = self.model,
                 model_dir = self.pretrained_dir,
                 strict	  = False,
                 **self.pretrained
@@ -1256,12 +1268,14 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             if self.verbose:
                 console.log(f"Load pretrained from: {self.pretrained}!")
         elif is_url_or_file(self.pretrained):
-            """load_pretrained(
+            """
+            load_pretrained(
                 self,
                 path 	  = self.pretrained,
                 model_dir = models_zoo_dir,
                 strict	  = False
-            )"""
+            )
+            """
             raise NotImplementedError("This function has not been implemented.")
         else:
             error_console.log(f"[yellow]Cannot load from pretrained: "
@@ -1361,9 +1375,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     @abstractmethod
     def forward(
         self,
-        input  : Tensor,
-        augment: bool = False,
-        profile: bool = False,
+        input    : Tensor,
+        augment  : bool = False,
+        profile  : bool = False,
+        out_index: int = -1,
         *args, **kwargs
     ) -> Tensor:
         """
@@ -1377,6 +1392,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             input (Tensor): Input of shape [B, C, H, W].
             augment (bool): Perform test-time augmentation. Defaults to False.
             profile (bool): Measure processing time. Defaults to False.
+            out_index (int): Return specific layer's output from `out_index`.
+                Defaults to -1 means the last layer.
             
         Returns:
             Predictions.
@@ -1385,8 +1402,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     
     def forward_once(
         self,
-        input  : Tensor,
-        profile: bool = False,
+        input    : Tensor,
+        profile  : bool = False,
+        out_index: int = -1,
         *args, **kwargs
     ) -> Tensor:
         """
@@ -1395,7 +1413,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Args:
             input (Tensor): Input of shape [B, C, H, W].
             profile (bool): Measure processing time. Defaults to False.
-            
+            out_index (int): Return specific layer's output from `out_index`.
+                Defaults to -1 means the last layer.
+                
         Returns:
             Predictions.
         """
@@ -1411,7 +1431,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             x = m(x)  # pass features through current layer
             y.append(x if m.i in self.save else None)
         
-        output = x
+        if out_index > -1 and out_index in self.save:
+            output = y[out_index]
+        else:
+            output = x
         return output
         
     def on_fit_start(self):
@@ -1444,8 +1467,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Args:
             batch (Any): Batch of inputs. It can be a tuple of
                 (input, target, extra).
-            batch_idx (int):
-                Batch index.
+            batch_idx (int): Batch index.
 
         Returns:
             Outputs:
@@ -1861,6 +1883,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         """
         pass
     
+    def print_info(self):
+        if self.verbose:
+            console.log(f"[red]{self.fullname}")
+            print_table(self.info)
+            console.log(f"Save indexes: {self.save}")
+    
     def tb_log_scalar(
         self,
         tag : str,
@@ -1921,6 +1949,44 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
 # H2: - Classification ---------------------------------------------------------
 
 class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
+    
+    def parse_model(
+        self,
+        d : dict      | None = None,
+        ch: list[int] | None = None
+    ) -> tuple[Sequential, list[int], list[dict]]:
+        """
+        Build the model. You have 2 options to build a model: (1) define each
+        layer manually, or (2) build model automatically from a config
+        dictionary.
+        
+        We inherit the same idea of model parsing in YOLOv5.
+        
+        Either way each layer should have the following attributes:
+            - i (int): index of the layer.
+            - f (int | list[int]): from, i.e., the current layer receive output
+              from the f-th layer. For example: -1 means from previous layer;
+              -2 means from 2 previous layers; [99, 101] means from the 99th
+              and 101st layers. This attribute is used in forward pass.
+            - t: type of the layer using this script:
+              t = str(m)[8:-2].replace("__main__.", "")
+            - np (int): number of parameters using the following script:
+              np = sum([x.numel() for x in m.parameters()])
+        
+        Args:
+            d (dict | None): Model definition dictionary. Default to None means
+                building the model manually.
+            ch (list[int] | None): The first layer's input channels. If given,
+                it will be used to further calculate the next layer's input
+                channels. Defaults to None means defines each layer in_ and
+                out_channels manually.
+        
+        Returns:
+            A Sequential model.
+            A list of layer index to save the features during forward pass.
+            A list of layer's info (dict) for debugging.
+        """
+        return parse_model(d=d, ch=ch)
     
     def forward(
         self,

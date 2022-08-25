@@ -1,0 +1,23 @@
+channels: 3
+
+backbone: [
+  # [from,    number, module,     args(out_channels, ...)]
+  [-1,     1,      Conv2d,            [64, 11, 4, 2]],       # 0
+  [-1,     1,      ReLU,              [True]],               # 1
+  [-1,     1,      MaxPool2d,         [3, 2]],               # 2
+  [-1,     1,      Conv2d,            [192, 5, 1, 2]],       # 3
+  [-1,     1,      ReLU,              [True]],               # 4
+  [-1,     1,      MaxPool2d,         [3, 2]],               # 5
+  [-1,     1,      Conv2d,            [384, 3, 1, 1]],       # 6
+  [-1,     1,      ReLU,              [True]],               # 7
+  [-1,     1,      Conv2d,            [256, 3, 1, 1]],       # 8
+  [-1,     1,      ReLU,              [True]],               # 9
+  [-1,     1,      Conv2d,            [256, 3, 1, 1]],       # 10
+  [-1,     1,      ReLU,              [True]],               # 11
+  [-1,     1,      MaxPool2d,         [3, 2]],               # 12
+  [-1,     1,      AdaptiveAvgPool2d, [6]],                  # 13
+]
+
+head: [
+  [-1,     1,      AlexNetClassifier, []],                   # 14
+]
