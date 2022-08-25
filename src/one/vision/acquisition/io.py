@@ -218,7 +218,7 @@ def to_image(
     image = to_3d_tensor(image)
     image = t.denormalize(image) if denormalize else image
     image = to_channel_last(image, keepdim=keepdim)
-    image = image.numpy()
+    image = image.cpu().numpy()
     return image.astype(np.uint8)
 
 

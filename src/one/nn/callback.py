@@ -572,7 +572,6 @@ class CheckpointCallback(Callback):
         # Mode 2: Save last checkpoint
         self._save_last_checkpoint(trainer=trainer, monitor_candidates=monitor_candidates)
         
-        # NOTE: Notify loggers
         if trainer.is_global_zero and trainer.logger:
             trainer.logger.after_save_checkpoint(proxy(self))
     
@@ -1399,7 +1398,8 @@ class ModelCheckpoint(Checkpoint):
             step  = monitor_candidates["step"]
             console.log(
                 f"[Epoch {epoch:04d}, Step {step:08d}] "
-                f"{self.monitor!r} was not in top {self.save_top_k}."
+                f"{self.monitor!r} reached {current::10.6f}, was not in top "
+                f"{self.save_top_k}."
             )
 
     def save_none_monitor_checkpoint(
@@ -1468,9 +1468,8 @@ class ModelCheckpoint(Checkpoint):
                 previous_key = "previous"
                 console.log(
                     f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
-                    f"{self.monitor!r} reached {current:10.6f}"
-                    f" (best {self.best_model_score:10.6f}). "
-                    f"Saving model to {str(filepath)!r} as top {k}"
+                    f"{self.monitor!r} reached [red]{current:10.6f}[default].\n"
+                    f"Saving model to {str(filepath)!r} as [red]top {k}"
                 )
         self._save_checkpoint(trainer=trainer, filepath=filepath)
 

@@ -1532,7 +1532,7 @@ class AlexNetClassifier(Module):
             x = self.act1(self.linear1(x))
             x = self.drop2(x)
             x = self.act2(self.linear2(x))
-            x = self.act3(self.linear3(x))
+            x = self.linear3(x)
             return x
         else:
             x = torch.flatten(input, 1)

@@ -419,7 +419,7 @@ class CIFAR10DataModule(DataModule):
         """
         Load ClassLabels.
         """
-        self.classlabels = ClassLabels(cifar10_classlabels)
+        self.classlabels = ClassLabels.from_list(cifar10_classlabels)
 
 
 @DATAMODULES.register(name="cifar100")
@@ -511,7 +511,7 @@ class CIFAR100DataModule(DataModule):
         """
         Load ClassLabels.
         """
-        self.classlabels = ClassLabels(cifar100_classlabels)
+        self.classlabels = ClassLabels.from_list(cifar100_classlabels)
 
 
 # H1: - Test -----------------------------------------------------------------

@@ -544,7 +544,7 @@ class Classification(Label):
         """
         Return the label in tensor format.
         """
-        return torch.FloatTensor([self.id])
+        return torch.tensor([self.id], dtype=torch.int64)
         
 
 class Classifications(Label):

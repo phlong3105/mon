@@ -20,6 +20,7 @@ model_cfg  = "alexnet.yaml"
 data_name  = "cifar10"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname
+shape      = [3, 64, 64]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -27,21 +28,21 @@ root       = RUNS_DIR / fullname
 data = {
     "name": data_name,
         # Dataset's name.
-    "shape": [3, 64, 64],
+    "shape": shape,
         # Image shape as [C, H, W], [H, W], or [S, S].
 	"num_classes": 10,
 		# Number of classes in the dataset.
-    "transform": None,
+    "transform": [
+        Resize(size=shape)
+    ],
         # Functions/transforms that takes in an input sample and returns a
         # transformed version.
     "target_transform": None,
-        # Functions/transforms that takes in a target and returns a transformed
-        # version.
-    "transforms": [
-        Resize(size=[3, 64, 64]),
-    ],
-        # Functions/transforms that takes in an input and a target and returns
-        # the transformed versions of both.
+        # Functions/transforms that takes in a target and returns a
+        # transformed version.
+    "transforms": None,
+        # Functions/transforms that takes in an input and a target and
+        # returns the transformed versions of both.
     "cache_data": False,
         # If True, cache data to disk for faster loading next time.
         # Defaults to False.
@@ -50,7 +51,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 8,
+    "batch_size": 64,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
@@ -78,7 +79,7 @@ model = {
         # manually in `self.parse_model()` method.
     "channels": 3,
         # Input channel. Defaults to 3.
-    "num_classes": None,
+    "num_classes": data["num_classes"],
         # Number of classes for classification or detection tasks.
         # Defaults to None.
     "classlabels": None,
@@ -119,9 +120,15 @@ callbacks = [
     default.model_checkpoint | {
         "root": root,
             # Root directory to save checkpoint files
-	    "monitor": "checkpoint/loss/train_epoch",  # "loss_epoch",
+	    "monitor": "checkpoint/accuracy/train_epoch",  # "loss_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint only
 			# for the last epoch.
+		"mode": "max",
+			# One of {min, max}. If `save_top_k != 0`, the decision to
+	        # overwrite the current save file is made based on either the
+	        # maximization or the minimization of the monitored quantity.
+	        # For `val_acc`, this should be `max`, for `val_loss` this should
+	        # be `min`, etc.
 	},
 	default.learning_rate_monitor,
 	default.rich_model_summary,

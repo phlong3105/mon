@@ -33,6 +33,7 @@ def train(args: Munch | dict):
     
     data: DataModule = DATAMODULES.build_from_dict(cfg=args.data)
     data.prepare_data()
+    data.setup(phase="training")
     
     args.model.classlabels = data.classlabels
     model: BaseModel       = MODELS.build_from_dict(cfg=args.model)
@@ -43,7 +44,6 @@ def train(args: Munch | dict):
     # H2: - Trainer ------------------------------------------------------------
     console.rule("[bold red]2. SETUP TRAINER")
     copy_file_to(file=args.cfg_file, dst=model.root)
-    data.setup(phase="training")
     model.phase = "training"
     
     ckpt                 = get_latest_checkpoint(dirpath=model.weights_dir)
@@ -81,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodce_lol226",
+		"cfg"        : "alexnet_cifar10",
         "accelerator": "auto",
 		"devices"    :  1,
 		"strategy"   : None,
@@ -103,36 +103,46 @@ hosts = {
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cfg",         type=str, help="The training cfg to use.")
-    parser.add_argument("--accelerator", type=str, help="Supports passing different accelerator types ('cpu', 'gpu', 'tpu', 'ipu', 'hpu', 'mps', 'auto') as well as custom accelerator instances.")
-    parser.add_argument("--devices",     type=str, help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
-    parser.add_argument("--strategy",    type=str, help="Supports different training strategies with aliases as well custom strategies.")
-
-    args   = parser.parse_args()
+    parser.add_argument("--cfg",         type=str,            help="The training cfg to use.")
+    parser.add_argument("--accelerator", type=str,            help="Supports passing different accelerator types ('cpu', 'gpu', 'tpu', 'ipu', 'hpu', 'mps', 'auto') as well as custom accelerator instances.")
+    parser.add_argument("--batch-size",  type=int,            help="Total Batch size for all GPUs.")
+    parser.add_argument("--devices",     type=str,            help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
+    parser.add_argument("--img-size",    type=int, nargs="+", help="Image sizes.")
+    parser.add_argument("--max-epochs",  type=int,            help="Stop training once this number of epochs is reached.")
+    parser.add_argument("--strategy",    type=str,            help="Supports different training strategies with aliases as well custom strategies.")
+    args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     hostname    = socket.gethostname().lower()
-    args        = Munch(hosts[hostname])
+    host_args   = Munch(hosts[hostname])
     
     input_args  = vars(parse_args())
-    cfg         = input_args.get("cfg",         None) or args.cfg
-    accelerator = input_args.get("accelerator", None) or args.accelerator
-    devices     = input_args.get("devices"    , None) or args.devices
-    strategy    = input_args.get("strategy"   , None) or args.strategy
+    cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
     
-    module = importlib.import_module(f"one.cfg.{args.cfg}")
+    module      = importlib.import_module(f"one.cfg.{cfg}")
+    batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None) or module.data["batch_size"]
+    shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None) or module.data["shape"]
+    accelerator = input_args.get("accelerator", None) or host_args.get("accelerator", None) or module.trainer["accelerator"]
+    devices     = input_args.get("devices",     None) or host_args.get("devices",     None) or module.trainer["devices"]
+    max_epochs  = input_args.get("max_epochs",  None) or host_args.get("max_epochs",  None) or module.trainer["max_epochs"]
+    strategy    = input_args.get("strategy",    None) or host_args.get("strategy",    None) or module.trainer["strategy"]
+    
     args   = Munch(
         hostname  = hostname,
         cfg_file  = module.__file__,
-        data      = module.data,
+        data      = module.data | {
+            "shape"     : shape,
+            "batch_size": batch_size,
+        },
         model     = module.model,
         callbacks = module.callbacks,
         logger    = module.logger,
         trainer   = module.trainer | {
             "accelerator": accelerator,
             "devices"    : devices,
+            "max_epochs" : max_epochs,
             "strategy"   : strategy,
         },
     )

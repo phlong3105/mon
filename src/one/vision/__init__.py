@@ -28,4 +28,5 @@ Taxonomy:
 
 from __future__ import annotations
 
+from .classification import *
 from .enhancement import *

@@ -20,6 +20,7 @@ model_cfg  = "hinet"
 data_name  = "ihaze"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname
+shape      = [3, 256, 256]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -27,7 +28,7 @@ root       = RUNS_DIR / fullname
 data = {
     "name": data_name,
         # Dataset's name.
-    "shape": [3, 256, 256],
+    "shape": shape,
         # Image shape as [C, H, W], [H, W], or [S, S].
     "transform": None,
         # Functions/transforms that takes in an input sample and returns a
@@ -36,7 +37,7 @@ data = {
         # Functions/transforms that takes in a target and returns a transformed
         # version.
     "transforms": [
-        Resize(size=[3, 512, 512]),
+        Resize(size=shape),
     ],
         # Functions/transforms that takes in an input and a target and returns
         # the transformed versions of both.

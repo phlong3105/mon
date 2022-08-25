@@ -358,10 +358,10 @@ def imshow_classification(
     label = label[:max_n] if label is not None else [f"" for _ in range(len(image))]
     assert_same_length(image, label)
     
-    if pred_top1 and target:
+    if pred_top1 is not None and target is not None:
         label  = [f"{l} \n pred={p} gt={t}"        for (l, p, t) in zip(label, pred_top1, target)]
         colors = ["darkgreen" if p == t else "red" for (p, t) in zip(pred_top1, target)]
-    elif target:
+    elif target is not None:
         label  = [f"{l} \n gt={t}" for (l, t) in zip(label, target)]
         colors = ["black" for _ in range(len(image))]
     else:
@@ -381,8 +381,7 @@ def imshow_classification(
     subfigs_flat = subfigs.flat
     move_figure(x=0, y=0)
     
-    for idx, (img, label, color, scores) in \
-        enumerate(zip(image, label, colors, scores_topk)):
+    for idx, (img, label, color, scores) in enumerate(zip(image, label, colors, scores_topk)):
         subfig = subfigs_flat[idx]
         subfig.suptitle(label, x=0.5, y=1.0, color=color)
         axs = subfig.subplots(2, 1)
@@ -398,14 +397,15 @@ def imshow_classification(
         pps = axs[1].barh(y_pos, scores, align="center", color="deepskyblue")
         axs[1].set_xlim(left=0.0)
         axs[1].set_yticks(y_pos)
-        axs[1].set_yticklabels(scores, horizontalalignment="left")
+        if pred_topk is not None:
+            axs[1].set_yticklabels(pred_topk[idx], horizontalalignment="left")
         # Scores
         max_width = max([rect.get_width() for rect in pps])
         for i, rect in enumerate(pps):
             if scores[i] > 0:
                 axs[1].text(
                     rect.get_x() + max_width, rect.get_y(),
-                    "{:.2f}".format(scores[i]), ha="right", va="bottom",
+                    f"{scores[i]:.2f}", ha="right", va="bottom",
                     rotation=0
                 )
     plt.get_current_fig_manager().set_window_title(winname)
