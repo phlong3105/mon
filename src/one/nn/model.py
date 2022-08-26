@@ -689,6 +689,8 @@ def parse_model(
             args = [c1, *args[0:]]
         elif m in [
             AlexNetClassifier,
+            LeNetClassifier,
+            VGGClassifier,
         ]:
             if isinstance(f, (list, tuple)):
                 c1 = ch[f[0]]

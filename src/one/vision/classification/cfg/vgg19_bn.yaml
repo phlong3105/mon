@@ -1,0 +1,63 @@
+channels: 1
+
+backbone: [
+  # [from,    number, module,     args(out_channels, ...)]
+  [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+  [-1,     1,      BatchNorm2d,       [64]],                 # 1
+  [-1,     1,      ReLU,              [True]],               # 2
+  [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 3
+  [-1,     1,      BatchNorm2d,       [64]],                 # 4
+  [-1,     1,      ReLU,              [True]],               # 5
+  [-1,     1,      MaxPool2d,         [2, 2]],               # 6
+  [-1,     1,      Conv2d,            [128, 3, 1, 1]],       # 7
+  [-1,     1,      BatchNorm2d,       [128]],                # 8
+  [-1,     1,      ReLU,              [True]],               # 9
+  [-1,     1,      Conv2d,            [128, 3, 1, 1]],       # 10
+  [-1,     1,      BatchNorm2d,       [128]],                # 11
+  [-1,     1,      ReLU,              [True]],               # 12
+  [-1,     1,      MaxPool2d,         [2, 2]],               # 13
+  [-1,     1,      Conv2d,            [256, 3, 1, 1]],       # 14
+  [-1,     1,      BatchNorm2d,       [256]],                # 15
+  [-1,     1,      ReLU,              [True]],               # 16
+  [-1,     1,      Conv2d,            [256, 3, 1, 1]],       # 17
+  [-1,     1,      BatchNorm2d,       [256]],                # 18
+  [-1,     1,      ReLU,              [True]],               # 19
+  [-1,     1,      Conv2d,            [256, 3, 1, 1]],       # 20
+  [-1,     1,      BatchNorm2d,       [256]],                # 21
+  [-1,     1,      ReLU,              [True]],               # 22
+  [-1,     1,      Conv2d,            [256, 3, 1, 1]],       # 23
+  [-1,     1,      BatchNorm2d,       [256]],                # 24
+  [-1,     1,      ReLU,              [True]],               # 25
+  [-1,     1,      MaxPool2d,         [2, 2]],               # 26
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 27
+  [-1,     1,      BatchNorm2d,       [512]],                # 28
+  [-1,     1,      ReLU,              [True]],               # 29
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 30
+  [-1,     1,      BatchNorm2d,       [512]],                # 31
+  [-1,     1,      ReLU,              [True]],               # 32
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 33
+  [-1,     1,      BatchNorm2d,       [512]],                # 34
+  [-1,     1,      ReLU,              [True]],               # 35
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 36
+  [-1,     1,      BatchNorm2d,       [512]],                # 37
+  [-1,     1,      ReLU,              [True]],               # 38
+  [-1,     1,      MaxPool2d,         [2, 2]],               # 39
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 40
+  [-1,     1,      BatchNorm2d,       [512]],                # 41
+  [-1,     1,      ReLU,              [True]],               # 42
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 43
+  [-1,     1,      BatchNorm2d,       [512]],                # 44
+  [-1,     1,      ReLU,              [True]],               # 45
+  [-1,     1,      Conv2d,            [512, 3, 1, 1]],       # 46
+  [-1,     1,      BatchNorm2d,       [512]],                # 47
+  [-1,     1,      ReLU,              [True]],               # 48
+  [-1,     1,      MaxPool2d,         [2, 2]],               # 49
+  [-1,     1,      BatchNorm2d,       [512]],                # 50
+  [-1,     1,      ReLU,              [True]],               # 51
+  [-1,     1,      MaxPool2d,         [2, 2]],               # 52
+  [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 53
+]
+
+head: [
+  [-1,     1,      VGGClassifier,     []],                   # 54
+]

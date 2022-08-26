@@ -2458,7 +2458,14 @@ def is_yaml_file(path: Path_ | None) -> bool:
 def are_same_state_dicts(input1: dict, input2: dict) -> bool:
     d1 = input1.values()
     d2 = input2.values()
-    return all(torch.equal(i, j) for i, j in zip(d1, d2))
+    for i, j in zip(d1, d2):
+        if isinstance(i, Tensor) and isinstance(j, Tensor):
+            if not torch.equal(i, j):
+                return False
+        else:
+            if not i == j:
+                return False
+    return True
 
 
 def assert_bmp_file(path: Path_ | None):

@@ -6,9 +6,6 @@
 
 from __future__ import annotations
 
-from torchvision.models import vgg19
-from torchvision.models import VGG19_Weights
-
 from one.nn import *
 
 CURRENT_DIR = Path(__file__).resolve().parent
@@ -112,16 +109,10 @@ class AlexNet(ImageClassificationModel):
             # print(self.model.state_dict().keys())
             # print(state_dict.keys())
             model_state_dict = self.model.state_dict()
-            model_state_dict["0.weight"]          = state_dict["features.0.weight"]
-            model_state_dict["0.bias"]            = state_dict["features.0.bias"]
-            model_state_dict["3.weight"]          = state_dict["features.3.weight"]
-            model_state_dict["3.bias"]            = state_dict["features.3.bias"]
-            model_state_dict["6.weight"]          = state_dict["features.6.weight"]
-            model_state_dict["6.bias"]            = state_dict["features.6.bias"]
-            model_state_dict["8.weight"]          = state_dict["features.8.weight"]
-            model_state_dict["8.bias"]            = state_dict["features.8.bias"]
-            model_state_dict["10.weight"]         = state_dict["features.10.weight"]
-            model_state_dict["10.bias"]           = state_dict["features.10.bias"]
+            for k, v in state_dict.items():
+                k = k.replace("features.", "")
+                if k in model_state_dict:
+                    model_state_dict[k] = v
             model_state_dict["14.linear1.weight"] = state_dict["classifier.1.weight"]
             model_state_dict["14.linear1.bias"]   = state_dict["classifier.1.bias"]
             model_state_dict["14.linear2.weight"] = state_dict["classifier.4.weight"]

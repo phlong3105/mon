@@ -1539,6 +1539,64 @@ class AlexNetClassifier(Module):
             return x
 
 
+@LAYERS.register(name="lenet_classifier")
+class LeNetClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.linear1 = Linear(in_features=in_channels, out_features=84)
+        self.act1    = Tanh()
+        self.linear2 = Linear(in_features=84, out_features=out_channels)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = self.linear1(input)
+            x = self.act1(x)
+            x = self.linear2(x)
+            return x
+        else:
+            return input
+
+
+@LAYERS.register(name="vgg_classifier")
+class VGGClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.linear1      = Linear(in_features=in_channels * 7 * 7, out_features=4096)
+        self.act1         = ReLU(inplace=True)
+        self.drop1        = Dropout()
+        self.linear2      = Linear(in_features=4096, out_features=4096)
+        self.act2         = ReLU(inplace=True)
+        self.drop2        = Dropout()
+        self.linear3      = Linear(in_features=4096, out_features=out_channels)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = torch.flatten(input, 1)
+            x = self.act1(self.linear1(x))
+            x = self.drop1(x)
+            x = self.act2(self.linear2(x))
+            x = self.drop2(x)
+            x = self.linear3(x)
+            return x
+        else:
+            x = torch.flatten(input, 1)
+            return x
+        
+
 # H2: - Linear -----------------------------------------------------------------
 
 LAYERS.register(name="bilinear",    module=Bilinear)
