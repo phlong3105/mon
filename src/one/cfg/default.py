@@ -40,7 +40,7 @@ model_checkpoint = {
         # When True, saves an exact copy of the checkpoint to a file `last.ckpt`
 		# whenever a checkpoint file gets saved. This allows accessing the
 		# latest checkpoint in a deterministic manner. Defaults to None.
-	"save_top_k": 1,
+	"save_top_k": 5,
         # - If `save_top_k == k`, the best k models according to the quantity
 		#   monitored will be saved.
         # - If `save_top_k == 0`, no models are saved.
@@ -112,7 +112,7 @@ model_checkpoint = {
 rich_model_summary = {
 	"name": "rich_model_summary",
 		# Name of the callback.
-	"max_depth": 1,
+	"max_depth": 2,
 		# Maximum depth of layer nesting that the summary will include. A value
 		# of 0 turns the layer summary off.
 }

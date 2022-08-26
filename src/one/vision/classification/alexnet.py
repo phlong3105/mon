@@ -126,9 +126,10 @@ class AlexNet(ImageClassificationModel):
             model_state_dict["14.linear1.bias"]   = state_dict["classifier.1.bias"]
             model_state_dict["14.linear2.weight"] = state_dict["classifier.4.weight"]
             model_state_dict["14.linear2.bias"]   = state_dict["classifier.4.bias"]
-            model_state_dict["14.linear3.weight"] = state_dict["classifier.6.weight"]
-            model_state_dict["14.linear3.bias"]   = state_dict["classifier.6.bias"]
+            if self.pretrained["num_classes"] == self.num_classes:
+                model_state_dict["14.linear3.weight"] = state_dict["classifier.6.weight"]
+                model_state_dict["14.linear3.bias"]   = state_dict["classifier.6.bias"]
             self.model.load_state_dict(model_state_dict)
-            assert_same_state_dicts(self.model.state_dict(), state_dict)
+            # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:
             super().load_pretrained()

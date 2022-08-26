@@ -62,32 +62,21 @@ python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_a
 
 python detect.py  \
     --weights \
+      'runs/train/yolov7-e6e-delftbikes-480/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-multiscale-01/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-multiscale-02/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-multiscale-03/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-multiscale-04/weights/best.pt' \
       'runs/train/yolov7-e6e-delftbikes-640/weights/best.pt' \
-      'runs/train/yolov7-e6-delftbikes-multiscale-01/weights/best.pt' \
-      'runs/train/yolov7-e6-delftbikes-multiscale-02/weights/best.pt' \
-      'runs/train/yolov7-e6-delftbikes-multiscale-03/weights/best.pt' \
-      'runs/train/yolov7-e6-delftbikes-multiscale-04/weights/best.pt' \
       'runs/train/yolov7-e6-delftbikes-640/weights/best.pt' \
-      'runs/train/yolov7-d6-delftbikes-multiscale-01/weights/best.pt' \
-      'runs/train/yolov7-d6-delftbikes-multiscale-02/weights/best.pt' \
-      'runs/train/yolov7-d6-delftbikes-multiscale-03/weights/best.pt' \
-      'runs/train/yolov7-d6-delftbikes-multiscale-04/weights/best.pt' \
       'runs/train/yolov7-d6-delftbikes-640/weights/best.pt' \
-      'runs/train/yolov7-w6-delftbikes-multiscale-01/weights/best.pt' \
-      'runs/train/yolov7-w6-delftbikes-multiscale-02/weights/best.pt' \
-      'runs/train/yolov7-w6-delftbikes-multiscale-03/weights/best.pt' \
-      'runs/train/yolov7-w6-delftbikes-multiscale-04/weights/best.pt' \
     --source /coco/delftbikes/test/images \
-    --img-size 640 \
-    --conf-thres 0.05 \
+    --img-size 480 \
+    --conf-thres 0.01 \
     --iou-thres 0.5 \
     --device 0 \
     --save-txt \
     --save-conf \
     --augment \
-    --name yolov7-delftbikes-multiscale \
+    --name yolov7-delftbikes-ensemble5 \
     --no-trace

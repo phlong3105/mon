@@ -1396,9 +1396,10 @@ class ModelCheckpoint(Checkpoint):
         elif self.verbose:
             epoch = monitor_candidates["epoch"]
             step  = monitor_candidates["step"]
+            key   = self.monitor.replace("checkpoint/", "")
             console.log(
-                f"[Epoch {epoch:04d}, Step {step:08d}] "
-                f"{self.monitor!r} reached {current::10.6f}, was not in top "
+                f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
+                f"{key} reached {current:10.6f}, was not in top "
                 f"{self.save_top_k}."
             )
 
@@ -1461,16 +1462,20 @@ class ModelCheckpoint(Checkpoint):
         if self.verbose:
             epoch = monitor_candidates["epoch"]
             step  = monitor_candidates["step"]
+            key   = self.monitor.replace("checkpoint/", "")
             if trainer.is_global_zero:
-                key          = self.monitor.replace("checkpoint/", "")
-                key          = key.replace("/", "_")
-                best_key     = "Best"
-                previous_key = "previous"
-                console.log(
-                    f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
-                    f"{self.monitor!r} reached [red]{current:10.6f}[default].\n"
-                    f"Saving model to {str(filepath)!r} as [red]top {k}"
-                )
+                if str(filepath) == str(self.best_model_path):
+                    console.log(
+                        f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
+                        f"{key} reached [red]{current:10.6f}[default].\n"
+                        f"Saving model to {str(filepath)!r} as [red]best"
+                    )
+                else:
+                    console.log(
+                        f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
+                        f"{key} reached [red]{current:10.6f}[default].\n"
+                        f"Saving model to {str(filepath)!r} as [red]top {k}"
+                    )
         self._save_checkpoint(trainer=trainer, filepath=filepath)
 
         if del_filepath is not None and filepath != del_filepath:

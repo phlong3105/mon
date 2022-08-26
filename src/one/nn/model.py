@@ -858,10 +858,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.cfg["channels"] = self.channels
         
         self.classlabels = ClassLabels.from_value(classlabels)
-        if is_dict(pretrained) and "num_classes" in self.pretrained:
-            num_classes = num_classes or self.pretrained["num_classes"]
         if self.classlabels:
             num_classes = num_classes or self.classlabels.num_classes()
+        if is_dict(pretrained) and "num_classes" in self.pretrained:
+            num_classes = num_classes or self.pretrained["num_classes"]
         self.num_classes = num_classes
         
         if self.num_classes:

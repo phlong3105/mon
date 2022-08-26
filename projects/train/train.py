@@ -82,20 +82,26 @@ def train(args: Munch | dict):
 hosts = {
 	"lp-labdesktop01-ubuntu": {
 		"cfg"        : "alexnet_cifar10",
+        "weights"    : "imagenet",
         "accelerator": "auto",
-		"devices"    :  1,
+		"devices"    : 1,
+        "max_epochs" : 200,
 		"strategy"   : None,
 	},
     "lp-imac.local": {
 		"cfg"        : "zerodce_lol226",
+        "weights"    : None,
         "accelerator": "cpu",
-		"devices"    :  1,
+		"devices"    : 1,
+        "max_epochs" : 200,
 		"strategy"   : None,
 	},
     "lp-macbookpro.local": {
 		"cfg"        : "hinet_ihaze",
+        "weights"    : None,
         "accelerator": "cpu",
-		"devices"    :  1,
+		"devices"    : 1,
+        "max_epochs" : 200,
 		"strategy"   : None,
 	},
 }
@@ -104,10 +110,11 @@ hosts = {
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg",         type=str,            help="The training cfg to use.")
-    parser.add_argument("--accelerator", type=str,            help="Supports passing different accelerator types ('cpu', 'gpu', 'tpu', 'ipu', 'hpu', 'mps', 'auto') as well as custom accelerator instances.")
+    parser.add_argument("--weights",     type=str,            help="Weights path.")
     parser.add_argument("--batch-size",  type=int,            help="Total Batch size for all GPUs.")
-    parser.add_argument("--devices",     type=str,            help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
     parser.add_argument("--img-size",    type=int, nargs="+", help="Image sizes.")
+    parser.add_argument("--accelerator", type=str,            help="Supports passing different accelerator types ('cpu', 'gpu', 'tpu', 'ipu', 'hpu', 'mps', 'auto') as well as custom accelerator instances.")
+    parser.add_argument("--devices",     type=str,            help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
     parser.add_argument("--max-epochs",  type=int,            help="Stop training once this number of epochs is reached.")
     parser.add_argument("--strategy",    type=str,            help="Supports different training strategies with aliases as well custom strategies.")
     args = parser.parse_args()
@@ -122,6 +129,7 @@ if __name__ == "__main__":
     cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
     
     module      = importlib.import_module(f"one.cfg.{cfg}")
+    weights     = input_args.get("weights",     None) or host_args.get("weights",     None) or module.model["pretrained"]
     batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None) or module.data["batch_size"]
     shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None) or module.data["shape"]
     accelerator = input_args.get("accelerator", None) or host_args.get("accelerator", None) or module.trainer["accelerator"]
@@ -136,7 +144,9 @@ if __name__ == "__main__":
             "shape"     : shape,
             "batch_size": batch_size,
         },
-        model     = module.model,
+        model     = module.model | {
+            "pretrained": weights,
+        },
         callbacks = module.callbacks,
         logger    = module.logger,
         trainer   = module.trainer | {
