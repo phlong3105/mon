@@ -2603,6 +2603,12 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        pass
         
     @staticmethod
     def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
