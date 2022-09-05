@@ -3159,6 +3159,17 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
             ):
                 self.labels[i].load(keep_in_memory=True)
         console.log(f"Labels have been cached.")
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        keep = []
+        for i, (img, lab) in enumerate(zip(self.images, self.labels)):
+            if is_image_file(img.path) and is_image_file(lab.path):
+                keep.append(i)
+        self.images = [img for i, img in enumerate(self.images) if i in keep]
+        self.labels = [lab for i, lab in enumerate(self.labels) if i in keep]
         
     @staticmethod
     def collate_fn(batch) -> tuple[Tensor, Tensor, list]:

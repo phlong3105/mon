@@ -120,7 +120,7 @@ callbacks = [
     default.model_checkpoint | {
         "root": root,
             # Root directory to save checkpoint files
-	    "monitor": "checkpoint/accuracy/train_epoch",  # "loss_epoch",
+	    "monitor": "checkpoint/accuracy/val_epoch",  # "loss_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint only
 			# for the last epoch.
 		"mode": "max",

@@ -1,8 +1,0 @@
-{
-  "class_labels": [
-    { "name": "human",      "id": 0, "train_id": 0, "color": [  0, 255,   0] },
-    { "name": "bicycle",    "id": 1, "train_id": 1, "color": [  0,   0, 255] },
-    { "name": "motorcycle", "id": 2, "train_id": 2, "color": [  0, 255, 255] },
-    { "name": "vehicle",    "id": 3, "train_id": 3, "color": [255,   0,   0] }
-  ]
-}

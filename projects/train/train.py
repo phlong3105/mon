@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import socket
+from io import StringIO
 
 from pytorch_lightning.callbacks import Checkpoint
 
@@ -37,14 +38,14 @@ def train(args: Munch | dict):
     
     args.model.classlabels = data.classlabels
     model: BaseModel       = MODELS.build_from_dict(cfg=args.model)
-
+    model.phase            = "training"
+    
     print_dict(args, title=model.fullname)
     console.log("[green]Done")
 
     # H2: - Trainer ------------------------------------------------------------
     console.rule("[bold red]2. SETUP TRAINER")
     copy_file_to(file=args.cfg_file, dst=model.root)
-    model.phase = "training"
     
     ckpt                 = get_latest_checkpoint(dirpath=model.weights_dir)
     callbacks            = CALLBACKS.build_from_dictlist(cfgs=args.callbacks)

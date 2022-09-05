@@ -21,6 +21,7 @@ Forward pass:
 from __future__ import annotations
 
 import math
+from typing import Type
 
 import torch.nn.functional as F
 from torch import Tensor
@@ -3119,6 +3120,190 @@ class EnhancementModule(Module):
 
 EM = EnhancementModule
 
+
+# H2: - ResNet -----------------------------------------------------------------
+
+class ResNetBasicBlock(Module):
+    
+    expansion: int = 1
+
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        stride      : int                           = 1,
+        groups      : int                           = 1,
+        dilation    : int                           = 1,
+        base_width  : int                           = 64,
+        downsample  : Module | None                 = None,
+        norm_layer  : Callable[... , Module] | None = None,
+    ):
+        super().__init__()
+        if norm_layer is None:
+            norm_layer = BatchNorm2d
+        if groups != 1 or base_width != 64:
+            raise ValueError(
+                "`BasicBlock` only supports `groups=1` and `base_width=64`"
+            )
+        if dilation > 1:
+            raise NotImplementedError(
+                "dilation > 1 not supported in `BasicBlock`"
+            )
+        # Both self.conv1 and self.downsample layers downsample the input when
+        # stride != 1
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            stride       = stride,
+            padding      = dilation,
+            groups       = groups,
+            bias         = False,
+            dilation     = dilation,
+        )
+        self.bn1        = norm_layer(out_channels)
+        self.relu       = nn.ReLU(inplace=True)
+        self.conv2      = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            stride       = stride,
+            padding      = dilation,
+            groups       = groups,
+            bias         = False,
+            dilation     = dilation,
+        )
+        self.bn2        = norm_layer(out_channels)
+        self.downsample = downsample
+        self.stride     = stride
+
+    def forward(self, input: Tensor) -> Tensor:
+        identity = input
+        output   = self.conv1(input)
+        output   = self.bn1(output)
+        output   = self.relu(output)
+        output   = self.conv2(output)
+        output   = self.bn2(output)
+        if self.downsample is not None:
+            identity = self.downsample(input)
+        output += identity
+        output  = self.relu(output)
+        return output
+
+
+class ResNetBottleneck(Module):
+    """
+    Bottleneck in torchvision places the stride for down-sampling at
+    3x3 convolution(self.conv2) while original implementation places the stride
+    at the first 1x1 convolution(self.conv1) according to
+    "Deep residual learning for image recognition" https://arxiv.org/abs/1512.03385.
+    This variant is also known as ResNet V1.5 and improves accuracy according
+    to https://ngc.nvidia.com/catalog/model-scripts/nvidia:resnet_50_v1_5_for_pytorch.
+    """
+    
+    expansion: int = 4
+
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        stride      : int                              = 1,
+        groups      : int                              = 1,
+        dilation    : int                              = 1,
+        base_width  : int                              = 64,
+        downsample  : Module | None                    = None,
+        norm_layer  : Callable[... , nn.Module] | None = None,
+    ):
+        super().__init__()
+        if norm_layer is None:
+            norm_layer = nn.BatchNorm2d
+        width = int(in_channels * (base_width / 64.0)) * groups
+        # Both self.conv2 and self.downsample layers downsample the input when
+        # stride != 1
+        self.conv1      = Conv2d(
+            in_channels  = in_channels,
+            out_channels = width,
+            kernel_size  = 1,
+            stride       = stride,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False
+        )
+        self.bn1        = norm_layer(width)
+        self.conv2      = Conv2d(
+            in_channels  = width,
+            out_channels = width,
+            kernel_size  = 3,
+            stride       = stride,
+            padding      = dilation,
+            groups       = groups,
+            bias         = True,
+            dilation     = dilation,
+        )
+        self.bn2        = norm_layer(width)
+        self.conv3      = Conv2d(
+            in_channels  = width,
+            out_channels = out_channels * self.expansion,
+            kernel_size  = 1,
+            stride       = stride,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False
+        )
+        self.bn3        = norm_layer(out_channels * self.expansion)
+        self.relu       = ReLU(inplace=True)
+        self.downsample = downsample
+        self.stride     = stride
+
+    def forward(self, input: Tensor) -> Tensor:
+        identity = input
+        output   = self.conv1(input)
+        output   = self.bn1(output)
+        output   = self.relu(output)
+        output   = self.conv2(output)
+        output   = self.bn2(output)
+        output   = self.relu(output)
+        output   = self.conv3(output)
+        output   = self.bn3(output)
+        if self.downsample is not None:
+            identity = self.downsample(input)
+        output += identity
+        output  = self.relu(output)
+        return output
+
+
+class ResNetBlock(Module):
+    
+    def __init__(
+        self,
+        block        : Type[ResNetBasicBlock | ResNetBottleneck],
+        num_blocks   : int,
+        in_channels  : int,
+        out_channels : int,
+        stride       : int                           = 1,
+        groups       : int                           = 1,
+        dilation     : int                           = 1,
+        prev_dilation: int                           = 1,
+        base_width   : int                           = 64,
+        dilate       : bool                          = False,
+        norm_layer   : Callable[... , Module] | None = None,
+    ):
+        super().__init__()
+        downsample = None
+        if stride != 1 or in_channels != out_channels * block.expansion:
+            downsample = nn.Sequential(
+                Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = out_channels * block.expansion,
+                    kernel_size  = 1,
+                    stride       = stride,
+                    bias         = False,
+                ),
+                norm_layer(out_channels * block.expansion),
+            )
+    
 
 # H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
 

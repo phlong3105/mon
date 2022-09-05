@@ -4653,7 +4653,7 @@ rich_console_theme = Theme(
 
 console = Console(
     color_system    = "auto",
-    log_time_format = "[%x %H:%M:%S:%f]",
+    log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
     soft_wrap       = True,
     width           = 200,
     theme           = rich_console_theme,
@@ -4661,7 +4661,7 @@ console = Console(
 
 error_console = Console(
     color_system    = "auto",
-    log_time_format = "[%x %H:%M:%S:%f]",
+    log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
     soft_wrap       = True,
     width           = 200,
     stderr          = True,
@@ -4674,7 +4674,7 @@ logging.basicConfig(
     format   = "%(message)s",
     handlers = [RichHandler(rich_tracebacks=True)]
 )
-logger = logging.getLogger("rich")
+logger   = logging.getLogger("rich")
 logger.setLevel(logging.INFO)
 
 
