@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import socket
-from io import StringIO
 
 from pytorch_lightning.callbacks import Checkpoint
 
@@ -82,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "hinet_cityscapes_rain",
+		"cfg"        : "hinet_rain100l",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,

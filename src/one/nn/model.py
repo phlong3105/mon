@@ -889,7 +889,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         # Set phase to freeze or unfreeze layers
         self.phase = phase
         
-        self.print_info()
+        # self.print_info()
     
     @property
     def debug(self) -> Munch | None:

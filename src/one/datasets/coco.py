@@ -9,14 +9,13 @@ from __future__ import annotations
 
 import argparse
 
-import torch
 from matplotlib import pyplot as plt
 
 from one.constants import *
 from one.core import *
 from one.data import ClassLabels
 from one.data import ClassLabels_
-from one.data import COCODetectionDataset
+from one.data import YOLODetectionDataset
 from one.data import DataModule
 from one.data import Image
 from one.plot import draw_box
@@ -208,7 +207,7 @@ coco17_91_classlabels = [
 
 
 @DATASETS.register(name="coco17_detection")
-class COCO17Detection(COCODetectionDataset):
+class COCO17Detection(YOLODetectionDataset):
     """
     
     Args:
@@ -249,9 +248,9 @@ class COCO17Detection(COCODetectionDataset):
         verbose         : bool                = True,
         *args, **kwargs
     ):
-        path = os.path.join(root, f"classlabels.json")
+        path = os.path.join(root, f"80_classlabels.json")
         if classlabels is None:
-            if not os.path.isfile(path):
+            if os.path.isfile(path):
                 classlabels = ClassLabels.from_file(path)
             else:
                 classlabels = ClassLabels.from_list(coco17_80_classlabels)
@@ -283,7 +282,7 @@ class COCO17Detection(COCODetectionDataset):
         
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / f"{self.split}2017"
+            pattern = self.root / "images" / f"{self.split}2017"
             for path in pbar.track(
                 list(pattern.rglob("*.jpg")),
                 description=f"Listing {self.__class__.classname} "
@@ -291,11 +290,17 @@ class COCO17Detection(COCODetectionDataset):
             ):
                 self.images.append(Image(path=path, backend=self.backend))
 
-    def annotation_file(self) -> Path_:
+    def annotation_files(self) -> Paths_:
         """
-        Returns the path to json annotation file.
+        Returns the path to json annotation files.
         """
-        return self.root / "coco17" / "annotations" / f"instances_{self.split}2017.json"
+        files: list[Path] = []
+        for img in self.images:
+            path = str(img.path)
+            path = path.replace("images", "annotations_yolo")
+            path = path.replace(".jpg", ".txt")
+            files.append(Path(path))
+        return files
     
 
 @DATAMODULES.register(name="coco17_detection")
@@ -305,7 +310,7 @@ class COCO17DetectionDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "coco" / "coco17",
+        root: Path_ = DATA_DIR / "coco" / "coco2017",
         name: str   = "coco17_detection",
         *args, **kwargs
     ):
@@ -398,7 +403,7 @@ class COCO17DetectionDataModule(DataModule):
 
 def test_coco17_detection():
     cfg = {
-        "root": DATA_DIR / "coco" / "coco17",
+        "root": DATA_DIR / "coco" / "coco2017",
            # Root directory of dataset.
         "name": "coco17_detection",
             # Dataset's name.

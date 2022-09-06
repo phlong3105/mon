@@ -351,14 +351,16 @@ class SupervisedAttentionModule(Module):
             Output feature for the next layer.
         """
         assert_sequence_of_length(input, 2)
-        prev_output   = input[0]
-        current_input = input[1]
+        fy    = input[0]
+        x     = input[1]
 
-        features  = self.conv1(prev_output)
-        output    = self.conv2(prev_output) + current_input
-        features *= self.act(self.conv3(output))
-        features += prev_output
-        return features, output
+        x1    = self.conv1(fy)
+        img   = self.conv2(fy) + x
+        x2    = torch.sigmoid(self.conv3(img))
+        x1   *= x2
+        x1   += fy
+        pred  = x1
+        return pred, img
     
 
 # H2: - Convolution ------------------------------------------------------------
@@ -2932,7 +2934,6 @@ class HINetConvBlock(Module):
             y1, y2 = torch.chunk(y, 2, dim=1)
             y      = torch.cat([self.norm(y1), y2], dim=1)
         y  = self.relu1(y)
-        
         y  = self.relu2(self.conv2(y))
         y += self.identity(x)
         

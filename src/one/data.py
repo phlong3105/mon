@@ -2715,22 +2715,30 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         images	    = json_data.get("images",	   None)
         annotations = json_data.get("annotations", None)
 
-        data = Munch()
-        temp = Munch()
         for img in images:
             id       = img.get("id",        uuid.uuid4().int)
             filename = img.get("file_name", "")
-            image    = Image(
-                id   = id,
-                name = filename,
-                path = "",
-            )
-            image.coco_url      = img.get("coco_url",      "")
-            image.flickr_url    = img.get("flickr_url",    "")
-            image.license       = img.get("license",       0 )
-            image.date_captured = img.get("date_captured", "")
-            data[id]            = image
-            temp[filename]      = id
+            height   = img.get("height",     0)
+            width    = img.get("width",      0)
+            index    = -1
+            for idx, im in enumerate(self.images):
+                if im.name == filename:
+                    index = idx
+                    break
+            self.images[index].id            = id
+            self.images[index].coco_url      = img.get("coco_url",      "")
+            self.images[index].flickr_url    = img.get("flickr_url",    "")
+            self.images[index].license       = img.get("license",       0 )
+            self.images[index].date_captured = img.get("date_captured", "")
+            self.images[index].shape         = (3, height, width)
+        
+        for ann in annotations:
+            id          = ann.get("id",           uuid.uuid4().int)
+            image_id    = ann.get("image_id",     None)
+            bbox        = ann.get("bbox",         None)
+            category_id = ann.get("category_id", -1)
+            area        = ann.get("area",         0)
+            iscrowd     = ann.get("iscrowd",      False)
         
     @abstractmethod
     def annotation_file(self) -> Path_:

@@ -97,7 +97,7 @@ class Rain100(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.png")),
+                list(pattern.rglob("rain/*.png")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -114,7 +114,7 @@ class Rain100(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
@@ -191,7 +191,7 @@ class Rain100H(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.png")),
+                list(pattern.rglob("rain/*.png")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -208,7 +208,7 @@ class Rain100H(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
@@ -285,7 +285,7 @@ class Rain100L(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.png")),
+                list(pattern.rglob("rain/*.png")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -302,7 +302,7 @@ class Rain100L(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
 
 
@@ -378,7 +378,7 @@ class Rain12(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.png")),
+                list(pattern.rglob("rain/*.png")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -395,7 +395,7 @@ class Rain12(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
       
 
@@ -472,7 +472,7 @@ class Rain1200(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.jpg")),
+                list(pattern.rglob("rain/*.jpg")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -489,7 +489,7 @@ class Rain1200(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
@@ -565,7 +565,7 @@ class Rain13K(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root
             for path in pbar.track(
-                list(pattern.rglob(f"{self.split}/no_rain/*")),
+                list(pattern.rglob(f"{self.split}/rain/*")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -582,7 +582,7 @@ class Rain13K(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
  
 
@@ -659,7 +659,7 @@ class Rain1400(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.jpg")),
+                list(pattern.rglob("rain/*.jpg")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -676,7 +676,7 @@ class Rain1400(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
  
 
@@ -752,7 +752,7 @@ class Rain2800(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.jpg")),
+                list(pattern.rglob("rain/*.jpg")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -769,7 +769,7 @@ class Rain2800(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
@@ -845,7 +845,7 @@ class Rain800(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
-                list(pattern.rglob("no_rain/*.jpg")),
+                list(pattern.rglob("rain/*.jpg")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -862,7 +862,7 @@ class Rain800(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("no_rain", "rain"))
+                path = Path(str(img.path).replace("rain", "no_rain"))
                 self.labels.append(Image(path=path, backend=self.backend))
 
            

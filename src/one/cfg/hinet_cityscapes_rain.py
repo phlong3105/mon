@@ -87,7 +87,7 @@ model = {
         # Model's running phase. Defaults to training.
     "pretrained": None,
         # Initialize weights from pretrained.
-    "loss": {"name": "psnr_loss", "max_val": 1.0},
+    "loss": {"name": "psnr_loss", "max_val": 1.0, "weight": 0.5},
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": [{"name": "psnr"}],
@@ -99,7 +99,7 @@ model = {
         {
             "optimizer": {
 				"name": "adam",
-				"lr": 0.0001,
+				"lr": 2e-4,
 				"weight_decay": 0,
 				"betas": [0.9, 0.99],
 			},
@@ -135,7 +135,11 @@ model = {
         }
     ],
         # Optimizer(s) for training model. Defaults to None.
-    "debug": default.debug,
+    "debug": default.debug | {
+		"every_n_epochs": 5,
+			# Number of epochs between debugging. To disable, set
+	        # `every_n_epochs=0`. Defaults to 1.
+    },
         # Debug configs. Defaults to None.
 	"verbose": True,
 }

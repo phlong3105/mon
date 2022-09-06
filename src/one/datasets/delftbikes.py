@@ -239,7 +239,7 @@ class DelftBikesYOLO(YOLODetectionDataset):
     ):
         path = os.path.join(root, f"classlabels.json")
         if classlabels is None:
-            if not os.path.isfile(path):
+            if os.path.isfile(path):
                 classlabels = ClassLabels.from_file(path)
             else:
                 classlabels = ClassLabels.from_list(delftbikes_classlabels)
