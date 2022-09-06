@@ -35,7 +35,7 @@ def test(args: Munch | dict):
     data.prepare_data()
     data.setup(phase="testing")
     
-    args.model.classlabels = data.classlabels
+    args.model.delftbikes_classlabels = data.classlabels
     model: BaseModel       = MODELS.build_from_dict(cfg=args.model)
 
     print_dict(args, title=model.fullname)

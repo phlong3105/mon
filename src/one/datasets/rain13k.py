@@ -7,6 +7,8 @@ Rain13K dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -2170,5 +2172,30 @@ def test_rain800():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_rain100", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_rain13k()
+    args = parse_args()
+    if args.task == "test_rain100":
+        test_rain100()
+    elif args.task == "test_rain100h":
+        test_rain100h()
+    elif args.task == "test_rain100l":
+        test_rain100l()
+    elif args.task == "test_rain12":
+        test_rain12()
+    elif args.task == "test_rain1200":
+        test_rain1200()
+    elif args.task == "test_rain13k":
+        test_rain13k()
+    elif args.task == "test_rain1400":
+        test_rain1400()
+    elif args.task == "test_rain2800":
+        test_rain2800()
+    elif args.task == "test_rain800":
+        test_rain800()

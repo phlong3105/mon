@@ -7,6 +7,8 @@ REDS dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 
 from one.constants import *
@@ -581,5 +583,14 @@ def test_reds():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_reds", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_reds()
+    args = parse_args()
+    if args.task == "test_reds":
+        test_reds()

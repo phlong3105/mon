@@ -82,8 +82,8 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "alexnet_cifar10",
-        "weights"    : "imagenet",
+		"cfg"        : "hinet_cityscapes_rain",
+        "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
         "max_epochs" : 200,

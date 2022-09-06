@@ -7,6 +7,8 @@ Snow100K dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -545,7 +547,7 @@ class Snow100KLDataModule(Snow100KDataModule):
 
 # H1: - Test -----------------------------------------------------------------
 
-def test():
+def test_snow100k():
     cfg = {
         "root": DATA_DIR / "snow100k",
            # Root directory of dataset.
@@ -596,7 +598,175 @@ def test():
     plt.show(block=True)
 
 
+def test_snow100ks():
+    cfg = {
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
+        "name": "snow100ks",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [C, H, W], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": False,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = Snow100KSDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.classlabels:
+        dm.classlabels.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
+    plt.show(block=True)
+
+
+def test_snow100km():
+    cfg = {
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
+        "name": "snow100km",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [C, H, W], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": False,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = Snow100KMDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.classlabels:
+        dm.classlabels.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
+    plt.show(block=True)
+
+
+def test_snow100kl():
+    cfg = {
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
+        "name": "snow100kl",
+            # Dataset's name.
+        "shape": [3, 512, 512],
+            # Image shape as [C, H, W], [H, W], or [S, S].
+        "transform": None,
+            # Functions/transforms that takes in an input sample and returns a
+            # transformed version.
+        "target_transform": None,
+            # Functions/transforms that takes in a target and returns a
+            # transformed version.
+        "transforms": [
+            Resize(size=[3, 512, 512])
+        ],
+            # Functions/transforms that takes in an input and a target and
+            # returns the transformed versions of both.
+        "cache_data": False,
+            # If True, cache data to disk for faster loading next time.
+            # Defaults to False.
+        "cache_images": False,
+            # If True, cache images into memory for faster training (WARNING:
+            # large datasets may exceed system RAM). Defaults to False.
+        "backend": VISION_BACKEND,
+            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "batch_size": 8,
+            # Number of samples in one forward & backward pass. Defaults to 1.
+        "devices" : 0,
+            # The devices to use. Defaults to 0.
+        "shuffle": True,
+            # If True, reshuffle the data at every training epoch.
+            # Defaults to True.
+        "verbose": True,
+            # Verbosity. Defaults to True.
+    }
+    dm  = Snow100KLDataModule(**cfg)
+    dm.setup()
+    # Visualize labels
+    if dm.classlabels:
+        dm.classlabels.print()
+    # Visualize one sample
+    data_iter           = iter(dm.train_dataloader)
+    input, target, meta = next(data_iter)
+    result              = {"image" : input, "target": target}
+    label               = [(m["name"]) for m in meta]
+    imshow_enhancement(winname="image", image=result, label=label)
+    plt.show(block=True)
+    
+
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_snow100k", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test()
+    args = parse_args()
+    if args.task == "test_snow100k":
+        test_snow100k()
+    elif args.task == "test_snow100ks":
+        test_snow100ks()
+    elif args.task == "test_snow100km":
+        test_snow100km()
+    elif args.task == "test_snow100kl":
+        test_snow100kl()

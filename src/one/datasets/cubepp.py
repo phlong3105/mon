@@ -7,6 +7,8 @@ CubePP dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -630,7 +632,7 @@ def test_cubepp():
     plt.show(block=True)
 
 
-def test_fusioncubepp():
+def test_fusion_cubepp():
     cfg = {
         "root": DATA_DIR / "cube++" / "simplecube++_512",
            # Root directory of dataset.
@@ -681,7 +683,7 @@ def test_fusioncubepp():
     plt.show(block=True)
 
 
-def test_simplecubepp():
+def test_simple_cubepp():
     cfg = {
         "root": DATA_DIR / "cube++" / "simplecube++",
            # Root directory of dataset.
@@ -734,5 +736,18 @@ def test_simplecubepp():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_cubepp", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_cubepp()
+    args = parse_args()
+    if args.task == "test_cubepp":
+        test_cubepp()
+    elif args.task == "test_fusion_cubepp":
+        test_fusion_cubepp()
+    elif args.task == "test_simple_cubepp":
+        test_simple_cubepp()

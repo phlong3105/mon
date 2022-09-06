@@ -7,6 +7,8 @@ RealBlurJ dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -524,5 +526,16 @@ def test_realblurr():
     
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_realblurj", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_realblurj()
+    args = parse_args()
+    if args.task == "test_realblurj":
+        test_realblurj()
+    elif args.task == "test_realblurr":
+        test_realblurr()

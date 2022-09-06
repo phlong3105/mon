@@ -7,6 +7,8 @@ GLADNet dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -227,7 +229,7 @@ class GLADNetDataModule(DataModule):
 
 # H1: - Test -----------------------------------------------------------------
 
-def test():
+def test_gladnet():
     cfg = {
         "root": DATA_DIR / "gladnet",
            # Root directory of dataset.
@@ -280,5 +282,14 @@ def test():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_gladnet", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test()
+    args = parse_args()
+    if args.task == "test_gladnet":
+        test_gladnet()

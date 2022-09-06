@@ -7,6 +7,8 @@ O-Haze dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 
 from one.constants import *
@@ -232,7 +234,7 @@ class OHazeDataModule(DataModule):
 
 # H1: - Test -----------------------------------------------------------------
 
-def test():
+def test_ohaze():
     cfg = {
         "root": DATA_DIR / "ntire" / "ohaze",
            # Root directory of dataset.
@@ -285,5 +287,14 @@ def test():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_ohaze", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test()
+    args = parse_args()
+    if args.task == "test_ohaze":
+        test_ohaze()

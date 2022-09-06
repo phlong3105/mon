@@ -7,6 +7,8 @@ LoL226 dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -1497,5 +1499,26 @@ def test_vv():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_lol226", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_lol226()
+    args = parse_args()
+    if args.task == "test_dcim":
+        test_dcim()
+    elif args.task == "test_lime":
+        test_lime()
+    elif args.task == "test_lol226":
+        test_lol226()
+    elif args.task == "test_mef":
+        test_mef()
+    elif args.task == "test_npe":
+        test_npe()
+    elif args.task == "test_vip":
+        test_vip()
+    elif args.task == "test_vv":
+        test_vv()

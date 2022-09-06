@@ -7,6 +7,7 @@ CIFAR datasets and datamodules.
 
 from __future__ import annotations
 
+import argparse
 import pickle
 
 from matplotlib import pyplot as plt
@@ -626,5 +627,16 @@ def test_cifar100():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_cifar10", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_cifar100()
+    args = parse_args()
+    if args.task == "test_cifar10":
+        test_cifar10()
+    elif args.task == "test_cifar100":
+        test_cifar100()

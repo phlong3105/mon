@@ -7,6 +7,8 @@ KODASLoL dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 
 from one.constants import *
@@ -266,5 +268,14 @@ def test_kodas_lol():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_kodas_lol", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_kodas_lol()
+    args = parse_args()
+    if args.task == "test_kodas_lol":
+        test_kodas_lol()

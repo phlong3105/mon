@@ -124,6 +124,7 @@ class HINet(ImageEnhancementModel):
             cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = pretrained,
             phase       = phase,
             loss        = loss,

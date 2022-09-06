@@ -7,6 +7,8 @@ SICE dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -1607,5 +1609,30 @@ def test_sice_unsupervised():
     
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_sice", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_sice_unsupervised()
+    args = parse_args()
+    if args.task == "test_sice":
+        test_sice()
+    elif args.task == "test_sice1":
+        test_sice1()
+    elif args.task == "test_sice2":
+        test_sice2()
+    elif args.task == "test_sice3":
+        test_sice3()
+    elif args.task == "test_sice4":
+        test_sice4()
+    elif args.task == "test_sice5":
+        test_sice5()
+    elif args.task == "test_sice6":
+        test_sice6()
+    elif args.task == "test_sice7":
+        test_sice7()
+    elif args.task == "test_sice_unsupervised":
+        test_sice_unsupervised()

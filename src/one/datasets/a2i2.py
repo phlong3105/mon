@@ -7,6 +7,8 @@ A2I2Haze dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -18,11 +20,11 @@ from one.data import DataModule
 from one.data import Detection
 from one.data import Detections
 from one.data import Image
-from one.data import ImageEnhancementDataset, ImageDetectionDataset
+from one.data import ImageDetectionDataset
+from one.data import ImageEnhancementDataset
 from one.plot import imshow_enhancement
 from one.vision.shape import box_xyxy_to_cxcywh_norm
 from one.vision.transformation import Resize
-
 
 a2i2_classlabels = [
     { "name": "vehicle", "id": 0, "color": [  0,   0, 142] }
@@ -453,7 +455,7 @@ class A2I2HazeDetDataModule(DataModule):
 
 # H1: - Test -----------------------------------------------------------------
 
-def test_a2i2haze():
+def test_a2i2_haze():
     cfg = {
         "root": DATA_DIR / "a2i2" / "haze",
            # Root directory of dataset.
@@ -506,5 +508,14 @@ def test_a2i2haze():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_a2i2_haze", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_a2i2haze()
+    args = parse_args()
+    if args.task == "test_a2i2_haze":
+        test_a2i2_haze()

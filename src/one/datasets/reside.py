@@ -17,6 +17,8 @@ RESIDE dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
@@ -1762,5 +1764,26 @@ def test_reside_sots_outdoor():
     
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_reside_hsts", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_reside_ots()
+    args = parse_args()
+    if args.task == "test_reside_hsts":
+        test_reside_hsts()
+    elif args.task == "test_reside_its":
+        test_reside_its()
+    elif args.task == "test_reside_its_v2":
+        test_reside_its_v2()
+    elif args.task == "test_reside_ots":
+        test_reside_ots()
+    elif args.task == "test_reside_sots":
+        test_reside_sots()
+    elif args.task == "test_reside_sots_indoor":
+        test_reside_sots_indoor()
+    elif args.task == "test_reside_sots_outdoor":
+        test_reside_sots_outdoor()

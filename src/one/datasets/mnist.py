@@ -7,6 +7,7 @@ CIFAR datasets and datamodules.
 
 from __future__ import annotations
 
+import argparse
 from urllib.error import URLError
 
 from matplotlib import pyplot as plt
@@ -502,7 +503,7 @@ def test_mnist():
     plt.show(block=True)
 
 
-def test_fashionmnist():
+def test_fashion_mnist():
     cfg = {
         "root": DATA_DIR / "mnist" / "fashionmnist",
            # Root directory of dataset.
@@ -558,5 +559,16 @@ def test_fashionmnist():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_mnist", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_fashionmnist()
+    args = parse_args()
+    if args.task == "test_mnist":
+        test_mnist()
+    elif args.task == "test_fashion_mnist":
+        test_fashion_mnist()

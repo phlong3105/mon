@@ -7,6 +7,8 @@ SateHaze1K dataset and datamodule.
 
 from __future__ import annotations
 
+import argparse
+
 import matplotlib.pyplot as plt
 
 from one.constants import *
@@ -625,7 +627,7 @@ def test_satehaze1k():
     plt.show(block=True)
 
 
-def test_satehaze1kmoderate():
+def test_satehaze1k_moderate():
     cfg = {
         "root": DATA_DIR / "satehaze1k",
            # Root directory of dataset.
@@ -676,7 +678,7 @@ def test_satehaze1kmoderate():
     plt.show(block=True)
 
 
-def test_satehaze1kthick():
+def test_satehaze1k_thick():
     cfg = {
         "root": DATA_DIR / "satehaze1k",
            # Root directory of dataset.
@@ -727,7 +729,7 @@ def test_satehaze1kthick():
     plt.show(block=True)
 
 
-def test_satehaze1kthick():
+def test_satehaze1k_thin():
     cfg = {
         "root": DATA_DIR / "satehaze1k",
            # Root directory of dataset.
@@ -780,5 +782,20 @@ def test_satehaze1kthick():
 
 # H1: - Main -----------------------------------------------------------------
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task", type=str , default="test_satehaze1k", help="The task to run")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test_satehaze1k()
+    args = parse_args()
+    if args.task == "test_satehaze1k":
+        test_satehaze1k()
+    elif args.task == "test_satehaze1k_moderate":
+        test_satehaze1k_moderate()
+    elif args.task == "test_satehaze1k_thick":
+        test_satehaze1k_thick()
+    elif args.task == "test_satehaze1k_thin":
+        test_satehaze1k_thin()

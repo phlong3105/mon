@@ -169,7 +169,7 @@ def split_4subsets(root: Path_, *args, **kwargs ):
 
 # H1: - Module -----------------------------------------------------------------
 
-classlabels = [
+delftbikes_classlabels = [
     {"id": 0 , "supercategory": "bike", "name": "back_hand_break", "color": [  0,   0,   0]},
     {"id": 1 , "supercategory": "bike", "name": "back_handle"    , "color": [ 81, 120, 228]},
     {"id": 2 , "supercategory": "bike", "name": "back_light"     , "color": [138, 183,  33]},
@@ -237,6 +237,13 @@ class DelftBikesYOLO(YOLODetectionDataset):
         verbose         : bool                = True,
         *args, **kwargs
     ):
+        path = os.path.join(root, f"classlabels.json")
+        if classlabels is None:
+            if not os.path.isfile(path):
+                classlabels = ClassLabels.from_file(path)
+            else:
+                classlabels = ClassLabels.from_list(delftbikes_classlabels)
+        
         super().__init__(
             root             = root,
             split            = split,
@@ -385,7 +392,7 @@ class DelftBikesYOLODataModule(DataModule):
         """
         Load ClassLabels.
         """
-        self.classlabels = ClassLabels.from_value(classlabels)
+        self.classlabels = ClassLabels.from_value(delftbikes_classlabels)
 
 
 # H1: - Test -------------------------------------------------------------------
