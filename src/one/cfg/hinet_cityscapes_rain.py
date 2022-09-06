@@ -49,7 +49,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 8,
+    "batch_size": 4,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
@@ -91,7 +91,7 @@ model = {
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": [{"name": "psnr"}],
-		"val":   [{"name": "psnr"}, {"name": "ssim"}],
+		"val":   [{"name": "psnr"}],
 		"test":  [{"name": "psnr"}, {"name": "ssim"}],
     },
         # Metric(s) for validating and testing model. Defaults to None.

@@ -266,7 +266,7 @@ class DelftBikesYOLO(YOLODetectionDataset):
         if self.split not in ["train", "val"]:
             console.log(
                 f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+                f"`train` or `val`. Get: {self.split}."
             )
         
         self.images: list[Image] = []

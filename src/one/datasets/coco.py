@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 
+from matplotlib import pyplot as plt
+
 from one.constants import *
 from one.core import *
 from one.data import ClassLabels
@@ -16,6 +18,8 @@ from one.data import ClassLabels_
 from one.data import COCODetectionDataset
 from one.data import DataModule
 from one.data import Image
+from one.plot import imshow
+from one.vision.shape import box_cxcywh_norm_to_xyxy
 from one.vision.transformation import Resize
 
 
@@ -272,37 +276,25 @@ class COCO17Detection(COCODetectionDataset):
         if self.split not in ["train", "val"]:
             console.log(
                 f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+                f"`train` or `val`. Get: {self.split}."
             )
         
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / f"{self.split}2017"
             for path in pbar.track(
-                list(pattern.rglob("images/*.jpg")),
+                list(pattern.rglob("*.jpg")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
                 self.images.append(Image(path=path, backend=self.backend))
 
-    def annotation_files(self) -> Paths_:
+    def annotation_file(self) -> Path_:
         """
-        Returns the path to json annotation files.
+        Returns the path to json annotation file.
         """
-        files: list[Path] = []
-        for img in self.images:
-            path = str(img.path)
-            path = path.replace("images", "yolo_labels")
-            path = path.replace(".jpg", ".txt")
-            files.append(Path(path))
-        return files
+        return self.root / "coco17" / "annotations" / f"instances_{self.split}2017.json"
     
-    def filter(self):
-        """
-        Filter unwanted samples.
-        """
-        pass
-
 
 @DATAMODULES.register(name="coco17_detection")
 class COCO17DetectionDataModule(DataModule):
@@ -311,7 +303,7 @@ class COCO17DetectionDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "coco",
+        root: Path_ = DATA_DIR / "coco" / "coco17",
         name: str   = "coco17_detection",
         *args, **kwargs
     ):
@@ -404,7 +396,7 @@ class COCO17DetectionDataModule(DataModule):
 
 def test_coco17_detection():
     cfg = {
-        "root": DATA_DIR / "coco",
+        "root": DATA_DIR / "coco" / "coco17",
            # Root directory of dataset.
         "name": "coco17_detection",
             # Dataset's name.
@@ -445,34 +437,35 @@ def test_coco17_detection():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    
-    data_iter           = iter(dm.train_dataloader)
+    data_iter = iter(dm.train_dataloader)
     start = time.time()
     input, target, meta = next(data_iter)
     end = time.time()
     console.log(end - start)
+
+    drawings = []
+    for i, img in enumerate(input):
+        chw       = img.shape
+        l         = target[target[:, 0] == i]
+        l[:, 2:6] = box_cxcywh_norm_to_xyxy(l[:, 2:6], chw[1], chw[2])
+        drawing   = draw_box(img, l, dm.class_labels.colors(), 5)
+        drawings.append(drawing)
     # print(target)
     # print(target[0].shape)
-    # imshow(winname="image", image=input)
-    # plt.show(block=True)
+    imshow(winname="image", image=drawing)
+    plt.show(block=True)
 
 
 # H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str , default="split_4subsets", help="The task to run")
+    parser.add_argument("--task", type=str , default="test_coco17_detection", help="The task to run")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.task == "generate_train_val":
-        generate_train_val(**args.__dict__)
-    elif args.task == "generate_yolo_labels":
-        generate_yolo_labels(**args.__dict__)
-    elif args.task == "split_4subsets":
-        split_4subsets(**args.__dict__)
-    elif args.task == "test_delftbikes_yolo":
-        test_delftbikes_yolo()
+    if args.task == "test_coco17_detection":
+        test_coco17_detection()

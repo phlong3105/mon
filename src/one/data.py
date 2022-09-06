@@ -2738,7 +2738,13 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         Returns the path to json annotation file.
         """
         pass
-
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        pass
+    
 
 class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     """
@@ -2829,7 +2835,13 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         Returns the path to json annotation files.
         """
         pass
-
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        pass
+    
 
 class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     """
@@ -2914,7 +2926,13 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         Returns the path to json annotation files.
         """
         pass
-
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        pass
+    
 
 # H2: - Enhancement ------------------------------------------------------------
 
