@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 
+import torch
 from matplotlib import pyplot as plt
 
 from one.constants import *
@@ -18,6 +19,7 @@ from one.data import ClassLabels_
 from one.data import COCODetectionDataset
 from one.data import DataModule
 from one.data import Image
+from one.plot import draw_box
 from one.plot import imshow
 from one.vision.shape import box_cxcywh_norm_to_xyxy
 from one.vision.transformation import Resize
@@ -448,11 +450,10 @@ def test_coco17_detection():
         chw       = img.shape
         l         = target[target[:, 0] == i]
         l[:, 2:6] = box_cxcywh_norm_to_xyxy(l[:, 2:6], chw[1], chw[2])
-        drawing   = draw_box(img, l, dm.class_labels.colors(), 5)
+        drawing   = draw_box(img, l, dm.class_labels.colors())
         drawings.append(drawing)
-    # print(target)
-    # print(target[0].shape)
-    imshow(winname="image", image=drawing)
+    drawings = torch.Tensor(drawings)
+    imshow(winname="image", image=drawings)
     plt.show(block=True)
 
 

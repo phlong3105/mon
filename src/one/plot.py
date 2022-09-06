@@ -28,6 +28,20 @@ plt.rcParams["savefig.bbox"] = "tight"
 
 # H1: - Drawing ----------------------------------------------------------------
 
+def draw_box(
+    image: Tensor,
+    box  : Tensor,
+    color: Tensor | Ints | None = None,
+    fill : bool                 = False
+) -> Tensor:
+    return draw_rectangle(
+        image     = image,
+        rectangle = box,
+        color     = color,
+        fill      = fill,
+    )
+    
+    
 def draw_pixel(image: Tensor, x: int, y: int, color: Tensor | Ints):
     """
     Draws a pixel into an image.
@@ -47,7 +61,7 @@ def draw_rectangle(
     image    : Tensor,
     rectangle: Tensor,
     color    : Tensor | Ints | None = None,
-    fill     : bool = False
+    fill     : bool                 = False
 ) -> Tensor:
     """
     Draw N rectangles on a batch of image tensors.
