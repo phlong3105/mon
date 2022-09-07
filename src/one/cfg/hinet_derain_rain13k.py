@@ -87,7 +87,7 @@ model = {
         # Model's running phase. Defaults to training.
     "pretrained": None,
         # Initialize weights from pretrained.
-    "loss": {"name": "mse_loss"},
+    "loss": {"name": "psnr_loss", "max_val": 1.0, "weight": 0.5},
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": [{"name": "psnr"}],
