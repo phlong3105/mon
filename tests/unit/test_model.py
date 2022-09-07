@@ -20,7 +20,14 @@ from one.vision.classification.vgg import VGG16Bn
 from one.vision.classification.vgg import VGG19
 from one.vision.classification.vgg import VGG19Bn
 from one.vision.enhancement.ffanet import FFANet
+from one.vision.enhancement.finet import FINet
+from one.vision.enhancement.finet import FINetDeblur
+from one.vision.enhancement.finet import FINetDenoise
+from one.vision.enhancement.finet import FINetDerain
 from one.vision.enhancement.hinet import HINet
+from one.vision.enhancement.hinet import HINetDeblur
+from one.vision.enhancement.hinet import HINetDenoise
+from one.vision.enhancement.hinet import HINetDerain
 from one.vision.enhancement.mbllen import MBLLEN
 from one.vision.enhancement.zerodce import ZeroDCE
 from one.vision.enhancement.zerodcepp import ZeroDCEPP
@@ -36,9 +43,37 @@ class TestModel(unittest.TestCase):
         ffanet = FFANet(verbose=True)
         self.assertIsNotNone(ffanet)
     
+    def test_finet(self):
+        finet = FINet(verbose=True)
+        self.assertIsNotNone(finet)
+    
+    def test_finet_deblur(self):
+        finet_deblur = FINetDeblur( verbose=True)
+        self.assertIsNotNone(finet_deblur)
+    
+    def test_finet_denoise(self):
+        finet_denoise = FINetDenoise(verbose=True)
+        self.assertIsNotNone(finet_denoise)
+    
+    def test_finet_derain(self):
+        finet_derain = FINetDerain(verbose=True)
+        self.assertIsNotNone(finet_derain)
+    
     def test_hinet(self):
         hinet = HINet(verbose=True)
         self.assertIsNotNone(hinet)
+    
+    def test_hinet_deblur(self):
+        hinet_deblur = HINetDeblur(pretrained="gopro", verbose=True)
+        self.assertIsNotNone(hinet_deblur)
+    
+    def test_hinet_denoise(self):
+        hinet_denoise = HINetDenoise(pretrained="sidd", verbose=True)
+        self.assertIsNotNone(hinet_denoise)
+    
+    def test_hinet_derain(self):
+        hinet_derain = HINetDerain(pretrained="rain13k", verbose=True)
+        self.assertIsNotNone(hinet_derain)
     
     def test_lenet(self):
         lenet = LeNet(num_classes=1000, verbose=True)

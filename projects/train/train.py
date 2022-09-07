@@ -81,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "hinet_rain100l",
+		"cfg"        : "hinet_rain13k",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
@@ -100,6 +100,14 @@ hosts = {
 		"cfg"        : "hinet_ihaze",
         "weights"    : None,
         "accelerator": "cpu",
+		"devices"    : 1,
+        "max_epochs" : 200,
+		"strategy"   : None,
+	},
+    "vsw-ws02": {
+		"cfg"        : "hinet_cityscapes_rain",
+        "weights"    : None,
+        "accelerator": "auto",
 		"devices"    : 1,
         "max_epochs" : 200,
 		"strategy"   : None,

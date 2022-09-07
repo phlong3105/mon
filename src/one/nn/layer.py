@@ -2834,6 +2834,126 @@ class FFAPreProcess(Module):
         return self.conv(input)
 
 
+# H2: - FINet ------------------------------------------------------------------
+
+@LAYERS.register(name="finet_conv_block")
+class FINetConvBlock(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        downsample  : bool,
+        relu_slope  : float,
+        use_csff    : bool  = False,
+        use_hin     : bool  = False,
+        alpha       : float = 0.5,
+        selection   : str   = "linear",
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.downsample = downsample
+        self.use_csff   = use_csff
+        
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            padding      = 1,
+            bias         = True
+        )
+        self.relu1 = LeakyReLU(relu_slope, inplace=False)
+        self.conv2 = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            padding      = 1,
+            bias         = True
+        )
+        self.relu2    = LeakyReLU(relu_slope, inplace=False)
+        self.identity = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+        )
+        
+        if downsample and use_csff:
+            self.csff_enc = Conv2d(
+                in_channels  = out_channels,
+                out_channels = out_channels,
+                kernel_size  = 3,
+                stride       = 1,
+                padding      = 1,
+            )
+            self.csff_dec = Conv2d(
+                in_channels  = out_channels,
+                out_channels = out_channels,
+                kernel_size  = 3,
+                stride       = 1,
+                padding      = 1,
+            )
+        
+        self.use_hin = use_hin
+        if self.use_hin:
+            self.norm = FractionInstanceNorm2d(
+                alpha        = self.alpha,
+                num_features = out_channels,
+                selection    = selection,
+            )
+
+        if downsample:
+            self.downsample = Conv2d(
+                in_channels  = out_channels,
+                out_channels = out_channels,
+                kernel_size  = 4,
+                stride       = 2,
+                padding      = 1,
+                bias         = False
+            )
+    
+    def forward(self, input: Tensors) -> tuple[Tensor | None, Tensor]:
+        """
+        
+        Args:
+            input (Tensors): A single tensor for the first UNet or a list of 3
+                tensors for the second UNet.
+
+        Returns:
+            Output tensors.
+        """
+        enc = dec = None
+        if isinstance(input, Tensor):
+            x = input
+        elif isinstance(input, Sequence):
+            x = input[0]  # Input
+            if len(input) == 2:
+                enc = input[1]  # Encode path
+            if len(input) == 3:
+                dec = input[2]  # Decode path
+        else:
+            raise TypeError()
+        
+        y  = self.conv1(x)
+        if self.use_fin:
+            y = self.norm(y)
+        y  = self.relu1(y)
+        y  = self.relu2(self.conv2(y))
+        y += self.identity(x)
+        
+        if enc is not None and dec is not None:
+            if not self.use_csff:
+                raise ValueError()
+            y = y + self.csff_enc(enc) + self.csff_dec(dec)
+       
+        if self.downsample:
+            y_down = self.downsample(y)
+            return y_down, y
+        else:
+            return None, y
+    
+    
 # H2: - HINet ------------------------------------------------------------------
 
 @LAYERS.register(name="hinet_conv_block")

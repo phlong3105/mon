@@ -555,17 +555,17 @@ class Rain13K(ImageEnhancementDataset):
         """
         List image files.
         """
-        if self.split not in ["test"]:
+        if self.split not in ["train", "val", "test"]:
             console.log(
                 f"{self.__class__.classname} dataset only supports `split`: "
-                f"`test`. Get: {self.split}."
+                f"`train`, `val`, or `test`. Get: {self.split}."
             )
             
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root
+            pattern = self.root / "*" / self.split / "rain" / "*"
             for path in pbar.track(
-                list(pattern.rglob(f"{self.split}/rain/*")),
+                list(glob.glob(str(pattern))),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -582,7 +582,10 @@ class Rain13K(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("rain", "no_rain"))
+                path         = img.path
+                grand_parent = path.parent.parent
+                name         = path.name
+                path         = grand_parent / "no_rain" / name
                 self.labels.append(Image(path=path, backend=self.backend))
  
 
@@ -1339,7 +1342,7 @@ class Rain13KDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain13k",
+        root: Path_ = DATA_DIR / "rain13k",
         name: str   = "rain13k",
         *args, **kwargs
     ):

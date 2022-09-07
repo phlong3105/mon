@@ -21,24 +21,35 @@ class CombinedLoss(BaseLoss):
     
     def __init__(
         self,
-        spa_weight    : Tensor = Tensor([1.0]),
+        spa_weight    : Floats = 1.0,
 	    exp_patch_size: int    = 16,
 	    exp_mean_val  : float  = 0.6,
-        exp_weight    : Tensor = Tensor([10.0]),
-        col_weight    : Tensor = Tensor([5.0]),
-        tv_weight     : Tensor = Tensor([200.0]),
+        exp_weight    : Floats = 10.0,
+        col_weight    : Floats = 5.0,
+        tv_weight     : Floats = 200.0,
+        reduction     : str    = "mean",
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.name     = "combined_loss"
-        self.loss_spa = SpatialConsistencyLoss(weight=spa_weight)
+        self.loss_spa = SpatialConsistencyLoss(
+            weight    = spa_weight,
+            reduction = reduction,
+        )
         self.loss_exp = ExposureControlLoss(
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
-            weight     = exp_weight
+            weight     = exp_weight,
+            reduction  = reduction,
         )
-        self.loss_col = ColorConstancyLoss(weight=col_weight)
-        self.loss_tv  = IlluminationSmoothnessLoss(weight=tv_weight)
+        self.loss_col = ColorConstancyLoss(
+            weight    = col_weight,
+            reduction = reduction,
+        )
+        self.loss_tv  = IlluminationSmoothnessLoss(
+            weight    = tv_weight,
+            reduction = reduction,
+        )
      
     def forward(self, input: Tensors, target: Sequence[Tensor], **_) -> Tensor:
         if isinstance(target, tuple):

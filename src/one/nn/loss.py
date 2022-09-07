@@ -65,6 +65,7 @@ def weighted_loss(f: Callable):
     A decorator that allows weighted loss calculation between multiple inputs
     (predictions from  multistage models) and a single target.
     """
+    
     @functools.wraps(f)
     def wrapper(
         input             : Tensors,
@@ -125,15 +126,9 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
     Args:
         weight (Tensor): Some loss function is the combination of other loss
             functions. This provides weight for each loss component.
-            Defaults to [1.0].
-        input_weight (Tensor | None): A manual scaling weight given to each
-            tensor in `input`. If specified, it must have the length equals
-            to the length of `input`.
-        elementwise_weight (Tensor | None): A manual scaling weight given
-            to each item in the batch. For classification, it is the weight
-            for each class.
+            Defaults to 1.0.
         reduction (str): Specifies the reduction to apply to the output.
-            One of: [`none`, `mean`, `sum`].
+            One of: [`none`, `mean`, `sum`, `weighted_sum`].
             - none: No reduction will be applied.
             - mean: The sum of the output will be divided by the number of
               elements in the output.
@@ -141,39 +136,21 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
             Defaults to mean.
     """
     
-    # If your loss function only support some reduction. Consider overwriting
-    # this value.
+    # If your loss function only support some reduction.
+    # Consider overwriting this value.
     reductions = ["none", "mean", "sum", "weighted_sum"]
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(reduction=reduction)
-        weight = weight or 1.0
-        if weight and not isinstance(weight, Tensor):
-            weight = Tensor(
-                weight if isinstance(weight, Sequence) else [weight]
-            )
-        if input_weight and not isinstance(input_weight, Tensor):
-            input_weight = Tensor(
-                input_weight
-                if isinstance(input_weight, Sequence)
-                else [input_weight]
-            )
-        if elementwise_weight and not isinstance(elementwise_weight, Tensor):
-            elementwise_weight = Tensor(
-                elementwise_weight
-                if isinstance(elementwise_weight, Sequence)
-                else [elementwise_weight]
-            )
-        self.weight             = weight
-        self.input_weight       = input_weight
-        self.elementwise_weight = elementwise_weight
+        weight = weight or [1.0]
+        if not isinstance(weight, Sequence):
+            weight = [weight]
+        self.weight = weight
         if self.reduction not in self.reductions:
             raise ValueError(
                 f"`reduction` must be one of: {self.reductions}. "
@@ -198,9 +175,12 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
 
 # H1: - Loss -------------------------------------------------------------------
 
-@weighted_loss
 def charbonnier_loss(
-    input: Tensor, target: Tensor, eps: float = 1e-3, **_
+    input    : Tensor,
+    target   : Tensor,
+    eps      : float      = 1e-3,
+    reduction: Reduction_ = "mean",
+    **_
 ) -> Tensor:
     """
     Charbonnier loss.
@@ -210,15 +190,21 @@ def charbonnier_loss(
         target (Tensor): The target tensor of shape [B, C, H, W].
         eps (float): Small value for numerically stability when dividing.
             Defaults to 1e-3.
-            
+        reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
-    return torch.sqrt((input - target) ** 2 + (eps * eps))
+    loss = torch.sqrt((input - target) ** 2 + (eps * eps))
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
-def color_constancy_loss(input: Tensor, target: None = None, **_) -> Tensor:
+def color_constancy_loss(
+    input    : Tensor,
+    target   : None       = None,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     A color constancy loss to correct the potential color deviations in the
     enhanced image and also build the relations among the three adjusted
@@ -231,6 +217,7 @@ def color_constancy_loss(input: Tensor, target: None = None, **_) -> Tensor:
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
             Defaults to None.
+        reduction (Reduction_): Reduction value to use.
         
     Returns:
         The loss tensor of shape [B].
@@ -243,11 +230,16 @@ def color_constancy_loss(input: Tensor, target: None = None, **_) -> Tensor:
     loss = torch.pow(
         torch.pow(d_rg, 2) + torch.pow(d_rb, 2) + torch.pow(d_gb, 2), 0.5
     )
-    return loss
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
-def edge_loss(input: Tensor, target: Tensor, eps: float = 1e-3, **_) -> Tensor:
+def edge_loss(
+    input    : Tensor,
+    target   : Tensor,
+    eps      : float      = 1e-3,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     Edge loss.
     
@@ -256,7 +248,8 @@ def edge_loss(input: Tensor, target: Tensor, eps: float = 1e-3, **_) -> Tensor:
         target (Tensor): The target tensor of shape [B, C, H, W].
         eps (float): Small value for numerically stability when dividing.
             Defaults to 1e-3.
-            
+        reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
@@ -280,17 +273,18 @@ def edge_loss(input: Tensor, target: Tensor, eps: float = 1e-3, **_) -> Tensor:
         diff 	   = image - filtered
         return diff
     
-    return torch.sqrt(
+    loss = torch.sqrt(
         (laplacian_kernel(input) - laplacian_kernel(target)) ** 2 + (eps * eps)
     )
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
 def exposure_control_loss(
     input     : Tensor,
     patch_size: Ints,
     mean_val  : float,
-    target    : None = None,
+    target    : None       = None,
+    reduction : Reduction_ = "mean",
     **_
 ) -> Tensor:
     """
@@ -305,7 +299,8 @@ def exposure_control_loss(
         target (None): The target tensor of shape [B, C, H, W]. Default to None.
         patch_size (Ints): Kernel size for pooling layer.
     	mean_val (float):
-            
+    	reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
@@ -313,11 +308,15 @@ def exposure_control_loss(
     mean = torch.mean(input, 1, keepdim=True)
     mean = pool(mean)
     loss = torch.pow(mean - torch.FloatTensor([mean_val]).to(input.device), 2)
-    return loss
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
-def gray_loss(input: Tensor, target: None = None, **_) -> Tensor:
+def gray_loss(
+    input    : Tensor,
+    target   : None       = None,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     Gray loss.
 
@@ -325,6 +324,7 @@ def gray_loss(input: Tensor, target: None = None, **_) -> Tensor:
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
             Defaults to None.
+        reduction (Reduction_): Reduction value to use.
         
     Returns:
         The loss tensor of shape [B].
@@ -332,13 +332,16 @@ def gray_loss(input: Tensor, target: None = None, **_) -> Tensor:
     return 1.0 / mse_loss(
         input     = input,
         target    = torch.ones_like(input) * 0.5,
-        reduction = "mean"
+        reduction = reduction
     )
 
 
-@weighted_loss
 def illumination_smoothness_loss(
-    input: Tensor, tv_loss_weight: int, target: None = None, **_
+    input         : Tensor,
+    tv_loss_weight: int,
+    target        : None       = None,
+    reduction     : Reduction_ = "mean",
+    **_
 ) -> Tensor:
     """
     Illumination Smoothness Loss preserve the mono-tonicity relations between
@@ -353,6 +356,7 @@ def illumination_smoothness_loss(
         target (Tensor): The target tensor of shape [B, C, H, W].
             Defaults to None.
         tv_loss_weight (int):
+        reduction (Reduction_): Reduction value to use.
         
     Returns:
         The loss tensor of shape [B].
@@ -365,41 +369,56 @@ def illumination_smoothness_loss(
     count_w    = x.size()[2] * (x.size()[3] - 1)
     h_tv       = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x-1, :]), 2).sum()
     w_tv       = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x-1]), 2).sum()
-    return tv_loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / batch_size
+    loss       = tv_loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / batch_size
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
-def mae_loss(input: Tensor, target: Tensor, **_) -> Tensor:
+def mae_loss(
+    input    : Tensor,
+    target   : Tensor,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     MAE (Mean Absolute Error or L1) loss.
     
     Args:
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
-    
+        reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
-    return F.l1_loss(input=input, target=target, reduction="none")
+    return F.l1_loss(input=input, target=target, reduction=reduction)
 
 
-@weighted_loss
-def mse_loss(input: Tensor, target: Tensor, **_) -> Tensor:
+def mse_loss(
+    input    : Tensor,
+    target   : Tensor,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     MSE (Mean Squared Error or L2) loss.
     
     Args:
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
-    
+        reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
-    return F.mse_loss(input=input, target=target, reduction="none")
+    return F.mse_loss(input=input, target=target, reduction=reduction)
 
 
-@weighted_loss
-def non_blurry_loss(input: Tensor, target: None = None, **_) -> Tensor:
+def non_blurry_loss(
+    input    : Tensor,
+    target   : None       = None,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     Non-blurry Loss.
     
@@ -407,20 +426,24 @@ def non_blurry_loss(input: Tensor, target: None = None, **_) -> Tensor:
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
             Defaults to None.
-    
+        reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
     return 1.0 - F.mse_loss(
         input     = input,
         target    = torch.ones_like(input) * 0.5,
-        reduction = "mean"
+        reduction = reduction
     )
 
 
-@weighted_loss
 def psnr_loss(
-    input: Tensor, target: Tensor, max_val: float = 1.0, **_
+    input    : Tensor,
+    target   : Tensor,
+    max_val  : float      = 1.0,
+    reduction: Reduction_ = "mean",
+    **_
 ) -> Tensor:
     """
     PSNR loss. Modified from BasicSR: https://github.com/xinntao/BasicSR
@@ -429,16 +452,21 @@ def psnr_loss(
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
         max_val (float): Dynamic range of the images. Defaults to 1.0.
+        reduction (Reduction_): Reduction value to use.
         
     Returns:
         The loss tensor of shape [B].
     """
-    return -1.0 * psnr(input=input, target=target, max_val=max_val)
+    loss = -1.0 * psnr(input=input, target=target, max_val=max_val)
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
 def smooth_mae_loss(
-    input: Tensor, target: Tensor, beta: float = 1.0, **_
+    input    : Tensor,
+    target   : Tensor,
+    beta     : float      = 1.0,
+    reduction: Reduction_ = "mean",
+    **_
 ) -> Tensor:
     """
     Smooth MAE (Mean Absolute Error or L1) loss.
@@ -447,6 +475,7 @@ def smooth_mae_loss(
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W].
         beta (float):
+        reduction (Reduction_): Reduction value to use.
         
     Returns:
         The loss tensor of shape [B].
@@ -455,17 +484,17 @@ def smooth_mae_loss(
         input     = input,
         target    = target,
         beta      = beta,
-        reduction = "none"
+        reduction = reduction
     )
 
 
-@weighted_loss
 def ssim_loss(
     input      : Tensor,
     target     : Tensor,
     window_size: int,
-    max_val    : float = 1.0,
-    eps        : float = 1e-12,
+    max_val    : float      = 1.0,
+    eps        : float      = 1e-12,
+    reduction  : Reduction_ = "mean",
     **_
 ) -> Tensor:
     """
@@ -478,6 +507,7 @@ def ssim_loss(
         max_val (float): Dynamic range of the images. Defaults to 1.0.
         eps (float): Small value for numerically stability when dividing.
             Defaults to 1e-12.
+        reduction (Reduction_): Reduction value to use.
         
     Returns:
         The loss tensor of shape [B].
@@ -491,11 +521,16 @@ def ssim_loss(
         eps         = eps
     )
     # Compute and reduce the loss
-    return torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
+    loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
-@weighted_loss
-def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
+def spatial_consistency_loss(
+    input    : Tensor,
+    target   : Tensor,
+    reduction: Reduction_ = "mean",
+    **_
+) -> Tensor:
     """
     Spatial Consistency Loss encourages spatial coherence of the enhanced
     image through preserving the difference of neighboring regions between the
@@ -508,7 +543,8 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
         input (Tensor): The input tensor of shape [B, C, H, W].
         target (Tensor): The target tensor of shape [B, C, H, W]. In this case,
             the enhanced image, i.e, prediction.
-    
+        reduction (Reduction_): Reduction value to use.
+        
     Returns:
         The loss tensor of shape [B].
     """
@@ -553,7 +589,7 @@ def spatial_consistency_loss(input: Tensor, target: Tensor, **_) -> Tensor:
     d_up            = torch.pow(d_org_up    - d_enhance_up,    2)
     d_down          = torch.pow(d_org_down  - d_enhance_down,  2)
     loss            = d_left + d_right + d_up + d_down
-    return loss
+    return reduce_loss(loss=loss, reduction=reduction)
 
 
 @LOSSES.register(name="charbonnier_loss")
@@ -561,31 +597,25 @@ class CharbonnierLoss(BaseLoss):
     
     def __init__(
         self,
-        eps               : float         = 1e-3,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        eps      : float  = 1e-3,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.eps  = eps
         self.name = "charbonnier_loss"
      
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return self.weight * charbonnier_loss(
-            input              = input,
-            target             = target,
-            eps                = self.eps,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * charbonnier_loss(
+            input     = input,
+            target    = target,
+            eps       = self.eps,
+            reduction = self.reduction,
         )
 
 
@@ -598,18 +628,14 @@ class CharbonnierEdgeLoss(BaseLoss):
     
     def __init__(
         self,
-        eps               : float         = 1e-3,
-        weight            : Tensor        = Tensor([1.0, 0.05]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        eps      : float  = 1e-3,
+        weight   : Floats = [1.0, 0.05],
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.eps  = eps
@@ -618,20 +644,16 @@ class CharbonnierEdgeLoss(BaseLoss):
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
         return \
             self.weight[0] * charbonnier_loss(
-                input              = input,
-                target             = target,
-                eps                = self.eps,
-                input_weight       = self.input_weight,
-                elementwise_weight = self.elementwise_weight,
-                reduction          = self.reduction,
+                input     = input,
+                target    = target,
+                eps       = self.eps,
+                reduction = self.reduction,
             ) + \
             self.weight[1] * edge_loss(
-                input              = input,
-                target             = target,
-                eps                = self.eps,
-                input_weight       = self.input_weight,
-                elementwise_weight = self.elementwise_weight,
-                reduction          = self.reduction,
+                input     = input,
+                target    = target,
+                eps       = self.eps,
+                reduction = self.reduction,
             )
 
 
@@ -640,28 +662,22 @@ class ColorConstancyLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "color_constancy_loss"
      
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return self.weight * color_constancy_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * color_constancy_loss(
+            input     = input,
+            target    = target,
+            reduction = self.reduction,
         )
 
 
@@ -670,31 +686,25 @@ class EdgeLoss(BaseLoss):
     
     def __init__(
         self,
-        eps               : float         = 1e-3,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        eps      : float  = 1e-3,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.eps  = eps
         self.name = "edge_loss"
      
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return self.weight * edge_loss(
-            input              = input,
-            target             = target,
-            eps                = self.eps,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * edge_loss(
+            input     = input,
+            target    = target,
+            eps       = self.eps,
+            reduction = self.reduction,
         )
     
     
@@ -706,19 +716,15 @@ class ExposureControlLoss(BaseLoss):
     
     def __init__(
         self,
-        patch_size        : Ints,
-        mean_val          : float,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        patch_size: Ints,
+        mean_val  : float,
+        weight    : Floats = 1.0,
+        reduction : str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name       = "exposure_control_loss"
@@ -726,14 +732,12 @@ class ExposureControlLoss(BaseLoss):
         self.mean_val   = mean_val
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight * exposure_control_loss(
-            input              = input,
-            target             = target,
-            patch_size         = self.patch_size,
-            mean_val           = self.mean_val,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * exposure_control_loss(
+            input      = input,
+            target     = target,
+            patch_size = self.patch_size,
+            mean_val   = self.mean_val,
+            reduction  = self.reduction,
         )
 
 
@@ -745,17 +749,13 @@ class GradientLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Tensor = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "gradient_loss"
@@ -774,13 +774,11 @@ class GradientLoss(BaseLoss):
             losses.append(
                 reduce_loss(
                     loss      = torch.mean(gradient_a_x) + torch.mean(gradient_a_y),
-                    weight    = self.elementwise_weight,
                     reduction = self.reduction
                 )
             )
-        return self.weight * reduce_loss(
+        return self.weight[0] * reduce_loss(
             loss      = torch.FloatTensor(losses),
-            weight    = self.input_weight,
             reduction = Reduction.WEIGHTED_SUM
         )
         
@@ -793,28 +791,22 @@ class GrayLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "gray_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight * mae_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * mae_loss(
+            input     = input,
+            target    = target,
+            reduction = self.reduction,
         )
 
 
@@ -826,17 +818,13 @@ class GrayscaleLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "grayscale_loss"
@@ -851,12 +839,10 @@ class GrayscaleLoss(BaseLoss):
         input_g  = [torch.mean(i,  1, keepdim=True) for i in input]
         target_g = torch.mean(target, 1, keepdim=True)
         
-        return self.weight * mse_loss(
-            input              = input_g,
-            target             = target_g,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * mse_loss(
+            input     = input_g,
+            target    = target_g,
+            reduction = self.reduction,
         )
 
 
@@ -865,31 +851,25 @@ class IlluminationSmoothnessLoss(BaseLoss):
     
     def __init__(
         self,
-        tv_loss_weight    : int           = 1,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        tv_loss_weight: int    = 1,
+        weight        : Floats = 1.0,
+        reduction     : str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name           = "illumination_smoothness_loss"
         self.tv_loss_weight = tv_loss_weight
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight * illumination_smoothness_loss(
-            input              = input,
-            target             = target,
-            tv_loss_weight     = self.tv_loss_weight,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * illumination_smoothness_loss(
+            input          = input,
+            target         = target,
+            tv_loss_weight = self.tv_loss_weight,
+            reduction      = self.reduction,
         )
 
 
@@ -902,28 +882,22 @@ class MAELoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "mae_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * mae_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * mae_loss(
+            input     = input,
+            target    = target,
+            reduction = self.reduction,
         )
 
 
@@ -936,28 +910,22 @@ class MSELoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "mse_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * mse_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * mse_loss(
+            input     = input,
+            target    = target,
+            reduction = self.reduction,
         )
 
 
@@ -969,28 +937,22 @@ class NonBlurryLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "non_blurry_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight * non_blurry_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * non_blurry_loss(
+            input     = input,
+            target    = target,
+            reduction = self.reduction,
         )
 
 
@@ -1002,18 +964,14 @@ class PerceptualL1Loss(BaseLoss):
     
     def __init__(
         self,
-        vgg               : nn.Module,
-        weight            : Tensor        = Tensor([1.0, 1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        vgg      : nn.Module,
+        weight   : Floats = [1.0, 1.0],
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name     = "perceptual_Loss"
@@ -1026,28 +984,26 @@ class PerceptualL1Loss(BaseLoss):
         }
         
         if self.weight is None:
-            self.weight = Tensor([1.0, 1.0])
+            self.weight = [1.0, 1.0]
         elif len(self.weight) != 2:
-            raise ValueError(f"Length of `weight` must be 2. "
-                             f"But got: {len(self.weight)}." )
+            raise ValueError(
+                f"Length of `weight` must be 2. "
+                f"But got: {len(self.weight)}."
+            )
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
         return \
             self.weight[0] * self.per_loss(
-                input              = input,
-                target             = target,
-                eps                = self.eps,
-                input_weight       = self.input_weight,
-                elementwise_weight = self.elementwise_weight,
-                reduction          = self.reduction,
+                input     = input,
+                target    = target,
+                eps       = self.eps,
+                reduction = self.reduction,
             ) + \
             self.weight[1] * self.l1_loss(
-                input              = input,
-                target             = target,
-                eps                = self.eps,
-                input_weight       = self.input_weight,
-                elementwise_weight = self.elementwise_weight,
-                reduction          = self.reduction,
+                input     = input,
+                target    = target,
+                eps       = self.eps,
+                reduction = self.reduction,
             )
 
 
@@ -1059,18 +1015,14 @@ class PerceptualLoss(BaseLoss):
     
     def __init__(
         self,
-        vgg               : nn.Module,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        vgg      : nn.Module,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "perceptual_Loss"
@@ -1094,13 +1046,11 @@ class PerceptualLoss(BaseLoss):
             losses.append(
                 reduce_loss(
                     loss      = F.mse_loss(input_features, target_features),
-                    weight    = self.elementwise_weight,
                     reduction = self.reduction
                 )
             )
-        return self.weight * reduce_loss(
+        return self.weight[0] * reduce_loss(
             loss      = torch.FloatTensor(losses),
-            weight    = self.input_weight,
             reduction = Reduction.WEIGHTED_SUM
         )
 
@@ -1113,31 +1063,25 @@ class PSNRLoss(BaseLoss):
     
     def __init__(
         self,
-        max_val           : float         = 1.0,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        max_val  : float  = 1.0,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name    = "psnr_loss"
         self.max_val = max_val
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * psnr_loss(
-            input              = input,
-            target             = target,
-            max_val            = self.max_val,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * psnr_loss(
+            input     = input,
+            target    = target,
+            max_val   = self.max_val,
+            reduction = self.reduction,
         )
 
 
@@ -1150,31 +1094,25 @@ class SmoothMAELoss(BaseLoss):
     
     def __init__(
         self,
-        beta              : float         = 1.0,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        beta     : float  = 1.0,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "smooth_mae_loss"
         self.beta = beta
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * smooth_mae_loss(
-            input              = input,
-            target             = target,
-            beta               = self.beta,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * smooth_mae_loss(
+            input     = input,
+            target    = target,
+            beta      = self.beta,
+            reduction = self.reduction,
         )
 
 
@@ -1186,28 +1124,22 @@ class SpatialConsistencyLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "spatial_consistency_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * spatial_consistency_loss(
-            input              = input,
-            target             = target,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * spatial_consistency_loss(
+            input     = input,
+            target    = target,
+            reduction = self.reduction,
         )
 
 
@@ -1226,19 +1158,15 @@ class SSIMLoss(BaseLoss):
     def __init__(
         self,
         window_size: int,
-        max_val           : float         = 1.0,
-        eps               : float         = 1e-12,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        max_val  : float  = 1.0,
+        eps      : float  = 1e-12,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name        = "ssim_loss"
@@ -1247,15 +1175,13 @@ class SSIMLoss(BaseLoss):
         self.eps         = eps
     
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight * ssim_loss(
-            input              = input,
-            target             = target,
-            window_size        = self.window_size,
-            max_val            = self.max_val,
-            eps                = self.eps,
-            input_weight       = self.input_weight,
-            elementwise_weight = self.elementwise_weight,
-            reduction          = self.reduction,
+        return self.weight[0] * ssim_loss(
+            input       = input,
+            target      = target,
+            window_size = self.window_size,
+            max_val     = self.max_val,
+            eps         = self.eps,
+            reduction   = self.reduction,
         )
 
 
@@ -1268,17 +1194,13 @@ class StdLoss(BaseLoss):
     
     def __init__(
         self,
-        weight            : Tensor        = Tensor([1.0]),
-        input_weight      : Tensor | None = None,
-        elementwise_weight: Tensor | None = None,
-        reduction         : str           = "mean",
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
         *args, **kwargs
     ):
         super().__init__(
-            weight             = weight,
-            input_weight       = input_weight,
-            elementwise_weight = elementwise_weight,
-            reduction          = reduction,
+            weight    = weight,
+            reduction = reduction,
             *args, **kwargs
         )
         self.name = "std_loss"
@@ -1315,13 +1237,11 @@ class StdLoss(BaseLoss):
                         functional.conv2d(i_mean, self.image),
                         functional.conv2d(i_mean, self.blur),
                     ),
-                    weight    = self.elementwise_weight,
                     reduction = self.reduction
                 )
             )
-        return self.weight * reduce_loss(
+        return self.weight[0] * reduce_loss(
             loss      = torch.FloatTensor(losses),
-            weight    = self.input_weight,
             reduction = Reduction.WEIGHTED_SUM
         )
 

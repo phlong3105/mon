@@ -815,8 +815,8 @@ class VGG16(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            print(self.model.state_dict().keys())
-            print(state_dict.keys())
+            # print(self.model.state_dict().keys())
+            # print(state_dict.keys())
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -977,8 +977,8 @@ class VGG19(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            print(self.model.state_dict().keys())
-            print(state_dict.keys())
+            # print(self.model.state_dict().keys())
+            # print(state_dict.keys())
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
