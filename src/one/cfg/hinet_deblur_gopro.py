@@ -15,9 +15,9 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "hinet"
+model_name = "hinet_deblur"
 model_cfg  = "hinet"
-data_name  = "rain13k"
+data_name  = "gopro"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname
 shape      = [3, 256, 256]
@@ -41,7 +41,7 @@ data = {
     ],
         # Functions/transforms that takes in an input and a target and returns
         # the transformed versions of both.
-    "cache_data": True,
+    "cache_data": False,
         # If True, cache data to disk for faster loading next time.
         # Defaults to False.
     "cache_images": False,
@@ -49,7 +49,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 8,
+    "batch_size": 4,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
@@ -87,11 +87,11 @@ model = {
         # Model's running phase. Defaults to training.
     "pretrained": None,
         # Initialize weights from pretrained.
-    "loss": {"name": "mse_loss"},
+    "loss": {"name": "psnr_loss", "max_val": 1.0, "weight": 0.5},
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": [{"name": "psnr"}],
-		"val":   [{"name": "psnr"}, {"name": "ssim"}],
+		"val":   [{"name": "psnr"}],
 		"test":  [{"name": "psnr"}, {"name": "ssim"}],
     },
         # Metric(s) for validating and testing model. Defaults to None.
@@ -136,7 +136,7 @@ model = {
     ],
         # Optimizer(s) for training model. Defaults to None.
     "debug": default.debug | {
-		"every_n_epochs": 10,
+		"every_n_epochs": 5,
 			# Number of epochs between debugging. To disable, set
 	        # `every_n_epochs=0`. Defaults to 1.
     },

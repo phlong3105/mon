@@ -15,9 +15,9 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "hinet"
-model_cfg  = "hinet"
-data_name  = "cityscapes_rain"
+model_name = "finet_dehaze"
+model_cfg  = "finet"
+data_name  = "ihaze"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname
 shape      = [3, 256, 256]

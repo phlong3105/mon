@@ -546,6 +546,55 @@ class HINetDeblur(HINet):
         )
 
 
+@MODELS.register(name="hinet_dehaze")
+class HINetDehaze(HINet):
+    """
+    """
+    
+    model_zoo = {}
+    
+    def __init__(
+        self,
+        root       : Path_               = RUNS_DIR,
+        name       : str          | None = "hinet",
+        fullname   : str          | None = "hinet_dehaze",
+        channels   : int                 = 3,
+        num_classes: int          | None = None,
+        classlabels: ClassLabels_ | None = None,
+        pretrained : Pretrained			 = False,
+        phase      : ModelPhase_         = "training",
+        loss   	   : Losses_      | None = None,
+        metrics	   : Metrics_     | None = None,
+        optimizers : Optimizers_  | None = None,
+        debug      : dict | Munch | None = None,
+        verbose    : bool                = False,
+        *args, **kwargs
+    ):
+        cfg = "hinet"
+        if isinstance(cfg, str) and cfg in cfgs:
+            cfg = cfgs[cfg]
+        elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
+            cfg = CFG_DIR / cfg
+
+        super().__init__(
+            root        = root,
+            name        = name,
+            fullname    = fullname,
+            cfg         = cfg,
+            channels    = channels,
+            num_classes = num_classes,
+            classlabels = classlabels,
+            pretrained  = HINetDehaze.init_pretrained(pretrained),
+            phase       = phase,
+            loss        = loss,
+            metrics     = metrics,
+            optimizers  = optimizers,
+            debug       = debug,
+            verbose     = verbose,
+            *args, **kwargs
+        )
+        
+        
 @MODELS.register(name="hinet_denoise")
 class HINetDenoise(HINet):
     """
@@ -647,7 +696,7 @@ class HINetDenoise_x0_5(HINet):
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
-            pretrained  = HINetDeblur.init_pretrained(pretrained),
+            pretrained  = HINetDenoise_x0_5.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
             metrics     = metrics,

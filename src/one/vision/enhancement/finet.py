@@ -328,6 +328,55 @@ class FINetDeblur(FINet):
         )
 
 
+@MODELS.register(name="finet_dehaze")
+class FINetDehaze(FINet):
+    """
+    """
+    
+    model_zoo = {}
+    
+    def __init__(
+        self,
+        root       : Path_               = RUNS_DIR,
+        name       : str          | None = "finet",
+        fullname   : str          | None = "finet_dehaze",
+        channels   : int                 = 3,
+        num_classes: int          | None = None,
+        classlabels: ClassLabels_ | None = None,
+        pretrained : Pretrained			 = False,
+        phase      : ModelPhase_         = "training",
+        loss   	   : Losses_      | None = None,
+        metrics	   : Metrics_     | None = None,
+        optimizers : Optimizers_  | None = None,
+        debug      : dict | Munch | None = None,
+        verbose    : bool                = False,
+        *args, **kwargs
+    ):
+        cfg = "finet"
+        if isinstance(cfg, str) and cfg in cfgs:
+            cfg = cfgs[cfg]
+        elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
+            cfg = CFG_DIR / cfg
+
+        super().__init__(
+            root        = root,
+            name        = name,
+            fullname    = fullname,
+            cfg         = cfg,
+            channels    = channels,
+            num_classes = num_classes,
+            classlabels = classlabels,
+            pretrained  = FINetDehaze.init_pretrained(pretrained),
+            phase       = phase,
+            loss        = loss,
+            metrics     = metrics,
+            optimizers  = optimizers,
+            debug       = debug,
+            verbose     = verbose,
+            *args, **kwargs
+        )
+
+
 @MODELS.register(name="FINet_denoise")
 class FINetDenoise(FINet):
     """
@@ -415,7 +464,7 @@ class FINetDenoise_x0_5(FINet):
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
-            pretrained  = FINetDeblur.init_pretrained(pretrained),
+            pretrained  = FINetDenoise_x0_5.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
             metrics     = metrics,
