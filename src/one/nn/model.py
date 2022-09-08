@@ -891,7 +891,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         # Set phase to freeze or unfreeze layers
         self.phase = phase
         
-        # self.print_info()
+        self.print_info()
     
     @property
     def debug(self) -> Munch | None:
@@ -1888,7 +1888,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         pass
     
     def print_info(self):
-        if self.verbose:
+        if self.verbose and self.model is not None:
             console.log(f"[red]{self.fullname}")
             print_table(self.info)
             console.log(f"Save indexes: {self.save}")

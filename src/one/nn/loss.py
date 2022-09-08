@@ -176,114 +176,6 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
 
 # H1: - Loss -------------------------------------------------------------------
 
-def edge_loss(
-    input    : Tensor,
-    target   : Tensor,
-    eps      : float      = 1e-3,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Edge loss.
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        eps (float): Small value for numerically stability when dividing.
-            Defaults to 1e-3.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    k 	   = Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
-    kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
-
-    def conv_gauss(image: Tensor) -> Tensor:
-        global kernel
-        if kernel.device != image.device:
-            kernel = kernel.to(image.device)
-        n_channels, _, kw, kh = kernel.shape
-        image = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode="replicate")
-        return F.conv2d(image, kernel, groups=n_channels)
-    
-    def laplacian_kernel(image: Tensor) -> Tensor:
-        filtered   = conv_gauss(image)  		# filter
-        down 	   = filtered[:, :, ::2, ::2]   # downsample
-        new_filter = torch.zeros_like(filtered)
-        new_filter[:, :, ::2, ::2] = down * 4   # upsample
-        filtered   = conv_gauss(new_filter)    # filter
-        diff 	   = image - filtered
-        return diff
-    
-    loss = torch.sqrt(
-        (laplacian_kernel(input) - laplacian_kernel(target)) ** 2 + (eps * eps)
-    )
-    loss = reduce_loss(loss=loss, reduction=reduction)
-    return loss
-
-
-def psnr_loss(
-    input    : Tensor,
-    target   : Tensor,
-    max_val  : float      = 1.0,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    PSNR loss. Modified from BasicSR: https://github.com/xinntao/BasicSR
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        max_val (float): Dynamic range of the images. Defaults to 1.0.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    loss = -1.0 * psnr(input=input, target=target, max_val=max_val)
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
-def ssim_loss(
-    input      : Tensor,
-    target     : Tensor,
-    window_size: int,
-    max_val    : float      = 1.0,
-    eps        : float      = 1e-12,
-    reduction  : Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    PSNR loss. Modified from BasicSR: https://github.com/xinntao/BasicSR
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        window_size (int): Size of the gaussian kernel to smooth the images.
-        max_val (float): Dynamic range of the images. Defaults to 1.0.
-        eps (float): Small value for numerically stability when dividing.
-            Defaults to 1e-12.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    # Compute the ssim map
-    ssim_map = ssim(
-        input       = input,
-        target      = target,
-        window_size = window_size,
-        max_val     = max_val,
-        eps         = eps
-    )
-    # Compute and reduce the loss
-    loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
-    loss = reduce_loss(loss=loss, reduction=reduction)
-    return loss
-
-
 @LOSSES.register(name="charbonnier_loss")
 class CharbonnierLoss(BaseLoss):
     
@@ -391,16 +283,34 @@ class EdgeLoss(BaseLoss):
             reduction = reduction,
             *args, **kwargs
         )
-        self.eps  = eps
-        self.name = "edge_loss"
-     
+        self.eps    = eps
+        self.name   = "edge_loss"
+        k 	        = Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
+        self.kernel = torch.matmul(k.t(), k).unsqueeze(0).repeat(3, 1, 1, 1)
+        
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return self.weight[0] * edge_loss(
-            input     = input,
-            target    = target,
-            eps       = self.eps,
-            reduction = self.reduction,
+        loss = torch.sqrt(
+            (self.laplacian_kernel(input) - self.laplacian_kernel(target)) ** 2
+            + (self.eps * self.eps)
         )
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
+    
+    def conv_gauss(self, image: Tensor) -> Tensor:
+        if self.kernel.device != image.device:
+            self.kernel = self.kernel.to(image.device)
+        n_channels, _, kw, kh = self.kernel.shape
+        image = F.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode="replicate")
+        return F.conv2d(image, self.kernel, groups=n_channels)
+    
+    def laplacian_kernel(self, image: Tensor) -> Tensor:
+        filtered   = self.conv_gauss(image)  		# filter
+        down 	   = filtered[:, :, ::2, ::2]       # downsample
+        new_filter = torch.zeros_like(filtered)
+        new_filter[:, :, ::2, ::2] = down * 4       # upsample
+        filtered   = self.conv_gauss(new_filter)    # filter
+        diff 	   = image - filtered
+        return diff
     
     
 @LOSSES.register(name="exposure_control_loss")
@@ -778,7 +688,9 @@ class PerceptualLoss(BaseLoss):
 @LOSSES.register(name="psnr_loss")
 class PSNRLoss(BaseLoss):
     """
-    PSNR Loss.
+    PSNR loss.
+    
+    Modified from BasicSR: https://github.com/xinntao/BasicSR
     """
     
     def __init__(
@@ -797,12 +709,9 @@ class PSNRLoss(BaseLoss):
         self.max_val = max_val
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight[0] * psnr_loss(
-            input     = input,
-            target    = target,
-            max_val   = self.max_val,
-            reduction = self.reduction,
-        )
+        loss = -1.0 * psnr(input=input, target=target, max_val=self.max_val)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="smooth_mae_loss")
@@ -905,6 +814,8 @@ class SSIMLoss(BaseLoss):
     """
     SSIM Loss.
     
+    Modified from BasicSR: https://github.com/xinntao/BasicSR
+    
     Args:
         window_size (int): Size of the gaussian kernel to smooth the images.
         max_val (float): Dynamic range of the images. Defaults to 1.0.
@@ -932,14 +843,18 @@ class SSIMLoss(BaseLoss):
         self.eps         = eps
     
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight[0] * ssim_loss(
+        # Compute the ssim map
+        ssim_map = ssim(
             input       = input,
             target      = target,
             window_size = self.window_size,
             max_val     = self.max_val,
-            eps         = self.eps,
-            reduction   = self.reduction,
+            eps         = self.eps
         )
+        # Compute and reduce the loss
+        loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="std_loss")
