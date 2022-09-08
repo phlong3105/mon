@@ -32,25 +32,24 @@ if not DATA_DIR.is_dir():
 # H1: - Factory-----------------------------------------------------------------
 
 # one.nn
-BACKBONES       = Factory(name="backbones")
-CALLBACKS       = Factory(name="callbacks")
-LAYERS          = Factory(name="layers")
-LOGGERS         = Factory(name="loggers")
-LOSSES          = Factory(name="losses")
-METRICS         = Factory(name="metrics")
-MODELS          = Factory(name="models")
-OPTIMIZERS      = OptimizerFactory(name="optimizers")
-SCHEDULERS      = SchedulerFactory(name="schedulers")
+BACKBONES      = Factory(name="backbones")
+CALLBACKS      = Factory(name="callbacks")
+LAYERS         = Factory(name="layers")
+LOGGERS        = Factory(name="loggers")
+LOSSES         = Factory(name="losses")
+METRICS        = Factory(name="metrics")
+MODELS         = Factory(name="models")
+OPTIMIZERS     = OptimizerFactory(name="optimizers")
+SCHEDULERS     = SchedulerFactory(name="schedulers")
 # Misc
-AUGMENTS        = Factory(name="augments")
-DATAMODULES     = Factory(name="datamodules")
-DATASETS        = Factory(name="datasets")
-DISTANCES       = Factory(name="distance_functions")
-DISTANCE_FUNCS  = Factory(name="distance_functions")
-FILE_HANDLERS   = Factory(name="file_handler")
-LABEL_HANDLERS  = Factory(name="label_handlers")
-MOTIONS         = Factory(name="motions")
-TRANSFORMS      = Factory(name="transforms")
+AUGMENTS       = Factory(name="augments")
+DATAMODULES    = Factory(name="datamodules")
+DATASETS       = Factory(name="datasets")
+DISTANCES      = Factory(name="distance_functions")
+FILE_HANDLERS  = Factory(name="file_handler")
+LABEL_HANDLERS = Factory(name="label_handlers")
+MOTIONS        = Factory(name="motions")
+TRANSFORMS     = Factory(name="transforms")
 
 
 # H1: - Misc -------------------------------------------------------------------
