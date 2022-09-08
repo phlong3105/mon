@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from abc import ABCMeta
 
+from torch import FloatTensor
 from torch import Tensor
 from torch.nn import functional
 from torch.nn.modules.loss import *
@@ -42,12 +43,12 @@ def reduce_loss(
     if reduction == Reduction.NONE:
         return loss
     if reduction == Reduction.MEAN:
-        return loss.mean()
+        return torch.mean(loss)
     if reduction == Reduction.SUM:
-        return loss.sum()
+        return torch.sum(loss)
     if reduction == Reduction.WEIGHTED_SUM:
         if weight is None:
-            return loss.sum()
+            return torch.sum(loss)
         else:
             if weight.device != loss.device:
                 weight.to(loss.device)
@@ -57,7 +58,7 @@ def reduce_loss(
                     f" But got: {weight.dim()} != {loss.dim()}"
                 )
             loss *= weight
-            return loss.sum()
+            return torch.sum(loss)
 
 
 def weighted_loss(f: Callable):
@@ -175,64 +176,6 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
 
 # H1: - Loss -------------------------------------------------------------------
 
-def charbonnier_loss(
-    input    : Tensor,
-    target   : Tensor,
-    eps      : float      = 1e-3,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Charbonnier loss.
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        eps (float): Small value for numerically stability when dividing.
-            Defaults to 1e-3.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    loss = torch.sqrt((input - target) ** 2 + (eps * eps))
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
-def color_constancy_loss(
-    input    : Tensor,
-    target   : None       = None,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    A color constancy loss to correct the potential color deviations in the
-    enhanced image and also build the relations among the three adjusted
-    channels.
-
-    References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
-
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-            Defaults to None.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
-    mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
-    d_rg       = torch.pow(mr - mg, 2)
-    d_rb       = torch.pow(mr - mb, 2)
-    d_gb       = torch.pow(mb - mg, 2)
-    loss = torch.pow(
-        torch.pow(d_rg, 2) + torch.pow(d_rb, 2) + torch.pow(d_gb, 2), 0.5
-    )
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
 def edge_loss(
     input    : Tensor,
     target   : Tensor,
@@ -276,166 +219,8 @@ def edge_loss(
     loss = torch.sqrt(
         (laplacian_kernel(input) - laplacian_kernel(target)) ** 2 + (eps * eps)
     )
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
-def exposure_control_loss(
-    input     : Tensor,
-    patch_size: Ints,
-    mean_val  : float,
-    target    : None       = None,
-    reduction : Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Exposure Control Loss measures the distance between the average intensity
-    value of a local region to the well-exposedness level E.
-
-    References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
-
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (None): The target tensor of shape [B, C, H, W]. Default to None.
-        patch_size (Ints): Kernel size for pooling layer.
-    	mean_val (float):
-    	reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    pool = nn.AvgPool2d(patch_size)
-    mean = torch.mean(input, 1, keepdim=True)
-    mean = pool(mean)
-    loss = torch.pow(mean - torch.FloatTensor([mean_val]).to(input.device), 2)
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
-def gray_loss(
-    input    : Tensor,
-    target   : None       = None,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Gray loss.
-
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-            Defaults to None.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    return 1.0 / mse_loss(
-        input     = input,
-        target    = torch.ones_like(input) * 0.5,
-        reduction = reduction
-    )
-
-
-def illumination_smoothness_loss(
-    input         : Tensor,
-    tv_loss_weight: int,
-    target        : None       = None,
-    reduction     : Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Illumination Smoothness Loss preserve the mono-tonicity relations between
-    neighboring pixels, we add an illumination smoothness loss to each curve
-    parameter map A.
-    
-    References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
-
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-            Defaults to None.
-        tv_loss_weight (int):
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    x          = input
-    batch_size = x.size()[0]
-    h_x        = x.size()[2]
-    w_x        = x.size()[3]
-    count_h    = (x.size()[2] - 1) * x.size()[3]
-    count_w    = x.size()[2] * (x.size()[3] - 1)
-    h_tv       = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x-1, :]), 2).sum()
-    w_tv       = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x-1]), 2).sum()
-    loss       = tv_loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / batch_size
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
-def mae_loss(
-    input    : Tensor,
-    target   : Tensor,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    MAE (Mean Absolute Error or L1) loss.
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    return F.l1_loss(input=input, target=target, reduction=reduction)
-
-
-def mse_loss(
-    input    : Tensor,
-    target   : Tensor,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    MSE (Mean Squared Error or L2) loss.
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    return F.mse_loss(input=input, target=target, reduction=reduction)
-
-
-def non_blurry_loss(
-    input    : Tensor,
-    target   : None       = None,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Non-blurry Loss.
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-            Defaults to None.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    return 1.0 - F.mse_loss(
-        input     = input,
-        target    = torch.ones_like(input) * 0.5,
-        reduction = reduction
-    )
+    loss = reduce_loss(loss=loss, reduction=reduction)
+    return loss
 
 
 def psnr_loss(
@@ -459,33 +244,6 @@ def psnr_loss(
     """
     loss = -1.0 * psnr(input=input, target=target, max_val=max_val)
     return reduce_loss(loss=loss, reduction=reduction)
-
-
-def smooth_mae_loss(
-    input    : Tensor,
-    target   : Tensor,
-    beta     : float      = 1.0,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Smooth MAE (Mean Absolute Error or L1) loss.
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W].
-        beta (float):
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    return F.smooth_l1_loss(
-        input     = input,
-        target    = target,
-        beta      = beta,
-        reduction = reduction
-    )
 
 
 def ssim_loss(
@@ -522,74 +280,8 @@ def ssim_loss(
     )
     # Compute and reduce the loss
     loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
-    return reduce_loss(loss=loss, reduction=reduction)
-
-
-def spatial_consistency_loss(
-    input    : Tensor,
-    target   : Tensor,
-    reduction: Reduction_ = "mean",
-    **_
-) -> Tensor:
-    """
-    Spatial Consistency Loss encourages spatial coherence of the enhanced
-    image through preserving the difference of neighboring regions between the
-    input image and its enhanced version.
-    
-    References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
-    
-    Args:
-        input (Tensor): The input tensor of shape [B, C, H, W].
-        target (Tensor): The target tensor of shape [B, C, H, W]. In this case,
-            the enhanced image, i.e, prediction.
-        reduction (Reduction_): Reduction value to use.
-        
-    Returns:
-        The loss tensor of shape [B].
-    """
-    kernel_left  = Tensor([[0,  0, 0], [-1, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
-    kernel_right = Tensor([[0,  0, 0], [ 0, 1, -1], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
-    kernel_up    = Tensor([[0, -1, 0], [ 0, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
-    kernel_down  = Tensor([[0,  0, 0], [ 0, 1,  0], [0, -1, 0]]).unsqueeze(0).unsqueeze(0)
-    
-    weight_left  = nn.Parameter(data=kernel_left,  requires_grad=True)
-    weight_right = nn.Parameter(data=kernel_right, requires_grad=True)
-    weight_up    = nn.Parameter(data=kernel_up,    requires_grad=True)
-    weight_down  = nn.Parameter(data=kernel_down,  requires_grad=True)
-    pool         = nn.AvgPool2d(4)
-    
-    if weight_left.device != input.device:
-        weight_left = weight_left.to(input.device)
-    if weight_right.device != input.device:
-        weight_right = weight_right.to(input.device)
-    if weight_up.device != input.device:
-        weight_up = weight_up.to(input.device)
-    if weight_down.device != input.device:
-        weight_down = weight_down.to(input.device)
-    
-    input_mean      = torch.mean(input,  1, keepdim=True)
-    target_mean     = torch.mean(target, 1, keepdim=True)
-    
-    input_pool      = pool(input_mean)
-    target_pool     = pool(target_mean)
-
-    d_org_left      = F.conv2d(input_pool, weight_left,  padding=1)
-    d_org_right     = F.conv2d(input_pool, weight_right, padding=1)
-    d_org_up        = F.conv2d(input_pool, weight_up,    padding=1)
-    d_org_down      = F.conv2d(input_pool, weight_down,  padding=1)
-
-    d_enhance_left  = F.conv2d(target_pool, weight_left,  padding=1)
-    d_enhance_right = F.conv2d(target_pool, weight_right, padding=1)
-    d_enhance_up    = F.conv2d(target_pool, weight_up,    padding=1)
-    d_enhance_down  = F.conv2d(target_pool, weight_down,  padding=1)
-
-    d_left          = torch.pow(d_org_left  - d_enhance_left,  2)
-    d_right         = torch.pow(d_org_right - d_enhance_right, 2)
-    d_up            = torch.pow(d_org_up    - d_enhance_up,    2)
-    d_down          = torch.pow(d_org_down  - d_enhance_down,  2)
-    loss            = d_left + d_right + d_up + d_down
-    return reduce_loss(loss=loss, reduction=reduction)
+    loss = reduce_loss(loss=loss, reduction=reduction)
+    return loss
 
 
 @LOSSES.register(name="charbonnier_loss")
@@ -611,12 +303,9 @@ class CharbonnierLoss(BaseLoss):
         self.name = "charbonnier_loss"
      
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return self.weight[0] * charbonnier_loss(
-            input     = input,
-            target    = target,
-            eps       = self.eps,
-            reduction = self.reduction,
-        )
+        loss = torch.sqrt((input - target) ** 2 + (self.eps * self.eps))
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="charbonnier_edge_loss")
@@ -640,25 +329,26 @@ class CharbonnierEdgeLoss(BaseLoss):
         )
         self.eps  = eps
         self.name = "charbonnier_edge_loss"
-     
+        self.charbonnier_loss = CharbonnierLoss(eps=eps, reduction=reduction)
+        self.edge_loss        = EdgeLoss(eps=eps, reduction=reduction)
+        
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return \
-            self.weight[0] * charbonnier_loss(
-                input     = input,
-                target    = target,
-                eps       = self.eps,
-                reduction = self.reduction,
-            ) + \
-            self.weight[1] * edge_loss(
-                input     = input,
-                target    = target,
-                eps       = self.eps,
-                reduction = self.reduction,
-            )
+        charbonnier_loss = self.charbonnier_loss(input=input, target=target)
+        edge_loss        = self.edge_loss(input=input, target=target)
+        return self.weight[0] * charbonnier_loss \
+               + self.weight[1] * edge_loss
 
 
 @LOSSES.register(name="color_constancy_loss")
 class ColorConstancyLoss(BaseLoss):
+    """
+    A color constancy loss to correct the potential color deviations in the
+    enhanced image and also build the relations among the three adjusted
+    channels.
+
+    References:
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
+    """
     
     def __init__(
         self,
@@ -674,11 +364,16 @@ class ColorConstancyLoss(BaseLoss):
         self.name = "color_constancy_loss"
      
     def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
-        return self.weight[0] * color_constancy_loss(
-            input     = input,
-            target    = target,
-            reduction = self.reduction,
+        mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
+        mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
+        d_rg       = torch.pow(mr - mg, 2)
+        d_rb       = torch.pow(mr - mb, 2)
+        d_gb       = torch.pow(mb - mg, 2)
+        loss = torch.pow(
+            torch.pow(d_rg, 2) + torch.pow(d_rb, 2) + torch.pow(d_gb, 2), 0.5
         )
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="edge_loss")
@@ -711,7 +406,16 @@ class EdgeLoss(BaseLoss):
 @LOSSES.register(name="exposure_control_loss")
 class ExposureControlLoss(BaseLoss):
     """
-    Exposure Control Loss.
+    Exposure Control Loss measures the distance between the average intensity
+    value of a local region to the well-exposedness level E.
+
+    References:
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
+
+    Args:
+        patch_size (Ints): Kernel size for pooling layer.
+        mean_val (float):
+        reduction (Reduction_): Reduction value to use.
     """
     
     def __init__(
@@ -730,16 +434,16 @@ class ExposureControlLoss(BaseLoss):
         self.name       = "exposure_control_loss"
         self.patch_size = patch_size
         self.mean_val   = mean_val
+        self.pool       = nn.AvgPool2d(self.patch_size)
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight[0] * exposure_control_loss(
-            input      = input,
-            target     = target,
-            patch_size = self.patch_size,
-            mean_val   = self.mean_val,
-            reduction  = self.reduction,
-        )
-
+        x    = input
+        x    = torch.mean(x, 1, keepdim=True)
+        mean = self.pool(x)
+        loss = torch.pow(mean - torch.FloatTensor([self.mean_val]).to(input.device), 2)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
+        
 
 @LOSSES.register(name="gradient_loss")
 class GradientLoss(BaseLoss):
@@ -803,11 +507,13 @@ class GrayLoss(BaseLoss):
         self.name = "gray_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight[0] * mae_loss(
+        mse_loss = F.mse_loss(
             input     = input,
-            target    = target,
-            reduction = self.reduction,
+            target    = torch.ones_like(input) * 0.5,
+            reduction = self.reduction
         )
+        loss = 1.0 / mse_loss
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="grayscale_loss")
@@ -839,15 +545,28 @@ class GrayscaleLoss(BaseLoss):
         input_g  = [torch.mean(i,  1, keepdim=True) for i in input]
         target_g = torch.mean(target, 1, keepdim=True)
         
-        return self.weight[0] * mse_loss(
-            input     = input_g,
-            target    = target_g,
-            reduction = self.reduction,
-        )
+        loss = Tensor([
+            F.mse_loss(
+                input     = i,
+                target    = target_g,
+                reduction = self.reduction
+            )
+            for i in input_g
+        ])
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="illumination_smoothness_loss")
 class IlluminationSmoothnessLoss(BaseLoss):
+    """
+    Illumination Smoothness Loss preserve the mono-tonicity relations between
+    neighboring pixels, we add an illumination smoothness loss to each curve
+    parameter map A.
+    
+    References:
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
+    """
     
     def __init__(
         self,
@@ -865,12 +584,16 @@ class IlluminationSmoothnessLoss(BaseLoss):
         self.tv_loss_weight = tv_loss_weight
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight[0] * illumination_smoothness_loss(
-            input          = input,
-            target         = target,
-            tv_loss_weight = self.tv_loss_weight,
-            reduction      = self.reduction,
-        )
+        x       = input
+        b       = x.size()[0]
+        h_x     = x.size()[2]
+        w_x     = x.size()[3]
+        count_h = (x.size()[2]-1) * x.size()[3]
+        count_w = x.size()[2] * (x.size()[3] - 1)
+        h_tv    = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x-1, :]), 2).sum()
+        w_tv    = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x-1]), 2).sum()
+        loss    = self.tv_loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="mae_loss")
@@ -894,11 +617,8 @@ class MAELoss(BaseLoss):
         self.name = "mae_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight[0] * mae_loss(
-            input     = input,
-            target    = target,
-            reduction = self.reduction,
-        )
+        loss = F.l1_loss(input=input, target=target, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="mse_loss")
@@ -922,11 +642,8 @@ class MSELoss(BaseLoss):
         self.name = "mse_loss"
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight[0] * mse_loss(
-            input     = input,
-            target    = target,
-            reduction = self.reduction,
-        )
+        loss = F.mse_loss(input=input, target=target, reduction=self.reduction)
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="non_blurry_loss")
@@ -949,11 +666,13 @@ class NonBlurryLoss(BaseLoss):
         self.name = "non_blurry_loss"
      
     def forward(self, input: Tensors, target: None = None, **_) -> Tensor:
-        return self.weight[0] * non_blurry_loss(
+        mse_loss = F.mse_loss(
             input     = input,
-            target    = target,
-            reduction = self.reduction,
+            target    = torch.ones_like(input) * 0.5,
+            reduction = self.reduction
         )
+        loss = 1.0 - mse_loss
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="perceptual_l1_loss")
@@ -1049,10 +768,11 @@ class PerceptualLoss(BaseLoss):
                     reduction = self.reduction
                 )
             )
-        return self.weight[0] * reduce_loss(
+        loss = reduce_loss(
             loss      = torch.FloatTensor(losses),
             reduction = Reduction.WEIGHTED_SUM
         )
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="psnr_loss")
@@ -1108,12 +828,13 @@ class SmoothMAELoss(BaseLoss):
         self.beta = beta
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight[0] * smooth_mae_loss(
+        loss = F.smooth_l1_loss(
             input     = input,
             target    = target,
             beta      = self.beta,
-            reduction = self.reduction,
+            reduction = self.reduction
         )
+        return self.weight[0] * loss
 
 
 @LOSSES.register(name="spatial_consistency_loss")
@@ -1133,15 +854,51 @@ class SpatialConsistencyLoss(BaseLoss):
             reduction = reduction,
             *args, **kwargs
         )
-        self.name = "spatial_consistency_loss"
+        self.name         = "spatial_consistency_loss"
+        kernel_left       = FloatTensor([[0,  0, 0], [-1, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
+        kernel_right      = FloatTensor([[0,  0, 0], [ 0, 1, -1], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
+        kernel_up         = FloatTensor([[0, -1, 0], [ 0, 1,  0], [0,  0, 0]]).unsqueeze(0).unsqueeze(0)
+        kernel_down       = FloatTensor([[0,  0, 0], [ 0, 1,  0], [0, -1, 0]]).unsqueeze(0).unsqueeze(0)
+        self.weight_left  = nn.Parameter(data=kernel_left,  requires_grad=False)
+        self.weight_right = nn.Parameter(data=kernel_right, requires_grad=False)
+        self.weight_up    = nn.Parameter(data=kernel_up,    requires_grad=False)
+        self.weight_down  = nn.Parameter(data=kernel_down,  requires_grad=False)
+        self.pool         = nn.AvgPool2d(4)
      
     def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
-        return self.weight[0] * spatial_consistency_loss(
-            input     = input,
-            target    = target,
-            reduction = self.reduction,
-        )
+        if self.weight_left.device != input.device:
+            self.weight_left = self.weight_left.to(input.device)
+        if self.weight_right.device != input.device:
+            self.weight_right = self.weight_right.to(input.device)
+        if self.weight_up.device != input.device:
+            self.weight_up = self.weight_up.to(input.device)
+        if self.weight_down.device != input.device:
+            self.weight_down = self.weight_down.to(input.device)
 
+        org_mean     = torch.mean(input,  1, keepdim=True)
+        enhance_mean = torch.mean(target, 1, keepdim=True)
+
+        org_pool     = self.pool(org_mean)
+        enhance_pool = self.pool(enhance_mean)
+
+        d_org_left      = F.conv2d(org_pool,     self.weight_left,  padding=1)
+        d_org_right     = F.conv2d(org_pool,     self.weight_right, padding=1)
+        d_org_up        = F.conv2d(org_pool,     self.weight_up,    padding=1)
+        d_org_down      = F.conv2d(org_pool,     self.weight_down,  padding=1)
+    
+        d_enhance_left  = F.conv2d(enhance_pool, self.weight_left,  padding=1)
+        d_enhance_right = F.conv2d(enhance_pool, self.weight_right, padding=1)
+        d_enhance_up    = F.conv2d(enhance_pool, self.weight_up,    padding=1)
+        d_enhance_down  = F.conv2d(enhance_pool, self.weight_down,  padding=1)
+    
+        d_left          = torch.pow(d_org_left  - d_enhance_left,  2)
+        d_right         = torch.pow(d_org_right - d_enhance_right, 2)
+        d_up            = torch.pow(d_org_up    - d_enhance_up,    2)
+        d_down          = torch.pow(d_org_down  - d_enhance_down,  2)
+        loss            = d_left + d_right + d_up + d_down
+        loss            = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
+    
 
 @LOSSES.register(name="ssim_loss")
 class SSIMLoss(BaseLoss):

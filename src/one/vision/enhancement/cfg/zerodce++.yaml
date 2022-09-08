@@ -2,21 +2,28 @@ channels: 3
 
 backbone: [
   # [from,  number, module,                       args(out_channels, ...)]
-  [-1,      1,      Downsample,                   [None, 1, "bilinear"]],   # 0  (x)
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [32, 3, 1, 1, 1, 1, 0]],  # 1  (x1)
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [32, 3, 1, 1, 1, 1, 0]],  # 2  (x2)
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [32, 3, 1, 1, 1, 1, 0]],  # 3  (x3)
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [32, 3, 1, 1, 1, 1, 0]],  # 4  (x4)
-  [[3, 4],  1,      Concat,                       []],                      # 5
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [32, 3, 1, 1, 1, 1, 0]],  # 6  (x5)
-  [[2, 6],  1,      Concat,                       []],                      # 7
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [32, 3, 1, 1, 1, 1, 0]],  # 8  (x6)
-  [[1, 8],  1,      Concat,                       []],                      # 9
-  [-1,      1,      DepthwiseSeparableConvReLU2d, [3,  3, 1, 1, 1, 1, 0]],  # 10 (x_r)
-  [-1,      1,      Tanh,                         []],                      # 11
-  [-1,      1,      UpsamplingBilinear2d,         [None, 1]],               # 12
+  [-1,      1,      Identity,                    []],                      # 0  (x)
+  [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 2
+  [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 4
+  [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 6
+  [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 8
+  [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
+  [[7, 9],  1,      Concat,                      []],                      # 10
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 11
+  [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
+  [[5, 12], 1,      Concat,                      []],                      # 13
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 14
+  [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
+  [[3, 15], 1,      Concat,                      []],                      # 16
+  [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 1, 0]],  # 17 (x_r)
+  [-1,      1,      Tanh,                        []],                      # 18
+  [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
 ]
 
 head: [
-  [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                     # 13
+  [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                    # 20
 ]

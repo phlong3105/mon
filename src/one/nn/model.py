@@ -662,6 +662,8 @@ def parse_model(
             Conv2d,
             ConvAct2d,
             ConvReLU2d,
+            DCENet,
+            DepthwiseSeparableConv2d,
             DepthwiseSeparableConvReLU2d,
             EnhancementModule,
             FFAPostProcess,

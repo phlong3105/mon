@@ -216,7 +216,7 @@ def to_image(
         image = image.clone()
     image = image.detach()
     image = to_3d_tensor(image)
-    image = t.denormalize(image) if denormalize else image
+    image = t.denormalize_simple(image) if denormalize else image
     image = to_channel_last(image, keepdim=keepdim)
     image = image.cpu().numpy()
     return image.astype(np.uint8)
@@ -263,7 +263,7 @@ def to_tensor(
     Returns:
         A tensor.
     """
-    from one.vision.transformation.intensity import normalize
+    import one.vision.transformation as t
 
     if not (F._is_numpy(image) or torch.is_tensor(image)
             or F._is_pil_image(image)):
@@ -298,7 +298,7 @@ def to_tensor(
    
     # Normalize
     if normalize:
-        image = normalize(image)
+        image = t.normalize_simple(image)
     
     # Convert type
     if isinstance(image, torch.ByteTensor):
@@ -553,7 +553,7 @@ def read_image_pil(path: Path_) -> Tensor:
     Returns:
         A tensor of shape [1, C, H, W].
     """
-    image = Image.open(path)                                         # PIL Image
+    image = Image.open(path)                                       # PIL Image
     image = to_tensor(image=image, keepdim=False, normalize=True)  # Tensor[C, H, W]
     return image
 

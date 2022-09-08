@@ -116,7 +116,7 @@ class TestModel(unittest.TestCase):
         self.assertIsNotNone(vgg19_bn)
         
     def test_zerodce(self):
-        zerodce = ZeroDCE(verbose=True)
+        zerodce = ZeroDCE(pretrained="sice", verbose=True)
         self.assertIsNotNone(zerodce)
 
     def test_zerodcepp(self):

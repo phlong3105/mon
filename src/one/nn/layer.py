@@ -3428,6 +3428,133 @@ class ResNetBlock(Module):
 
 # H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
 
+@LAYERS.register(name="dcenet")
+class DCENet(Module):
+    """
+    """
+    
+    def __init__(
+        self,
+        in_channels : int  = 3,
+        mid_channels: int  = 32,
+        out_channels: int  = 24,
+        kernel_size : Ints = 3,
+        stride      : Ints = 1,
+        padding     : Ints = 1,
+        dilation    : Ints = 1,      
+        groups      : int  = 1,      
+        bias        : bool = True,   
+        padding_mode: str  = "zeros",
+        device      : Any  = None,   
+        dtype       : Any  = None,   
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.relu  = ReLU(inplace=True)
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype,      
+        ) 
+        self.conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype, 
+        ) 
+        self.conv3 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype, 
+        ) 
+        self.conv4 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype, 
+        ) 
+        self.conv5 = Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype, 
+        ) 
+        self.conv6 = Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype, 
+        ) 
+        self.conv7 = Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,    
+            groups       = groups,     
+            bias         = bias,        
+            padding_mode = padding_mode,
+            device       = device,     
+            dtype        = dtype,       
+        ) 
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x  = input
+        x1 =  self.relu(self.conv1(x))
+        x2 =  self.relu(self.conv2(x1))
+        x3 =  self.relu(self.conv3(x2))
+        x4 =  self.relu(self.conv4(x3))
+        x5 =  self.relu(self.conv5(torch.cat([x3, x4], dim=1)))
+        x6 =  self.relu(self.conv6(torch.cat([x2, x5], dim=1)))
+        a  = torch.tanh(self.conv7(torch.cat([x1, x6], dim=1)))
+        return a
+
+
 @LAYERS.register(name="pixelwise_higher_order_le_curve")
 class PixelwiseHigherOrderLECurve(Module):
     """
@@ -3473,7 +3600,7 @@ class PixelwiseHigherOrderLECurve(Module):
         for i in range(self.n):
             a_i = a if isinstance(a, int) else a[i]
             x   = x + a_i * (torch.pow(x, 2) - x)
-        
-        a = torch.cat(a, dim=1) if isinstance(a, list) else a
-        print(x)
+
+        a = list(a)             if isinstance(a, tuple) else a
+        a = torch.cat(a, dim=1) if isinstance(a, list)  else a
         return a, x

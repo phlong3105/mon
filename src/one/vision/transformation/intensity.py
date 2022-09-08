@@ -359,6 +359,31 @@ def denormalize(
     return image
 
 
+def denormalize_simple(
+    image  : Tensor,
+    inplace: bool = False,
+) -> Tensor:
+    """
+    Denormalize an image Tensor with mean and standard deviation.
+    
+    Args:
+        image (Tensor): Float image of shape [..., C, H, W] to be adjusted,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
+        
+    Returns:
+        Denormalized image with same size as input.
+    """
+    assert_tensor_of_atleast_ndim(image, 3)
+    if not image.is_floating_point():
+        raise TypeError(f"Input tensor should be a float Tensor. Got {image.dtype}.")
+    if not inplace:
+        image = image.clone()
+    
+    image = torch.clamp(image * 255, 0, 255)
+    return image
+
 def erase(
     image  : Tensor,
     i      : int,
@@ -496,7 +521,36 @@ def normalize(
     std   = std.view(-1, 1, 1)  if std.ndim == 1  else std
     image.sub_(mean).div_(std)
     return image
+
+
+def normalize_simple(
+    image  : Tensor,
+    inplace: bool = False,
+) -> Tensor:
+    """
+    Normalize a float tensor image with mean and standard deviation.
+
+    Args:
+        image (Tensor): Float image of shape [..., C, H, W] to be adjusted,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
+
+    Returns:
+        Normalized image of shape [..., C, H, W].
+    """
+    assert_tensor_of_atleast_ndim(image, 3)
+    if not inplace:
+        image = image.clone()
     
+    image = image.to(dtype=torch.float32)
+    if not image.is_floating_point():
+        raise TypeError(
+            f"Input tensor should be a float Tensor. Got {image.dtype}."
+        )
+    image = image / 255.0
+    return image
+
 
 def posterize(image: Tensor, bits: int) -> Tensor:
     """

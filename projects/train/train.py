@@ -88,6 +88,14 @@ hosts = {
         "max_epochs" : 200,
 		"strategy"   : None,
 	},
+    "lp-labdesktop02-ubuntu": {
+		"cfg"        : "zerodce_lol",
+        "weights"    : None,
+        "accelerator": "auto",
+		"devices"    : 1,
+        "max_epochs" : 200,
+		"strategy"   : None,
+	},
     "lp-imac.local": {
 		"cfg"        : "zerodce_lol226",
         "weights"    : None,

@@ -22,8 +22,8 @@ class CombinedLoss(BaseLoss):
     def __init__(
         self,
         spa_weight    : Floats = 1.0,
-	    exp_patch_size: int    = 16,
-	    exp_mean_val  : float  = 0.6,
+        exp_patch_size: int    = 16,
+        exp_mean_val  : float  = 0.6,
         exp_weight    : Floats = 10.0,
         col_weight    : Floats = 5.0,
         tv_weight     : Floats = 200.0,
@@ -52,15 +52,18 @@ class CombinedLoss(BaseLoss):
         )
      
     def forward(self, input: Tensors, target: Sequence[Tensor], **_) -> Tensor:
-        if isinstance(target, tuple):
+        if isinstance(target, Sequence):
             a       = target[0]
             enhance = target[-1]
+            # print(enhance)
         else:
             raise TypeError()
-        return self.loss_spa(input=input, target=enhance) \
-               + self.loss_exp(input=enhance) \
-               + self.loss_col(input=enhance) \
-               + self.loss_tv(input=a)
+        loss_spa = self.loss_spa(input=enhance, target=input)
+        loss_exp = self.loss_exp(input=enhance)
+        loss_col = self.loss_col(input=enhance)
+        loss_tv  = self.loss_tv(input=a)
+        # print(float(loss_spa), float(loss_exp), float(loss_col), float(loss_tv))
+        return loss_spa + loss_exp + loss_col + loss_tv
 
 
 # H1: - Model ------------------------------------------------------------------
@@ -71,20 +74,26 @@ cfgs = {
         "backbone": [
             # [from,  number, module,     args(out_channels, ...)]
             [-1,      1,      Identity,   []],                    # 0  (x)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 1  (x1)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 2  (x2)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 3  (x3)
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 4  (x4)
-            [[3, 4],  1,      Concat,     []],                    # 5
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 6  (x5)
-            [[2, 6],  1,      Concat,     []],                    # 7
-            [-1,      1,      ConvReLU2d, [32, 3, 1, 1]],         # 8  (x6)
-            [[1, 8],  1,      Concat,     []],                    # 9
-            [-1,      1,      ConvReLU2d, [24, 3, 1, 1]],         # 10 (x_r)
-            [-1,      1,      Tanh,       []],                    # 11
+            [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 1
+            [-1,      1,      ReLU,       [True]],                # 2  (x1)
+            [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 3
+            [-1,      1,      ReLU,       [True]],                # 4  (x2)
+            [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 5
+            [-1,      1,      ReLU,       [True]],                # 6  (x3)
+            [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 7
+            [-1,      1,      ReLU,       [True]],                # 8  (x4)
+            [[6, 8],  1,      Concat,     []],                    # 9
+            [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 10
+            [-1,      1,      ReLU,       [True]],                # 11 (x5)
+            [[4, 11], 1,      Concat,     []],                    # 12
+            [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 13
+            [-1,      1,      ReLU,       [True]],                # 14 (x6)
+            [[2, 14], 1,      Concat,     []],                    # 15
+            [-1,      1,      Conv2d,     [24, 3, 1, 1]],         # 16 (x_r)
+            [-1,      1,      Tanh,       []],                    # 17
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],  # 12
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],  # 18
         ]
     },
 }
@@ -98,6 +107,15 @@ class ZeroDCE(ImageEnhancementModel):
         https://github.com/Li-Chongyi/Zero-DCE
     """
     
+    model_zoo = {
+        "sice": dict(
+            name        = "sice",
+            path        = "",
+            filename    = "zerodce-sice.pth",
+            num_classes = None,
+        ),
+    }
+    
     def __init__(
         self,
         root       : Path_               = RUNS_DIR,
@@ -109,7 +127,7 @@ class ZeroDCE(ImageEnhancementModel):
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
-        loss   	   : Losses_      | None = CombinedLoss(tv_weight=Tensor([200.0])),
+        loss   	   : Losses_      | None = CombinedLoss(tv_weight=200.0),
         metrics	   : Metrics_     | None = None,
         optimizers : Optimizers_  | None = None,
         debug      : dict | Munch | None = None,
@@ -129,7 +147,8 @@ class ZeroDCE(ImageEnhancementModel):
             cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
-            pretrained  = pretrained,
+            classlabels = classlabels,
+            pretrained  = ZeroDCE.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss or CombinedLoss(),
             metrics     = metrics,
@@ -138,7 +157,7 @@ class ZeroDCE(ImageEnhancementModel):
             verbose     = verbose,
             *args, **kwargs
         )
-   
+
     def init_weights(self, m: Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -149,7 +168,39 @@ class ZeroDCE(ImageEnhancementModel):
         elif classname.find("BatchNorm") != -1:
             m.weight.data.normal_(1.0, 0.02)
             m.bias.data.fill_(0)
-        
+    
+    def load_pretrained(self):
+        """
+        Load pretrained weights. It only loads the intersection layers of
+        matching keys and shapes between current model and pretrained.
+        """
+        if is_dict(self.pretrained) \
+            and self.pretrained["name"] in ["sice"]:
+            state_dict = load_state_dict_from_path(
+                model_dir=self.pretrained_dir, **self.pretrained
+            )
+            # print(self.model.state_dict().keys())
+            # print(state_dict.keys())
+            model_state_dict = self.model.state_dict()
+            model_state_dict["1.weight"]  = state_dict["e_conv1.weight"]
+            model_state_dict["1.bias"]    = state_dict["e_conv1.bias"]
+            model_state_dict["3.weight"]  = state_dict["e_conv2.weight"]
+            model_state_dict["3.bias"]    = state_dict["e_conv2.bias"]
+            model_state_dict["5.weight"]  = state_dict["e_conv3.weight"]
+            model_state_dict["5.bias"]    = state_dict["e_conv3.bias"]
+            model_state_dict["7.weight"]  = state_dict["e_conv4.weight"]
+            model_state_dict["7.bias"]    = state_dict["e_conv4.bias"]
+            model_state_dict["10.weight"] = state_dict["e_conv5.weight"]
+            model_state_dict["10.bias"]   = state_dict["e_conv5.bias"]
+            model_state_dict["13.weight"] = state_dict["e_conv6.weight"]
+            model_state_dict["13.bias"]   = state_dict["e_conv6.bias"]
+            model_state_dict["16.weight"] = state_dict["e_conv7.weight"]
+            model_state_dict["16.bias"]   = state_dict["e_conv7.bias"]
+            self.model.load_state_dict(model_state_dict)
+            assert_same_state_dicts(self.model.state_dict(), state_dict)
+        else:
+            super().load_pretrained()
+    
     def forward_loss(
         self,
         input : Tensor,

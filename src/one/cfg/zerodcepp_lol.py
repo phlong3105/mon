@@ -17,7 +17,7 @@ from one.vision.transformation import Resize
 
 model_name = "zerodce++"
 model_cfg  = "zerodce++.yaml"
-data_name  = "lol226"
+data_name  = "lol"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname
 shape      = [3, 256, 256]
@@ -85,7 +85,7 @@ model = {
         # Defaults to None.
     "phase": "training",
         # Model's running phase. Defaults to training.
-    "pretrained": None,
+    "pretrained": "sice",
         # Initialize weights from pretrained.
     "loss": None,
         # Loss function for training model. Defaults to None.
@@ -136,4 +136,13 @@ trainer = default.trainer | {
         # Default path for logs and weights when no logger/ckpt_callback passed.
         # Can be remote file paths such as `s3://mybucket/path` or
         # 'hdfs://path/'. Defaults to os.getcwd().
+	"gradient_clip_val": 0.1,
+        # The value at which to clip gradients. Passing `gradient_clip_val=None`
+        # disables gradient clipping. If using Automatic Mixed Precision (AMP),
+        # the gradients will be unscaled before. Defaults to None.
+	"gradient_clip_algorithm": "norm",
+        # The gradient clipping algorithm to use.
+        # Pass `gradient_clip_algorithm="value"` to clip by  value, and
+        # `gradient_clip_algorithm="norm"` to clip by norm. By default, it will
+        # be set to "norm".
 }
