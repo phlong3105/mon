@@ -23,6 +23,7 @@ from __future__ import annotations
 import math
 from typing import Type
 
+import torch
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import *
@@ -1332,6 +1333,49 @@ LAYERS.register(name="feature_alpha_dropout", module=FeatureAlphaDropout)
 
 # H2: - Extract ----------------------------------------------------------------
 
+@LAYERS.register(name="extract_feature")
+class ExtractFeature(Module):
+    """
+    Extract a feature at `index` in a tensor.
+    
+    Args:
+        index (int): The index of the feature to extract.
+    """
+    
+    def __init__(self, index: int, *args, **kwargs):
+        super().__init__()
+        self.index = index
+    
+    def forward(self, input: Tensor) -> Tensor:
+        assert_tensor_of_ndim(input, 4)
+        return input[:, self.index, :, :]
+
+
+@LAYERS.register(name="extract_features")
+class ExtractFeatures(Module):
+    """
+    Extract features between `start` index and `end` index in a tensor.
+    
+    Args:
+        start (int): The start index of the features to extract.
+        end (int): The end index of the features to extract.
+    """
+    
+    def __init__(
+        self,
+        start: int,
+        end  : int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.start = start
+        self.end   = end
+    
+    def forward(self, input: Tensor) -> Tensor:
+        assert_tensor_of_ndim(input, 4)
+        return input[:, self.start:self.end, :, :]
+    
+
 @LAYERS.register(name="extract_item")
 class ExtractItem(Module):
     """
@@ -1380,6 +1424,20 @@ class ExtractItems(Module):
             f"But got: {type(input)}."
         )
     
+    
+@LAYERS.register(name="max")
+class Max(Module):
+    """
+    """
+    
+    def __init__(self, dim: int, keepdim: bool = False, *args, **kwargs):
+        super().__init__()
+        self.dim     = dim
+        self.keepdim = keepdim
+    
+    def forward(self, input: Tensors) -> Tensor:
+        return torch.max(input=input, dim=self.dim, keepdim=self.keepdim)
+
 
 # H2: - Fusion -----------------------------------------------------------------
 
@@ -1437,6 +1495,34 @@ class Foldcut(nn.Module):
     def forward(self, input: Tensor) -> Tensor:
         x1, x2 = input.chunk(2, dim=self.dim)
         return x1 + x2
+
+
+@LAYERS.register(name="interpolate_concat")
+class InterpolateConcat(Module):
+    """
+    Concatenate a list of tensors along dimension.
+    
+    Args:
+        dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
+    """
+    
+    def __init__(self, dim: str | ellipsis | None = 1, *args, **kwargs):
+        super().__init__()
+        self.dim = dim
+        
+    def forward(self, input: Sequence[Tensor]) -> Tensor:
+        sizes  = [list(i.size()) for i in input]
+        hs     = [s[2] for s in sizes]
+        ws     = [s[3] for s in sizes]
+        h, w   = max(hs), max(ws)
+        output = []
+        for i in input:
+            s = i.size()
+            if s[2] != h or s[3] != w:
+                output.append(F.interpolate(input=i, size=(h, w)))
+            else:
+                output.append(i)
+        return torch.cat(to_list(output), dim=self.dim)
 
 
 @LAYERS.register(name="join")
@@ -2523,6 +2609,22 @@ class Scale(Module):
         
     def forward(self, input: Tensor) -> Tensor:
         return input * self.scale
+
+
+@LAYERS.register(name="interpolate")
+class Interpolate(Module):
+    """
+    
+    Args:
+        size (Ints):
+    """
+    
+    def __init__(self, size: Ints):
+        super().__init__()
+        self.size = to_size(size)
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return F.interpolate(input=input, size=self.size)
 
 
 @LAYERS.register(name="upsample")

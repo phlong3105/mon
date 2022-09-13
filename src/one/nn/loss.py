@@ -170,7 +170,7 @@ class BaseLoss(_Loss, metaclass=ABCMeta):
         return cls.__name__
     
     @abstractmethod
-    def forward(self, input: Tensors, target: Tensor, **_) -> Tensor:
+    def forward(self, input: Tensor, target: Tensor, **_) -> Tensor:
         pass
     
 

@@ -63,6 +63,10 @@ data = {
 # H1: - Model ------------------------------------------------------------------
 
 model = {
+	"cfg": model_cfg,
+        # Model's layers configuration. It can be an external .yaml path or a
+        # dictionary. Defaults to None means you should define each layer
+        # manually in `self.parse_model()` method.
     "root": root,
         # The root directory of the model. Defaults to RUNS_DIR.
     "name": model_name,
@@ -71,10 +75,6 @@ model = {
     "fullname": fullname,
         # Model's fullname in the following format: {name}-{data_name}-{postfix}.
         # In case None is given, it will be `self.basename`. Defaults to None.
-    "cfg": model_cfg,
-        # Model's layers configuration. It can be an external .yaml path or a
-        # dictionary. Defaults to None means you should define each layer
-        # manually in `self.parse_model()` method.
     "channels": 3,
         # Input channel. Defaults to 3.
     "num_classes": None,

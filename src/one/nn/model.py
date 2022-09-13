@@ -711,7 +711,11 @@ def parse_model(
             c2 = ch[f[-1]]
         elif m is Foldcut:
             c2 = ch[f] // 2
-        elif m in [Chuncat, Concat]:
+        elif m in [
+            Chuncat,
+            Concat,
+            InterpolateConcat,
+        ]:
             c2 = sum([ch[x] for x in f])
         else:
             c2 = ch[f]
@@ -788,15 +792,15 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     the model.
     
     Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
             {name}-{data_name}-{postfix}. In case None is given, it will be
             `self.name`. Defaults to None.
-        cfg (dict | Path_ | None): Model's layers configuration. It can be an
-            external .yaml path or a dictionary. Defaults to None means you
-            should define each layer manually in `self.parse_model()` method.
         channels (int): Input channel. Defaults to 3.
         num_classes (int | None): Number of classes for classification or
             detection tasks. Defaults to None.
@@ -817,16 +821,17 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         optimizers (Optimizers_ | None): Optimizer(s) for training model.
             Defaults to None.
         debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     model_zoo = {}  # A dictionary of all pretrained weights.
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = None,
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = None,
         fullname   : str  | None         = None,
-        cfg        : dict | Path_ | None = None,
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -1424,7 +1429,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             Predictions.
         """
         x     = input
-        y, dt =  [], []
+        y, dt = [], []
         for m in self.model:
             if m.f != -1:  # Get features from previous layer
                 if isinstance(m.f, int):

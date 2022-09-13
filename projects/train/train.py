@@ -113,7 +113,7 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws02": {
-		"cfg"        : "hinet_cityscapes_rain",
+		"cfg"        : "hinet_dehaze_cityscapes_fog",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,

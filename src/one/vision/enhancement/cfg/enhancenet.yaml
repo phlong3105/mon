@@ -1,0 +1,32 @@
+channels: 4
+
+backbone: [
+  # [from,        number, module,            args(out_channels, ...)]
+  [-1,            1,      Identity,          []],                                      # 0  (r, i)
+  [0,             1,      ExtractItem,       [0]],                                     # 1  (r)
+  [0,             1,      ExtractItem,       [1]],                                     # 2  (i)
+  [[1, 2],        1,      Concat,            []],                                      # 3  (x)
+  [-1,            1,      Conv2d,            [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 4  (conv_0)
+  [-1,            1,      Conv2d,            [64, 3, 2, 1, 1, 1, True, "replicate"]],  # 5
+  [-1,            1,      ReLU,              [True]],                                  # 6  (conv_1)
+  [-1,            1,      Conv2d,            [64, 3, 2, 1, 1, 1, True, "replicate"]],  # 7
+  [-1,            1,      ReLU,              [True]],                                  # 8  (conv_2)
+  [-1,            1,      Conv2d,            [64, 3, 2, 1, 1, 1, True, "replicate"]],  # 9
+  [-1,            1,      ReLU,              [True]],                                  # 10 (conv_3)
+  [[-1, 8],       1,      InterpolateConcat, [1]],                                     # 11 (conv_3_up, conv_2)
+  [-1,            1,      Conv2d,            [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 12
+  [-1,            1,      ReLU,              [True]],                                  # 13 (deconv_1)
+  [[-1, 6],       1,      InterpolateConcat, [1]],                                     # 14 (deconv_1_up, conv_1)
+  [-1,            1,      Conv2d,            [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 15
+  [-1,            1,      ReLU,              [True]],                                  # 16 (deconv_2)
+  [[-1, 4],       1,      InterpolateConcat, [1]],                                     # 17 (deconv_2_up, conv_0)
+  [-1,            1,      Conv2d,            [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 18
+  [-1,            1,      ReLU,              [True]],                                  # 19 (deconv_3)
+  [[-1, 13, 16],  1,      InterpolateConcat, [1]],                                     # 20 (deconv_1, deconv_2, deconv_3)
+  [-1,            1,      Conv2d,            [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 21
+  [-1,            1,      BatchNorm2d,       [64]],                                    # 22
+]
+
+head: [
+  [-1,            1,      Conv2d,            [1,  3]],                                 # 23
+]

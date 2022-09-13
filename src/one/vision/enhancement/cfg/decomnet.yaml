@@ -1,0 +1,29 @@
+channels: 3
+
+backbone: [
+  # [from,   number, module,          args(out_channels, ...)]
+  [-1,       1,      Identity,        []],                                      # 0  (x)
+  [-1,       1,      Max,             [1, True]],                               # 1  (x_max)
+  [[0, 1],   1,      Concat,          []],                                      # 2  (x_concat)
+  [-1,       1,      Conv2d,          [64, 3, 1, 4, 1, 1, True, "replicate"]],  # 3
+  [-1,       1,      Conv2d,          [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 4
+  [-1,       1,      ReLU,            [True]],                                  # 5
+  [-1,       1,      Conv2d,          [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 6
+  [-1,       1,      ReLU,            [True]],                                  # 7
+  [-1,       1,      Conv2d,          [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 8
+  [-1,       1,      ReLU,            [True]],                                  # 9
+  [-1,       1,      Conv2d,          [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 10
+  [-1,       1,      ReLU,            [True]],                                  # 11
+  [-1,       1,      Conv2d,          [64, 3, 1, 1, 1, 1, True, "replicate"]],  # 12
+  [-1,       1,      ReLU,            [True]],                                  # 13
+  [-1,       1,      Conv2d,          [4,  3, 1, 1, 1, 1, True, "replicate"]],  # 14
+  [-1,       1,      BatchNorm2d,     [4]],                                     # 15
+]
+
+head: [
+  [-1,       1,      ExtractFeatures, [0, 3]],                                  # 16
+  [-2,       1,      ExtractFeatures, [3, 4]],                                  # 17
+  [-2,       1,      Sigmoid,         []],                                      # 18  (r)
+  [-2,       1,      Sigmoid,         []],                                      # 19  (i)
+  [[-2, -1], 1,      Join,            []],                                      # 20  (r, i)
+]

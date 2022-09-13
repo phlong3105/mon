@@ -231,14 +231,46 @@ cfgs = {
 @MODELS.register(name="hinet")
 class HINet(ImageEnhancementModel):
     """
+    
+    Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.name`. Defaults to None.
+        channels (int): Input channel. Defaults to 3.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet",
-        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -258,10 +290,10 @@ class HINet(ImageEnhancementModel):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
@@ -487,6 +519,38 @@ class HINet(ImageEnhancementModel):
 @MODELS.register(name="hinet-deblur")
 class HINetDeblur(HINet):
     """
+    
+    Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.name`. Defaults to None.
+        channels (int): Input channel. Defaults to 3.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     model_zoo = {
@@ -506,10 +570,10 @@ class HINetDeblur(HINet):
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-deblur",
-        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -529,10 +593,10 @@ class HINetDeblur(HINet):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
@@ -550,16 +614,48 @@ class HINetDeblur(HINet):
 @MODELS.register(name="hinet-dehaze")
 class HINetDehaze(HINet):
     """
+    
+    Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.name`. Defaults to None.
+        channels (int): Input channel. Defaults to 3.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     model_zoo = {}
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-dehaze",
-        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -579,10 +675,10 @@ class HINetDehaze(HINet):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
@@ -600,6 +696,38 @@ class HINetDehaze(HINet):
 @MODELS.register(name="hinet_denoise")
 class HINetDenoise(HINet):
     """
+    
+    Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.name`. Defaults to None.
+        channels (int): Input channel. Defaults to 3.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     model_zoo = {
@@ -613,10 +741,10 @@ class HINetDenoise(HINet):
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = "hinet_denoise.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-denoise",
-        cfg        : dict | Path_ | None = "hinet-denoise",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -629,7 +757,7 @@ class HINetDenoise(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "hinet-denoise"
+        cfg = cfg or "hinet_denoise"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -657,6 +785,38 @@ class HINetDenoise(HINet):
 @MODELS.register(name="hinet-denoise-x0.5")
 class HINetDenoise_x0_5(HINet):
     """
+    
+    Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.name`. Defaults to None.
+        channels (int): Input channel. Defaults to 3.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     model_zoo = {
@@ -670,10 +830,10 @@ class HINetDenoise_x0_5(HINet):
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = "hinet_x0.5.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-denoise-x0.5",
-        cfg        : dict | Path_ | None = "hinet-x0.5",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -686,7 +846,7 @@ class HINetDenoise_x0_5(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "hinet-x0.5"
+        cfg = cfg or "hinet_x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -714,6 +874,38 @@ class HINetDenoise_x0_5(HINet):
 @MODELS.register(name="hinet-derain")
 class HINetDerain(HINet):
     """
+    
+    Args:
+        cfg (dict | Path_ | None): Model's layers configuration. It can be an
+            external .yaml path or a dictionary. Defaults to None means you
+            should define each layer manually in `self.parse_model()` method.
+        root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        name (str | None): Model's name. In case None is given, it will be
+            `self.__class__.__name__`. Defaults to None.
+        fullname (str | None): Model's fullname in the following format:
+            {name}-{data_name}-{postfix}. In case None is given, it will be
+            `self.name`. Defaults to None.
+        channels (int): Input channel. Defaults to 3.
+        num_classes (int | None): Number of classes for classification or
+            detection tasks. Defaults to None.
+        classlabels (ClassLabels | None): ClassLabels object that contains all
+            labels in the dataset. Defaults to None.
+        pretrained (Pretrained): Initialize weights from pretrained.
+            - If True, use the original pretrained described by the author
+              (usually, ImageNet or COCO). By default, it is the first element
+              in the `model_zoo` dictionary.
+            - If str and is a file/path, then load weights from saved file.
+            - In each inherited model, `pretrained` can be a dictionary's
+              key to get the corresponding local file or url of the weight.
+        phase (ModelPhase_): Model's running phase. Defaults to training.
+        loss (Losses_ | None): Loss function for training model.
+            Defaults to None.
+        metrics (Metrics_ | None): Metric(s) for validating and testing model.
+            Defaults to None.
+        optimizers (Optimizers_ | None): Optimizer(s) for training model.
+            Defaults to None.
+        debug (dict | Munch | None): Debug configs. Defaults to None.
+        verbose (bool): Verbosity.
     """
     
     model_zoo = {
@@ -727,10 +919,10 @@ class HINetDerain(HINet):
     
     def __init__(
         self,
+        cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-derain",
-        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
