@@ -29,6 +29,7 @@ from one.vision.enhancement.hinet import HINetDeblur
 from one.vision.enhancement.hinet import HINetDenoise
 from one.vision.enhancement.hinet import HINetDerain
 from one.vision.enhancement.mbllen import MBLLEN
+from one.vision.enhancement.retinexnet import RetinexNet
 from one.vision.enhancement.zerodce import ZeroDCE
 from one.vision.enhancement.zerodcepp import ZeroDCEPP
 
@@ -83,6 +84,10 @@ class TestModel(unittest.TestCase):
         mbllen = MBLLEN(verbose=True)
         self.assertIsNotNone(mbllen)
     
+    def test_retinexnet(self):
+        retinexnet = RetinexNet(verbose=True)
+        self.assertIsNotNone(retinexnet)
+        
     def test_vgg11(self):
         vgg11 = VGG11(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(vgg11)
