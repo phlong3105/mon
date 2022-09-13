@@ -85,7 +85,7 @@ cfgs = {
             [[26, -1],     1,      Join,                []],                               # 54
         ]
     },
-    "finet_x0.5": {
+    "finet-x0.5": {
         "channels": 3,
         "backbone": [
             # [from,       number, module,              args(out_channels, ...)]
@@ -155,7 +155,7 @@ cfgs = {
             [[26, -1],     1,      Join,                []],                               # 54
         ]
     },
-    "finet_denoise": {
+    "finet-denoise": {
         "channels": 3,
         "backbone": [
             # [from,       number, module,              args(out_channels, ...)]
@@ -279,7 +279,7 @@ class FINet(ImageEnhancementModel):
         pass
     
     
-@MODELS.register(name="finet_deblur")
+@MODELS.register(name="finet-deblur")
 class FINetDeblur(FINet):
     """
     """
@@ -290,7 +290,8 @@ class FINetDeblur(FINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
-        fullname   : str          | None = "finet_deblur",
+        fullname   : str          | None = "finet-deblur",
+        cfg        : dict | Path_ | None = "finet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -303,7 +304,7 @@ class FINetDeblur(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "finet"
+        cfg = cfg or "finet"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -328,7 +329,7 @@ class FINetDeblur(FINet):
         )
 
 
-@MODELS.register(name="finet_dehaze")
+@MODELS.register(name="finet-dehaze")
 class FINetDehaze(FINet):
     """
     """
@@ -339,7 +340,8 @@ class FINetDehaze(FINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
-        fullname   : str          | None = "finet_dehaze",
+        fullname   : str          | None = "finet-dehaze",
+        cfg        : dict | Path_ | None = "finet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -352,12 +354,12 @@ class FINetDehaze(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "finet"
+        cfg = cfg or "finet"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
             cfg = CFG_DIR / cfg
-
+    
         super().__init__(
             root        = root,
             name        = name,
@@ -388,7 +390,8 @@ class FINetDenoise(FINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
-        fullname   : str          | None = "finet_denoise",
+        fullname   : str          | None = "finet-denoise",
+        cfg        : dict | Path_ | None = "finet-denoise",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -401,7 +404,7 @@ class FINetDenoise(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "finet_denoise"
+        cfg = cfg or "finet-denoise"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -426,7 +429,7 @@ class FINetDenoise(FINet):
         )
    
    
-@MODELS.register(name="finet_denoise_x0.5")
+@MODELS.register(name="finet-denoise-x0.5")
 class FINetDenoise_x0_5(FINet):
     """
     """
@@ -437,7 +440,8 @@ class FINetDenoise_x0_5(FINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
-        fullname   : str          | None = "finet_denoise_x0.5",
+        fullname   : str          | None = "finet-denoise-x0.5",
+        cfg        : dict | Path_ | None = "finet-x0.5",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -450,7 +454,7 @@ class FINetDenoise_x0_5(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "finet_x0.5"
+        cfg = cfg or "finet-x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -475,7 +479,7 @@ class FINetDenoise_x0_5(FINet):
         )
 
 
-@MODELS.register(name="finet_derain")
+@MODELS.register(name="finet-derain")
 class FINetDerain(FINet):
     """
     """
@@ -486,7 +490,8 @@ class FINetDerain(FINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
-        fullname   : str          | None = "finet_derain",
+        fullname   : str          | None = "finet-derain",
+        cfg        : dict | Path_ | None = "finet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -499,7 +504,7 @@ class FINetDerain(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "finet"
+        cfg = cfg or "finet"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

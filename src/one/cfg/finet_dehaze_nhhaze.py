@@ -15,7 +15,7 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "finet_dehaze"
+model_name = "finet-dehaze"
 model_cfg  = "finet"
 data_name  = "nhhaze"
 fullname   = f"{model_name}-{data_name}"

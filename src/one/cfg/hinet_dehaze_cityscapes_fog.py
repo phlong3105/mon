@@ -15,8 +15,8 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "hinet_dehaze"
-model_cfg  = "hinet"
+model_name = "hinet-dehaze"
+model_cfg  = "hinet.yaml"
 data_name  = "cityscapes_fog"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname

@@ -15,7 +15,7 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "hinet_derain"
+model_name = "hinet-derain"
 model_cfg  = "hinet"
 data_name  = "rain13k"
 fullname   = f"{model_name}-{data_name}"

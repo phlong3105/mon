@@ -85,7 +85,7 @@ cfgs = {
             [[26, -1],     1,      Join,                []],                               # 54
         ]
     },
-    "hinet_x0.5": {
+    "hinet-x0.5": {
         "channels": 3,
         "backbone": [
             # [from,       number, module,              args(out_channels, ...)]
@@ -155,7 +155,7 @@ cfgs = {
             [[26, -1],     1,      Join,                []],                               # 54
         ]
     },
-    "hinet_denoise": {
+    "hinet-denoise": {
         "channels": 3,
         "backbone": [
             # [from,       number, module,              args(out_channels, ...)]
@@ -484,7 +484,7 @@ class HINet(ImageEnhancementModel):
             super().load_pretrained()
             
     
-@MODELS.register(name="hinet_deblur")
+@MODELS.register(name="hinet-deblur")
 class HINetDeblur(HINet):
     """
     """
@@ -508,7 +508,8 @@ class HINetDeblur(HINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
-        fullname   : str          | None = "hinet_deblur",
+        fullname   : str          | None = "hinet-deblur",
+        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -521,7 +522,7 @@ class HINetDeblur(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "hinet"
+        cfg = cfg or "hinet"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -546,7 +547,7 @@ class HINetDeblur(HINet):
         )
 
 
-@MODELS.register(name="hinet_dehaze")
+@MODELS.register(name="hinet-dehaze")
 class HINetDehaze(HINet):
     """
     """
@@ -557,7 +558,8 @@ class HINetDehaze(HINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
-        fullname   : str          | None = "hinet_dehaze",
+        fullname   : str          | None = "hinet-dehaze",
+        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -570,7 +572,7 @@ class HINetDehaze(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "hinet"
+        cfg = cfg or "hinet"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -613,7 +615,8 @@ class HINetDenoise(HINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
-        fullname   : str          | None = "hinet_denoise",
+        fullname   : str          | None = "hinet-denoise",
+        cfg        : dict | Path_ | None = "hinet-denoise",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -626,7 +629,7 @@ class HINetDenoise(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "hinet_denoise"
+        cfg = cfg or "hinet-denoise"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -651,7 +654,7 @@ class HINetDenoise(HINet):
         )
    
    
-@MODELS.register(name="hinet_denoise_x0.5")
+@MODELS.register(name="hinet-denoise-x0.5")
 class HINetDenoise_x0_5(HINet):
     """
     """
@@ -669,7 +672,8 @@ class HINetDenoise_x0_5(HINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
-        fullname   : str          | None = "hinet_denoise_x0.5",
+        fullname   : str          | None = "hinet-denoise-x0.5",
+        cfg        : dict | Path_ | None = "hinet-x0.5",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -682,7 +686,7 @@ class HINetDenoise_x0_5(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "hinet_x0.5"
+        cfg = cfg or "hinet-x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -707,7 +711,7 @@ class HINetDenoise_x0_5(HINet):
         )
 
 
-@MODELS.register(name="hinet_derain")
+@MODELS.register(name="hinet-derain")
 class HINetDerain(HINet):
     """
     """
@@ -725,7 +729,8 @@ class HINetDerain(HINet):
         self,
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
-        fullname   : str          | None = "hinet_derain",
+        fullname   : str          | None = "hinet-derain",
+        cfg        : dict | Path_ | None = "hinet",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -738,7 +743,7 @@ class HINetDerain(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = "hinet"
+        cfg = cfg or "hinet"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

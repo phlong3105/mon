@@ -15,7 +15,7 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "hinet_deblur"
+model_name = "hinet-deblur"
 model_cfg  = "hinet"
 data_name  = "gopro"
 fullname   = f"{model_name}-{data_name}"
