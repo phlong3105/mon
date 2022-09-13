@@ -1,4 +1,4 @@
-channels: 1
+channels: 3
 
 backbone: [
   # [from,    number, module,     args(out_channels, ...)]

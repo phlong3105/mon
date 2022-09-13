@@ -19,7 +19,7 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      ReLU,              [True]],               # 1
             [-1,     1,      MaxPool2d,         [2, 2]],               # 2
             [-1,     1,      Conv2d,            [128, 3, 1, 1]],       # 3
@@ -50,7 +50,7 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      BatchNorm2d,       [64]],                 # 1
             [-1,     1,      ReLU,              [True]],               # 2
             [-1,     1,      MaxPool2d,         [2, 2]],               # 3
@@ -89,9 +89,9 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      ReLU,              [True]],               # 1
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 2
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 2
             [-1,     1,      ReLU,              [True]],               # 3
             [-1,     1,      MaxPool2d,         [2, 2]],               # 4
             [-1,     1,      Conv2d,            [128, 3, 1, 1]],       # 5
@@ -124,10 +124,10 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      BatchNorm2d,       [64]],                 # 1
             [-1,     1,      ReLU,              [True]],               # 2
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 3
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 3
             [-1,     1,      BatchNorm2d,       [64]],                 # 4
             [-1,     1,      ReLU,              [True]],               # 5
             [-1,     1,      MaxPool2d,         [2, 2]],               # 6
@@ -169,9 +169,9 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      ReLU,              [True]],               # 1
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 2
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 2
             [-1,     1,      ReLU,              [True]],               # 3
             [-1,     1,      MaxPool2d,         [2, 2]],               # 4
             [-1,     1,      Conv2d,            [128, 3, 1, 1]],       # 5
@@ -210,10 +210,10 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      BatchNorm2d,       [64]],                 # 1
             [-1,     1,      ReLU,              [True]],               # 2
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 3
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 3
             [-1,     1,      BatchNorm2d,       [64]],                 # 4
             [-1,     1,      ReLU,              [True]],               # 5
             [-1,     1,      MaxPool2d,         [2, 2]],               # 6
@@ -264,9 +264,9 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      ReLU,              [True]],               # 1
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 2
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 2
             [-1,     1,      ReLU,              [True]],               # 3
             [-1,     1,      MaxPool2d,         [2, 2]],               # 4
             [-1,     1,      Conv2d,            [128, 3, 1, 1]],       # 5
@@ -311,10 +311,10 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 0
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 0
             [-1,     1,      BatchNorm2d,       [64]],                 # 1
             [-1,     1,      ReLU,              [True]],               # 2
-            [-1,     1,      Conv2d,            [64, 3, 1, 1]],        # 3
+            [-1,     1,      Conv2d,            [64,  3, 1, 1]],       # 3
             [-1,     1,      BatchNorm2d,       [64]],                 # 4
             [-1,     1,      ReLU,              [True]],               # 5
             [-1,     1,      MaxPool2d,         [2, 2]],               # 6
