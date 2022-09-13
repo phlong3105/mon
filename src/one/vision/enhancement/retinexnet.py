@@ -157,6 +157,42 @@ class EnhanceLoss(BaseLoss):
         return loss
 
 
+class RetinexLoss(BaseLoss):
+    """
+    Calculate the retinex loss according to RetinexNet paper
+    (https://arxiv.org/abs/1808.04560).
+    """
+    
+    def __init__(
+        self,
+        weight   : Floats = 1.0,
+        reduction: str    = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight    = weight,
+            reduction = reduction,
+            *args, **kwargs
+        )
+        self.name         = "retinex_loss"
+        self.decom_loss   = DecomLoss()
+        self.enhance_loss = EnhanceLoss()
+        
+    def forward(self, input : Tensor, target: Tensor, **_) -> Tensor:
+        input, r_low, i_low, r_high, i_high, i_delta, i_delta_3, enhance = \
+            input[0], input[1], input[2], input[3], input[4], input[5], input[6], input[7]
+        decom_loss = self.decom_loss(
+            input  = (input, r_low, i_low, r_high, i_high),
+            target = target,
+        )
+        enhance_loss = self.enhance_loss(
+            input  = (r_low, i_low, i_delta, i_delta_3, enhance),
+            target = target,
+        )
+        loss = decom_loss + enhance_loss
+        return loss
+
+
 # H1: - Model ------------------------------------------------------------------
 
 cfgs = {
@@ -397,6 +433,7 @@ class ModelPhase(Enum):
     ENHANCENET = "enhancenet"
     # Train the whole network. Produce predictions, calculate losses and
     # metrics, update weights at the end of each epoch/step.
+    RETINEXNET = "retinexnet"
     TRAINING   = "training"
     # Produce predictions, calculate losses and metrics, update weights at
     # the end of each epoch/step.
@@ -418,6 +455,7 @@ class ModelPhase(Enum):
         return {
             "decomnet"  : cls.DECOMNET,
             "enhancenet": cls.ENHANCENET,
+            "retinexnet": cls.RETINEXNET,
             "training"  : cls.TRAINING,
             "testing"   : cls.TESTING,
             "inference" : cls.INFERENCE,
@@ -435,9 +473,10 @@ class ModelPhase(Enum):
         return {
             0: cls.DECOMNET,
             1: cls.ENHANCENET,
-            2: cls.TRAINING,
-            3: cls.TESTING,
-            4: cls.INFERENCE,
+            2: cls.RETINEXNET,
+            3: cls.TRAINING,
+            4: cls.TESTING,
+            5: cls.INFERENCE,
         }
 
     @classmethod
@@ -592,6 +631,7 @@ class RetinexNet(ImageEnhancementModel):
         )
         self.decom_loss	  = DecomLoss()
         self.enhance_loss = EnhanceLoss()
+        self.retinex_loss = RetinexLoss()
     
     @property
     def phase(self) -> ModelPhase:
@@ -616,6 +656,9 @@ class RetinexNet(ImageEnhancementModel):
         elif self._phase is ModelPhase.ENHANCENET:
             self.model[0].freeze()
             self.model[1].unfreeze()
+        elif self._phase is ModelPhase.RETINEXNET:
+            self.model[0].unfreeze()
+            self.model[1].unfreeze()
         else:
             self.freeze()
     
@@ -627,7 +670,7 @@ class RetinexNet(ImageEnhancementModel):
         input : Tensor,
         target: Tensor,
         *args, **kwargs
-    ) -> tuple[Tensor, Tensor | None]:
+    ) -> tuple[Any, Tensor | None]:
         """
         Forward pass with loss value. Loss function may require more arguments
         beside the ground-truth and prediction values. For calculating the
@@ -647,7 +690,7 @@ class RetinexNet(ImageEnhancementModel):
             loss           = self.decom_loss(input=pred, target=target)
             return pred, loss
         
-        else:
+        elif self.phase is ModelPhase.ENHANCENET:
             r_low, i_low = self.model[0](input=input)
             i_delta      = self.model[1](input=(r_low, i_low))
             i_delta_3 	 = torch.cat((i_delta, i_delta, i_delta), dim=1)
@@ -655,7 +698,17 @@ class RetinexNet(ImageEnhancementModel):
             pred         = (r_low, i_low, i_delta, i_delta_3, enhance)
             loss         = self.enhance_loss(input=pred, target=target)
             return pred, loss
-    
+
+        else:
+            r_low, i_low   = self.model[0](input=input)
+            r_high, i_high = self.model[0](input=target)
+            i_delta        = self.model[1](input=(r_low, i_low))
+            i_delta_3 	   = torch.cat((i_delta, i_delta, i_delta), dim=1)
+            enhance  	   = r_low * i_delta_3
+            pred           = (input, r_low, i_low, r_high, i_high, i_delta, i_delta_3, enhance)
+            loss           = self.retinex_loss(input=pred, target=target)
+            return pred, loss
+        
     def forward_once(
         self,
         input    : Tensor,
@@ -728,8 +781,14 @@ class RetinexNet(ImageEnhancementModel):
                 result["i_low"]  = torch.cat(tensors=(i_low, i_low, i_low), dim=1)
                 result["r_high"] = r_high
                 result["i_high"] = torch.cat(tensors=(i_high, i_high, i_high), dim=1)
-            else:
+            elif self.phase is ModelPhase.RETINEXNET:
                 r_low, i_low, i_delta, i_delta_3, enhance = pred
+                result["r_low"]   = r_low
+                result["i_low"]   = torch.cat(tensors=(i_low, i_low, i_low), dim=1)
+                result["i_delta"] = i_delta_3
+                result["enhance"] = enhance
+            else:
+                input, r_low, i_low, r_high, i_high, i_delta, i_delta_3, enhance = pred
                 result["r_low"]   = r_low
                 result["i_low"]   = torch.cat(tensors=(i_low, i_low, i_low), dim=1)
                 result["i_delta"] = i_delta_3
