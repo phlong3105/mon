@@ -95,7 +95,7 @@ class Inception3(ImageClassificationModel):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "inception3",
+        cfg        : dict | Path_ | None = "inception3.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "inception",
         fullname   : str  | None         = "inception3",
