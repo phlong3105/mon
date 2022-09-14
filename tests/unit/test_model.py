@@ -11,6 +11,14 @@ import unittest
 
 from one.vision.classification.alexnet import AlexNet
 from one.vision.classification.lenet import LeNet
+from one.vision.classification.resnet import ResNet101
+from one.vision.classification.resnet import ResNet152
+from one.vision.classification.resnet import ResNet18
+from one.vision.classification.resnet import ResNet34
+from one.vision.classification.resnet import ResNet50
+from one.vision.classification.resnext import ResNeXt101_32X8D
+from one.vision.classification.resnext import ResNeXt101_64X4D
+from one.vision.classification.resnext import ResNeXt50_32X4D
 from one.vision.classification.vgg import VGG11
 from one.vision.classification.vgg import VGG11Bn
 from one.vision.classification.vgg import VGG13
@@ -84,6 +92,38 @@ class TestModel(unittest.TestCase):
         mbllen = MBLLEN(verbose=True)
         self.assertIsNotNone(mbllen)
     
+    def test_resnet18(self):
+        resnet18 = ResNet18(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnet18)
+        
+    def test_resnet34(self):
+        resnet34 = ResNet34(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnet34)
+    
+    def test_resnet50(self):
+        resnet50 = ResNet50(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnet50)
+    
+    def test_resnet101(self):
+        resnet101 = ResNet101(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnet101)
+    
+    def test_resnet152(self):
+        resnet152 = ResNet152(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnet152)
+    
+    def test_resnext50_32x4d(self):
+        resnext50_32x4d = ResNeXt50_32X4D(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnext50_32x4d)
+
+    def test_resnext101_32x8d(self):
+        resnext101_32x8d = ResNeXt101_32X8D(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnext101_32x8d)
+    
+    def test_resnext101_64x4d(self):
+        resnext101_64x4d = ResNeXt101_64X4D(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(resnext101_64x4d)
+        
     def test_retinexnet(self):
         retinexnet = RetinexNet(verbose=True)
         self.assertIsNotNone(retinexnet)

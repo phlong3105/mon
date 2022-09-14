@@ -29,7 +29,7 @@ cfgs = {
             [-1,     1,      Tanh,            []],           # 7
         ],
         "head": [                                           
-            [-1,     1,      LeNetClassifier, []],           # 8
+            [-1,     1,      LeNetClassifier, [120]],        # 8
         ]
     },
 }

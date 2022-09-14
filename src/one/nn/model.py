@@ -692,15 +692,24 @@ def parse_model(
         elif m in [
             AlexNetClassifier,
             LeNetClassifier,
+            ResNetClassifier,
             VGGClassifier,
         ]:
+            """
             if isinstance(f, (list, tuple)):
                 c1 = ch[f[0]]
             else:
                 c1 = ch[f]
+            """
+            c1   = args[0]
             c2   = nc
-            args = [c1, c2, *args[0:]]
-        elif m is BatchNorm2d:
+            args = [c1, c2, *args[1:]]
+        elif m in [
+            ResNetBlock,
+        ]:
+            c1 = args[2]
+            c2 = args[3]
+        elif m in [BatchNorm2d]:
             args = [ch[f]]
         elif m in [
             Join,
@@ -709,7 +718,7 @@ def parse_model(
             Sum,
         ]:
             c2 = ch[f[-1]]
-        elif m is Foldcut:
+        elif m in [Foldcut]:
             c2 = ch[f] // 2
         elif m in [
             Chuncat,

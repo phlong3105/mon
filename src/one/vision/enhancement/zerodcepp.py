@@ -161,8 +161,12 @@ class ZeroDCEPP(ImageEnhancementModel):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             model_state_dict["2.dw_conv.weight"]  = state_dict["e_conv1.depth_conv.weight"]
             model_state_dict["2.dw_conv.bias"]    = state_dict["e_conv1.depth_conv.bias"]

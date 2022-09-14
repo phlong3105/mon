@@ -19,5 +19,5 @@ backbone: [
 ]
 
 head: [
-  [-1,     1,      AlexNetClassifier, []],                   # 14
+  [-1,     1,      AlexNetClassifier, [256]],                # 14
 ]

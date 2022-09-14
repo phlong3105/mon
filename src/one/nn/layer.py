@@ -1653,6 +1653,29 @@ class LeNetClassifier(Module):
             return input
 
 
+@LAYERS.register(name="resnet_classifier")
+class ResNetClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.linear       = Linear(in_features=in_channels, out_features=out_channels)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = torch.flatten(input, 1)
+            x = self.linear(x)
+            return x
+        else:
+            x = torch.flatten(input, 1)
+            return x
+        
+
 @LAYERS.register(name="vgg_classifier")
 class VGGClassifier(Module):
     
@@ -1687,6 +1710,23 @@ class VGGClassifier(Module):
         
 
 # H2: - Linear -----------------------------------------------------------------
+
+@LAYERS.register(name="flatten")
+class Flatten(Module):
+    """
+    Flatten a tensor along a dimension.
+    
+    Args:
+        dim (int): Dimension to flatten. Defaults to 1.
+    """
+    
+    def __init__(self, dim: int = 1, *args, **kwargs):
+        super().__init__()
+        self.dim = dim
+        
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.flatten(input, self.dim)
+
 
 LAYERS.register(name="bilinear",    module=Bilinear)
 LAYERS.register(name="identity",    module=Identity)
@@ -3346,6 +3386,7 @@ EM = EnhancementModule
 
 # H2: - ResNet -----------------------------------------------------------------
 
+@LAYERS.register(name="resnet_basic_block")
 class ResNetBasicBlock(Module):
     
     expansion: int = 1
@@ -3414,6 +3455,7 @@ class ResNetBasicBlock(Module):
         return output
 
 
+@LAYERS.register(name="resnet_bottleneck")
 class ResNetBottleneck(Module):
     """
     Bottleneck in torchvision places the stride for down-sampling at
@@ -3440,7 +3482,7 @@ class ResNetBottleneck(Module):
         super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
-        width = int(in_channels * (base_width / 64.0)) * groups
+        width = int(out_channels * (base_width / 64.0)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when
         # stride != 1
         self.conv1      = Conv2d(
@@ -3461,7 +3503,7 @@ class ResNetBottleneck(Module):
             stride       = stride,
             padding      = dilation,
             groups       = groups,
-            bias         = True,
+            bias         = False,
             dilation     = dilation,
         )
         self.bn2        = norm_layer(width)
@@ -3497,6 +3539,7 @@ class ResNetBottleneck(Module):
         return output
 
 
+@LAYERS.register(name="resnet_block")
 class ResNetBlock(Module):
     
     def __init__(
@@ -3508,13 +3551,17 @@ class ResNetBlock(Module):
         stride       : int                           = 1,
         groups       : int                           = 1,
         dilation     : int                           = 1,
-        prev_dilation: int                           = 1,
         base_width   : int                           = 64,
         dilate       : bool                          = False,
-        norm_layer   : Callable[... , Module] | None = None,
+        norm_layer   : Callable[... , Module] | None = BatchNorm2d,
     ):
         super().__init__()
-        downsample = None
+        downsample    = None
+        prev_dilation = dilation
+        if dilate:
+            dilation *= stride
+            stride    = 1
+        
         if stride != 1 or in_channels != out_channels * block.expansion:
             downsample = nn.Sequential(
                 Conv2d(
@@ -3526,6 +3573,37 @@ class ResNetBlock(Module):
                 ),
                 norm_layer(out_channels * block.expansion),
             )
+      
+        layers = []
+        layers.append(
+            block(
+                in_channels  = in_channels,
+                out_channels = out_channels,
+                stride       = stride,
+                groups       = groups,
+                dilation     = prev_dilation,
+                base_width   = base_width,
+                downsample   = downsample,
+                norm_layer   = norm_layer,
+            )
+        )
+        for _ in range(1, num_blocks):
+            layers.append(
+                block(
+                    in_channels  = out_channels * block.expansion,
+                    out_channels = out_channels,
+                    stride       = 1,
+                    groups       = groups,
+                    dilation     = dilation,
+                    base_width   = base_width,
+                    downsample   = None,
+                    norm_layer   = norm_layer,
+                )
+            )
+        self.convs = nn.Sequential(*layers)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        return self.convs(input)
     
 
 # H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------

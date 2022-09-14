@@ -43,7 +43,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 21
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 22
+            [-1,     1,      VGGClassifier,     [512]],                # 22
         ]
     },
     "vgg11_bn": {
@@ -82,7 +82,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 29
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 30
+            [-1,     1,      VGGClassifier,     [512]],                # 30
         ]
     },
     "vgg13": {
@@ -117,7 +117,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 25
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 26
+            [-1,     1,      VGGClassifier,     [512]],                # 26
         ]
     },
     "vgg13_bn": {
@@ -162,7 +162,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 35
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 36
+            [-1,     1,      VGGClassifier,     [512]],                # 36
         ]
     },
     "vgg16": {
@@ -203,7 +203,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 31
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 32
+            [-1,     1,      VGGClassifier,     [512]],                # 32
         ]
     },
     "vgg16_bn": {
@@ -257,7 +257,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 44
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 45
+            [-1,     1,      VGGClassifier,     [512]],                # 45
         ]
     },
     "vgg19": {
@@ -304,7 +304,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 37
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 38
+            [-1,     1,      VGGClassifier,     [512]],                # 38
         ]
     },
     "vgg19_bn": {
@@ -367,7 +367,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [7]],                  # 53
         ],
         "head": [
-            [-1,     1,      VGGClassifier,     []],                   # 54
+            [-1,     1,      VGGClassifier,     [512]],                # 54
         ]
     },
 }
@@ -560,8 +560,12 @@ class VGG11(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -676,8 +680,12 @@ class VGG11Bn(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -792,8 +800,12 @@ class VGG13(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -908,8 +920,12 @@ class VGG13Bn(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -1024,8 +1040,12 @@ class VGG16(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -1140,8 +1160,12 @@ class VGG16Bn(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -1256,8 +1280,12 @@ class VGG19(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")
@@ -1372,8 +1400,12 @@ class VGG19Bn(VGG):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")

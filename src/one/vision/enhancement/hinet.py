@@ -321,8 +321,12 @@ class HINet(ImageEnhancementModel):
                 model_dir=self.pretrained_dir, **self.pretrained
             )
             state_dict = state_dict["params"]
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             model_state_dict["1.weight"]				= state_dict["conv_01.weight"]
             model_state_dict["1.bias"]				    = state_dict["conv_01.bias"]

@@ -35,7 +35,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [6]],                  # 13
         ],
         "head": [
-            [-1,     1,      AlexNetClassifier, []],                   # 14
+            [-1,     1,      AlexNetClassifier, [256]],                # 14
         ]
     },
 }
@@ -140,8 +140,12 @@ class AlexNet(ImageClassificationModel):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            # print(self.model.state_dict().keys())
-            # print(state_dict.keys())
+            """
+            for k in sorted(self.model.state_dict().keys()):
+                print(f"model_state_dict[\"{k}\"] = ")
+            for k in sorted(state_dict.keys()):
+                print(f"state_dict[\"{k}\"]")
+            """
             model_state_dict = self.model.state_dict()
             for k, v in state_dict.items():
                 k = k.replace("features.", "")

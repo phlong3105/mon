@@ -43,5 +43,5 @@ backbone: [
 ]
 
 head: [
-  [-1,     1,      VGGClassifier,     []],                   # 38
+  [-1,     1,      VGGClassifier,     [512]],                # 38
 ]

@@ -13,5 +13,5 @@ backbone: [
 ]
 
 head: [
-  [-1,     1,      LeNetClassifier, []],           # 8
+  [-1,     1,      LeNetClassifier, [120]],        # 8
 ]
