@@ -1,3 +1,5 @@
+zero_init_residual: False
+
 channels: 3
 
 backbone: [

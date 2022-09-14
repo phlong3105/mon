@@ -507,6 +507,7 @@ class ConvBnReLU2d(Module):
         device      : Any               = None,
         dtype       : Any               = None,
         apply_act   : bool              = True,
+        eps         : float             = 1e-5,
         *args, **kwargs
     ):
         super().__init__()
@@ -526,7 +527,7 @@ class ConvBnReLU2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.bn  = BatchNorm2d(out_channels)
+        self.bn  = BatchNorm2d(out_channels, eps)
         self.act = ReLU()
     
     def forward(self, input: Tensor) -> Tensor:
@@ -1624,8 +1625,7 @@ class AlexNetClassifier(Module):
             x = self.linear3(x)
             return x
         else:
-            x = torch.flatten(input, 1)
-            return x
+            return input
 
 
 @LAYERS.register(name="lenet_classifier")
@@ -1653,6 +1653,38 @@ class LeNetClassifier(Module):
             return input
 
 
+@LAYERS.register(name="inception_classifier")
+class InceptionClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.avgpool      = nn.AdaptiveAvgPool2d((1, 1))
+        self.dropout      = nn.Dropout(p=0.5)
+        self.fc           = nn.Linear(in_channels, out_channels)
+
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = input
+            # Adaptive average pooling
+            x = self.avgpool(x)
+            # N x 2048 x 1 x 1
+            x = self.dropout(x)
+            # N x 2048 x 1 x 1
+            x = torch.flatten(x, 1)
+            # N x 2048
+            x = self.fc(x)
+            # N x 1000 (num_classes)
+            return x
+        else:
+            return input
+    
+
 @LAYERS.register(name="resnet_classifier")
 class ResNetClassifier(Module):
     
@@ -1672,8 +1704,7 @@ class ResNetClassifier(Module):
             x = self.linear(x)
             return x
         else:
-            x = torch.flatten(input, 1)
-            return x
+            return input
         
 
 @LAYERS.register(name="vgg_classifier")
@@ -1705,8 +1736,7 @@ class VGGClassifier(Module):
             x = self.linear3(x)
             return x
         else:
-            x = torch.flatten(input, 1)
-            return x
+            return input
         
 
 # H2: - Linear -----------------------------------------------------------------
@@ -3300,6 +3330,460 @@ class HINetSkipBlock(Module):
         input    = self.blocks(input)
         return input + shortcut
     
+    
+# H2: - Inception --------------------------------------------------------------
+
+@LAYERS.register(name="inception_basic_conv2d")
+class InceptionBasicConv2d(Module):
+    """
+    Conv2d + BN + ReLU.
+    """
+
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : Ints,
+        stride      : Ints              = 1,
+        padding     : str | Ints | None = 0,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = False,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        apply_act   : bool              = True,
+        eps         : float             = 0.001,
+        *args, **kwargs
+    ):
+        super().__init__()
+        kernel_size = to_2tuple(kernel_size)
+        stride      = to_2tuple(stride)
+        dilation    = to_2tuple(dilation)
+        self.conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = to_same_padding(kernel_size, padding),
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.bn  = BatchNorm2d(out_channels, eps)
+        self.act = ReLU()
+    
+    def forward(self, input: Tensor) -> Tensor:
+        return self.act(self.bn(self.conv(input)))
+    
+
+@LAYERS.register(name="inception_a")
+class InceptionA(Module):
+    
+    base_out_channels: int = 224  # + pool_features
+    
+    def __init__(
+        self,
+        in_channels  : int,
+        pool_features: int,
+        conv_block   : Callable[..., nn.Module] | None = None
+    ):
+        super().__init__()
+        if conv_block is None:
+            conv_block = InceptionBasicConv2d
+        
+        self.branch1x1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 64,
+            kernel_size  = 1,
+            eps          = 0.001,
+        )
+        self.branch5x5_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 48,
+            kernel_size  = 1,
+            eps          = 0.001,
+        )
+        self.branch5x5_2 = conv_block(
+            in_channels  = 48,
+            out_channels = 64,
+            kernel_size  = 5,
+            padding      = 2,
+            eps          = 0.001,
+        )
+        self.branch3x3dbl_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 64,
+            kernel_size  = 1,
+            eps          = 0.001,
+        )
+        self.branch3x3dbl_2 = conv_block(
+            in_channels  = 64,
+            out_channels = 96,
+            kernel_size  = 3,
+            padding      = 1,
+            eps          = 0.001,
+        )
+        self.branch3x3dbl_3 = conv_block(
+            in_channels  = 96,
+            out_channels = 96,
+            kernel_size  = 3,
+            padding      = 1,
+            eps          = 0.001,
+        )
+        self.branch_pool = conv_block(
+            in_channels  = in_channels,
+            out_channels = pool_features,
+            kernel_size  = 1,
+            eps          = 0.001,
+        )
+
+    def forward(self, input: Tensor) -> Tensor:
+        branch1x1    = self.branch1x1(input)
+        branch5x5    = self.branch5x5_1(input)
+        branch5x5    = self.branch5x5_2(branch5x5)
+        branch3x3dbl = self.branch3x3dbl_1(input)
+        branch3x3dbl = self.branch3x3dbl_2(branch3x3dbl)
+        branch3x3dbl = self.branch3x3dbl_3(branch3x3dbl)
+        branch_pool  = F.avg_pool2d(input, kernel_size=3, stride=1, padding=1)
+        branch_pool  = self.branch_pool(branch_pool)
+        outputs      = [branch1x1, branch5x5, branch3x3dbl, branch_pool]
+        return torch.cat(outputs, 1)
+
+
+@LAYERS.register(name="inception_b")
+class InceptionB(Module):
+    
+    base_out_channels: int = 480   # + in_channels
+    
+    def __init__(
+        self,
+        in_channels: int,
+        conv_block : Callable[..., nn.Module] | None = None
+    ):
+        super().__init__()
+        if conv_block is None:
+            conv_block = InceptionBasicConv2d
+        
+        self.branch3x3 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 384,
+            kernel_size  = 3,
+            stride       = 2,
+        )
+        self.branch3x3dbl_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 64,
+            kernel_size  = 1,
+        )
+        self.branch3x3dbl_2 = conv_block(
+            in_channels  = 64,
+            out_channels = 96,
+            kernel_size  = 3,
+            padding      = 1,
+        )
+        self.branch3x3dbl_3 = conv_block(
+            in_channels  = 96,
+            out_channels = 96,
+            kernel_size  = 3,
+            stride       = 2,
+        )
+
+    def forward(self, input: Tensor) -> Tensor:
+        branch3x3    = self.branch3x3(input)
+        branch3x3dbl = self.branch3x3dbl_1(input)
+        branch3x3dbl = self.branch3x3dbl_2(branch3x3dbl)
+        branch3x3dbl = self.branch3x3dbl_3(branch3x3dbl)
+        branch_pool  = F.max_pool2d(input, kernel_size=3, stride=2)
+        outputs      = [branch3x3, branch3x3dbl, branch_pool]
+        return torch.cat(outputs, 1)
+
+
+@LAYERS.register(name="inception_c")
+class InceptionC(Module):
+    
+    base_out_channels: int = 768
+    
+    def __init__(
+        self,
+        in_channels : int,
+        channels_7x7: int,
+        conv_block  : Callable[..., nn.Module] | None = None
+    ):
+        super().__init__()
+        if conv_block is None:
+            conv_block = InceptionBasicConv2d
+        c7 = channels_7x7
+        
+        self.branch1x1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 192,
+            kernel_size  = 1,
+        )
+        self.branch7x7_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = c7,
+            kernel_size  = 1,
+        )
+        self.branch7x7_2 = conv_block(
+            in_channels  = c7,
+            out_channels = c7,
+            kernel_size  = (1, 7),
+            padding      = (0, 3),
+        )
+        self.branch7x7_3 = conv_block(
+            in_channels  = c7,
+            out_channels = 192,
+            kernel_size  = (7, 1),
+            padding      = (3, 0),
+        )
+        self.branch7x7dbl_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = c7,
+            kernel_size  = 1,
+        )
+        self.branch7x7dbl_2 = conv_block(
+            in_channels  = c7,
+            out_channels = c7,
+            kernel_size  = (7, 1),
+            padding      = (3, 0),
+        )
+        self.branch7x7dbl_3 = conv_block(
+            in_channels  = c7,
+            out_channels = c7,
+            kernel_size  = (1, 7),
+            padding      = (0, 3),
+        )
+        self.branch7x7dbl_4 = conv_block(
+            in_channels  = c7,
+            out_channels = c7,
+            kernel_size  = (7, 1),
+            padding      = (3, 0),
+        )
+        self.branch7x7dbl_5 = conv_block(
+            in_channels  = c7,
+            out_channels = 192,
+            kernel_size  = (1 , 7),
+            padding      = (0 , 3),
+        )
+        self.branch_pool = conv_block(
+            in_channels  = in_channels,
+            out_channels = 192,
+            kernel_size  = 1,
+        )
+
+    def forward(self, input: Tensor) -> Tensor:
+        branch1x1    = self.branch1x1(input)
+        branch7x7    = self.branch7x7_1(input)
+        branch7x7    = self.branch7x7_2(branch7x7)
+        branch7x7    = self.branch7x7_3(branch7x7)
+        branch7x7dbl = self.branch7x7dbl_1(input)
+        branch7x7dbl = self.branch7x7dbl_2(branch7x7dbl)
+        branch7x7dbl = self.branch7x7dbl_3(branch7x7dbl)
+        branch7x7dbl = self.branch7x7dbl_4(branch7x7dbl)
+        branch7x7dbl = self.branch7x7dbl_5(branch7x7dbl)
+        branch_pool  = F.avg_pool2d(input, kernel_size=3, stride=1, padding=1)
+        branch_pool  = self.branch_pool(branch_pool)
+        outputs      = [branch1x1, branch7x7, branch7x7dbl, branch_pool]
+        return torch.cat(outputs, 1)
+    
+    
+@LAYERS.register(name="inception_d")
+class InceptionD(Module):
+    
+    base_out_channels: int = 512   # + in_channels
+    
+    def __init__(
+        self,
+        in_channels: int,
+        conv_block : Callable[..., nn.Module] | None = None
+    ):
+        super().__init__()
+        if conv_block is None:
+            conv_block = InceptionBasicConv2d
+        
+        self.branch3x3_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 192,
+            kernel_size  = 1,
+        )
+        self.branch3x3_2 = conv_block(
+            in_channels  = 192,
+            out_channels = 320,
+            kernel_size  = 3,
+            stride       = 2,
+        )
+        self.branch7x7x3_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 192,
+            kernel_size  = 1,
+        )
+        self.branch7x7x3_2 = conv_block(
+            in_channels  = 192,
+            out_channels = 192,
+            kernel_size  = (1, 7),
+            padding      = (0, 3),
+        )
+        self.branch7x7x3_3 = conv_block(
+            in_channels  = 192,
+            out_channels = 192,
+            kernel_size  = (7, 1),
+            padding      = (3, 0),
+        )
+        self.branch7x7x3_4 = conv_block(
+            in_channels  = 192,
+            out_channels = 192,
+            kernel_size  = 3,
+            stride       = 2,
+        )
+
+    def forward(self, input: Tensor) -> Tensor:
+        branch3x3   = self.branch3x3_1(input)
+        branch3x3   = self.branch3x3_2(branch3x3)
+        branch7x7x3 = self.branch7x7x3_1(input)
+        branch7x7x3 = self.branch7x7x3_2(branch7x7x3)
+        branch7x7x3 = self.branch7x7x3_3(branch7x7x3)
+        branch7x7x3 = self.branch7x7x3_4(branch7x7x3)
+        branch_pool = F.max_pool2d(input, kernel_size=3, stride=2)
+        outputs     = [branch3x3, branch7x7x3, branch_pool]
+        return torch.cat(outputs, 1)
+    
+
+@LAYERS.register(name="inception_e")
+class InceptionE(Module):
+    
+    base_out_channels: int = 2048
+    
+    def __init__(
+        self,
+        in_channels: int,
+        conv_block : Callable[..., nn.Module] | None = None
+    ):
+        super().__init__()
+        if conv_block is None:
+            conv_block = InceptionBasicConv2d
+        
+        self.branch1x1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 320,
+            kernel_size  = 1,
+        )
+        self.branch3x3_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 384,
+            kernel_size  = 1,
+        )
+        self.branch3x3_2a = conv_block(
+            in_channels  = 384,
+            out_channels = 384,
+            kernel_size  = (1, 3),
+            padding      = (0, 1),
+        )
+        self.branch3x3_2b = conv_block(
+            in_channels  = 384,
+            out_channels = 384,
+            kernel_size  = (3, 1),
+            padding      = (1, 0),
+        )
+        self.branch3x3dbl_1 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 448,
+            kernel_size  = 1,
+        )
+        self.branch3x3dbl_2 = conv_block(
+            in_channels  = 448,
+            out_channels = 384,
+            kernel_size  = 3,
+            padding      = 1,
+        )
+        self.branch3x3dbl_3a = conv_block(
+            in_channels  = 384,
+            out_channels = 384,
+            kernel_size  = (1, 3),
+            padding      = (0, 1),
+        )
+        self.branch3x3dbl_3b = conv_block(
+            in_channels  = 384,
+            out_channels = 384,
+            kernel_size  = (3, 1),
+            padding      = (1, 0),
+        )
+
+        self.branch_pool = conv_block(
+            in_channels  = in_channels,
+            out_channels = 192,
+            kernel_size  = 1,
+        )
+
+    def forward(self, input: Tensor) -> Tensor:
+        branch1x1    = self.branch1x1(input)
+        branch3x3    = self.branch3x3_1(input)
+        branch3x3    = [
+            self.branch3x3_2a(branch3x3),
+            self.branch3x3_2b(branch3x3),
+        ]
+        branch3x3    = torch.cat(branch3x3, 1)
+        branch3x3dbl = self.branch3x3dbl_1(input)
+        branch3x3dbl = self.branch3x3dbl_2(branch3x3dbl)
+        branch3x3dbl = [
+            self.branch3x3dbl_3a(branch3x3dbl),
+            self.branch3x3dbl_3b(branch3x3dbl),
+        ]
+        branch3x3dbl = torch.cat(branch3x3dbl, 1)
+        branch_pool  = F.avg_pool2d(input, kernel_size=3, stride=1, padding=1)
+        branch_pool  = self.branch_pool(branch_pool)
+        outputs      = [branch1x1, branch3x3, branch3x3dbl, branch_pool]
+        return torch.cat(outputs, 1)
+
+
+@LAYERS.register(name="inception_aux")
+class InceptionAux(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        conv_block  : Callable[..., nn.Module] | None = None
+    ):
+        super().__init__()
+        if conv_block is None:
+            conv_block = InceptionBasicConv2d
+       
+        self.conv0 = conv_block(
+            in_channels  = in_channels,
+            out_channels = 128,
+            kernel_size  = 1,
+        )
+        self.conv1 = conv_block(
+            in_channels  = 128,
+            out_channels = 768,
+            kernel_size  = 5,
+        )
+        self.conv1.stddev = 0.01  # type: ignore[assignment]
+        self.fc           = nn.Linear(768, out_channels)
+        self.fc.stddev    = 0.001  # type: ignore[assignment]
+
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        # N x 768 x 17 x 17
+        x = F.avg_pool2d(x, kernel_size=5, stride=3)
+        # N x 768 x 5 x 5
+        x = self.conv0(x)
+        # N x 128 x 5 x 5
+        x = self.conv1(x)
+        # N x 768 x 1 x 1
+        # Adaptive average pooling
+        x = F.adaptive_avg_pool2d(x, (1, 1))
+        # N x 768 x 1 x 1
+        x = torch.flatten(x, 1)
+        # N x 768
+        x = self.fc(x)
+        # N x 1000
+        return x
+
 
 # H2: - MBLLEN -----------------------------------------------------------------
 

@@ -17,6 +17,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 
 cfgs = {
     "resnext50_32x4d": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -35,6 +36,7 @@ cfgs = {
         ]
     },
     "resnext101_32x8d": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -53,6 +55,7 @@ cfgs = {
         ]
     },
     "resnext101_64x4d": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]

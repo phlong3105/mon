@@ -670,6 +670,7 @@ def parse_model(
             FFAPreProcess,
             HINetConvBlock,
             HINetUpBlock,
+            InceptionBasicConv2d,
         ]:
             if isinstance(f, (list, tuple)):
                 c1, c2 = ch[f[0]], args[0]
@@ -690,25 +691,33 @@ def parse_model(
                 c1 = c2 = ch[f]
             args = [c1, *args[0:]]
         elif m in [
+            InceptionA,
+            InceptionB,
+            InceptionC,
+            InceptionD,
+            InceptionE,
+        ]:
+            c1 = args[0]
+            if m in [InceptionA]:
+                c2 = m.base_out_channels + args[1]
+            elif m in [InceptionB, InceptionD]:
+                c2 = m.base_out_channels + c1
+            elif m in [InceptionC, InceptionE]:
+                c2 = m.base_out_channels
+        elif m in [
             AlexNetClassifier,
             LeNetClassifier,
+            InceptionAux,
+            InceptionClassifier,
             ResNetClassifier,
             VGGClassifier,
         ]:
-            """
-            if isinstance(f, (list, tuple)):
-                c1 = ch[f[0]]
-            else:
-                c1 = ch[f]
-            """
             c1   = args[0]
             c2   = nc
             args = [c1, c2, *args[1:]]
-        elif m in [
-            ResNetBlock,
-        ]:
-            c1 = args[2]
-            c2 = args[3]
+        elif m in [ResNetBlock]:
+            c1   = args[2]
+            c2   = args[3]
         elif m in [BatchNorm2d]:
             args = [ch[f]]
         elif m in [

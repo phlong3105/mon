@@ -1,0 +1,31 @@
+zero_init_residual: False
+
+channels: 3
+
+backbone: [
+  # [from,   number, module,               args(out_channels, ...)]
+  [-1,       1,      InceptionBasicConv2d, [32, 3, 2   ]],  # 0
+  [-1,       1,      InceptionBasicConv2d, [32, 3, 1   ]],  # 1
+  [-1,       1,      InceptionBasicConv2d, [64, 3, 1, 0]],  # 2
+  [-1,       1,      MaxPool2d,            [3, 2]],         # 3
+  [-1,       1,      InceptionBasicConv2d, [80,  1]],       # 4
+  [-1,       1,      InceptionBasicConv2d, [192, 3]],       # 5
+  [-1,       1,      MaxPool2d,            [3, 2]],         # 6
+  [-1,       1,      InceptionA,           [192, 32]],      # 7
+  [-1,       1,      InceptionA,           [256, 64]],      # 8
+  [-1,       1,      InceptionA,           [288, 64]],      # 8
+  [-1,       1,      InceptionB,           [288]],          # 9
+  [-1,       1,      InceptionC,           [768, 128]],     # 10
+  [-1,       1,      InceptionC,           [768, 160]],     # 11
+  [-1,       1,      InceptionC,           [768, 160]],     # 12
+  [-1,       1,      InceptionC,           [768, 192]],     # 13
+  [-1,       1,      InceptionAux,         [768]],          # 14
+  [-1,       1,      InceptionD,           [768]],          # 15
+  [-1,       1,      InceptionE,           [1280]],         # 16
+  [-1,       1,      InceptionE,           [2048]],         # 17
+]
+
+head: [
+  [-1,       1,      InceptionClassifier,  [2048]],         # 18
+  [[14, -1], 1,      Join,                 []],             # 19
+]

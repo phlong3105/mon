@@ -17,6 +17,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 
 cfgs = {
     "wide_resnet50": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -35,6 +36,7 @@ cfgs = {
         ]
     },
     "wide_resnet101": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]

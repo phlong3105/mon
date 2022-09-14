@@ -10,6 +10,7 @@ from __future__ import annotations
 import unittest
 
 from one.vision.classification.alexnet import AlexNet
+from one.vision.classification.inception import Inception3
 from one.vision.classification.lenet import LeNet
 from one.vision.classification.resnet import ResNet101
 from one.vision.classification.resnet import ResNet152
@@ -85,6 +86,10 @@ class TestModel(unittest.TestCase):
     def test_hinet_derain(self):
         hinet_derain = HINetDerain(pretrained="rain13k", verbose=True)
         self.assertIsNotNone(hinet_derain)
+    
+    def test_inception3(self):
+        inception3 = Inception3(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(inception3)
     
     def test_lenet(self):
         lenet = LeNet(num_classes=1000, verbose=True)

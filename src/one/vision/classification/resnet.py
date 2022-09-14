@@ -16,6 +16,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 
 cfgs = {
     "resnet18": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -34,6 +35,7 @@ cfgs = {
         ]
     },
     "resnet34": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -52,6 +54,7 @@ cfgs = {
         ]
     },
     "resnet50": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -70,6 +73,7 @@ cfgs = {
         ]
     },
     "resnet101": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -88,6 +92,7 @@ cfgs = {
         ]
     },
     "resnet152": {
+        "zero_init_residual": False,
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -185,7 +190,7 @@ class ResNet(ImageClassificationModel):
             verbose     = verbose,
             *args, **kwargs
         )
-    
+
     def init_weights(self, m: Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -200,6 +205,13 @@ class ResNet(ImageClassificationModel):
             nn.init.constant_(m.weight, 1)
             nn.init.constant_(m.bias, 0)
 
+        zero_init_residual = self.cfg["zero_init_residual"]
+        if zero_init_residual:
+            if isinstance(m, ResNetBottleneck) and m.bn3.weight is not None:
+                nn.init.constant_(m.bn3.weight, 0)
+            elif isinstance(m, ResNetBottleneck) and m.bn2.weight is not None:
+                nn.init.constant_(m.bn2.weight, 0)
+        
 
 @MODELS.register(name="resnet18")
 class ResNet18(ResNet):
