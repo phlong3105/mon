@@ -27,6 +27,8 @@ from one.vision.classification.vgg import VGG16
 from one.vision.classification.vgg import VGG16Bn
 from one.vision.classification.vgg import VGG19
 from one.vision.classification.vgg import VGG19Bn
+from one.vision.classification.wide_resnet import Wide_ResNet101
+from one.vision.classification.wide_resnet import Wide_ResNet50
 from one.vision.enhancement.ffanet import FFANet
 from one.vision.enhancement.finet import FINet
 from one.vision.enhancement.finet import FINetDeblur
@@ -159,7 +161,15 @@ class TestModel(unittest.TestCase):
     def test_vgg19_bn(self):
         vgg19_bn = VGG19Bn(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(vgg19_bn)
-        
+    
+    def test_wide_resnet50(self):
+        wide_resnet50 = Wide_ResNet50(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(wide_resnet50)
+    
+    def test_wide_resnet101(self):
+        wide_resnet101 = Wide_ResNet101(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(wide_resnet101)
+    
     def test_zerodce(self):
         zerodce = ZeroDCE(pretrained="sice", verbose=True)
         self.assertIsNotNone(zerodce)

@@ -15,12 +15,6 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 
 # H1: - Model ------------------------------------------------------------------
 
-"""
-_ovewrite_named_param(kwargs, "groups", 32)
-_ovewrite_named_param(kwargs, "width_per_group", 8)
-return _resnet(Bottleneck, [3, 4, 23, 3], weights, progress, **kwargs)
-"""
-
 cfgs = {
     "resnext50_32x4d": {
         "channels": 3,
@@ -499,7 +493,6 @@ class ResNeXt50_32X4D(ResNet):
             model_state_dict["7.convs.2.conv1.weight"]                     = state_dict["layer4.2.conv1.weight"]
             model_state_dict["7.convs.2.conv2.weight"]                     = state_dict["layer4.2.conv2.weight"]
             model_state_dict["7.convs.2.conv3.weight"]                     = state_dict["layer4.2.conv3.weight"]
-
             if self.pretrained["num_classes"] == self.num_classes:
                 model_state_dict["9.linear.weight"] = state_dict["fc.weight"]
                 model_state_dict["9.linear.bias"]   = state_dict["fc.bias"]
@@ -1340,12 +1333,12 @@ class ResNeXt101_64X4D(ResNet):
             state_dict = load_state_dict_from_path(
                 model_dir=self.pretrained_dir, **self.pretrained
             )
-            
+            """
             for k in sorted(self.model.state_dict().keys()):
                 print(f"model_state_dict[\"{k}\"] = ")
             for k in sorted(state_dict.keys()):
                 print(f"state_dict[\"{k}\"]")
-            
+            """
             model_state_dict = self.model.state_dict()
             model_state_dict["0.weight"]                                   = state_dict["conv1.weight"]
             model_state_dict["1.weight"]                                   = state_dict["bn1.weight"]
