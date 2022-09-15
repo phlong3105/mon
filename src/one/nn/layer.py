@@ -1628,31 +1628,6 @@ class AlexNetClassifier(Module):
             return input
 
 
-@LAYERS.register(name="lenet_classifier")
-class LeNetClassifier(Module):
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
-        super().__init__()
-        self.out_channels = out_channels
-        self.linear1 = Linear(in_features=in_channels, out_features=84)
-        self.act1    = Tanh()
-        self.linear2 = Linear(in_features=84, out_features=out_channels)
-    
-    def forward(self, input: Tensor) -> Tensor:
-        if self.out_channels > 0:
-            x = self.linear1(input)
-            x = self.act1(x)
-            x = self.linear2(x)
-            return x
-        else:
-            return input
-
-
 @LAYERS.register(name="inception_classifier")
 class InceptionClassifier(Module):
     
@@ -1684,9 +1659,9 @@ class InceptionClassifier(Module):
         else:
             return input
     
-
-@LAYERS.register(name="resnet_classifier")
-class ResNetClassifier(Module):
+    
+@LAYERS.register(name="lenet_classifier")
+class LeNetClassifier(Module):
     
     def __init__(
         self,
@@ -1696,7 +1671,35 @@ class ResNetClassifier(Module):
     ):
         super().__init__()
         self.out_channels = out_channels
-        self.linear       = Linear(in_features=in_channels, out_features=out_channels)
+        self.linear1 = Linear(in_features=in_channels, out_features=84)
+        self.act1    = Tanh()
+        self.linear2 = Linear(in_features=84, out_features=out_channels)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = self.linear1(input)
+            x = self.act1(x)
+            x = self.linear2(x)
+            return x
+        else:
+            return input
+
+
+@LAYERS.register(name="linear_classifier")
+class LinearClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.linear = Linear(
+            in_features  = in_channels,
+            out_features = out_channels,
+        )
     
     def forward(self, input: Tensor) -> Tensor:
         if self.out_channels > 0:
@@ -2780,6 +2783,118 @@ LAYERS.register(name="upsampling_bilinear2d", module=UpsamplingBilinear2d)
 
 
 # H1: - EXPERIMENTAL -----------------------------------------------------------
+
+# H2: - Densenet ---------------------------------------------------------------
+
+@LAYERS.register(name="dense_layer")
+class DenseLayer(Module):
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        bn_size         : int,
+        drop_rate       : float,
+        memory_efficient: bool = False,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.norm1 = BatchNorm2d(in_channels)
+        self.relu1 = ReLU(inplace=True)
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels * bn_size,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False
+        )
+        self.norm2 = BatchNorm2d(out_channels * bn_size)
+        self.relu2 = ReLU(inplace=True)
+        self.conv2 = Conv2d(
+            in_channels  = out_channels * bn_size,
+            out_channels = out_channels,
+            kernel_size  = 3,
+            stride       = 1,
+            padding      = 1,
+            bias         = False
+        )
+        self.drop_rate        = float(drop_rate)
+        self.memory_efficient = memory_efficient
+
+    def forward(self, input: Tensors) -> Tensor:
+        prev_features     = [input] if isinstance(input, Tensor) else input
+        concat_features   = torch.cat(prev_features, dim=1)
+        bottleneck_output = self.conv1(self.relu1(self.norm1(concat_features)))
+        new_features      = self.conv2(self.relu2(self.norm2(bottleneck_output)))
+        if self.drop_rate > 0.0:
+            new_features = F.dropout(
+                input    = new_features,
+                p        = self.drop_rate,
+                training = self.training
+            )
+        return new_features
+
+
+@LAYERS.register(name="dense_block")
+class DenseBlock(ModuleDict):
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        num_layers      : int,
+        bn_size         : int,
+        drop_rate       : float,
+        memory_efficient: bool = False,
+        *args, **kwargs
+    ):
+        super().__init__()
+        for i in range(num_layers):
+            layer = DenseLayer(
+                in_channels      = in_channels + i * out_channels,
+                out_channels     = out_channels,
+                bn_size          = bn_size,
+                drop_rate        = drop_rate,
+                memory_efficient = memory_efficient,
+            )
+            self.add_module("denselayer%d" % (i + 1), layer)
+
+    def forward(self, input: Tensor) -> Tensor:
+        features = [input]
+        for name, layer in self.items():
+            new_features = layer(features)
+            features.append(new_features)
+        return torch.cat(features, 1)
+
+
+@LAYERS.register(name="dense_transition")
+class DenseTransition(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.norm = BatchNorm2d(in_channels)
+        self.relu = ReLU(inplace=True)
+        self.conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            bias         = False,
+        )
+        self.pool = AvgPool2d(kernel_size=2, stride=2)
+
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.norm(x)
+        x = self.relu(x)
+        x = self.conv(x)
+        x = self.pool(x)
+        return x
+    
 
 # H2: - FFANet -----------------------------------------------------------------
 

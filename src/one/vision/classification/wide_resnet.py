@@ -32,7 +32,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                                 # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [2048]],                                                              # 9
+            [-1,     1,      LinearClassifier,  [2048]],                                                              # 9
         ]
     },
     "wide_resnet101": {
@@ -51,7 +51,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                                  # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [2048]],                                                               # 9
+            [-1,     1,      LinearClassifier,  [2048]],                                                               # 9
         ]
     },
 }

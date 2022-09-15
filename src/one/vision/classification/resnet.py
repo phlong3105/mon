@@ -31,7 +31,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                               # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [512]],                                                             # 9
+            [-1,     1,      LinearClassifier,  [512]],                                                             # 9
         ]
     },
     "resnet34": {
@@ -50,7 +50,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                               # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [512]],                                                             # 9
+            [-1,     1,      LinearClassifier,  [512]],                                                             # 9
         ]
     },
     "resnet50": {
@@ -69,7 +69,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                                # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [2048]],                                                             # 9
+            [-1,     1,      LinearClassifier,  [2048]],                                                             # 9
         ]
     },
     "resnet101": {
@@ -88,7 +88,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                                 # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [2048]],                                                              # 9
+            [-1,     1,      LinearClassifier,  [2048]],                                                              # 9
         ]
     },
     "resnet152": {
@@ -107,7 +107,7 @@ cfgs = {
             [-1,     1,      AdaptiveAvgPool2d, [1]],                                                                 # 8
         ],
         "head": [
-            [-1,     1,      ResNetClassifier,  [2048]],                                                              # 9
+            [-1,     1,      LinearClassifier,  [2048]],                                                              # 9
         ]
     },
 }

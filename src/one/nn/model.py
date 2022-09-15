@@ -691,6 +691,17 @@ def parse_model(
                 c1 = c2 = ch[f]
             args = [c1, *args[0:]]
         elif m in [
+            DenseBlock,
+            DenseTransition,
+        ]:
+            c1 = args[0]
+            if m in [DenseBlock]:
+                out_channels = args[1]
+                num_layers   = args[2]
+                c2           = c1 + out_channels * num_layers
+            elif m in [DenseTransition]:
+                c2           = c1 // 2
+        elif m in [
             InceptionA,
             InceptionB,
             InceptionC,
@@ -706,10 +717,10 @@ def parse_model(
                 c2 = m.base_out_channels
         elif m in [
             AlexNetClassifier,
-            LeNetClassifier,
             InceptionAux,
             InceptionClassifier,
-            ResNetClassifier,
+            LeNetClassifier,
+            LinearClassifier,
             VGGClassifier,
         ]:
             c1   = args[0]

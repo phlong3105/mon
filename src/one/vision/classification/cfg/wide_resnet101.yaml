@@ -16,5 +16,5 @@ backbone: [
 ]
 
 head: [
-  [-1,     1,      ResNetClassifier,  [2048]],                                                               # 9
+  [-1,     1,      LinearClassifier,  [2048]],                                                               # 9
 ]

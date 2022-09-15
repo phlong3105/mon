@@ -10,6 +10,10 @@ from __future__ import annotations
 import unittest
 
 from one.vision.classification.alexnet import AlexNet
+from one.vision.classification.densenet import DenseNet121
+from one.vision.classification.densenet import DenseNet161
+from one.vision.classification.densenet import DenseNet169
+from one.vision.classification.densenet import DenseNet201
 from one.vision.classification.inception import Inception3
 from one.vision.classification.lenet import LeNet
 from one.vision.classification.resnet import ResNet101
@@ -50,6 +54,22 @@ class TestModel(unittest.TestCase):
     def test_alexnet(self):
         alexnet = AlexNet(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(alexnet)
+    
+    def test_densenet121(self):
+        densenet121 = DenseNet121(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(densenet121)
+    
+    def test_densenet161(self):
+        densenet161 = DenseNet161(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(densenet161)
+    
+    def test_densenet169(self):
+        densenet169 = DenseNet169(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(densenet169)
+    
+    def test_densenet201(self):
+        densenet201 = DenseNet201(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(densenet201)
         
     def test_ffanet(self):
         ffanet = FFANet(verbose=True)
