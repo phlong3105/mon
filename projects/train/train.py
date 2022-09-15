@@ -89,7 +89,7 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "finet_dehaze_densehaze",
+		"cfg"        : "vgg19_cifar10",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
