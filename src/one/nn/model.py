@@ -702,6 +702,7 @@ def parse_model(
             elif m in [DenseTransition]:
                 c2           = c1 // 2
         elif m in [
+            Inception,
             InceptionA,
             InceptionB,
             InceptionC,
@@ -709,7 +710,13 @@ def parse_model(
             InceptionE,
         ]:
             c1 = args[0]
-            if m in [InceptionA]:
+            if m in [Inception]:
+                ch1x1     = args[1]
+                ch3x3     = args[3]
+                ch5x5     = args[5]
+                pool_proj = args[6]
+                c2        = ch1x1 + ch3x3 + ch5x5 + pool_proj
+            elif m in [InceptionA]:
                 c2 = m.base_out_channels + args[1]
             elif m in [InceptionB, InceptionD]:
                 c2 = m.base_out_channels + c1
@@ -717,7 +724,9 @@ def parse_model(
                 c2 = m.base_out_channels
         elif m in [
             AlexNetClassifier,
-            InceptionAux,
+            GoogleNetClassifier,
+            InceptionAux1,
+            InceptionAux2,
             InceptionClassifier,
             LeNetClassifier,
             LinearClassifier,

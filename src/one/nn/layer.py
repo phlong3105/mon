@@ -1628,6 +1628,37 @@ class AlexNetClassifier(Module):
             return input
 
 
+@LAYERS.register(name="googlenet_classifier")
+class GoogleNetClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        dropout     : float,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.dropout      = dropout
+        self.avgpool      = AdaptiveAvgPool2d((1, 1))
+        self.dropout      = Dropout(p=dropout)
+        self.fc           = Linear(in_features=in_channels, out_features=out_channels)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = self.avgpool(input)
+            # N x 1024 x 1 x 1
+            x = torch.flatten(x, 1)
+            # N x 1024
+            x = self.dropout(x)
+            x = self.fc(x)
+            # N x 1000 (num_classes)
+            return x
+        else:
+            return input
+
+
 @LAYERS.register(name="inception_classifier")
 class InceptionClassifier(Module):
     

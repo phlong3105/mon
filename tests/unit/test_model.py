@@ -14,6 +14,7 @@ from one.vision.classification.densenet import DenseNet121
 from one.vision.classification.densenet import DenseNet161
 from one.vision.classification.densenet import DenseNet169
 from one.vision.classification.densenet import DenseNet201
+from one.vision.classification.googlenet import GoogleNet
 from one.vision.classification.inception import Inception3
 from one.vision.classification.lenet import LeNet
 from one.vision.classification.resnet import ResNet101
@@ -90,6 +91,10 @@ class TestModel(unittest.TestCase):
     def test_finet_derain(self):
         finet_derain = FINetDerain(verbose=True)
         self.assertIsNotNone(finet_derain)
+    
+    def test_googlenet(self):
+        googlenet = GoogleNet(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(googlenet)
     
     def test_hinet(self):
         hinet = HINet(verbose=True)
