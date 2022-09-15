@@ -135,8 +135,7 @@ class GoogleNet(ImageClassificationModel):
         )
     
     def init_weights(self, m: Module):
-        classname = m.__class__.__name__
-
+        classname    = m.__class__.__name__
         init_weights = self.cfg["init_weights"]
         if init_weights:
             if isinstance(m, Conv2d) or isinstance(m, nn.Linear):
