@@ -19,7 +19,7 @@ backbone: [
   [-1,       1,      InceptionC,           [768, 160]],     # 11
   [-1,       1,      InceptionC,           [768, 160]],     # 12
   [-1,       1,      InceptionC,           [768, 192]],     # 13
-  [-1,       1,      InceptionAux,         [768]],          # 14
+  [-1,       1,      InceptionAux1,        [768]],          # 14
   [-1,       1,      InceptionD,           [768]],          # 15
   [-1,       1,      InceptionE,           [1280]],         # 16
   [-1,       1,      InceptionE,           [2048]],         # 17
