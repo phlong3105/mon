@@ -1,4 +1,4 @@
-zero_init_residual: False
+init_weights: False
 
 channels: 3
 

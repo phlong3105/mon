@@ -16,6 +16,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 
 cfgs = {
     "googlenet": {
+        "init_weights": False,
         "channels": 3,
         "backbone": [
             # [from,       number, module,               args(out_channels, ...)]
