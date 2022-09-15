@@ -19,85 +19,89 @@ cfgs = {
     "densenet121": {
         "channels": 3,
         "backbone": [
-            # [from, number, module,           args(out_channels, ...)]
-            [-1,     1,      Conv2d,           [64, 7, 2, 3, 1, 1, False]],     # 0
-            [-1,     1,      BatchNorm2d,      []],                             # 1
-            [-1,     1,      ReLU,             [True]],                         # 2
-            [-1,     1,      MaxPool2d,        [3, 2, 1]],                      # 3
-            [-1,     1,      DenseBlock,       [64,   32, 6,  4, 0.0, False]],  # 4   c2 = 64 + 32 * 6   = 256
-            [-1,     1,      DenseTransition,  [256,  128]],                    # 5   c2 = 256 // 2      = 128
-            [-1,     1,      DenseBlock,       [128,  32, 12, 4, 0.0, False]],  # 6   c2 = 128 + 32 * 12 = 512
-            [-1,     1,      DenseTransition,  [512,  256]],                    # 7   c2 = 512 // 2      = 256
-            [-1,     1,      DenseBlock,       [256,  32, 24, 4, 0.0, False]],  # 8   c2 = 256 + 32 * 24 = 1024
-            [-1,     1,      DenseTransition,  [1024, 512]],                    # 9   c2 = 1024 // 2     = 512
-            [-1,     1,      DenseBlock,       [512,  32, 16, 4, 0.0, False]],  # 10  c2 = 512 + 32 * 16 = 1024
-            [-1,     1,      BatchNorm2d,      []],                             # 11
+            # [from, number, module,            args(out_channels, ...)]
+            [-1,     1,      Conv2d,            [64, 7, 2, 3, 1, 1, False]],     # 0
+            [-1,     1,      BatchNorm2d,       []],                             # 1
+            [-1,     1,      ReLU,              [True]],                         # 2
+            [-1,     1,      MaxPool2d,         [3, 2, 1]],                      # 3
+            [-1,     1,      DenseBlock,        [64,   32, 6,  4, 0.0, False]],  # 4   c2 = 64 + 32 * 6   = 256
+            [-1,     1,      DenseTransition,   [256,  128]],                    # 5   c2 = 256 // 2      = 128
+            [-1,     1,      DenseBlock,        [128,  32, 12, 4, 0.0, False]],  # 6   c2 = 128 + 32 * 12 = 512
+            [-1,     1,      DenseTransition,   [512,  256]],                    # 7   c2 = 512 // 2      = 256
+            [-1,     1,      DenseBlock,        [256,  32, 24, 4, 0.0, False]],  # 8   c2 = 256 + 32 * 24 = 1024
+            [-1,     1,      DenseTransition,   [1024, 512]],                    # 9   c2 = 1024 // 2     = 512
+            [-1,     1,      DenseBlock,        [512,  32, 16, 4, 0.0, False]],  # 10  c2 = 512 + 32 * 16 = 1024
+            [-1,     1,      BatchNorm2d,       []],                             # 11
+            [-1,     1,      AdaptiveAvgPool2d, [1]],                            # 12
         ],
         "head": [
-            [-1,     1,      LinearClassifier, [1024]],                         # 12
+            [-1,     1,      LinearClassifier,  [1024]],                         # 13
         ]
     },
     "densenet161": {
         "channels": 3,
         "backbone": [
-            # [from, number, module,           args(out_channels, ...)]
-            [-1,     1,      Conv2d,           [96, 7, 2, 3, 1, 1, False]],     # 0
-            [-1,     1,      BatchNorm2d,      []],                             # 1
-            [-1,     1,      ReLU,             [True]],                         # 2
-            [-1,     1,      MaxPool2d,        [3, 2, 1]],                      # 3
-            [-1,     1,      DenseBlock,       [96,   48, 6,  4, 0.0, False]],  # 4   c2 = 96   + 48 * 6  = 384
-            [-1,     1,      DenseTransition,  [384,  192]],                    # 5   c2 = 384 // 2       = 192
-            [-1,     1,      DenseBlock,       [192,  48, 12, 4, 0.0, False]],  # 6   c2 = 192  + 48 * 12 = 768
-            [-1,     1,      DenseTransition,  [768,  384]],                    # 7   c2 = 768 // 2       = 384
-            [-1,     1,      DenseBlock,       [384,  48, 36, 4, 0.0, False]],  # 8   c2 = 384  + 48 * 36 = 2112
-            [-1,     1,      DenseTransition,  [2112, 1056]],                   # 9   c2 = 2112 // 2      = 1056
-            [-1,     1,      DenseBlock,       [1056, 48, 24, 4, 0.0, False]],  # 10  c2 = 1056 + 48 * 24 = 2208
-            [-1,     1,      BatchNorm2d,      []],                             # 11
+            # [from, number, module,            args(out_channels, ...)]
+            [-1,     1,      Conv2d,            [96, 7, 2, 3, 1, 1, False]],     # 0
+            [-1,     1,      BatchNorm2d,       []],                             # 1
+            [-1,     1,      ReLU,              [True]],                         # 2
+            [-1,     1,      MaxPool2d,         [3, 2, 1]],                      # 3
+            [-1,     1,      DenseBlock,        [96,   48, 6,  4, 0.0, False]],  # 4   c2 = 96   + 48 * 6  = 384
+            [-1,     1,      DenseTransition,   [384,  192]],                    # 5   c2 = 384 // 2       = 192
+            [-1,     1,      DenseBlock,        [192,  48, 12, 4, 0.0, False]],  # 6   c2 = 192  + 48 * 12 = 768
+            [-1,     1,      DenseTransition,   [768,  384]],                    # 7   c2 = 768 // 2       = 384
+            [-1,     1,      DenseBlock,        [384,  48, 36, 4, 0.0, False]],  # 8   c2 = 384  + 48 * 36 = 2112
+            [-1,     1,      DenseTransition,   [2112, 1056]],                   # 9   c2 = 2112 // 2      = 1056
+            [-1,     1,      DenseBlock,        [1056, 48, 24, 4, 0.0, False]],  # 10  c2 = 1056 + 48 * 24 = 2208
+            [-1,     1,      BatchNorm2d,       []],                             # 11
+            [-1,     1,      AdaptiveAvgPool2d, [1]],                            # 12
         ],
         "head": [
-            [-1,     1,      LinearClassifier, [2208]],                         # 12
+            [-1,     1,      LinearClassifier,  [2208]],                         # 13
         ]
     },
     "densenet169": {
         "channels": 3,
         "backbone": [
-            # [from, number, module,           args(out_channels, ...)]
-            [-1,     1,      Conv2d,           [64, 7, 2, 3, 1, 1, False]],     # 0
-            [-1,     1,      BatchNorm2d,      []],                             # 1
-            [-1,     1,      ReLU,             [True]],                         # 2
-            [-1,     1,      MaxPool2d,        [3, 2, 1]],                      # 3
-            [-1,     1,      DenseBlock,       [64,   32, 6,  4, 0.0, False]],  # 4   c2 = 64 + 32 * 6   = 256
-            [-1,     1,      DenseTransition,  [256,  128]],                    # 5   c2 = 256 // 2      = 128
-            [-1,     1,      DenseBlock,       [128,  32, 12, 4, 0.0, False]],  # 6   c2 = 128 + 32 * 12 = 512
-            [-1,     1,      DenseTransition,  [512,  256]],                    # 7   c2 = 512 // 2      = 256
-            [-1,     1,      DenseBlock,       [256,  32, 32, 4, 0.0, False]],  # 8   c2 = 256 + 32 * 32 = 1280
-            [-1,     1,      DenseTransition,  [1280, 640]],                    # 9   c2 = 1280 // 2     = 640
-            [-1,     1,      DenseBlock,       [640,  32, 32, 4, 0.0, False]],  # 10  c2 = 640 + 32 * 32 = 1664
-            [-1,     1,      BatchNorm2d,      []],                             # 11
+            # [from, number, module,            args(out_channels, ...)]
+            [-1,     1,      Conv2d,            [64, 7, 2, 3, 1, 1, False]],     # 0
+            [-1,     1,      BatchNorm2d,       []],                             # 1
+            [-1,     1,      ReLU,              [True]],                         # 2
+            [-1,     1,      MaxPool2d,         [3, 2, 1]],                      # 3
+            [-1,     1,      DenseBlock,        [64,   32, 6,  4, 0.0, False]],  # 4   c2 = 64 + 32 * 6   = 256
+            [-1,     1,      DenseTransition,   [256,  128]],                    # 5   c2 = 256 // 2      = 128
+            [-1,     1,      DenseBlock,        [128,  32, 12, 4, 0.0, False]],  # 6   c2 = 128 + 32 * 12 = 512
+            [-1,     1,      DenseTransition,   [512,  256]],                    # 7   c2 = 512 // 2      = 256
+            [-1,     1,      DenseBlock,        [256,  32, 32, 4, 0.0, False]],  # 8   c2 = 256 + 32 * 32 = 1280
+            [-1,     1,      DenseTransition,   [1280, 640]],                    # 9   c2 = 1280 // 2     = 640
+            [-1,     1,      DenseBlock,        [640,  32, 32, 4, 0.0, False]],  # 10  c2 = 640 + 32 * 32 = 1664
+            [-1,     1,      BatchNorm2d,       []],                             # 11
+            [-1,     1,      AdaptiveAvgPool2d, [1]],                            # 12
         ],
         "head": [
-            [-1,     1,      LinearClassifier, [1664]],                         # 12
+            [-1,     1,      LinearClassifier,  [1664]],                         # 13
         ]
     },
     "densenet201": {
         "channels": 3,
         "backbone": [
-            # [from, number, module,           args(out_channels, ...)]
-            [-1,     1,      Conv2d,           [64, 7, 2, 3, 1, 1, False]],     # 0
-            [-1,     1,      BatchNorm2d,      []],                             # 1
-            [-1,     1,      ReLU,             [True]],                         # 2
-            [-1,     1,      MaxPool2d,        [3, 2, 1]],                      # 3
-            [-1,     1,      DenseBlock,       [64,   32, 6,  4, 0.0, False]],  # 4   c2 = 64 + 32 * 6   = 256
-            [-1,     1,      DenseTransition,  [256,  128]],                    # 5   c2 = 256 // 2      = 128
-            [-1,     1,      DenseBlock,       [128,  32, 12, 4, 0.0, False]],  # 6   c2 = 128 + 32 * 12 = 512
-            [-1,     1,      DenseTransition,  [512,  256]],                    # 7   c2 = 512 // 2      = 256
-            [-1,     1,      DenseBlock,       [256,  32, 48, 4, 0.0, False]],  # 8   c2 = 256 + 32 * 48 = 1792
-            [-1,     1,      DenseTransition,  [1792, 896]],                    # 9   c2 = 1792 // 2     = 896
-            [-1,     1,      DenseBlock,       [896,  32, 32, 4, 0.0, False]],  # 10  c2 = 896 + 32 * 32 = 1920
-            [-1,     1,      BatchNorm2d,      []],                             # 11
+            # [from, number, module,            args(out_channels, ...)]
+            [-1,     1,      Conv2d,            [64, 7, 2, 3, 1, 1, False]],     # 0
+            [-1,     1,      BatchNorm2d,       []],                             # 1
+            [-1,     1,      ReLU,              [True]],                         # 2
+            [-1,     1,      MaxPool2d,         [3, 2, 1]],                      # 3
+            [-1,     1,      DenseBlock,        [64,   32, 6,  4, 0.0, False]],  # 4   c2 = 64 + 32 * 6   = 256
+            [-1,     1,      DenseTransition,   [256,  128]],                    # 5   c2 = 256 // 2      = 128
+            [-1,     1,      DenseBlock,        [128,  32, 12, 4, 0.0, False]],  # 6   c2 = 128 + 32 * 12 = 512
+            [-1,     1,      DenseTransition,   [512,  256]],                    # 7   c2 = 512 // 2      = 256
+            [-1,     1,      DenseBlock,        [256,  32, 48, 4, 0.0, False]],  # 8   c2 = 256 + 32 * 48 = 1792
+            [-1,     1,      DenseTransition,   [1792, 896]],                    # 9   c2 = 1792 // 2     = 896
+            [-1,     1,      DenseBlock,        [896,  32, 32, 4, 0.0, False]],  # 10  c2 = 896 + 32 * 32 = 1920
+            [-1,     1,      BatchNorm2d,       []],                             # 11
+            [-1,     1,      AdaptiveAvgPool2d, [1]],                            # 12
         ],
         "head": [
-            [-1,     1,      LinearClassifier, [1920]],                         # 12
+            [-1,     1,      LinearClassifier,  [1920]],                         # 13
         ]
     },
 }
@@ -903,8 +907,8 @@ class DenseNet121(DenseNet):
             model_state_dict["11.running_mean"]                           = state_dict["features.norm5.running_mean"]
             model_state_dict["11.running_var"]                            = state_dict["features.norm5.running_var"]
             if self.pretrained["num_classes"] == self.num_classes:
-                model_state_dict["12.linear.bias"]   = state_dict["classifier.bias"]
-                model_state_dict["12.linear.weight"] = state_dict["classifier.weight"]
+                model_state_dict["13.linear.bias"]   = state_dict["classifier.bias"]
+                model_state_dict["13.linear.weight"] = state_dict["classifier.weight"]
             self.model.load_state_dict(model_state_dict)
             # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:
@@ -1819,8 +1823,8 @@ class DenseNet161(DenseNet):
             model_state_dict["11.running_mean"]                    = state_dict["features.norm5.running_mean"]
             model_state_dict["11.running_var"]                     = state_dict["features.norm5.running_var"]
             if self.pretrained["num_classes"] == self.num_classes:
-                model_state_dict["12.linear.bias"]   = state_dict["classifier.bias"]
-                model_state_dict["12.linear.weight"] = state_dict["classifier.weight"]
+                model_state_dict["13.linear.bias"]   = state_dict["classifier.bias"]
+                model_state_dict["13.linear.weight"] = state_dict["classifier.weight"]
             self.model.load_state_dict(model_state_dict)
             # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:
@@ -2775,8 +2779,8 @@ class DenseNet169(DenseNet):
             model_state_dict["11.running_mean"]                    = state_dict["features.norm5.running_mean"]
             model_state_dict["11.running_var"]                     = state_dict["features.norm5.running_var"]
             if self.pretrained["num_classes"] == self.num_classes:
-                model_state_dict["12.linear.bias"]   = state_dict["classifier.bias"]
-                model_state_dict["12.linear.weight"] = state_dict["classifier.weight"]
+                model_state_dict["13.linear.bias"]   = state_dict["classifier.bias"]
+                model_state_dict["13.linear.weight"] = state_dict["classifier.weight"]
             self.model.load_state_dict(model_state_dict)
             # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:
@@ -3891,8 +3895,8 @@ class DenseNet201(DenseNet):
             model_state_dict["11.running_mean"]                    = state_dict["features.norm5.running_mean"]
             model_state_dict["11.running_var"]                     = state_dict["features.norm5.running_var"]
             if self.pretrained["num_classes"] == self.num_classes:
-                model_state_dict["12.linear.bias"]   = state_dict["classifier.bias"]
-                model_state_dict["12.linear.weight"] = state_dict["classifier.weight"]
+                model_state_dict["13.linear.bias"]   = state_dict["classifier.bias"]
+                model_state_dict["13.linear.weight"] = state_dict["classifier.weight"]
             self.model.load_state_dict(model_state_dict)
             # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:
