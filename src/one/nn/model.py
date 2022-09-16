@@ -702,6 +702,7 @@ def parse_model(
             elif m in [DenseTransition]:
                 c2           = c1 // 2
         elif m in [
+            Fire,
             Inception,
             InceptionA,
             InceptionB,
@@ -710,7 +711,11 @@ def parse_model(
             InceptionE,
         ]:
             c1 = args[0]
-            if m in [Inception]:
+            if m in [Fire]:
+                expand1x1_planes = args[2]
+                expand3x3_planes = args[3]
+                c2               = expand1x1_planes + expand3x3_planes
+            elif m in [Inception]:
                 ch1x1     = args[1]
                 ch3x3     = args[3]
                 ch5x5     = args[5]
@@ -730,6 +735,7 @@ def parse_model(
             InceptionClassifier,
             LeNetClassifier,
             LinearClassifier,
+            SqueezeNetClassifier,
             VGGClassifier,
         ]:
             c1   = args[0]

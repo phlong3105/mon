@@ -1741,6 +1741,39 @@ class LinearClassifier(Module):
             return input
         
 
+@LAYERS.register(name="squeezenet_classifier")
+class SqueezeNetClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        dropout     : float = 0.5,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.dropout = Dropout(p=dropout)
+        self.conv    = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+        )
+        self.act     = ReLU(inplace=True)
+        self.avgpool = AdaptiveAvgPool2d((1, 1))
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = self.dropout(input)
+            x = self.conv(x)
+            x = self.act(x)
+            x = self.avgpool(x)
+            x = torch.flatten(x, dims=1)
+            return x
+        else:
+            return input
+
+
 @LAYERS.register(name="vgg_classifier")
 class VGGClassifier(Module):
     
@@ -4352,6 +4385,51 @@ class ResNetBlock(Module):
     def forward(self, input: Tensor) -> Tensor:
         return self.convs(input)
     
+    
+# H2: - SqueezeNet -------------------------------------------------------------
+
+@LAYERS.register(name="fire")
+class Fire(Module):
+    """
+    """
+    
+    def __init__(
+        self,
+        in_channels     : int,
+        squeeze_planes  : int,
+        expand1x1_planes: int,
+        expand3x3_planes: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.in_channels = in_channels
+        self.squeeze = Conv2d(
+            in_channels  = in_channels,
+            out_channels = squeeze_planes,
+            kernel_size  = 1,
+        )
+        self.squeeze_activation = ReLU(inplace=True)
+        self.expand1x1 = Conv2d(
+            in_channels  = squeeze_planes,
+            out_channels = expand1x1_planes,
+            kernel_size  = 1,
+        )
+        self.expand1x1_activation = ReLU(inplace=True)
+        self.expand3x3 = Conv2d(
+            in_channels  = squeeze_planes,
+            out_channels = expand3x3_planes,
+            kernel_size  = 3,
+            padding      = 1,
+        )
+        self.expand3x3_activation = ReLU(inplace=True)
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x  = input
+        x  = self.squeeze_activation(self.squeeze(x))
+        x1 = self.expand1x1_activation(self.expand1x1(x))
+        x3 = self.expand3x3_activation(self.expand3x3(x))
+        return torch.cat([x1, x3], dim=1)
+
 
 # H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
 

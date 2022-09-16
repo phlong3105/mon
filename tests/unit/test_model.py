@@ -25,6 +25,9 @@ from one.vision.classification.resnet import ResNet50
 from one.vision.classification.resnext import ResNeXt101_32X8D
 from one.vision.classification.resnext import ResNeXt101_64X4D
 from one.vision.classification.resnext import ResNeXt50_32X4D
+from one.vision.classification.squeezenet import SqueezeNet
+from one.vision.classification.squeezenet import SqueezeNet_1_0
+from one.vision.classification.squeezenet import SqueezeNet_1_1
 from one.vision.classification.vgg import VGG11
 from one.vision.classification.vgg import VGG11Bn
 from one.vision.classification.vgg import VGG13
@@ -159,6 +162,14 @@ class TestModel(unittest.TestCase):
     def test_retinexnet(self):
         retinexnet = RetinexNet(verbose=True)
         self.assertIsNotNone(retinexnet)
+    
+    def test_squeezenet_1_0(self):
+        squeezenet_1_0 = SqueezeNet_1_0(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(squeezenet_1_0)
+    
+    def test_squeezenet_1_1(self):
+        squeezenet_1_1 = SqueezeNet_1_1(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(squeezenet_1_1)
         
     def test_vgg11(self):
         vgg11 = VGG11(num_classes=1000, pretrained="imagenet", verbose=True)
