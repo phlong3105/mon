@@ -25,7 +25,10 @@ from one.vision.classification.resnet import ResNet50
 from one.vision.classification.resnext import ResNeXt101_32X8D
 from one.vision.classification.resnext import ResNeXt101_64X4D
 from one.vision.classification.resnext import ResNeXt50_32X4D
-from one.vision.classification.squeezenet import SqueezeNet
+from one.vision.classification.shufflenetv2 import ShuffleNetV2_x0_5
+from one.vision.classification.shufflenetv2 import ShuffleNetV2_x1_0
+from one.vision.classification.shufflenetv2 import ShuffleNetV2_x1_5
+from one.vision.classification.shufflenetv2 import ShuffleNetV2_x2_0
 from one.vision.classification.squeezenet import SqueezeNet_1_0
 from one.vision.classification.squeezenet import SqueezeNet_1_1
 from one.vision.classification.vgg import VGG11
@@ -162,7 +165,23 @@ class TestModel(unittest.TestCase):
     def test_retinexnet(self):
         retinexnet = RetinexNet(verbose=True)
         self.assertIsNotNone(retinexnet)
+        
+    def test_shufflenet_v2_x0_5(self):
+        shufflenet_v2_x0_5 = ShuffleNetV2_x0_5(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(shufflenet_v2_x0_5)
     
+    def test_shufflenet_v2_x1_0(self):
+        shufflenet_v2_x1_0 = ShuffleNetV2_x1_0(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(shufflenet_v2_x1_0)
+    
+    def test_shufflenet_v2_x1_5(self):
+        shufflenet_v2_x1_5 = ShuffleNetV2_x1_5(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(shufflenet_v2_x1_5)
+    
+    def test_shufflenet_v2_x2_0(self):
+        shufflenet_v2_x2_0 = ShuffleNetV2_x2_0(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(shufflenet_v2_x2_0)
+        
     def test_squeezenet_1_0(self):
         squeezenet_1_0 = SqueezeNet_1_0(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(squeezenet_1_0)

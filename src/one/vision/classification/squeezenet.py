@@ -15,7 +15,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 # H1: - Model ------------------------------------------------------------------
 
 cfgs = {
-    "squeezenet_1.0": {
+    "squeezenet-1.0": {
         "channels": 3,
         "backbone": [
             # [from, number, module,    args(out_channels, ...)]
@@ -37,7 +37,7 @@ cfgs = {
             [-1,     1,      SqueezeNetClassifier, [512]],           # 13
         ]
     },
-    "squeezenet_1.1": {
+    "squeezenet-1.1": {
         "channels": 3,
         "backbone": [
             # [from, number, module,    args(out_channels, ...)]
@@ -186,7 +186,7 @@ class SqueezeNet_1_0(SqueezeNet):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth",
-            filename    = "squeezenet_1.0-imagenet.pth",
+            filename    = "squeezenet-1.0-imagenet.pth",
             num_classes = 1000,
         ),
     }
@@ -196,7 +196,7 @@ class SqueezeNet_1_0(SqueezeNet):
         cfg        : dict | Path_ | None = "squeezenet_1.0.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "squeezenet",
-        fullname   : str  | None         = "squeezenet_1.0",
+        fullname   : str  | None         = "squeezenet-1.0",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -209,7 +209,7 @@ class SqueezeNet_1_0(SqueezeNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "squeezenet_1.0"
+        cfg = cfg or "squeezenet-1.0"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -349,7 +349,7 @@ class SqueezeNet_1_1(SqueezeNet):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
-            filename    = "squeezenet_1.1-imagenet.pth",
+            filename    = "squeezenet-1.1-imagenet.pth",
             num_classes = 1000,
         ),
     }
@@ -359,7 +359,7 @@ class SqueezeNet_1_1(SqueezeNet):
         cfg        : dict | Path_ | None = "squeezenet_1.1.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "squeezenet",
-        fullname   : str  | None         = "squeezenet_1.1",
+        fullname   : str  | None         = "squeezenet-1.1",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -372,7 +372,7 @@ class SqueezeNet_1_1(SqueezeNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "squeezenet_1.1"
+        cfg = cfg or "squeezenet-1.1"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

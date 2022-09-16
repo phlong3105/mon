@@ -23,7 +23,6 @@ from __future__ import annotations
 import math
 from typing import Type
 
-import torch
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import *
@@ -1741,6 +1740,31 @@ class LinearClassifier(Module):
             return input
         
 
+@LAYERS.register(name="shufflenetv2_classifier")
+class ShuffleNetV2Classifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.linear = Linear(
+            in_features  = in_channels,
+            out_features = out_channels,
+        )
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = input.mean([2, 3])  # globalpool
+            x = self.linear(x)
+            return x
+        else:
+            return input
+        
+
 @LAYERS.register(name="squeezenet_classifier")
 class SqueezeNetClassifier(Module):
     
@@ -2846,7 +2870,32 @@ LAYERS.register(name="upsampling_nearest2d",  module=UpsamplingNearest2d)
 LAYERS.register(name="upsampling_bilinear2d", module=UpsamplingBilinear2d)
 
 
-# H1: - EXPERIMENTAL -----------------------------------------------------------
+# H2: - Shuffle ----------------------------------------------------------------
+
+@LAYERS.register(name="channel_shuffle")
+class ChannelShuffle(Module):
+    """
+    """
+    
+    def __init__(self, groups: int, *args, **kwargs):
+        super().__init__()
+        self.name   = type(self).__name__
+        self.groups = groups
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x                  = input
+        b, c, h, w         = x.size()
+        channels_per_group = c // self.groups
+        # reshape
+        x = x.view(b, self.groups, channels_per_group, h, w)
+        x = torch.transpose(x, 1, 2).contiguous()
+        # flatten
+        x = x.view(b, -1, h, w)
+        return x
+
+
+    # H1: - EXPERIMENTAL -----------------------------------------------------------
+
 
 # H2: - Densenet ---------------------------------------------------------------
 
@@ -4384,8 +4433,116 @@ class ResNetBlock(Module):
     
     def forward(self, input: Tensor) -> Tensor:
         return self.convs(input)
+
+
+# H2: - ShuffleNet -------------------------------------------------------------
+
+@LAYERS.register(name="inverted_residual")
+class InvertedResidual(Module):
     
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        stride      : int,
+        *args, **kwargs
+    ):
+        super().__init__()
+
+        if not (1 <= stride <= 3):
+            raise ValueError("Illegal stride value.")
+        self.stride = stride
+
+        branch_features = out_channels // 2
+        if (self.stride == 1) and (in_channels != branch_features << 1):
+            raise ValueError(
+                f"Invalid combination of `stride` {stride}, "
+                f"`in_channels` {in_channels} and `out_channels` {out_channels} "
+                f"values. If stride == 1 then `in_channels` should be equal "
+                f"to `out_channels` // 2 << 1."
+            )
+
+        if self.stride > 1:
+            self.branch1 = nn.Sequential(
+                Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = in_channels,
+                    kernel_size  = 3,
+                    stride       = self.stride,
+                    padding      = 1,
+                    groups       = in_channels,
+                    bias         = False,
+                ),
+                BatchNorm2d(in_channels),
+                Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = branch_features,
+                    kernel_size  = 1,
+                    stride       = 1,
+                    padding      = 0,
+                    bias         = False
+                ),
+                BatchNorm2d(branch_features),
+                ReLU(inplace=True),
+            )
+        else:
+            self.branch1 = Sequential()
+
+        self.branch2 = Sequential(
+            Conv2d(
+                in_channels  = in_channels if (self.stride > 1) else branch_features,
+                out_channels = branch_features,
+                kernel_size  = 1,
+                stride       = 1,
+                padding      = 0,
+                bias         = False,
+            ),
+            BatchNorm2d(branch_features),
+            ReLU(inplace=True),
+            Conv2d(
+                in_channels  = branch_features,
+                out_channels = branch_features,
+                kernel_size  = 3,
+                stride       = self.stride,
+                padding      = 1,
+                groups       = branch_features,
+                bias         = False,
+            ),
+            BatchNorm2d(branch_features),
+            Conv2d(
+                in_channels  = branch_features,
+                out_channels = branch_features,
+                kernel_size  = 1,
+                stride       = 1,
+                padding      = 0,
+                bias         = False,
+            ),
+            BatchNorm2d(branch_features),
+            ReLU(inplace=True),
+        )
     
+    @staticmethod
+    def channel_shuffle(x: Tensor, groups: int) -> Tensor:
+        b, c, h, w         = x.size()
+        channels_per_group = c // groups
+        # reshape
+        x = x.view(b, groups, channels_per_group, h, w)
+        x = torch.transpose(x, 1, 2).contiguous()
+        # flatten
+        x = x.view(b, -1, h, w)
+        return x
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        if self.stride == 1:
+            x1, x2 = x.chunk(2, dim=1)
+            output = torch.cat((x1, self.branch2(x2)), dim=1)
+        else:
+            output = torch.cat((self.branch1(x), self.branch2(x)), dim=1)
+        output = self.channel_shuffle(output, 2)
+        return output
+
+
 # H2: - SqueezeNet -------------------------------------------------------------
 
 @LAYERS.register(name="fire")

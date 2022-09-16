@@ -690,18 +690,32 @@ def parse_model(
             else:
                 c1 = c2 = ch[f]
             args = [c1, *args[0:]]
+        elif m in [InvertedResidual]:
+            if isinstance(f, (list, tuple)):
+                c1, c2 = ch[f[0]], args[0]
+            else:
+                c1, c2 = ch[f],    args[0]
+            args = [c1, *args[0:]]
+        elif m in [
+            AlexNetClassifier,
+            GoogleNetClassifier,
+            InceptionAux1,
+            InceptionAux2,
+            InceptionClassifier,
+            LeNetClassifier,
+            LinearClassifier,
+            ShuffleNetV2Classifier,
+            SqueezeNetClassifier,
+            VGGClassifier,
+        ]:
+            c1   = args[0]
+            c2   = nc
+            args = [c1, c2, *args[1:]]
+        elif m in [BatchNorm2d]:
+            args = [ch[f]]
         elif m in [
             DenseBlock,
             DenseTransition,
-        ]:
-            c1 = args[0]
-            if m in [DenseBlock]:
-                out_channels = args[1]
-                num_layers   = args[2]
-                c2           = c1 + out_channels * num_layers
-            elif m in [DenseTransition]:
-                c2           = c1 // 2
-        elif m in [
             Fire,
             Inception,
             InceptionA,
@@ -711,6 +725,12 @@ def parse_model(
             InceptionE,
         ]:
             c1 = args[0]
+            if m in [DenseBlock]:
+                out_channels = args[1]
+                num_layers   = args[2]
+                c2           = c1 + out_channels * num_layers
+            elif m in [DenseTransition]:
+                c2           = c1 // 2
             if m in [Fire]:
                 expand1x1_planes = args[2]
                 expand3x3_planes = args[3]
@@ -727,25 +747,9 @@ def parse_model(
                 c2 = m.base_out_channels + c1
             elif m in [InceptionC, InceptionE]:
                 c2 = m.base_out_channels
-        elif m in [
-            AlexNetClassifier,
-            GoogleNetClassifier,
-            InceptionAux1,
-            InceptionAux2,
-            InceptionClassifier,
-            LeNetClassifier,
-            LinearClassifier,
-            SqueezeNetClassifier,
-            VGGClassifier,
-        ]:
-            c1   = args[0]
-            c2   = nc
-            args = [c1, c2, *args[1:]]
         elif m in [ResNetBlock]:
-            c1   = args[2]
-            c2   = args[3]
-        elif m in [BatchNorm2d]:
-            args = [ch[f]]
+            c1 = args[2]
+            c2 = args[3]
         elif m in [
             Join,
             PixelwiseHigherOrderLECurve,
