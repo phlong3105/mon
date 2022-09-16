@@ -19,7 +19,9 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from,   number, module,               args(out_channels, ...)]
-            [-1,       1,      InceptionBasicConv2d, [32, 3, 2   ]],  # 0
+            [-1,       1,      Conv2dNormActivation, [128, 4, 4, 0, 1, LayerNorm2d, None, 1, True, True]],  # 0 total_stage_blocks = 36
+            [-1,       1,      ConvNeXtBlock,        []],  # 1
+            
         ],             
         "head": [      
             [-1,       1,      InceptionClassifier,  [2048]],         # 18
@@ -30,10 +32,10 @@ cfgs = {
 
 """
 block_setting = [
-    CNBlockConfig(128,  256,  3),
-    CNBlockConfig(256,  512,  3),
-    CNBlockConfig(512,  1024, 27),
-    CNBlockConfig(1024, None, 3),
+    CNBlockConfig(input_channels=128,  out_channels=256,  num_layers=3),
+    CNBlockConfig(input_channels=256,  out_channels=512,  num_layers=3),
+    CNBlockConfig(input_channels=512,  out_channels=1024, num_layers=27),
+    CNBlockConfig(input_channels=1024, out_channels=None, num_layers=3),
 ]
 stochastic_depth_prob = kwargs.pop("stochastic_depth_prob", 0.5)
 """
