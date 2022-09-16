@@ -398,7 +398,7 @@ def imshow_classification(
     for idx, (img, label, color, scores) in enumerate(zip(image, label, colors, scores_topk)):
         subfig = subfigs_flat[idx]
         subfig.suptitle(label, x=0.5, y=1.0, color=color)
-        axs = subfig.subplots(2, 1)
+        axs    = subfig.subplots(2, 1)
         for ax in axs.flat:
             ax.set_xticklabels([])
             ax.set_yticklabels([])

@@ -20,7 +20,7 @@ model_cfg  = "vgg19.yaml"
 data_name  = "cifar10"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / fullname
-shape      = [3, 64, 64]
+shape      = [3, 224, 224]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -43,7 +43,7 @@ data = {
     "transforms": None,
         # Functions/transforms that takes in an input and a target and
         # returns the transformed versions of both.
-    "cache_data": False,
+    "cache_data": True,
         # If True, cache data to disk for faster loading next time.
         # Defaults to False.
     "cache_images": False,
@@ -51,7 +51,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 64,
+    "batch_size": 32,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.

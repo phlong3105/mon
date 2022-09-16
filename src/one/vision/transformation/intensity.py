@@ -384,6 +384,7 @@ def denormalize_simple(
     image = torch.clamp(image * 255, 0, 255)
     return image
 
+
 def erase(
     image  : Tensor,
     i      : int,
