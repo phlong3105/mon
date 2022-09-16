@@ -16,7 +16,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 # H1: - Model ------------------------------------------------------------------
 
 cfgs = {
-    "resnext50_32x4d": {
+    "resnext50-32x4d": {
         "zero_init_residual": False,
         "channels": 3,
         "backbone": [
@@ -35,7 +35,7 @@ cfgs = {
             [-1,     1,      LinearClassifier,  [2048]],                                                             # 9
         ]
     },
-    "resnext101_32x8d": {
+    "resnext101-32x8d": {
         "zero_init_residual": False,
         "channels": 3,
         "backbone": [
@@ -54,7 +54,7 @@ cfgs = {
             [-1,     1,      LinearClassifier,  [2048]],                                                              # 9
         ]
     },
-    "resnext101_64x4d": {
+    "resnext101-64x4d": {
         "zero_init_residual": False,
         "channels": 3,
         "backbone": [
@@ -76,7 +76,7 @@ cfgs = {
 }
 
 
-@MODELS.register(name="resnext50_32x4d")
+@MODELS.register(name="resnext50-32x4d")
 class ResNeXt50_32X4D(ResNet):
     """
     
@@ -117,17 +117,17 @@ class ResNeXt50_32X4D(ResNet):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/resnext50_32x4d-1a0047aa.pth",
-            filename    = "resnext50_32x4d-imagenet.pth",
+            filename    = "resnext50-32x4d-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "resnext50_32x4d.yaml",
+        cfg        : dict | Path_ | None = "resnext50-32x4d.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "resnext",
-        fullname   : str  | None         = "resnext50_32x4d",
+        fullname   : str  | None         = "resnext50-32x4d",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -140,7 +140,7 @@ class ResNeXt50_32X4D(ResNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "resnext50_32x4d"
+        cfg = cfg or "resnext50-32x4d"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -505,7 +505,7 @@ class ResNeXt50_32X4D(ResNet):
             super().load_pretrained()
 
 
-@MODELS.register(name="resnext101_32x8d")
+@MODELS.register(name="resnext101-32x8d")
 class ResNeXt101_32X8D(ResNet):
     """
     
@@ -546,17 +546,17 @@ class ResNeXt101_32X8D(ResNet):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth",
-            filename    = "resnext101_32x8d-imagenet.pth",
+            filename    = "resnext101-32x8d-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "resnext101_32x8d.yaml",
+        cfg        : dict | Path_ | None = "resnext101-32x8d.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "resnext",
-        fullname   : str  | None         = "resnext101_32x8d",
+        fullname   : str  | None         = "resnext101-32x8d",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -569,7 +569,7 @@ class ResNeXt101_32X8D(ResNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "resnext101_32x8d"
+        cfg = cfg or "resnext101-32x8d"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -1240,7 +1240,7 @@ class ResNeXt101_32X8D(ResNet):
             super().load_pretrained()
 
 
-@MODELS.register(name="resnext101_64x4d")
+@MODELS.register(name="resnext101-64x4d")
 class ResNeXt101_64X4D(ResNet):
     """
     
@@ -1281,17 +1281,17 @@ class ResNeXt101_64X4D(ResNet):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/resnext101_64x4d-173b62eb.pth",
-            filename    = "resnext101_64x4d-imagenet.pth",
+            filename    = "resnext101-64x4d-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "resnext101_64x4d.yaml",
+        cfg        : dict | Path_ | None = "resnext101-64x4d.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "resnext",
-        fullname   : str  | None         = "resnext101_64x4d",
+        fullname   : str  | None         = "resnext101-64x4d",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -1304,7 +1304,7 @@ class ResNeXt101_64X4D(ResNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "resnext101_64x4d"
+        cfg = cfg or "resnext101-64x4d"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

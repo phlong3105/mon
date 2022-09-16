@@ -15,7 +15,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 # H1: - Model ------------------------------------------------------------------
 
 cfgs = {
-    "shufflenet_v2-x0.5": {
+    "shufflenet-v2-x0.5": {
         "channels": 3,
         "backbone": [
             # [from, number, module,           args(out_channels, ...)]
@@ -52,7 +52,7 @@ cfgs = {
             [-1,     1,      ShuffleNetV2Classifier, [1024]],                  # 23
         ]
     },
-    "shufflenet_v2-x1.0": {
+    "shufflenet-v2-x1.0": {
         "channels": 3,
         "backbone": [
             # [from, number, module,           args(out_channels, ...)]
@@ -89,7 +89,7 @@ cfgs = {
             [-1,     1,      ShuffleNetV2Classifier, [1024]],                  # 23
         ]
     },
-    "shufflenet_v2-x1.5": {
+    "shufflenet-v2-x1.5": {
         "channels": 3,
         "backbone": [
             # [from, number, module,           args(out_channels, ...)]
@@ -126,7 +126,7 @@ cfgs = {
             [-1,     1,      ShuffleNetV2Classifier, [1024]],                  # 23
         ]
     },
-    "shufflenet_v2-x2.0": {
+    "shufflenet-v2-x2.0": {
         "channels": 3,
         "backbone": [
             # [from, number, module,           args(out_channels, ...)]
@@ -166,7 +166,7 @@ cfgs = {
 }
 
 
-@MODELS.register(name="shufflenet_v2")
+@MODELS.register(name="shufflenet-v2")
 class ShuffleNetV2(ImageClassificationModel):
     """
     
@@ -205,10 +205,10 @@ class ShuffleNetV2(ImageClassificationModel):
 
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "shufflenet_v2_x0.5",
+        cfg        : dict | Path_ | None = "shufflenet-v2-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet_v2",
-        fullname   : str  | None         = "shufflenet_v2_x0.5",
+        name       : str  | None         = "shufflenet-v2",
+        fullname   : str  | None         = "shufflenet-v2-x0.5",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -221,7 +221,7 @@ class ShuffleNetV2(ImageClassificationModel):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "shufflenet_v2_x0.5"
+        cfg = cfg or "shufflenet-v2-x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -249,7 +249,7 @@ class ShuffleNetV2(ImageClassificationModel):
         pass
    
 
-@MODELS.register(name="shufflenet_v2_x0.5")
+@MODELS.register(name="shufflenet-v2-x0.5")
 class ShuffleNetV2_x0_5(ShuffleNetV2):
     """
     
@@ -290,17 +290,17 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth",
-            filename    = "shufflenet_v2-x0.5-imagenet.pth",
+            filename    = "shufflenet-v2-x0.5-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "shufflenet_v2_x0.5.yaml",
+        cfg        : dict | Path_ | None = "shufflenet-v2-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet_v2",
-        fullname   : str  | None         = "shufflenet_v2-x0.5",
+        name       : str  | None         = "shufflenet-v2",
+        fullname   : str  | None         = "shufflenet-v2-x0.5",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -313,7 +313,7 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "shufflenet_v2-x0.5"
+        cfg = cfg or "shufflenet-v2-x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -641,7 +641,7 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
             super().load_pretrained()
 
 
-@MODELS.register(name="shufflenet_v2_x1.0")
+@MODELS.register(name="shufflenet-v2-x1.0")
 class ShuffleNetV2_x1_0(ShuffleNetV2):
     """
     
@@ -682,17 +682,17 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth",
-            filename    = "shufflenet_v2-x1.0-imagenet.pth",
+            filename    = "shufflenet-v2-x1.0-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "shufflenet_v2_x1.0.yaml",
+        cfg        : dict | Path_ | None = "shufflenet-v2-x1.0.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet_v2",
-        fullname   : str  | None         = "shufflenet_v2-x1.0",
+        name       : str  | None         = "shufflenet-v2",
+        fullname   : str  | None         = "shufflenet-v2-x1.0",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -705,7 +705,7 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "shufflenet_v2-x1.0"
+        cfg = cfg or "shufflenet-v2-x1.0"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -1033,7 +1033,7 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
             super().load_pretrained()
 
 
-@MODELS.register(name="shufflenet_v2_x1.5")
+@MODELS.register(name="shufflenet-v2-x1.5")
 class ShuffleNetV2_x1_5(ShuffleNetV2):
     """
     
@@ -1074,17 +1074,17 @@ class ShuffleNetV2_x1_5(ShuffleNetV2):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/shufflenetv2_x1_5-3c479a10.pth",
-            filename    = "shufflenet_v2-x1.5-imagenet.pth",
+            filename    = "shufflenet-v2-x1.5-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "shufflenet_v2_x1.5.yaml",
+        cfg        : dict | Path_ | None = "shufflenet-v2-x1.5.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet_v2",
-        fullname   : str  | None         = "shufflenet_v2-x1.5",
+        name       : str  | None         = "shufflenet-v2",
+        fullname   : str  | None         = "shufflenet-v2-x1.5",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -1097,7 +1097,7 @@ class ShuffleNetV2_x1_5(ShuffleNetV2):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "shufflenet_v2-x1.5"
+        cfg = cfg or "shufflenet-v2-x1.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -1425,7 +1425,7 @@ class ShuffleNetV2_x1_5(ShuffleNetV2):
             super().load_pretrained()
 
 
-@MODELS.register(name="shufflenet_v2_x2.0")
+@MODELS.register(name="shufflenet-v2-x2.0")
 class ShuffleNetV2_x2_0(ShuffleNetV2):
     """
     
@@ -1466,17 +1466,17 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/shufflenetv2_x2_0-8be3c8ee.pth",
-            filename    = "shufflenet_v2-x2.0-imagenet.pth",
+            filename    = "shufflenet-v2-x2.0-imagenet.pth",
             num_classes = 1000,
         ),
     }
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "shufflenet_v2_x2.0.yaml",
+        cfg        : dict | Path_ | None = "shufflenet-v2-x2.0.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet_v2",
-        fullname   : str  | None         = "shufflenet_v2-x2.0",
+        name       : str  | None         = "shufflenet-v2",
+        fullname   : str  | None         = "shufflenet-v2-x2.0",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -1489,7 +1489,7 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "shufflenet_v2-x2.0"
+        cfg = cfg or "shufflenet-v2-x2.0"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

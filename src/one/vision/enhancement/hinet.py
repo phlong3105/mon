@@ -745,7 +745,7 @@ class HINetDenoise(HINet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "hinet_denoise.yaml",
+        cfg        : dict | Path_ | None = "hinet-denoise.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-denoise",
@@ -761,7 +761,7 @@ class HINetDenoise(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "hinet_denoise"
+        cfg = cfg or "hinet-denoise"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -834,7 +834,7 @@ class HINetDenoise_x0_5(HINet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "hinet_x0.5.yaml",
+        cfg        : dict | Path_ | None = "hinet-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-denoise-x0.5",
@@ -850,7 +850,7 @@ class HINetDenoise_x0_5(HINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "hinet_x0.5"
+        cfg = cfg or "hinet-x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

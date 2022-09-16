@@ -21,11 +21,13 @@ Forward pass:
 from __future__ import annotations
 
 import math
+from functools import partial
 from typing import Type
 
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import *
+from torchvision.ops.misc import *
 
 from one.constants import *
 from one.core import *
@@ -1083,6 +1085,9 @@ class PointwiseConv2d(Conv2d):
 LAYERS.register(name="conv1d",                module=Conv1d)
 LAYERS.register(name="conv2d",                module=Conv2d)
 LAYERS.register(name="conv3d",                module=Conv3d)
+LAYERS.register(name="conv_norm_act",         module=ConvNormActivation)
+LAYERS.register(name="conv2d_norm_act",       module=Conv2dNormActivation)
+LAYERS.register(name="conv3d_norm_act",       module=Conv2dNormActivation)
 LAYERS.register(name="conv_transpose1d",      module=ConvTranspose1d)
 LAYERS.register(name="conv_transpose2d",      module=ConvTranspose2d)
 LAYERS.register(name="conv_transpose3d",      module=ConvTranspose3d)
@@ -2895,6 +2900,47 @@ class ChannelShuffle(Module):
 
 
     # H1: - EXPERIMENTAL -----------------------------------------------------------
+
+
+# H2: - ConvNeXt ---------------------------------------------------------------
+
+class ConvNeXtBlock(Module):
+    
+    def __init__(
+        self,
+        dim                  : int,
+        layer_scale          : float,
+        stochastic_depth_prob: float,
+        norm_layer           : Callable[..., Module] | None = None,
+    ):
+        super().__init__()
+        if norm_layer is None:
+            norm_layer = partial(LayerNorm, eps=1e-6)
+
+        self.block = nn.Sequential(
+            Conv2d(
+                in_channels  = dim,
+                out_channels = dim,
+                kernel_size  = 7,
+                padding      = 3,
+                groups       = dim,
+                bias         = True,
+            ),
+            Permute([0, 2, 3, 1]),
+            norm_layer(dim),
+            Linear(in_features=dim,     out_features=4 * dim, bias=True),
+            GELU(),
+            Linear(in_features=4 * dim, out_features=dim,     bias=True),
+            Permute([0, 3, 1, 2]),
+        )
+        self.layer_scale      = Parameter(torch.ones(dim, 1, 1) * layer_scale)
+        self.stochastic_depth = StochasticDepth(stochastic_depth_prob, "row")
+    
+    def forward(self, input: Tensor) -> Tensor:
+        output = self.layer_scale * self.block(input)
+        output = self.stochastic_depth(output)
+        output += input
+        return output
 
 
 # H2: - Densenet ---------------------------------------------------------------

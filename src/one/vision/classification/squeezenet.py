@@ -145,7 +145,7 @@ class SqueezeNet(ImageClassificationModel):
         pass
    
 
-@MODELS.register(name="squeezenet_1.0")
+@MODELS.register(name="squeezenet-1.0")
 class SqueezeNet_1_0(SqueezeNet):
     """
     
@@ -193,7 +193,7 @@ class SqueezeNet_1_0(SqueezeNet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "squeezenet_1.0.yaml",
+        cfg        : dict | Path_ | None = "squeezenet-1.0.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "squeezenet",
         fullname   : str  | None         = "squeezenet-1.0",
@@ -308,7 +308,7 @@ class SqueezeNet_1_0(SqueezeNet):
             super().load_pretrained()
 
 
-@MODELS.register(name="squeezenet_1.1")
+@MODELS.register(name="squeezenet-1.1")
 class SqueezeNet_1_1(SqueezeNet):
     """
     
@@ -356,7 +356,7 @@ class SqueezeNet_1_1(SqueezeNet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "squeezenet_1.1.yaml",
+        cfg        : dict | Path_ | None = "squeezenet-1.1.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "squeezenet",
         fullname   : str  | None         = "squeezenet-1.1",

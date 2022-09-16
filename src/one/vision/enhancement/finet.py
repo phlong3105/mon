@@ -516,7 +516,7 @@ class FINetDenoise(FINet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "finet_denoise.yaml",
+        cfg        : dict | Path_ | None = "finet-denoise.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-denoise",
@@ -532,7 +532,7 @@ class FINetDenoise(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "finet_denoise"
+        cfg = cfg or "finet-denoise"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -598,7 +598,7 @@ class FINetDenoise_x0_5(FINet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "finet_x0.5.yaml",
+        cfg        : dict | Path_ | None = "finet-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-denoise-x0.5",
@@ -614,7 +614,7 @@ class FINetDenoise_x0_5(FINet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "finet_x0.5"
+        cfg = cfg or "finet-x0.5"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

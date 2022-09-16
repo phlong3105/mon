@@ -25,10 +25,10 @@ from one.vision.classification.resnet import ResNet50
 from one.vision.classification.resnext import ResNeXt101_32X8D
 from one.vision.classification.resnext import ResNeXt101_64X4D
 from one.vision.classification.resnext import ResNeXt50_32X4D
-from one.vision.classification.shufflenetv2 import ShuffleNetV2_x0_5
-from one.vision.classification.shufflenetv2 import ShuffleNetV2_x1_0
-from one.vision.classification.shufflenetv2 import ShuffleNetV2_x1_5
-from one.vision.classification.shufflenetv2 import ShuffleNetV2_x2_0
+from one.vision.classification.shufflenet_v2 import ShuffleNetV2_x0_5
+from one.vision.classification.shufflenet_v2 import ShuffleNetV2_x1_0
+from one.vision.classification.shufflenet_v2 import ShuffleNetV2_x1_5
+from one.vision.classification.shufflenet_v2 import ShuffleNetV2_x2_0
 from one.vision.classification.squeezenet import SqueezeNet_1_0
 from one.vision.classification.squeezenet import SqueezeNet_1_1
 from one.vision.classification.vgg import VGG11

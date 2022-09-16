@@ -660,6 +660,7 @@ def parse_model(
         
         if m in [
             Conv2d,
+            Conv2dNormActivation,
             ConvAct2d,
             ConvReLU2d,
             DCENet,
