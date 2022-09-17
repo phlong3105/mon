@@ -2950,8 +2950,8 @@ class ConvNeXtLayer(Module):
         super().__init__()
         sd_prob = stochastic_depth_prob
         if (id is not None) and (total_stage_blocks is not None):
-            sd_prob    = stochastic_depth_prob * id / (total_stage_blocks - 1.0)
-       
+            sd_prob = stochastic_depth_prob * id / (total_stage_blocks - 1.0)
+
         self.block = Sequential(
             Conv2d(
                 in_channels  = dim,
@@ -2980,8 +2980,8 @@ class ConvNeXtLayer(Module):
         self.stochastic_depth = StochasticDepth(sd_prob, "row")
     
     def forward(self, input: Tensor) -> Tensor:
-        output = self.layer_scale * self.block(input)
-        output = self.stochastic_depth(output)
+        output  = self.layer_scale * self.block(input)
+        output  = self.stochastic_depth(output)
         output += input
         return output
 
@@ -2995,22 +2995,24 @@ class ConvNeXtBlock(Module):
         layer_scale          : float,
         stochastic_depth_prob: float,
         num_layers           : int,
+        stage_block_id       : int,
         total_stage_blocks   : int | None                   = None,
         norm_layer           : Callable[..., Module] | None = None,
     ):
         super().__init__()
         layers = []
-        for idx in range(num_layers):
+        for i in range(num_layers):
             layers.append(
                 ConvNeXtLayer(
                     dim                   = dim,
                     layer_scale           = layer_scale,
                     stochastic_depth_prob = stochastic_depth_prob,
-                    id                    = idx,
+                    id                    = stage_block_id,
                     total_stage_blocks    = total_stage_blocks,
                     norm_layer            = norm_layer,
                 )
             )
+            stage_block_id += 1
         self.block = Sequential(*layers)
     
     def forward(self, input: Tensor) -> Tensor:

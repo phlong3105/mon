@@ -22,16 +22,16 @@ cfgs = {
         "backbone": [
             # [from, number, module,               args(out_channels, ...)]
             [-1,     1,      Conv2dNormActivation, [128,  4, 4, 0, 1, LayerNorm2d, None, 1, True, True]],  # 0 total_stage_blocks = 36
-            [-1,     1,      ConvNeXtBlock,        [128,  1e-6, 0.5, 3,  36]],                             # 1
+            [-1,     1,      ConvNeXtBlock,        [128,  1e-6, 0.5, 3,  0,  36]],                         # 1
             [-1,     1,      LayerNorm2d,          [128]],                                                 # 2
             [-1,     1,      Conv2d,               [128,  256,  2, 2]],                                    # 3
-            [-1,     1,      ConvNeXtBlock,        [256,  1e-6, 0.5, 3,  36]],                             # 4
+            [-1,     1,      ConvNeXtBlock,        [256,  1e-6, 0.5, 3,  3,  36]],                         # 4
             [-1,     1,      LayerNorm2d,          [256]],                                                 # 5
             [-1,     1,      Conv2d,               [256,  512,  2, 2]],                                    # 6
-            [-1,     1,      ConvNeXtBlock,        [512,  1e-6, 0.5, 27, 36]],                             # 7
+            [-1,     1,      ConvNeXtBlock,        [512,  1e-6, 0.5, 27, 6,  36]],                         # 7
             [-1,     1,      LayerNorm2d,          [512]],                                                 # 8
             [-1,     1,      Conv2d,               [512,  1024, 2, 2]],                                    # 9
-            [-1,     1,      ConvNeXtBlock,        [1024, 1e-6, 0.5, 3,  36]],                             # 10
+            [-1,     1,      ConvNeXtBlock,        [1024, 1e-6, 0.5, 3,  33, 36]],                         # 10
             [-1,     1,      AdaptiveAvgPool2d,    [1]],                                                   # 11
         ],
         "head": [
