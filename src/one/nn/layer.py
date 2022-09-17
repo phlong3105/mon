@@ -27,7 +27,10 @@ from typing import Type
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import *
-from torchvision.ops.misc import *
+from torchvision.ops import Conv2dNormActivation
+from torchvision.ops import Permute
+from torchvision.ops import StochasticDepth
+from torchvision.ops.misc import ConvNormActivation
 
 from one.constants import *
 from one.core import *
@@ -1632,6 +1635,35 @@ class AlexNetClassifier(Module):
             return input
 
 
+@LAYERS.register(name="convnext_classifier")
+class ConvNeXtClassifier(Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        norm_layer  : Callable[..., Module] | None = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        self.norm         = norm_layer(in_channels)
+        self.flatten      = Flatten(1)
+        self.linear       = Linear(
+            in_features  = in_channels,
+            out_features = out_channels,
+        )
+    
+    def forward(self, input: Tensor) -> Tensor:
+        if self.out_channels > 0:
+            x = self.norm(input)
+            x = self.flatten(x)
+            x = self.linear(x)
+            return x
+        else:
+            return input
+        
+
 @LAYERS.register(name="googlenet_classifier")
 class GoogleNetClassifier(Module):
     
@@ -2899,25 +2931,28 @@ class ChannelShuffle(Module):
         return x
 
 
-    # H1: - EXPERIMENTAL -----------------------------------------------------------
-
+# H1: - EXPERIMENTAL -----------------------------------------------------------
 
 # H2: - ConvNeXt ---------------------------------------------------------------
 
-class ConvNeXtBlock(Module):
+@LAYERS.register(name="convnext_layer")
+class ConvNeXtLayer(Module):
     
     def __init__(
         self,
         dim                  : int,
         layer_scale          : float,
         stochastic_depth_prob: float,
+        id                   : int | None                   = None,
+        total_stage_blocks   : int | None                   = None,
         norm_layer           : Callable[..., Module] | None = None,
     ):
         super().__init__()
-        if norm_layer is None:
-            norm_layer = partial(LayerNorm, eps=1e-6)
-
-        self.block = nn.Sequential(
+        sd_prob = stochastic_depth_prob
+        if (id is not None) and (total_stage_blocks is not None):
+            sd_prob    = stochastic_depth_prob * id / (total_stage_blocks - 1.0)
+       
+        self.block = Sequential(
             Conv2d(
                 in_channels  = dim,
                 out_channels = dim,
@@ -2927,20 +2962,59 @@ class ConvNeXtBlock(Module):
                 bias         = True,
             ),
             Permute([0, 2, 3, 1]),
-            norm_layer(dim),
-            Linear(in_features=dim,     out_features=4 * dim, bias=True),
+            LayerNorm2d(dim, eps=1e-6),
+            Linear(
+                in_features  = dim,
+                out_features = 4 * dim,
+                bias         = True,
+            ),
             GELU(),
-            Linear(in_features=4 * dim, out_features=dim,     bias=True),
+            Linear(
+                in_features  = 4 * dim,
+                out_features = dim,
+                bias         = True,
+            ),
             Permute([0, 3, 1, 2]),
         )
         self.layer_scale      = Parameter(torch.ones(dim, 1, 1) * layer_scale)
-        self.stochastic_depth = StochasticDepth(stochastic_depth_prob, "row")
+        self.stochastic_depth = StochasticDepth(sd_prob, "row")
     
     def forward(self, input: Tensor) -> Tensor:
         output = self.layer_scale * self.block(input)
         output = self.stochastic_depth(output)
         output += input
         return output
+
+
+@LAYERS.register(name="convnext_block")
+class ConvNeXtBlock(Module):
+    
+    def __init__(
+        self,
+        dim                  : int,
+        layer_scale          : float,
+        stochastic_depth_prob: float,
+        num_layers           : int,
+        total_stage_blocks   : int | None                   = None,
+        norm_layer           : Callable[..., Module] | None = None,
+    ):
+        super().__init__()
+        layers = []
+        for idx in range(num_layers):
+            layers.append(
+                ConvNeXtLayer(
+                    dim                   = dim,
+                    layer_scale           = layer_scale,
+                    stochastic_depth_prob = stochastic_depth_prob,
+                    id                    = idx,
+                    total_stage_blocks    = total_stage_blocks,
+                    norm_layer            = norm_layer,
+                )
+            )
+        self.block = Sequential(*layers)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        return self.block(input)
 
 
 # H2: - Densenet ---------------------------------------------------------------

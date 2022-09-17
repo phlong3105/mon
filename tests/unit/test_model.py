@@ -10,6 +10,7 @@ from __future__ import annotations
 import unittest
 
 from one.vision.classification.alexnet import AlexNet
+from one.vision.classification.convnext import ConvNeXtBase
 from one.vision.classification.densenet import DenseNet121
 from one.vision.classification.densenet import DenseNet161
 from one.vision.classification.densenet import DenseNet169
@@ -61,6 +62,10 @@ class TestModel(unittest.TestCase):
     def test_alexnet(self):
         alexnet = AlexNet(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(alexnet)
+    
+    def test_convnext_base(self):
+        convnext_base = ConvNeXtBase(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(convnext_base)
     
     def test_densenet121(self):
         densenet121 = DenseNet121(num_classes=1000, pretrained="imagenet", verbose=True)

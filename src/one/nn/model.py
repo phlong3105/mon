@@ -699,6 +699,7 @@ def parse_model(
             args = [c1, *args[0:]]
         elif m in [
             AlexNetClassifier,
+            ConvNeXtClassifier,
             GoogleNetClassifier,
             InceptionAux1,
             InceptionAux2,
@@ -774,7 +775,8 @@ def parse_model(
             ch = []
         ch.append(c2)
         
-        m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)  # module
+        # Create layers
+        m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)
         m_.i  = i
         m_.f  = f
         m_.t  = t  = str(m)[8:-2].replace("__main__.", "")      # module type
@@ -788,7 +790,7 @@ def parse_model(
             "n"        : n,
             "params"   : np,
             "module"   : t,
-            "arguments": args
+            "arguments": args,
         })
         
     return Sequential(*layers), sorted(save), info
