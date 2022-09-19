@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import torch.nn.functional as F
 from torch import Tensor
+from torch.nn import Module
 
 from one.vision.filtering.kernel import *
 
@@ -779,7 +780,7 @@ def spatial_gradient3d(
     return output
 
 
-class BlurPool2D(nn.Module):
+class BlurPool2D(Module):
     """
     Compute blur (anti-aliasing) and downsample a given feature map.
 
@@ -811,7 +812,7 @@ class BlurPool2D(nn.Module):
         )
 
 
-class BoxBlur(nn.Module):
+class BoxBlur(Module):
     """
     Blur an image using the box filter. The function smooths an image using the
     kernel:
@@ -859,7 +860,7 @@ class BoxBlur(nn.Module):
         )
 
 
-class GaussianBlur2d(nn.Module):
+class GaussianBlur2d(Module):
     """
     Create an operator that blurs a tensor using a Gaussian filter.
     The operator smooths the given tensor with a gaussian kernel by convolving
@@ -914,7 +915,7 @@ class GaussianBlur2d(nn.Module):
         )
 
 
-class Laplacian(nn.Module):
+class Laplacian(Module):
     """
     Create an operator that returns a tensor using a Laplacian filter.
     The operator smooths the given tensor with a laplacian kernel by convolving
@@ -963,7 +964,7 @@ class Laplacian(nn.Module):
         )
     
     
-class MaxBlurPool2D(nn.Module):
+class MaxBlurPool2D(Module):
     """
     Compute pools and blurs and downsample a given feature map.
     Equivalent to `nn.Sequential(nn.MaxPool2d(...), BlurPool2D(...))`
@@ -1009,7 +1010,7 @@ class MaxBlurPool2D(nn.Module):
         )
 
 
-class MedianBlur(nn.Module):
+class MedianBlur(Module):
     """
     Blur an image using the median filter.
     
@@ -1025,7 +1026,7 @@ class MedianBlur(nn.Module):
         return median_blur(input=input, kernel_size=self.kernel_size)
 
 
-class Sobel(nn.Module):
+class Sobel(Module):
     """
     Compute the Sobel operator and returns the magnitude per channel.
     
@@ -1053,7 +1054,7 @@ class Sobel(nn.Module):
         return sobel(input=input, normalized=self.normalized, eps=self.eps)
 
 
-class SpatialGradient(nn.Module):
+class SpatialGradient(Module):
     """
     Compute the first order image derivative in both x and y using a Sobel
     operator.
@@ -1099,7 +1100,7 @@ class SpatialGradient(nn.Module):
         )
 
 
-class SpatialGradient3d(nn.Module):
+class SpatialGradient3d(Module):
     """
     Compute the first and second order volume derivative in x, y and d using a diff
     operator.
@@ -1272,7 +1273,7 @@ def canny(
     return magnitude, edges
 
 
-class Canny(nn.Module):
+class Canny(Module):
     """
     Module that finds edges of the input image and filters them using the Canny
     algorithm.
@@ -1387,9 +1388,10 @@ def unsharp_mask(
     return data_sharpened
 
 
-class UnsharpMask(nn.Module):
+class UnsharpMask(Module):
     """
-    Create an operator that sharpens image with: out = 2 * image - gaussian_blur2d(image).
+    Create an operator that sharpens image with:
+        out = 2 * image - gaussian_blur2d(image)
     
     Args:
         kernel_size (Ints): The size of the kernel.

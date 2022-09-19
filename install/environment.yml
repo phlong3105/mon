@@ -30,6 +30,7 @@ dependencies:
   - filterpy
   - git
   - git-lfs
+  - imgaug
   - librsvg
   - libiconv
   - libprotobuf
