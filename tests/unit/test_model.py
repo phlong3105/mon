@@ -11,6 +11,9 @@ import unittest
 
 from one.vision.classification.alexnet import AlexNet
 from one.vision.classification.convnext import ConvNeXtBase
+from one.vision.classification.convnext import ConvNeXtLarge
+from one.vision.classification.convnext import ConvNeXtSmall
+from one.vision.classification.convnext import ConvNeXtTiny
 from one.vision.classification.densenet import DenseNet121
 from one.vision.classification.densenet import DenseNet161
 from one.vision.classification.densenet import DenseNet169
@@ -67,6 +70,18 @@ class TestModel(unittest.TestCase):
         convnext_base = ConvNeXtBase(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(convnext_base)
     
+    def test_convnext_tiny(self):
+        convnext_tiny = ConvNeXtTiny(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(convnext_tiny)
+        
+    def test_convnext_small(self):
+        convnext_small = ConvNeXtSmall(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(convnext_small)
+    
+    def test_convnext_large(self):
+        convnext_large = ConvNeXtLarge(num_classes=1000, pretrained="imagenet", verbose=True)
+        self.assertIsNotNone(convnext_large)
+        
     def test_densenet121(self):
         densenet121 = DenseNet121(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(densenet121)

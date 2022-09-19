@@ -769,7 +769,7 @@ def parse_model(
             c2 = sum([ch[x] for x in f])
         else:
             c2 = ch[f]
-        
+
         # Append c2 as c1 for next layers
         if i == 0:
             ch = []

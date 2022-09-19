@@ -2943,15 +2943,16 @@ class ConvNeXtLayer(Module):
         dim                  : int,
         layer_scale          : float,
         stochastic_depth_prob: float,
-        id                   : int | None                   = None,
+        stage_block_id       : int | None                   = None,
         total_stage_blocks   : int | None                   = None,
         norm_layer           : Callable[..., Module] | None = None,
     ):
         super().__init__()
         sd_prob = stochastic_depth_prob
-        if (id is not None) and (total_stage_blocks is not None):
-            sd_prob = stochastic_depth_prob * id / (total_stage_blocks - 1.0)
-
+        if (stage_block_id is not None) and (total_stage_blocks is not None):
+            sd_prob = stochastic_depth_prob * stage_block_id / (total_stage_blocks - 1.0)
+        if norm_layer is None:
+            norm_layer = partial(nn.LayerNorm, eps=1e-6)
         self.block = Sequential(
             Conv2d(
                 in_channels  = dim,
@@ -2962,7 +2963,7 @@ class ConvNeXtLayer(Module):
                 bias         = True,
             ),
             Permute([0, 2, 3, 1]),
-            LayerNorm2d(dim, eps=1e-6),
+            norm_layer(dim),
             Linear(
                 in_features  = dim,
                 out_features = 4 * dim,
@@ -3001,13 +3002,13 @@ class ConvNeXtBlock(Module):
     ):
         super().__init__()
         layers = []
-        for i in range(num_layers):
+        for _ in range(num_layers):
             layers.append(
                 ConvNeXtLayer(
                     dim                   = dim,
                     layer_scale           = layer_scale,
                     stochastic_depth_prob = stochastic_depth_prob,
-                    id                    = stage_block_id,
+                    stage_block_id        = stage_block_id,
                     total_stage_blocks    = total_stage_blocks,
                     norm_layer            = norm_layer,
                 )

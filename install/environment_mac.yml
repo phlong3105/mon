@@ -30,7 +30,6 @@ dependencies:
   - filterpy
   - git
   - git-lfs
-  - imgaug
   - librsvg
   - libiconv
   - libprotobuf
@@ -61,6 +60,7 @@ dependencies:
   - pynvml
 
   # Image
+  - imgaug
   - ffmpeg-python
   # - opencv-python
   - pillow
@@ -71,7 +71,7 @@ dependencies:
   - torchaudio=0.12.1
   - pretrainedmodels
   - pycocotools
-  - pytorch-lightning=1.7.0
+  - pytorch-lightning=1.7.5
   - pytorch-model-summary
   - timm
   - torchmetrics
