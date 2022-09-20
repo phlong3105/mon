@@ -663,6 +663,7 @@ def parse_model(
             Conv2dNormActivation,
             ConvAct2d,
             ConvReLU2d,
+            ConvTranspose2d,
             DCENet,
             DepthwiseSeparableConv2d,
             DepthwiseSeparableConvReLU2d,
@@ -672,6 +673,7 @@ def parse_model(
             HINetConvBlock,
             HINetUpBlock,
             InceptionBasicConv2d,
+            UNetBlock,
         ]:
             if isinstance(f, (list, tuple)):
                 c1, c2 = ch[f[0]], args[0]

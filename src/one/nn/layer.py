@@ -4711,6 +4711,71 @@ class Fire(Module):
         return torch.cat([x1, x3], dim=1)
 
 
+# H2: - UNet -------------------------------------------------------------------
+
+@LAYERS.register(name="unet_block")
+class UNetBlock(Module):
+    """
+    """
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : Ints              = 3,
+        stride      : Ints              = 1,
+        padding     : str | Ints | None = 1,
+        dilation    : Ints              = 1,
+        groups      : int               = 1,
+        bias        : bool              = False,
+        padding_mode: str               = "zeros",
+        device      : Any               = None,
+        dtype       : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.norm1 = BatchNorm2d(num_features=out_channels)
+        self.relu1 = ReLU(inplace=True)
+        self.conv2 = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.norm2 = BatchNorm2d(num_features=out_channels)
+        self.relu2 = ReLU(inplace=True)
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.conv1(x)
+        x = self.norm1(x)
+        x = self.relu1(x)
+        x = self.conv2(x)
+        x = self.norm2(x)
+        x = self.relu2(x)
+        return x
+
+
 # H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
 
 @LAYERS.register(name="dcenet")

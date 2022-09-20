@@ -268,6 +268,35 @@ class ColorConstancyLoss(BaseLoss):
         return self.weight[0] * loss
 
 
+@LOSSES.register(name="dice_loss")
+class DiceLoss(BaseLoss):
+
+    def __init__(
+        self,
+        smooth    : float  = 1.0,
+        weight    : Floats = 1.0,
+        reduction : str    = "mean",
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight    = weight,
+            reduction = reduction,
+            *args, **kwargs
+        )
+        self.smooth = smooth
+
+    def forward(self, input: Tensor, target: Tensor = None, **_):
+        assert_same_shape(input, target)
+        input        = input[:,  0].contiguous().view(-1)
+        target       = target[:, 0].contiguous().view(-1)
+        intersection = (input * target).sum()
+        dice_coeff   = (2.0 * intersection + self.smooth) \
+                       / (input.sum() + target.sum() + self.smooth)
+        loss         = 1.0 - dice_coeff
+        # loss         = reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+
 @LOSSES.register(name="edge_loss")
 class EdgeLoss(BaseLoss):
     

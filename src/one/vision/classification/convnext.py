@@ -184,16 +184,21 @@ class ConvNeXt(ImageClassificationModel):
     
     def init_weights(self, m: Module):
         classname = m.__class__.__name__
-
-        init_weights = self.cfg["init_weights"]
-        if init_weights:
-            if isinstance(m, Conv2d) or isinstance(m, nn.Linear):
-                stddev = float(m.stddev) if hasattr(m, "stddev") else 0.1  # type: ignore
-                torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=stddev, a=-2, b=2)
-            elif isinstance(m, BatchNorm2d):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
-
+        
+        if classname.find("Conv") != -1:
+            if hasattr(m, "conv"):
+                nn.init.trunc_normal_(m.conv.weight, std=0.02)
+                if m.conv.bias is not None:
+                    nn.init.zeros_(m.conv.bias)
+            else:
+                nn.init.trunc_normal_(m.weight, std=0.02)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+        elif classname.find("Linear") != -1:
+            nn.init.trunc_normal_(m.weight, std=0.02)
+            if m.bias is not None:
+                nn.init.zeros_(m.bias)
+                
 
 @MODELS.register(name="convnext-base")
 class ConvNeXtBase(ConvNeXt):

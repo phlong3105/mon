@@ -1,0 +1,31 @@
+channels: 3
+
+backbone: [
+  # [from,   number, module,          args(out_channels, ...)]
+  [-1,       1,      UNetBlock,       [32]],          # 0  enc1
+  [-1,       1,      MaxPool2d,       [2, 2]],        # 1
+  [-1,       1,      UNetBlock,       [64]],          # 2  enc2
+  [-1,       1,      MaxPool2d,       [2, 2]],        # 3
+  [-1,       1,      UNetBlock,       [128]],         # 4  enc3
+  [-1,       1,      MaxPool2d,       [2, 2]],        # 5
+  [-1,       1,      UNetBlock,       [256]],         # 6  enc4
+  [-1,       1,      MaxPool2d,       [2, 2]],        # 7
+  [-1,       1,      UNetBlock,       [512]],         # 8  bottleneck
+  [-1,       1,      ConvTranspose2d, [256, 2, 2]],   # 9  dec4
+  [[-1, 6],  1,      Concat,          []],            # 10 dec4 = dec4 + enc4
+  [-1,       1,      UNetBlock,       [256]],         # 11 dec4
+  [-1,       1,      ConvTranspose2d, [128, 2, 2]],   # 12 dec3
+  [[-1, 4],  1,      Concat,          []],            # 13 dec3 = dec3 + enc3
+  [-1,       1,      UNetBlock,       [128]],         # 14 dec3
+  [-1,       1,      ConvTranspose2d, [64, 2, 2]],    # 15 dec2
+  [[-1, 2],  1,      Concat,          []],            # 16 dec2 = dec2 + enc2
+  [-1,       1,      UNetBlock,       [64]],          # 17 dec2
+  [-1,       1,      ConvTranspose2d, [32, 2, 2]],    # 18 dec1
+  [[-1, 0],  1,      Concat,          []],            # 19 dec1 = dec1 + enc1
+  [-1,       1,      UNetBlock,       [32]],          # 20 dec1
+  [-1,       1,      Conv2d,          [1, 1]],        # 21 conv
+]
+
+head: [
+  [-1,       1,      Sigmoid,         []],            # 22
+]

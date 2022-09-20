@@ -58,6 +58,7 @@ from one.vision.enhancement.mbllen import MBLLEN
 from one.vision.enhancement.retinexnet import RetinexNet
 from one.vision.enhancement.zerodce import ZeroDCE
 from one.vision.enhancement.zerodcepp import ZeroDCEPP
+from one.vision.segmentation.unet import UNet
 
 
 class TestModel(unittest.TestCase):
@@ -209,7 +210,11 @@ class TestModel(unittest.TestCase):
     def test_squeezenet_1_1(self):
         squeezenet_1_1 = SqueezeNet_1_1(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(squeezenet_1_1)
-        
+    
+    def test_unet_32(self):
+        unet_32 = UNet(cfg="unet-32.yaml", pretrained="lgg", verbose=True)
+        self.assertIsNotNone(unet_32)
+    
     def test_vgg11(self):
         vgg11 = VGG11(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(vgg11)
