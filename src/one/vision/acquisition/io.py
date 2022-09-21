@@ -13,6 +13,7 @@ from abc import ABCMeta
 import ffmpeg
 import numpy as np
 import PIL
+import torch
 import torchvision
 import torchvision.transforms.functional as F
 from joblib import delayed
@@ -630,21 +631,20 @@ def write_image_pil(
         denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
     """
-
     # Convert image
     image = to_image(image, denormalize=denormalize)
     image = Image.fromarray(image.astype(np.uint8))
     
     # Write image
-    dir  = Path(dir)
+    dir      = Path(dir)
     create_dirs(paths=[dir])
-    name = Path(name)
-    stem = name.stem
-    ext  = name.suffix
-    ext  = f".{extension}"    if ext == ""      else ext
-    ext  = f".{ext}"          if "." not in ext else ext
-    stem = f"{prefix}_{stem}" if prefix != ""   else stem
-    name = f"{stem}{extension}"
+    name     = Path(name)
+    stem     = name.stem
+    ext      = name.suffix
+    ext      = f".{extension}"    if ext == ""      else ext
+    ext      = f".{ext}"          if "." not in ext else ext
+    stem     = f"{prefix}_{stem}" if prefix != ""   else stem
+    name     = f"{stem}{extension}"
     filepath = dir / name
     image.save(filepath)
     
@@ -670,23 +670,24 @@ def write_image_torch(
         denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
     """
-    from one.vision.transformation.intensity import denormalize
+    import one.vision.transformation as t
     assert_tensor_of_ndim_in_range(image, 2, 3)
     
     # Convert image
-    image = denormalize(image) if denormalize else image
-    image = to_channel_last(image)
+    image = t.denormalize_simple(image) if denormalize else image
+    # image = to_channel_last(image)
+    image = image.to(torch.uint8)
     
     # Write image
-    dir  = Path(dir)
+    dir      = Path(dir)
     create_dirs(paths=[dir])
-    name = Path(name)
-    stem = name.stem
-    ext  = name.suffix
-    ext  = f".{extension}"    if ext == ""      else ext
-    ext  = f".{ext}"          if "." not in ext else ext
-    stem = f"{prefix}_{stem}" if prefix != ""   else stem
-    name = f"{stem}{extension}"
+    name     = Path(name)
+    stem     = name.stem
+    ext      = name.suffix
+    ext      = f".{extension}"    if ext == ""      else ext
+    ext      = f".{ext}"          if "." not in ext else ext
+    stem     = f"{prefix}_{stem}" if prefix != ""   else stem
+    name     = f"{stem}{extension}"
     filepath = dir / name
     
     if ext in [".jpg", ".jpeg"]:
@@ -937,7 +938,7 @@ class BaseWriter(metaclass=ABCMeta):
     def write(
         self,
         image      : Tensor,
-        image_file : str | None = None,
+        file       : str | None = None,
         denormalize: bool       = True
     ):
         """
@@ -945,7 +946,7 @@ class BaseWriter(metaclass=ABCMeta):
 
         Args:
             image (Tensor): Image.
-            image_file (str | None): Image file. Defaults to None.
+            file (str | None): Image file. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
@@ -955,14 +956,14 @@ class BaseWriter(metaclass=ABCMeta):
     def write_batch(
         self,
         images     : Tensors,
-        image_files: list[str] | None = None,
+        files      : list[str] | None = None,
         denormalize: bool             = True
     ):
         """Add batch of frames to video.
 
         Args:
             images (Tensors): List of images.
-            image_files (list[str] | None): Image files. Defaults to None.
+            files (list[str] | None): Image files. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
@@ -1120,7 +1121,7 @@ class ImageWriter(BaseWriter):
     def write(
         self,
         image      : Tensor,
-        image_file : Path_ | None = None,
+        file       : Path_ | None = None,
         denormalize: bool         = True
     ):
         """
@@ -1128,7 +1129,7 @@ class ImageWriter(BaseWriter):
         
         Args:
             image (Tensor): The image to write.
-            image_file (Path_ | None): The name of the image file.
+            file (Path_ | None): The name of the image file.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
@@ -1149,15 +1150,15 @@ class ImageWriter(BaseWriter):
         create_dirs(paths=[parent_dir])
         cv2.imwrite(output_file, image)
         """
-        if isinstance(image_file, (Path, str)):
-            image_file = self.dst / f"{Path(image_file).stem}{self.extension}"
+        if isinstance(file, (Path, str)):
+            file = self.dst / f"{Path(file).stem}{self.extension}"
         else:
             raise ValueError(f"`image_file` must be given.")
-        image_file = Path(image_file)
+        file = Path(file)
         write_image_torch(
             image       = image,
-            dir         = image_file.parent,
-            name        = image_file.name,
+            dir         = file.parent,
+            name        = file.name,
             extension   = self.extension,
             denormalize = denormalize
         )
@@ -1166,7 +1167,7 @@ class ImageWriter(BaseWriter):
     def write_batch(
         self,
         images     : Tensors,
-        image_files: Paths_ | None = None,
+        files      : Paths_ | None = None,
         denormalize: bool          = True,
     ):
         """
@@ -1175,18 +1176,20 @@ class ImageWriter(BaseWriter):
         Args:
             images (Tensors): A list of tensors, each of which is a single
                 image.
-            image_files (Paths_ | None): Paths to save images. Defaults to None.
+            files (Paths_ | None): Paths to save images. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
         images = to_3d_tensor_list(images)
+
+        if files is None:
+            files = [None for _ in range(len(images))]
         
-        if image_files is None:
-            image_files = [None for _ in range(len(images))]
-        
-        for image, image_file in zip(images, image_files):
+        for image, file in zip(images, files):
             self.write(
-                image=image, image_file=image_file, denormalize=denormalize
+                image       = image,
+                file        = file,
+                denormalize = denormalize,
             )
 
 
@@ -1713,27 +1716,27 @@ class VideoWriterCV(VideoWriter):
     def write(
         self,
         image      : Tensor,
-        image_file : str  | None = None,
-        denormalize: bool        = True
+        file       : Path_ | None = None,
+        denormalize: bool         = True
     ):
         """
         Add a frame to writing video.
 
         Args:
             image (Tensor): Image.
-            image_file (str | None): Image file. Defaults to None.
+            file (Path_ | None): Image file. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
         image = to_image(image=image, keepdim=False, denormalize=denormalize)
         
         if self.save_image:
-            if isinstance(image_file, (Path, str)):
-                image_file = self.dst / f"{Path(image_file).stem}.png"
+            if isinstance(file, (Path, str)):
+                file = self.dst / f"{Path(file).stem}.png"
             else:
                 raise ValueError(f"`image_file` must be given.")
-            create_dirs(paths=[image_file.parent])
-            cv2.imwrite(str(image_file), image)
+            create_dirs(paths=[file.parent])
+            cv2.imwrite(str(file), image)
         
         self.video_writer.write(image)
         self.index += 1
@@ -1741,26 +1744,28 @@ class VideoWriterCV(VideoWriter):
     def write_batch(
         self,
         images     : Tensors,
-        image_files: list[str] | None = None,
-        denormalize: bool             = True
+        files      : Paths_ | None = None,
+        denormalize: bool          = True
     ):
         """
         Add batch of frames to video.
 
         Args:
             images (Tensors): Images.
-            image_files (list[str] | None): Image files. Defaults to None.
+            files (Paths_ | None): Image files. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
         images = to_3d_tensor_list(images)
         
-        if image_files is None:
-            image_files = [None for _ in range(len(images))]
+        if files is None:
+            files = [None for _ in range(len(images))]
 
-        for image, image_file in zip(images, image_files):
+        for image, file in zip(images, files):
             self.write(
-                image=image, image_file=image_file, denormalize=denormalize
+                image       = image,
+                file        = file,
+                denormalize = denormalize,
             )
 
 
@@ -1847,51 +1852,53 @@ class VideoWriterFFmpeg(VideoWriter):
     def write(
         self,
         image      : Tensor,
-        image_file : str | None = None,
-        denormalize: bool       = True
+        file       : Path_ | None = None,
+        denormalize: bool         = True
     ):
         """
         Add a frame to writing video.
 
         Args:
             image (Tensor): Image of shape [C, H, W].
-            image_file (str | None): Image file. Defaults to None.
+            file (Path_ | None): Image file. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
         if self.save_image:
-            if isinstance(image_file, (Path, str)):
-                image_file = self.dst / f"{Path(image_file).stem}.png"
+            if isinstance(file, (Path, str)):
+                file = self.dst / f"{Path(file).stem}.png"
             else:
                 raise ValueError(f"`image_file` must be given.")
-            create_dirs(paths=[image_file.parent])
+            create_dirs(paths=[file.parent])
             image = to_image(image=image, keepdim=False, denormalize=denormalize)
-            cv2.imwrite(str(image_file), image)
+            cv2.imwrite(str(file), image)
         
         write_video_ffmpeg(
-            process=self.ffmpeg_process, image=image, denormalize=denormalize
+            process     = self.ffmpeg_process,
+            image       = image,
+            denormalize = denormalize
         )
         self.index += 1
 
     def write_batch(
         self,
         images     : Tensors,
-        image_files: list[str] | None = None,
-        denormalize: bool             = True
+        files      : Paths_ | None = None,
+        denormalize: bool          = True,
     ):
         """
         Add batch of frames to video.
 
         Args:
             images (Tensors): Images.
-            image_files (list[str] | None): Image files. Defaults to None.
+            files (Paths_ | None): Image files. Defaults to None.
             denormalize (bool): If True, the image will be denormalized to
                 [0, 255]. Defaults to True.
         """
         images = to_3d_tensor_list(images)
         
-        if image_files is None:
-            image_files = [None for _ in range(len(images))]
+        if files is None:
+            files = [None for _ in range(len(images))]
 
-        for image, image_file in zip(images, image_files):
-            self.write(image=image, image_file=image_file)
+        for image, file in zip(images, files):
+            self.write(image=image, file=file)

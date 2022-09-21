@@ -4562,7 +4562,7 @@ def get_next_version(root_dir: str) -> int:
         else:
             d = ""
         bn = os.path.basename(d)
-        if bn.startswith("version_"):
+        if bn.startswith("version_") or  bn.startswith("exp_"):
             dir_ver = bn.split("_")[1].replace("/", "")
             existing_versions.append(int(dir_ver))
     if len(existing_versions) == 0:

@@ -174,6 +174,8 @@ debug = {
 		# be the same as the number of items in the list. Defaults to 8.
     "wait_time": 0.001,
         # Pause sometimes before showing the next image. Defaults to 0.001.
+	"save": True,
+		# Save debug image. Defaults to False.
 }
 
 

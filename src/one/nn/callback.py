@@ -353,7 +353,7 @@ class ModelCheckpoint(Checkpoint):
     ):
         console.log(
             f"\n{trainer.current_epoch - self.start_epoch + 1} epochs completed "
-            f"in {((time.time() - self.start_time) / 3600):.3f}"
+            f"in {((time.time() - self.start_time) / 3600):.3f} hours"
         )
         self.logger.write(
             f"\n{trainer.current_epoch - self.start_epoch + 1} epochs completed "

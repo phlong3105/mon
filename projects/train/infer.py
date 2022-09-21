@@ -11,69 +11,12 @@ import argparse
 import socket
 
 from one.data import *
-from one.nn import ImageEnhancementModel
-from one.vision.acquisition import get_image_size
-from one.vision.acquisition import ImageLoader
-from one.vision.acquisition import to_image
-from one.vision.acquisition import write_image_torch
-from one.vision.transformation import resize
+from one.nn import attempt_load
+from one.nn import ImageInferrer
+import one.vision
 
 
 # H1: - Infer ------------------------------------------------------------------
-
-def preprocess(
-    images: Tensor,
-    shape : Ints,
-) -> tuple[Tensor, Ints, Ints]:
-    """
-    Preprocessing input.
-    
-    Args:
-        images (Tensor): Input images as [B, H, W, C].
-        shape (Ints): Resize images to shape.
-        
-    Returns:
-    	images (Tensor): Input image as  [B, C H, W].
-    	size0 (Ints): The original images' sizes.
-        size1 (Ints): The resized images' sizes.
-    """
-    # NOTE: THIS PIPELINE IS FASTER
-    size0    = get_image_size(images)
-    new_size = to_size(shape)
-    if shape:
-        images = [resize(image=i, size=new_size) for i in images]
-    images = torch.stack(images)
-    size1  = get_image_size(images)
-    return images, size0, size1
-
-
-def postprocess_enhancement(
-    results: Tensor,
-    size0  : Ints,
-    size1  : Ints
-) -> Tensor:
-    """
-    Postprocessing results.
-
-    Args:
-        results (Tensor): Output images.
-        size0 (Ints): The original images' sizes.
-        size1 (Ints): The resized images' sizes.
-            
-    Returns:
-        results (Tensor): Post-processed output images as [B, H, W, C].
-    """
-    if isinstance(results, (list, tuple)):
-        results = results[-1]
-        
-    if size0 != size1:
-        results = resize(
-            image         = results,
-            size          = size0,
-            interpolation = InterpolationMode.CUBIC,
-        )
-    return results
-
 
 def detect(args: Munch | dict):
     args = Munch.fromDict(args)
@@ -81,92 +24,36 @@ def detect(args: Munch | dict):
     # H2: - Initialization -----------------------------------------------------
     console.rule("[bold red]1. INITIALIZATION")
     console.log(f"Machine: {args.hostname}")
-    
-    # Input
-    data = ImageLoader(source=args.source, batch_size=args.batch_size)
-    
-    # Output
-    output_dir = ""
-    if args.save:
-        # assert_url_or_file(str(args.root))
-        # assert_str(args.name)
-        output_dir = Path(args.root) / args.name
-    
     # Model
-    if is_ckpt_file(args.weights):
-        model = MODELS.build(
-            name        = args.model,
-            cfg         = args.cfg,
-            num_classes = args.num_classes,
-            phase       = "inference",
-        )
-        model = model.load_from_checkpoint(
-            checkpoint_path = args.weights,
-            name            = args.model,
-            cfg             = args.cfg,
-            num_classes     = args.num_classes,
-            phase           = "inference",
-        )
-    else:
-        model = MODELS.build(
-            name        = args.model,
-            cfg         = args.cfg,
-            pretrained  = args.weights,
-            num_classes = args.num_classes,
-            phase       = "inference",
-        )
     devices = select_device(device=args.devices)
-    model.to(devices)
-    
+    model   = attempt_load(
+        name        = args.model,
+        cfg         = args.cfg,
+        weights     = args.weights,
+        num_classes = args.num_classes,
+        phase       = "inference",
+    )
     print_dict(args, title=model.fullname)
     console.log("[green]Done")
-    
-    # Visualize
-    if args.verbose:
-        cv2.namedWindow("image",  cv2.WINDOW_AUTOSIZE | cv2.WINDOW_KEEPRATIO)
-        cv2.namedWindow("result", cv2.WINDOW_AUTOSIZE | cv2.WINDOW_KEEPRATIO)
-    
-    # H2: - Training -----------------------------------------------------------
-    console.rule("[bold red]2. INFERENCE")
-    
-    with progress_bar() as pbar:
-        for batch_idx, batch in pbar.track(
-            enumerate(data),
-            total=len(data),
-            description=f"[bright_yellow] Processing"
-        ):
-            images, indexes, files, rel_paths = batch
-            input, size0, size1 = preprocess(images, shape=args.shape)
-            input = input.to(devices)
-            pred  = model.forward(input=input)
-            
-            if isinstance(model, ImageEnhancementModel):
-                results = postprocess_enhancement(
-                    results = input,
-                    size0   = size0,
-                    size1   = size1,
-                )
-                
-            if args.verbose:
-                images_np  = to_image(image=images,  denormalize=True)
-                results_np = to_image(image=results, denormalize=True)
-                for i in range(len(images)):
-                    cv2.imshow("image",  images_np[i])
-                    cv2.imshow("result", results_np[i])
-                    cv2.waitKey(1)
-            if args.save:
-                for i in range(len(images)):
-                    write_image_torch(
-                        image = results[i],
-                        dir   = output_dir,
-                        name  = rel_paths[i],
-                    )
-            
+
+    # H2: - Inferrer -----------------------------------------------------------
+    console.rule("[bold red]2. Inferrer")
+    inferrer = ImageInferrer(
+        source     = args.source,
+        root       = args.root,
+        name       = args.name,
+        batch_size = args.batch_size,
+        shape      = args.shape,
+        device     = args.devices,
+        save       = args.save,
+        verbose    = args.verbose,
+    )
     console.log("[green]Done")
-   
-    # H2: - Terminate ----------------------------------------------------------
-    if args.verbose:
-        cv2.destroyAllWindows()
+    
+    # H2: - Inference ----------------------------------------------------------
+    console.rule("[bold red]3. INFERENCE")
+    inferrer.run(model=model, source=args.source)
+    console.log("[green]Done")
 
 
 # H1: - Main -------------------------------------------------------------------
@@ -175,7 +62,7 @@ hosts = {
 	"lp-labdesktop01-ubuntu": {
         "model"      : "zerodce++",
         "cfg"        : "zerodce++.yaml",
-        "weights"    : "imagenet",
+        "weights"    : None,
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
@@ -189,7 +76,7 @@ hosts = {
     "lp-labdesktop02-ubuntu": {
         "model"      : "zerodce++",     
         "cfg"        : "zerodce++.yaml",
-        "weights"    : "imagenet",
+        "weights"    : None,
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
@@ -201,9 +88,9 @@ hosts = {
         "verbose"    : True,
 	},
     "lp-imac.local": {
-        "model"      : "zerodce++",
-        "cfg"        : "zerodce++.yaml",
-        "weights"    : "imagenet",
+        "model"      : "zerodce",
+        "cfg"        : "zerodce.yaml",
+        "weights"    : None,
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,

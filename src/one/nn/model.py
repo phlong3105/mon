@@ -607,10 +607,307 @@ class Trainer(pl.Trainer):
 # H1: - Inferrer ---------------------------------------------------------------
 
 class Inferrer(metaclass=ABCMeta):
-    pass
+    """
+    Base inference pipeline.
+    """
+    
+    def __init__(
+        self,
+        source    : Path_ | None = None,
+        root      : Path_ | None = RUNS_DIR / "infer",
+        name      : str          = "exp",
+        batch_size: int          = 1,
+        shape     : Ints  | None = None,
+        device    : int | str    = "cpu",
+        save      : bool         = True,
+        verbose   : bool         = True,
+        *args, **kwargs
+    ):
+        self.source      = source
+        self.root        = root
+        self.shape       = shape
+        self.batch_size  = batch_size
+        self.device      = select_device(device=device, batch_size=batch_size)
+        self.save        = save
+        self.verbose     = verbose
+        self.model       = None
+        self.data_loader = None
+        self.data_writer = None
+        
+        if name == "exp":
+            self.name = f"exp_{get_next_version(str(self.root))}"
+        else:
+            self.name = name
+        self.output_dir = self.root / self.name
+    
+    @property
+    def root(self) -> Path:
+        return self._root
+    
+    @root.setter
+    def root(self, root: Path_ | None):
+        """
+        Assign the root directory of the model.
+        
+        Args:
+            root (Path_ | None): The root directory to save the results.
+        """
+        if root is None:
+            root = RUNS_DIR / "infer"
+        else:
+            root = Path(root)
+        self._root = root
+    
+    @abstractmethod
+    def init_data_loader(self):
+        """
+        Initialize data loader.
+        """
+        pass
+    
+    @abstractmethod
+    def init_data_writer(self):
+        """
+        Initialize data writer.
+        """
+        pass
+    
+    @abstractmethod
+    def run(self, model: BaseModel, source: Path_):
+        """
+        
+        Args:
+            model (BaseModel): Model.
+            source (Path_): Data source.
+        """
+        pass
+    
+    @abstractmethod
+    def preprocess(self, input: Tensor):
+        """
+        Preprocessing input.
+        
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
 
+        Returns:
+            input (Tensor): Processed input image as  [B, C H, W].
+        """
+        pass
+    
+    @abstractmethod
+    def postprocess(self, input: Tensor, pred: Tensor, *args, **kwargs) -> Tensor:
+        """
+        Postprocessing prediction.
+        
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            pred (Tensor): Prediction of shape [B, C, H, W].
+
+        Returns:
+            results (Tensor): Results of shape [B, C, H, W].
+        """
+        pass
+    
+    def on_run_start(self):
+        """
+        Call before `run()` starts.
+        """
+        create_dirs(paths=[self.output_dir], recreate=True)
+        self.init_data_loader()
+        self.init_data_writer()
+        
+        self.model.to(self.device)
+        self.model.eval()
+    
+    @abstractmethod
+    def on_run_end(self):
+        """
+        Call after `run()` finishes.
+        """
+        pass
+    
+    
+class ImageInferrer(Inferrer):
+    """
+    Image inference pipeline.
+    """
+    
+    @property
+    def root(self) -> Path:
+        return self._root
+    
+    @root.setter
+    def root(self, root: Path_ | None):
+        """
+        Assign the root directory of the model.
+        
+        Args:
+            root (Path_ | None): The root directory to save the results.
+        """
+        if root is None:
+            root = RUNS_DIR / "infer"
+        else:
+            root = Path(root)
+        self._root = root
+    
+    def init_data_loader(self):
+        if self.source:
+            from one.vision.acquisition import ImageLoader
+            self.data_loader = ImageLoader(
+                source     = self.source,
+                batch_size = self.batch_size,
+            )
+    
+    def init_data_writer(self):
+        if self.save:
+            from one.vision.acquisition import ImageWriter
+            self.data_writer = ImageWriter(dst=self.output_dir)
+    
+    def run(self, model: BaseModel, source: Path_):
+        self.model  = model
+        self.source = source
+        
+        self.on_run_start()
+
+        start_time = time.time()
+        with progress_bar() as pbar:
+            for batch_idx, batch in pbar.track(
+                enumerate(self.data_loader),
+                total=len(self.data_loader),
+                description=f"[bright_yellow] Processing"
+            ):
+                images, indexes, files, rel_paths = batch
+                input, size0, size1 = self.preprocess(images)
+                pred = model.forward(input=input)
+                pred = self.postprocess(
+                    input = input,
+                    pred  = pred,
+                    size0 = size0,
+                    size1 = size1,
+                )
+                
+                if self.verbose:
+                    self.model.show_results(
+                        input = input,
+                        pred  = pred,
+                        max_n = self.batch_size,
+                        nrow  = self.batch_size,
+                        save  = False,
+                    )
+                if self.save:
+                    self.data_writer.write_batch(
+                        images      = pred,
+                        files       = files,
+                        denormalize = True,
+                    )
+        console.log(
+            f"Completed in {((time.time() - start_time) / 3600):.3f} hours"
+        )
+        
+        self.on_run_end()
+        
+    def preprocess(self, input: Tensor) -> tuple[Tensor, Ints, Ints]:
+        """
+        Preprocessing input.
+        
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+
+        Returns:
+            input (Tensor): Processed input image as  [B, C H, W].
+        	size0 (Ints): The original images' sizes.
+            size1 (Ints): The resized images' sizes.
+        """
+        from one.vision.acquisition import get_image_size
+        from one.vision.transformation import resize
+        
+        size0 = get_image_size(input)
+        if self.shape:
+            new_size = to_size(self.shape)
+            if size0 != new_size:
+                input = resize(image=input, size=new_size)
+            # images = [resize(i, self.shape) for i in images]
+            # images = torch.stack(input)
+        size1 = get_image_size(input)
+        input = input.to(self.device)
+        return input, size0, size1
+
+    # noinspection PyMethodOverriding
+    def postprocess(
+        self,
+        input: Tensor,
+        pred : Tensor,
+        size0: Ints,
+        size1: Ints,
+    ) -> Tensor:
+        """
+        Postprocessing prediction.
+        
+        Args:
+            input (Tensor): Input of shape [B, C, H, W].
+            pred (Tensor): Prediction of shape [B, C, H, W].
+            size0 (Ints): The original images' sizes.
+            size1 (Ints): The resized images' sizes.
+            
+        Returns:
+            pred (Tensor): Results of shape [B, C, H, W].
+        """
+        from one.vision.transformation import resize
+        
+        if isinstance(pred, (list, tuple)):
+            pred = pred[-1]
+        
+        if size0 != size1:
+            pred = resize(
+                image         = pred,
+                size          = size0,
+                interpolation = InterpolationMode.BILINEAR
+            )
+        return pred
+    
+    def on_run_end(self):
+        """
+        Call after `run()` finishes.
+        """
+        if self.verbose:
+            cv2.destroyAllWindows()
+    
 
 # H1: - Model ------------------------------------------------------------------
+
+def attempt_load(
+    name       : str,
+    cfg        : Path_,
+    weights    : Path_,
+    num_classes: int | None = None,
+    phase      : str        = "inference",
+    *args, **kwargs
+):
+    if is_ckpt_file(weights):
+        model = MODELS.build(
+            name        = name,
+            cfg         = cfg,
+            num_classes = num_classes,
+            phase       = "inference",
+        )
+        model = model.load_from_checkpoint(
+            checkpoint_path = weights,
+            name            = model,
+            cfg             = cfg,
+            num_classes     = num_classes,
+            phase           = "inference",
+        )
+    else:
+        model = MODELS.build(
+            name        = name,
+            cfg         = cfg,
+            pretrained  = weights,
+            num_classes = num_classes,
+            phase       = "inference",
+        )
+    return model
+
 
 def parse_model(
     d : dict      | None = None,
@@ -1505,7 +1802,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         else:
             output = x
         return output
-        
+    
     def on_fit_start(self):
         """
         Called at the very beginning of fit.
@@ -1704,7 +2001,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                     target   = target,
                     pred     = pred,
                     filepath = self.debug_image_filepath,
-                    **self.debug
+                    **self.debug | {
+                        "max_n": input[0],
+                        "nrow" : input[0],
+                    }
                 )
 
         # Loss
@@ -1820,6 +2120,23 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             target = target.flatten(start_dim=0, end_dim=1)
             pred   = pred.flatten(start_dim=0,   end_dim=1)
         
+        # Debugging
+        epoch = self.current_epoch + 1
+        if self.debug and \
+            epoch % self.debug.every_n_epochs == 0 and \
+            self.epoch_step < self.debug.max_n:
+            if self.trainer.is_global_zero:
+                self.show_results(
+                    input    = input,
+                    target   = target,
+                    pred     = pred,
+                    filepath = self.debug_image_filepath,
+                    **self.debug | {
+                        "max_n": input[0],
+                        "nrow" : input[0],
+                    }
+                )
+                
         # Loss
         loss = loss.mean() if loss is not None else None
         self.ckpt_log_scalar(f"checkpoint/loss/test_step", loss)
@@ -1927,6 +2244,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         max_n        : int | None    = 8,
         nrow         : int | None    = 8,
         wait_time    : float         = 0.01,
+        save         : bool          = False,
         verbose      : bool          = False,
         *args, **kwargs
     ):
@@ -1947,6 +2265,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 items in the list. Defaults to 8.
             wait_time (float): Wait some time (in seconds) to display the
                 figure then reset. Defaults to 0.01.
+            save (bool): Save debug image. Defaults to False.
             verbose (bool): If True shows the results on the screen.
                 Defaults to False.
         """
@@ -2100,6 +2419,7 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
         max_n        : int | None    = 8,
         nrow         : int | None    = 8,
         wait_time    : float         = 0.01,
+        save         : bool          = False,
         verbose      : bool          = False,
         *args, **kwargs
     ):
@@ -2120,14 +2440,18 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
                 items in the list. Defaults to 8.
             wait_time (float): Wait some time (in seconds) to display the
                 figure then reset. Defaults to 0.01.
+            save (bool): Save debug image. Defaults to False.
             verbose (bool): If True shows the results on the screen.
                 Defaults to False.
         """
         from one.plot import imshow_classification
-        save_cfg = {
-            "filepath"  : filepath or self.debug_image_filepath ,
-            "pil_kwargs": dict(quality=image_quality)
-        }
+        
+        save_cfg = None
+        if save:
+            save_cfg = {
+                "filepath"  : filepath or self.debug_image_filepath ,
+                "pil_kwargs": dict(quality=image_quality)
+            }
         imshow_classification(
             winname   = self.phase.value,
             image     = input,
@@ -2135,9 +2459,9 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
             target    = target,
             scale     = 2,
             save_cfg  = save_cfg,
-            max_n     = self.debug.max_n,
-            nrow      = self.debug.nrow,
-            wait_time = self.debug.wait_time,
+            max_n     = max_n,
+            nrow      = nrow,
+            wait_time = wait_time,
         )
 
 
@@ -2226,6 +2550,7 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
         max_n        : int | None    = 8,
         nrow         : int | None    = 8,
         wait_time    : float         = 0.01,
+        save         : bool          = False,
         verbose      : bool          = False,
         *args, **kwargs
     ):
@@ -2246,6 +2571,7 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
                 items in the list. Defaults to 8.
             wait_time (float): Wait some time (in seconds) to display the
                 figure then reset. Defaults to 0.01.
+            save (bool): Save debug image. Defaults to False.
             verbose (bool): If True shows the results on the screen.
                 Defaults to False.
         """
@@ -2261,17 +2587,19 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
                 result["pred"] = pred[-1]
             else:
                 result["pred"] = pred
-                
-        save_cfg = {
-            "filepath"  : filepath or self.debug_image_filepath ,
-            "pil_kwargs": dict(quality=image_quality)
-        }
+        
+        save_cfg = None
+        if save:
+            save_cfg = {
+                "filepath"  : filepath or self.debug_image_filepath ,
+                "pil_kwargs": dict(quality=image_quality)
+            }
         imshow_enhancement(
             winname   = self.phase.value,
             image     = result,
             scale     = 2,
             save_cfg  = save_cfg,
-            max_n     = self.debug.max_n,
-            nrow      = self.debug.nrow,
-            wait_time = self.debug.wait_time,
+            max_n     = max_n,
+            nrow      = nrow,
+            wait_time = wait_time,
         )
