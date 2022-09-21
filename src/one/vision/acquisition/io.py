@@ -690,9 +690,9 @@ def write_image_torch(
     filepath = dir / name
     
     if ext in [".jpg", ".jpeg"]:
-        torchvision.io.image.write_jpeg(input=image, filename=filepath)
+        torchvision.io.image.write_jpeg(input=image, filename=str(filepath))
     elif ext in [".png"]:
-        torchvision.io.image.write_png(input=image, filename=filepath)
+        torchvision.io.image.write_png(input=image, filename=str(filepath))
 
 
 def write_images_pil(
@@ -798,8 +798,9 @@ class BaseLoader(metaclass=ABCMeta):
     A baseclass/interface for all VideoLoader classes.
     
     Args:
-        data (Path_): Data source. Can be a path to an image file, a directory,
-            a video, or a stream. It can also be a pathname pattern to images.
+        source (Path_): Data source. Can be a path to an image file, a
+            directory, a video, or a stream. It can also be a pathname pattern
+            to images.
         batch_size (int): Number of samples in one forward & backward pass.
             Defaults to 1.
         verbose (bool): Verbosity mode of video loader backend. Defaults to False.
@@ -807,13 +808,13 @@ class BaseLoader(metaclass=ABCMeta):
     
     def __init__(
         self,
-        data      : Path_,
+        source    : Path_,
         batch_size: int  = 1,
         verbose   : bool = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.data       = Path(data)
+        self.source     = Path(source)
         self.batch_size = batch_size
         self.verbose    = verbose
         self.index      =  0
@@ -980,8 +981,8 @@ class ImageLoader(BaseLoader):
         have different shapes.
     
     Args:
-        data (Path_): The path to the image file. Can be a path to an image file
-            or a directory, or a pathname pattern to images.
+        source (Path_): The path to the image file. Can be a path to an image
+            file or a directory, or a pathname pattern to images.
         batch_size (int): The number of images to be processed at once.
             Defaults to 1.
         backend (VisionBackend_): The backend to use for image processing.
@@ -991,7 +992,7 @@ class ImageLoader(BaseLoader):
 
     def __init__(
         self,
-        data      : Path_,
+        source    : Path_,
         batch_size: int            = 1,
         backend   : VisionBackend_ = VisionBackend.CV,
         verbose   : bool           = False,
@@ -999,7 +1000,7 @@ class ImageLoader(BaseLoader):
         self.images  = []
         self.backend = VisionBackend.from_value(backend)
         super().__init__(
-            data       = data,
+            source     = source,
             batch_size = batch_size,
             verbose    = verbose
         )
@@ -1026,16 +1027,16 @@ class ImageLoader(BaseLoader):
             indexes   = []
             files     = []
             rel_paths = []
-
+            
             for i in range(self.batch_size):
                 if self.index >= self.num_images:
                     break
                 
                 file     = self.images[self.index]
-                rel_path = file.replace(self.data, "")
+                rel_path = str(file).replace(str(self.source), "")
                 image    = read_image(
                     path    = self.images[self.index],
-                    backend = self.backend
+                    backend = self.backend,
                 )
                 # image  = image[:, :, ::-1]  # BGR to RGB
                 
@@ -1043,20 +1044,23 @@ class ImageLoader(BaseLoader):
                 indexes.append(self.index)
                 files.append(file)
                 rel_paths.append(rel_path)
-
+                
                 self.index += 1
             
-            # return np.array(images), indexes, files, rel_paths
-            return torch.stack(images), indexes, files, rel_paths
+            images = torch.stack(images)
+            images = torch.squeeze(images, dim=0)
+            return images, indexes, files, rel_paths
     
     def init(self):
         self.images = []
-        if is_image_file(self.data):
-            self.images = [self.data]
-        elif is_dir(self.data):
-            self.images = [i for i in Path(self.data).rglob("*") if is_image_file(i)]
-        elif isinstance(self.data, str):
-            self.images = [Path(i) for i in glob.glob(self.data) if is_image_file(i)]
+        if is_image_file(self.source):
+            self.images = [self.source]
+        elif is_dir(self.source):
+            self.images = [i for i in Path(self.source).rglob("*")
+                           if is_image_file(i)]
+        elif isinstance(self.source, str):
+            self.images = [Path(i) for i in glob.glob(self.source)
+                           if is_image_file(i)]
         else:
             raise IOError("Error when listing image files.")
         self.num_images = len(self.images)
@@ -1335,9 +1339,10 @@ class VideoLoaderCV(VideoLoader):
                 rel_paths.append(rel_path)
                 
                 self.index += 1
-            
-            # return np.array(images), indexes, files, rel_paths
-            return torch.stack(images), indexes, files, rel_paths
+
+            images = torch.stack(images)
+            images = torch.squeeze(images, dim=0)
+            return images, indexes, files, rel_paths
     
     @property
     def format(self):  # Flag=8
@@ -1517,9 +1522,10 @@ class VideoLoaderFFmpeg(VideoLoader):
                 rel_paths.append(rel_path)
                 
                 self.index += 1
-            
-            # return np.array(images), indexes, files, rel_paths
-            return torch.stack(images), indexes, files, rel_paths
+
+            images = torch.stack(images)
+            images = torch.squeeze(images, dim=0)
+            return images, indexes, files, rel_paths
         
     @property
     def fourcc(self) -> str:

@@ -5030,7 +5030,10 @@ class ComposeTransform(nn.Sequential):
                 for t in transforms
             ]
             if not all(isinstance(t, Transform) for t in transforms):
-                raise TypeError(f"All items in `transforms` must be callable.")
+                raise TypeError(
+                    f"All items in `transforms` must be callable. "
+                    f"But got: {transforms}"
+                )
         
         args = transforms + list(args)
         super().__init__(*args, **kwargs)

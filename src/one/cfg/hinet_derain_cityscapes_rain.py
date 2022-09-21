@@ -19,7 +19,7 @@ model_name = "hinet-derain"
 model_cfg  = "hinet.yaml"
 data_name  = "cityscapes_rain"
 fullname   = f"{model_name}-{data_name}"
-root       = RUNS_DIR / fullname
+root       = RUNS_DIR / "train" / fullname
 shape      = [3, 256, 256]
 
 

@@ -1227,7 +1227,7 @@ def resize(
         Resized image of shape [..., C, H, W].
     """
     assert_tensor(image)
-    size = (to_size(size))  # H, W
+    # size = (to_size(size))  # H, W
     
     if not inplace:
         image = image.clone()

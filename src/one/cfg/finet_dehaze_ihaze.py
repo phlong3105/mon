@@ -19,7 +19,7 @@ model_name = "finet-dehaze"
 model_cfg  = "finet"
 data_name  = "ihaze"
 fullname   = f"{model_name}-{data_name}"
-root       = RUNS_DIR / fullname
+root       = RUNS_DIR / "train" / fullname
 shape      = [3, 256, 256]
 
 

@@ -19,7 +19,7 @@ model_name = "retinexnet"
 model_cfg  = "retinexnet.yaml"
 data_name  = "lol"
 fullname   = f"{model_name}-{data_name}"
-root       = RUNS_DIR / fullname
+root       = RUNS_DIR / "train" / fullname
 shape      = [3, 256, 256]
 
 

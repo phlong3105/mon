@@ -19,7 +19,7 @@ model_name = "hinet-dehaze"
 model_cfg  = "hinet.yaml"
 data_name  = "cityscapes_fog"
 fullname   = f"{model_name}-{data_name}"
-root       = RUNS_DIR / fullname
+root       = RUNS_DIR / "train" / fullname
 shape      = [3, 256, 256]
 
 

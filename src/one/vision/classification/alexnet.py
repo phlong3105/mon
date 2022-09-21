@@ -79,6 +79,12 @@ class AlexNet(ImageClassificationModel):
     """
     
     model_zoo = {
+        "cifar10": dict(
+            name        = "cifar10",
+            path        = "",
+            filename    = "alexnet-cifar10.pt",
+            num_classes = 10,
+        ),
         "imagenet": dict(
             name        = "imagenet",
             path        = "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",

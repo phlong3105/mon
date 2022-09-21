@@ -261,7 +261,7 @@ def load_state_dict_from_path(
     if state_dict and "model_state_dict" in state_dict:
         state_dict = state_dict["model_state_dict"]
     if state_dict and "state_dict" in state_dict:
-        state_dict = state_dict["model_state_dict"]
+        state_dict = state_dict["state_dict"]
     return state_dict
 
 
@@ -374,10 +374,9 @@ def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
                 "to nccl."
             )
 
-  
+
 # H1: - Trainer ----------------------------------------------------------------
 
-# noinspection PyUnresolvedReferences
 class Trainer(pl.Trainer):
     """
     Override `pytorch_lightning.Trainer` with several methods and properties.
@@ -603,6 +602,12 @@ class Trainer(pl.Trainer):
                 "MPS available but not used. Set `accelerator` and `devices` using"
                 f" `Trainer(accelerator='mps', devices={MPSAccelerator.auto_device_count()})`."
             )
+
+
+# H1: - Inferrer ---------------------------------------------------------------
+
+class Inferrer(metaclass=ABCMeta):
+    pass
 
 
 # H1: - Model ------------------------------------------------------------------
@@ -1110,10 +1115,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Args:
             root (Path_): The root directory of the model.
         """
-        root = Path(root)
-        if not root.is_dir():
-            root = RUNS_DIR
+        if root is None:
+            root = RUNS_DIR / "train"
+        else:
+            root = Path(root)
         self._root = root
+        
         if self._root.name != self.fullname:
             self._root = self._root / self.fullname
 

@@ -64,7 +64,7 @@ from one.vision.segmentation.unet import UNet
 class TestModel(unittest.TestCase):
     
     def test_alexnet(self):
-        alexnet = AlexNet(num_classes=1000, pretrained="imagenet", verbose=True)
+        alexnet = AlexNet(num_classes=10, pretrained="cifar10", verbose=True)
         self.assertIsNotNone(alexnet)
     
     def test_convnext_base(self):

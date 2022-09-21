@@ -1599,7 +1599,6 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             target_transform = ComposeTransform(target_transform)
         if transforms is not None:
             transforms = ComposeTransform(transforms)
-        
         self.transform        = transform
         self.target_transform = target_transform
         self.transforms       = transforms

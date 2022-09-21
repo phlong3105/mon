@@ -19,7 +19,7 @@ model_name = "alexnet"
 model_cfg  = "alexnet.yaml"
 data_name  = "cifar10"
 fullname   = f"{model_name}-{data_name}"
-root       = RUNS_DIR / fullname
+root       = RUNS_DIR / "train" / fullname
 shape      = [3, 64, 64]
 
 
