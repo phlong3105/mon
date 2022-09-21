@@ -677,6 +677,7 @@ def write_image_torch(
     image = t.denormalize_simple(image) if denormalize else image
     # image = to_channel_last(image)
     image = image.to(torch.uint8)
+    image = image.cpu()
     
     # Write image
     dir      = Path(dir)
@@ -1034,7 +1035,7 @@ class ImageLoader(BaseLoader):
                     break
                 
                 file     = self.images[self.index]
-                rel_path = str(file).replace(str(self.source), "")
+                rel_path = str(file).replace(str(self.source) + "/", "")
                 image    = read_image(
                     path    = self.images[self.index],
                     backend = self.backend,
@@ -1150,8 +1151,10 @@ class ImageWriter(BaseWriter):
         create_dirs(paths=[parent_dir])
         cv2.imwrite(output_file, image)
         """
-        if isinstance(file, (Path, str)):
-            file = self.dst / f"{Path(file).stem}{self.extension}"
+        if isinstance(file, Path):
+            file = self.dst / f"{file.stem}{self.extension}"
+        elif isinstance(file, str):
+            file = self.dst / file
         else:
             raise ValueError(f"`image_file` must be given.")
         file = Path(file)

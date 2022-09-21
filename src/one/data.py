@@ -2001,7 +2001,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         if cache_images:
             self.cache_images()
         
-    def __getitem__(self, index: int) -> tuple[Tensor, dict]:
+    def __getitem__(self, index: int) -> tuple[Tensor, Tensor | None, dict]:
         """
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
@@ -2021,7 +2021,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
             input, *_ = self.transform(input=input,  target=None, dataset=self)
         if self.transforms is not None:
             input, *_ = self.transforms(input=input, target=None, dataset=self)
-        return input, meta
+        return input, None, meta
         
     def __len__(self) -> int:
         """
@@ -2077,7 +2077,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         console.log(f"Images have been cached.")
         
     @staticmethod
-    def collate_fn(batch) -> tuple[Tensor, list]:
+    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list]:
         """
         Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
@@ -2085,14 +2085,14 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         Args:
             batch: a list of tuples of (input, meta).
         """
-        input, meta = zip(*batch)  # Transposed
+        input, _, meta = zip(*batch)  # Transposed
         if all(i.ndim == 3 for i in input):
             input = torch.stack(input, 0)
         elif all(i.ndim == 4 for i in input):
             input = torch.cat(input, 0)
         else:
             raise ValueError(f"Expect 3 <= `input.ndim` <= 4.")
-        return input, meta
+        return input, None, meta
 
 
 class UnlabeledVideoDataset(UnlabeledDataset, metaclass=ABCMeta):

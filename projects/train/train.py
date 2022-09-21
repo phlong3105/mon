@@ -81,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "hinet_derain_snow100k",
+		"cfg"        : "zerodce_lol",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,

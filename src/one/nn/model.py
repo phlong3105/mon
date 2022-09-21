@@ -169,6 +169,9 @@ def load_pretrained(
         state_dict = state_dict,
         strict     = strict
     )
+    # Debug
+    # print(state_dict.keys())
+    # print(module.state_dict().keys())
     return module
 
 
@@ -235,19 +238,23 @@ def load_state_dict_from_path(
     """
     if path is None:
         raise ValueError()
-    if model_dir is not None:
+    if model_dir:
         model_dir = Path(model_dir)
     
     path = Path(path)
     if not is_torch_saved_file(path) and \
         (model_dir is None or not model_dir.is_dir()):
         raise ValueError(f"`model_dir` must be defined. But got: {model_dir}.")
-
-    state_dict  = None
-    save_weight = model_dir / filename
+    
+    save_weight = ""
+    if filename:
+        save_weight = model_dir / filename
+    
+    state_dict = None
     if is_torch_saved_file(save_weight):
-        # Can be either the weight file or the weights file.
         state_dict = torch.load(str(save_weight), map_location=map_location)
+    elif is_torch_saved_file(path):
+        state_dict = torch.load(str(path), map_location=map_location)
     elif is_url(path):
         state_dict = load_state_dict_from_url(
             url          = str(path),
@@ -798,7 +805,7 @@ class ImageInferrer(Inferrer):
                 if self.save:
                     self.data_writer.write_batch(
                         images      = pred,
-                        files       = files,
+                        files       = rel_paths,
                         denormalize = True,
                     )
         console.log(
@@ -893,7 +900,7 @@ def attempt_load(
         )
         model = model.load_from_checkpoint(
             checkpoint_path = weights,
-            name            = model,
+            name            = name,
             cfg             = cfg,
             num_classes     = num_classes,
             phase           = "inference",
@@ -1196,7 +1203,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         metrics	   : Metrics_     | None = None,
         optimizers : Optimizers_  | None = None,
         debug      : dict | Munch | None = None,
-        verbose    : bool                = False,
+        verbose    : bool                = True,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -1609,7 +1616,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         elif pretrained in cls.model_zoo:
             return cls.model_zoo[pretrained]
         else:
-            return None
+            return pretrained
     
     @abstractmethod
     def init_weights(self, m: Module):
@@ -1623,10 +1630,10 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Load pretrained weights. It only loads the intersection layers of
         matching keys and shapes between current model and pretrained.
         """
-        if self.pretrained:
+        if is_dict(self.pretrained):
             create_dirs(paths=[self.pretrained_dir])
             load_pretrained(
-                module	  = self.model,
+                module	  = self,
                 model_dir = self.pretrained_dir,
                 strict	  = False,
                 **self.pretrained
@@ -1634,15 +1641,13 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             if self.verbose:
                 console.log(f"Load pretrained from: {self.pretrained}!")
         elif is_url_or_file(self.pretrained):
-            """
             load_pretrained(
-                self,
-                path 	  = self.pretrained,
-                model_dir = models_zoo_dir,
-                strict	  = False
+                module    = self,
+                path 	  = str(self.pretrained),
+                model_dir = self.pretrained_dir,
+                strict	  = False,
             )
-            """
-            raise NotImplementedError("This function has not been implemented.")
+            # raise NotImplementedError("This function has not been implemented.")
         else:
             error_console.log(f"[yellow]Cannot load from pretrained: "
                               f"{self.pretrained}!")
@@ -2446,12 +2451,10 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
         """
         from one.plot import imshow_classification
         
-        save_cfg = None
-        if save:
-            save_cfg = {
-                "filepath"  : filepath or self.debug_image_filepath ,
-                "pil_kwargs": dict(quality=image_quality)
-            }
+        save_cfg = {
+            "filepath"  : filepath or self.debug_image_filepath ,
+            "pil_kwargs": dict(quality=image_quality)
+        } if save else None
         imshow_classification(
             winname   = self.phase.value,
             image     = input,
@@ -2588,12 +2591,10 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
             else:
                 result["pred"] = pred
         
-        save_cfg = None
-        if save:
-            save_cfg = {
-                "filepath"  : filepath or self.debug_image_filepath ,
-                "pil_kwargs": dict(quality=image_quality)
-            }
+        save_cfg = {
+            "filepath"  : filepath or self.debug_image_filepath ,
+            "pil_kwargs": dict(quality=image_quality)
+        } if save else None
         imshow_enhancement(
             winname   = self.phase.value,
             image     = result,

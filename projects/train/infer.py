@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import argparse
 import socket
+import one.vision
 
 from one.data import *
 from one.nn import attempt_load
 from one.nn import ImageInferrer
-import one.vision
 
 
 # H1: - Infer ------------------------------------------------------------------
@@ -90,9 +90,9 @@ hosts = {
     "lp-imac.local": {
         "model"      : "zerodce",
         "cfg"        : "zerodce.yaml",
-        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol.pt",
+        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol226.pt",
         "num_classes": None,
-        "source"     : DATA_DIR / "lol226",
+        "source"     : DATA_DIR / "lol226",  # / "test" / "low",
         "batch_size" : 1,
         "img_size"   : (3, 256, 256),
 		"devices"    : "cpu",
