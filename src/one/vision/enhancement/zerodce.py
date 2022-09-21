@@ -89,7 +89,7 @@ cfgs = {
             [-1,      1,      Conv2d,     [32, 3, 1, 1]],         # 13
             [-1,      1,      ReLU,       [True]],                # 14 (x6)
             [[2, 14], 1,      Concat,     []],                    # 15
-            [-1,      1,      Conv2d,     [24, 3, 1, 1]],         # 16 (x_r)
+            [-1,      1,      Conv2d,     [24, 3, 1, 1]],         # 16 (a)
             [-1,      1,      Tanh,       []],                    # 17
         ],
         "head": [
@@ -140,6 +140,12 @@ class ZeroDCE(ImageEnhancementModel):
     """
     
     model_zoo = {
+        "lol": dict(
+            name        = "lol",
+            path        = "",
+            filename    = "zerodce-lol.pth",
+            num_classes = None,
+        ),
         "sice": dict(
             name        = "sice",
             path        = "",

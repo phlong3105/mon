@@ -18,7 +18,7 @@ import one.vision
 
 # H1: - Infer ------------------------------------------------------------------
 
-def detect(args: Munch | dict):
+def infer(args: Munch | dict):
     args = Munch.fromDict(args)
     
     # H2: - Initialization -----------------------------------------------------
@@ -62,7 +62,7 @@ hosts = {
 	"lp-labdesktop01-ubuntu": {
         "model"      : "zerodce++",
         "cfg"        : "zerodce++.yaml",
-        "weights"    : None,
+        "weights"    : PRETRAINED_DIR / "zerodce++" / "zerodce++-lol.pt",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
@@ -90,7 +90,7 @@ hosts = {
     "lp-imac.local": {
         "model"      : "zerodce",
         "cfg"        : "zerodce.yaml",
-        "weights"    : None,
+        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol.pt",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
@@ -155,4 +155,4 @@ if __name__ == "__main__":
         save        = save,
         verbose     = verbose,
     )
-    detect(args)
+    infer(args)

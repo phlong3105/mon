@@ -37,12 +37,12 @@ cfgs = {
             [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 14
             [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
             [[3, 15], 1,      Concat,                      []],                      # 16
-            [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 1, 0]],  # 17 (x_r)
+            [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 1, 0]],  # 17 (a)
             [-1,      1,      Tanh,                        []],                      # 18
             [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                     # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
         ]
     }
 }
@@ -89,6 +89,12 @@ class ZeroDCEPP(ImageEnhancementModel):
     """
     
     model_zoo = {
+        "lol": dict(
+            name        = "lol",
+            path        = "",
+            filename    = "zerodce++-lol.pth",
+            num_classes = None,
+        ),
         "sice": dict(
             name        = "sice",
             path        = "",
