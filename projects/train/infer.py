@@ -90,9 +90,9 @@ hosts = {
     "lp-imac.local": {
         "model"      : "zerodce",
         "cfg"        : "zerodce.yaml",
-        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol226.pt",
+        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol.pt",
         "num_classes": None,
-        "source"     : DATA_DIR / "lol226",  # / "test" / "low",
+        "source"     : DATA_DIR / "lol" / "test" / "low",
         "batch_size" : 1,
         "img_size"   : (3, 256, 256),
 		"devices"    : "cpu",

@@ -879,7 +879,7 @@ class ImageInferrer(Inferrer):
         """
         if self.verbose:
             cv2.destroyAllWindows()
-    
+
 
 # H1: - Model ------------------------------------------------------------------
 
