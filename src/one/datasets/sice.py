@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 
 import matplotlib.pyplot as plt
+import torchvision
 from torch.utils.data import random_split
 
 from one.constants import *
@@ -21,7 +22,10 @@ from one.data import ImageEnhancementDataset
 from one.data import UnlabeledImageDataset
 from one.plot import imshow
 from one.plot import imshow_enhancement
+from one.vision.acquisition import write_image_torch
+from one.vision.transformation import denormalize_simple
 from one.vision.transformation import Resize
+from one.vision.transformation import resize
 
 
 # H1: - Module -----------------------------------------------------------------
@@ -496,7 +500,7 @@ class SICEDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "sice" / "supervised",
+        root: Path_ = DATA_DIR / "sice" / "supervised_resized",
         name: str   = "sice",
         *args, **kwargs
     ):
@@ -1150,14 +1154,46 @@ class SICEUnsupervisedDataModule(DataModule):
 
 # H1: - Utils ------------------------------------------------------------------
 
-
-
+def resize_images(root: Path_, size: Ints):
+    """
+    Resize images.
+    
+    Args:
+        root (Path_): Root directory of the images.
+        size (Ints): Desired image size.
+    """
+    root = Path(root)
+    images: list[Image] = []
+    with progress_bar() as pbar:
+        for path in pbar.track(
+            list(root.rglob("*.jpg")),
+            description=f"Listing images"
+        ):
+            images.append(Image(path=path))
+       
+        for image in pbar.track(images, description=f"Resizing images"):
+            img = image.load()
+            img = resize(
+                image = img,
+                size  = size,
+            )
+            path     = image.path
+            rel_path = str(path).replace(str(root) + "/", "")
+            rel_path = Path(rel_path)
+            new_root = Path(str(root) + "_resized")
+            new_path = new_root / rel_path
+            img      = denormalize_simple(img)
+            img      = img.to(torch.uint8)
+            img      = torch.squeeze(img)
+            create_dirs(paths=[new_path.parent])
+            torchvision.io.image.write_jpeg(input=img, filename=str(new_path))
+            
 
 # H1: - Test -------------------------------------------------------------------
 
 def test_sice():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised_resized",
            # Root directory of dataset.
         "name": "sice",
             # Dataset's name.
@@ -1208,7 +1244,7 @@ def test_sice():
 
 def test_sice1():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice1",
             # Dataset's name.
@@ -1259,7 +1295,7 @@ def test_sice1():
 
 def test_sice2():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice2",
             # Dataset's name.
@@ -1310,7 +1346,7 @@ def test_sice2():
 
 def test_sice3():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice3",
             # Dataset's name.
@@ -1361,7 +1397,7 @@ def test_sice3():
 
 def test_sice4():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice4",
             # Dataset's name.
@@ -1412,7 +1448,7 @@ def test_sice4():
 
 def test_sice5():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice5",
             # Dataset's name.
@@ -1463,7 +1499,7 @@ def test_sice5():
 
 def test_sice6():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice6",
             # Dataset's name.
@@ -1514,7 +1550,7 @@ def test_sice6():
 
 def test_sice7():
     cfg = {
-        "root": DATA_DIR / "sice"/ "supervised",
+        "root": DATA_DIR / "sice" / "supervised",
            # Root directory of dataset.
         "name": "sice7",
             # Dataset's name.
@@ -1565,7 +1601,7 @@ def test_sice7():
 
 def test_sice_unsupervised():
     cfg = {
-        "root": DATA_DIR / "sice"/ "unsupervised",
+        "root": DATA_DIR / "sice" / "unsupervised",
            # Root directory of dataset.
         "name": "sice_unsupervised",
             # Dataset's name.
@@ -1616,14 +1652,18 @@ def test_sice_unsupervised():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str , default="test_sice", help="The task to run")
+    parser.add_argument("--task", type=str , default="resize_images",                  help="The task to run.")
+    parser.add_argument("--root", type=str,  default=DATA_DIR / "sice" / "supervised", help="Data root")
+    parser.add_argument("--size", type=int,  nargs="+", default=(3, 256, 256),         help="Image size.")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.task == "test_sice":
+    if args.task == "resize_images":
+        resize_images(root=args.root, size=args.size)
+    elif args.task == "test_sice":
         test_sice()
     elif args.task == "test_sice1":
         test_sice1()
