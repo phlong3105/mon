@@ -1197,8 +1197,8 @@ def test_dcim():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
     
@@ -1246,8 +1246,8 @@ def test_lime():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
 
@@ -1295,8 +1295,8 @@ def test_lol226():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
 
@@ -1344,8 +1344,8 @@ def test_mef():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
 
@@ -1393,8 +1393,8 @@ def test_npe():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
 
@@ -1442,8 +1442,8 @@ def test_vip():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
 
@@ -1491,8 +1491,8 @@ def test_vv():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.test_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image", image=input)
     plt.show(block=True)
 

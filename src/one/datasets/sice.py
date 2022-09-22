@@ -22,7 +22,6 @@ from one.data import ImageEnhancementDataset
 from one.data import UnlabeledImageDataset
 from one.plot import imshow
 from one.plot import imshow_enhancement
-from one.vision.acquisition import write_image_torch
 from one.vision.transformation import denormalize_simple
 from one.vision.transformation import Resize
 from one.vision.transformation import resize
@@ -1642,13 +1641,13 @@ def test_sice_unsupervised():
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter   = iter(dm.train_dataloader)
-    input, meta = next(data_iter)
+    data_iter      = iter(dm.train_dataloader)
+    input, _, meta = next(data_iter)
     imshow(winname="image",  image=input)
     plt.show(block=True)
     
     
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()
