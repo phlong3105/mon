@@ -58,6 +58,7 @@ from one.vision.enhancement.mbllen import MBLLEN
 from one.vision.enhancement.retinexnet import RetinexNet
 from one.vision.enhancement.zerodce import ZeroDCE
 from one.vision.enhancement.zerodcepp import ZeroDCEPP
+from one.vision.enhancement.zerodcev2 import ZeroDCEV2
 from one.vision.segmentation.unet import UNet
 
 
@@ -260,5 +261,9 @@ class TestModel(unittest.TestCase):
         self.assertIsNotNone(zerodce)
 
     def test_zerodcepp(self):
-        zerodcepp = ZeroDCEPP(verbose=True)
+        zerodcepp = ZeroDCEPP(pretrained="sice", verbose=True)
         self.assertIsNotNone(zerodcepp)
+    
+    def test_zerodcev2(self):
+        zerodcev2 = ZeroDCEV2(verbose=True)
+        self.assertIsNotNone(zerodcev2)
