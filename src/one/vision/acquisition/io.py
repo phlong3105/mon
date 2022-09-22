@@ -675,7 +675,6 @@ def write_image_torch(
     
     # Convert image
     image = t.denormalize_simple(image) if denormalize else image
-    # image = to_channel_last(image)
     image = image.to(torch.uint8)
     image = image.cpu()
     
@@ -684,17 +683,17 @@ def write_image_torch(
     create_dirs(paths=[dir])
     name     = Path(name)
     stem     = name.stem
-    ext      = name.suffix
-    ext      = f".{extension}"    if ext == ""      else ext
+    ext      = extension  # name.suffix
+    ext      = f"{name.suffix}"   if ext == ""      else ext
     ext      = f".{ext}"          if "." not in ext else ext
     stem     = f"{prefix}_{stem}" if prefix != ""   else stem
-    name     = f"{stem}{extension}"
+    name     = f"{stem}{ext}"
     filepath = dir / name
-    
+
     if ext in [".jpg", ".jpeg"]:
         torchvision.io.image.write_jpeg(input=image, filename=str(filepath))
     elif ext in [".png"]:
-        torchvision.io.image.write_png(input=image, filename=str(filepath))
+        torchvision.io.image.write_png(input=image,  filename=str(filepath))
 
 
 def write_images_pil(
@@ -1085,7 +1084,7 @@ class ImageWriter(BaseWriter):
         shape (Ints): Output size as [C, H, W]. This is also used to reshape
             the input. Defaults to (3, 480, 640).
         extension (str): The extension of the file to be saved.
-            Defaults to .jpg
+            Defaults to .png
         verbose (bool): Verbosity mode of video writer backend. Defaults to False.
     """
 
@@ -1093,7 +1092,7 @@ class ImageWriter(BaseWriter):
         self,
         dst      : Path_,
         shape    : Ints = (3, 480, 640),
-        extension: str  = ".jpg",
+        extension: str  = ".png",
         verbose  : bool = False,
         *args, **kwargs
     ):

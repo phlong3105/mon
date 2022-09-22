@@ -1085,6 +1085,306 @@ class PointwiseConv2d(Conv2d):
         )
 
 
+@LAYERS.register(name="subspace_blueprint_separable_conv2d")
+class SubspaceBlueprintSeparableConv2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d adopted from the paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints              = 1,
+        padding         : str | Ints | None = 0,
+        dilation        : Ints              = 1,
+        groups          : int               = 1,
+        bias            : bool              = True,
+        padding_mode    : str               = "zeros",
+        device          : Any               = None,
+        dtype           : Any               = None,
+        p               : float             = 0.25,
+        min_mid_channels: int               = 4,
+        *args, **kwargs
+    ):
+        super().__init__()
+        mid_channels = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.pw_conv2(x)
+        x = self.dw_conv(x)
+        return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
+    
+
+@LAYERS.register(name="subspace_blueprint_separable_conv_bn2d")
+class SubspaceBlueprintSeparableConvBn2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d with BatchNorm adopted from the paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints              = 1,
+        padding         : str | Ints | None = 0,
+        dilation        : Ints              = 1,
+        groups          : int               = 1,
+        bias            : bool              = True,
+        padding_mode    : str               = "zeros",
+        device          : Any               = None,
+        dtype           : Any               = None,
+        p               : float             = 0.25,
+        min_mid_channels: int               = 4,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.bn1      = BatchNorm2d(num_features=mid_channels)
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.bn2     = BatchNorm2d(num_features=out_channels)
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.bn1(x)
+        x = self.pw_conv2(x)
+        x = self.bn2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+@LAYERS.register(name="unconstrained_blueprint_separable_conv2d")
+class UnconstrainedBlueprintSeparableConv2d(Module):
+    """
+    Unconstrained Blueprint Separable Conv2d adopted from the paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        kernel_size   : Ints,
+        stride        : Ints              = 1,
+        padding       : str | Ints | None = 0,
+        dilation      : Ints              = 1,
+        groups        : int               = 1,
+        bias          : bool              = True,
+        padding_mode  : str               = "zeros",
+        device        : Any               = None,
+        dtype         : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv(x)
+        x = self.dw_conv(x)
+        return x
+
+
+@LAYERS.register(name="unconstrained_blueprint_separable_conv_bn2d")
+class UnconstrainedBlueprintSeparableConvBn2d(Module):
+    """
+    Unconstrained Blueprint Separable Conv2d with BatchNorm adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        kernel_size   : Ints,
+        stride        : Ints              = 1,
+        padding       : str | Ints | None = 0,
+        dilation      : Ints              = 1,
+        groups        : int               = 1,
+        bias          : bool              = True,
+        padding_mode  : str               = "zeros",
+        device        : Any               = None,
+        dtype         : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.bn      = BatchNorm2d(num_features=out_channels)
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv(x)
+        x = self.bn(x)
+        x = self.dw_conv(x)
+
+
+BSConv2dS   = SubspaceBlueprintSeparableConv2d
+BSConv2dU   = UnconstrainedBlueprintSeparableConv2d
+BSConvBn2dS = SubspaceBlueprintSeparableConvBn2d
+BSConvBn2dU = UnconstrainedBlueprintSeparableConvBn2d
+
+LAYERS.register(name="bsconv2ds",             module=BSConv2dS)
+LAYERS.register(name="bsconv2du",             module=BSConv2dU)
+LAYERS.register(name="bsconvbn2ds",           module=BSConvBn2dS)
+LAYERS.register(name="bsconvbn2du",           module=BSConvBn2dU)
 LAYERS.register(name="conv1d",                module=Conv1d)
 LAYERS.register(name="conv2d",                module=Conv2d)
 LAYERS.register(name="conv3d",                module=Conv3d)

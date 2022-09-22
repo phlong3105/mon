@@ -198,6 +198,10 @@ class ZeroDCEPP(ImageEnhancementModel):
             model_state_dict["14.dw_conv.bias"]   = state_dict["e_conv6.depth_conv.bias"]
             model_state_dict["14.pw_conv.weight"] = state_dict["e_conv6.point_conv.weight"]
             model_state_dict["14.pw_conv.bias"]   = state_dict["e_conv6.point_conv.bias"]
+            model_state_dict["17.dw_conv.weight"] = state_dict["e_conv7.depth_conv.weight"]
+            model_state_dict["17.dw_conv.bias"]   = state_dict["e_conv7.depth_conv.bias"]
+            model_state_dict["17.pw_conv.weight"] = state_dict["e_conv7.point_conv.weight"]
+            model_state_dict["17.pw_conv.bias"]   = state_dict["e_conv7.point_conv.bias"]
             self.model.load_state_dict(model_state_dict)
             # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:

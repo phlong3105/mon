@@ -81,19 +81,19 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcev2_lol",
+		"cfg"        : "zerodcev2_s3_lol226",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "zerodce_sice",
+		"cfg"        : "zerodcev2_lol226",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
     "lp-imac.local": {

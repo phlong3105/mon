@@ -833,7 +833,11 @@ class ImageInferrer(Inferrer):
         if self.shape:
             new_size = to_size(self.shape)
             if size0 != new_size:
-                input = resize(image=input, size=new_size)
+                input = resize(
+                    image         = input,
+                    size          = new_size,
+                    interpolation = InterpolationMode.BICUBIC
+                )
             # images = [resize(i, self.shape) for i in images]
             # images = torch.stack(input)
         size1 = get_image_size(input)
@@ -869,7 +873,7 @@ class ImageInferrer(Inferrer):
             pred = resize(
                 image         = pred,
                 size          = size0,
-                interpolation = InterpolationMode.BILINEAR
+                interpolation = InterpolationMode.BICUBIC
             )
         return pred
     
@@ -968,6 +972,10 @@ def parse_model(
         # print(f, n, m, args)
         
         if m in [
+            BSConv2dS,
+            BSConv2dU,
+            BSConvBn2dS,
+            BSConvBn2dU,
             Conv2d,
             Conv2dNormActivation,
             ConvAct2d,
@@ -982,6 +990,8 @@ def parse_model(
             HINetConvBlock,
             HINetUpBlock,
             InceptionBasicConv2d,
+            UnconstrainedBlueprintSeparableConv2d,
+            UnconstrainedBlueprintSeparableConvBn2d,
             UNetBlock,
         ]:
             if isinstance(f, (list, tuple)):
