@@ -22,7 +22,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="gladnet")
 class GLADNet(ImageEnhancementDataset):
@@ -227,7 +227,7 @@ class GLADNetDataModule(DataModule):
         pass
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_gladnet():
     cfg = {
@@ -280,7 +280,7 @@ def test_gladnet():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

@@ -22,7 +22,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="deepupe")
 class DeepUPE(ImageEnhancementDataset):
@@ -209,7 +209,7 @@ class DeepUPEDataModule(DataModule):
         pass
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_deepupe():
     cfg = {
@@ -262,7 +262,7 @@ def test_deepupe():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

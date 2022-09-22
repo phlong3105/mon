@@ -56,7 +56,7 @@ fashionmnist_classlabels = [
 ]
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="mnist")
 class MNIST(ImageClassificationDataset):
@@ -447,7 +447,7 @@ class FashionMNISTDataModule(DataModule):
         self.classlabels = ClassLabels(mnist_classlabels)
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_mnist():
     cfg = {
@@ -557,7 +557,7 @@ def test_fashion_mnist():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

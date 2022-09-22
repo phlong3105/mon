@@ -21,7 +21,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="satehaze1k")
 class SateHaze1K(ImageEnhancementDataset):
@@ -574,7 +574,7 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
         self.summarize()
   
   
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_satehaze1k():
     cfg = {
@@ -780,7 +780,7 @@ def test_satehaze1k_thin():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

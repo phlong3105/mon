@@ -24,7 +24,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="sice")
 class SICE(ImageEnhancementDataset):
@@ -98,7 +98,7 @@ class SICE(ImageEnhancementDataset):
         with progress_bar() as pbar:
             pattern = self.root / self.split / "low"
             for path in pbar.track(
-                list(pattern.rglob("*.JPG")),
+                list(pattern.rglob("*.jpg")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
@@ -116,7 +116,7 @@ class SICE(ImageEnhancementDataset):
                             f"{self.split} labels"
             ):
                 stem = str(img.path.parent.stem)
-                path = self.root / self.split / "high" / f"{stem}.JPG"
+                path = self.root / self.split / "high" / f"{stem}.jpg"
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
@@ -1148,7 +1148,12 @@ class SICEUnsupervisedDataModule(DataModule):
         pass
     
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Utils ------------------------------------------------------------------
+
+
+
+
+# H1: - Test -------------------------------------------------------------------
 
 def test_sice():
     cfg = {

@@ -21,7 +21,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="nhhaze")
 class NHHaze(ImageEnhancementDataset):
@@ -228,7 +228,7 @@ class NHHazeDataModule(DataModule):
         pass
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_nhhaze():
     cfg = {
@@ -281,7 +281,7 @@ def test_nhhaze():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

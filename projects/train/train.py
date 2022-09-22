@@ -81,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodce_lol",
+		"cfg"        : "zerodce_sice",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
@@ -89,7 +89,7 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "vgg19_cifar10",
+		"cfg"        : "zerodce_sice",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,

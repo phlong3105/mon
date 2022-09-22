@@ -22,7 +22,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="snow100k")
 class Snow100K(ImageEnhancementDataset):
@@ -545,7 +545,7 @@ class Snow100KLDataModule(Snow100KDataModule):
         self.summarize()
         
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_snow100k():
     cfg = {
@@ -751,7 +751,7 @@ def test_snow100kl():
     plt.show(block=True)
     
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

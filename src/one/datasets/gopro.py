@@ -22,7 +22,7 @@ from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="gopro")
 class GoPro(ImageEnhancementDataset):
@@ -211,7 +211,7 @@ class GoProDataModule(DataModule):
         pass
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_gopro():
     cfg = {
@@ -264,7 +264,7 @@ def test_gopro():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

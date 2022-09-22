@@ -31,7 +31,7 @@ a2i2_classlabels = [
 ]
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="a2i2haze")
 class A2I2Haze(ImageEnhancementDataset):
@@ -453,7 +453,7 @@ class A2I2HazeDetDataModule(DataModule):
         self.classlabels = ClassLabels.from_list(a2i2_classlabels)
     
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_a2i2_haze():
     cfg = {
@@ -506,7 +506,7 @@ def test_a2i2_haze():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

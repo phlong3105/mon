@@ -60,11 +60,11 @@ def infer(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-        "model"      : "zerodce++",
-        "cfg"        : "zerodce++.yaml",
-        "weights"    : PRETRAINED_DIR / "zerodce++" / "zerodce++-lol.pt",
+        "model"      : "zerodce",
+        "cfg"        : "zerodce.yaml",
+        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-sice_unsupervised.pt",
         "num_classes": None,
-        "source"     : DATA_DIR / "lol226",
+        "source"     : DATA_DIR / "sice" / "unsupervised" / "test",
         "batch_size" : 1,
         "img_size"   : (3, 256, 256),
 		"devices"    : "0",

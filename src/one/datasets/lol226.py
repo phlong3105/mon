@@ -21,7 +21,7 @@ from one.plot import imshow
 from one.vision.transformation import Resize
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="dcim")
 class DCIM(UnlabeledImageDataset):
@@ -1152,7 +1152,7 @@ class VVDataModule(DataModule):
         pass
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_dcim():
     cfg = {
@@ -1497,7 +1497,7 @@ def test_vv():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()

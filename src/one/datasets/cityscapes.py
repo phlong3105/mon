@@ -62,7 +62,7 @@ cityscapes_classlabels = [
 ]
 
 
-# H1: - Module ---------------------------------------------------------------
+# H1: - Module -----------------------------------------------------------------
 
 @DATASETS.register(name="cityscape_fog")
 class CityscapesFog(ImageEnhancementDataset):
@@ -902,7 +902,7 @@ class CityscapesRainDataModule(DataModule):
         self.classlabels = ClassLabels.from_list(cityscapes_classlabels)
 
 
-# H1: - Test -----------------------------------------------------------------
+# H1: - Test -------------------------------------------------------------------
 
 def test_cityscapes_fog():
     cfg = {
@@ -1079,7 +1079,7 @@ def test_cityscapes_rain():
     plt.show(block=True)
 
 
-# H1: - Main -----------------------------------------------------------------
+# H1: - Main -------------------------------------------------------------------
 
 def parse_args():
     parser = argparse.ArgumentParser()
