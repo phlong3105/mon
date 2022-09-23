@@ -132,29 +132,58 @@ cfgs = {
         "channels": 3,
         "backbone": [
             # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                                                   # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],                                # 1  (x_down)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],                                        # 2
-            [-1,      1,      ReLU,                        [True]],                                               # 3  (x1)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.5]],  # 4
-            [-1,      1,      ReLU,                        [True]],                                               # 5  (x2)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],                                        # 6
-            [-1,      1,      ReLU,                        [True]],                                               # 7  (x3)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],                                        # 8
-            [-1,      1,      ReLU,                        [True]],                                               # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                                                   # 10
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],                                        # 11
-            [-1,      1,      ReLU,                        [True]],                                               # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                                                   # 13
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],                                        # 14
-            [-1,      1,      ReLU,                        [True]],                                               # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                                                   # 16
-            [-1,      1,      BSConvBn2dS,                 [3,  3, 1, 1]],                                        # 17 (a)
-            [-1,      1,      Tanh,                        []],                                                   # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],                                            # 19
+            [-1,      1,      Identity,                    []],                     # 0  (x)
+            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],  # 1  (x_down)
+            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 2
+            [-1,      1,      ReLU,                        [True]],                 # 3  (x1)
+            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 4
+            [-1,      1,      ReLU,                        [True]],                 # 5  (x2)
+            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 6
+            [-1,      1,      ReLU,                        [True]],                 # 7  (x3)
+            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 8
+            [-1,      1,      ReLU,                        [True]],                 # 9  (x4)
+            [[7, 9],  1,      Concat,                      []],                     # 10
+            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 11
+            [-1,      1,      ReLU,                        [True]],                 # 12 (x5)
+            [[5, 12], 1,      Concat,                      []],                     # 13
+            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 14
+            [-1,      1,      ReLU,                        [True]],                 # 15 (x6)
+            [[3, 15], 1,      Concat,                      []],                     # 16
+            [-1,      1,      BSConvIn2dS,                 [3,  3, 1, 1]],          # 17 (a)
+            [-1,      1,      Tanh,                        []],                     # 18
+            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],              # 19
         ],                                                                                                        
         "head": [                                                                                                 
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                                                  # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                    # 20
+        ]
+    },
+    "zerodcev2-s4": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,                      args(out_channels, ...)]
+            [-1,      1,      Identity,                    []],                     # 0  (x)
+            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],  # 1  (x_down)
+            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 2
+            [-1,      1,      ReLU,                        [True]],                 # 3  (x1)
+            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 4
+            [-1,      1,      ReLU,                        [True]],                 # 5  (x2)
+            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 6
+            [-1,      1,      ReLU,                        [True]],                 # 7  (x3)
+            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 8
+            [-1,      1,      ReLU,                        [True]],                 # 9  (x4)
+            [[7, 9],  1,      Concat,                      []],                     # 10
+            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 11
+            [-1,      1,      ReLU,                        [True]],                 # 12 (x5)
+            [[5, 12], 1,      Concat,                      []],                     # 13
+            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 14
+            [-1,      1,      ReLU,                        [True]],                 # 15 (x6)
+            [[3, 15], 1,      Concat,                      []],                     # 16
+            [-1,      1,      BSConvHin2dS,                [3,  3, 1, 1]],          # 17 (a)
+            [-1,      1,      Tanh,                        []],                     # 18
+            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],              # 19
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                    # 20
         ]
     },
     "zerodcev2-u1": {
@@ -215,6 +244,64 @@ cfgs = {
             [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
         ]
     },
+    "zerodcev2-u3": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,                      args(out_channels, ...)]
+            [-1,      1,      Identity,                    []],                      # 0  (x)
+            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
+            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 2
+            [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
+            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 4
+            [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
+            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 6
+            [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
+            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 8
+            [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
+            [[7, 9],  1,      Concat,                      []],                      # 10
+            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 11
+            [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
+            [[5, 12], 1,      Concat,                      []],                      # 13
+            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 14
+            [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
+            [[3, 15], 1,      Concat,                      []],                      # 16
+            [-1,      1,      BSConvIn2dU,                 [3,  3, 1, 1]],           # 17 (a)
+            [-1,      1,      Tanh,                        []],                      # 18
+            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
+        ]
+    },
+    "zerodcev2-u4": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,                      args(out_channels, ...)]
+            [-1,      1,      Identity,                    []],                     # 0  (x)
+            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],  # 1  (x_down)
+            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 2
+            [-1,      1,      ReLU,                        [True]],                 # 3  (x1)
+            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 4
+            [-1,      1,      ReLU,                        [True]],                 # 5  (x2)
+            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 6
+            [-1,      1,      ReLU,                        [True]],                 # 7  (x3)
+            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 8
+            [-1,      1,      ReLU,                        [True]],                 # 9  (x4)
+            [[7, 9],  1,      Concat,                      []],                     # 10
+            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 11
+            [-1,      1,      ReLU,                        [True]],                 # 12 (x5)
+            [[5, 12], 1,      Concat,                      []],                     # 13
+            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 14
+            [-1,      1,      ReLU,                        [True]],                 # 15 (x6)
+            [[3, 15], 1,      Concat,                      []],                     # 16
+            [-1,      1,      BSConvHin2dU,                [3,  3, 1, 1]],          # 17 (a)
+            [-1,      1,      Tanh,                        []],                     # 18
+            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],              # 19
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                    # 20
+        ]
+    },
 }
 
 
@@ -257,7 +344,7 @@ class ZeroDCEV2(ImageEnhancementModel):
         debug (dict | Munch | None): Debug configs. Defaults to None.
         verbose (bool): Verbosity.
     """
-
+    
     model_zoo = {}
     
     def __init__(
@@ -301,7 +388,7 @@ class ZeroDCEV2(ImageEnhancementModel):
             verbose     = verbose,
             *args, **kwargs
         )
-
+    
     def init_weights(self, m: Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -314,56 +401,6 @@ class ZeroDCEV2(ImageEnhancementModel):
             else:
                 m.weight.data.normal_(0.0, 0.02)
     
-    def load_pretrained(self):
-        """
-        Load pretrained weights. It only loads the intersection layers of
-        matching keys and shapes between current model and pretrained.
-        """
-        if is_dict(self.pretrained) \
-            and self.pretrained["name"] in ["sice"]:
-            state_dict = load_state_dict_from_path(
-                model_dir=self.pretrained_dir, **self.pretrained
-            )
-            """
-            for k in sorted(self.model.state_dict().keys()):
-                print(f"model_state_dict[\"{k}\"] = ")
-            for k in sorted(state_dict.keys()):
-                print(f"state_dict[\"{k}\"]")
-            """
-            model_state_dict = self.model.state_dict()
-            model_state_dict["2.dw_conv.weight"]  = state_dict["e_conv1.depth_conv.weight"]
-            model_state_dict["2.dw_conv.bias"]    = state_dict["e_conv1.depth_conv.bias"]
-            model_state_dict["2.pw_conv.weight"]  = state_dict["e_conv1.point_conv.weight"]
-            model_state_dict["2.pw_conv.bias"]    = state_dict["e_conv1.point_conv.bias"]
-            model_state_dict["5.dw_conv.weight"]  = state_dict["e_conv2.depth_conv.weight"]
-            model_state_dict["5.dw_conv.bias"]    = state_dict["e_conv2.depth_conv.bias"]
-            model_state_dict["5.pw_conv.weight"]  = state_dict["e_conv2.point_conv.weight"]
-            model_state_dict["5.pw_conv.bias"]    = state_dict["e_conv2.point_conv.bias"]
-            model_state_dict["8.dw_conv.weight"]  = state_dict["e_conv3.depth_conv.weight"]
-            model_state_dict["8.dw_conv.bias"]    = state_dict["e_conv3.depth_conv.bias"]
-            model_state_dict["8.pw_conv.weight"]  = state_dict["e_conv3.point_conv.weight"]
-            model_state_dict["8.pw_conv.bias"]    = state_dict["e_conv3.point_conv.bias"]
-            model_state_dict["11.dw_conv.weight"] = state_dict["e_conv4.depth_conv.weight"]
-            model_state_dict["11.dw_conv.bias"]   = state_dict["e_conv4.depth_conv.bias"]
-            model_state_dict["11.pw_conv.weight"] = state_dict["e_conv4.point_conv.weight"]
-            model_state_dict["11.pw_conv.bias"]   = state_dict["e_conv4.point_conv.bias"]
-            model_state_dict["15.dw_conv.weight"] = state_dict["e_conv5.depth_conv.weight"]
-            model_state_dict["15.dw_conv.bias"]   = state_dict["e_conv5.depth_conv.bias"]
-            model_state_dict["15.pw_conv.weight"] = state_dict["e_conv5.point_conv.weight"]
-            model_state_dict["15.pw_conv.bias"]   = state_dict["e_conv5.point_conv.bias"]
-            model_state_dict["19.dw_conv.weight"] = state_dict["e_conv6.depth_conv.weight"]
-            model_state_dict["19.dw_conv.bias"]   = state_dict["e_conv6.depth_conv.bias"]
-            model_state_dict["19.pw_conv.weight"] = state_dict["e_conv6.point_conv.weight"]
-            model_state_dict["19.pw_conv.bias"]   = state_dict["e_conv6.point_conv.bias"]
-            model_state_dict["23.dw_conv.weight"] = state_dict["e_conv7.depth_conv.weight"]
-            model_state_dict["23.dw_conv.bias"]   = state_dict["e_conv7.depth_conv.bias"]
-            model_state_dict["23.pw_conv.weight"] = state_dict["e_conv7.point_conv.weight"]
-            model_state_dict["23.pw_conv.bias"]   = state_dict["e_conv7.point_conv.bias"]
-            self.model.load_state_dict(model_state_dict)
-            # assert_same_state_dicts(self.model.state_dict(), state_dict)
-        else:
-            super().load_pretrained()
-            
     def forward_loss(
         self,
         input : Tensor,

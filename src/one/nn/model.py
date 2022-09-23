@@ -976,6 +976,10 @@ def parse_model(
             BSConv2dU,
             BSConvBn2dS,
             BSConvBn2dU,
+            BSConvHin2dS,
+            BSConvHin2dU,
+            BSConvIn2dS,
+            BSConvIn2dU,
             Conv2d,
             Conv2dNormActivation,
             ConvAct2d,
@@ -1392,7 +1396,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         Alias of `self.dim()`.
         """
         return self.dim
-     
+
+    @property
+    def params(self) -> int:
+        params = [i["params"] for i in self.info]
+        return sum(params)
+    
     @property
     def phase(self) -> ModelPhase:
         return self._phase

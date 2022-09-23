@@ -335,6 +335,10 @@ class ModelCheckpoint(Checkpoint):
         self.last_time_checked = time.monotonic()
         self.logger = open(self.root / "log.txt", "a", encoding="utf-8")
         
+        # Print model's info
+        if hasattr(pl_module, "params"):
+            self.logger.write(f"\nParameters: {pl_module.params}\n")
+        
         # Print header
         key = self.monitor.replace("checkpoint/", "")
         key = key.split("/")[0]

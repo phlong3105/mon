@@ -45,6 +45,7 @@ from one.vision.classification.vgg import VGG19
 from one.vision.classification.vgg import VGG19Bn
 from one.vision.classification.wide_resnet import Wide_ResNet101
 from one.vision.classification.wide_resnet import Wide_ResNet50
+from one.vision.enhancement.dual_cnn import DualCNN
 from one.vision.enhancement.ffanet import FFANet
 from one.vision.enhancement.finet import FINet
 from one.vision.enhancement.finet import FINetDeblur
@@ -99,6 +100,10 @@ class TestModel(unittest.TestCase):
     def test_densenet201(self):
         densenet201 = DenseNet201(num_classes=1000, pretrained="imagenet", verbose=True)
         self.assertIsNotNone(densenet201)
+    
+    def test_dual_cnn(self):
+        dual_cnn = DualCNN(verbose=True)
+        self.assertIsNotNone(dual_cnn)
         
     def test_ffanet(self):
         ffanet = FFANet(verbose=True)

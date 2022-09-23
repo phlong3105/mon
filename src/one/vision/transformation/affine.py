@@ -341,7 +341,11 @@ class Affine(Transform):
 
 # H1: - Crop -----------------------------------------------------------------
 
-def center_crop(image: Tensor, output_size: Ints, inplace: bool = False) -> Tensor:
+def center_crop(
+    image      : Tensor,
+    output_size: Ints,
+    inplace    : bool = False
+) -> Tensor:
     """
     Crops an image at the center. If image size is smaller than output size
     along any edge, image is padded with 0 and then center cropped.
@@ -387,6 +391,39 @@ def center_crop(image: Tensor, output_size: Ints, inplace: bool = False) -> Tens
         width   = crop_w,
         inplace = inplace
     )
+
+
+def crop_tblr(
+    image  : Tensor,
+    top    : int,
+    bottom : int,
+    left   : int,
+    right  : int,
+    inplace: bool = False
+) -> Tensor:
+    """
+    Crops an image with top + bottom + left + right value.
+    
+    Args:
+        image (Tensor): Image of shape [..., C, H, W] to be transformed,
+            where ... means it can have an arbitrary number of leading
+            dimensions.
+        top (int): Top padding.
+        bottom (int): Bottom padding.
+        left (int): Left padding.
+        right (int): Right padding.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
+        
+    Returns:
+        Cropped image of shape [..., C, H, W].
+    """
+    bottom = -bottom if bottom > 0 else bottom
+    right  = -right  if right  > 0 else right
+    
+    if not inplace:
+        image = image.clone()
+
+    return image[..., top:bottom, left:right]
 
 
 def crop(

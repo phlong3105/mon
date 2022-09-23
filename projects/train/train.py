@@ -81,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcev2_s3_lol226",
+		"cfg"        : "dual_cnn_lol226",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,

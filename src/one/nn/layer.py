@@ -1052,7 +1052,7 @@ class DepthwiseSeparableConvReLU2d(Module):
         
     def forward(self, input: Tensor) -> Tensor:
         return self.act(self.pw_conv(self.dw_conv(input)))
-        
+
 
 @LAYERS.register(name="pointwise_conv2d")
 class PointwiseConv2d(Conv2d):
@@ -1250,6 +1250,192 @@ class SubspaceBlueprintSeparableConvBn2d(Module):
         x = self.bn2(x)
         x = self.dw_conv(x)
         return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
+    
+
+@LAYERS.register(name="subspace_blueprint_separable_conv_hin2d")
+class SubspaceBlueprintSeparableConvHin2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d with HalfInstanceNorm adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints              = 1,
+        padding         : str | Ints | None = 0,
+        dilation        : Ints              = 1,
+        groups          : int               = 1,
+        bias            : bool              = True,
+        padding_mode    : str               = "zeros",
+        device          : Any               = None,
+        dtype           : Any               = None,
+        p               : float             = 0.25,
+        min_mid_channels: int               = 4,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.hin1     = HalfInstanceNorm2d(num_features=mid_channels)
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.hin2    = HalfInstanceNorm2d(num_features=out_channels)
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.hin1(x)
+        x = self.pw_conv2(x)
+        x = self.hin2(x)
+        x = self.dw_conv(x)
+        return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
+
+
+@LAYERS.register(name="subspace_blueprint_separable_conv_in2d")
+class SubspaceBlueprintSeparableConvIn2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d with InstanceNorm adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints              = 1,
+        padding         : str | Ints | None = 0,
+        dilation        : Ints              = 1,
+        groups          : int               = 1,
+        bias            : bool              = True,
+        padding_mode    : str               = "zeros",
+        device          : Any               = None,
+        dtype           : Any               = None,
+        p               : float             = 0.25,
+        min_mid_channels: int               = 4,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.in1      = InstanceNorm2d(num_features=mid_channels)
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.in2     = InstanceNorm2d(num_features=out_channels)
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.in1(x)
+        x = self.pw_conv2(x)
+        x = self.in2(x)
+        x = self.dw_conv(x)
+        return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
 
 
 @LAYERS.register(name="unconstrained_blueprint_separable_conv2d")
@@ -1374,17 +1560,154 @@ class UnconstrainedBlueprintSeparableConvBn2d(Module):
         x = self.pw_conv(x)
         x = self.bn(x)
         x = self.dw_conv(x)
+        return x
 
 
-BSConv2dS   = SubspaceBlueprintSeparableConv2d
-BSConv2dU   = UnconstrainedBlueprintSeparableConv2d
-BSConvBn2dS = SubspaceBlueprintSeparableConvBn2d
-BSConvBn2dU = UnconstrainedBlueprintSeparableConvBn2d
+@LAYERS.register(name="unconstrained_blueprint_separable_conv_hin2d")
+class UnconstrainedBlueprintSeparableConvHin2d(Module):
+    """
+    Unconstrained Blueprint Separable Conv2d with HalfInstanceNorm adopted from
+    the paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        kernel_size   : Ints,
+        stride        : Ints              = 1,
+        padding       : str | Ints | None = 0,
+        dilation      : Ints              = 1,
+        groups        : int               = 1,
+        bias          : bool              = True,
+        padding_mode  : str               = "zeros",
+        device        : Any               = None,
+        dtype         : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.hin     = HalfInstanceNorm2d(num_features=out_channels)
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv(x)
+        x = self.hin(x)
+        x = self.dw_conv(x)
+        return x
+
+
+@LAYERS.register(name="unconstrained_blueprint_separable_conv_in2d")
+class UnconstrainedBlueprintSeparableConvIn2d(Module):
+    """
+    Unconstrained Blueprint Separable Conv2d with InstanceNorm adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        kernel_size   : Ints,
+        stride        : Ints              = 1,
+        padding       : str | Ints | None = 0,
+        dilation      : Ints              = 1,
+        groups        : int               = 1,
+        bias          : bool              = True,
+        padding_mode  : str               = "zeros",
+        device        : Any               = None,
+        dtype         : Any               = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.isn     = InstanceNorm2d(num_features=out_channels)
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv(x)
+        x = self.isn(x)
+        x = self.dw_conv(x)
+        return x
+
+
+BSConv2dS    = SubspaceBlueprintSeparableConv2d
+BSConv2dU    = UnconstrainedBlueprintSeparableConv2d
+BSConvBn2dS  = SubspaceBlueprintSeparableConvBn2d
+BSConvBn2dU  = UnconstrainedBlueprintSeparableConvBn2d
+BSConvHin2dS = SubspaceBlueprintSeparableConvHin2d
+BSConvHin2dU = UnconstrainedBlueprintSeparableConvHin2d
+BSConvIn2dS  = SubspaceBlueprintSeparableConvIn2d
+BSConvIn2dU  = UnconstrainedBlueprintSeparableConvIn2d
 
 LAYERS.register(name="bsconv2ds",             module=BSConv2dS)
 LAYERS.register(name="bsconv2du",             module=BSConv2dU)
 LAYERS.register(name="bsconvbn2ds",           module=BSConvBn2dS)
 LAYERS.register(name="bsconvbn2du",           module=BSConvBn2dU)
+LAYERS.register(name="bsconvhin2ds",          module=BSConvHin2dS)
+LAYERS.register(name="bsconvhin2du",          module=BSConvHin2dU)
+LAYERS.register(name="bsconvin2ds",           module=BSConvIn2dS)
+LAYERS.register(name="bsconvin2du",           module=BSConvIn2dU)
 LAYERS.register(name="conv1d",                module=Conv1d)
 LAYERS.register(name="conv2d",                module=Conv2d)
 LAYERS.register(name="conv3d",                module=Conv3d)
@@ -1401,6 +1724,48 @@ LAYERS.register(name="lazy_conv_transpose1d", module=LazyConvTranspose1d)
 LAYERS.register(name="lazy_conv_transpose2d", module=LazyConvTranspose2d)
 LAYERS.register(name="lazy_conv_transpose3d", module=LazyConvTranspose3d)
 
+
+# H2: - Cropping ---------------------------------------------------------------
+
+@LAYERS.register(name="crop_tblr")
+class CropTBLR(Module):
+    """
+    Crop tensor with top + bottom + left + right value.
+    
+    Args:
+        top (int): Top padding.
+        bottom (int): Bottom padding.
+        left (int): Left padding.
+        right (int): Right padding.
+        inplace (bool): If True, make this operation inplace. Defaults to False.
+    """
+
+    def __init__(
+        self,
+        top    : int,
+        bottom : int,
+        left   : int,
+        right  : int,
+        inplace: bool = False,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.top     = top
+        self.bottom  = bottom
+        self.left    = left
+        self.right   = right
+        self.inplace = inplace
+
+    def forward(self, input: Tensor) -> Tensor:
+        import one.vision.transformation as t
+        return t.crop_tblr(
+            image  = input,
+            top    = self.top,
+            bottom = self.bottom,
+            left   = self.left,
+            right  = self.right,
+        )
+    
 
 # H2: - Dropout ----------------------------------------------------------------
 
@@ -2471,7 +2836,7 @@ class HalfInstanceNorm2d(InstanceNorm2d):
         *args, **kwargs
     ):
         super().__init__(
-            num_features        = num_features // 2,
+            num_features        = math.ceil(num_features / 2),
             eps                 = eps,
             momentum            = momentum,
             affine              = affine,

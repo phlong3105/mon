@@ -61,12 +61,12 @@ def infer(args: Munch | dict):
 hosts = {
 	"lp-labdesktop01-ubuntu": {
         "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-s3",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s3-lol226.pt",
+        "cfg"        : "zerodcev2-s4",
+        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s4-lol226.pt",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
-        "img_size"   : (3, 512, 512),
+        "img_size"   : None,  # (3, 512, 512),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
         "name"       : "exp",
