@@ -46,7 +46,7 @@ cfgs = {
             [-1,     1,      VGGClassifier,     [512]],                # 22
         ]
     },
-    "vgg11_bn": {
+    "vgg11-bn": {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -120,7 +120,7 @@ cfgs = {
             [-1,     1,      VGGClassifier,     [512]],                # 26
         ]
     },
-    "vgg13_bn": {
+    "vgg13-bn": {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -206,7 +206,7 @@ cfgs = {
             [-1,     1,      VGGClassifier,     [512]],                # 32
         ]
     },
-    "vgg16_bn": {
+    "vgg16-bn": {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -307,7 +307,7 @@ cfgs = {
             [-1,     1,      VGGClassifier,     [512]],                # 38
         ]
     },
-    "vgg19_bn": {
+    "vgg19-bn": {
         "channels": 3,
         "backbone": [
             # [from, number, module,            args(out_channels, ...)]
@@ -632,7 +632,7 @@ class VGG11Bn(VGG):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "vgg11_bn.yaml",
+        cfg        : dict | Path_ | None = "vgg11-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
         fullname   : str  | None         = "vgg11_bn",
@@ -872,7 +872,7 @@ class VGG13Bn(VGG):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "vgg13_bn.yaml",
+        cfg        : dict | Path_ | None = "vgg13-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
         fullname   : str  | None         = "vgg13_bn",
@@ -1112,7 +1112,7 @@ class VGG16Bn(VGG):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "vgg16_bn.yaml",
+        cfg        : dict | Path_ | None = "vgg16-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
         fullname   : str  | None         = "vgg16_bn",
@@ -1352,7 +1352,7 @@ class VGG19Bn(VGG):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "vgg19_bn.yaml",
+        cfg        : dict | Path_ | None = "vgg19-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
         fullname   : str  | None         = "vgg19_bn",

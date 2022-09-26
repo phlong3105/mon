@@ -16,7 +16,7 @@ CFG_DIR     = CURRENT_DIR / "cfg"
 # H1: - Model ------------------------------------------------------------------
 
 cfgs = {
-    "wide_resnet50": {
+    "wide-resnet50": {
         "zero_init_residual": False,
         "channels": 3,
         "backbone": [
@@ -35,7 +35,7 @@ cfgs = {
             [-1,     1,      LinearClassifier,  [2048]],                                                              # 9
         ]
     },
-    "wide_resnet101": {
+    "wide-resnet101": {
         "zero_init_residual": False,
         "channels": 3,
         "backbone": [
@@ -57,7 +57,7 @@ cfgs = {
 }
 
 
-@MODELS.register(name="wide_resnet50")
+@MODELS.register(name="wide-resnet50")
 class Wide_ResNet50(ResNet):
     """
     
@@ -105,10 +105,10 @@ class Wide_ResNet50(ResNet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "wide_resnet50.yaml",
+        cfg        : dict | Path_ | None = "wide-resnet50.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "wide_resnet",
-        fullname   : str  | None         = "wide_resnet50",
+        name       : str  | None         = "wide-resnet",
+        fullname   : str  | None         = "wide-resnet50",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -121,7 +121,7 @@ class Wide_ResNet50(ResNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "wide_resnet50"
+        cfg = cfg or "wide-resnet50"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -486,7 +486,7 @@ class Wide_ResNet50(ResNet):
             super().load_pretrained()
 
 
-@MODELS.register(name="wide_resnet101")
+@MODELS.register(name="wide-resnet101")
 class Wide_ResNet101(ResNet):
     """
     
@@ -534,10 +534,10 @@ class Wide_ResNet101(ResNet):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "wide_resnet101.yaml",
+        cfg        : dict | Path_ | None = "wide-resnet101.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "wide_resnet",
-        fullname   : str  | None         = "wide_resnet101",
+        name       : str  | None         = "wide-resnet",
+        fullname   : str  | None         = "wide-resnet101",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -550,7 +550,7 @@ class Wide_ResNet101(ResNet):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "wide_resnet101"
+        cfg = cfg or "wide-resnet101"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
