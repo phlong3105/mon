@@ -53,7 +53,7 @@ class CombinedLoss(BaseLoss):
      
     def forward(self, input: Tensors, target: Sequence[Tensor], **_) -> Tensor:
         if isinstance(target, Sequence):
-            a       = target[0]
+            a       = target[-2]
             enhance = target[-1]
             # print(enhance)
         else:

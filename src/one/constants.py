@@ -34,7 +34,6 @@ if not DATA_DIR.is_dir():
 # one.nn
 BACKBONES      = Factory(name="backbones")
 CALLBACKS      = Factory(name="callbacks")
-LAYERS         = Factory(name="layers")
 LOGGERS        = Factory(name="loggers")
 LOSSES         = Factory(name="losses")
 METRICS        = Factory(name="metrics")

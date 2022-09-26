@@ -81,7 +81,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "dual_cnn_lol",
+		"cfg"        : "zerodcev2_u1_lol226",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
@@ -89,7 +89,7 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "zerodcev2_lol226",
+		"cfg"        : "zerodcev2_u3_lol226",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
@@ -113,11 +113,11 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws02": {
-		"cfg"        : "hinet_derain_snow100k",
+		"cfg"        : "zerodcev2_u2_lol226",
         "weights"    : None,
         "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
 }

@@ -635,7 +635,7 @@ class VGG11Bn(VGG):
         cfg        : dict | Path_ | None = "vgg11-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg11_bn",
+        fullname   : str  | None         = "vgg11-bn",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -648,7 +648,7 @@ class VGG11Bn(VGG):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "vgg11_bn"
+        cfg = cfg or "vgg11-bn"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -875,7 +875,7 @@ class VGG13Bn(VGG):
         cfg        : dict | Path_ | None = "vgg13-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg13_bn",
+        fullname   : str  | None         = "vgg13-bn",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -888,7 +888,7 @@ class VGG13Bn(VGG):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "vgg13_bn"
+        cfg = cfg or "vgg13-bn"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -1115,7 +1115,7 @@ class VGG16Bn(VGG):
         cfg        : dict | Path_ | None = "vgg16-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg16_bn",
+        fullname   : str  | None         = "vgg16-bn",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -1128,7 +1128,7 @@ class VGG16Bn(VGG):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "vgg16_bn"
+        cfg = cfg or "vgg16-bn"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):
@@ -1355,7 +1355,7 @@ class VGG19Bn(VGG):
         cfg        : dict | Path_ | None = "vgg19-bn.yaml",
         root       : Path_               = RUNS_DIR,
         name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg19_bn",
+        fullname   : str  | None         = "vgg19-bn",
         channels   : int                 = 3,
         num_classes: int  | None 		 = None,
         classlabels: ClassLabels_ | None = None,
@@ -1368,7 +1368,7 @@ class VGG19Bn(VGG):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "vgg19_bn"
+        cfg = cfg or "vgg19-bn"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

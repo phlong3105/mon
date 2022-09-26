@@ -986,6 +986,7 @@ def parse_model(
             ConvReLU2d,
             ConvTranspose2d,
             DCENet,
+            DCENetV2,
             DepthwiseSeparableConv2d,
             DepthwiseSeparableConvReLU2d,
             EnhancementModule,

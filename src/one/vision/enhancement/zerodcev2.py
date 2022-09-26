@@ -53,12 +53,15 @@ class CombinedLoss(BaseLoss):
         )
      
     def forward(self, input: Tensors, target: Sequence[Tensor], **_) -> Tensor:
+        import one.vision.transformation as t
+        
         if isinstance(target, Sequence):
-            a       = target[0]
+            a       = target[-2]
             enhance = target[-1]
             # print(enhance)
         else:
             raise TypeError()
+        # input    = t.crop_tblr(input, 6, -6, 6, -6)
         loss_spa = self.loss_spa(input=enhance, target=input)
         loss_exp = self.loss_exp(input=enhance)
         loss_col = self.loss_col(input=enhance)
@@ -73,233 +76,112 @@ cfgs = {
     "zerodcev2-s1": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                      # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
-            [-1,      1,      BSConv2dS,                   [32, 3, 1, 1]],           # 2
-            [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
-            [-1,      1,      BSConv2dS,                   [32, 3, 1, 1]],           # 4
-            [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
-            [-1,      1,      BSConv2dS,                   [32, 3, 1, 1]],           # 6
-            [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
-            [-1,      1,      BSConv2dS,                   [32, 3, 1, 1]],           # 8
-            [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                      # 10
-            [-1,      1,      BSConv2dS,                   [32, 3, 1, 1]],           # 11
-            [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                      # 13
-            [-1,      1,      BSConv2dS,                   [32, 3, 1, 1]],           # 14
-            [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                      # 16
-            [-1,      1,      BSConv2dS,                   [3,  3, 1, 1]],           # 17 (a)
-            [-1,      1,      Tanh,                        []],                      # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConv2dS]],      # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
     "zerodcev2-s2": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                      # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],           # 2
-            [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],           # 4
-            [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],           # 6
-            [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],           # 8
-            [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                      # 10
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],           # 11
-            [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                      # 13
-            [-1,      1,      BSConvBn2dS,                 [32, 3, 1, 1]],           # 14
-            [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                      # 16
-            [-1,      1,      BSConvBn2dS,                 [3,  3, 1, 1]],           # 17 (a)
-            [-1,      1,      Tanh,                        []],                      # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConvBn2dS]],    # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
     "zerodcev2-s3": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                     # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],  # 1  (x_down)
-            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 2
-            [-1,      1,      ReLU,                        [True]],                 # 3  (x1)
-            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 4
-            [-1,      1,      ReLU,                        [True]],                 # 5  (x2)
-            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 6
-            [-1,      1,      ReLU,                        [True]],                 # 7  (x3)
-            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 8
-            [-1,      1,      ReLU,                        [True]],                 # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                     # 10
-            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 11
-            [-1,      1,      ReLU,                        [True]],                 # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                     # 13
-            [-1,      1,      BSConvIn2dS,                 [32, 3, 1, 1]],          # 14
-            [-1,      1,      ReLU,                        [True]],                 # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                     # 16
-            [-1,      1,      BSConvIn2dS,                 [3,  3, 1, 1]],          # 17 (a)
-            [-1,      1,      Tanh,                        []],                     # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],              # 19
-        ],                                                                                                        
-        "head": [                                                                                                 
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                    # 20
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConvIn2dS]],    # 1
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
     "zerodcev2-s4": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                     # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],  # 1  (x_down)
-            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 2
-            [-1,      1,      ReLU,                        [True]],                 # 3  (x1)
-            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 4
-            [-1,      1,      ReLU,                        [True]],                 # 5  (x2)
-            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 6
-            [-1,      1,      ReLU,                        [True]],                 # 7  (x3)
-            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 8
-            [-1,      1,      ReLU,                        [True]],                 # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                     # 10
-            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 11
-            [-1,      1,      ReLU,                        [True]],                 # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                     # 13
-            [-1,      1,      BSConvHin2dS,                [32, 3, 1, 1]],          # 14
-            [-1,      1,      ReLU,                        [True]],                 # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                     # 16
-            [-1,      1,      BSConvHin2dS,                [3,  3, 1, 1]],          # 17 (a)
-            [-1,      1,      Tanh,                        []],                     # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],              # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConvHin2dS]],   # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                    # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
+        ]
+    },
+    "zerodcev2-t1": {
+        "channels": 3,
+        "backbone": [
+            # [from,        number, module,                      args(out_channels, ...)]
+            [-1,            1,      Identity,                    []],                              # 0  (x)
+            # Branch 1: Light
+            [-1,            1,      DCENetV2,                    [3, 32, BSConvHin2dS]],           # 1
+            [[1, 0],        1,      PixelwiseHigherOrderLECurve, [1]],                             # 2
+            [2,             1,      ExtractItem,                 [0]],                             # 3
+            [2,             1,      ExtractItem,                 [1]],                             # 4
+            [3,             1,      CropTBLR,                    [6, -6, 6, -6]],                  # 5
+            [4,             1,      CropTBLR,                    [6, -6, 6, -6]],                  # 6
+            # Branch 2: Details                                                 
+            [0,             1,      VDSR,                        [3]],                             # 7
+            [-1,            1,      CropTBLR,                    [6, -6, 6, -6]],                  # 8
+            # Branch 3: Structures
+            [0,             1,      SRCNN,                       [3, 9, 1, 0, 1, 1, 0, 5, 1, 0]],  # 9
+        ],                                                                      
+        "head": [
+            [[7, 4],        1,      Sum,                         []],                              # 10
+            [[7, 9, 3, 10], 1,      Join,                        []],                              # 11 (detail, structure, a, output)
         ]
     },
     "zerodcev2-u1": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                      # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
-            [-1,      1,      BSConv2dU,                   [32, 3, 1, 1]],           # 2
-            [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
-            [-1,      1,      BSConv2dU,                   [32, 3, 1, 1]],           # 4
-            [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
-            [-1,      1,      BSConv2dU,                   [32, 3, 1, 1]],           # 6
-            [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
-            [-1,      1,      BSConv2dU,                   [32, 3, 1, 1]],           # 8
-            [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                      # 10
-            [-1,      1,      BSConv2dU,                   [32, 3, 1, 1]],           # 11
-            [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                      # 13
-            [-1,      1,      BSConv2dU,                   [32, 3, 1, 1]],           # 14
-            [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                      # 16
-            [-1,      1,      BSConv2dU,                   [3,  3, 1, 1]],           # 17 (a)
-            [-1,      1,      Tanh,                        []],                      # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConv2dU]],      # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
     "zerodcev2-u2": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                      # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
-            [-1,      1,      BSConvBn2dU,                 [32, 3, 1, 1]],           # 2
-            [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
-            [-1,      1,      BSConvBn2dU,                 [32, 3, 1, 1]],           # 4
-            [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
-            [-1,      1,      BSConvBn2dU,                 [32, 3, 1, 1]],           # 6
-            [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
-            [-1,      1,      BSConvBn2dU,                 [32, 3, 1, 1]],           # 8
-            [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                      # 10
-            [-1,      1,      BSConvBn2dU,                 [32, 3, 1, 1]],           # 11
-            [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                      # 13
-            [-1,      1,      BSConvBn2dU,                 [32, 3, 1, 1]],           # 14
-            [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                      # 16
-            [-1,      1,      BSConvBn2dU,                 [3,  3, 1, 1]],           # 17 (a)
-            [-1,      1,      Tanh,                        []],                      # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConvBn2dU]],    # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
     "zerodcev2-u3": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                      # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
-            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 2
-            [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
-            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 4
-            [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
-            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 6
-            [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
-            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 8
-            [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                      # 10
-            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 11
-            [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                      # 13
-            [-1,      1,      BSConvIn2dU,                 [32, 3, 1, 1]],           # 14
-            [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                      # 16
-            [-1,      1,      BSConvIn2dU,                 [3,  3, 1, 1]],           # 17 (a)
-            [-1,      1,      Tanh,                        []],                      # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConvIn2dU]],    # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                     # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
     "zerodcev2-u4": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                     # 0  (x)
-            [-1,      1,      Downsample,                  [None, 1, "bilinear"]],  # 1  (x_down)
-            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 2
-            [-1,      1,      ReLU,                        [True]],                 # 3  (x1)
-            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 4
-            [-1,      1,      ReLU,                        [True]],                 # 5  (x2)
-            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 6
-            [-1,      1,      ReLU,                        [True]],                 # 7  (x3)
-            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 8
-            [-1,      1,      ReLU,                        [True]],                 # 9  (x4)
-            [[7, 9],  1,      Concat,                      []],                     # 10
-            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 11
-            [-1,      1,      ReLU,                        [True]],                 # 12 (x5)
-            [[5, 12], 1,      Concat,                      []],                     # 13
-            [-1,      1,      BSConvHin2dU,                [32, 3, 1, 1]],          # 14
-            [-1,      1,      ReLU,                        [True]],                 # 15 (x6)
-            [[3, 15], 1,      Concat,                      []],                     # 16
-            [-1,      1,      BSConvHin2dU,                [3,  3, 1, 1]],          # 17 (a)
-            [-1,      1,      Tanh,                        []],                     # 18
-            [-1,      1,      UpsamplingBilinear2d,        [None, 1]],              # 19
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCENetV2, [3, 32, BSConvHin2dU]],   # 1
         ],
         "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],                    # 20
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [1]],  # 2
         ]
     },
 }
@@ -349,10 +231,10 @@ class ZeroDCEV2(ImageEnhancementModel):
     
     def __init__(
         self,
-        cfg        : dict | Path_ | None = "zerodcev2-u1",
+        cfg        : dict | Path_ | None = "zerodcev2-s1",
         root       : Path_               = RUNS_DIR,
         name       : str          | None = "zerodcev2",
-        fullname   : str          | None = "zerodcev2-u1",
+        fullname   : str          | None = "zerodcev2-s1",
         channels   : int                 = 3,
         num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
@@ -365,7 +247,7 @@ class ZeroDCEV2(ImageEnhancementModel):
         verbose    : bool                = False,
         *args, **kwargs
     ):
-        cfg = cfg or "zerodcev2-u"
+        cfg = cfg or "zerodcev2-s1"
         if isinstance(cfg, str) and cfg in cfgs:
             cfg = cfgs[cfg]
         elif isinstance(cfg, (str, Path)) and not is_yaml_file(cfg):

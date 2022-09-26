@@ -25,14 +25,12 @@ from functools import partial
 from typing import Type
 
 import torch.nn.functional as F
+import torchvision
 from torch import Tensor
 from torch.nn import *
-from torchvision.ops import Conv2dNormActivation
 from torchvision.ops import Permute
 from torchvision.ops import StochasticDepth
-from torchvision.ops.misc import ConvNormActivation
 
-from one.constants import *
 from one.core import *
 
 
@@ -41,7 +39,6 @@ from one.core import *
 
 # H2: - Activation -------------------------------------------------------------
 
-@LAYERS.register(name="argmax")
 class ArgMax(Module):
     """
     Find the indices of the maximum value of all elements in the input
@@ -60,8 +57,6 @@ class ArgMax(Module):
         return torch.argmax(input, dim=self.dim)
 
 
-@LAYERS.register(name="clamp")
-@LAYERS.register(name="clip")
 class Clamp(Module):
     """
     Clamp the feature value within [min, max]. More details can be found in
@@ -81,7 +76,6 @@ class Clamp(Module):
         return torch.clamp(input, min=self.min, max=self.max)
 
 
-@LAYERS.register(name="frelu")
 class FReLU(Module):
     
     def __init__(self, c1: int, k: Ints = 3, *args, **kwargs):
@@ -94,37 +88,36 @@ class FReLU(Module):
         return torch.max(input, self.bn(self.conv(input)))
 
 
-Clip = Clamp
-
-LAYERS.register(name="celu",                module=CELU)
-LAYERS.register(name="elu",                 module=ELU)
-LAYERS.register(name="gelu",                module=GELU)
-LAYERS.register(name="glu",                 module=GLU)
-LAYERS.register(name="hard_shrink",         module=Hardshrink)
-LAYERS.register(name="hard_sigmoid",        module=Hardsigmoid)
-LAYERS.register(name="hard_swish", 	        module=Hardswish)
-LAYERS.register(name="hard_tanh",           module=Hardtanh)
-LAYERS.register(name="leaky_relu",          module=LeakyReLU)
-LAYERS.register(name="log_sigmoid",         module=LogSigmoid)
-LAYERS.register(name="log_softmax",         module=LogSoftmax)
-LAYERS.register(name="mish",                module=Mish)
-LAYERS.register(name="multihead_attention", module=MultiheadAttention)
-LAYERS.register(name="prelu",               module=PReLU)
-LAYERS.register(name="relu", 		        module=ReLU)
-LAYERS.register(name="relu6", 		        module=ReLU6)
-LAYERS.register(name="rrelu", 		        module=RReLU)
-LAYERS.register(name="selu", 		        module=SELU)
-LAYERS.register(name="sigmoid",		        module=Sigmoid)
-LAYERS.register(name="silu", 		        module=SiLU)
-LAYERS.register(name="softmax",             module=Softmax)
-LAYERS.register(name="softmax_2d",          module=Softmax2d)
-LAYERS.register(name="softmin",             module=Softmin)
-LAYERS.register(name="softplus", 	        module=Softplus)
-LAYERS.register(name="softshrink",          module=Softshrink)
-LAYERS.register(name="softsign",            module=Softsign)
-LAYERS.register(name="tanh",		        module=Tanh)
-LAYERS.register(name="tanhshrink",          module=Tanhshrink)
-LAYERS.register(name="threshold",           module=Threshold)
+CELU               = nn.CELU
+Clip               = Clamp
+ELU                = nn.ELU
+GELU               = nn.GELU
+GLU                = nn.GLU
+Hardshrink         = nn.Hardshrink
+Hardsigmoid        = nn.Hardsigmoid
+Hardswish          = nn.Hardswish
+Hardtanh           = nn.Hardtanh
+LeakyReLU          = nn.LeakyReLU
+LogSigmoid         = nn.LogSigmoid
+LogSoftmax         = nn.LogSoftmax
+Mish               = nn.Mish
+MultiheadAttention = nn.MultiheadAttention
+PReLU              = nn.PReLU
+ReLU               = nn.ReLU
+ReLU6              = nn.ReLU6
+RReLU              = nn.RReLU
+SELU               = nn.SELU
+Sigmoid            = nn.Sigmoid
+SiLU               = nn.SiLU
+Softmax            = nn.Softmax
+Softmax2d          = nn.Softmax2d
+Softmin            = nn.Softmin
+Softplus           = nn.Softplus
+Softshrink         = nn.Softshrink
+Softsign           = nn.Softsign
+Tanh               = nn.Tanh
+Tanhshrink         = nn.Tanhshrink
+Threshold          = nn.Threshold
 
 
 def to_act_layer(
@@ -135,20 +128,18 @@ def to_act_layer(
     """
     Create activation layer.
     """
-    if isinstance(act, str):
-        act = LAYERS.build(name=act)
+    # if isinstance(act, str):
+    #     act = LAYERS.build(name=act)
     if isinstance(act, types.FunctionType):
         act_args  = dict(inplace=True) if inplace else {}
         act = act(**act_args)
-    if act is None:
+    elif act is None:
         act = Identity()
     return act
 
 
 # H2: - Attention --------------------------------------------------------------
 
-@LAYERS.register(name="channel_attention_layer")
-@LAYERS.register(name="cal")
 class ChannelAttentionLayer(Module):
     """
     Channel Attention Layer.
@@ -215,8 +206,6 @@ class ChannelAttentionLayer(Module):
         return x * y
 
 
-@LAYERS.register(name="pixel_attention_layer")
-@LAYERS.register(name="pal")
 class PixelAttentionLayer(Module):
     """
     Pixel Attention Layer.
@@ -276,8 +265,6 @@ class PixelAttentionLayer(Module):
         return input * self.pa(input)
 
 
-@LAYERS.register(name="supervised_attention_module")
-@LAYERS.register(name="sam")
 class SupervisedAttentionModule(Module):
     """
     Supervised Attention Module.
@@ -400,7 +387,6 @@ def conv2d_same(
     )
 
 
-@LAYERS.register(name="cond_act2d")
 class ConvAct2d(Module):
     """
     Conv2d + Act.
@@ -443,7 +429,6 @@ class ConvAct2d(Module):
         return self.act(self.conv(input))
 
 
-@LAYERS.register(name="cond_bn_mish2d")
 class ConvBnMish2d(Module):
     """
     Conv2d + BN + Mish.
@@ -491,7 +476,6 @@ class ConvBnMish2d(Module):
         return self.act(self.conv(input))
 
 
-@LAYERS.register(name="cond_bn_relu2d")
 class ConvBnReLU2d(Module):
     """
     Conv2d + BN + ReLU.
@@ -538,7 +522,6 @@ class ConvBnReLU2d(Module):
         return self.act(self.bn(self.conv(input)))
 
 
-@LAYERS.register(name="cond_bn_relu62d")
 class ConvBnReLU62d(Module):
     """
     Conv2d + BN + ReLU6.
@@ -584,7 +567,6 @@ class ConvBnReLU62d(Module):
         return self.act(self.bn(self.conv(input)))
 
 
-@LAYERS.register(name="cond_mish2d")
 class ConvMish2d(Module):
     """
     Conv2d + Mish.
@@ -627,7 +609,6 @@ class ConvMish2d(Module):
         return self.act(self.conv(input))
 
 
-@LAYERS.register(name="cond_relu2d")
 class ConvReLU2d(Module):
     """
     Conv2d + ReLU.
@@ -668,7 +649,6 @@ class ConvReLU2d(Module):
         return self.act(self.conv(input))
 
 
-@LAYERS.register(name="conv_same2d")
 class ConvSame2d(Conv2d):
     """
     Tensorflow like `SAME` convolution wrapper for 2D convolutions.
@@ -715,7 +695,6 @@ class ConvSame2d(Conv2d):
         )
     
 
-@LAYERS.register(name="conv_sigmoid2d")
 class ConvSigmoid2d(Module):
     """
     Conv2d + Sigmoid.
@@ -758,7 +737,6 @@ class ConvSigmoid2d(Module):
         return self.act(self.conv(input))
 
 
-@LAYERS.register(name="conv_tf2d")
 class ConvTF2d(Conv2d):
     """
     Implementation of 2D convolution in TensorFlow with `padding` as "same",
@@ -826,7 +804,6 @@ class ConvTF2d(Conv2d):
         return output
 
 
-@LAYERS.register(name="conv_transpose_act2d")
 class ConvTransposeAct2d(Module):
     """
     ConvTranspose2d + Act.
@@ -872,7 +849,6 @@ class ConvTransposeAct2d(Module):
         return self.act(self.conv(input))
 
 
-@LAYERS.register(name="depthwise_conv2d")
 class DepthwiseConv2d(Conv2d):
     """
     Depthwise Conv2d with 3x3 kernel size, 1 stride, and groups == out_channels.
@@ -904,7 +880,6 @@ class DepthwiseConv2d(Conv2d):
         )
 
 
-@LAYERS.register(name="depthwise_conv_bn_mish2d")
 class DepthwiseConvBnMish2d(ConvBnMish2d):
     """
     Depthwise Conv2d + Bn + Mish.
@@ -941,7 +916,6 @@ class DepthwiseConvBnMish2d(ConvBnMish2d):
         )
 
 
-@LAYERS.register(name="depthwise_separable_conv2d")
 class DepthwiseSeparableConv2d(Module):
     """
     Depthwise Separable Conv2d.
@@ -997,7 +971,6 @@ class DepthwiseSeparableConv2d(Module):
         return self.pw_conv(self.dw_conv(input))
 
 
-@LAYERS.register(name="depthwise_separable_conv_relu2d")
 class DepthwiseSeparableConvReLU2d(Module):
     """
     Depthwise Separable Conv2d ReLU.
@@ -1054,7 +1027,6 @@ class DepthwiseSeparableConvReLU2d(Module):
         return self.act(self.pw_conv(self.dw_conv(input)))
 
 
-@LAYERS.register(name="pointwise_conv2d")
 class PointwiseConv2d(Conv2d):
     """
     Pointwise Conv2d with 1x1 kernel size, 1 stride, and groups == 1.
@@ -1085,7 +1057,6 @@ class PointwiseConv2d(Conv2d):
         )
 
 
-@LAYERS.register(name="subspace_blueprint_separable_conv2d")
 class SubspaceBlueprintSeparableConv2d(Module):
     """
     Subspace Blueprint Separable Conv2d adopted from the paper:
@@ -1169,7 +1140,6 @@ class SubspaceBlueprintSeparableConv2d(Module):
         return torch.norm(wwt - i, p="fro")
     
 
-@LAYERS.register(name="subspace_blueprint_separable_conv_bn2d")
 class SubspaceBlueprintSeparableConvBn2d(Module):
     """
     Subspace Blueprint Separable Conv2d with BatchNorm adopted from the paper:
@@ -1258,7 +1228,6 @@ class SubspaceBlueprintSeparableConvBn2d(Module):
         return torch.norm(wwt - i, p="fro")
     
 
-@LAYERS.register(name="subspace_blueprint_separable_conv_hin2d")
 class SubspaceBlueprintSeparableConvHin2d(Module):
     """
     Subspace Blueprint Separable Conv2d with HalfInstanceNorm adopted from the
@@ -1348,7 +1317,6 @@ class SubspaceBlueprintSeparableConvHin2d(Module):
         return torch.norm(wwt - i, p="fro")
 
 
-@LAYERS.register(name="subspace_blueprint_separable_conv_in2d")
 class SubspaceBlueprintSeparableConvIn2d(Module):
     """
     Subspace Blueprint Separable Conv2d with InstanceNorm adopted from the
@@ -1438,7 +1406,6 @@ class SubspaceBlueprintSeparableConvIn2d(Module):
         return torch.norm(wwt - i, p="fro")
 
 
-@LAYERS.register(name="unconstrained_blueprint_separable_conv2d")
 class UnconstrainedBlueprintSeparableConv2d(Module):
     """
     Unconstrained Blueprint Separable Conv2d adopted from the paper:
@@ -1499,7 +1466,6 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
         return x
 
 
-@LAYERS.register(name="unconstrained_blueprint_separable_conv_bn2d")
 class UnconstrainedBlueprintSeparableConvBn2d(Module):
     """
     Unconstrained Blueprint Separable Conv2d with BatchNorm adopted from the
@@ -1563,7 +1529,6 @@ class UnconstrainedBlueprintSeparableConvBn2d(Module):
         return x
 
 
-@LAYERS.register(name="unconstrained_blueprint_separable_conv_hin2d")
 class UnconstrainedBlueprintSeparableConvHin2d(Module):
     """
     Unconstrained Blueprint Separable Conv2d with HalfInstanceNorm adopted from
@@ -1627,7 +1592,6 @@ class UnconstrainedBlueprintSeparableConvHin2d(Module):
         return x
 
 
-@LAYERS.register(name="unconstrained_blueprint_separable_conv_in2d")
 class UnconstrainedBlueprintSeparableConvIn2d(Module):
     """
     Unconstrained Blueprint Separable Conv2d with InstanceNorm adopted from the
@@ -1691,43 +1655,32 @@ class UnconstrainedBlueprintSeparableConvIn2d(Module):
         return x
 
 
-BSConv2dS    = SubspaceBlueprintSeparableConv2d
-BSConv2dU    = UnconstrainedBlueprintSeparableConv2d
-BSConvBn2dS  = SubspaceBlueprintSeparableConvBn2d
-BSConvBn2dU  = UnconstrainedBlueprintSeparableConvBn2d
-BSConvHin2dS = SubspaceBlueprintSeparableConvHin2d
-BSConvHin2dU = UnconstrainedBlueprintSeparableConvHin2d
-BSConvIn2dS  = SubspaceBlueprintSeparableConvIn2d
-BSConvIn2dU  = UnconstrainedBlueprintSeparableConvIn2d
-
-LAYERS.register(name="bsconv2ds",             module=BSConv2dS)
-LAYERS.register(name="bsconv2du",             module=BSConv2dU)
-LAYERS.register(name="bsconvbn2ds",           module=BSConvBn2dS)
-LAYERS.register(name="bsconvbn2du",           module=BSConvBn2dU)
-LAYERS.register(name="bsconvhin2ds",          module=BSConvHin2dS)
-LAYERS.register(name="bsconvhin2du",          module=BSConvHin2dU)
-LAYERS.register(name="bsconvin2ds",           module=BSConvIn2dS)
-LAYERS.register(name="bsconvin2du",           module=BSConvIn2dU)
-LAYERS.register(name="conv1d",                module=Conv1d)
-LAYERS.register(name="conv2d",                module=Conv2d)
-LAYERS.register(name="conv3d",                module=Conv3d)
-LAYERS.register(name="conv_norm_act",         module=ConvNormActivation)
-LAYERS.register(name="conv2d_norm_act",       module=Conv2dNormActivation)
-LAYERS.register(name="conv3d_norm_act",       module=Conv2dNormActivation)
-LAYERS.register(name="conv_transpose1d",      module=ConvTranspose1d)
-LAYERS.register(name="conv_transpose2d",      module=ConvTranspose2d)
-LAYERS.register(name="conv_transpose3d",      module=ConvTranspose3d)
-LAYERS.register(name="lazy_conv1d",           module=LazyConv1d)
-LAYERS.register(name="lazy_conv2d",           module=LazyConv2d)
-LAYERS.register(name="lazy_conv3d",           module=LazyConv3d)
-LAYERS.register(name="lazy_conv_transpose1d", module=LazyConvTranspose1d)
-LAYERS.register(name="lazy_conv_transpose2d", module=LazyConvTranspose2d)
-LAYERS.register(name="lazy_conv_transpose3d", module=LazyConvTranspose3d)
+BSConv2dS            = SubspaceBlueprintSeparableConv2d
+BSConv2dU            = UnconstrainedBlueprintSeparableConv2d
+BSConvBn2dS          = SubspaceBlueprintSeparableConvBn2d
+BSConvBn2dU          = UnconstrainedBlueprintSeparableConvBn2d
+BSConvHin2dS         = SubspaceBlueprintSeparableConvHin2d
+BSConvHin2dU         = UnconstrainedBlueprintSeparableConvHin2d
+BSConvIn2dS          = SubspaceBlueprintSeparableConvIn2d
+BSConvIn2dU          = UnconstrainedBlueprintSeparableConvIn2d
+Conv1d               = nn.Conv1d
+Conv2d               = nn.Conv2d
+Conv3d               = nn.Conv3d
+ConvNormActivation   = torchvision.ops.misc.ConvNormActivation
+Conv2dNormActivation = torchvision.ops.Conv2dNormActivation
+ConvTranspose1d      = nn.ConvTranspose1d
+ConvTranspose2d      = nn.ConvTranspose2d
+ConvTranspose3d      = nn.ConvTranspose3d
+LazyConv1d           = nn.LazyConv1d
+LazyConv2d           = nn.LazyConv2d
+LazyConv3d           = nn.LazyConv3d
+LazyConvTranspose1d  = nn.LazyConvTranspose1d
+LazyConvTranspose2d  = nn.LazyConvTranspose2d
+LazyConvTranspose3d  = nn.LazyConvTranspose3d
 
 
 # H2: - Cropping ---------------------------------------------------------------
 
-@LAYERS.register(name="crop_tblr")
 class CropTBLR(Module):
     """
     Crop tensor with top + bottom + left + right value.
@@ -1924,7 +1877,6 @@ def drop_path(
     return output
 
 
-@LAYERS.register(name="drop_block2d")
 class DropBlock2d(Module):
     """
     DropBlock.
@@ -1975,7 +1927,6 @@ class DropBlock2d(Module):
             )
 
 
-@LAYERS.register(name="drop_path")
 class DropPath(Module):
     """
     Drop paths (Stochastic Depth) per sample.
@@ -1996,17 +1947,16 @@ class DropPath(Module):
         )
 
 
-LAYERS.register(name="alpha_dropout",         module=AlphaDropout)
-LAYERS.register(name="dropout",               module=Dropout)
-LAYERS.register(name="dropout1d",             module=Dropout1d)
-LAYERS.register(name="dropout2d",             module=Dropout2d)
-LAYERS.register(name="dropout3d",             module=Dropout3d)
-LAYERS.register(name="feature_alpha_dropout", module=FeatureAlphaDropout)
+AlphaDropout        = nn.AlphaDropout
+Dropout             = nn.Dropout
+Dropout1d           = nn.Dropout1d
+Dropout2d           = nn.Dropout2d
+Dropout3d           = nn.Dropout3d
+FeatureAlphaDropout = nn.FeatureAlphaDropout
 
 
 # H2: - Extract ----------------------------------------------------------------
 
-@LAYERS.register(name="extract_feature")
 class ExtractFeature(Module):
     """
     Extract a feature at `index` in a tensor.
@@ -2024,7 +1974,6 @@ class ExtractFeature(Module):
         return input[:, self.index, :, :]
 
 
-@LAYERS.register(name="extract_features")
 class ExtractFeatures(Module):
     """
     Extract features between `start` index and `end` index in a tensor.
@@ -2049,7 +1998,6 @@ class ExtractFeatures(Module):
         return input[:, self.start:self.end, :, :]
     
 
-@LAYERS.register(name="extract_item")
 class ExtractItem(Module):
     """
     Extract an item (feature) at `index` in a sequence of tensors.
@@ -2074,7 +2022,6 @@ class ExtractItem(Module):
             )
     
 
-@LAYERS.register(name="extract_items")
 class ExtractItems(Module):
     """
     Extract a list of items (features) at `indexes` in a sequence of tensors.
@@ -2098,7 +2045,6 @@ class ExtractItems(Module):
         )
     
     
-@LAYERS.register(name="max")
 class Max(Module):
     """
     """
@@ -2114,7 +2060,6 @@ class Max(Module):
 
 # H2: - Fusion -----------------------------------------------------------------
 
-@LAYERS.register(name="concat")
 class Concat(Module):
     """
     Concatenate a list of tensors along dimension.
@@ -2131,7 +2076,6 @@ class Concat(Module):
         return torch.cat(to_list(input), dim=self.dim)
 
 
-@LAYERS.register(name="chuncat")
 class Chuncat(Module):
     """
     
@@ -2153,7 +2097,6 @@ class Chuncat(Module):
         return torch.cat(x1 + x2, dim=self.dim)
 
 
-@LAYERS.register(name="foldcut")
 class Foldcut(nn.Module):
     """
     
@@ -2170,7 +2113,6 @@ class Foldcut(nn.Module):
         return x1 + x2
 
 
-@LAYERS.register(name="interpolate_concat")
 class InterpolateConcat(Module):
     """
     Concatenate a list of tensors along dimension.
@@ -2198,7 +2140,6 @@ class InterpolateConcat(Module):
         return torch.cat(to_list(output), dim=self.dim)
 
 
-@LAYERS.register(name="join")
 class Join(Module):
     """
     Join multiple features and return a list tensors.
@@ -2208,7 +2149,6 @@ class Join(Module):
         return to_list(input)
     
 
-@LAYERS.register(name="shortcut")
 class Shortcut(Module):
     """
     
@@ -2224,7 +2164,6 @@ class Shortcut(Module):
         return input[0] + input[1]
 
 
-@LAYERS.register(name="softmax_fusion")
 class SoftmaxFusion(Module):
     """
     Weighted sum of multiple layers https://arxiv.org/abs/1911.09070. Apply
@@ -2256,7 +2195,6 @@ class SoftmaxFusion(Module):
         return output
 
 
-@LAYERS.register(name="sum")
 class Sum(Module):
     
     def forward(self, input: Sequence[Tensor]) -> Tensor:
@@ -2268,7 +2206,6 @@ class Sum(Module):
 
 # H2: - Head -------------------------------------------------------------------
 
-@LAYERS.register(name="alexnet_classifier")
 class AlexNetClassifier(Module):
     
     def __init__(
@@ -2300,7 +2237,6 @@ class AlexNetClassifier(Module):
             return input
 
 
-@LAYERS.register(name="convnext_classifier")
 class ConvNeXtClassifier(Module):
     
     def __init__(
@@ -2329,7 +2265,6 @@ class ConvNeXtClassifier(Module):
             return input
         
 
-@LAYERS.register(name="googlenet_classifier")
 class GoogleNetClassifier(Module):
     
     def __init__(
@@ -2360,7 +2295,6 @@ class GoogleNetClassifier(Module):
             return input
 
 
-@LAYERS.register(name="inception_classifier")
 class InceptionClassifier(Module):
     
     def __init__(
@@ -2392,7 +2326,6 @@ class InceptionClassifier(Module):
             return input
     
     
-@LAYERS.register(name="lenet_classifier")
 class LeNetClassifier(Module):
     
     def __init__(
@@ -2417,7 +2350,6 @@ class LeNetClassifier(Module):
             return input
 
 
-@LAYERS.register(name="linear_classifier")
 class LinearClassifier(Module):
     
     def __init__(
@@ -2442,7 +2374,6 @@ class LinearClassifier(Module):
             return input
         
 
-@LAYERS.register(name="shufflenetv2_classifier")
 class ShuffleNetV2Classifier(Module):
     
     def __init__(
@@ -2467,7 +2398,6 @@ class ShuffleNetV2Classifier(Module):
             return input
         
 
-@LAYERS.register(name="squeezenet_classifier")
 class SqueezeNetClassifier(Module):
     
     def __init__(
@@ -2500,7 +2430,6 @@ class SqueezeNetClassifier(Module):
             return input
 
 
-@LAYERS.register(name="vgg_classifier")
 class VGGClassifier(Module):
     
     def __init__(
@@ -2534,7 +2463,6 @@ class VGGClassifier(Module):
 
 # H2: - Linear -----------------------------------------------------------------
 
-@LAYERS.register(name="flatten")
 class Flatten(Module):
     """
     Flatten a tensor along a dimension.
@@ -2551,15 +2479,14 @@ class Flatten(Module):
         return torch.flatten(input, self.dim)
 
 
-LAYERS.register(name="bilinear",    module=Bilinear)
-LAYERS.register(name="identity",    module=Identity)
-LAYERS.register(name="lazy_linear", module=LazyLinear)
-LAYERS.register(name="linear",      module=Linear)
+Bilinear   = nn.Bilinear  
+Identity   = nn.Identity  
+LazyLinear = nn.LazyLinear
+Linear     = nn.Linear    
 
 
 # H2: - Normalization ----------------------------------------------------------
 
-@LAYERS.register(name="batch_norm_act2d")
 class BatchNormAct2d(BatchNorm2d):
     """
     BatchNorm2d + Activation.
@@ -2601,7 +2528,6 @@ class BatchNormAct2d(BatchNorm2d):
         return output
 
 
-@LAYERS.register(name="batch_norm_relu2d")
 class BatchNormReLU2d(BatchNormAct2d):
     """
     BatchNorm2d + ReLU.
@@ -2638,7 +2564,6 @@ class BatchNormReLU2d(BatchNormAct2d):
         )
         
 
-@LAYERS.register(name="fraction_instance_norm2d")
 class FractionInstanceNorm2d(InstanceNorm2d):
     """
     Fractional Instance Normalization is a generalization of Half Instance
@@ -2739,7 +2664,6 @@ class FractionInstanceNorm2d(InstanceNorm2d):
             return torch.cat([out1, out2], dim=1)
 
 
-@LAYERS.register(name="group_norm_act")
 class GroupNormAct(GroupNorm):
     """
     GroupNorm + Activation.
@@ -2783,7 +2707,6 @@ class GroupNormAct(GroupNorm):
         return self.act(output)
 
 
-@LAYERS.register(name="half_group_norm")
 class HalfGroupNorm(GroupNorm):
 
     def __init__(
@@ -2817,7 +2740,6 @@ class HalfGroupNorm(GroupNorm):
         return torch.cat([out_1, out_2], dim=1)
 
 
-@LAYERS.register(name="half_instance_norm2d")
 class HalfInstanceNorm2d(InstanceNorm2d):
     """
     Half instance normalization layer proposed in paper:
@@ -2861,7 +2783,6 @@ class HalfInstanceNorm2d(InstanceNorm2d):
         return torch.cat([out_1, out_2], dim=1)
 
 
-@LAYERS.register(name="half_layer_norm")
 class HalfLayerNorm(LayerNorm):
 
     def __init__(
@@ -2893,7 +2814,6 @@ class HalfLayerNorm(LayerNorm):
         return torch.cat([out_1, out_2], dim=1)
 
 
-@LAYERS.register(name="layer_norm2d")
 class LayerNorm2d(LayerNorm):
     """
     LayerNorm for channels of 2D spatial [B, C, H, W] tensors.
@@ -2926,22 +2846,22 @@ class LayerNorm2d(LayerNorm):
         ).permute(0, 3, 1, 2)
 
 
-LAYERS.register(name="batch_norm1d",         module=BatchNorm1d)
-LAYERS.register(name="batch_norm2d",         module=BatchNorm2d)
-LAYERS.register(name="batch_norm3d",         module=BatchNorm3d)
-LAYERS.register(name="group_norm",           module=GroupNorm)
-LAYERS.register(name="layer_norm",           module=LayerNorm)
-LAYERS.register(name="lazy_batch_norm1d",    module=LazyBatchNorm1d)
-LAYERS.register(name="lazy_batch_norm2d",    module=LazyBatchNorm2d)
-LAYERS.register(name="lazy_batch_norm3d",    module=LazyBatchNorm3d)
-LAYERS.register(name="lazy_instance_norm1d", module=LazyInstanceNorm1d)
-LAYERS.register(name="lazy_instance_norm2d", module=LazyInstanceNorm2d)
-LAYERS.register(name="lazy_instance_norm3d", module=LazyInstanceNorm3d)
-LAYERS.register(name="local_response_norm",  module=LocalResponseNorm)
-LAYERS.register(name="instance_norm1d",      module=InstanceNorm1d)
-LAYERS.register(name="instance_norm2d",      module=InstanceNorm2d)
-LAYERS.register(name="instance_norm3d",      module=InstanceNorm3d)
-LAYERS.register(name="sync_batch_norm",      module=SyncBatchNorm)
+BatchNorm1d        = nn.BatchNorm1d       
+BatchNorm2d        = nn.BatchNorm2d       
+BatchNorm3d        = nn.BatchNorm3d       
+GroupNorm          = nn.GroupNorm         
+LayerNorm          = nn.LayerNorm         
+LazyBatchNorm1d    = nn.LazyBatchNorm1d   
+LazyBatchNorm2d    = nn.LazyBatchNorm2d   
+LazyBatchNorm3d    = nn.LazyBatchNorm3d   
+LazyInstanceNorm1d = nn.LazyInstanceNorm1d
+LazyInstanceNorm2d = nn.LazyInstanceNorm2d
+LazyInstanceNorm3d = nn.LazyInstanceNorm3d
+LocalResponseNorm  = nn.LocalResponseNorm 
+InstanceNorm1d     = nn.InstanceNorm1d    
+InstanceNorm2d     = nn.InstanceNorm2d    
+InstanceNorm3d     = nn.InstanceNorm3d    
+SyncBatchNorm      = nn.SyncBatchNorm     
 
 
 # H2: - Padding ----------------------------------------------------------------
@@ -3021,16 +2941,16 @@ def pad_same(
     return input
 
 
-LAYERS.register(name="constant_pad1d",    module=ConstantPad1d)
-LAYERS.register(name="constant_pad2d",    module=ConstantPad2d)
-LAYERS.register(name="constant_pad3d",    module=ConstantPad3d)
-LAYERS.register(name="reflection_pad1d",  module=ReflectionPad1d)
-LAYERS.register(name="reflection_pad2d",  module=ReflectionPad2d)
-LAYERS.register(name="reflection_pad3d",  module=ReflectionPad3d)
-LAYERS.register(name="replication_pad1d", module=ReplicationPad1d)
-LAYERS.register(name="replication_pad2d", module=ReplicationPad2d)
-LAYERS.register(name="replication_pad3d", module=ReplicationPad3d)
-LAYERS.register(name="zero_pad2d",        module=ZeroPad2d)
+ConstantPad1d    = nn.ConstantPad1d   
+ConstantPad2d    = nn.ConstantPad2d   
+ConstantPad3d    = nn.ConstantPad3d   
+ReflectionPad1d  = nn.ReflectionPad1d 
+ReflectionPad2d  = nn.ReflectionPad2d 
+ReflectionPad3d  = nn.ReflectionPad3d 
+ReplicationPad1d = nn.ReplicationPad1d
+ReplicationPad2d = nn.ReplicationPad2d
+ReplicationPad3d = nn.ReplicationPad3d
+ZeroPad2d        = nn.ZeroPad2d       
 
 
 # H2: - Pooling ----------------------------------------------------------------
@@ -3122,7 +3042,6 @@ def max_pool_same2d(
     )
 
 
-@LAYERS.register(name="adaptive_avg_max_pool2d")
 class AdaptiveAvgMaxPool2d(Module):
 
     def __init__(self, output_size: int = 1):
@@ -3136,7 +3055,6 @@ class AdaptiveAvgMaxPool2d(Module):
         )
 
 
-@LAYERS.register(name="adaptive_cat_avg_max_pool2d")
 class AdaptiveCatAvgMaxPool2d(Module):
 
     def __init__(self, output_size: int = 1):
@@ -3150,7 +3068,6 @@ class AdaptiveCatAvgMaxPool2d(Module):
         )
 
 
-@LAYERS.register(name="adaptive_pool2d")
 class AdaptivePool2d(Module):
     """
     Selectable global pooling layer with dynamic input kernel size.
@@ -3203,7 +3120,6 @@ class AdaptivePool2d(Module):
             return 1
         
 
-@LAYERS.register(name="avg_pool_same2d")
 class AvgPoolSame2d(AvgPool2d):
     """
     Tensorflow like 'same' wrapper for 2D average pooling.
@@ -3244,7 +3160,6 @@ class AvgPoolSame2d(AvgPool2d):
         )
 
 
-@LAYERS.register(name="fast_adaptive_avg_pool2d")
 class FastAdaptiveAvgPool2d(Module):
 
     def __init__(self, flatten: bool = False, *args, **kwargs):
@@ -3255,7 +3170,6 @@ class FastAdaptiveAvgPool2d(Module):
         return input.mean((2, 3), keepdim=not self.flatten)
     
 
-@LAYERS.register(name="max_pool_same2d")
 class MaxPoolSame2d(MaxPool2d):
     """
     Tensorflow like `same` wrapper for 2D max pooling.
@@ -3298,7 +3212,6 @@ class MaxPoolSame2d(MaxPool2d):
         )
 
 
-@LAYERS.register(name="median_pool2d")
 class MedianPool2d(Module):
     """
     Median pool (usable as median filter when stride=1) module.
@@ -3354,30 +3267,29 @@ class MedianPool2d(Module):
         return output
 
 
-LAYERS.register(name="adaptive_avg_pool1d",   module=AdaptiveAvgPool1d)
-LAYERS.register(name="adaptive_avg_pool2d",   module=AdaptiveAvgPool2d)
-LAYERS.register(name="adaptive_avg_pool3d",   module=AdaptiveAvgPool3d)
-LAYERS.register(name="adaptive_max_pool1d",   module=AdaptiveMaxPool1d)
-LAYERS.register(name="adaptive_max_pool2d",   module=AdaptiveMaxPool2d)
-LAYERS.register(name="adaptive_max_pool3d",   module=AdaptiveMaxPool3d)
-LAYERS.register(name="avg_pool1d",		      module=AvgPool1d)
-LAYERS.register(name="avg_pool2d",		      module=AvgPool2d)
-LAYERS.register(name="avg_pool3d", 		      module=AvgPool3d)
-LAYERS.register(name="fractional_max_pool2d", module=FractionalMaxPool2d)
-LAYERS.register(name="fractional_max_pool3d", module=FractionalMaxPool3d)
-LAYERS.register(name="lp_pool_1d", 			  module=LPPool1d)
-LAYERS.register(name="lp_pool_2d", 			  module=LPPool2d)
-LAYERS.register(name="max_pool1d", 		      module=MaxPool1d)
-LAYERS.register(name="max_pool2d", 		      module=MaxPool2d)
-LAYERS.register(name="max_pool3d", 		      module=MaxPool3d)
-LAYERS.register(name="max_unpool1d", 		  module=MaxUnpool1d)
-LAYERS.register(name="max_unpool2d", 		  module=MaxUnpool2d)
-LAYERS.register(name="max_unpool3d", 		  module=MaxUnpool3d)
+AdaptiveAvgPool1d   = nn.AdaptiveAvgPool1d  
+AdaptiveAvgPool2d   = nn.AdaptiveAvgPool2d  
+AdaptiveAvgPool3d   = nn.AdaptiveAvgPool3d  
+AdaptiveMaxPool1d   = nn.AdaptiveMaxPool1d  
+AdaptiveMaxPool2d   = nn.AdaptiveMaxPool2d  
+AdaptiveMaxPool3d   = nn.AdaptiveMaxPool3d  
+AvgPool1d           = nn.AvgPool1d          
+AvgPool2d           = nn.AvgPool2d          
+AvgPool3d           = nn.AvgPool3d          
+FractionalMaxPool2d = nn.FractionalMaxPool2d
+FractionalMaxPool3d = nn.FractionalMaxPool3d
+LPPool1d            = nn.LPPool1d           
+LPPool2d            = nn.LPPool2d           
+MaxPool1d           = nn.MaxPool1d          
+MaxPool2d           = nn.MaxPool2d          
+MaxPool3d           = nn.MaxPool3d          
+MaxUnpool1d         = nn.MaxUnpool1d        
+MaxUnpool2d         = nn.MaxUnpool2d        
+MaxUnpool3d         = nn.MaxUnpool3d        
 
 
 # H2: - Scaling ----------------------------------------------------------------
 
-@LAYERS.register(name="downsample")
 class Downsample(Module):
     """
     Downsample a given multi-channel 1D (temporal), 2D (spatial) or 3D
@@ -3455,7 +3367,6 @@ class Downsample(Module):
         )
     
     
-@LAYERS.register(name="scale")
 class Scale(Module):
     """
     A learnable scale parameter. This layer scales the input by a learnable
@@ -3474,7 +3385,6 @@ class Scale(Module):
         return input * self.scale
 
 
-@LAYERS.register(name="interpolate")
 class Interpolate(Module):
     """
     
@@ -3490,7 +3400,6 @@ class Interpolate(Module):
         return F.interpolate(input=input, size=self.size)
 
 
-@LAYERS.register(name="upsample")
 class Upsample(Module):
     """
     Upsample a given multi-channel 1D (temporal), 2D (spatial) or 3D
@@ -3568,13 +3477,12 @@ class Upsample(Module):
         )
 
 
-LAYERS.register(name="upsampling_nearest2d",  module=UpsamplingNearest2d)
-LAYERS.register(name="upsampling_bilinear2d", module=UpsamplingBilinear2d)
+UpsamplingNearest2d  = nn.UpsamplingNearest2d
+UpsamplingBilinear2d = nn.UpsamplingBilinear2d
 
 
 # H2: - Shuffle ----------------------------------------------------------------
 
-@LAYERS.register(name="channel_shuffle")
 class ChannelShuffle(Module):
     """
     """
@@ -3600,7 +3508,6 @@ class ChannelShuffle(Module):
 
 # H2: - ConvNeXt ---------------------------------------------------------------
 
-@LAYERS.register(name="convnext_layer")
 class ConvNeXtLayer(Module):
     
     def __init__(
@@ -3652,7 +3559,6 @@ class ConvNeXtLayer(Module):
         return output
 
 
-@LAYERS.register(name="convnext_block")
 class ConvNeXtBlock(Module):
     
     def __init__(
@@ -3687,7 +3593,6 @@ class ConvNeXtBlock(Module):
 
 # H2: - Densenet ---------------------------------------------------------------
 
-@LAYERS.register(name="dense_layer")
 class DenseLayer(Module):
     def __init__(
         self,
@@ -3735,7 +3640,6 @@ class DenseLayer(Module):
         return new_features
 
 
-@LAYERS.register(name="dense_block")
 class DenseBlock(ModuleDict):
 
     def __init__(
@@ -3767,7 +3671,6 @@ class DenseBlock(ModuleDict):
         return torch.cat(features, 1)
 
 
-@LAYERS.register(name="dense_transition")
 class DenseTransition(Module):
     
     def __init__(
@@ -3799,7 +3702,6 @@ class DenseTransition(Module):
 
 # H2: - FFANet -----------------------------------------------------------------
 
-@LAYERS.register(name="ffa")
 class FFA(Module):
     """
     This is the main feature in FFA-Net, the Feature Fusion Attention.
@@ -3856,7 +3758,6 @@ class FFA(Module):
         return output
 
 
-@LAYERS.register(name="ffa_block")
 class FFABlock(Module):
     """
     A basic block structure in FFA-Net that consists of:
@@ -3915,7 +3816,6 @@ class FFABlock(Module):
         return y
 
 
-@LAYERS.register(name="ffa_group")
 class FFAGroup(Module):
     """
     Our Group Architecture combines B Basic Block structures with skip
@@ -3957,7 +3857,6 @@ class FFAGroup(Module):
         return y
 
 
-@LAYERS.register(name="ffa_post_process")
 class FFAPostProcess(Module):
     """
     Post-process module in FFA-Net.
@@ -3990,7 +3889,6 @@ class FFAPostProcess(Module):
         return self.conv2(self.conv1(input))
 
 
-@LAYERS.register(name="ffa_pre_process")
 class FFAPreProcess(Module):
     """
     Pre-process module in FFA-Net.
@@ -4024,7 +3922,6 @@ class FFAPreProcess(Module):
 
 # H2: - FINet ------------------------------------------------------------------
 
-@LAYERS.register(name="finet_conv_block")
 class FINetConvBlock(Module):
     
     def __init__(
@@ -4144,7 +4041,6 @@ class FINetConvBlock(Module):
     
 # H2: - HINet ------------------------------------------------------------------
 
-@LAYERS.register(name="hinet_conv_block")
 class HINetConvBlock(Module):
     
     def __init__(
@@ -4257,7 +4153,6 @@ class HINetConvBlock(Module):
             return None, y
     
 
-@LAYERS.register(name="hinet_up_block")
 class HINetUpBlock(Module):
     
     def __init__(
@@ -4293,7 +4188,6 @@ class HINetUpBlock(Module):
         return y[-1]
 
 
-@LAYERS.register(name="hinet_skip_block")
 class HINetSkipBlock(Module):
     
     def __init__(
@@ -4349,7 +4243,6 @@ class HINetSkipBlock(Module):
     
 # H2: - Inception --------------------------------------------------------------
 
-@LAYERS.register(name="inception_basic_conv2d")
 class InceptionBasicConv2d(Module):
     """
     Conv2d + BN + ReLU.
@@ -4396,7 +4289,6 @@ class InceptionBasicConv2d(Module):
         return self.act(self.bn(self.conv(input)))
     
     
-@LAYERS.register(name="inception")
 class Inception(Module):
     
     def __init__(
@@ -4472,7 +4364,6 @@ class Inception(Module):
         return torch.cat(outputs, dim=1)
 
 
-@LAYERS.register(name="inception_a")
 class InceptionA(Module):
     
     base_out_channels: int = 224  # + pool_features
@@ -4546,7 +4437,6 @@ class InceptionA(Module):
         return torch.cat(outputs, 1)
 
 
-@LAYERS.register(name="inception_b")
 class InceptionB(Module):
     
     base_out_channels: int = 480   # + in_channels
@@ -4594,7 +4484,6 @@ class InceptionB(Module):
         return torch.cat(outputs, 1)
 
 
-@LAYERS.register(name="inception_c")
 class InceptionC(Module):
     
     base_out_channels: int = 768
@@ -4683,7 +4572,6 @@ class InceptionC(Module):
         return torch.cat(outputs, 1)
     
     
-@LAYERS.register(name="inception_d")
 class InceptionD(Module):
     
     base_out_channels: int = 512   # + in_channels
@@ -4744,7 +4632,6 @@ class InceptionD(Module):
         return torch.cat(outputs, 1)
     
 
-@LAYERS.register(name="inception_e")
 class InceptionE(Module):
     
     base_out_channels: int = 2048
@@ -4831,7 +4718,6 @@ class InceptionE(Module):
         return torch.cat(outputs, 1)
 
 
-@LAYERS.register(name="inception_aux1")
 class InceptionAux1(Module):
     
     def __init__(
@@ -4877,7 +4763,6 @@ class InceptionAux1(Module):
         return x
 
 
-@LAYERS.register(name="inception_aux2")
 class InceptionAux2(Module):
     
     def __init__(
@@ -4920,8 +4805,6 @@ class InceptionAux2(Module):
 
 # H2: - MBLLEN -----------------------------------------------------------------
 
-@LAYERS.register(name="enhancement_module")
-@LAYERS.register(name="em")
 class EnhancementModule(Module):
     """
     Enhancement regression (EM) has a symmetric structure to first apply
@@ -5003,7 +4886,6 @@ EM = EnhancementModule
 
 # H2: - ResNet -----------------------------------------------------------------
 
-@LAYERS.register(name="resnet_basic_block")
 class ResNetBasicBlock(Module):
     
     expansion: int = 1
@@ -5072,7 +4954,6 @@ class ResNetBasicBlock(Module):
         return output
 
 
-@LAYERS.register(name="resnet_bottleneck")
 class ResNetBottleneck(Module):
     """
     Bottleneck in torchvision places the stride for down-sampling at
@@ -5156,7 +5037,6 @@ class ResNetBottleneck(Module):
         return output
 
 
-@LAYERS.register(name="resnet_block")
 class ResNetBlock(Module):
     
     def __init__(
@@ -5225,7 +5105,6 @@ class ResNetBlock(Module):
 
 # H2: - ShuffleNet -------------------------------------------------------------
 
-@LAYERS.register(name="inverted_residual")
 class InvertedResidual(Module):
     
     def __init__(
@@ -5333,7 +5212,6 @@ class InvertedResidual(Module):
 
 # H2: - SqueezeNet -------------------------------------------------------------
 
-@LAYERS.register(name="fire")
 class Fire(Module):
     """
     """
@@ -5378,7 +5256,6 @@ class Fire(Module):
 
 # H2: - SRCNN ------------------------------------------------------------------
 
-@LAYERS.register(name="srcnn")
 class SRCNN(Module):
     """
     SRCNN (Super-Resolution Convolutional Neural Network).
@@ -5464,7 +5341,6 @@ class SRCNN(Module):
 
 # H2: - UNet -------------------------------------------------------------------
 
-@LAYERS.register(name="unet_block")
 class UNetBlock(Module):
     """
     """
@@ -5529,7 +5405,6 @@ class UNetBlock(Module):
 
 # H2: - VDSR -------------------------------------------------------------------
 
-@LAYERS.register(name="vdsr")
 class VDSR(Module):
     """
     VDSR (Very Deep Super-Resolution).
@@ -5617,7 +5492,6 @@ class VDSR(Module):
 
 # H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
 
-@LAYERS.register(name="dcenet")
 class DCENet(Module):
     """
     """
@@ -5625,8 +5499,8 @@ class DCENet(Module):
     def __init__(
         self,
         in_channels : int  = 3,
-        mid_channels: int  = 32,
         out_channels: int  = 24,
+        mid_channels: int  = 32,
         kernel_size : Ints = 3,
         stride      : Ints = 1,
         padding     : Ints = 1,
@@ -5734,41 +5608,42 @@ class DCENet(Module):
     
     def forward(self, input: Tensor) -> Tensor:
         x  = input
-        x1 =  self.relu(self.conv1(x))
-        x2 =  self.relu(self.conv2(x1))
-        x3 =  self.relu(self.conv3(x2))
-        x4 =  self.relu(self.conv4(x3))
-        x5 =  self.relu(self.conv5(torch.cat([x3, x4], dim=1)))
-        x6 =  self.relu(self.conv6(torch.cat([x2, x5], dim=1)))
+        x1 = self.relu(self.conv1(x))
+        x2 = self.relu(self.conv2(x1))
+        x3 = self.relu(self.conv3(x2))
+        x4 = self.relu(self.conv4(x3))
+        x5 = self.relu(self.conv5(torch.cat([x3, x4], dim=1)))
+        x6 = self.relu(self.conv6(torch.cat([x2, x5], dim=1)))
         a  = torch.tanh(self.conv7(torch.cat([x1, x6], dim=1)))
         return a
 
 
-
-@LAYERS.register(name="dcenetv2_s4")
-class DCENetV2_S4(Module):
+class DCENetV2(Module):
     """
     """
     
     def __init__(
         self,
-        in_channels : int  = 3,
-        mid_channels: int  = 32,
-        out_channels: int  = 24,
-        kernel_size : Ints = 3,
-        stride      : Ints = 1,
-        padding     : Ints = 1,
-        dilation    : Ints = 1,
-        groups      : int  = 1,
-        bias        : bool = True,
-        padding_mode: str  = "zeros",
-        device      : Any  = None,
-        dtype       : Any  = None,
+        in_channels : int      = 3,
+        out_channels: int      = 3,
+        mid_channels: int      = 32,
+        conv_layer  : Callable = BSConvHin2dS,
+        kernel_size : Ints     = 3,
+        stride      : Ints     = 1,
+        padding     : Ints     = 1,
+        dilation    : Ints     = 1,
+        groups      : int      = 1,
+        bias        : bool     = True,
+        padding_mode: str      = "zeros",
+        device      : Any      = None,
+        dtype       : Any      = None,
         *args, **kwargs
     ):
         super().__init__()
-        self.relu  = ReLU(inplace=True)
-        self.conv1 = Conv2d(
+        self.downsample = Downsample(None, 1, "bilinear")
+        self.upsample   = UpsamplingBilinear2d(None, 1)
+        self.relu       = ReLU(inplace=True)
+        self.conv1 = conv_layer(
             in_channels  = in_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5781,7 +5656,7 @@ class DCENetV2_S4(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv2 = Conv2d(
+        self.conv2 = conv_layer(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5794,7 +5669,7 @@ class DCENetV2_S4(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv3 = Conv2d(
+        self.conv3 = conv_layer(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5807,7 +5682,7 @@ class DCENetV2_S4(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv4 = Conv2d(
+        self.conv4 = conv_layer(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5833,7 +5708,7 @@ class DCENetV2_S4(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv6 = Conv2d(
+        self.conv6 = conv_layer(
             in_channels  = mid_channels * 2,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5846,7 +5721,7 @@ class DCENetV2_S4(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv7 = Conv2d(
+        self.conv7 = conv_layer(
             in_channels  = mid_channels * 2,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -5862,17 +5737,18 @@ class DCENetV2_S4(Module):
     
     def forward(self, input: Tensor) -> Tensor:
         x  = input
-        x1 =  self.relu(self.conv1(x))
-        x2 =  self.relu(self.conv2(x1))
-        x3 =  self.relu(self.conv3(x2))
-        x4 =  self.relu(self.conv4(x3))
-        x5 =  self.relu(self.conv5(torch.cat([x3, x4], dim=1)))
-        x6 =  self.relu(self.conv6(torch.cat([x2, x5], dim=1)))
+        x  = self.downsample(x)
+        x1 = self.relu(self.conv1(x))
+        x2 = self.relu(self.conv2(x1))
+        x3 = self.relu(self.conv3(x2))
+        x4 = self.relu(self.conv4(x3))
+        x5 = self.relu(self.conv5(torch.cat([x3, x4], dim=1)))
+        x6 = self.relu(self.conv6(torch.cat([x2, x5], dim=1)))
         a  = torch.tanh(self.conv7(torch.cat([x1, x6], dim=1)))
+        a  = self.upsample(a)
         return a
+       
 
-
-@LAYERS.register(name="pixelwise_higher_order_le_curve")
 class PixelwiseHigherOrderLECurve(Module):
     """
     Pixelwise Light-Enhancement Curve is a higher-order curves that can be
