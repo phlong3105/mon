@@ -23,8 +23,8 @@ from one.vision.transformation import Resize
 
 # H1: - Module -----------------------------------------------------------------
 
-@DATASETS.register(name="retras_vnight_unsupervised")
-class RETRASVNightUnsupervised(UnlabeledImageDataset):
+@DATASETS.register(name="retras_vnight")
+class RETRASVNight(UnlabeledImageDataset):
     """
     RETRAS (REalistic TRAffic Surveillance) Virtual Night dataset.
     
@@ -93,7 +93,7 @@ class RETRASVNightUnsupervised(UnlabeledImageDataset):
             
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / "full"  # self.split
             for path in pbar.track(
                 list(pattern.rglob("*/image/*.jpg")),
                 description=f"Listing {self.__class__.classname} "
@@ -102,8 +102,8 @@ class RETRASVNightUnsupervised(UnlabeledImageDataset):
                 self.images.append(Image(path=path, backend=self.backend))
 
 
-@DATAMODULES.register(name="retras_vnight_unsupervised")
-class RETRASVNightUnsupervisedDataModule(DataModule):
+@DATAMODULES.register(name="retras_vnight")
+class RETRASVNightDataModule(DataModule):
     """
     RETRAS Virtual Night DataModule.
     """
@@ -144,12 +144,12 @@ class RETRASVNightUnsupervisedDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{RETRASVNightUnsupervised.classname}[/red] datasets.")
+        console.log(f"Setup [red]{RETRASVNight.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = RETRASVNightUnsupervised(
+            self.train = RETRASVNight(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -159,7 +159,7 @@ class RETRASVNightUnsupervisedDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.val = RETRASVNightUnsupervised(
+            self.val = RETRASVNight(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -174,7 +174,7 @@ class RETRASVNightUnsupervisedDataModule(DataModule):
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RETRASVNightUnsupervised(
+            self.test = RETRASVNight(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -201,7 +201,7 @@ class RETRASVNightUnsupervisedDataModule(DataModule):
 
 # H1: - Test -------------------------------------------------------------------
 
-def test_retras_vnight_unsupervised():
+def test_retras_vnight():
     cfg = {
         "root": DATA_DIR /  "retras" / "vnight",
            # Root directory of dataset.
@@ -238,7 +238,7 @@ def test_retras_vnight_unsupervised():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = RETRASVNightUnsupervisedDataModule(**cfg)
+    dm  = RETRASVNightDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.classlabels:
@@ -254,12 +254,12 @@ def test_retras_vnight_unsupervised():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str, default="test_retras_vnight_unsupervised", help="The task to run.")
+    parser.add_argument("--task", type=str, default="test_retras_vnight", help="The task to run.")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.task == "test_retras_vnight_unsupervised":
-        test_retras_vnight_unsupervised()
+    if args.task == "test_retras_vnight":
+        test_retras_vnight()

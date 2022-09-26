@@ -61,8 +61,9 @@ dependencies:
 
   # Image
   - ffmpeg-python
-  # - opencv-python
+  - opencv
   - pillow
+  - py-opencv
 
   # PyTorch
   - pytorch=1.12.1
@@ -87,7 +88,7 @@ dependencies:
   - pip:
       - label-studio
       # - mediapipe
-      - opencv-python
-      - opencv-contrib-python
+      # - opencv-python
+      # - opencv-contrib-python
       - ptflops
       - thop

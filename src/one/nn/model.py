@@ -994,9 +994,11 @@ def parse_model(
             HINetConvBlock,
             HINetUpBlock,
             InceptionBasicConv2d,
+            SRCNN,
             UnconstrainedBlueprintSeparableConv2d,
             UnconstrainedBlueprintSeparableConvBn2d,
             UNetBlock,
+            VDSR,
         ]:
             if isinstance(f, (list, tuple)):
                 c1, c2 = ch[f[0]], args[0]
@@ -2440,8 +2442,8 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
         pred		 : Tensor | None = None,
         filepath     : Path_  | None = None,
         image_quality: int           = 95,
-        max_n        : int | None    = 8,
-        nrow         : int | None    = 8,
+        max_n        : int    | None = 8,
+        nrow         : int    | None = 8,
         wait_time    : float         = 0.01,
         save         : bool          = False,
         verbose      : bool          = False,
@@ -2569,8 +2571,8 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
         pred		 : Tensor | None = None,
         filepath     : Path_  | None = None,
         image_quality: int           = 95,
-        max_n        : int | None    = 8,
-        nrow         : int | None    = 8,
+        max_n        : int    | None = 8,
+        nrow         : int    | None = 8,
         wait_time    : float         = 0.01,
         save         : bool          = False,
         verbose      : bool          = False,

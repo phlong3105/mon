@@ -19,58 +19,17 @@ cfgs = {
     "dual-cnn": {
         "channels": 3,
         "backbone": [
-            # [from,   number, module,   args(out_channels, ...)]
-            [-1,       1,      Identity, []],                          # 0  (x)
-            # Branch 1: Details (Edge Preserving)
-            [0,        1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 1
-            [-1,       1,      ReLU,     [True]],                      # 2  (input)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 3
-            [-1,       1,      ReLU,     [True]],                      # 4  (1)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 5
-            [-1,       1,      ReLU,     [True]],                      # 6  (2)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 7
-            [-1,       1,      ReLU,     [True]],                      # 8  (3)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 9
-            [-1,       1,      ReLU,     [True]],                      # 10 (4)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 11
-            [-1,       1,      ReLU,     [True]],                      # 12 (5)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 13
-            [-1,       1,      ReLU,     [True]],                      # 14 (6)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 15
-            [-1,       1,      ReLU,     [True]],                      # 16 (7)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 17
-            [-1,       1,      ReLU,     [True]],                      # 18 (8)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 19
-            [-1,       1,      ReLU,     [True]],                      # 20 (9)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 21
-            [-1,       1,      ReLU,     [True]],                      # 22 (10)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 23
-            [-1,       1,      ReLU,     [True]],                      # 24 (11)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 25
-            [-1,       1,      ReLU,     [True]],                      # 26 (12)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 27
-            [-1,       1,      ReLU,     [True]],                      # 28 (13)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 29
-            [-1,       1,      ReLU,     [True]],                      # 30 (14)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 31
-            [-1,       1,      ReLU,     [True]],                      # 32 (15)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 33
-            [-1,       1,      ReLU,     [True]],                      # 34 (16)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 35
-            [-1,       1,      ReLU,     [True]],                      # 36 (17)
-            [-1,       1,      Conv2d,   [64, 3, 1, 1, 1, 1, False]],  # 37
-            [-1,       1,      ReLU,     [True]],                      # 38 (18)
-            [-1,       1,      Conv2d,   [3, 3, 1, 1, 1, 1, False]],   # 39
+            # [from,     number, module,   args(out_channels, ...)]
+            [-1,         1,      Identity, []],                              # 0  (x)
+            # Branch 1: Details (Edge Preserving)                          
+            [0,          1,      VDSR,     [3]],                             # 1
             # Branch 2: Structures
-            [0,        1,      Conv2d,   [64, 9, 1, 0]],               # 40
-            [-1,       1,      ReLU,     [True]],                      # 41
-            [-1,       1,      Conv2d,   [32, 1, 1, 0]],               # 42
-            [-1,       1,      ReLU,     [True]],                      # 43
-            [-1,       1,      Conv2d,   [3,  5, 1, 0]],               # 44
+            [0,          1,      SRCNN,    [3, 9, 1, 0, 1, 1, 0, 5, 1, 0]],  # 2
         ],
         "head": [
-            [39,       1,      CropTBLR, [6, -6, 6, -6]],              # 45
-            [[-1, 44], 1,      Sum,      []],                          # 46
+            [1,          1,      CropTBLR, [6, -6, 6, -6]],                  # 3
+            [[2, -1],    1,      Sum,      []],                              # 4
+            [[1, 2, -1], 1,      Join,     []],                              # 5 (detail, structure, output)
         ]
     },
 }
@@ -122,10 +81,10 @@ class DualCNN(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "dual-cnn",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "dual-cnn",
-        fullname   : str  | None         = "dual-cnn",
+        name       : str          | None = "dual-cnn",
+        fullname   : str          | None = "dual-cnn",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -161,16 +120,7 @@ class DualCNN(ImageEnhancementModel):
         )
     
     def init_weights(self, m: Module):
-        classname = m.__class__.__name__
-        if classname.find("Conv") != -1:
-            if hasattr(m, "conv"):
-                m.conv.weight.data.normal_(0.0, 0.02)
-            elif hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)
-            elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)
-            else:
-                m.weight.data.normal_(0.0, 0.02)
+        pass
     
     def load_pretrained(self):
         """
@@ -193,7 +143,7 @@ class DualCNN(ImageEnhancementModel):
             # assert_same_state_dicts(self.model.state_dict(), state_dict)
         else:
             super().load_pretrained()
-    
+          
     def forward_loss(
         self,
         input : Tensor,
@@ -212,7 +162,32 @@ class DualCNN(ImageEnhancementModel):
         Returns:
             Predictions and loss value.
         """
-        pred  = self.forward(input=input, *args, **kwargs)
-        loss  = self.loss(input, pred) if self.loss else None
-        loss += self.regularization_loss(alpha=0.1)
+        import one.vision.transformation as t
+        pred        = self.forward(input=input, *args, **kwargs)  # (detail, structure, output)
+        crop_target = t.crop_tblr(target, 6, -6, 6, -6)
+        loss = 0.01 * self.loss(pred[1], crop_target) \
+               + self.loss(pred[-1], crop_target) if self.loss else None
         return pred[-1], loss
+
+    def on_fit_start(self):
+        """
+        Called at the very beginning of fit.
+        """
+        self.optims = Adam(
+            params       = [
+                {"params": self.model[1].parameters(), "lr": 2e-5},
+                {"params": self.model[2].parameters(), "lr": 2e-4}
+            ],
+            weight_decay = 1e-4,
+        )
+        super().on_fit_start()
+        
+    def on_train_epoch_start(self):
+        """
+        Called in the training loop at the very beginning of the epoch.
+        """
+        vdsr_lr  = 2e-5 * (0.2 ** (self.current_epoch // 50))
+        srcnn_lr = 2e-4 * (0.2 ** (self.current_epoch // 50))
+        self.optims.param_groups[0]["lr"] = vdsr_lr
+        self.optims.param_groups[1]["lr"] = srcnn_lr
+        super().on_train_epoch_start()
