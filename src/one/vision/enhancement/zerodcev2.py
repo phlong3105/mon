@@ -128,71 +128,82 @@ cfgs = {
             [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                # 2
         ]
     },
-    "zerodcev2-s6": {
-        "channels": 3,
-        "backbone": [
-            # [from,  number, module,   args(out_channels, ...)]
-            [-1,      1,      Identity, []],                                                      # 0  (x)
-            [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dSP1, act=HalfInstanceNorm2d)]],  # 1
-        ],
-        "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                  # 2
-        ]
-    },
-    "zerodcev2-s7": {
-        "channels": 3,
-        "backbone": [
-            # [from,  number, module,   args(out_channels, ...)]
-            [-1,      1,      Identity, []],                                                      # 0  (x)
-            [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dSP2, act=HalfInstanceNorm2d)]],  # 1
-        ],
-        "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                  # 2
-        ]
-    },
-    "zerodcev2-s8": {
-        "channels": 3,
-        "backbone": [
-            # [from,  number, module,   args(out_channels, ...)]
-            [-1,      1,      Identity, []],                                                      # 0  (x)
-            [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dSP3, act=HalfInstanceNorm2d)]],  # 1
-        ],
-        "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                  # 2
-        ]
-    },
-    "zerodcev2-s9": {
-        "channels": 3,
-        "backbone": [
-            # [from,  number, module,   args(out_channels, ...)]
-            [-1,      1,      Identity, []],                                                      # 0  (x)
-            [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dSP4, act=HalfInstanceNorm2d)]],  # 1
-        ],
-        "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                  # 2
-        ]
-    },
     "zerodcev2-t1": {
         "channels": 3,
         "backbone": [
             # [from,        number, module,                      args(out_channels, ...)]
-            [-1,            1,      Identity,                    []],                                                  # 0  (x)
+            [-1,            1,      Identity,                    []],                                                   # 0  (x)
             # Branch 1: Light
-            [-1,            1,      DCEV2,                       [3, 32, partial(BSConv2dS, act=HalfInstanceNorm2d)]], # 1
-            [[1, 0],        1,      PixelwiseHigherOrderLECurve, [8]],                                                 # 2
-            [2,             1,      ExtractItem,                 [0]],                                                 # 3
-            [2,             1,      ExtractItem,                 [1]],                                                 # 4
-            [3,             1,      CropTBLR,                    [6, -6, 6, -6]],                                      # 5
-            [4,             1,      CropTBLR,                    [6, -6, 6, -6]],                                      # 6
+            [-1,            1,      DCEV2,                       [3, 32, partial(BSConv2dS, act=HalfInstanceNorm2d)]],  # 1
+            [[1, 0],        1,      PixelwiseHigherOrderLECurve, [8]],                                                  # 2
+            [2,             1,      ExtractItem,                 [0]],                                                  # 3
+            [2,             1,      ExtractItem,                 [1]],                                                  # 4
+            [3,             1,      CropTBLR,                    [6, -6, 6, -6]],                                       # 5
+            [4,             1,      CropTBLR,                    [6, -6, 6, -6]],                                       # 6
             # Branch 2: Details
-            [0,             1,      VDSR,                        [3]],                                                 # 7
-            [-1,            1,      CropTBLR,                    [6, -6, 6, -6]],                                      # 8
+            [0,             1,      VDSR,                        [3]],                                                  # 7
+            [-1,            1,      CropTBLR,                    [6, -6, 6, -6]],                                       # 8
             # Branch 3: Structures
-            [0,             1,      SRCNN,                       [3, 9, 1, 0, 1, 1, 0, 5, 1, 0]],                      # 9
+            [0,             1,      SRCNN,                       [3, 9, 1, 0, 1, 1, 0, 5, 1, 0]],                       # 9
         ],                                                                      
         "head": [
-            [[7, 4],        1,      Sum,                         []],                              # 10
-            [[7, 9, 3, 10], 1,      Join,                        []],                              # 11 (detail, structure, a, output)
+            [[7, 4],        1,      Sum,                         []],                                                   # 10
+            [[7, 9, 3, 10], 1,      Join,                        []],                                                   # 11 (detail, structure, a, output)
+        ]
+    },
+    "zerodcev2-u1": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                      # 0  (x)
+            [-1,      1,      DCEV2,    [3, 32, BSConv2dU]],      # 1
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],  # 2
+        ]
+    },
+    "zerodcev2-u2": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                                            # 0  (x)
+            [-1,      1,      DCEV2,    [3, 32, partial(BSConv2dU, act=BatchNorm2d)]],  # 1
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                        # 2
+        ]
+    },
+    "zerodcev2-u3": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                                               # 0  (x)
+            [-1,      1,      DCEV2,    [3, 32, partial(BSConv2dU, act=InstanceNorm2d)]],  # 1
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                           # 2
+        ]
+    },
+    "zerodcev2-u4": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                                                   # 0  (x)
+            [-1,      1,      DCEV2,    [3, 32, partial(BSConv2dU, act=HalfInstanceNorm2d)]],  # 1
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                               # 2
+        ]
+    },
+    "zerodcev2-u5": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                                                    # 0  (x)
+            [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dU, act=HalfInstanceNorm2d)]],  # 1
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                # 2
         ]
     },
 }

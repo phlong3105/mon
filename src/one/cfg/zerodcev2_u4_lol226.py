@@ -16,9 +16,9 @@ from one.vision.transformation import Resize
 # H1: - Basic ------------------------------------------------------------------
 
 model_name = "zerodcev2"
-model_cfg  = "zerodcev2-s9"
-data_name  = "lol"
-fullname   = f"zerodcev2-s9-{data_name}"
+model_cfg  = "zerodcev2-u4"
+data_name  = "lol226"
+fullname   = f"zerodcev2-u4-{data_name}"
 root       = RUNS_DIR / "train" / fullname
 shape      = [3, 512, 512]
 

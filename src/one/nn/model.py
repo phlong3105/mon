@@ -990,6 +990,7 @@ def parse_model(
         
         if m in [
             ABSConv2dS,
+            ABSConv2dU,
             BSConv2dS,
             BSConv2dU,
             Conv2d,

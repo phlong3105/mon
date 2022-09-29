@@ -503,258 +503,6 @@ def conv2d_same(
     )
 
 
-class AttentionSubspaceBlueprintSeparableConv2d(Module):
-    """
-    Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : Ints,
-        stride          : Ints            = 1,
-        padding         : Ints | str      = 0,
-        dilation        : Ints            = 1,
-        groups          : int             = 1,
-        bias            : bool            = True,
-        padding_mode    : str             = "zeros",
-        device          : Any             = None,
-        dtype           : Any             = None,
-        p               : float           = 0.25,
-        min_mid_channels: int             = 4,
-        act             : Callable | None = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
-        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
-        self.pw_conv1 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = mid_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act1     = act(num_features=mid_channels) if act is not None else None
-        self.pw_conv2 = Conv2d(
-            in_channels  = mid_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act2    = act(num_features=out_channels) if act is not None else None
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        """
-        self.pa = PixelAttention(
-            channels    = out_channels,
-            reduction   = 16,
-            kernel_size = 1,
-            groups      = 1
-        )
-        """
-        self.sa = SpatialAttention(kernel_size=7)
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        if self.act1 is not None:
-            x = self.act1(x)
-        x = self.pw_conv2(x)
-        if self.act2 is not None:
-            x = self.act2(x)
-        x = self.dw_conv(x)
-        # x = self.pa(x) * x
-        x = self.sa(x) * x
-        # x = x + input
-        return x
-    
-    def regularization_loss(self):
-        w   = self.pw_conv1.weight[:, :, 0, 0]
-        wwt = torch.mm(w, torch.transpose(w, 0, 1))
-        i   = torch.eye(wwt.shape[0], device=wwt.device)
-        return torch.norm(wwt - i, p="fro")
-
-
-class AttentionSubspaceBlueprintSeparableConv2dP1(AttentionSubspaceBlueprintSeparableConv2d):
-   
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        if self.act1 is not None:
-            x = self.act1(x)
-        x = self.sa(x) * x
-        x = self.pw_conv2(x)
-        if self.act2 is not None:
-            x = self.act2(x)
-        x = self.dw_conv(x)
-        return x
-
-
-class AttentionSubspaceBlueprintSeparableConv2dP2(AttentionSubspaceBlueprintSeparableConv2d):
-   
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        if self.act1 is not None:
-            x = self.act1(x)
-        x = self.pw_conv2(x)
-        if self.act2 is not None:
-            x = self.act2(x)
-        x = self.sa(x) * x
-        x = self.dw_conv(x)
-        return x
-
-
-class AttentionSubspaceBlueprintSeparableConv2dP3(AttentionSubspaceBlueprintSeparableConv2d):
-   
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        if self.act1 is not None:
-            x = self.act1(x)
-        x = self.pw_conv2(x)
-        if self.act2 is not None:
-            x = self.act2(x)
-        x = self.dw_conv(x)
-        x = self.sa(x) * x
-        return x
-
-
-class AttentionSubspaceBlueprintSeparableConv2dP4(Module):
-    
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : Ints,
-        stride          : Ints            = 1,
-        padding         : Ints | str      = 0,
-        dilation        : Ints            = 1,
-        groups          : int             = 1,
-        bias            : bool            = True,
-        padding_mode    : str             = "zeros",
-        device          : Any             = None,
-        dtype           : Any             = None,
-        p               : float           = 0.25,
-        min_mid_channels: int             = 4,
-        act             : Callable | None = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
-        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
-        self.pw_conv1 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = mid_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act1     = act(num_features=mid_channels) if act is not None else None
-        self.pw_conv2 = Conv2d(
-            in_channels  = mid_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act2    = act(num_features=out_channels) if act is not None else None
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        """
-        self.pa = PixelAttention(
-            channels    = out_channels,
-            reduction   = 16,
-            kernel_size = 1,
-            groups      = 1
-        )
-        """
-        self.sa1 = SpatialAttention(kernel_size=7)
-        self.sa2 = SpatialAttention(kernel_size=7)
-        self.sa3 = SpatialAttention(kernel_size=7)
-    
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        if self.act1 is not None:
-            x = self.act1(x)
-        x = self.sa1(x) * x
-        x = self.pw_conv2(x)
-        if self.act2 is not None:
-            x = self.act2(x)
-        x = self.sa2(x) * x
-        x = self.dw_conv(x)
-        x = self.sa3(x) * x
-        return x
-    
-    def regularization_loss(self):
-        w   = self.pw_conv1.weight[:, :, 0, 0]
-        wwt = torch.mm(w, torch.transpose(w, 0, 1))
-        i   = torch.eye(wwt.shape[0], device=wwt.device)
-        return torch.norm(wwt - i, p="fro")
-
-
-ABSConv2dSP1 = AttentionSubspaceBlueprintSeparableConv2dP1
-ABSConv2dSP2 = AttentionSubspaceBlueprintSeparableConv2dP2
-ABSConv2dSP3 = AttentionSubspaceBlueprintSeparableConv2dP3
-ABSConv2dSP4 = AttentionSubspaceBlueprintSeparableConv2dP4
-
-
 class ConvAct2d(Module):
     """
     Conv2d + Act.
@@ -1222,7 +970,6 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
         return x
 
 
-ABSConv2dS           = AttentionSubspaceBlueprintSeparableConv2d
 BSConv2dS            = SubspaceBlueprintSeparableConv2d
 BSConv2dU            = UnconstrainedBlueprintSeparableConv2d
 Conv1d               = nn.Conv1d
@@ -5122,6 +4869,187 @@ class VDSR(Module):
 
 
 # H2: - ZeroDCE ----------------------------------------------------------------
+
+class AttentionSubspaceBlueprintSeparableConv2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints            = 1,
+        padding         : Ints | str      = 0,
+        dilation        : Ints            = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable | None = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act1     = act(num_features=mid_channels) if act is not None else None
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act2    = act(num_features=out_channels) if act is not None else None
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.simam = SimAM()
+        """
+        self.ca = ChannelAttention(
+            channels    = out_channels,
+            reduction   = 16,
+            kernel_size = 1,
+            groups      = 1
+        )
+        self.sa = SpatialAttention(kernel_size=7)
+        """
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.simam(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        # x = self.ca(x) * x
+        # x = self.sa(x) * x
+        # x = x + input
+        return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
+
+
+class AttentionUnconstrainedBlueprintSeparableConv2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints            = 1,
+        padding         : Ints | str      = 0,
+        dilation        : Ints            = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable | None = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act = act(num_features=out_channels) if act is not None else None
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.sa = SpatialAttention(kernel_size=7)
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv(x)
+        if self.act is not None:
+            x = self.act(x)
+        x = self.dw_conv(x)
+        # x = self.ca(x) * x
+        x = self.sa(x) * x
+        # x = x + input
+        return x
+
+
+ABSConv2dS = AttentionSubspaceBlueprintSeparableConv2d
+ABSConv2dU = AttentionUnconstrainedBlueprintSeparableConv2d
+
 
 class DCE(Module):
     """
