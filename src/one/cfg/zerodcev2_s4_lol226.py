@@ -20,7 +20,7 @@ model_cfg  = "zerodcev2-s4"
 data_name  = "lol226"
 fullname   = f"zerodcev2-s4-{data_name}"
 root       = RUNS_DIR / "train" / fullname
-shape      = [3, 256, 256]
+shape      = [3, 512, 512]
 
 
 # H1: - Data -------------------------------------------------------------------

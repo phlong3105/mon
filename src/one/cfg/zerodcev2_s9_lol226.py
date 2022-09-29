@@ -15,12 +15,12 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "zerodce"
-model_cfg  = "zerodce.yaml"
-data_name  = "sice"
-fullname   = f"{model_name}-{data_name}"
+model_name = "zerodcev2"
+model_cfg  = "zerodcev2-s9"
+data_name  = "lol226"
+fullname   = f"zerodcev2-s9-{data_name}"
 root       = RUNS_DIR / "train" / fullname
-shape      = [3, 256, 256]
+shape      = [3, 512, 512]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -85,7 +85,7 @@ model = {
         # Defaults to None.
     "phase": "training",
         # Model's running phase. Defaults to training.
-    "pretrained": "sice",
+    "pretrained": None,
         # Initialize weights from pretrained.
     "loss": None,
         # Loss function for training model. Defaults to None.

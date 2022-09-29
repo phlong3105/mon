@@ -49,7 +49,11 @@ class ArgMax(Module):
             Defaults to None.
     """
     
-    def __init__(self, dim: int | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        dim: int | None = None,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
         
@@ -67,7 +71,12 @@ class Clamp(Module):
         max (float): Upper-bound of the range to be clamped to. Defaults to -1.0
     """
     
-    def __init__(self, min: float = -1.0, max: float = 1.0, *args, **kwargs):
+    def __init__(
+        self,
+        min: float = -1.0,
+        max: float =  1.0,
+        *args, **kwargs
+    ):
         super().__init__()
         self.min = min
         self.max = max
@@ -78,14 +87,19 @@ class Clamp(Module):
 
 class FReLU(Module):
     
-    def __init__(self, c1: int, k: Ints = 3, *args, **kwargs):
+    def __init__(
+        self,
+        c1: int,
+        k : Ints = 3,
+        *args, **kwargs
+    ):
         super().__init__()
         k         = to_2tuple(k)
         self.conv = Conv2d(c1, c1, k, 1, 1, groups=c1)
-        self.bn   = BatchNorm2d(c1)
+        self.act  = BatchNorm2d(c1)
         
     def forward(self, input: Tensor) -> Tensor:
-        return torch.max(input, self.bn(self.conv(input)))
+        return torch.max(input, self.act(self.conv(input)))
 
 
 CELU               = nn.CELU
@@ -131,22 +145,26 @@ def to_act_layer(
     # if isinstance(act, str):
     #     act = LAYERS.build(name=act)
     if isinstance(act, types.FunctionType):
-        act_args  = dict(inplace=True) if inplace else {}
-        act = act(**act_args)
+        kwargs |= {"inplace": inplace}
+        act     = act(*args, **kwargs)
     elif act is None:
-        act = Identity()
+        act     = Identity()
     return act
 
 
 # H2: - Attention --------------------------------------------------------------
 
-class ChannelAttentionLayer(Module):
+class ChannelAttention(Module):
     """
-    Channel Attention Layer.
+    Channel Attention adopted from the paper:
+        "CBAM: Convolutional Block Attention Module"
     
     Args:
         channels (int): Number of input and output channels.
         reduction (int): Reduction factor.
+    
+    References:
+        https://github.com/luuuyi/CBAM.PyTorch/blob/master/model/resnet_cbam.py
     """
     
     def __init__(
@@ -154,21 +172,24 @@ class ChannelAttentionLayer(Module):
         channels    : int,
         reduction   : int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 0,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = False,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
+        avg_pool    : bool       = True,
+        max_pool    : bool       = True,
         *args, **kwargs
     ):
         super().__init__()
         # Global average pooling: feature -> point
-        self.avg_pool = AdaptiveAvgPool2d(1)
+        self.avg_pool = AdaptiveAvgPool2d(1) if avg_pool else None
+        self.max_pool = AdaptiveMaxPool2d(1) if max_pool else None
         # Feature channel downscale and upscale -> channel weight
-        self.ca = Sequential(
+        self.fc       = Sequential(
             Conv2d(
                 in_channels  = channels,
                 out_channels = channels // reduction,
@@ -195,18 +216,26 @@ class ChannelAttentionLayer(Module):
                 padding_mode = padding_mode,
                 device       = device,
                 dtype        = dtype,
-            ),
-            Sigmoid()
+            )
         )
+        self.act = Sigmoid()
         
     def forward(self, input: Tensor) -> Tensor:
-        x = input
-        y = self.avg_pool(x)
-        y = self.ca(y)
-        return x * y
+        avg_out = None
+        max_out = None
+        if self.avg_pool is not None:
+            avg_out = self.fc(self.avg_pool(input))
+        if self.max_pool is not None:
+            max_out = self.fc(self.max_pool(input))
+        if avg_out is not None and max_out is not None:
+            x = avg_out + max_out
+        else:
+            x = avg_out or max_out
+        x = self.act(x)
+        return x
+    
 
-
-class PixelAttentionLayer(Module):
+class PixelAttention(Module):
     """
     Pixel Attention Layer.
     
@@ -219,18 +248,18 @@ class PixelAttentionLayer(Module):
         channels    : int,
         reduction   : int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 0,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = True,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
         *args, **kwargs
     ):
         super().__init__()
-        self.pa = Sequential(
+        self.fc = Sequential(
             Conv2d(
                 in_channels  = channels,
                 out_channels = channels // reduction,
@@ -258,12 +287,99 @@ class PixelAttentionLayer(Module):
                 device       = device,
                 dtype        = dtype,
             ),
-            Sigmoid()
         )
+        self.act = Sigmoid()
         
     def forward(self, input: Tensor) -> Tensor:
-        return input * self.pa(input)
+        x  = input
+        x  = self.fc(x)
+        x  = self.act(x)
+        x  = torch.mul(input, x)
+        return x
 
+
+class SimAM(Module):
+    """
+    A Simple, Parameter-Free Attention Module for Convolutional Neural Network
+    adopted from paper:
+        "https://github.com/ZjjConan/SimAM"
+    """
+    
+    def __init__(
+        self,
+        e_lambda: float = 1e-4,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.e_lambda = e_lambda
+        self.act      = Sigmoid()
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x  = input
+        # Spatial size
+        b, c, h, w = x.size()
+        n          = w * h - 1
+        # Square of (t - u)
+        d = (x - x.mean(dim=[2, 3], keepdim=True)).pow(2)
+        # d.sum() / n is channel variance
+        v = d.sum(dim=[2, 3], keepdim=True) / n
+        # E_inv groups all important of x
+        e_inv = d / (4 * (v + self.e_lambda)) + 0.5
+        # Attended features
+        y = x * self.act(e_inv)
+        return y
+
+
+class SpatialAttention(Module):
+    """
+    Spatial Attention adopted from the paper:
+        "CBAM: Convolutional Block Attention Module"
+    
+    Args:
+        channels (int): Number of input and output channels.
+        reduction (int): Reduction factor.
+        
+    References:
+        https://github.com/luuuyi/CBAM.PyTorch/blob/master/model/resnet_cbam.py
+    """
+    
+    def __init__(
+        self,
+        kernel_size : Ints,
+        stride      : Ints = 1,
+        dilation    : Ints = 1,
+        groups      : int  = 1,
+        bias        : bool = False,
+        padding_mode: str  = "zeros",
+        device      : Any  = None,
+        dtype       : Any  = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.conv = Conv2d(
+            in_channels  = 2,
+            out_channels = 1,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = kernel_size // 2,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act = Sigmoid()
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x          = input
+        avg_out    = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max( x, dim=1, keepdim=True)
+        x          = torch.cat([avg_out, max_out], dim=1)
+        x          = self.conv(x)
+        x          = self.act(x)
+        return x
+    
 
 class SupervisedAttentionModule(Module):
     """
@@ -348,7 +464,7 @@ class SupervisedAttentionModule(Module):
 
         x1    = self.conv1(fy)
         img   = self.conv2(fy) + x
-        x2    = torch.sigmoid(self.conv3(img))
+        x2    = self.act(self.conv3(img))
         x1   *= x2
         x1   += fy
         pred  = x1
@@ -360,11 +476,11 @@ class SupervisedAttentionModule(Module):
 def conv2d_same(
     input   : Tensor,
     weight  : Tensor,
-    bias    : Tensor | None     = None,
-    stride  : Ints              = 1,
-    padding : str | Ints | None = 0,
-    dilation: Ints              = 1,
-    groups  : int               = 1,
+    bias    : Tensor | None = None,
+    stride  : Ints          = 1,
+    padding : Ints | str    = 0,
+    dilation: Ints          = 1,
+    groups  : int           = 1,
     *args, **kwargs
 ):
     """
@@ -387,6 +503,258 @@ def conv2d_same(
     )
 
 
+class AttentionSubspaceBlueprintSeparableConv2d(Module):
+    """
+    Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        https://github.com/zeiss-microscopy/BSConv
+    """
+
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints            = 1,
+        padding         : Ints | str      = 0,
+        dilation        : Ints            = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable | None = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act1     = act(num_features=mid_channels) if act is not None else None
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act2    = act(num_features=out_channels) if act is not None else None
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        """
+        self.pa = PixelAttention(
+            channels    = out_channels,
+            reduction   = 16,
+            kernel_size = 1,
+            groups      = 1
+        )
+        """
+        self.sa = SpatialAttention(kernel_size=7)
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        # x = self.pa(x) * x
+        x = self.sa(x) * x
+        # x = x + input
+        return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
+
+
+class AttentionSubspaceBlueprintSeparableConv2dP1(AttentionSubspaceBlueprintSeparableConv2d):
+   
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.sa(x) * x
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2dP2(AttentionSubspaceBlueprintSeparableConv2d):
+   
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.sa(x) * x
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2dP3(AttentionSubspaceBlueprintSeparableConv2d):
+   
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        x = self.sa(x) * x
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2dP4(Module):
+    
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : Ints,
+        stride          : Ints            = 1,
+        padding         : Ints | str      = 0,
+        dilation        : Ints            = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable | None = None,
+        *args, **kwargs
+    ):
+        super().__init__()
+        assert_number_in_range(p, 0.0, 1.0)
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        self.pw_conv1 = Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act1     = act(num_features=mid_channels) if act is not None else None
+        self.pw_conv2 = Conv2d(
+            in_channels  = mid_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act2    = act(num_features=out_channels) if act is not None else None
+        self.dw_conv = Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        """
+        self.pa = PixelAttention(
+            channels    = out_channels,
+            reduction   = 16,
+            kernel_size = 1,
+            groups      = 1
+        )
+        """
+        self.sa1 = SpatialAttention(kernel_size=7)
+        self.sa2 = SpatialAttention(kernel_size=7)
+        self.sa3 = SpatialAttention(kernel_size=7)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.sa1(x) * x
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.sa2(x) * x
+        x = self.dw_conv(x)
+        x = self.sa3(x) * x
+        return x
+    
+    def regularization_loss(self):
+        w   = self.pw_conv1.weight[:, :, 0, 0]
+        wwt = torch.mm(w, torch.transpose(w, 0, 1))
+        i   = torch.eye(wwt.shape[0], device=wwt.device)
+        return torch.norm(wwt - i, p="fro")
+
+
+ABSConv2dSP1 = AttentionSubspaceBlueprintSeparableConv2dP1
+ABSConv2dSP2 = AttentionSubspaceBlueprintSeparableConv2dP2
+ABSConv2dSP3 = AttentionSubspaceBlueprintSeparableConv2dP3
+ABSConv2dSP4 = AttentionSubspaceBlueprintSeparableConv2dP4
+
+
 class ConvAct2d(Module):
     """
     Conv2d + Act.
@@ -397,16 +765,16 @@ class ConvAct2d(Module):
         in_channels : int,
         out_channels: int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        act         : Callable | None   = ReLU(),
-        inplace     : bool              = True,
+        stride      : Ints            = 1,
+        padding     : Ints | str      = 0,
+        dilation    : Ints            = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        act         : Callable | None = ReLU(),
+        inplace     : bool            = True,
         *args, **kwargs
     ):
         super().__init__()
@@ -429,186 +797,6 @@ class ConvAct2d(Module):
         return self.act(self.conv(input))
 
 
-class ConvBnMish2d(Module):
-    """
-    Conv2d + BN + Mish.
-    """
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints              = 1,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        dilation    = to_2tuple(dilation)
-        self.conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = to_same_padding(kernel_size, padding),
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.bn   = BatchNorm2d(out_channels)
-        self.act  = Mish()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.bn(self.conv(input)))
-
-    def fuse_forward(self, input: Tensor) -> Tensor:
-        return self.act(self.conv(input))
-
-
-class ConvBnReLU2d(Module):
-    """
-    Conv2d + BN + ReLU.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        apply_act   : bool              = True,
-        eps         : float             = 1e-5,
-        *args, **kwargs
-    ):
-        super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        dilation    = to_2tuple(dilation)
-        self.conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = to_same_padding(kernel_size, padding),
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.bn  = BatchNorm2d(out_channels, eps)
-        self.act = ReLU()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.bn(self.conv(input)))
-
-
-class ConvBnReLU62d(Module):
-    """
-    Conv2d + BN + ReLU6.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        apply_act   : bool              = True,
-        *args, **kwargs
-    ):
-        super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        dilation    = to_2tuple(dilation)
-        self.conv = Conv2d(
-                in_channels  = in_channels,
-                out_channels = out_channels,
-                kernel_size  = kernel_size,
-                stride       = stride,
-                padding      = to_same_padding(kernel_size, padding),
-                dilation     = dilation,
-                groups       = groups,
-                bias         = bias,
-                padding_mode = padding_mode,
-                device       = device,
-                dtype        = dtype,
-        )
-        self.bn  = BatchNorm2d(out_channels)
-        self.act = ReLU6()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.bn(self.conv(input)))
-
-
-class ConvMish2d(Module):
-    """
-    Conv2d + Mish.
-    """
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        self.conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = to_same_padding(kernel_size, padding),
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act = Mish()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.conv(input))
-
-
 class ConvReLU2d(Module):
     """
     Conv2d + ReLU.
@@ -619,14 +807,14 @@ class ConvReLU2d(Module):
         in_channels : int,
         out_channels: int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 0,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = True,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -659,14 +847,14 @@ class ConvSame2d(Conv2d):
         in_channels : int,
         out_channels: int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 0,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = True,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -693,48 +881,6 @@ class ConvSame2d(Conv2d):
             dilation = self.dilation,
             groups   = self.groups
         )
-    
-
-class ConvSigmoid2d(Module):
-    """
-    Conv2d + Sigmoid.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        self.conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = to_same_padding(kernel_size, padding),
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act = Sigmoid()
-    
-    def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.conv(input))
 
 
 class ConvTF2d(Conv2d):
@@ -751,14 +897,14 @@ class ConvTF2d(Conv2d):
         in_channels : int,
         out_channels: int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 0,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = True,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -804,118 +950,6 @@ class ConvTF2d(Conv2d):
         return output
 
 
-class ConvTransposeAct2d(Module):
-    """
-    ConvTranspose2d + Act.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        act         : Callable | None   = ReLU(),
-        inplace     : bool              = True,
-        *args, **kwargs
-    ):
-        super().__init__()
-        act   = to_act_layer(act=act, inplace=inplace)
-        kernel_size = to_2tuple(kernel_size)
-        stride      = to_2tuple(stride)
-        self.conv = ConvTranspose2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = to_same_padding(kernel_size, padding),
-            dilation     = dilation,
-            groups       = groups,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act = to_act_layer(act=act, inplace=inplace)
-    
-    def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.conv(input))
-
-
-class DepthwiseConv2d(Conv2d):
-    """
-    Depthwise Conv2d with 3x3 kernel size, 1 stride, and groups == out_channels.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        padding     : str | Ints | None = 0,
-        groups      : int | None        = 0,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = (3, 3),
-            stride       = (1, 1),
-            padding      = padding,
-            groups       = groups if groups is not None else math.gcd(in_channels, out_channels),
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-
-
-class DepthwiseConvBnMish2d(ConvBnMish2d):
-    """
-    Depthwise Conv2d + Bn + Mish.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        kernel_size : Ints              = 1,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        apply_act   : bool              = True,
-        *args, **kwargs
-    ):
-        super().__init__(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = math.gcd(in_channels, out_channels),
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-            apply_act    = apply_act,
-        )
-
-
 class DepthwiseSeparableConv2d(Module):
     """
     Depthwise Separable Conv2d.
@@ -927,16 +961,16 @@ class DepthwiseSeparableConv2d(Module):
         out_channels  : int,
         dw_kernel_size: Ints,
         pw_kernel_size: Ints,
-        dw_stride     : Ints              = 1,
-        dw_padding    : str | Ints | None = 0,
-        pw_stride     : Ints              = 1,
-        pw_padding    : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
+        dw_stride     : Ints       = 1,
+        dw_padding    : Ints | str = 0,
+        pw_stride     : Ints       = 1,
+        pw_padding    : Ints | str = 0,
+        dilation      : Ints       = 1,
+        groups        : int        = 1,
+        bias          : bool       = True,
+        padding_mode  : str        = "zeros",
+        device        : Any        = None,
+        dtype         : Any        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -968,7 +1002,10 @@ class DepthwiseSeparableConv2d(Module):
         )
         
     def forward(self, input: Tensor) -> Tensor:
-        return self.pw_conv(self.dw_conv(input))
+        x = input
+        x = self.dw_conv(x)
+        x = self.pw_conv(x)
+        return x
 
 
 class DepthwiseSeparableConvReLU2d(Module):
@@ -982,16 +1019,16 @@ class DepthwiseSeparableConvReLU2d(Module):
         out_channels  : int,
         dw_kernel_size: Ints,
         pw_kernel_size: Ints,
-        dw_stride     : Ints              = 1,
-        pw_stride     : Ints              = 1,
-        dw_padding    : str | Ints | None = 0,
-        pw_padding    : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
+        dw_stride     : Ints       = 1,
+        pw_stride     : Ints       = 1,
+        dw_padding    : Ints | str = 0,
+        pw_padding    : Ints | str = 0,
+        dilation      : Ints       = 1,
+        groups        : int        = 1,
+        bias          : bool       = True,
+        padding_mode  : str        = "zeros",
+        device        : Any        = None,
+        dtype         : Any        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -1024,37 +1061,11 @@ class DepthwiseSeparableConvReLU2d(Module):
         self.act = ReLU(inplace=True)
         
     def forward(self, input: Tensor) -> Tensor:
-        return self.act(self.pw_conv(self.dw_conv(input)))
-
-
-class PointwiseConv2d(Conv2d):
-    """
-    Pointwise Conv2d with 1x1 kernel size, 1 stride, and groups == 1.
-    """
-
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        padding     : str | Ints | None = 0,
-        bias        : bool              = True,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = padding,
-            groups       = 1,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
+        x = input
+        x = self.dw_conv(x)
+        x = self.pw_conv(x)
+        x = self.act(x)
+        return x
 
 
 class SubspaceBlueprintSeparableConv2d(Module):
@@ -1072,103 +1083,20 @@ class SubspaceBlueprintSeparableConv2d(Module):
         in_channels     : int,
         out_channels    : int,
         kernel_size     : Ints,
-        stride          : Ints              = 1,
-        padding         : str | Ints | None = 0,
-        dilation        : Ints              = 1,
-        groups          : int               = 1,
-        bias            : bool              = True,
-        padding_mode    : str               = "zeros",
-        device          : Any               = None,
-        dtype           : Any               = None,
-        p               : float             = 0.25,
-        min_mid_channels: int               = 4,
+        stride          : Ints            = 1,
+        padding         : Ints | str      = 0,
+        dilation        : Ints            = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable | None = None,
         *args, **kwargs
     ):
         super().__init__()
-        mid_channels = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
-        self.pw_conv1 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = mid_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.pw_conv2 = Conv2d(
-            in_channels  = mid_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        x = self.pw_conv2(x)
-        x = self.dw_conv(x)
-        return x
-    
-    def regularization_loss(self):
-        w   = self.pw_conv1.weight[:, :, 0, 0]
-        wwt = torch.mm(w, torch.transpose(w, 0, 1))
-        i   = torch.eye(wwt.shape[0], device=wwt.device)
-        return torch.norm(wwt - i, p="fro")
-    
-
-class SubspaceBlueprintSeparableConvBn2d(Module):
-    """
-    Subspace Blueprint Separable Conv2d with BatchNorm adopted from the paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : Ints,
-        stride          : Ints              = 1,
-        padding         : str | Ints | None = 0,
-        dilation        : Ints              = 1,
-        groups          : int               = 1,
-        bias            : bool              = True,
-        padding_mode    : str               = "zeros",
-        device          : Any               = None,
-        dtype           : Any               = None,
-        p               : float             = 0.25,
-        min_mid_channels: int               = 4,
-        *args, **kwargs
-    ):
-        super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
         mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
         self.pw_conv1 = Conv2d(
             in_channels  = in_channels,
@@ -1183,7 +1111,7 @@ class SubspaceBlueprintSeparableConvBn2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.bn1      = BatchNorm2d(num_features=mid_channels)
+        self.act1     = act(num_features=mid_channels) if act is not None else None
         self.pw_conv2 = Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -1197,7 +1125,7 @@ class SubspaceBlueprintSeparableConvBn2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.bn2     = BatchNorm2d(num_features=out_channels)
+        self.act2    = act(num_features=out_channels) if act is not None else None
         self.dw_conv = Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -1215,187 +1143,11 @@ class SubspaceBlueprintSeparableConvBn2d(Module):
     def forward(self, input: Tensor) -> Tensor:
         x = input
         x = self.pw_conv1(x)
-        x = self.bn1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
         x = self.pw_conv2(x)
-        x = self.bn2(x)
-        x = self.dw_conv(x)
-        return x
-    
-    def regularization_loss(self):
-        w   = self.pw_conv1.weight[:, :, 0, 0]
-        wwt = torch.mm(w, torch.transpose(w, 0, 1))
-        i   = torch.eye(wwt.shape[0], device=wwt.device)
-        return torch.norm(wwt - i, p="fro")
-    
-
-class SubspaceBlueprintSeparableConvHin2d(Module):
-    """
-    Subspace Blueprint Separable Conv2d with HalfInstanceNorm adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : Ints,
-        stride          : Ints              = 1,
-        padding         : str | Ints | None = 0,
-        dilation        : Ints              = 1,
-        groups          : int               = 1,
-        bias            : bool              = True,
-        padding_mode    : str               = "zeros",
-        device          : Any               = None,
-        dtype           : Any               = None,
-        p               : float             = 0.25,
-        min_mid_channels: int               = 4,
-        *args, **kwargs
-    ):
-        super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
-        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
-        self.pw_conv1 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = mid_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.hin1     = HalfInstanceNorm2d(num_features=mid_channels)
-        self.pw_conv2 = Conv2d(
-            in_channels  = mid_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.hin2    = HalfInstanceNorm2d(num_features=out_channels)
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        x = self.hin1(x)
-        x = self.pw_conv2(x)
-        x = self.hin2(x)
-        x = self.dw_conv(x)
-        return x
-    
-    def regularization_loss(self):
-        w   = self.pw_conv1.weight[:, :, 0, 0]
-        wwt = torch.mm(w, torch.transpose(w, 0, 1))
-        i   = torch.eye(wwt.shape[0], device=wwt.device)
-        return torch.norm(wwt - i, p="fro")
-
-
-class SubspaceBlueprintSeparableConvIn2d(Module):
-    """
-    Subspace Blueprint Separable Conv2d with InstanceNorm adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : Ints,
-        stride          : Ints              = 1,
-        padding         : str | Ints | None = 0,
-        dilation        : Ints              = 1,
-        groups          : int               = 1,
-        bias            : bool              = True,
-        padding_mode    : str               = "zeros",
-        device          : Any               = None,
-        dtype           : Any               = None,
-        p               : float             = 0.25,
-        min_mid_channels: int               = 4,
-        *args, **kwargs
-    ):
-        super().__init__()
-        assert_number_in_range(p, 0.0, 1.0)
-        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
-        self.pw_conv1 = Conv2d(
-            in_channels  = in_channels,
-            out_channels = mid_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.in1      = InstanceNorm2d(num_features=mid_channels)
-        self.pw_conv2 = Conv2d(
-            in_channels  = mid_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.in2     = InstanceNorm2d(num_features=out_channels)
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv1(x)
-        x = self.in1(x)
-        x = self.pw_conv2(x)
-        x = self.in2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
         x = self.dw_conv(x)
         return x
     
@@ -1421,14 +1173,15 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
         in_channels   : int,
         out_channels  : int,
         kernel_size   : Ints,
-        stride        : Ints              = 1,
-        padding       : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
+        stride        : Ints            = 1,
+        padding       : Ints | str      = 0,
+        dilation      : Ints            = 1,
+        groups        : int             = 1,
+        bias          : bool            = True,
+        padding_mode  : str             = "zeros",
+        device        : Any             = None,
+        dtype         : Any             = None,
+        act           : Callable | None = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -1445,6 +1198,7 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
+        self.act = act(num_features=out_channels) if act is not None else None
         self.dw_conv = Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -1462,207 +1216,15 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
     def forward(self, input: Tensor) -> Tensor:
         x = input
         x = self.pw_conv(x)
+        if self.act is not None:
+            x = self.act(x)
         x = self.dw_conv(x)
         return x
 
 
-class UnconstrainedBlueprintSeparableConvBn2d(Module):
-    """
-    Unconstrained Blueprint Separable Conv2d with BatchNorm adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels   : int,
-        out_channels  : int,
-        kernel_size   : Ints,
-        stride        : Ints              = 1,
-        padding       : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        self.pw_conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.bn      = BatchNorm2d(num_features=out_channels)
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv(x)
-        x = self.bn(x)
-        x = self.dw_conv(x)
-        return x
-
-
-class UnconstrainedBlueprintSeparableConvHin2d(Module):
-    """
-    Unconstrained Blueprint Separable Conv2d with HalfInstanceNorm adopted from
-    the paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels   : int,
-        out_channels  : int,
-        kernel_size   : Ints,
-        stride        : Ints              = 1,
-        padding       : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        self.pw_conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.hin     = HalfInstanceNorm2d(num_features=out_channels)
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv(x)
-        x = self.hin(x)
-        x = self.dw_conv(x)
-        return x
-
-
-class UnconstrainedBlueprintSeparableConvIn2d(Module):
-    """
-    Unconstrained Blueprint Separable Conv2d with InstanceNorm adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-
-    def __init__(
-        self,
-        in_channels   : int,
-        out_channels  : int,
-        kernel_size   : Ints,
-        stride        : Ints              = 1,
-        padding       : str | Ints | None = 0,
-        dilation      : Ints              = 1,
-        groups        : int               = 1,
-        bias          : bool              = True,
-        padding_mode  : str               = "zeros",
-        device        : Any               = None,
-        dtype         : Any               = None,
-        *args, **kwargs
-    ):
-        super().__init__()
-        self.pw_conv = Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.isn     = InstanceNorm2d(num_features=out_channels)
-        self.dw_conv = Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        
-    def forward(self, input: Tensor) -> Tensor:
-        x = input
-        x = self.pw_conv(x)
-        x = self.isn(x)
-        x = self.dw_conv(x)
-        return x
-
-
+ABSConv2dS           = AttentionSubspaceBlueprintSeparableConv2d
 BSConv2dS            = SubspaceBlueprintSeparableConv2d
 BSConv2dU            = UnconstrainedBlueprintSeparableConv2d
-BSConvBn2dS          = SubspaceBlueprintSeparableConvBn2d
-BSConvBn2dU          = UnconstrainedBlueprintSeparableConvBn2d
-BSConvHin2dS         = SubspaceBlueprintSeparableConvHin2d
-BSConvHin2dU         = UnconstrainedBlueprintSeparableConvHin2d
-BSConvIn2dS          = SubspaceBlueprintSeparableConvIn2d
-BSConvIn2dU          = UnconstrainedBlueprintSeparableConvIn2d
 Conv1d               = nn.Conv1d
 Conv2d               = nn.Conv2d
 Conv3d               = nn.Conv3d
@@ -1965,7 +1527,11 @@ class ExtractFeature(Module):
         index (int): The index of the feature to extract.
     """
     
-    def __init__(self, index: int, *args, **kwargs):
+    def __init__(
+        self,
+        index: int,
+        *args, **kwargs
+    ):
         super().__init__()
         self.index = index
     
@@ -2006,7 +1572,11 @@ class ExtractItem(Module):
         index (int): The index of the item to extract.
     """
     
-    def __init__(self, index: int, *args, **kwargs):
+    def __init__(
+        self,
+        index: int,
+        *args, **kwargs
+    ):
         super().__init__()
         self.index = index
     
@@ -2030,7 +1600,11 @@ class ExtractItems(Module):
         indexes (Sequence[int]): The indexes of the items to extract.
     """
     
-    def __init__(self, indexes: Sequence[int], *args, **kwargs):
+    def __init__(
+        self,
+        indexes: Sequence[int],
+        *args, **kwargs
+    ):
         super().__init__()
         self.indexes = indexes
     
@@ -2049,7 +1623,12 @@ class Max(Module):
     """
     """
     
-    def __init__(self, dim: int, keepdim: bool = False, *args, **kwargs):
+    def __init__(
+        self,
+        dim    : int,
+        keepdim: bool = False,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim     = dim
         self.keepdim = keepdim
@@ -2068,7 +1647,11 @@ class Concat(Module):
         dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 1, *args, **kwargs):
+    def __init__(
+        self,
+        dim: str | ellipsis | None = 1,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
         
@@ -2083,7 +1666,11 @@ class Chuncat(Module):
         dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 1, *args, **kwargs):
+    def __init__(
+        self,
+        dim: str | ellipsis | None = 1,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
 
@@ -2104,7 +1691,11 @@ class Foldcut(nn.Module):
         dim (str | ellipsis | None): Dimension to concat to. Defaults to 0.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 0, *args, **kwargs):
+    def __init__(
+        self,
+        dim: str | ellipsis | None = 0,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
 
@@ -2121,7 +1712,11 @@ class InterpolateConcat(Module):
         dim (str | ellipsis | None): Dimension to concat to. Defaults to 1.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 1, *args, **kwargs):
+    def __init__(
+        self,
+        dim: str | ellipsis | None = 1,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
         
@@ -2156,7 +1751,11 @@ class Shortcut(Module):
         dim (str | ellipsis | None): Dimension to concat to. Defaults to 0.
     """
     
-    def __init__(self, dim: str | ellipsis | None = 0, *args, **kwargs):
+    def __init__(
+        self,
+        dim: str | ellipsis | None = 0,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
 
@@ -2175,7 +1774,12 @@ class SoftmaxFusion(Module):
         n (int): Number of inputs.
     """
 
-    def __init__(self, n: int, weight: bool = False, *args, **kwargs):
+    def __init__(
+        self,
+        n     : int,
+        weight: bool = False,
+        *args, **kwargs
+    ):
         super().__init__()
         self.weight = weight  # Apply weights boolean
         self.iter 	= range(n - 1)  # iter object
@@ -2243,12 +1847,12 @@ class ConvNeXtClassifier(Module):
         self,
         in_channels : int,
         out_channels: int,
-        norm_layer  : Callable[..., Module] | None = None,
+        norm        : Callable | None = None,
         *args, **kwargs
     ):
         super().__init__()
         self.out_channels = out_channels
-        self.norm         = norm_layer(in_channels)
+        self.norm         = norm(in_channels)
         self.flatten      = Flatten(1)
         self.linear       = Linear(
             in_features  = in_channels,
@@ -2471,7 +2075,11 @@ class Flatten(Module):
         dim (int): Dimension to flatten. Defaults to 1.
     """
     
-    def __init__(self, dim: int = 1, *args, **kwargs):
+    def __init__(
+        self,
+        dim: int = 1,
+        *args, **kwargs
+    ):
         super().__init__()
         self.dim = dim
         
@@ -2507,7 +2115,6 @@ class BatchNormAct2d(BatchNorm2d):
         dtype              : Any             = None,
         act                : Callable | None = ReLU(),
         inplace            : bool            = True,
-        drop_block         : Callable | None = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -2683,7 +2290,6 @@ class GroupNormAct(GroupNorm):
         dtype       : Any             = None,
         act         : Callable | None = ReLU,
         inplace     : bool            = True,
-        drop_block  : Callable | None = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -3129,10 +2735,9 @@ class AvgPoolSame2d(AvgPool2d):
         self,
         kernel_size      : Ints,
         stride           : Ints | None = None,
-        padding          : Ints | None = 0,
+        padding          : Ints        = 0,
         ceil_mode        : bool        = False,
         count_include_pad: bool        = True,
-        *args, **kwargs
     ):
         kernel_size = to_2tuple(kernel_size)
         stride      = to_2tuple(stride)
@@ -3162,7 +2767,7 @@ class AvgPoolSame2d(AvgPool2d):
 
 class FastAdaptiveAvgPool2d(Module):
 
-    def __init__(self, flatten: bool = False, *args, **kwargs):
+    def __init__(self, flatten: bool = False):
         super().__init__()
         self.flatten = flatten
 
@@ -3182,7 +2787,6 @@ class MaxPoolSame2d(MaxPool2d):
         padding    : Ints | None = (0, 0),
         dilation   : Ints        = (1, 1),
         ceil_mode  : bool        = False,
-        *args, **kwargs
     ):
         kernel_size = to_2tuple(kernel_size)
         stride      = to_2tuple(stride)
@@ -3228,9 +2832,9 @@ class MedianPool2d(Module):
     def __init__(
         self,
         kernel_size: Ints,
-        stride     : Ints    	       = (1, 1),
-        padding    : str | Ints | None = 0,
-        same	   : bool			   = False,
+        stride     : Ints       = (1, 1),
+        padding    : Ints | str = 0,
+        same	   : bool	    = False,
         *args, **kwargs
     ):
         super().__init__()
@@ -3377,7 +2981,11 @@ class Scale(Module):
         scale (float): Initial value of scale factor. Defaults to 1.0.
     """
     
-    def __init__(self, scale: float = 1.0):
+    def __init__(
+        self,
+        scale: float = 1.0,
+        *args, **kwargs
+    ):
         super().__init__()
         self.scale = scale
         
@@ -3392,7 +3000,11 @@ class Interpolate(Module):
         size (Ints):
     """
     
-    def __init__(self, size: Ints):
+    def __init__(
+        self,
+        size: Ints,
+        *args, **kwargs
+    ):
         super().__init__()
         self.size = to_size(size)
         
@@ -3487,7 +3099,11 @@ class ChannelShuffle(Module):
     """
     """
     
-    def __init__(self, groups: int, *args, **kwargs):
+    def __init__(
+        self,
+        groups: int,
+        *args, **kwargs
+    ):
         super().__init__()
         self.name   = type(self).__name__
         self.groups = groups
@@ -3515,16 +3131,17 @@ class ConvNeXtLayer(Module):
         dim                  : int,
         layer_scale          : float,
         stochastic_depth_prob: float,
-        stage_block_id       : int | None                   = None,
-        total_stage_blocks   : int | None                   = None,
-        norm_layer           : Callable[..., Module] | None = None,
+        stage_block_id       : int      | None = None,
+        total_stage_blocks   : int      | None = None,
+        norm                 : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
         sd_prob = stochastic_depth_prob
         if (stage_block_id is not None) and (total_stage_blocks is not None):
             sd_prob = stochastic_depth_prob * stage_block_id / (total_stage_blocks - 1.0)
-        if norm_layer is None:
-            norm_layer = partial(nn.LayerNorm, eps=1e-6)
+        if norm is None:
+            norm = partial(nn.LayerNorm, eps=1e-6)
         self.block = Sequential(
             Conv2d(
                 in_channels  = dim,
@@ -3535,7 +3152,7 @@ class ConvNeXtLayer(Module):
                 bias         = True,
             ),
             Permute([0, 2, 3, 1]),
-            norm_layer(dim),
+            norm(dim),
             Linear(
                 in_features  = dim,
                 out_features = 4 * dim,
@@ -3568,8 +3185,9 @@ class ConvNeXtBlock(Module):
         stochastic_depth_prob: float,
         num_layers           : int,
         stage_block_id       : int,
-        total_stage_blocks   : int | None                   = None,
-        norm_layer           : Callable[..., Module] | None = None,
+        total_stage_blocks   : int      | None = None,
+        norm                 : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
         layers = []
@@ -3581,7 +3199,7 @@ class ConvNeXtBlock(Module):
                     stochastic_depth_prob = stochastic_depth_prob,
                     stage_block_id        = stage_block_id,
                     total_stage_blocks    = total_stage_blocks,
-                    norm_layer            = norm_layer,
+                    norm= norm,
                 )
             )
             stage_block_id += 1
@@ -3742,7 +3360,7 @@ class FFA(Module):
             ),
             Sigmoid()
         ])
-        self.pa = PixelAttentionLayer(
+        self.pa = PixelAttention(
             channels    = self.channels,
             reduction   = 8,
             kernel_size = 1,
@@ -3788,15 +3406,16 @@ class FFABlock(Module):
             padding      = (kernel_size // 2),
             bias         = True
         )
-        self.calayer = ChannelAttentionLayer(
+        self.ca = ChannelAttention(
             channels    = channels,
             reduction   = 8,
             kernel_size = 1,
             stride      = 1,
             padding     = 0,
             bias        = True,
+            max_pool    = False,
         )
-        self.palayer = PixelAttentionLayer(
+        self.pa = PixelAttention(
             channels     = channels,
             reduction    = 8,
             kernel_size  = 1,
@@ -3810,8 +3429,8 @@ class FFABlock(Module):
         y  = self.act1(self.conv1(x))
         y  = y + x
         y  = self.conv2(y)
-        y  = self.calayer(y)
-        y  = self.palayer(y)
+        y  = self.ca(y)
+        y  = self.pa(y)
         y += x
         return y
 
@@ -3939,6 +3558,8 @@ class FINetConvBlock(Module):
         super().__init__()
         self.downsample = downsample
         self.use_csff   = use_csff
+        self.use_hin    = use_hin
+        self.alpha      = alpha
         
         self.conv1 = Conv2d(
             in_channels  = in_channels,
@@ -3980,7 +3601,6 @@ class FINetConvBlock(Module):
                 padding      = 1,
             )
         
-        self.use_hin = use_hin
         if self.use_hin:
             self.norm = FractionInstanceNorm2d(
                 alpha        = self.alpha,
@@ -4253,16 +3873,16 @@ class InceptionBasicConv2d(Module):
         in_channels : int,
         out_channels: int,
         kernel_size : Ints,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 0,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = False,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
-        apply_act   : bool              = True,
-        eps         : float             = 0.001,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 0,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = False,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
+        apply_act   : bool       = True,
+        eps         : float      = 0.001,
         *args, **kwargs
     ):
         super().__init__()
@@ -4300,24 +3920,25 @@ class Inception(Module):
         ch5x5red   : int,
         ch5x5      : int,
         pool_proj  : int,
-        conv_block : Callable[..., nn.Module] | None = None,
+        conv       : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
         
-        self.branch1 = conv_block(
+        self.branch1 = conv(
             in_channels  = in_channels,
             out_channels = ch1x1,
             kernel_size  = 1,
         )
         self.branch2 = Sequential(
-            conv_block(
+            conv(
                 in_channels  = in_channels,
                 out_channels = ch3x3red,
                 kernel_size  = 1,
             ),
-            conv_block(
+            conv(
                 in_channels  = ch3x3red,
                 out_channels = ch3x3,
                 kernel_size  = 3,
@@ -4325,7 +3946,7 @@ class Inception(Module):
             )
         )
         self.branch3 = Sequential(
-            conv_block(
+            conv(
                 in_channels  = in_channels,
                 out_channels = ch5x5red,
                 kernel_size  = 1,
@@ -4333,7 +3954,7 @@ class Inception(Module):
             # Here, kernel_size=3 instead of kernel_size=5 is a known bug.
             # Please see https://github.com/pytorch/vision/issues/906 for
             # details.
-            conv_block(
+            conv(
                 in_channels  = ch5x5red,
                 out_channels = ch5x5,
                 kernel_size  = 3,
@@ -4347,7 +3968,7 @@ class Inception(Module):
                 padding     = 1,
                 ceil_mode   = True,
             ),
-            conv_block(
+            conv(
                 in_channels  = in_channels,
                 out_channels = pool_proj,
                 kernel_size  = 1,
@@ -4372,52 +3993,53 @@ class InceptionA(Module):
         self,
         in_channels  : int,
         pool_features: int,
-        conv_block   : Callable[..., nn.Module] | None = None
+        conv         : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
         
-        self.branch1x1 = conv_block(
+        self.branch1x1 = conv(
             in_channels  = in_channels,
             out_channels = 64,
             kernel_size  = 1,
             eps          = 0.001,
         )
-        self.branch5x5_1 = conv_block(
+        self.branch5x5_1 = conv(
             in_channels  = in_channels,
             out_channels = 48,
             kernel_size  = 1,
             eps          = 0.001,
         )
-        self.branch5x5_2 = conv_block(
+        self.branch5x5_2 = conv(
             in_channels  = 48,
             out_channels = 64,
             kernel_size  = 5,
             padding      = 2,
             eps          = 0.001,
         )
-        self.branch3x3dbl_1 = conv_block(
+        self.branch3x3dbl_1 = conv(
             in_channels  = in_channels,
             out_channels = 64,
             kernel_size  = 1,
             eps          = 0.001,
         )
-        self.branch3x3dbl_2 = conv_block(
+        self.branch3x3dbl_2 = conv(
             in_channels  = 64,
             out_channels = 96,
             kernel_size  = 3,
             padding      = 1,
             eps          = 0.001,
         )
-        self.branch3x3dbl_3 = conv_block(
+        self.branch3x3dbl_3 = conv(
             in_channels  = 96,
             out_channels = 96,
             kernel_size  = 3,
             padding      = 1,
             eps          = 0.001,
         )
-        self.branch_pool = conv_block(
+        self.branch_pool = conv(
             in_channels  = in_channels,
             out_channels = pool_features,
             kernel_size  = 1,
@@ -4444,30 +4066,31 @@ class InceptionB(Module):
     def __init__(
         self,
         in_channels: int,
-        conv_block : Callable[..., nn.Module] | None = None
+        conv       : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
         
-        self.branch3x3 = conv_block(
+        self.branch3x3 = conv(
             in_channels  = in_channels,
             out_channels = 384,
             kernel_size  = 3,
             stride       = 2,
         )
-        self.branch3x3dbl_1 = conv_block(
+        self.branch3x3dbl_1 = conv(
             in_channels  = in_channels,
             out_channels = 64,
             kernel_size  = 1,
         )
-        self.branch3x3dbl_2 = conv_block(
+        self.branch3x3dbl_2 = conv(
             in_channels  = 64,
             out_channels = 96,
             kernel_size  = 3,
             padding      = 1,
         )
-        self.branch3x3dbl_3 = conv_block(
+        self.branch3x3dbl_3 = conv(
             in_channels  = 96,
             out_channels = 96,
             kernel_size  = 3,
@@ -4492,65 +4115,66 @@ class InceptionC(Module):
         self,
         in_channels : int,
         channels_7x7: int,
-        conv_block  : Callable[..., nn.Module] | None = None
+        conv        : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
         c7 = channels_7x7
         
-        self.branch1x1 = conv_block(
+        self.branch1x1 = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
         )
-        self.branch7x7_1 = conv_block(
+        self.branch7x7_1 = conv(
             in_channels  = in_channels,
             out_channels = c7,
             kernel_size  = 1,
         )
-        self.branch7x7_2 = conv_block(
+        self.branch7x7_2 = conv(
             in_channels  = c7,
             out_channels = c7,
             kernel_size  = (1, 7),
             padding      = (0, 3),
         )
-        self.branch7x7_3 = conv_block(
+        self.branch7x7_3 = conv(
             in_channels  = c7,
             out_channels = 192,
             kernel_size  = (7, 1),
             padding      = (3, 0),
         )
-        self.branch7x7dbl_1 = conv_block(
+        self.branch7x7dbl_1 = conv(
             in_channels  = in_channels,
             out_channels = c7,
             kernel_size  = 1,
         )
-        self.branch7x7dbl_2 = conv_block(
+        self.branch7x7dbl_2 = conv(
             in_channels  = c7,
             out_channels = c7,
             kernel_size  = (7, 1),
             padding      = (3, 0),
         )
-        self.branch7x7dbl_3 = conv_block(
+        self.branch7x7dbl_3 = conv(
             in_channels  = c7,
             out_channels = c7,
             kernel_size  = (1, 7),
             padding      = (0, 3),
         )
-        self.branch7x7dbl_4 = conv_block(
+        self.branch7x7dbl_4 = conv(
             in_channels  = c7,
             out_channels = c7,
             kernel_size  = (7, 1),
             padding      = (3, 0),
         )
-        self.branch7x7dbl_5 = conv_block(
+        self.branch7x7dbl_5 = conv(
             in_channels  = c7,
             out_channels = 192,
             kernel_size  = (1 , 7),
             padding      = (0 , 3),
         )
-        self.branch_pool = conv_block(
+        self.branch_pool = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
@@ -4579,41 +4203,42 @@ class InceptionD(Module):
     def __init__(
         self,
         in_channels: int,
-        conv_block : Callable[..., nn.Module] | None = None
+        conv       : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
         
-        self.branch3x3_1 = conv_block(
+        self.branch3x3_1 = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
         )
-        self.branch3x3_2 = conv_block(
+        self.branch3x3_2 = conv(
             in_channels  = 192,
             out_channels = 320,
             kernel_size  = 3,
             stride       = 2,
         )
-        self.branch7x7x3_1 = conv_block(
+        self.branch7x7x3_1 = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
         )
-        self.branch7x7x3_2 = conv_block(
+        self.branch7x7x3_2 = conv(
             in_channels  = 192,
             out_channels = 192,
             kernel_size  = (1, 7),
             padding      = (0, 3),
         )
-        self.branch7x7x3_3 = conv_block(
+        self.branch7x7x3_3 = conv(
             in_channels  = 192,
             out_channels = 192,
             kernel_size  = (7, 1),
             padding      = (3, 0),
         )
-        self.branch7x7x3_4 = conv_block(
+        self.branch7x7x3_4 = conv(
             in_channels  = 192,
             out_channels = 192,
             kernel_size  = 3,
@@ -4639,59 +4264,60 @@ class InceptionE(Module):
     def __init__(
         self,
         in_channels: int,
-        conv_block : Callable[..., nn.Module] | None = None
+        conv       : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
         
-        self.branch1x1 = conv_block(
+        self.branch1x1 = conv(
             in_channels  = in_channels,
             out_channels = 320,
             kernel_size  = 1,
         )
-        self.branch3x3_1 = conv_block(
+        self.branch3x3_1 = conv(
             in_channels  = in_channels,
             out_channels = 384,
             kernel_size  = 1,
         )
-        self.branch3x3_2a = conv_block(
+        self.branch3x3_2a = conv(
             in_channels  = 384,
             out_channels = 384,
             kernel_size  = (1, 3),
             padding      = (0, 1),
         )
-        self.branch3x3_2b = conv_block(
+        self.branch3x3_2b = conv(
             in_channels  = 384,
             out_channels = 384,
             kernel_size  = (3, 1),
             padding      = (1, 0),
         )
-        self.branch3x3dbl_1 = conv_block(
+        self.branch3x3dbl_1 = conv(
             in_channels  = in_channels,
             out_channels = 448,
             kernel_size  = 1,
         )
-        self.branch3x3dbl_2 = conv_block(
+        self.branch3x3dbl_2 = conv(
             in_channels  = 448,
             out_channels = 384,
             kernel_size  = 3,
             padding      = 1,
         )
-        self.branch3x3dbl_3a = conv_block(
+        self.branch3x3dbl_3a = conv(
             in_channels  = 384,
             out_channels = 384,
             kernel_size  = (1, 3),
             padding      = (0, 1),
         )
-        self.branch3x3dbl_3b = conv_block(
+        self.branch3x3dbl_3b = conv(
             in_channels  = 384,
             out_channels = 384,
             kernel_size  = (3, 1),
             padding      = (1, 0),
         )
 
-        self.branch_pool = conv_block(
+        self.branch_pool = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
@@ -4724,18 +4350,19 @@ class InceptionAux1(Module):
         self,
         in_channels : int,
         out_channels: int,
-        conv_block  : Callable[..., nn.Module] | None = None
+        conv        : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
        
-        self.conv0 = conv_block(
+        self.conv0 = conv(
             in_channels  = in_channels,
             out_channels = 128,
             kernel_size  = 1,
         )
-        self.conv1 = conv_block(
+        self.conv1 = conv(
             in_channels  = 128,
             out_channels = 768,
             kernel_size  = 5,
@@ -4769,14 +4396,15 @@ class InceptionAux2(Module):
         self,
         in_channels : int,
         out_channels: int,
-        dropout     : float                           = 0.7,
-        conv_block  : Callable[..., nn.Module] | None = None,
+        dropout     : float           = 0.7,
+        conv        : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if conv_block is None:
-            conv_block = InceptionBasicConv2d
+        if conv is None:
+            conv = InceptionBasicConv2d
        
-        self.conv = conv_block(
+        self.conv = conv(
             in_channels  = in_channels,
             out_channels = 128,
             kernel_size  = 1,
@@ -4894,16 +4522,17 @@ class ResNetBasicBlock(Module):
         self,
         in_channels : int,
         out_channels: int,
-        stride      : int                           = 1,
-        groups      : int                           = 1,
-        dilation    : int                           = 1,
-        base_width  : int                           = 64,
-        downsample  : Module | None                 = None,
-        norm_layer  : Callable[... , Module] | None = None,
+        stride      : int             = 1,
+        groups      : int             = 1,
+        dilation    : int             = 1,
+        base_width  : int             = 64,
+        downsample  : Module   | None = None,
+        norm        : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if norm_layer is None:
-            norm_layer = BatchNorm2d
+        if norm is None:
+            norm = BatchNorm2d
         if groups != 1 or base_width != 64:
             raise ValueError(
                 "`BasicBlock` only supports `groups=1` and `base_width=64`"
@@ -4924,7 +4553,7 @@ class ResNetBasicBlock(Module):
             bias         = False,
             dilation     = dilation,
         )
-        self.bn1        = norm_layer(out_channels)
+        self.bn1        = norm(out_channels)
         self.relu       = nn.ReLU(inplace=True)
         self.conv2      = Conv2d(
             in_channels  = out_channels,
@@ -4936,7 +4565,7 @@ class ResNetBasicBlock(Module):
             bias         = False,
             dilation     = dilation,
         )
-        self.bn2        = norm_layer(out_channels)
+        self.bn2        = norm(out_channels)
         self.downsample = downsample
         self.stride     = stride
 
@@ -4970,16 +4599,17 @@ class ResNetBottleneck(Module):
         self,
         in_channels : int,
         out_channels: int,
-        stride      : int                              = 1,
-        groups      : int                              = 1,
-        dilation    : int                              = 1,
-        base_width  : int                              = 64,
-        downsample  : Module | None                    = None,
-        norm_layer  : Callable[... , nn.Module] | None = None,
+        stride      : int             = 1,
+        groups      : int             = 1,
+        dilation    : int             = 1,
+        base_width  : int             = 64,
+        downsample  : Module   | None = None,
+        norm        : Callable | None = None,
+        *args, **kwargs
     ):
         super().__init__()
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+        if norm is None:
+            norm = nn.BatchNorm2d
         width = int(out_channels * (base_width / 64.0)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when
         # stride != 1
@@ -4993,7 +4623,7 @@ class ResNetBottleneck(Module):
             groups       = 1,
             bias         = False
         )
-        self.bn1        = norm_layer(width)
+        self.bn1        = norm(width)
         self.conv2      = Conv2d(
             in_channels  = width,
             out_channels = width,
@@ -5004,7 +4634,7 @@ class ResNetBottleneck(Module):
             bias         = False,
             dilation     = dilation,
         )
-        self.bn2        = norm_layer(width)
+        self.bn2        = norm(width)
         self.conv3      = Conv2d(
             in_channels  = width,
             out_channels = out_channels * self.expansion,
@@ -5015,7 +4645,7 @@ class ResNetBottleneck(Module):
             groups       = 1,
             bias         = False
         )
-        self.bn3        = norm_layer(out_channels * self.expansion)
+        self.bn3        = norm(out_channels * self.expansion)
         self.relu       = ReLU(inplace=True)
         self.downsample = downsample
         self.stride     = stride
@@ -5045,12 +4675,13 @@ class ResNetBlock(Module):
         num_blocks   : int,
         in_channels  : int,
         out_channels : int,
-        stride       : int                           = 1,
-        groups       : int                           = 1,
-        dilation     : int                           = 1,
-        base_width   : int                           = 64,
-        dilate       : bool                          = False,
-        norm_layer   : Callable[... , Module] | None = BatchNorm2d,
+        stride       : int             = 1,
+        groups       : int             = 1,
+        dilation     : int             = 1,
+        base_width   : int             = 64,
+        dilate       : bool            = False,
+        norm         : Callable | None = BatchNorm2d,
+        *args, **kwargs
     ):
         super().__init__()
         downsample    = None
@@ -5068,7 +4699,7 @@ class ResNetBlock(Module):
                     stride       = stride,
                     bias         = False,
                 ),
-                norm_layer(out_channels * block.expansion),
+                norm(out_channels * block.expansion),
             )
       
         layers = []
@@ -5081,7 +4712,7 @@ class ResNetBlock(Module):
                 dilation     = prev_dilation,
                 base_width   = base_width,
                 downsample   = downsample,
-                norm_layer   = norm_layer,
+                norm= norm,
             )
         )
         for _ in range(1, num_blocks):
@@ -5094,7 +4725,7 @@ class ResNetBlock(Module):
                     dilation     = dilation,
                     base_width   = base_width,
                     downsample   = None,
-                    norm_layer   = norm_layer,
+                    norm= norm,
                 )
             )
         self.convs = nn.Sequential(*layers)
@@ -5274,13 +4905,13 @@ class SRCNN(Module):
         out_channels: int,
         kernel_size1: Ints,
         stride1     : Ints,
-        padding1    : str | Ints | None,
+        padding1    : Ints | str,
         kernel_size2: Ints,
         stride2     : Ints,
-        padding2    : str | Ints | None,
+        padding2    : Ints | str,
         kernel_size3: Ints,
         stride3     : Ints,
-        padding3    : str | Ints | None,
+        padding3    : Ints | str,
         dilation    : Ints = 1,
         groups      : int  = 1,
         bias        : bool = True,
@@ -5349,15 +4980,15 @@ class UNetBlock(Module):
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Ints              = 3,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 1,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = False,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        kernel_size : Ints       = 3,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 1,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = False,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -5418,15 +5049,15 @@ class VDSR(Module):
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Ints              = 3,
-        stride      : Ints              = 1,
-        padding     : str | Ints | None = 1,
-        dilation    : Ints              = 1,
-        groups      : int               = 1,
-        bias        : bool              = False,
-        padding_mode: str               = "zeros",
-        device      : Any               = None,
-        dtype       : Any               = None,
+        kernel_size : Ints       = 3,
+        stride      : Ints       = 1,
+        padding     : Ints | str = 1,
+        dilation    : Ints       = 1,
+        groups      : int        = 1,
+        bias        : bool       = False,
+        padding_mode: str        = "zeros",
+        device      : Any        = None,
+        dtype       : Any        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -5490,9 +5121,9 @@ class VDSR(Module):
         return x
 
 
-# H2: - ZeroDCE/ZeroDCE++ ------------------------------------------------------
+# H2: - ZeroDCE ----------------------------------------------------------------
 
-class DCENet(Module):
+class DCE(Module):
     """
     """
     
@@ -5618,7 +5249,7 @@ class DCENet(Module):
         return a
 
 
-class DCENetV2(Module):
+class DCEV2(Module):
     """
     """
     
@@ -5627,7 +5258,7 @@ class DCENetV2(Module):
         in_channels : int      = 3,
         out_channels: int      = 3,
         mid_channels: int      = 32,
-        conv_layer  : Callable = BSConvHin2dS,
+        conv        : Callable = BSConv2dS,
         kernel_size : Ints     = 3,
         stride      : Ints     = 1,
         padding     : Ints     = 1,
@@ -5643,7 +5274,7 @@ class DCENetV2(Module):
         self.downsample = Downsample(None, 1, "bilinear")
         self.upsample   = UpsamplingBilinear2d(None, 1)
         self.relu       = ReLU(inplace=True)
-        self.conv1 = conv_layer(
+        self.conv1 = conv(
             in_channels  = in_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5656,7 +5287,7 @@ class DCENetV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv2 = conv_layer(
+        self.conv2 = conv(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5669,7 +5300,7 @@ class DCENetV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv3 = conv_layer(
+        self.conv3 = conv(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5682,7 +5313,7 @@ class DCENetV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv4 = conv_layer(
+        self.conv4 = conv(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5695,7 +5326,7 @@ class DCENetV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv5 = Conv2d(
+        self.conv5 = conv(
             in_channels  = mid_channels * 2,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5708,7 +5339,7 @@ class DCENetV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv6 = conv_layer(
+        self.conv6 = conv(
             in_channels  = mid_channels * 2,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -5721,7 +5352,7 @@ class DCENetV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv7 = conv_layer(
+        self.conv7 = conv(
             in_channels  = mid_channels * 2,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -5767,7 +5398,11 @@ class PixelwiseHigherOrderLECurve(Module):
         n (int): Number of iterations.
     """
     
-    def __init__(self, n: int):
+    def __init__(
+        self,
+        n: int,
+        *args, **kwargs
+    ):
         super().__init__()
         self.n = n
     
@@ -5779,7 +5414,9 @@ class PixelwiseHigherOrderLECurve(Module):
         # Prepare curve parameter
         _, c1, _, _ = x.shape  # Should be 3
         _, c2, _, _ = a.shape  # Should be 3*n
+        single_map  = True
         if c2 == c1 * self.n:
+            single_map = False
             a = torch.split(a, c1, dim=1)
         elif c2 == 3:
             pass
@@ -5791,7 +5428,7 @@ class PixelwiseHigherOrderLECurve(Module):
 
         # Estimate curve parameter
         for i in range(self.n):
-            a_i = a if isinstance(a, int) else a[i]
+            a_i = a if single_map else a[i]
             x   = x + a_i * (torch.pow(x, 2) - x)
 
         a = list(a)             if isinstance(a, tuple) else a

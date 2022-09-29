@@ -61,12 +61,12 @@ def infer(args: Munch | dict):
 hosts = {
 	"lp-labdesktop01-ubuntu": {
         "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-t1",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-t1-lol226.pt",
+        "cfg"        : "zerodcev2-s5",
+        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s5-lol226.pt",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
-        "img_size"   : None,  # (3, 512, 512),
+        "img_size"   : None,  # (3, 900, 1200),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
         "name"       : "exp",
@@ -101,6 +101,20 @@ hosts = {
         "save"       : True,
         "verbose"    : True,
 	},
+    "vsw-ws02": {
+        "model"      : "zerodcev2",
+        "cfg"        : "zerodcev2-s9",
+        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s9-lol226.pt",
+        "num_classes": None,
+        "source"     : DATA_DIR / "lol226",
+        "batch_size" : 1,
+        "img_size"   : None,  # (3, 900, 1200),
+		"devices"    : "0",
+        "root"       : RUNS_DIR / "infer",
+        "name"       : "exp",
+        "save"       : True,
+        "verbose"    : True,
+	},
 }
 
 
@@ -112,12 +126,12 @@ def parse_args():
     parser.add_argument("--num-classes", type=int,                             help="Number of classes.")
     parser.add_argument("--source",      type=str,                             help="Data source.")
     parser.add_argument("--batch-size",  type=int,                             help="Total Batch size for all GPUs.")
-    parser.add_argument("--img-size",    type=int,  nargs="+",                 help="Image sizes.")
+    parser.add_argument("--img-size",    type=int, nargs="+",                  help="Image sizes.")
     parser.add_argument("--devices",     type=str,                             help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
     parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/name")
     parser.add_argument("--name",        type=str,                             help="Save results to root/name")
-    parser.add_argument("--save",        action="store_true", default=True,    help="Save.")
-    parser.add_argument("--verbose",     action="store_true", default=True,    help="Display results.")
+    parser.add_argument("--save",        action="store_true",                  help="Save.")
+    parser.add_argument("--verbose",     action="store_true",                  help="Display results.")
     args = parser.parse_args()
     return args
 

@@ -8,6 +8,7 @@ Model and training-related components.
 from __future__ import annotations
 
 import platform
+from timeit import default_timer as timer
 
 from munch import Munch
 from pytorch_lightning.accelerators import CUDAAccelerator
@@ -720,7 +721,8 @@ class Inferrer(metaclass=ABCMeta):
         """
         Call before `run()` starts.
         """
-        create_dirs(paths=[self.output_dir], recreate=True)
+        if self.save:
+            create_dirs(paths=[self.output_dir], recreate=True)
         self.init_data_loader()
         self.init_data_writer()
         
@@ -774,26 +776,33 @@ class ImageInferrer(Inferrer):
     def run(self, model: BaseModel, source: Path_):
         self.model  = model
         self.source = source
-        
         self.on_run_start()
-
-        start_time = time.time()
+        
+        step_times = []
+        start_time = timer()
         with progress_bar() as pbar:
             for batch_idx, batch in pbar.track(
                 enumerate(self.data_loader),
                 total=len(self.data_loader),
                 description=f"[bright_yellow] Processing"
             ):
+                # Frame capture
                 images, indexes, files, rel_paths = batch
+                # Pre-process
                 input, size0, size1 = self.preprocess(images)
-                pred = model.forward(input=input)
+                # Process
+                step_start_time = timer()
+                pred            = model.forward(input=input)
+                step_end_time   = timer()
+                step_times.append(step_end_time - step_start_time)
+                # Post-process
                 pred = self.postprocess(
                     input = input,
                     pred  = pred,
                     size0 = size0,
                     size1 = size1,
                 )
-                
+                # Debug
                 if self.verbose:
                     self.model.show_results(
                         input = input,
@@ -808,8 +817,16 @@ class ImageInferrer(Inferrer):
                         files       = rel_paths,
                         denormalize = True,
                     )
+        end_time = timer()
         console.log(
-            f"Completed in {((time.time() - start_time) / 3600):.3f} hours"
+            f"Completed in {(end_time - start_time):.9f} seconds"
+        )
+        console.log(
+            f"Average FPS at {(1.0 / ((end_time - start_time) / len(step_times))):.9f}"
+        )
+        console.log(
+            f"Average forward pass FPS at "
+            f"{(1.0 / (sum(step_times) / len(step_times))):.9f}"
         )
         
         self.on_run_end()
@@ -972,21 +989,16 @@ def parse_model(
         # print(f, n, m, args)
         
         if m in [
+            ABSConv2dS,
             BSConv2dS,
             BSConv2dU,
-            BSConvBn2dS,
-            BSConvBn2dU,
-            BSConvHin2dS,
-            BSConvHin2dU,
-            BSConvIn2dS,
-            BSConvIn2dU,
             Conv2d,
             Conv2dNormActivation,
             ConvAct2d,
             ConvReLU2d,
             ConvTranspose2d,
-            DCENet,
-            DCENetV2,
+            DCE,
+            DCEV2,
             DepthwiseSeparableConv2d,
             DepthwiseSeparableConvReLU2d,
             EnhancementModule,
@@ -997,7 +1009,6 @@ def parse_model(
             InceptionBasicConv2d,
             SRCNN,
             UnconstrainedBlueprintSeparableConv2d,
-            UnconstrainedBlueprintSeparableConvBn2d,
             UNetBlock,
             VDSR,
         ]:
@@ -1007,11 +1018,11 @@ def parse_model(
                 c1, c2 = ch[f],    args[0]
             args = [c1, c2, *args[1:]]
         elif m in [
-            ChannelAttentionLayer,
+            ChannelAttention,
             FFA,
             FFABlock,
             FFAGroup,
-            PixelAttentionLayer,
+            PixelAttention,
             SupervisedAttentionModule,
         ]:
             if isinstance(f, (list, tuple)):
@@ -1929,7 +1940,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 # self.tb_log(f"{metric.name}/train_step", value, "step")
         
         self.epoch_step += 1
-        return {"loss": loss}
+        return {
+            "loss"  : loss,
+            # "input" : input,
+            # "target": target,
+            # "pred"  : pred,
+        }
     
     def training_epoch_end(self, outputs: EpochOutput):
         # Loss
@@ -2047,7 +2063,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 # self.tb_log(f"{metric.name}/val_step", value, "step")
             
         self.epoch_step += 1
-        return {"loss": loss}
+        return {
+            "loss"  : loss,
+            # "input" : input,
+            # "target": target,
+            # "pred"  : pred,
+        }
     
     def validation_epoch_end(self, outputs: EpochOutput):
         # Loss
@@ -2177,7 +2198,12 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 # self.tb_log(f"{metric.name}/test_step", value, "step")
         
         self.epoch_step += 1
-        return {"loss": loss}
+        return {
+            "loss"  : loss,
+            # "input" : input,
+            # "target": target,
+            # "pred"  : pred,
+        }
     
     def test_epoch_end(self, outputs: EpochOutput):
         # Loss
@@ -2478,7 +2504,7 @@ class ImageClassificationModel(BaseModel, metaclass=ABCMeta):
             "pil_kwargs": dict(quality=image_quality)
         } if save else None
         imshow_classification(
-            winname   = self.phase.value,
+            winname   = self.fullname,  # self.phase.value,
             image     = input,
             pred      = pred,
             target    = target,
@@ -2618,7 +2644,7 @@ class ImageEnhancementModel(BaseModel, metaclass=ABCMeta):
             "pil_kwargs": dict(quality=image_quality)
         } if save else None
         imshow_enhancement(
-            winname   = self.phase.value,
+            winname   = self.fullname,  # self.phase.value,
             image     = result,
             scale     = 2,
             save_cfg  = save_cfg,

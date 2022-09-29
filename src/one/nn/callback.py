@@ -9,6 +9,7 @@ from __future__ import annotations
 import re
 from _weakref import proxy
 from datetime import timedelta
+from timeit import default_timer as timer
 
 import pytorch_lightning as pl
 import yaml
@@ -331,7 +332,7 @@ class ModelCheckpoint(Checkpoint):
         pl_module: "pl.LightningModule"
     ):
         self.start_epoch       = trainer.current_epoch
-        self.start_time        = time.time()
+        self.start_time        = timer()
         self.last_time_checked = time.monotonic()
         self.logger = open(self.root / "log.txt", "a", encoding="utf-8")
         
@@ -355,13 +356,16 @@ class ModelCheckpoint(Checkpoint):
         trainer  : "pl.Trainer",
         pl_module: "pl.LightningModule"
     ):
+        end_time = timer()
         console.log(
             f"\n{trainer.current_epoch - self.start_epoch + 1} epochs completed "
-            f"in {((time.time() - self.start_time) / 3600):.3f} hours"
+            f"in {(end_time - self.start_time):.3f} seconds "
+            f"({((end_time - self.start_time) / 3600):.3f} hours)"
         )
         self.logger.write(
             f"\n{trainer.current_epoch - self.start_epoch + 1} epochs completed "
-            f"in {((time.time() - self.start_time) / 3600):.3f} hours"
+            f"in {(end_time - self.start_time):.3f} seconds "
+            f"({((end_time - self.start_time) / 3600):.3f} hours)"
         )
         self.logger.flush()
     

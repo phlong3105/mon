@@ -157,7 +157,7 @@ tensorboard = {
 # H1: - Trainer ----------------------------------------------------------------
 
 debug = {
-	"every_n_epochs": 10,
+	"every_n_epochs": 50,
         # Number of epochs between debugging. To disable, set `every_n_epochs=0`.
 		# Defaults to 1.
     "save_to_subdir": True,
