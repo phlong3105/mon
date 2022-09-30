@@ -82,7 +82,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcepp_retras_vnight",
+		"cfg"        : "zerodcev2_s5_lol",
         "project"    : "",
         "weights"    : None,
         "batch_size" : 8,
@@ -112,13 +112,13 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws03": {
-		"cfg"        : "zerodcev2_s5_lol",
-        "project"    : "lol",
+		"cfg"        : "zerodcepp_retras_vnight",
+        "project"    : None,
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 500,
+        "max_epochs" : 200,
 		"strategy"   : None,
 	},
 }
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
 
     project = input_args.get("project", None) or host_args.get("project", None)
-    if project is not None or project != "":
+    if project is not None and project != "":
         module = importlib.import_module(f"one.cfg.{project}.{cfg}")
     else:
         module = importlib.import_module(f"one.cfg.{cfg}")

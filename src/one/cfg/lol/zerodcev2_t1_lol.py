@@ -124,7 +124,7 @@ callbacks = [
 	    "monitor": "checkpoint/loss/train_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint
 	        # only for the last epoch.
-	    "mode": "min",
+		"mode": "min",
 			# One of {min, max}. If `save_top_k != 0`, the decision to
 	        # overwrite the current save file is made based on either the
 	        # maximization or the minimization of the monitored quantity.
