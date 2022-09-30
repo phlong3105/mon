@@ -372,7 +372,7 @@ class ModelCheckpoint(Checkpoint):
             for m in pl_module.val_metrics:
                 headers   += f"{f'val_{m.name}':>12} "
                 self.keys |= {f'val_{m.name}': 0}
-        headers += f"  {'reach':<16}"
+        headers += f" {'reach':<16}"
     
         console.log(f"[bold]{headers}")
         self.logger.write(f"\nTraining:")
@@ -605,7 +605,7 @@ class ModelCheckpoint(Checkpoint):
                 m = c.split("/")[0]
                 c = f"train_{m}" if "train" in c else f"val_{m}"
                 self.keys[c] = v
-            row1 = f"{epoch:>10d} {step:>10d} [red]{current:>16.6f}[default] "
+            row1 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
             row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
             for _, v in self.keys.items():
                 row1 += f"{v:>12.6f} "
@@ -698,11 +698,11 @@ class ModelCheckpoint(Checkpoint):
         else:
             if self.verbose and trainer.is_global_zero:
                 row1 = f"{epoch:>10d} {step:>10d} [orange1]{current:>16.6f}[default] "
-                row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f}"
+                row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
                 for _, v in self.keys.items():
                     row1 += f"{v:>12.6f} "
                     row2 += f"{v:>12.6f} "
-                row1 += f" [red]{'best':<16.6s}[default]"
+                row1 += f" [orange1]{f'top {k}':<16.6s}[default]"
                 row2 += f" {f'top {k}':<16.6s}\n"
                 console.log(row1)
                 self.logger.write(row2)
