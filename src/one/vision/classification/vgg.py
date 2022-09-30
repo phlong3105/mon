@@ -382,6 +382,7 @@ class VGG(ImageClassificationModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -414,10 +415,11 @@ class VGG(ImageClassificationModel):
         self,
         cfg        : dict | Path_ | None = "vgg11.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg11",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg11",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -437,10 +439,12 @@ class VGG(ImageClassificationModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = pretrained,
             phase       = phase,
             loss        = loss,
@@ -473,6 +477,7 @@ class VGG11(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -514,10 +519,11 @@ class VGG11(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg11.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg11",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg11",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -537,10 +543,12 @@ class VGG11(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG11.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -593,6 +601,7 @@ class VGG11Bn(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -634,10 +643,11 @@ class VGG11Bn(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg11-bn.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg11-bn",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg11-bn",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -657,10 +667,12 @@ class VGG11Bn(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG11Bn.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -713,6 +725,7 @@ class VGG13(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -754,10 +767,11 @@ class VGG13(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg13.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg13",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg13",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -777,10 +791,12 @@ class VGG13(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG13.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -833,6 +849,7 @@ class VGG13Bn(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -874,10 +891,11 @@ class VGG13Bn(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg13-bn.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg13-bn",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg13-bn",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -897,10 +915,12 @@ class VGG13Bn(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG13Bn.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -953,6 +973,7 @@ class VGG16(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -994,10 +1015,11 @@ class VGG16(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg16.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg16",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg16",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1017,10 +1039,12 @@ class VGG16(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG16.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1073,6 +1097,7 @@ class VGG16Bn(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1114,10 +1139,11 @@ class VGG16Bn(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg16-bn.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg16-bn",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg16-bn",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1137,10 +1163,12 @@ class VGG16Bn(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG16Bn.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1193,6 +1221,7 @@ class VGG19(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1234,10 +1263,11 @@ class VGG19(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg19.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg19",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg19",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1257,10 +1287,12 @@ class VGG19(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG19.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1313,6 +1345,7 @@ class VGG19Bn(VGG):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1354,10 +1387,11 @@ class VGG19Bn(VGG):
         self,
         cfg        : dict | Path_ | None = "vgg19-bn.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "vgg",
-        fullname   : str  | None         = "vgg19-bn",
+        project    : str          | None = None,
+        name       : str          | None = "vgg",
+        fullname   : str          | None = "vgg19-bn",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1377,10 +1411,12 @@ class VGG19Bn(VGG):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = VGG19Bn.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,

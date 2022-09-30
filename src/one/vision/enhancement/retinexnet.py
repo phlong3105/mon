@@ -269,6 +269,7 @@ class DecomNet(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -301,6 +302,7 @@ class DecomNet(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "decomnet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "decomnet",
         fullname   : str          | None = "decomnet",
         channels   : int                 = 3,
@@ -324,6 +326,7 @@ class DecomNet(ImageEnhancementModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -352,6 +355,7 @@ class EnhanceNet(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -384,6 +388,7 @@ class EnhanceNet(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "enhancenet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "enhancenet",
         fullname   : str          | None = "enhancenet",
         channels   : int                 = 3,
@@ -407,6 +412,7 @@ class EnhanceNet(ImageEnhancementModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -560,6 +566,7 @@ class RetinexNet(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -592,6 +599,7 @@ class RetinexNet(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "retinexnet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "retinexnet",
         fullname   : str          | None = "retinexnet",
         channels   : int                 = 3,
@@ -615,6 +623,7 @@ class RetinexNet(ImageEnhancementModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,

@@ -175,6 +175,7 @@ class ShuffleNetV2(ImageClassificationModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -207,10 +208,11 @@ class ShuffleNetV2(ImageClassificationModel):
         self,
         cfg        : dict | Path_ | None = "shufflenet-v2-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet-v2",
-        fullname   : str  | None         = "shufflenet-v2-x0.5",
+        project    : str          | None = None,
+        name       : str          | None = "shufflenet-v2",
+        fullname   : str          | None = "shufflenet-v2-x0.5",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -230,10 +232,12 @@ class ShuffleNetV2(ImageClassificationModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = pretrained,
             phase       = phase,
             loss        = loss,
@@ -258,6 +262,7 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -299,10 +304,11 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
         self,
         cfg        : dict | Path_ | None = "shufflenet-v2-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet-v2",
-        fullname   : str  | None         = "shufflenet-v2-x0.5",
+        project    : str          | None = None,
+        name       : str          | None = "shufflenet-v2",
+        fullname   : str          | None = "shufflenet-v2-x0.5",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -322,10 +328,12 @@ class ShuffleNetV2_x0_5(ShuffleNetV2):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ShuffleNetV2_x0_5.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -650,6 +658,7 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -691,10 +700,11 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
         self,
         cfg        : dict | Path_ | None = "shufflenet-v2-x1.0.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet-v2",
-        fullname   : str  | None         = "shufflenet-v2-x1.0",
+        project    : str          | None = None,
+        name       : str          | None = "shufflenet-v2",
+        fullname   : str          | None = "shufflenet-v2-x1.0",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -714,10 +724,12 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ShuffleNetV2_x1_0.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1042,6 +1054,7 @@ class ShuffleNetV2_x1_5(ShuffleNetV2):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1083,10 +1096,11 @@ class ShuffleNetV2_x1_5(ShuffleNetV2):
         self,
         cfg        : dict | Path_ | None = "shufflenet-v2-x1.5.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet-v2",
-        fullname   : str  | None         = "shufflenet-v2-x1.5",
+        project    : str          | None = None,
+        name       : str          | None = "shufflenet-v2",
+        fullname   : str          | None = "shufflenet-v2-x1.5",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1106,10 +1120,12 @@ class ShuffleNetV2_x1_5(ShuffleNetV2):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ShuffleNetV2_x1_5.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1434,6 +1450,7 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1475,10 +1492,11 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
         self,
         cfg        : dict | Path_ | None = "shufflenet-v2-x2.0.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "shufflenet-v2",
-        fullname   : str  | None         = "shufflenet-v2-x2.0",
+        project    : str          | None = None,
+        name       : str          | None = "shufflenet-v2",
+        fullname   : str          | None = "shufflenet-v2-x2.0",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1498,10 +1516,12 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ShuffleNetV2_x2_0.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,

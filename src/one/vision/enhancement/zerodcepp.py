@@ -60,6 +60,7 @@ class ZeroDCEPP(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -107,10 +108,11 @@ class ZeroDCEPP(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "zerodce++.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "zerodce++",
-        fullname   : str  | None         = "zerodce++",
+        project    : str          | None = None,
+        name       : str          | None = "zerodce++",
+        fullname   : str          | None = "zerodce++",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -128,10 +130,11 @@ class ZeroDCEPP(ImageEnhancementModel):
             cfg = CFG_DIR / cfg
             
         super().__init__(
+            cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,

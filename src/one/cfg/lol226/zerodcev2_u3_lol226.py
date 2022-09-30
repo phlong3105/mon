@@ -7,7 +7,7 @@ Zero-DCE trained on LIME dataset.
 
 from __future__ import annotations
 
-from . import default
+from one.cfg import default
 from one.constants import RUNS_DIR
 from one.constants import VISION_BACKEND
 from one.vision.transformation import Resize
@@ -19,7 +19,8 @@ model_name = "zerodcev2"
 model_cfg  = "zerodcev2-u3"
 data_name  = "lol226"
 fullname   = f"zerodcev2-u3-{data_name}"
-root       = RUNS_DIR / "train" / fullname
+root       = RUNS_DIR / "train"
+project    = "lol226"
 shape      = [3, 512, 512]
 
 
@@ -69,6 +70,8 @@ model = {
         # manually in `self.parse_model()` method.
     "root": root,
         # The root directory of the model. Defaults to RUNS_DIR.
+    "project": project,
+		# Project name. Defaults to None.
     "name": model_name,
         # Model's name. In case None is given, it will be
         # `self.__class__.__name__`. Defaults to None.
@@ -106,6 +109,7 @@ model = {
     "debug": default.debug,
         # Debug configs. Defaults to None.
 	"verbose": True,
+		# Verbosity. Defaults to True.
 }
 
 
@@ -113,11 +117,15 @@ model = {
 
 callbacks = [
     default.model_checkpoint | {
-        "root": root,
-            # Root directory to save checkpoint files
-	    "monitor": "checkpoint/loss/train_epoch",  # "loss_epoch",
-		    # Quantity to monitor. Defaults to None which saves a checkpoint only
-			# for the last epoch.
+	    "monitor": "checkpoint/loss/train_epoch",
+		    # Quantity to monitor. Defaults to None which saves a checkpoint
+	        # only for the last epoch.
+	    "mode": "min",
+			# One of {min, max}. If `save_top_k != 0`, the decision to
+	        # overwrite the current save file is made based on either the
+	        # maximization or the minimization of the monitored quantity.
+	        # For `val_acc`, this should be `max`, for `val_loss` this should
+	        # be `min`, etc.
 	},
 	default.learning_rate_monitor,
 	default.rich_model_summary,
@@ -125,10 +133,7 @@ callbacks = [
 ]
 
 logger = {
-	"tensorboard": default.tensorboard | {
-		"save_dir": root,
-			# Save directory.
-	},
+	"tensorboard": default.tensorboard,
 }
 
 trainer = default.trainer | {

@@ -237,6 +237,7 @@ class HINet(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -269,6 +270,7 @@ class HINet(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet",
         channels   : int                 = 3,
@@ -292,6 +294,7 @@ class HINet(ImageEnhancementModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -529,6 +532,7 @@ class HINetDeblur(HINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -576,6 +580,7 @@ class HINetDeblur(HINet):
         self,
         cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-deblur",
         channels   : int                 = 3,
@@ -599,6 +604,7 @@ class HINetDeblur(HINet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -624,6 +630,7 @@ class HINetDehaze(HINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -658,6 +665,7 @@ class HINetDehaze(HINet):
         self,
         cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-dehaze",
         channels   : int                 = 3,
@@ -681,6 +689,7 @@ class HINetDehaze(HINet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -706,6 +715,7 @@ class HINetDenoise(HINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -747,6 +757,7 @@ class HINetDenoise(HINet):
         self,
         cfg        : dict | Path_ | None = "hinet-denoise.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-denoise",
         channels   : int                 = 3,
@@ -768,10 +779,11 @@ class HINetDenoise(HINet):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
@@ -795,6 +807,7 @@ class HINetDenoise_x0_5(HINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -836,6 +849,7 @@ class HINetDenoise_x0_5(HINet):
         self,
         cfg        : dict | Path_ | None = "hinet-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-denoise-x0.5",
         channels   : int                 = 3,
@@ -857,10 +871,11 @@ class HINetDenoise_x0_5(HINet):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
@@ -884,6 +899,7 @@ class HINetDerain(HINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -925,6 +941,7 @@ class HINetDerain(HINet):
         self,
         cfg        : dict | Path_ | None = "hinet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "hinet",
         fullname   : str          | None = "hinet-derain",
         channels   : int                 = 3,
@@ -946,10 +963,11 @@ class HINetDerain(HINet):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,

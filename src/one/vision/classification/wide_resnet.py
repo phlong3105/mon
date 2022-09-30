@@ -66,6 +66,7 @@ class Wide_ResNet50(ResNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -107,10 +108,11 @@ class Wide_ResNet50(ResNet):
         self,
         cfg        : dict | Path_ | None = "wide-resnet50.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "wide-resnet",
-        fullname   : str  | None         = "wide-resnet50",
+        project    : str          | None = None,
+        name       : str          | None = "wide-resnet",
+        fullname   : str          | None = "wide-resnet50",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -130,10 +132,12 @@ class Wide_ResNet50(ResNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = Wide_ResNet50.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -495,6 +499,7 @@ class Wide_ResNet101(ResNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -536,10 +541,11 @@ class Wide_ResNet101(ResNet):
         self,
         cfg        : dict | Path_ | None = "wide-resnet101.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "wide-resnet",
-        fullname   : str  | None         = "wide-resnet101",
+        project    : str          | None = None,
+        name       : str          | None = "wide-resnet",
+        fullname   : str          | None = "wide-resnet101",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -559,10 +565,12 @@ class Wide_ResNet101(ResNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = Wide_ResNet101.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,

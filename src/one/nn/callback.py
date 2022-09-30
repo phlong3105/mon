@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from _weakref import proxy
+from datetime import datetime
 from datetime import timedelta
 from timeit import default_timer as timer
 
@@ -170,6 +171,7 @@ class ModelCheckpoint(Checkpoint):
         self.kth_best_model_path = None
         self.best_model_path     = None
         self.last_model_path     = None
+        self.keys                = {}
         
         if mode not in self.mode_dict:
             raise ValueError(
@@ -178,14 +180,19 @@ class ModelCheckpoint(Checkpoint):
             )
         self.mode      = mode
         self.kth_value = self.mode_dict[mode]
-        
-        self.fs = get_filesystem(root if root else "")
+
+        """
         if root and self.fs.protocol == "file":
             root = os.path.realpath(root)
-        self.root     = Path(root)
+        self.root = Path(root)
+        if project is not None and project != "":
+            self.root = self.root / project
         self.ckpt_dir = self.root / "weights"
+        """
+        self.fs       = get_filesystem(root if root else "")
+        self.root     = root
+        self.ckpt_dir = root / "weights" if (root is not None) else None
         self.filename = filename
-        
         self.init_triggers(
             every_n_train_steps = every_n_train_steps,
             every_n_epochs      = every_n_epochs,
@@ -270,6 +277,11 @@ class ModelCheckpoint(Checkpoint):
         pl_module: "pl.LightningModule",
         stage    : str | None = None
     ):
+        if self.root is None \
+            or (hasattr(pl_module, "root") and self.root != pl_module.root):
+            self.root     = pl_module.root
+            self.ckpt_dir = self.root / "weights"
+            
         self.resolve_ckpt_dir(trainer)
         assert self.root is not None
         if trainer.is_global_zero and stage == "fit":
@@ -334,21 +346,37 @@ class ModelCheckpoint(Checkpoint):
         self.start_epoch       = trainer.current_epoch
         self.start_time        = timer()
         self.last_time_checked = time.monotonic()
+        print(self.root)
         self.logger = open(self.root / "log.txt", "a", encoding="utf-8")
+        self.logger.write(f"\n================================================================================\n")
+        self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n")
         
         # Print model's info
         if hasattr(pl_module, "params"):
-            self.logger.write(f"\nParameters: {pl_module.params}\n")
+            self.logger.write(f"{'Model':<10}     : {pl_module.name}\n")
+            self.logger.write(f"{'Data':<10}      : {pl_module.fullname}\n")
+            self.logger.write(f"{'Parameters':<10}: {pl_module.params}\n")
         
         # Print header
-        key = self.monitor.replace("checkpoint/", "")
-        key = key.split("/")[0]
-        console.log(
-            f"\n[bold]{'Epoch':>10} {'step':>10} {key:>10} {'loss':>10} {'reach':<10}"
-        )
-        self.logger.write(
-            f"\n{'Epoch':>10} {'step':>10} {key:>10} {'loss':>10} {'reach':<10} \n"
-        )
+        monitor   = self.monitor.replace("checkpoint/", "")
+        monitor   = f"monitor_" + monitor.split("/")[0]
+        headers   = f"\n{'Epoch':>10} {'step':>10} {monitor:>16} {'train_loss':>12} "
+        self.keys = OrderedDict(train_loss=0)
+        if pl_module.train_metrics is not None:
+            for m in pl_module.train_metrics:
+                headers   += f"{f'train_{m.name}':>12} "
+                self.keys |= {f'train_{m.name}': 0}
+        headers   += f"{'val_loss':>12} "
+        self.keys |= {"val_loss": 0}
+        if pl_module.val_metrics is not None:
+            for m in pl_module.val_metrics:
+                headers   += f"{f'val_{m.name}':>12} "
+                self.keys |= {f'val_{m.name}': 0}
+        headers += f"  {'reach':<16}"
+    
+        console.log(f"[bold]{headers}")
+        self.logger.write(f"\nTraining:")
+        self.logger.write(headers + "\n")
         self.logger.flush()
     
     def on_train_end(
@@ -358,12 +386,12 @@ class ModelCheckpoint(Checkpoint):
     ):
         end_time = timer()
         console.log(
-            f"\n{trainer.current_epoch - self.start_epoch + 1} epochs completed "
+            f"\n{trainer.current_epoch - self.start_epoch} epochs completed "
             f"in {(end_time - self.start_time):.3f} seconds "
             f"({((end_time - self.start_time) / 3600):.3f} hours)"
         )
         self.logger.write(
-            f"\n{trainer.current_epoch - self.start_epoch + 1} epochs completed "
+            f"\n{trainer.current_epoch - self.start_epoch} epochs completed "
             f"in {(end_time - self.start_time):.3f} seconds "
             f"({((end_time - self.start_time) / 3600):.3f} hours)"
         )
@@ -568,25 +596,25 @@ class ModelCheckpoint(Checkpoint):
                 monitor_candidates = monitor_candidates
             )
         elif self.verbose:
-            epoch = monitor_candidates["epoch"]
-            step  = monitor_candidates["step"]
-            loss  = monitor_candidates.get("checkpoint/loss/train_epoch", 0.0)
-            # key   = self.monitor.replace("checkpoint/", "")
-            """
-            console.log(
-                f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
-                f"{key} reached {current:10.6f}, was not in top "
-                f"{self.save_top_k}."
-            )
-            """
-            console.log(
-                f"{epoch:>10d} {step:>10d} {current:>10.6f} {loss:>10.6f} "
-                f"{f'not in top {self.save_top_k}':<10.6s}"
-            )
-            self.logger.write(
-                f"{epoch:>10d} {step:>10d} {current:>10.6f} {loss:>10.6f} "
-                f"{f'not in top {self.save_top_k}':<10.6s} \n"
-            )
+            epoch = monitor_candidates.pop("epoch")
+            step  = monitor_candidates.pop("step")
+            for c, v in monitor_candidates.items():
+                if "epoch" not in c:
+                    continue
+                c = c.replace("checkpoint/", "")
+                m = c.split("/")[0]
+                c = f"train_{m}" if "train" in c else f"val_{m}"
+                self.keys[c] = v
+            row1 = f"{epoch:>10d} {step:>10d} [red]{current:>16.6f}[default] "
+            row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
+            for _, v in self.keys.items():
+                row1 += f"{v:>12.6f} "
+                row2 += f"{v:>12.6f} "
+            row1 += f" {f'not in top {self.save_top_k}':<16.6s}"
+            row2 += f" {f'not in top {self.save_top_k}':<16.6s}\n"
+            
+            console.log(row1)
+            self.logger.write(row2)
             self.logger.flush()
 
     def save_none_monitor_checkpoint(
@@ -644,47 +672,41 @@ class ModelCheckpoint(Checkpoint):
         _op = min if self.mode == "min" else max
         self.best_model_path  = _op(self.best_k_models, key=self.best_k_models.get)  # type: ignore[arg-type]
         self.best_model_score = self.best_k_models[self.best_model_path]
-
+        
         is_current_new_best = str(filepath) == str(self.best_model_path)
-        epoch = monitor_candidates["epoch"]
-        step  = monitor_candidates["step"]
-        loss  = monitor_candidates.get("checkpoint/loss/train_epoch", 0.0)
-        # key   = self.monitor.replace("checkpoint/", "")
+        epoch = monitor_candidates.pop("epoch")
+        step  = monitor_candidates.pop("step")
+        for c, v in monitor_candidates.items():
+            if "epoch" not in c:
+                continue
+            c = c.replace("checkpoint/", "")
+            m = c.split("/")[0]
+            c = f"train_{m}" if "train" in c else f"val_{m}"
+            self.keys[c] = v
         if is_current_new_best:
             if self.verbose and trainer.is_global_zero:
-                """
-                console.log(
-                    f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
-                    f"{key} reached [red]{current:10.6f}[default].\n"
-                    f"Saving model to {str(filepath)!r} as [red]best."
-                )
-                """
-                console.log(
-                    f"{epoch:>10d} {step:>10d} [red]{current:>10.6f}[default] "
-                    f"{loss:>10.6f} [red]{'best':<10.6s}[default]"
-                )
-                self.logger.write(
-                    f"{epoch:>10d} {step:>10d} {current:>10.6f} {loss:>10.6f} "
-                    f"{'best':<10.6s} \n"
-                )
+                row1 = f"{epoch:>10d} {step:>10d} [red]{current:>16.6f}[default] "
+                row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
+                for _, v in self.keys.items():
+                    row1 += f"{v:>12.6f} "
+                    row2 += f"{v:>12.6f} "
+                row1 += f" [red]{'best':<16.6s}[default]"
+                row2 += f" {'best':<16.6s}\n"
+                console.log(row1)
+                self.logger.write(row2)
             self._save_best_checkpoint(trainer=trainer, filepath=filepath)
         else:
             if self.verbose and trainer.is_global_zero:
-                """
-                console.log(
-                    f"[bold][Epoch {epoch:04d}, Step {step:08d}] "
-                    f"{key} reached [red]{current:10.6f}[default].\n"
-                    f"Saving model to {str(filepath)!r} as [red]top {k}."
-                )
-                """
-                console.log(
-                    f"{epoch:>10d} {step:>10d} [orange1]{current:>10.6f}[default] "
-                    f"{loss:>10.6f} [orange1]{f'top {k}':<10.6s}[default]"
-                )
-                self.logger.write(
-                    f"{epoch:>10d} {step:>10d} {current:>10.6f} {loss:>10.6f} "
-                    f"{f'top {k}':<10.6s} \n"
-                )
+                row1 = f"{epoch:>10d} {step:>10d} [orange1]{current:>16.6f}[default] "
+                row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f}"
+                for _, v in self.keys.items():
+                    row1 += f"{v:>12.6f} "
+                    row2 += f"{v:>12.6f} "
+                row1 += f" [red]{'best':<16.6s}[default]"
+                row2 += f" {f'top {k}':<16.6s}\n"
+                console.log(row1)
+                self.logger.write(row2)
+        
         self.logger.flush()
         self._save_checkpoint(trainer=trainer, filepath=filepath)
         self._save_last_checkpoint(trainer=trainer, filepath=filepath)
@@ -835,6 +857,10 @@ class ModelCheckpoint(Checkpoint):
             filename = cls.checkpoint_join_char.join([prefix, filename])
 
         return filename
+    
+    def reset_keys(self):
+        for k, v in self.keys.items():
+            self.keys[k] = 0
     
     def to_yaml(self, filepath: Path_ | None = None):
         """

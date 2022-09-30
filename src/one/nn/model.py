@@ -623,6 +623,7 @@ class Inferrer(metaclass=ABCMeta):
         self,
         source    : Path_ | None = None,
         root      : Path_ | None = RUNS_DIR / "infer",
+        project   : str          = "",
         name      : str          = "exp",
         batch_size: int          = 1,
         shape     : Ints  | None = None,
@@ -633,6 +634,7 @@ class Inferrer(metaclass=ABCMeta):
     ):
         self.source      = source
         self.root        = root
+        self.project     = project
         self.shape       = shape
         self.batch_size  = batch_size
         self.device      = select_device(device=device, batch_size=batch_size)
@@ -646,8 +648,11 @@ class Inferrer(metaclass=ABCMeta):
             self.name = f"exp_{get_next_version(str(self.root))}"
         else:
             self.name = name
-        self.output_dir = self.root / self.name
-    
+        if self.project is not None and self.project != "":
+            self.output_dir = self.root / self.project / self.name
+        else:
+            self.output_dir = self.root / self.name
+        
     @property
     def root(self) -> Path:
         return self._root
@@ -1187,6 +1192,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1221,10 +1227,11 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self,
         cfg        : dict | Path_ | None = None,
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = None,
-        fullname   : str  | None         = None,
+        project    : str          | None = None,
+        name       : str          | None = None,
+        fullname   : str          | None = None,
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1238,6 +1245,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         super().__init__(*args, **kwargs)
         self.name          = name
         self.fullname      = fullname
+        self.project       = project
         self.root          = root
         self.num_classes   = num_classes
         self.pretrained    = pretrained
@@ -1459,6 +1467,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             root = Path(root)
         self._root = root
         
+        if self.project is not None and self.project != "":
+            self._root = self._root / self.project
         if self._root.name != self.fullname:
             self._root = self._root / self.fullname
 

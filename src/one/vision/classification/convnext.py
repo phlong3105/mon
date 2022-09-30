@@ -113,6 +113,7 @@ class ConvNeXt(ImageClassificationModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -145,10 +146,11 @@ class ConvNeXt(ImageClassificationModel):
         self,
         cfg        : dict | Path_ | None = "convnext-base.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "convnext",
-        fullname   : str  | None         = "convnext-base",
+        project    : str          | None = None,
+        name       : str          | None = "convnext",
+        fullname   : str          | None = "convnext-base",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -168,6 +170,7 @@ class ConvNeXt(ImageClassificationModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -209,6 +212,8 @@ class ConvNeXtBase(ConvNeXt):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -250,10 +255,11 @@ class ConvNeXtBase(ConvNeXt):
         self,
         cfg        : dict | Path_ | None = "convnext-base.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "convnext",
-        fullname   : str  | None         = "convnext-base",
+        project    : str          | None = None,
+        name       : str          | None = "convnext",
+        fullname   : str          | None = "convnext-base",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -273,6 +279,7 @@ class ConvNeXtBase(ConvNeXt):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -663,6 +670,8 @@ class ConvNeXtTiny(ConvNeXt):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -704,10 +713,11 @@ class ConvNeXtTiny(ConvNeXt):
         self,
         cfg        : dict | Path_ | None = "convnext-tiny.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "convnext",
-        fullname   : str  | None         = "convnext-tiny",
+        project    : str          | None = None,
+        name       : str          | None = "convnext",
+        fullname   : str          | None = "convnext-tiny",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -727,6 +737,7 @@ class ConvNeXtTiny(ConvNeXt):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -955,6 +966,8 @@ class ConvNeXtSmall(ConvNeXt):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -996,10 +1009,11 @@ class ConvNeXtSmall(ConvNeXt):
         self,
         cfg        : dict | Path_ | None = "convnext-small",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "convnext",
-        fullname   : str  | None         = "convnext-small",
+        project    : str          | None = None,
+        name       : str          | None = "convnext",
+        fullname   : str          | None = "convnext-small",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1019,6 +1033,7 @@ class ConvNeXtSmall(ConvNeXt):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -1409,6 +1424,8 @@ class ConvNeXtLarge(ConvNeXt):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1450,10 +1467,11 @@ class ConvNeXtLarge(ConvNeXt):
         self,
         cfg        : dict | Path_ | None = "convnext-large.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "convnext",
-        fullname   : str  | None         = "convnext-large",
+        project    : str          | None = None,
+        name       : str          | None = "convnext",
+        fullname   : str          | None = "convnext-large",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1473,6 +1491,7 @@ class ConvNeXtLarge(ConvNeXt):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,

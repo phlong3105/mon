@@ -116,6 +116,7 @@ class DenseNet(ImageClassificationModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -148,10 +149,11 @@ class DenseNet(ImageClassificationModel):
         self,
         cfg        : dict | Path_ | None = "densenet121.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "densenet",
-        fullname   : str  | None         = "densenet121",
+        project    : str          | None = None,
+        name       : str          | None = "densenet",
+        fullname   : str          | None = "densenet121",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -171,6 +173,7 @@ class DenseNet(ImageClassificationModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -208,6 +211,7 @@ class DenseNet121(DenseNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -249,10 +253,11 @@ class DenseNet121(DenseNet):
         self,
         cfg        : dict | Path_ | None = "densenet121.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "densenet",
-        fullname   : str  | None         = "densenet121",
+        project    : str          | None = None,
+        name       : str          | None = "densenet",
+        fullname   : str          | None = "densenet121",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -272,10 +277,12 @@ class DenseNet121(DenseNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = DenseNet121.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -924,6 +931,7 @@ class DenseNet161(DenseNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -965,10 +973,11 @@ class DenseNet161(DenseNet):
         self,
         cfg        : dict | Path_ | None = "densenet161.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "densenet",
-        fullname   : str  | None         = "densenet161",
+        project    : str          | None = None,
+        name       : str          | None = "densenet",
+        fullname   : str          | None = "densenet161",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -988,10 +997,12 @@ class DenseNet161(DenseNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = DenseNet161.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1840,6 +1851,7 @@ class DenseNet169(DenseNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1881,10 +1893,11 @@ class DenseNet169(DenseNet):
         self,
         cfg        : dict | Path_ | None = "densenet169.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "densenet",
-        fullname   : str  | None         = "densenet169",
+        project    : str          | None = None,
+        name       : str          | None = "densenet",
+        fullname   : str          | None = "densenet169",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1904,10 +1917,12 @@ class DenseNet169(DenseNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = DenseNet169.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -2796,6 +2811,7 @@ class DenseNet201(DenseNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -2837,10 +2853,11 @@ class DenseNet201(DenseNet):
         self,
         cfg        : dict | Path_ | None = "densenet201.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "densenet",
-        fullname   : str  | None         = "densenet201",
+        project    : str          | None = None,
+        name       : str          | None = "densenet",
+        fullname   : str          | None = "densenet201",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -2860,10 +2877,12 @@ class DenseNet201(DenseNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = DenseNet201.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,

@@ -71,6 +71,7 @@ class SqueezeNet(ImageClassificationModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -103,10 +104,11 @@ class SqueezeNet(ImageClassificationModel):
         self,
         cfg        : dict | Path_ | None = "squeezenet_1.0",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "squeezenet",
-        fullname   : str  | None         = "squeezenet_1.0",
+        project    : str          | None = None,
+        name       : str          | None = "squeezenet",
+        fullname   : str          | None = "squeezenet_1.0",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -126,10 +128,12 @@ class SqueezeNet(ImageClassificationModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = pretrained,
             phase       = phase,
             loss        = loss,
@@ -154,6 +158,7 @@ class SqueezeNet_1_0(SqueezeNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -195,10 +200,11 @@ class SqueezeNet_1_0(SqueezeNet):
         self,
         cfg        : dict | Path_ | None = "squeezenet-1.0.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "squeezenet",
-        fullname   : str  | None         = "squeezenet-1.0",
+        project    : str          | None = None,
+        name       : str          | None = "squeezenet",
+        fullname   : str          | None = "squeezenet-1.0",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -218,10 +224,12 @@ class SqueezeNet_1_0(SqueezeNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = SqueezeNet_1_0.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -317,6 +325,7 @@ class SqueezeNet_1_1(SqueezeNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -358,10 +367,11 @@ class SqueezeNet_1_1(SqueezeNet):
         self,
         cfg        : dict | Path_ | None = "squeezenet-1.1.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "squeezenet",
-        fullname   : str  | None         = "squeezenet-1.1",
+        project    : str          | None = None,
+        name       : str          | None = "squeezenet",
+        fullname   : str          | None = "squeezenet-1.1",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -381,10 +391,12 @@ class SqueezeNet_1_1(SqueezeNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = SqueezeNet_1_1.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,

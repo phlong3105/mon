@@ -85,6 +85,7 @@ class ResNeXt50_32X4D(ResNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -126,10 +127,11 @@ class ResNeXt50_32X4D(ResNet):
         self,
         cfg        : dict | Path_ | None = "resnext50-32x4d.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "resnext",
-        fullname   : str  | None         = "resnext50-32x4d",
+        project    : str          | None = None,
+        name       : str          | None = "resnext",
+        fullname   : str          | None = "resnext50-32x4d",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -149,10 +151,12 @@ class ResNeXt50_32X4D(ResNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ResNeXt50_32X4D.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -514,6 +518,7 @@ class ResNeXt101_32X8D(ResNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -555,10 +560,11 @@ class ResNeXt101_32X8D(ResNet):
         self,
         cfg        : dict | Path_ | None = "resnext101-32x8d.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "resnext",
-        fullname   : str  | None         = "resnext101-32x8d",
-        channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        project    : str          | None = None,
+        name       : str          | None  = "resnext",
+        fullname   : str          | None  = "resnext101-32x8d",
+        channels   : int                  = 3,
+        num_classes: int          | None  = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -578,10 +584,12 @@ class ResNeXt101_32X8D(ResNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ResNeXt101_32X8D.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,
@@ -1249,6 +1257,7 @@ class ResNeXt101_64X4D(ResNet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -1290,10 +1299,11 @@ class ResNeXt101_64X4D(ResNet):
         self,
         cfg        : dict | Path_ | None = "resnext101-64x4d.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "resnext",
-        fullname   : str  | None         = "resnext101-64x4d",
+        project    : str          | None = None,
+        name       : str          | None = "resnext",
+        fullname   : str          | None = "resnext101-64x4d",
         channels   : int                 = 3,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -1313,10 +1323,12 @@ class ResNeXt101_64X4D(ResNet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = ResNeXt101_64X4D.init_pretrained(pretrained),
             phase       = phase,
             loss        = loss,

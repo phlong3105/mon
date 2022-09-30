@@ -19,7 +19,8 @@ model_name = "hinet-deblur"
 model_cfg  = "hinet"
 data_name  = "reds_blur"
 fullname   = f"{model_name}-{data_name}"
-root       = RUNS_DIR / "train" / fullname
+root       = RUNS_DIR / "train"
+project    = None
 shape      = [3, 256, 256]
 
 
@@ -69,6 +70,8 @@ model = {
         # manually in `self.parse_model()` method.
     "root": root,
         # The root directory of the model. Defaults to RUNS_DIR.
+    "project": project,
+		# Project name. Defaults to None.
     "name": model_name,
         # Model's name. In case None is given, it will be
         # `self.__class__.__name__`. Defaults to None.
@@ -142,6 +145,7 @@ model = {
     },
         # Debug configs. Defaults to None.
 	"verbose": True,
+		# Verbosity. Defaults to True.
 }
 
 
@@ -149,11 +153,9 @@ model = {
 
 callbacks = [
     default.model_checkpoint | {
-        "root": root,
-            # Root directory to save checkpoint files
-	    "monitor": "checkpoint/psnr/train_epoch",  # "loss_epoch",
-		    # Quantity to monitor. Defaults to None which saves a checkpoint only
-			# for the last epoch.
+	    "monitor": "checkpoint/psnr/train_epoch",
+		    # Quantity to monitor. Defaults to None which saves a checkpoint
+	        # only for the last epoch.
 		"mode": "max",
 			# One of {min, max}. If `save_top_k != 0`, the decision to
 	        # overwrite the current save file is made based on either the
@@ -167,10 +169,7 @@ callbacks = [
 ]
 
 logger = {
-	"tensorboard": default.tensorboard | {
-		"save_dir": root,
-			# Save directory.
-	},
+	"tensorboard": default.tensorboard,
 }
 
 trainer = default.trainer | {

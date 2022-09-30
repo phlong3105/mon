@@ -141,10 +141,10 @@ cfgs = {
             [3,             1,      CropTBLR,                    [6, -6, 6, -6]],                                       # 5
             [4,             1,      CropTBLR,                    [6, -6, 6, -6]],                                       # 6
             # Branch 2: Details
-            [0,             1,      VDSR,                        [3]],                                                  # 7
+            [4,             1,      VDSR,                        [3]],                                                  # 7
             [-1,            1,      CropTBLR,                    [6, -6, 6, -6]],                                       # 8
             # Branch 3: Structures
-            [0,             1,      SRCNN,                       [3, 9, 1, 0, 1, 1, 0, 5, 1, 0]],                       # 9
+            [4,             1,      SRCNN,                       [3, 9, 1, 0, 1, 1, 0, 5, 1, 0]],                       # 9
         ],                                                                      
         "head": [
             [[7, 4],        1,      Sum,                         []],                                                   # 10
@@ -221,6 +221,7 @@ class ZeroDCEV2(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -255,6 +256,7 @@ class ZeroDCEV2(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "zerodcev2-s1",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "zerodcev2",
         fullname   : str          | None = "zerodcev2-s1",
         channels   : int                 = 3,
@@ -276,10 +278,11 @@ class ZeroDCEV2(ImageEnhancementModel):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,

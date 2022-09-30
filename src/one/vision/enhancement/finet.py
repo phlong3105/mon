@@ -237,6 +237,7 @@ class FINet(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -269,6 +270,7 @@ class FINet(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "finet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet",
         channels   : int                 = 3,
@@ -292,6 +294,7 @@ class FINet(ImageEnhancementModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -320,6 +323,7 @@ class FINetDeblur(FINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -354,6 +358,7 @@ class FINetDeblur(FINet):
         self,
         cfg        : dict | Path_ | None = "finet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-deblur",
         channels   : int                 = 3,
@@ -375,10 +380,11 @@ class FINetDeblur(FINet):
             cfg = CFG_DIR / cfg
 
         super().__init__(
+            cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
-            cfg         = cfg,
             channels    = channels,
             num_classes = num_classes,
             classlabels = classlabels,
@@ -402,6 +408,7 @@ class FINetDehaze(FINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -436,6 +443,7 @@ class FINetDehaze(FINet):
         self,
         cfg        : dict | Path_ | None = "finet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-dehaze",
         channels   : int                 = 3,
@@ -459,6 +467,7 @@ class FINetDehaze(FINet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -484,6 +493,7 @@ class FINetDenoise(FINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -518,6 +528,7 @@ class FINetDenoise(FINet):
         self,
         cfg        : dict | Path_ | None = "finet-denoise.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-denoise",
         channels   : int                 = 3,
@@ -541,6 +552,7 @@ class FINetDenoise(FINet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -566,6 +578,7 @@ class FINetDenoise_x0_5(FINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -600,6 +613,7 @@ class FINetDenoise_x0_5(FINet):
         self,
         cfg        : dict | Path_ | None = "finet-x0.5.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-denoise-x0.5",
         channels   : int                 = 3,
@@ -623,6 +637,7 @@ class FINetDenoise_x0_5(FINet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
@@ -648,6 +663,7 @@ class FINetDerain(FINet):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -682,6 +698,7 @@ class FINetDerain(FINet):
         self,
         cfg        : dict | Path_ | None = "finet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "finet",
         fullname   : str          | None = "finet-derain",
         channels   : int                 = 3,
@@ -705,6 +722,7 @@ class FINetDerain(FINet):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,

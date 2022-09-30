@@ -7,7 +7,7 @@ Zero-DCE trained on LIME dataset.
 
 from __future__ import annotations
 
-from . import default
+from one.cfg import default
 from one.constants import RUNS_DIR
 from one.constants import VISION_BACKEND
 from one.vision.transformation import Resize
@@ -16,10 +16,11 @@ from one.vision.transformation import Resize
 # H1: - Basic ------------------------------------------------------------------
 
 model_name = "zerodcev2"
-model_cfg  = "zerodcev2-s3"
-data_name  = "lol226"
-fullname   = f"zerodcev2-s3-{data_name}"
-root       = RUNS_DIR / "train" / fullname
+model_cfg  = "zerodcev2-u4"
+data_name  = "lol"
+fullname   = f"zerodcev2-u4-{data_name}"
+root       = RUNS_DIR / "train"
+project    = "lol"
 shape      = [3, 512, 512]
 
 
@@ -67,6 +68,8 @@ model = {
         # Model's layers configuration. It can be an external .yaml path or a
         # dictionary. Defaults to None means you should define each layer
         # manually in `self.parse_model()` method.
+    "project": project,
+		# Project name. Defaults to None.
     "root": root,
         # The root directory of the model. Defaults to RUNS_DIR.
     "name": model_name,
@@ -89,7 +92,11 @@ model = {
         # Initialize weights from pretrained.
     "loss": None,
         # Loss function for training model. Defaults to None.
-    "metrics": None,
+    "metrics": {
+	    "train": [{"name": "psnr"}],
+		"val":   [{"name": "psnr"}],
+		"test":  [{"name": "psnr"}],
+    },
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [
         {
@@ -106,6 +113,7 @@ model = {
     "debug": default.debug,
         # Debug configs. Defaults to None.
 	"verbose": True,
+		# Verbosity. Defaults to True.
 }
 
 
@@ -113,11 +121,15 @@ model = {
 
 callbacks = [
     default.model_checkpoint | {
-        "root": root,
-            # Root directory to save checkpoint files
-	    "monitor": "checkpoint/loss/train_epoch",  # "loss_epoch",
-		    # Quantity to monitor. Defaults to None which saves a checkpoint only
-			# for the last epoch.
+	    "monitor": "checkpoint/loss/train_epoch",
+		    # Quantity to monitor. Defaults to None which saves a checkpoint
+	        # only for the last epoch.
+	    "mode": "min",
+			# One of {min, max}. If `save_top_k != 0`, the decision to
+	        # overwrite the current save file is made based on either the
+	        # maximization or the minimization of the monitored quantity.
+	        # For `val_acc`, this should be `max`, for `val_loss` this should
+	        # be `min`, etc.
 	},
 	default.learning_rate_monitor,
 	default.rich_model_summary,
@@ -125,10 +137,7 @@ callbacks = [
 ]
 
 logger = {
-	"tensorboard": default.tensorboard | {
-		"save_dir": root,
-			# Save directory.
-	},
+	"tensorboard": default.tensorboard,
 }
 
 trainer = default.trainer | {

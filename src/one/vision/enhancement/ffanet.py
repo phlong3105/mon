@@ -43,6 +43,7 @@ class FFANet(ImageEnhancementModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -75,6 +76,7 @@ class FFANet(ImageEnhancementModel):
         self,
         cfg        : dict | Path_ | None = "ffanet.yaml",
         root       : Path_               = RUNS_DIR,
+        project    : str          | None = None,
         name       : str          | None = "ffanet",
         fullname   : str          | None = "ffanet",
         channels   : int                 = 3,
@@ -98,6 +100,7 @@ class FFANet(ImageEnhancementModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,

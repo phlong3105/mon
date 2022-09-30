@@ -28,7 +28,7 @@ learning_rate_monitor = {
 model_checkpoint = {
 	"name": "model_checkpoint",
 	    # Name of the callback.
-    "root": RUNS_DIR,
+    "root": None,
         # Root directory to save checkpoint files
 	"filename": None,
         # Checkpoint filename. Can contain named formatting options to be
@@ -105,7 +105,7 @@ model_checkpoint = {
 		#   will result in extra folders. For example,
 	    #   `filename='epoch={epoch}-step={step}-val_acc={val/acc:.2f}', auto_insert_metric_name=False`
 	"verbose": True,
-		#   Verbosity mode. Defaults to False.
+		# Verbosity mode. Defaults to False.
 }
 
 

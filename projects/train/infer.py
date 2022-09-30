@@ -40,6 +40,7 @@ def infer(args: Munch | dict):
     console.rule("[bold red]2. Inferrer")
     inferrer = ImageInferrer(
         source     = args.source,
+        project    = args.project,
         root       = args.root,
         name       = args.name,
         batch_size = args.batch_size,
@@ -69,6 +70,7 @@ hosts = {
         "img_size"   : None,  # (3, 900, 1200),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
         "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
@@ -83,6 +85,7 @@ hosts = {
         "img_size"   : None,  # (3, 256, 256),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
         "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
@@ -97,34 +100,37 @@ hosts = {
         "img_size"   : (3, 256, 256),
 		"devices"    : "cpu",
         "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
         "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
 	},
     "vsw-ws02": {
         "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-u5",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-u5-lol226.pt",
+        "cfg"        : "zerodcev2-t1",
+        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-t1-lol226.pt",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
         "img_size"   : None,  # (3, 900, 1200),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
         "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
 	},
     "vsw-ws03": {
         "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-s8",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s8-lol226.pt",
+        "cfg"        : "zerodcev2-t1",
+        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-t1-lol226.pt",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "batch_size" : 1,
         "img_size"   : None,  # (3, 900, 1200),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
         "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
@@ -142,8 +148,9 @@ def parse_args():
     parser.add_argument("--batch-size",  type=int,                             help="Total Batch size for all GPUs.")
     parser.add_argument("--img-size",    type=int, nargs="+",                  help="Image sizes.")
     parser.add_argument("--devices",     type=str,                             help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
-    parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/name")
-    parser.add_argument("--name",        type=str,                             help="Save results to root/name")
+    parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/project/name")
+    parser.add_argument("--project",     type=str,                             help="Save results to root/project/name")
+    parser.add_argument("--name",        type=str,                             help="Save results to root/project/name")
     parser.add_argument("--save",        action="store_true",                  help="Save.")
     parser.add_argument("--verbose",     action="store_true",                  help="Display results.")
     args = parser.parse_args()
@@ -164,6 +171,7 @@ if __name__ == "__main__":
     shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None)
     devices     = input_args.get("devices",     None) or host_args.get("devices",     None)
     root        = input_args.get("root",        None) or host_args.get("root",        None)
+    project     = input_args.get("project",     None) or host_args.get("project",     None)
     name        = input_args.get("name",        None) or host_args.get("name",        None)
     save        = input_args.get("save",        None) or host_args.get("save",        None)
     verbose     = input_args.get("verbose",     None) or host_args.get("verbose",     None)
@@ -180,6 +188,7 @@ if __name__ == "__main__":
         devices     = devices,
         root        = root,
         name        = name,
+        project     = project,
         save        = save,
         verbose     = verbose,
     )

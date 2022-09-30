@@ -44,6 +44,7 @@ class LeNet(ImageClassificationModel):
             external .yaml path or a dictionary. Defaults to None means you
             should define each layer manually in `self.parse_model()` method.
         root (Path_): The root directory of the model. Defaults to RUNS_DIR.
+        project (str | None): Project name. Defaults to None.
         name (str | None): Model's name. In case None is given, it will be
             `self.__class__.__name__`. Defaults to None.
         fullname (str | None): Model's fullname in the following format:
@@ -76,10 +77,11 @@ class LeNet(ImageClassificationModel):
         self,
         cfg        : dict | Path_ | None = "lenet.yaml",
         root       : Path_               = RUNS_DIR,
-        name       : str  | None         = "lenet",
-        fullname   : str  | None         = "lenet",
+        project    : str          | None = None,
+        name       : str          | None = "lenet",
+        fullname   : str          | None = "lenet",
         channels   : int                 = 1,
-        num_classes: int  | None 		 = None,
+        num_classes: int          | None = None,
         classlabels: ClassLabels_ | None = None,
         pretrained : Pretrained			 = False,
         phase      : ModelPhase_         = "training",
@@ -99,10 +101,12 @@ class LeNet(ImageClassificationModel):
         super().__init__(
             cfg         = cfg,
             root        = root,
+            project     = project,
             name        = name,
             fullname    = fullname,
             channels    = channels,
             num_classes = num_classes,
+            classlabels = classlabels,
             pretrained  = pretrained,
             phase       = phase,
             loss        = loss,

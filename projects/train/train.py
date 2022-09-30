@@ -53,6 +53,7 @@ def train(args: Munch | dict):
     logger = []
     for k, v in args.logger.items():
         if k == "tensorboard":
+            v |= { "save_dir": model.root }
             logger.append(TensorBoardLogger(**v))
     
     args.trainer.callbacks            = callbacks
@@ -81,7 +82,8 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcev2_s5_lol226",
+		"cfg"        : "zerodcepp_retras_vnight",
+        "project"    : "",
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
@@ -90,7 +92,8 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "zerodcev2_u3_lol226",
+		"cfg"        : "zerodce_lol",
+        "project"    : "lol",
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
@@ -98,26 +101,9 @@ hosts = {
         "max_epochs" : 500,
 		"strategy"   : None,
 	},
-    "lp-imac.local": {
-		"cfg"        : "zerodce_lol226",
-        "weights"    : None,
-        "batch_size" : 8,
-        "accelerator": "cpu",
-		"devices"    : 1,
-        "max_epochs" : 200,
-		"strategy"   : None,
-	},
-    "lp-macbookpro.local": {
-		"cfg"        : "hinet_ihaze",
-        "weights"    : None,
-        "batch_size" : 8,
-        "accelerator": "cpu",
-		"devices"    : 1,
-        "max_epochs" : 200,
-		"strategy"   : None,
-	},
     "vsw-ws02": {
-		"cfg"        : "zerodcev2_s5_lol226",
+		"cfg"        : "zerodcepp_lol",
+        "project"    : "lol",
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
@@ -126,7 +112,8 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws03": {
-		"cfg"        : "zerodcev2_t1_lol226",
+		"cfg"        : "zerodcev2_s5_lol",
+        "project"    : "lol",
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
@@ -140,6 +127,7 @@ hosts = {
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg",         type=str,            help="The training cfg to use.")
+    parser.add_argument("--project",     type=str,            help="Save results to root/project/name")
     parser.add_argument("--weights",     type=str,            help="Weights path.")
     parser.add_argument("--batch-size",  type=int,            help="Total Batch size for all GPUs.")
     parser.add_argument("--img-size",    type=int, nargs="+", help="Image sizes.")
@@ -157,8 +145,13 @@ if __name__ == "__main__":
     
     input_args  = vars(parse_args())
     cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
-    
-    module      = importlib.import_module(f"one.cfg.{cfg}")
+
+    project = input_args.get("project", None) or host_args.get("project", None)
+    if project is not None or project != "":
+        module = importlib.import_module(f"one.cfg.{project}.{cfg}")
+    else:
+        module = importlib.import_module(f"one.cfg.{cfg}")
+    project     = input_args.get("project",     None) or host_args.get("project",     None) or module.model["project"]
     weights     = input_args.get("weights",     None) or host_args.get("weights",     None) or module.model["pretrained"]
     batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None) or module.data["batch_size"]
     shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None) or module.data["shape"]
@@ -175,6 +168,7 @@ if __name__ == "__main__":
             "batch_size": batch_size,
         },
         model     = module.model | {
+            "project"   : project,
             "pretrained": weights,
         },
         callbacks = module.callbacks,
