@@ -3367,9 +3367,9 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         """
         input, target, meta = zip(*batch)  # Transposed
 
-        if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
+        if all(i.ndim == 3 for i in input):
             input  = torch.stack(input,  0)
-        elif all(i.ndim == 4 for i in input) and all(t.ndim == 4 for t in target):
+        elif all(i.ndim == 4 for i in input):
             input  = torch.cat(input,  0)
         else:
             raise ValueError(
@@ -3515,9 +3515,9 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
         """
         input, target, meta = zip(*batch)  # Transposed
-        if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
+        if all(i.ndim == 3 for i in input):
             input  = torch.stack(input,  0)
-        elif all(i.ndim == 4 for i in input) and all(t.ndim == 4 for t in target):
+        elif all(i.ndim == 4 for i in input):
             input  = torch.cat(input,  0)
         else:
             raise ValueError(

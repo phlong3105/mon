@@ -17,10 +17,10 @@ from one.vision.transformation import Resize
 
 model_name = "zerodcev2"
 model_cfg  = "zerodcev2-s5"
-data_name  = "lol226"
+data_name  = "lol4k"
 fullname   = f"{model_cfg}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = "lol226"
+project    = "lol4k"
 shape      = [3, 512, 512]
 
 
@@ -92,7 +92,11 @@ model = {
         # Initialize weights from pretrained.
     "loss": None,
         # Loss function for training model. Defaults to None.
-    "metrics": None,
+    "metrics": {
+	    "train": None,
+		"val":   [{"name": "psnr"}, {"name": "ssim"}],
+		"test":  [{"name": "psnr"}, {"name": "ssim"}],
+    },
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [
         {
