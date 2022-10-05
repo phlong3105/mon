@@ -7,7 +7,7 @@ Zero-DCE trained on LIME dataset.
 
 from __future__ import annotations
 
-from . import default
+from one.cfg import default
 from one.constants import RUNS_DIR
 from one.constants import VISION_BACKEND
 from one.vision.transformation import Resize
@@ -15,12 +15,12 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "hinet-deblur"
+model_name = "hinet-derain"
 model_cfg  = "hinet"
-data_name  = "gopro"
+data_name  = "snow100k"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = None
+project    = "hinet"
 shape      = [3, 256, 256]
 
 
@@ -50,7 +50,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 4,
+    "batch_size": 32,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
@@ -153,7 +153,7 @@ model = {
 
 callbacks = [
     default.model_checkpoint | {
-	    "monitor": "checkpoint/psnr/train_epoch",
+	   "monitor": "checkpoint/psnr/train_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint
 	        # only for the last epoch.
 		"mode": "max",

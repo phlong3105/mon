@@ -7,7 +7,7 @@ Zero-DCE trained on LIME dataset.
 
 from __future__ import annotations
 
-from . import default
+from one.cfg import default
 from one.constants import RUNS_DIR
 from one.constants import VISION_BACKEND
 from one.vision.transformation import Resize
@@ -20,7 +20,7 @@ model_cfg  = "finet"
 data_name  = "nhhaze"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = None
+project    = "finet"
 shape      = [3, 256, 256]
 
 

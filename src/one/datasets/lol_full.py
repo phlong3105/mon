@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 
 import matplotlib.pyplot as plt
+from torch.utils.data import random_split
 
 from one.constants import *
 from one.core import *
@@ -17,14 +18,16 @@ from one.data import ClassLabels_
 from one.data import DataModule
 from one.data import Image
 from one.data import ImageEnhancementDataset
+from one.data import UnlabeledImageDataset
+from one.plot import imshow
 from one.plot import imshow_enhancement
 from one.vision.transformation import Resize
 
 
 # H1: - Module -----------------------------------------------------------------
 
-@DATASETS.register(name="lol")
-class LoL(ImageEnhancementDataset):
+@DATASETS.register(name="lol_full")
+class LoLFull(UnlabeledImageDataset):
     """
     LoL dataset consists of multiple datasets related to low-light image
     enhancement task.
@@ -55,7 +58,7 @@ class LoL(ImageEnhancementDataset):
     
     def __init__(
         self,
-        name            : str                 = "lol",
+        name            : str                 = "lol_full",
         root            : Path_               = DATA_DIR / "lol",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
@@ -97,39 +100,26 @@ class LoL(ImageEnhancementDataset):
             
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root
             for path in pbar.track(
-                list(pattern.rglob("low/*.*")),
+                list(pattern.rglob("*/*")),
                 description=f"Listing {self.__class__.classname} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                if is_image_file(path):
+                    self.images.append(Image(path=path, backend=self.backend))
     
-    def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.classname} "
-                            f"{self.split} labels"
-            ):
-                path = Path(str(img.path).replace("low", "high"))
-                self.labels.append(Image(path=path, backend=self.backend))
-                
-
-@DATAMODULES.register(name="lol")
-class LoLDataModule(DataModule):
+    
+@DATAMODULES.register(name="lol_full")
+class LoLFullDataModule(DataModule):
     """
     LoL DataModule.
     """
     
     def __init__(
         self,
-        name            : str                = "lol",
-        root            : Path_              = DATA_DIR / "lol",
+        name            : str                = "lol_full",
+        root            : Path_              = DATA_DIR / "lol_full",
         shape           : Ints               = (3, 512, 512),
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
@@ -184,12 +174,12 @@ class LoLDataModule(DataModule):
                 Set to None to setup all train, val, and test data.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{LoL.classname}[/red] datasets.")
+        console.log(f"Setup [red]{LoLFull.classname}[/red] datasets.")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = LoL(
+            full_dataset = LoLFull(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -199,22 +189,17 @@ class LoLDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.val = LoL(
-                root             = self.root,
-                split            = "val",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
+            train_size   = int(0.8 * len(full_dataset))
+            val_size     = len(full_dataset) - train_size
+            self.train, self.val = random_split(
+                full_dataset, [train_size, val_size]
             )
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(full_dataset, "classlabels", None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = LoL(
+            self.test = LoLFull(
                 root             = self.root,
                 split            = "test",
                 shape            = self.shape,
@@ -241,11 +226,11 @@ class LoLDataModule(DataModule):
 
 # H1: - Test -------------------------------------------------------------------
 
-def test_lol():
+def test_lol_full():
     cfg = {
-        "name": "lol",
+        "name": "lol_full",
             # Dataset's name.
-        "root": DATA_DIR / "lol",
+        "root": DATA_DIR / "lol_full",
             # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
@@ -278,17 +263,15 @@ def test_lol():
         "verbose": True,
             # Verbosity. Defaults to True.
     }
-    dm  = LoLDataModule(**cfg)
+    dm  = LoLFullDataModule(**cfg)
     dm.setup()
     # Visualize labels
     if dm.classlabels:
         dm.classlabels.print()
     # Visualize one sample
-    data_iter           = iter(dm.train_dataloader)
-    input, target, meta = next(data_iter)
-    result              = {"image" : input, "target": target}
-    label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
+    data_iter      = iter(dm.test_dataloader)
+    input, _, meta = next(data_iter)
+    imshow(winname="image", image=input)
     plt.show(block=True)
 
 
@@ -296,12 +279,12 @@ def test_lol():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str , default="test_lol", help="The task to run")
+    parser.add_argument("--task", type=str , default="test_lol_full", help="The task to run")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.task == "test_lol":
-        test_lol()
+    if args.task == "test_lol_full":
+        test_lol_full()

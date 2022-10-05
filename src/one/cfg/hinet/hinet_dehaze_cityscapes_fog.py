@@ -7,7 +7,7 @@ Zero-DCE trained on LIME dataset.
 
 from __future__ import annotations
 
-from . import default
+from one.cfg import default
 from one.constants import RUNS_DIR
 from one.constants import VISION_BACKEND
 from one.vision.transformation import Resize
@@ -15,12 +15,12 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "finet-dehaze"
-model_cfg  = "finet.yaml"
-data_name  = "densehaze"
+model_name = "hinet-dehaze"
+model_cfg  = "hinet.yaml"
+data_name  = "cityscapes_fog"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = None
+project    = "hinet"
 shape      = [3, 256, 256]
 
 
