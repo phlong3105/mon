@@ -7,7 +7,7 @@ Zero-DCE trained on LIME dataset.
 
 from __future__ import annotations
 
-from . import default
+from one.cfg import default
 from one.constants import RUNS_DIR
 from one.constants import VISION_BACKEND
 from one.vision.transformation import Resize
@@ -15,12 +15,12 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "zerodce++"
-model_cfg  = "zerodce++.yaml"
-data_name  = "retras_vnight"
-fullname   = f"{model_name}-{data_name}"
+model_name = "zerodcev2"
+model_cfg  = "zerodcev2-t1"
+data_name  = "lol226"
+fullname   = f"{model_cfg}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = None
+project    = "lol226"
 shape      = [3, 512, 512]
 
 
@@ -88,7 +88,7 @@ model = {
         # Defaults to None.
     "phase": "training",
         # Model's running phase. Defaults to training.
-    "pretrained": "sice",
+    "pretrained": None,
         # Initialize weights from pretrained.
     "loss": None,
         # Loss function for training model. Defaults to None.

@@ -15,13 +15,13 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "zerodce"
-model_cfg  = "zerodce"
-data_name  = "lol_demo"
-fullname   = f"{model_name}-{data_name}"
+model_name = "zerodcev2"
+model_cfg  = "zerodcev2-s4"
+data_name  = "lol226"
+fullname   = f"{model_cfg}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = "lol_demo"
-shape      = [3, 256, 256]
+project    = "lol226"
+shape      = [3, 512, 512]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -29,8 +29,6 @@ shape      = [3, 256, 256]
 data = {
     "name": data_name,
         # Dataset's name.
-    "filename": "aokigahara.mp4",
-            # Video file name.
     "shape": shape,
         # Image shape as [C, H, W], [H, W], or [S, S].
     "transform": None,
@@ -56,7 +54,7 @@ data = {
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
-    "shuffle": False,
+    "shuffle": True,
         # If True, reshuffle the data at every training epoch. Defaults to True.
     "verbose": True,
         # Verbosity. Defaults to True.

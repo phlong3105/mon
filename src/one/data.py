@@ -2136,14 +2136,21 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         Args:
             batch: a list of tuples of (input, meta).
         """
-        input, _, meta = zip(*batch)  # Transposed
+        input, target, meta = zip(*batch)  # Transposed
         if all(i.ndim == 3 for i in input):
             input = torch.stack(input, 0)
         elif all(i.ndim == 4 for i in input):
             input = torch.cat(input, 0)
         else:
             raise ValueError(f"Expect 3 <= `input.ndim` <= 4.")
-        return input, None, meta
+
+        if all(is_tensor(t) and t.ndim == 3 for t in target):
+            target = torch.stack(target, 0)
+        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+            target = torch.cat(target, 0)
+        else:
+            target = None
+        return input, target, meta
 
 
 class UnlabeledVideoDataset(UnlabeledDataset, metaclass=ABCMeta):
@@ -2337,14 +2344,21 @@ class UnlabeledVideoDataset(UnlabeledDataset, metaclass=ABCMeta):
         Args:
             batch: a list of tuples of (input, meta).
         """
-        input, _, meta = zip(*batch)  # Transposed
+        input, target, meta = zip(*batch)  # Transposed
         if all(i.ndim == 3 for i in input):
             input = torch.stack(input, 0)
         elif all(i.ndim == 4 for i in input):
             input = torch.cat(input, 0)
         else:
             raise ValueError(f"Expect 3 <= `input.ndim` <= 4.")
-        return input, None, meta
+        
+        if all(is_tensor(t) and t.ndim == 3 for t in target):
+            target = torch.stack(target, 0)
+        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+            target = torch.cat(target, 0)
+        else:
+            target = None
+        return input, target, meta
 
 
 class ImageDirectoryDataset(UnlabeledImageDataset):
@@ -2715,7 +2729,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
         console.log(f"Images have been cached.")
 
     @staticmethod
-    def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
+    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list]:
         """
         Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
@@ -2732,7 +2746,11 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             raise ValueError(
                 f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
-        target = torch.cat(target, 0)
+        
+        if all(is_tensor(t) for t in input):
+            target = torch.cat(target, 0)
+        else:
+            target = None
         return input, target, meta
     
 
@@ -3342,7 +3360,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         self.labels = [lab for i, lab in enumerate(self.labels) if i in keep]
         
     @staticmethod
-    def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
+    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list]:
         """
         Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
@@ -3351,14 +3369,19 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
 
         if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
             input  = torch.stack(input,  0)
-            target = torch.stack(target, 0)
         elif all(i.ndim == 4 for i in input) and all(t.ndim == 4 for t in target):
             input  = torch.cat(input,  0)
-            target = torch.cat(target, 0)
         else:
             raise ValueError(
                 f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
+        
+        if all(is_tensor(t) and t.ndim == 3 for t in target):
+            target = torch.stack(target, 0)
+        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+            target = torch.cat(target, 0)
+        else:
+            target = None
         return input, target, meta
     
 
@@ -3486,7 +3509,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         self.labels = [lab for i, lab in enumerate(self.labels) if i in keep]
         
     @staticmethod
-    def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
+    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list]:
         """
         Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
@@ -3494,14 +3517,19 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         input, target, meta = zip(*batch)  # Transposed
         if all(i.ndim == 3 for i in input) and all(t.ndim == 3 for t in target):
             input  = torch.stack(input,  0)
-            target = torch.stack(target, 0)
         elif all(i.ndim == 4 for i in input) and all(t.ndim == 4 for t in target):
             input  = torch.cat(input,  0)
-            target = torch.cat(target, 0)
         else:
             raise ValueError(
                 f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
+        
+        if all(is_tensor(t) and t.ndim == 3 for t in target):
+            target = torch.stack(target, 0)
+        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+            target = torch.cat(target, 0)
+        else:
+            target = None
         return input, target, meta
 
 

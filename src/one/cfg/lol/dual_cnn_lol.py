@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-5
+# -*- coding: utf-8 -*-
 
 """
 Zero-DCE trained on LIME dataset.
@@ -15,10 +15,10 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "zerodcev2"
-model_cfg  = "zerodcev2-s2"
-data_name  = "lol_demo"
-fullname   = f"zerodcev2-s2-{data_name}"
+model_name = "dual-cnn"
+model_cfg  = "dual-cnn"
+data_name  = "lol"
+fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / "train"
 project    = None
 shape      = [3, 256, 256]
@@ -29,8 +29,6 @@ shape      = [3, 256, 256]
 data = {
     "name": data_name,
         # Dataset's name.
-    "filename": "aokigahara.mp4",
-            # Video file name.
     "shape": shape,
         # Image shape as [C, H, W], [H, W], or [S, S].
     "transform": None,
@@ -56,7 +54,7 @@ data = {
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
-    "shuffle": False,
+    "shuffle": True,
         # If True, reshuffle the data at every training epoch. Defaults to True.
     "verbose": True,
         # Verbosity. Defaults to True.
@@ -92,7 +90,7 @@ model = {
         # Model's running phase. Defaults to training.
     "pretrained": None,
         # Initialize weights from pretrained.
-    "loss": None,
+    "loss": {"name": "mse_loss", "size_average": False},
         # Loss function for training model. Defaults to None.
     "metrics": None,
         # Metric(s) for validating and testing model. Defaults to None.

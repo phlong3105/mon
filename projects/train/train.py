@@ -92,8 +92,8 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "zerodcev2_s1_lol",
-        "project"    : "lol",
+		"cfg"        : "zerodcev2_s1_lol4k",
+        "project"    : "lol4k",
         "weights"    : None,
         "batch_size" : 4,
         "accelerator": "auto",
@@ -103,7 +103,7 @@ hosts = {
 	},
     "vsw-ws02": {
 		"cfg"        : "hinet_derain_cityscapes_rain",
-        "project"    : None,
+        "project"    : "hinet",
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
@@ -112,10 +112,10 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws03": {
-		"cfg"        : "zerodcev2_s5_lol",
-        "project"    : "lol",
+		"cfg"        : "zerodcev2_s5_lol4k",
+        "project"    : "lol4k",
         "weights"    : None,
-        "batch_size" : 8,
+        "batch_size" : 16,
         "accelerator": "auto",
 		"devices"    : 1,
         "max_epochs" : 500,
