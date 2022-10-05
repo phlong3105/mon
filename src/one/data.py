@@ -2146,7 +2146,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
 
         if all(is_tensor(t) and t.ndim == 3 for t in target):
             target = torch.stack(target, 0)
-        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+        elif all(is_tensor(t) and t.ndim == 4 for t in target):
             target = torch.cat(target, 0)
         else:
             target = None
@@ -2354,7 +2354,7 @@ class UnlabeledVideoDataset(UnlabeledDataset, metaclass=ABCMeta):
         
         if all(is_tensor(t) and t.ndim == 3 for t in target):
             target = torch.stack(target, 0)
-        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+        elif all(is_tensor(t) and t.ndim == 4 for t in target):
             target = torch.cat(target, 0)
         else:
             target = None
@@ -2747,7 +2747,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
                 f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
         
-        if all(is_tensor(t) for t in input):
+        if all(is_tensor(t) for t in target):
             target = torch.cat(target, 0)
         else:
             target = None
@@ -3378,7 +3378,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         
         if all(is_tensor(t) and t.ndim == 3 for t in target):
             target = torch.stack(target, 0)
-        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+        elif all(is_tensor(t) and t.ndim == 4 for t in target):
             target = torch.cat(target, 0)
         else:
             target = None
@@ -3526,7 +3526,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
         
         if all(is_tensor(t) and t.ndim == 3 for t in target):
             target = torch.stack(target, 0)
-        elif all(is_tensor(t) and t.ndim == 4 for t in input):
+        elif all(is_tensor(t) and t.ndim == 4 for t in target):
             target = torch.cat(target, 0)
         else:
             target = None
