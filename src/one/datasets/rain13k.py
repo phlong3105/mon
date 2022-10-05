@@ -31,6 +31,7 @@ class Rain100(ImageEnhancementDataset):
     pairs of rain/no-rain train-val images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -55,7 +56,8 @@ class Rain100(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain100",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain100",
         split           : str                 = "test",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -69,6 +71,7 @@ class Rain100(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -125,6 +128,7 @@ class Rain100H(ImageEnhancementDataset):
     pairs of rain/no-rain train-val images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -149,7 +153,8 @@ class Rain100H(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain100h",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain100h",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -163,6 +168,7 @@ class Rain100H(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -219,6 +225,7 @@ class Rain100L(ImageEnhancementDataset):
     pairs of rain/no-rain train-val images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -243,7 +250,8 @@ class Rain100L(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain100l",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain100l",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -257,6 +265,7 @@ class Rain100L(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -312,6 +321,7 @@ class Rain12(ImageEnhancementDataset):
     Rain12 dataset consists 12 pairs of rain/no-rain images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -336,7 +346,8 @@ class Rain12(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain12",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain12",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -350,6 +361,7 @@ class Rain12(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -406,6 +418,7 @@ class Rain1200(ImageEnhancementDataset):
     pairs of rain/no-rain train images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -430,7 +443,8 @@ class Rain1200(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain1200",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain1200",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -444,6 +458,7 @@ class Rain1200(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -499,6 +514,7 @@ class Rain13K(ImageEnhancementDataset):
     Rain13K dataset consists 13k pairs of rain/no-rain train images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -523,7 +539,8 @@ class Rain13K(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain13k",
+        root            : Path_               = DATA_DIR / "rain13k",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -537,6 +554,7 @@ class Rain13K(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -596,6 +614,7 @@ class Rain1400(ImageEnhancementDataset):
     pairs of rain/no-rain train images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -620,7 +639,8 @@ class Rain1400(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain1400",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain1400",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -634,6 +654,7 @@ class Rain1400(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -689,6 +710,7 @@ class Rain2800(ImageEnhancementDataset):
     Rain2800 dataset consists 2800 pairs of rain/no-rain test images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -713,7 +735,8 @@ class Rain2800(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain2800",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain2800",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -727,6 +750,7 @@ class Rain2800(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -782,6 +806,7 @@ class Rain800(ImageEnhancementDataset):
     Rain800 dataset consists 800 pairs of rain/no-rain train-val images.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -806,7 +831,8 @@ class Rain800(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "rain800",
+        root            : Path_               = DATA_DIR / "rain13k" / "rain800",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -820,6 +846,7 @@ class Rain800(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -877,11 +904,33 @@ class Rain100DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain100",
-        name: str   = "rain100",
+        name            : str                = "rain100",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain100",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -961,98 +1010,6 @@ class Rain100DataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="rain100l")
-class Rain100LDataModule(DataModule):
-    """
-    Rain100L DataModule.
-    """
-    
-    def __init__(
-        self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain100l",
-        name: str   = "rain100l",
-        *args, **kwargs
-    ):
-        super().__init__(root=root, name=name, *args, **kwargs)
-        
-    def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.load_classlabels()
-    
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
-
-        Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
-                Defaults to None.
-        """
-        console.log(f"Setup [red]{Rain100L.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-
-        # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = Rain100L(
-                root             = self.root,
-                split            = "train",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
-            )
-            train_size   = int(0.8 * len(full_dataset))
-            val_size     = len(full_dataset) - train_size
-            self.train, self.val = random_split(
-                full_dataset, [train_size, val_size]
-            )
-            self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
-            
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain100L(
-                root             = self.root,
-                split            = "test",
-                shape            = self.shape,
-                transform        = self.transform,
-                target_transform = self.target_transform,
-                transforms       = self.transforms,
-                verbose          = self.verbose,
-                **self.dataset_kwargs
-            )
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
-        
-        if self.classlabels is None:
-            self.load_classlabels()
-
-        self.summarize()
-        
-    def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        pass
-
-
 @DATAMODULES.register(name="rain100h")
 class Rain100HDataModule(DataModule):
     """
@@ -1061,11 +1018,33 @@ class Rain100HDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain100h",
-        name: str   = "rain100h",
+        name            : str                = "rain100h",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain100h",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1145,6 +1124,120 @@ class Rain100HDataModule(DataModule):
         pass
 
 
+@DATAMODULES.register(name="rain100l")
+class Rain100LDataModule(DataModule):
+    """
+    Rain100L DataModule.
+    """
+    
+    def __init__(
+        self,
+        name            : str                = "rain100l",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain100l",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
+    def prepare_data(self, *args, **kwargs):
+        """
+        Use this method to do things that might write to disk or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.load_classlabels()
+    
+    def setup(self, phase: ModelPhase_ | None = None):
+        """
+        There are also data operations you might want to perform on every GPU.
+
+        Todos:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Perform train/val/test splits.
+            - Apply transforms (defined explicitly in your datamodule or
+              assigned in init).
+            - Define collate_fn for you custom dataset.
+
+        Args:
+            phase (ModelPhase_ | None):
+                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
+                Set to None to setup all train, val, and test data.
+                Defaults to None.
+        """
+        console.log(f"Setup [red]{Rain100L.classname}[/red] datasets.")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        # Assign train/val datasets for use in dataloaders
+        if phase in [None, ModelPhase.TRAINING]:
+            full_dataset = Rain100L(
+                root             = self.root,
+                split            = "train",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
+            )
+            train_size   = int(0.8 * len(full_dataset))
+            val_size     = len(full_dataset) - train_size
+            self.train, self.val = random_split(
+                full_dataset, [train_size, val_size]
+            )
+            self.classlabels = getattr(full_dataset, "classlabels", None)
+            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
+            
+        # Assign test datasets for use in dataloader(s)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = Rain100L(
+                root             = self.root,
+                split            = "test",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
+            )
+            self.classlabels = getattr(self.test, "classlabels", None)
+            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+        
+        if self.classlabels is None:
+            self.load_classlabels()
+
+        self.summarize()
+        
+    def load_classlabels(self):
+        """
+        Load ClassLabels.
+        """
+        pass
+
+
 @DATAMODULES.register(name="rain12")
 class Rain12DataModule(DataModule):
     """
@@ -1153,11 +1246,33 @@ class Rain12DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain12",
-        name: str   = "rain12",
+        name            : str                = "rain12",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain12",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1245,11 +1360,33 @@ class Rain1200DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain1200",
-        name: str   = "rain1200",
+        name            : str                = "rain1200",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain1200",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1342,11 +1479,33 @@ class Rain13KDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k",
-        name: str   = "rain13k",
+        name            : str                = "rain13k",
+        root            : Path_              = DATA_DIR / "rain13k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1439,11 +1598,33 @@ class Rain1400DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain1400",
-        name: str   = "rain1400",
+        name            : str                = "rain1400",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain1400",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1531,11 +1712,33 @@ class Rain2800DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain2800",
-        name: str   = "rain2800",
+        name            : str                = "rain2800",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain2800",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1623,11 +1826,33 @@ class Rain800DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "rain13k" / "rain800",
-        name: str   = "rain800",
+        name            : str                = "rain800",
+        root            : Path_              = DATA_DIR / "rain13k" / "rain800",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1716,10 +1941,10 @@ class Rain800DataModule(DataModule):
 
 def test_rain100():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain100",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1767,10 +1992,10 @@ def test_rain100():
 
 def test_rain100h():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain100h",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1818,10 +2043,10 @@ def test_rain100h():
 
 def test_rain100l():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain100l",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1869,10 +2094,10 @@ def test_rain100l():
 
 def test_rain12():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain12",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1920,10 +2145,10 @@ def test_rain12():
 
 def test_rain1200():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain1200",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1971,10 +2196,10 @@ def test_rain1200():
 
 def test_rain13k():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain13k",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -2022,10 +2247,10 @@ def test_rain13k():
 
 def test_rain1400():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain1400",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -2073,10 +2298,10 @@ def test_rain1400():
 
 def test_rain2800():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain2800",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -2124,10 +2349,10 @@ def test_rain2800():
 
 def test_rain800():
     cfg = {
-        "root": DATA_DIR / "rain13k",
-           # Root directory of dataset.
         "name": "rain800",
             # Dataset's name.
+        "root": DATA_DIR / "rain13k",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

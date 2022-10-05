@@ -1564,6 +1564,7 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
     `__getitem__` and `__len__` method.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -1579,6 +1580,7 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -1588,6 +1590,7 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
         verbose         : bool               = True,
         *args, **kwargs
     ):
+        self.name    = name
         self.root    = Path(root)
         self.split   = split
         self.shape   = shape
@@ -1619,6 +1622,26 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             transforms = StandardTransform(transform, target_transform)
         self.transforms = transforms
         """
+    
+    def __iter__(self):
+        """
+        The __iter__ function returns an iterator object starting at index 0.
+        
+        Returns:
+            The iterator object itself.
+        """
+        self.reset()
+        return self
+
+    @abstractmethod
+    def __len__(self) -> int:
+        """
+        Returns the length of the dataset.
+        
+        Returns:
+            Length of the dataset.
+        """
+        pass
         
     @abstractmethod
     def __getitem__(self, index: int) -> Any:
@@ -1633,16 +1656,6 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
             Any.
         """
         pass
-
-    @abstractmethod
-    def __len__(self) -> int:
-        """
-        Returns the length of the dataset.
-        
-        Returns:
-            Length of the dataset.
-        """
-        pass
     
     def __repr__(self) -> str:
         head = "Dataset " + self.__class__.__name__
@@ -1655,6 +1668,12 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
         lines = [head] + [" " * self._repr_indent + line for line in body]
         return "\n".join(lines)
     
+    def __del__(self):
+        """
+        Close.
+        """
+        self.close()
+        
     def _format_transform_repr(self, transform: Callable, head: str) -> list[str]:
         lines = transform.__repr__().splitlines()
         return [f"{head}{lines[0]}"] + ["{}{}".format(" " * len(head), line) for line in lines[1:]]
@@ -1676,14 +1695,28 @@ class Dataset(data.Dataset, metaclass=ABCMeta):
         """
         return cls.__name__
     
+    @abstractmethod
+    def reset(self):
+        """
+        Reset and start over.
+        """
+        pass
+    
+    @abstractmethod
+    def close(self):
+        """
+        Stop and release.
+        """
+        pass
+    
 
 class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
     """
     Base class for all datamodules.
     
     Args:
+        name (str): Datamodule's name.
         root (Path_): Root directory of dataset.
-        name (str): Dataset's name.
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
         transform (Transforms_ | None): Functions/transforms that takes in an
             input sample and returns a transformed version.
@@ -1704,22 +1737,22 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
     
     def __init__(
         self,
-        root            : Path_,
         name            : str,
-        shape           : Ints,
+        root            : Path_,
+        shape           : Ints               = (3, 512, 512),
         transform       : Transforms_ | None = None,
         target_transform: Transforms_ | None = None,
         transforms      : Transforms_ | None = None,
         batch_size      : int                = 1,
         devices         : Devices            = 0,
         shuffle         : bool               = True,
-        collate_fn      : Callable | None    = None,
+        collate_fn      : Callable    | None = None,
         verbose         : bool               = True,
         *args, **kwargs
     ):
         super().__init__()
-        self.root             = Path(root)
         self.name             = name
+        self.root             = Path(root)
         self.shape            = shape
         self.transform        = transform
         self.target_transform = target_transform
@@ -1915,9 +1948,9 @@ class DataModule(pl.LightningDataModule, metaclass=ABCMeta):
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Desc")
         
-        table.add_row("1", "train",       f"{len(self.train)              if self.train is not None else None}")
-        table.add_row("2", "val",         f"{len(self.val)                if self.val   is not None else None}")
-        table.add_row("3", "test",        f"{len(self.test)               if self.test  is not None else None}")
+        table.add_row("1", "train",       f"{len(self.train)              if self.train       is not None else None}")
+        table.add_row("2", "val",         f"{len(self.val)                if self.val         is not None else None}")
+        table.add_row("3", "test",        f"{len(self.test)               if self.test        is not None else None}")
         table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "shape",       f"{self.shape}")
@@ -1941,6 +1974,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
     This is mainly used for unsupervised learning tasks.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -1963,6 +1997,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name        : str,
         root        : Path_,
         split       : str,
         shape       : Ints,
@@ -1975,6 +2010,7 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(
+            name       = name,
             root       = root,
             split      = split,
             shape      = shape,
@@ -2000,8 +2036,20 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
             self.cache_data(path=cache_file)
         if cache_images:
             self.cache_images()
+    
+    def __len__(self) -> int:
+        """
+        This function returns the length of the images list.
         
-    def __getitem__(self, index: int) -> tuple[Tensor, Tensor | None, dict]:
+        Returns:
+            The length of the images list.
+        """
+        return len(self.images)
+    
+    def __getitem__(
+        self,
+        index: int
+    ) -> tuple[Tensor, Tensor | None, dict | None]:
         """
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
@@ -2022,15 +2070,6 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
         if self.transforms is not None:
             input, *_ = self.transforms(input=input, target=None, dataset=self)
         return input, None, meta
-        
-    def __len__(self) -> int:
-        """
-        This function returns the length of the images list.
-        
-        Returns:
-            The length of the images list.
-        """
-        return len(self.images)
         
     @abstractmethod
     def list_images(self):
@@ -2075,9 +2114,21 @@ class UnlabeledImageDataset(UnlabeledDataset, metaclass=ABCMeta):
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
-        
+    
+    def reset(self):
+        """
+        Reset and start over.
+        """
+        pass
+    
+    def close(self):
+        """
+        Stop and release.
+        """
+        pass
+    
     @staticmethod
-    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list]:
+    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list | None]:
         """
         Collate function used to fused input items together when using
         `batch_size > 1`. This is used in the `DataLoader` wrapper.
@@ -2099,8 +2150,201 @@ class UnlabeledVideoDataset(UnlabeledDataset, metaclass=ABCMeta):
     """
     Base class for datasets that represent an unlabeled collection of video.
     This is mainly used for unsupervised learning tasks.
+    
+    Args:
+        name (str): Dataset name.
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
+        num_images (int | None): Only process certain amount of samples.
+            Defaults to None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        api_preference (int): Preferred Capture API backends to use. Can be
+            used to enforce a specific reader implementation. Two most used
+            options are: [cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900].
+            See more: https://docs.opencv.org/4.5.5/d4/d15
+            /group__videoio__flags__base.html
+            #ggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
+            Defaults to cv2.CAP_FFMPEG.
+        verbose (bool): Verbosity. Defaults to True.
     """
-    pass
+    
+    def __init__(
+        self,
+        name          : str,
+        root          : Path_,
+        split         : str,
+        shape         : Ints,
+        max_samples   : int         | None = None,
+        transform     : Transforms_ | None = None,
+        transforms    : Transforms_ | None = None,
+        api_preference: int                = cv2.CAP_FFMPEG,
+        verbose       : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name       = name,
+            root       = root,
+            split      = split,
+            shape      = shape,
+            transform  = transform,
+            transforms = transforms,
+            verbose    = verbose,
+            *args, **kwargs
+        )
+        self.api_preference = api_preference
+        
+        self.source: Path_ = ""
+        self.video_capture = None
+        self.index         = 0
+        self.max_samples   = max_samples
+        self.num_images    = 0
+
+        self.list_source()
+        self.init_video_capture()
+        self.filter()
+        self.verify()
+    
+    def __iter__(self):
+        """
+        The __iter__ function returns an iterator object starting at index 0.
+        
+        Returns:
+            The iterator object itself.
+        """
+        self.reset()
+        return self
+    
+    def __len__(self) -> int:
+        """
+        This function returns the length of the images list.
+        
+        Returns:
+            The length of the images list.
+        """
+        return self.num_images
+    
+    def __getitem__(
+        self,
+        index: int
+    ) -> tuple[Tensor, Tensor | None, dict | None]:
+        """
+        Returns the sample and metadata, optionally transformed by the
+        respective transforms.
+
+        Args:
+            index (int): The index of the sample to be retrieved.
+
+        Returns:
+            Sample of shape [1, C, H, W], optionally transformed by the
+                respective transforms.
+            Metadata of image.
+        """
+        from one.vision.acquisition import to_tensor
+
+        if index >= self.num_images:
+            self.close()
+            raise StopIteration
+        else:
+            if isinstance(self.video_capture, cv2.VideoCapture):
+                ret_val, image = self.video_capture.read()
+                rel_path       = self.source.name
+            else:
+                raise RuntimeError(
+                    f"`video_capture` has not been initialized."
+                )
+
+            image = image[:, :, ::-1]  # BGR to RGB
+            image = to_tensor(image=image, keepdim=False, normalize=True)
+            input = image
+            meta  = {"rel_path": rel_path}
+
+            if self.transform is not None:
+                input, *_ = self.transform(input=input,  target=None, dataset=self)
+            if self.transforms is not None:
+                input, *_ = self.transforms(input=input, target=None, dataset=self)
+            return input, None, meta
+    
+    @property
+    def num_images(self) -> int:
+        return self._num_images
+    
+    @num_images.setter
+    def num_images(self, num_images: int | None):
+        self._num_images = num_images or 0
+        
+    @abstractmethod
+    def list_source(self):
+        """
+        List video file.
+        """
+        pass
+    
+    def init_video_capture(self):
+        source = str(self.source)
+        if is_video_file(source):
+            self.video_capture = cv2.VideoCapture(source, self.api_preference)
+            num_images         = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        else:
+            raise IOError("Error when reading input stream or video file!")
+
+        if self.num_images == 0:
+            self.num_images = num_images
+        if self.max_samples is not None and self.num_images > self.max_samples:
+            self.num_images = self.max_samples
+    
+    def filter(self):
+        """
+        Filter unwanted samples.
+        """
+        pass
+    
+    def verify(self):
+        """
+        Verify and checking.
+        """
+        if not self.num_images > 0:
+            raise RuntimeError(f"No images in dataset.")
+        console.log(f"Number of samples: {self.num_images}.")
+
+    def reset(self):
+        """
+        Reset and start over.
+        """
+        if isinstance(self.video_capture, cv2.VideoCapture):
+            self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    
+    def close(self):
+        """
+        Stop and release the current `video_capture` object.
+        """
+        if isinstance(self.video_capture, cv2.VideoCapture) \
+            and self.video_capture:
+            self.video_capture.release()
+            
+    @staticmethod
+    def collate_fn(batch) -> tuple[Tensor, Tensor | None, list | None]:
+        """
+        Collate function used to fused input items together when using
+        `batch_size > 1`. This is used in the `DataLoader` wrapper.
+        
+        Args:
+            batch: a list of tuples of (input, meta).
+        """
+        input, _, meta = zip(*batch)  # Transposed
+        if all(i.ndim == 3 for i in input):
+            input = torch.stack(input, 0)
+        elif all(i.ndim == 4 for i in input):
+            input = torch.cat(input, 0)
+        else:
+            raise ValueError(f"Expect 3 <= `input.ndim` <= 4.")
+        return input, None, meta
 
 
 class ImageDirectoryDataset(UnlabeledImageDataset):
@@ -2108,6 +2352,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
     A directory of images starting from `root` directory.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2130,6 +2375,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
     
     def __init__(
         self,
+        name        : str,
         root        : Path_,
         split       : str,
         shape       : Ints,
@@ -2142,6 +2388,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name         = name,
             root         = root,
             split        = split,
             shape        = shape,
@@ -2192,6 +2439,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
     Base class for datasets that represent an unlabeled collection of images.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2216,6 +2464,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2230,6 +2479,7 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -2261,8 +2511,17 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         if cache_images:
             self.cache_images()
     
+    def __len__(self) -> int:
+        """
+        This function returns the length of the images list.
+        
+        Returns:
+            The length of the images list.
+        """
+        return len(self.images)
+    
     @abstractmethod
-    def __getitem__(self, index: int) -> tuple[Tensor, Any, Image]:
+    def __getitem__(self, index: int) -> tuple[Tensor, Any, dict | None]:
         """
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
@@ -2277,15 +2536,6 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
             Metadata of image.
         """
         pass
-    
-    def __len__(self) -> int:
-        """
-        This function returns the length of the images list.
-        
-        Returns:
-            The length of the images list.
-        """
-        return len(self.images)
     
     @abstractmethod
     def list_images(self):
@@ -2340,7 +2590,19 @@ class LabeledImageDataset(LabeledDataset, metaclass=ABCMeta):
         datasets may exceed system RAM).
         """
         pass
-
+    
+    def reset(self):
+        """
+        Reset and start over.
+        """
+        pass
+    
+    def close(self):
+        """
+        Stop and release.
+        """
+        pass
+    
 
 class LabeledVideoDataset(LabeledDataset, metaclass=ABCMeta):
     """
@@ -2357,6 +2619,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
     labels stored in a simple JSON format.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2381,6 +2644,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2396,6 +2660,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
     ):
         self.labels: list[Classifications] = []
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -2410,7 +2675,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             *args, **kwargs
         )
     
-    def __getitem__(self, index: int) -> tuple[Tensor, int, dict]:
+    def __getitem__(self, index: int) -> tuple[Tensor, int, dict | None]:
         """
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
@@ -2448,7 +2713,7 @@ class ImageClassificationDataset(LabeledImageDataset, metaclass=ABCMeta):
             ):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
-    
+
     @staticmethod
     def collate_fn(batch) -> tuple[Tensor, Tensor, list]:
         """
@@ -2511,6 +2776,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
     of associated detections.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2535,6 +2801,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2550,6 +2817,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
     ):
         self.labels: list[Detections] = []
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -2564,7 +2832,7 @@ class ImageDetectionDataset(LabeledImageDataset, metaclass=ABCMeta):
             *args, **kwargs
         )
 
-    def __getitem__(self, index: int) -> tuple[Tensor, Tensor, dict]:
+    def __getitem__(self, index: int) -> tuple[Tensor, Tensor, dict | None]:
         """
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
@@ -2647,6 +2915,7 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     <https://cocodataset.org/#format-data>`.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2671,6 +2940,7 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2685,6 +2955,7 @@ class COCODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -2760,6 +3031,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     <https://host.robots.ox.ac.uk/pascal/VOC>`.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2784,6 +3056,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2798,6 +3071,7 @@ class VOCDetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -2856,6 +3130,7 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     detections saved in `YOLO format`.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2880,6 +3155,7 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2894,6 +3170,7 @@ class YOLODetectionDataset(ImageDetectionDataset, metaclass=ABCMeta):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -2949,6 +3226,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
     of associated enhanced images.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -2973,6 +3251,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -2988,6 +3267,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
     ):
         self.labels: list[Image] = []
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -3002,7 +3282,7 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
             *args, **kwargs
         )
 
-    def __getitem__(self, index: int) -> tuple[Tensor, Tensor, dict]:
+    def __getitem__(self, index: int) -> tuple[Tensor, Tensor, dict | None]:
         """
         Returns the sample and metadata, optionally transformed by the
         respective transforms.
@@ -3090,6 +3370,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
     of associated semantic segmentations.
     
     Args:
+        name (str): Dataset name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -3114,6 +3395,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
     
     def __init__(
         self,
+        name            : str,
         root            : Path_,
         split           : str,
         shape           : Ints,
@@ -3129,6 +3411,7 @@ class ImageSegmentationDataset(LabeledImageDataset, metaclass=ABCMeta):
     ):
         self.labels: list[Segmentation] = []
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,

@@ -50,6 +50,7 @@ class DenseHaze(ImageEnhancementDataset):
     that there is still much room for improvement.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -74,7 +75,8 @@ class DenseHaze(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "densehaze",
+        root            : Path_               = DATA_DIR / "ntire" / "densehaze",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -88,6 +90,7 @@ class DenseHaze(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -145,11 +148,33 @@ class DenseHazeDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "ntire" / "densehaze",
-        name: str   = "densehaze",
+        name            : str                = "densehaze",
+        root            : Path_              = DATA_DIR / "ntire" / "densehaze",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -238,10 +263,10 @@ class DenseHazeDataModule(DataModule):
 
 def test_densehaze():
     cfg = {
-        "root": DATA_DIR / "ntire" / "densehaze",
-           # Root directory of dataset.
         "name": "densehaze",
             # Dataset's name.
+        "root": DATA_DIR / "ntire" / "densehaze",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

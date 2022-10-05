@@ -29,6 +29,7 @@ class DCIM(UnlabeledImageDataset):
     DCIM dataset consists of 64 low-light images only.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -51,7 +52,8 @@ class DCIM(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "dcim",
+        root            : Path_              = DATA_DIR / "lol226" / "dcim",
         split           : str                = "train",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -64,6 +66,7 @@ class DCIM(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -98,6 +101,7 @@ class LIME(UnlabeledImageDataset):
     LIME dataset consists 10 low-light images only.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -120,7 +124,8 @@ class LIME(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "lime",
+        root            : Path_              = DATA_DIR / "lol226" / "lime",
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -133,6 +138,7 @@ class LIME(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -167,6 +173,7 @@ class LoL226(UnlabeledImageDataset):
     LoL226 dataset consists of 226 low-light images only.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -189,7 +196,8 @@ class LoL226(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "lol226",
+        root            : Path_              = DATA_DIR / "lol226",
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -202,6 +210,7 @@ class LoL226(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -237,6 +246,7 @@ class MEF(UnlabeledImageDataset):
     MEF dataset consists 17 low-light images only.
 
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -259,7 +269,8 @@ class MEF(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "mef",
+        root            : Path_               = DATA_DIR / "lol226" / "mef",
         split           : str                 = "test",
         shape           : Ints                = (3, 512, 512),
         transform       : Transforms_ | None  = None,
@@ -272,6 +283,7 @@ class MEF(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -306,6 +318,7 @@ class NPE(UnlabeledImageDataset):
     NPE dataset consists 85 low-light images only.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -328,7 +341,8 @@ class NPE(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "mef",
+        root            : Path_              = DATA_DIR / "lol226" / "npe",
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -341,6 +355,7 @@ class NPE(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -376,6 +391,7 @@ class VIP(UnlabeledImageDataset):
     VIP dataset consists of 8 low-light images only.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -398,7 +414,8 @@ class VIP(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "vip",
+        root            : Path_              = DATA_DIR / "lol226" / "vip",
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -411,6 +428,7 @@ class VIP(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -445,6 +463,7 @@ class VV(UnlabeledImageDataset):
     VV dataset consists of 24 low-light images only.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -467,7 +486,8 @@ class VV(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "vv",
+        root            : Path_              = DATA_DIR / "lol226" / "vv",
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -480,6 +500,7 @@ class VV(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -516,11 +537,33 @@ class DCIMDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226" / "dcim",
-        name: str   = "dcim",
+        name            : str                = "dcim",
+        root            : Path_              = DATA_DIR / "lol226" / "dcim",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -608,11 +651,33 @@ class LIMEDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226" / "lime",
-        name: str   = "lime",
+        name            : str                = "lime",
+        root            : Path_              = DATA_DIR / "lol226" / "lime",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -700,11 +765,33 @@ class LoL226DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226",
-        name: str   = "lol226",
+        name            : str                = "lol226",
+        root            : Path_              = DATA_DIR / "lol226",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -792,11 +879,33 @@ class MEFDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226" / "mef",
-        name: str   = "mef",
+        name            : str                = "mef",
+        root            : Path_              = DATA_DIR / "lol226" / "mef",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -884,11 +993,33 @@ class NPEDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226" / "npe",
-        name: str   = "mef",
+        name            : str                = "mef",
+        root            : Path_              = DATA_DIR / "lol226" / "npe",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -976,11 +1107,33 @@ class VIPDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226" / "vip",
-        name: str   = "vip",
+        name            : str                = "vip",
+        root            : Path_              = DATA_DIR / "lol226" / "vip",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1068,11 +1221,33 @@ class VVDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "lol226" / "vv",
-        name: str   = "vv",
+        name            : str                = "vv",
+        root            : Path_              = DATA_DIR / "lol226" / "vv",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1156,10 +1331,10 @@ class VVDataModule(DataModule):
 
 def test_dcim():
     cfg = {
-        "root": DATA_DIR / "lol226" / "dcim",
-           # Root directory of dataset.
         "name": "dcim",
             # Dataset's name.
+        "root": DATA_DIR / "lol226" / "dcim",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1205,10 +1380,10 @@ def test_dcim():
 
 def test_lime():
     cfg = {
-        "root": DATA_DIR / "lol226" / "lime",
-           # Root directory of dataset.
         "name": "lime",
             # Dataset's name.
+        "root": DATA_DIR / "lol226" / "lime",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1254,10 +1429,10 @@ def test_lime():
     
 def test_lol226():
     cfg = {
-        "root": DATA_DIR / "lol226",
-           # Root directory of dataset.
         "name": "lol226",
             # Dataset's name.
+        "root": DATA_DIR / "lol226",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1303,10 +1478,10 @@ def test_lol226():
 
 def test_mef():
     cfg = {
-        "root": DATA_DIR / "lol226" / "mef",
-           # Root directory of dataset.
         "name": "mef",
             # Dataset's name.
+        "root": DATA_DIR / "lol226" / "mef",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1352,10 +1527,10 @@ def test_mef():
 
 def test_npe():
     cfg = {
-        "root": DATA_DIR / "lol226" / "mef",
-           # Root directory of dataset.
         "name": "mef",
             # Dataset's name.
+        "root": DATA_DIR / "lol226" / "mef",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1401,10 +1576,10 @@ def test_npe():
 
 def test_vip():
     cfg = {
-        "root": DATA_DIR / "lol226" / "vip",
-           # Root directory of dataset.
         "name": "vip",
             # Dataset's name.
+        "root": DATA_DIR / "lol226" / "vip",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1450,10 +1625,10 @@ def test_vip():
 
 def test_vv():
     cfg = {
-        "root": DATA_DIR / "lol226" / "vv",
-           # Root directory of dataset.
         "name": "vv",
             # Dataset's name.
+        "root": DATA_DIR / "lol226" / "vv",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

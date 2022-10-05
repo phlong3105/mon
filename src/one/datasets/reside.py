@@ -53,6 +53,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -77,7 +78,8 @@ class RESIDEHSTS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_hsts",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -91,6 +93,7 @@ class RESIDEHSTS(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -160,6 +163,7 @@ class RESIDEITS(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -184,7 +188,8 @@ class RESIDEITS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_its",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -198,6 +203,7 @@ class RESIDEITS(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -267,6 +273,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -291,7 +298,8 @@ class RESIDEITSv2(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_its_v2",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -305,6 +313,7 @@ class RESIDEITSv2(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -375,6 +384,7 @@ class RESIDEOTS(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -399,7 +409,8 @@ class RESIDEOTS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_ots",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -413,6 +424,7 @@ class RESIDEOTS(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -482,6 +494,7 @@ class RESIDESOTS(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -506,7 +519,8 @@ class RESIDESOTS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_sots",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -520,6 +534,7 @@ class RESIDESOTS(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -589,6 +604,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -613,7 +629,8 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_ots_indoor",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -627,6 +644,7 @@ class RESIDESOTSIndoor(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -696,6 +714,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
     future directions.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -720,7 +739,8 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reside_ots_outdoor",
+        root            : Path_               = DATA_DIR / "reside",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -734,6 +754,7 @@ class RESIDESOTSOutdoor(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -792,11 +813,33 @@ class RESIDEHSTSDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_hsts",
+        name            : str                = "reside_hsts",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -884,11 +927,33 @@ class RESIDEITSDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_its",
+        name            : str                = "reside_its",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -981,11 +1046,33 @@ class RESIDEITSv2DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_its_v2",
+        name            : str                = "reside_its_v2",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1058,11 +1145,33 @@ class RESIDEOTSDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_ots",
+        name            : str                = "reside_ots",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1135,11 +1244,33 @@ class RESIDESOTSDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_sots",
+        name            : str                = "reside_sots",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1227,11 +1358,33 @@ class RESIDESOTSIndoorDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_ots_indoor",
+        name            : str                = "reside_ots_indoor",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1319,11 +1472,33 @@ class RESIDESOTSOutdoorDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reside",
-        name: str   = "reside_ots_outdoor",
+        name            : str                = "reside_ots_outdoor",
+        root            : Path_              = DATA_DIR / "reside",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1407,10 +1582,10 @@ class RESIDESOTSOutdoorDataModule(DataModule):
 
 def test_reside_hsts():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_hsts",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1458,10 +1633,10 @@ def test_reside_hsts():
    
 def test_reside_its():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_its",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1509,10 +1684,10 @@ def test_reside_its():
 
 def test_reside_its_v2():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_its_v2",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1560,10 +1735,10 @@ def test_reside_its_v2():
 
 def test_reside_ots():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_ots",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1611,10 +1786,10 @@ def test_reside_ots():
 
 def test_reside_sots():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_sots",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1662,10 +1837,10 @@ def test_reside_sots():
 
 def test_reside_sots_indoor():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_sots_indoor",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1713,10 +1888,10 @@ def test_reside_sots_indoor():
 
 def test_reside_sots_outdoor():
     cfg = {
-        "root": DATA_DIR / "reside",
-           # Root directory of dataset.
         "name": "reside_sots_outdoor",
             # Dataset's name.
+        "root": DATA_DIR / "reside",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

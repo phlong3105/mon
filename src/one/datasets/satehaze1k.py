@@ -47,6 +47,7 @@ class SateHaze1K(ImageEnhancementDataset):
     of thick fog images for segmentation purposes.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -71,7 +72,8 @@ class SateHaze1K(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "satehaze1k",
+        root            : Path_               = DATA_DIR / "satehaze1k",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -85,6 +87,7 @@ class SateHaze1K(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -135,12 +138,44 @@ class SateHaze1K(ImageEnhancementDataset):
                 self.labels.append(Image(path=path, backend=self.backend))
                 
 
-@DATASETS.register(name="satehaze1kthin")
+@DATASETS.register(name="satehaze1k_thin")
 class SateHaze1KThin(SateHaze1K):
     """
     SateHaze1K-Thin dataset.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "satehaze1k_thin",
+        root            : Path_               = DATA_DIR / "satehaze1k",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -176,12 +211,44 @@ class SateHaze1KThin(SateHaze1K):
                 self.labels.append(Image(path=path, backend=self.backend))
 
 
-@DATASETS.register(name="satehaze1kmoderate")
+@DATASETS.register(name="satehaze1k_moderate")
 class SateHaze1KModerate(SateHaze1K):
     """
     SateHaze1K-Moderate.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "satehaze1k_moderate",
+        root            : Path_               = DATA_DIR / "satehaze1k",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -217,12 +284,44 @@ class SateHaze1KModerate(SateHaze1K):
                 self.labels.append(Image(path=path, backend=self.backend))
                 
 
-@DATASETS.register(name="satehaze1kthick")
+@DATASETS.register(name="satehaze1k_thick")
 class SateHaze1KThick(SateHaze1K):
     """
     SateHaze1K-Thick dataset.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "satehaze1k_thick",
+        root            : Path_               = DATA_DIR / "satehaze1k",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -266,11 +365,33 @@ class SateHaze1KDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "satehaze1k",
-        name: str   = "satehaze1k",
+        name            : str                = "satehaze1k",
+        root            : Path_              = DATA_DIR / "satehaze1k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -355,12 +476,42 @@ class SateHaze1KDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="satehaze1kthin")
+@DATAMODULES.register(name="satehaze1k_thin")
 class SateHaze1KThinDataModule(SateHaze1KDataModule):
     """
     SateHaze1K-Thin DataModule.
     """
-  
+    
+    def __init__(
+        self,
+        name            : str                = "satehaze1k_thin",
+        root            : Path_              = DATA_DIR / "satehaze1k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -428,12 +579,42 @@ class SateHaze1KThinDataModule(SateHaze1KDataModule):
         self.summarize()
   
       
-@DATAMODULES.register(name="satehaze1kmoderate")
+@DATAMODULES.register(name="satehaze1k_moderate")
 class SateHaze1KModerateDataModule(SateHaze1KDataModule):
     """
     SateHaze1K-Moderate DataModule.
     """
     
+    def __init__(
+        self,
+        name            : str                = "satehaze1k_moderate",
+        root            : Path_              = DATA_DIR / "satehaze1k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -501,12 +682,42 @@ class SateHaze1KModerateDataModule(SateHaze1KDataModule):
         self.summarize()
       
       
-@DATAMODULES.register(name="satehaze1kthick")
+@DATAMODULES.register(name="satehaze1k_thick")
 class SateHaze1KThickDataModule(SateHaze1KDataModule):
     """
     SateHaze1K-Thick DataModule.
     """
     
+    def __init__(
+        self,
+        name            : str                = "satehaze1k_thick",
+        root            : Path_              = DATA_DIR / "satehaze1k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -578,10 +789,10 @@ class SateHaze1KThickDataModule(SateHaze1KDataModule):
 
 def test_satehaze1k():
     cfg = {
-        "root": DATA_DIR / "satehaze1k",
-           # Root directory of dataset.
         "name": "satehaze1k",
             # Dataset's name.
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -629,10 +840,10 @@ def test_satehaze1k():
 
 def test_satehaze1k_moderate():
     cfg = {
-        "root": DATA_DIR / "satehaze1k",
-           # Root directory of dataset.
         "name": "satehaze1kmoderate",
             # Dataset's name.
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -680,10 +891,10 @@ def test_satehaze1k_moderate():
 
 def test_satehaze1k_thick():
     cfg = {
-        "root": DATA_DIR / "satehaze1k",
-           # Root directory of dataset.
         "name": "satehaze1kthick",
             # Dataset's name.
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -731,10 +942,10 @@ def test_satehaze1k_thick():
 
 def test_satehaze1k_thin():
     cfg = {
-        "root": DATA_DIR / "satehaze1k",
-           # Root directory of dataset.
         "name": "satehaze1kthin",
             # Dataset's name.
+        "root": DATA_DIR / "satehaze1k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

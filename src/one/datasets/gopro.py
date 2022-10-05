@@ -32,6 +32,7 @@ class GoPro(ImageEnhancementDataset):
     by accumulating differing number of sharp frames.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -56,7 +57,8 @@ class GoPro(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "gopro",
+        root            : Path_               = DATA_DIR / "gopro",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -70,6 +72,7 @@ class GoPro(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -127,11 +130,33 @@ class GoProDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "gopro",
-        name: str   = "gopro",
+        name            : str                = "gopro",
+        root            : Path_              = DATA_DIR / "gopro",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -215,10 +240,10 @@ class GoProDataModule(DataModule):
 
 def test_gopro():
     cfg = {
-        "root": DATA_DIR / "gopro",
-           # Root directory of dataset.
         "name": "gopro",
             # Dataset's name.
+        "root": DATA_DIR / "gopro",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

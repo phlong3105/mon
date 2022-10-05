@@ -4537,13 +4537,17 @@ def get_latest_file(path: Path_, recursive: bool = True) -> Path | None:
     return None
 
 
-def get_next_version(root_dir: str) -> int:
+def get_next_version(
+    root_dir: str,
+    prefix  : str | None = None,
+) -> int:
     """
     Get the next experiment version number.
     
     Args:
         root_dir (str): Path to the folder that contains all experiment folders.
-
+        prefix (str | None):
+        
     Returns:
          Next version number.
     """
@@ -4562,7 +4566,9 @@ def get_next_version(root_dir: str) -> int:
         else:
             d = ""
         bn = os.path.basename(d)
-        if bn.startswith("version_") or  bn.startswith("exp_"):
+        if bn.startswith("version_") \
+            or bn.startswith("exp_") \
+            or (isinstance(prefix, str) and bn.startswith(prefix + "_")):
             dir_ver = bn.split("_")[1].replace("/", "")
             existing_versions.append(int(dir_ver))
     if len(existing_versions) == 0:

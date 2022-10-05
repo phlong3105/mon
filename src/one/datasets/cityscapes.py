@@ -69,6 +69,7 @@ class CityscapesFog(ImageEnhancementDataset):
     """
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         beta (float | list | str | None): Additional information on the
@@ -99,7 +100,8 @@ class CityscapesFog(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                       = "cityscapes_fog",
+        root            : Path_                     = DATA_DIR / "cityscapes",
         split           : str                       = "train",
         beta            : float | list | str | None = "*",
         extra           : bool                      = False,
@@ -118,6 +120,7 @@ class CityscapesFog(ImageEnhancementDataset):
         self.extra = extra
         
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -197,6 +200,7 @@ class CityscapesLol(ImageEnhancementDataset):
     """
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -221,7 +225,8 @@ class CityscapesLol(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "cityscapes_lol",
+        root            : Path_               = DATA_DIR / "cityscapes",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -235,6 +240,7 @@ class CityscapesLol(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -289,6 +295,7 @@ class CityscapesRain(ImageEnhancementDataset):
     """
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         alpha (float | list | str | None): One of the values in `self.alphas`.
@@ -333,7 +340,8 @@ class CityscapesRain(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                       = "cityscapes_rain",
+        root            : Path_                     = DATA_DIR / "cityscapes",
         split           : str                       = "train",
         alpha           : float | list | str | None = "*",
         beta            : float | list | str | None = "*",
@@ -356,6 +364,7 @@ class CityscapesRain(ImageEnhancementDataset):
         self.pattern   = pattern
         
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -480,6 +489,7 @@ class CityscapesSemantic(ImageSegmentationDataset):
     """
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         quality (str): Quality of the semantic segmentation mask to use. One of
@@ -513,7 +523,8 @@ class CityscapesSemantic(ImageSegmentationDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "cityscapes_rain",
+        root            : Path_               = DATA_DIR / "cityscapes",
         split           : str                 = "train",
         quality         : str                 = "gtFine",
         encoding        : str                 = "id",
@@ -546,6 +557,7 @@ class CityscapesSemantic(ImageSegmentationDataset):
                 classlabels = ClassLabels.from_list(cityscapes_classlabels)
         
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -621,11 +633,33 @@ class CityscapesFogDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cityscapes",
-        name: str   = "cityscapes_fog",
+        name            : str                = "cityscapes_fog",
+        root            : Path_              = DATA_DIR / "cityscapes",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -717,11 +751,33 @@ class CityscapesLolDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cityscapes",
-        name: str   = "cityscapes_lol",
+        name            : str                = "cityscapes_lol",
+        root            : Path_              = DATA_DIR / "cityscapes",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -813,11 +869,33 @@ class CityscapesRainDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cityscapes",
-        name: str   = "cityscapes_rain",
+        name            : str                = "cityscapes_rain",
+        root            : Path_              = DATA_DIR / "cityscapes",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -906,10 +984,10 @@ class CityscapesRainDataModule(DataModule):
 
 def test_cityscapes_fog():
     cfg = {
-        "root": DATA_DIR / "cityscapes",
-           # Root directory of dataset.
         "name": "cityscapes_fog",
             # Dataset's name.
+        "root": DATA_DIR / "cityscapes",
+            # Root directory of dataset.
         "beta": "*",
             # Additional information on the attenuation coefficient.
             # One of: [0.005, 0.01, 0.02]. Can also be a list to include
@@ -962,10 +1040,10 @@ def test_cityscapes_fog():
 
 def test_cityscapes_lol():
     cfg = {
-        "root": DATA_DIR / "cityscapes",
-           # Root directory of dataset.
         "name": "cityscapes_lol",
             # Dataset's name.
+        "root": DATA_DIR / "cityscapes",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1013,10 +1091,10 @@ def test_cityscapes_lol():
 
 def test_cityscapes_rain():
     cfg = {
-        "root": DATA_DIR / "cityscapes",
-           # Root directory of dataset.
         "name": "cityscapes_rain",
             # Dataset's name.
+        "root": DATA_DIR / "cityscapes",
+            # Root directory of dataset.
         "alpha": "*",
             # One of: [0.01, 0.02, 0.03]. Can also be a list to include multiple
             # alphas. When `all`, `*`, or `None`, all alphas will be included.

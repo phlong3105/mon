@@ -102,23 +102,23 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws02": {
-		"cfg"        : "zerodce_lol",
-        "project"    : "lol",
-        "weights"    : None,
-        "batch_size" : 8,
-        "accelerator": "auto",
-		"devices"    : 1,
-        "max_epochs" : 500,
-		"strategy"   : None,
-	},
-    "vsw-ws03": {
-		"cfg"        : "zerodcepp_retras_vnight",
+		"cfg"        : "hinet_derain_cityscapes_rain",
         "project"    : None,
         "weights"    : None,
         "batch_size" : 8,
         "accelerator": "auto",
 		"devices"    : 1,
         "max_epochs" : 200,
+		"strategy"   : None,
+	},
+    "vsw-ws03": {
+		"cfg"        : "zerodcev2_s5_lol",
+        "project"    : "lol",
+        "weights"    : None,
+        "batch_size" : 8,
+        "accelerator": "auto",
+		"devices"    : 1,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
 }
@@ -142,15 +142,15 @@ def parse_args():
 if __name__ == "__main__":
     hostname    = socket.gethostname().lower()
     host_args   = Munch(hosts[hostname])
-    
     input_args  = vars(parse_args())
-    cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
-
-    project = input_args.get("project", None) or host_args.get("project", None)
+    cfg         = input_args.get("cfg",     None) or host_args.get("cfg",     None)
+    project     = input_args.get("project", None) or host_args.get("project", None)
+   
     if project is not None and project != "":
         module = importlib.import_module(f"one.cfg.{project}.{cfg}")
     else:
         module = importlib.import_module(f"one.cfg.{cfg}")
+    
     project     = input_args.get("project",     None) or host_args.get("project",     None) or module.model["project"]
     weights     = input_args.get("weights",     None) or host_args.get("weights",     None) or module.model["pretrained"]
     batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None) or module.data["batch_size"]
@@ -160,7 +160,7 @@ if __name__ == "__main__":
     max_epochs  = input_args.get("max_epochs",  None) or host_args.get("max_epochs",  None) or module.trainer["max_epochs"]
     strategy    = input_args.get("strategy",    None) or host_args.get("strategy",    None) or module.trainer["strategy"]
     
-    args   = Munch(
+    args = Munch(
         hostname  = hostname,
         cfg_file  = module.__file__,
         data      = module.data | {

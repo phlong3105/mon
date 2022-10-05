@@ -484,7 +484,7 @@ class FINetDehaze(FINet):
         )
 
 
-@MODELS.register(name="FINet_denoise")
+@MODELS.register(name="FINet-denoise")
 class FINetDenoise(FINet):
     """
     

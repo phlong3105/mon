@@ -82,6 +82,7 @@ def test(args: Munch | dict):
 hosts = {
 	"lp-labdesktop01-ubuntu": {
 		"cfg"        : "alexnet_cifar10",
+        "project"    : None,
         "weights"    : "imagenet",
         "accelerator": "auto",
 		"devices"    : 1,
@@ -90,6 +91,7 @@ hosts = {
 	},
     "lp-imac.local": {
 		"cfg"        : "zerodce_lol226",
+        "project"    : None,
         "weights"    : None,
         "accelerator": "cpu",
 		"devices"    : 1,
@@ -98,6 +100,7 @@ hosts = {
 	},
     "lp-macbookpro.local": {
 		"cfg"        : "hinet_ihaze",
+        "project"    : None,
         "weights"    : None,
         "accelerator": "cpu",
 		"devices"    : 1,
@@ -110,6 +113,7 @@ hosts = {
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--cfg",         type=str,            help="The training cfg to use.")
+    parser.add_argument("--project",     type=str,            help="Save results to root/project/name")
     parser.add_argument("--weights",     type=str,            help="Weights path.")
     parser.add_argument("--batch-size",  type=int,            help="Total Batch size for all GPUs.")
     parser.add_argument("--img-size",    type=int, nargs="+", help="Image sizes.")
@@ -124,11 +128,16 @@ def parse_args():
 if __name__ == "__main__":
     hostname    = socket.gethostname().lower()
     host_args   = Munch(hosts[hostname])
-    
     input_args  = vars(parse_args())
     cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
+    project     = input_args.get("project", None) or host_args.get("project", None)
     
-    module      = importlib.import_module(f"one.cfg.{cfg}")
+    if project is not None and project != "":
+        module = importlib.import_module(f"one.cfg.{project}.{cfg}")
+    else:
+        module = importlib.import_module(f"one.cfg.{cfg}")
+    
+    project     = input_args.get("project",     None) or host_args.get("project",     None) or module.model["project"]
     weights     = input_args.get("weights",     None) or host_args.get("weights",     None) or module.model["pretrained"]
     batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None) or module.data["batch_size"]
     shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None) or module.data["shape"]
@@ -137,7 +146,7 @@ if __name__ == "__main__":
     max_epochs  = input_args.get("max_epochs",  None) or host_args.get("max_epochs",  None) or module.trainer["max_epochs"]
     strategy    = input_args.get("strategy",    None) or host_args.get("strategy",    None) or module.trainer["strategy"]
     
-    args   = Munch(
+    args = Munch(
         hostname  = hostname,
         cfg_file  = module.__file__,
         data      = module.data | {
@@ -145,6 +154,7 @@ if __name__ == "__main__":
             "batch_size": batch_size,
         },
         model     = module.model | {
+            "project"   : project,
             "pretrained": weights,
         },
         callbacks = module.callbacks,
@@ -156,5 +166,4 @@ if __name__ == "__main__":
             "strategy"   : strategy,
         },
     )
-    
     test(args)

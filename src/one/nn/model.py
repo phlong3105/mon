@@ -614,6 +614,8 @@ class Trainer(pl.Trainer):
 
 # H1: - Inferrer ---------------------------------------------------------------
 
+# H2: - Base Inferrer ----------------------------------------------------------
+
 class Inferrer(metaclass=ABCMeta):
     """
     Base inference pipeline.
@@ -621,38 +623,55 @@ class Inferrer(metaclass=ABCMeta):
     
     def __init__(
         self,
-        source    : Path_ | None = None,
-        root      : Path_ | None = RUNS_DIR / "infer",
-        project   : str          = "",
-        name      : str          = "exp",
-        batch_size: int          = 1,
-        shape     : Ints  | None = None,
-        device    : int | str    = "cpu",
-        save      : bool         = True,
-        verbose   : bool         = True,
+        source     : Path_ | None = None,
+        root       : Path_ | None = RUNS_DIR / "infer",
+        project    : str          = "",
+        name       : str          = "exp",
+        max_samples: int   | None = None,
+        batch_size : int          = 1,
+        shape      : Ints  | None = None,
+        device     : int   | str  = "cpu",
+        phase      : ModelPhase_  = "training",
+        save       : bool         = True,
+        verbose    : bool         = True,
         *args, **kwargs
     ):
         self.source      = source
         self.root        = root
         self.project     = project
         self.shape       = shape
+        self.max_samples = max_samples
         self.batch_size  = batch_size
         self.device      = select_device(device=device, batch_size=batch_size)
+        self.phase       = phase
         self.save        = save
         self.verbose     = verbose
         self.model       = None
         self.data_loader = None
         self.data_writer = None
         
+        """
         if name == "exp":
-            self.name = f"exp_{get_next_version(str(self.root))}"
+            self.name = f"exp_{get_next_version(str(self.root, name))}"
         else:
             self.name = name
+        """
         if self.project is not None and self.project != "":
-            self.output_dir = self.root / self.project / self.name
-        else:
-            self.output_dir = self.root / self.name
-        
+            self.root = self.root / self.project
+        self.name       = f"{name}_{get_next_version(str(self.root), name)}"
+        self.output_dir = self.root / self.name
+    
+    @property
+    def phase(self) -> ModelPhase:
+        return self._phase
+    
+    @phase.setter
+    def phase(self, phase: ModelPhase_ = "training"):
+        """
+        Assign the model's running phase.
+        """
+        self._phase = ModelPhase.from_value(phase)
+       
     @property
     def root(self) -> Path:
         return self._root
@@ -709,7 +728,12 @@ class Inferrer(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def postprocess(self, input: Tensor, pred: Tensor, *args, **kwargs) -> Tensor:
+    def postprocess(
+        self,
+        input: Tensor,
+        pred : Tensor,
+        *args, **kwargs
+    ) -> Tensor:
         """
         Postprocessing prediction.
         
@@ -731,8 +755,8 @@ class Inferrer(metaclass=ABCMeta):
         self.init_data_loader()
         self.init_data_writer()
         
+        self.model.phase = self.phase
         self.model.to(self.device)
-        self.model.eval()
     
     @abstractmethod
     def on_run_end(self):
@@ -740,49 +764,98 @@ class Inferrer(metaclass=ABCMeta):
         Call after `run()` finishes.
         """
         pass
-    
-    
-class ImageInferrer(Inferrer):
+
+
+# H2: - Vision Inferrer --------------------------------------------------------
+
+class VisionInferrer(Inferrer):
     """
-    Image inference pipeline.
+    Online vision inference pipeline.
     """
     
-    @property
-    def root(self) -> Path:
-        return self._root
-    
-    @root.setter
-    def root(self, root: Path_ | None):
-        """
-        Assign the root directory of the model.
+    def __init__(
+        self,
+        source     : Path_ | None = None,
+        root       : Path_ | None = RUNS_DIR / "infer",
+        project    : str          = "",
+        name       : str          = "exp",
+        max_samples: int   | None = None,
+        batch_size : int          = 1,
+        shape      : Ints  | None = None,
+        device     : int   | str  = "cpu",
+        phase      : ModelPhase_  = "training",
+        save       : bool         = True,
+        verbose    : bool         = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            source      = source,
+            root        = root,
+            project     = project,
+            name        = name,
+            max_samples = max_samples,
+            batch_size  = batch_size,
+            shape       = shape,
+            device      = device,
+            phase       = phase,
+            save        = save,
+            verbose     = verbose,
+            *args, **kwargs
+        )
         
-        Args:
-            root (Path_ | None): The root directory to save the results.
-        """
-        if root is None:
-            root = RUNS_DIR / "infer"
-        else:
-            root = Path(root)
-        self._root = root
-    
     def init_data_loader(self):
-        if self.source:
-            from one.vision.acquisition import ImageLoader
-            self.data_loader = ImageLoader(
-                source     = self.source,
-                batch_size = self.batch_size,
+        """
+        Initialize data loader.
+        """
+        import one.vision.acquisition as io
+        if is_image_file(self.source) or is_dir(self.source):
+            self.data_loader = io.ImageLoader(
+                source      = self.source,
+                max_samples = self.max_samples,
+                batch_size  = self.batch_size,
             )
-    
+        elif is_video_file(self.source):
+            self.data_loader = io.VideoLoaderCV(
+                source      = self.source,
+                max_samples = self.max_samples,
+                batch_size  = self.batch_size,
+            )
+        else:
+            raise RuntimeError()
+        
     def init_data_writer(self):
+        """
+        Initialize data writer.
+        """
+        import one.vision.acquisition as io
         if self.save:
-            from one.vision.acquisition import ImageWriter
-            self.data_writer = ImageWriter(dst=self.output_dir)
+            if is_image_file(self.source) or is_dir(self.source):
+                self.data_writer = io.ImageWriter(dst=self.output_dir)
+            elif is_video_file(self.source) \
+                and isinstance(self.data_loader, io.VideoLoaderCV):
+                self.data_writer = io.VideoWriterCV(
+                    dst        = self.output_dir,
+                    shape      = self.data_loader.shape,
+                    frame_rate = 30,
+                )
+            else:
+                raise RuntimeError()
     
     def run(self, model: BaseModel, source: Path_):
         self.model  = model
         self.source = source
         self.on_run_start()
         
+        # Setup online learning
+        if self.phase == ModelPhase.TRAINING:
+            optimizer = torch.optim.Adam(
+                params       = model.parameters(),
+                lr           = 0.001,
+                weight_decay = 0.001,
+            )
+        else:
+            optimizer = None
+            
         step_times = []
         start_time = timer()
         with progress_bar() as pbar:
@@ -793,13 +866,26 @@ class ImageInferrer(Inferrer):
             ):
                 # Frame capture
                 images, indexes, files, rel_paths = batch
+                
                 # Pre-process
                 input, size0, size1 = self.preprocess(images)
+                
                 # Process
                 step_start_time = timer()
-                pred            = model.forward(input=input)
+                if model.phase == ModelPhase.TRAINING:
+                    pred, loss = model.forward_loss(input=input, target=None)
+                else:
+                    pred, loss = model.forward(input=input), None
                 step_end_time   = timer()
                 step_times.append(step_end_time - step_start_time)
+                
+                # Online learning
+                if optimizer is not None and loss is not None:
+                    optimizer.zero_grad()
+                    loss.backward()
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), 0.1)
+                    optimizer.step()
+                
                 # Post-process
                 pred = self.postprocess(
                     input = input,
@@ -807,10 +893,11 @@ class ImageInferrer(Inferrer):
                     size0 = size0,
                     size1 = size1,
                 )
+                
                 # Debug
                 if self.verbose:
                     self.model.show_results(
-                        input = input,
+                        input = images,
                         pred  = pred,
                         max_n = self.batch_size,
                         nrow  = self.batch_size,
@@ -822,12 +909,17 @@ class ImageInferrer(Inferrer):
                         files       = rel_paths,
                         denormalize = True,
                     )
+                
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+                
         end_time = timer()
         console.log(
             f"Completed in {(end_time - start_time):.9f} seconds"
         )
         console.log(
-            f"Average FPS at {(1.0 / ((end_time - start_time) / len(step_times))):.9f}"
+            f"Average FPS at "
+            f"{(1.0 / ((end_time - start_time) / len(step_times))):.9f}"
         )
         console.log(
             f"Average forward pass FPS at "
@@ -858,7 +950,7 @@ class ImageInferrer(Inferrer):
                 input = resize(
                     image         = input,
                     size          = new_size,
-                    interpolation = InterpolationMode.BICUBIC
+                    interpolation = InterpolationMode.BILINEAR
                 )
             # images = [resize(i, self.shape) for i in images]
             # images = torch.stack(input)
@@ -895,7 +987,7 @@ class ImageInferrer(Inferrer):
             pred = resize(
                 image         = pred,
                 size          = size0,
-                interpolation = InterpolationMode.BICUBIC
+                interpolation = InterpolationMode.BILINEAR
             )
         return pred
     
@@ -905,6 +997,8 @@ class ImageInferrer(Inferrer):
         """
         if self.verbose:
             cv2.destroyAllWindows()
+        if self.save and self.data_writer:
+            self.data_writer.close()
 
 
 # H1: - Model ------------------------------------------------------------------

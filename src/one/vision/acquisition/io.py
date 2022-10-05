@@ -802,34 +802,30 @@ class BaseLoader(metaclass=ABCMeta):
         source (Path_): Data source. Can be a path to an image file, a
             directory, a video, or a stream. It can also be a pathname pattern
             to images.
+        max_samples (int | None): Only process certain amount of samples.
+            Defaults to None.
         batch_size (int): Number of samples in one forward & backward pass.
             Defaults to 1.
-        verbose (bool): Verbosity mode of video loader backend. Defaults to False.
+        verbose (bool): Verbosity mode of video loader backend. Defaults to
+        False.
     """
     
     def __init__(
         self,
-        source    : Path_,
-        batch_size: int  = 1,
-        verbose   : bool = False,
+        source     : Path_,
+        max_samples: int | None = None,
+        batch_size : int        = 1,
+        verbose    : bool       = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.source     = Path(source)
-        self.batch_size = batch_size
-        self.verbose    = verbose
-        self.index      =  0
-        self.num_images = -1
+        self.source      = Path(source)
+        self.batch_size  = batch_size
+        self.verbose     = verbose
+        self.index       = 0
+        self.max_samples = max_samples
+        self.num_images  = 0
         self.init()
-    
-    def __len__(self) -> int:
-        """
-        The function returns the number of images in the dataset.
-        
-        Returns:
-            The number of images in the dataset.
-        """
-        return self.num_images
     
     def __iter__(self):
         """
@@ -841,6 +837,15 @@ class BaseLoader(metaclass=ABCMeta):
         self.reset()
         return self
     
+    def __len__(self) -> int:
+        """
+        The function returns the number of images in the dataset.
+        
+        Returns:
+            The number of images in the dataset.
+        """
+        return self.num_images
+    
     @abstractmethod
     def __next__(self):
         pass
@@ -850,7 +855,7 @@ class BaseLoader(metaclass=ABCMeta):
         Close.
         """
         self.close()
-    
+  
     def batch_len(self) -> int:
         """
         Return the total batches calculated from `batch_size`.
@@ -984,26 +989,31 @@ class ImageLoader(BaseLoader):
     Args:
         source (Path_): The path to the image file. Can be a path to an image
             file or a directory, or a pathname pattern to images.
+        max_samples (int | None): Only process certain amount of samples.
+            Defaults to None.
         batch_size (int): The number of images to be processed at once.
             Defaults to 1.
         backend (VisionBackend_): The backend to use for image processing.
             Default to VisionBackend.CV.
-        verbose (bool): Verbosity mode of video loader backend. Defaults to False.
+        verbose (bool): Verbosity mode of video loader backend.
+            Defaults to False.
     """
 
     def __init__(
         self,
-        source    : Path_,
-        batch_size: int            = 1,
-        backend   : VisionBackend_ = VisionBackend.CV,
-        verbose   : bool           = False,
+        source     : Path_,
+        max_samples: int | None     = None,
+        batch_size : int            = 1,
+        backend    : VisionBackend_ = VisionBackend.CV,
+        verbose    : bool           = False,
     ):
         self.images  = []
         self.backend = VisionBackend.from_value(backend)
         super().__init__(
-            source     = source,
-            batch_size = batch_size,
-            verbose    = verbose
+            source      = source,
+            max_samples = max_samples,
+            batch_size  = batch_size,
+            verbose     = verbose
         )
 
     def __next__(self) -> tuple[Tensor, list, list, list]:
@@ -1064,8 +1074,12 @@ class ImageLoader(BaseLoader):
                            if is_image_file(i)]
         else:
             raise IOError("Error when listing image files.")
-        self.num_images = len(self.images)
-
+        
+        if self.num_images == 0:
+            self.num_images = len(self.images)
+        if self.max_samples is not None and self.num_images > self.max_samples:
+            self.num_images = self.max_samples
+        
     def reset(self):
         self.index = 0
 
@@ -1200,20 +1214,31 @@ class ImageWriter(BaseWriter):
 class VideoLoader(BaseLoader, metaclass=ABCMeta):
     """
     A baseclass/interface for all VideoLoader classes.
+    
+    Args:
+        source (Path_): The path to the image file. Can be a path to an image
+            file or a directory, or a pathname pattern to images.
+        max_samples (int): Only process certain amount of images. Defaults to 0.
+        batch_size (int): The number of images to be processed at once.
+            Defaults to 1.
+        verbose (bool): Verbosity mode of video loader backend.
+            Defaults to False.
     """
     
     def __init__(
         self,
-        data      : Path_,
-        batch_size: int  = 1,
-        verbose   : bool = False,
+        source     : Path_,
+        max_samples: int | None = None,
+        batch_size : int        = 1,
+        verbose    : bool       = False,
         *args, **kwargs
     ):
         self.frame_rate = 0
         super().__init__(
-            data       = data,
-            batch_size = batch_size,
-            verbose    = verbose,
+            source      = source,
+            max_samples = max_samples,
+            batch_size  = batch_size,
+            verbose     = verbose,
             *args, **kwargs
         )
     
@@ -1273,32 +1298,40 @@ class VideoLoaderCV(VideoLoader):
     Loads frame(s) from a video or a stream using OpenCV.
 
     Args:
-        data (Path_): Data source. Can be a path to an image file, a directory,
-            a video, or a stream. It can also be a pathname pattern to images.
+        source (Path_): Data source. Can be a path to an image file,
+            a directory, a video, or a stream. It can also be a pathname
+            pattern to images.
+        max_samples (int | None): Only process certain amount of samples.
+            Defaults to None.
         batch_size (int): Number of samples in one forward & backward pass.
             Defaults to 1.
         api_preference (int): Preferred Capture API backends to use. Can be
             used to enforce a specific reader implementation. Two most used
             options are: [cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900].
-            See more: https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base.html#ggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
+            See more: https://docs.opencv.org/4.5.5/d4/d15
+            /group__videoio__flags__base.html
+            #ggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
             Defaults to cv2.CAP_FFMPEG.
-        verbose (bool): Verbosity mode of video loader backend. Defaults to False.
+        verbose (bool): Verbosity mode of video loader backend. Defaults to
+        False.
     """
 
     def __init__(
         self,
-        data          : str,
-        batch_size    : int  = 1,
-        api_preference: int  = cv2.CAP_FFMPEG,
-        verbose       : bool = False,
+        source        : str,
+        max_samples   : int | None = None,
+        batch_size    : int        = 1,
+        api_preference: int        = cv2.CAP_FFMPEG,
+        verbose       : bool       = False,
         *args, **kwargs
     ):
         self.api_preference = api_preference
         self.video_capture  = None
         super().__init__(
-            data       = data,
-            batch_size = batch_size,
-            verbose    = verbose,
+            source      = source,
+            max_samples = max_samples,
+            batch_size  = batch_size,
+            verbose     = verbose,
             *args, **kwargs
         )
    
@@ -1312,7 +1345,7 @@ class VideoLoaderCV(VideoLoader):
             List of image files.
             List of images' relative paths corresponding to data.
         """
-        if not self.is_stream and self.index >= self.frame_count:
+        if not self.is_stream and self.index >= self.num_images:
             self.close()
             raise StopIteration
         else:
@@ -1322,12 +1355,12 @@ class VideoLoaderCV(VideoLoader):
             rel_paths = []
             
             for i in range(self.batch_size):
-                if not self.is_stream and self.index >= self.frame_count:
+                if not self.is_stream and self.index >= self.num_images:
                     break
                 
                 if isinstance(self.video_capture, cv2.VideoCapture):
                     ret_val, image = self.video_capture.read()
-                    rel_path       = self.data.name
+                    rel_path       = self.source.name
                 else:
                     raise RuntimeError(
                         f"`video_capture` has not been initialized."
@@ -1336,11 +1369,11 @@ class VideoLoaderCV(VideoLoader):
                 if image is None:
                     continue
                 image = image[:, :, ::-1]  # BGR to RGB
-                image = to_tensor(image=image, keepdim=False)
+                image = to_tensor(image=image, keepdim=False, normalize=True)
                 
                 images.append(image)
                 indexes.append(self.index)
-                files.append(self.data)
+                files.append(self.source)
                 rel_paths.append(rel_path)
                 
                 self.index += 1
@@ -1424,16 +1457,22 @@ class VideoLoaderCV(VideoLoader):
         return int(self.video_capture.get(cv2.CAP_PROP_POS_FRAMES))
     
     def init(self):
-        if is_video_file(self.data):
-            self.video_capture = cv2.VideoCapture(self.data, self.api_preference)
-            self.num_images    = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+        source = str(self.source)
+        if is_video_file(source):
+            self.video_capture = cv2.VideoCapture(source, self.api_preference)
+            num_images         = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
             self.frame_rate    = int(self.video_capture.get(cv2.CAP_PROP_FPS))
-        elif is_video_stream(self.data):
-            self.video_capture = cv2.VideoCapture(self.data, self.api_preference)  # stream
+        elif is_video_stream(source):
+            self.video_capture = cv2.VideoCapture(source, self.api_preference)  # stream
+            num_images         = -1
             self.video_capture.set(cv2.CAP_PROP_BUFFERSIZE, self.batch_size)
-            self.num_images    = -1
         else:
             raise IOError("Error when reading input stream or video file!")
+
+        if self.num_images == 0:
+            self.num_images = num_images
+        if self.max_samples is not None and self.num_images > self.max_samples:
+            self.num_images = self.max_samples
         
     def reset(self):
         """
@@ -1457,11 +1496,14 @@ class VideoLoaderFFmpeg(VideoLoader):
     Loads frame(s) from a video or a stream using FFmpeg.
     
     Args:
-        data (str): Data source. Can be a path to an image file, pathname
+        source (str): Data source. Can be a path to an image file, pathname
             pattern to  image files, a directory, a video, or a stream.
+        max_samples (int | None): Only process certain amount of samples.
+            Defaults to None.
         batch_size (int): Number of samples in one forward & backward pass.
             Defaults to 1.
-        verbose (bool): Verbosity mode of video loader backend. Defaults to False.
+        verbose (bool): Verbosity mode of video loader backend. Defaults to
+        False.
         kwargs: Any supplied kwargs are passed to ffmpeg verbatim.
         
     References:
@@ -1470,9 +1512,10 @@ class VideoLoaderFFmpeg(VideoLoader):
     
     def __init__(
         self,
-        data      : str,
-        batch_size: int  = 1,
-        verbose   : bool = False,
+        source     : str,
+        max_samples: int  = 0,
+        batch_size : int  = 1,
+        verbose    : bool = False,
         *args, **kwargs
     ):
         self.ffmpeg_cmd     = None
@@ -1480,7 +1523,8 @@ class VideoLoaderFFmpeg(VideoLoader):
         self.ffmpeg_kwargs  = kwargs
         self.video_info     = None
         super().__init__(
-            data       = data,
+            source     = source,
+            max_samples= max_samples,
             batch_size = batch_size,
             verbose    = verbose,
             *args, **kwargs
@@ -1515,7 +1559,7 @@ class VideoLoaderFFmpeg(VideoLoader):
                         width   = self.frame_width,
                         height  = self.frame_height
                     )  # Already in RGB
-                    rel_path = self.data.name
+                    rel_path = self.source.name
                 else:
                     raise RuntimeError(
                         f"`video_capture` has not been initialized."
@@ -1523,7 +1567,7 @@ class VideoLoaderFFmpeg(VideoLoader):
                 
                 images.append(image)
                 indexes.append(self.index)
-                files.append(self.data)
+                files.append(self.source)
                 rel_paths.append(rel_path)
                 
                 self.index += 1
@@ -1551,7 +1595,7 @@ class VideoLoaderFFmpeg(VideoLoader):
         """
         Return number of frames in the video file.
         """
-        if is_video_file(self.data):
+        if is_video_file(self.source):
             return int(self.video_info["nb_frames"])
         else:
             return -1
@@ -1574,21 +1618,22 @@ class VideoLoaderFFmpeg(VideoLoader):
         """
         Initialize ffmpeg cmd.
         """
-        probe           = ffmpeg.probe(self.data, **self.ffmpeg_kwargs)
+        source          = str(self.source)
+        probe           = ffmpeg.probe(source, **self.ffmpeg_kwargs)
         self.video_info = next(
             s for s in probe["streams"] if s["codec_type"] == "video"
         )
         if self.verbose:
             self.ffmpeg_cmd = (
                 ffmpeg
-                    .input(self.data, **self.ffmpeg_kwargs)
+                    .input(source, **self.ffmpeg_kwargs)
                     .output("pipe:", format="rawvideo", pix_fmt="rgb24")
                     .compile()
             )
         else:
             self.ffmpeg_cmd = (
                 ffmpeg
-                    .input(self.data, **self.ffmpeg_kwargs)
+                    .input(source, **self.ffmpeg_kwargs)
                     .output("pipe:", format="rawvideo", pix_fmt="rgb24")
                     .global_args("-loglevel", "quiet")
                     .compile()
@@ -1658,7 +1703,7 @@ class VideoWriterCV(VideoWriter):
     Saves frames to individual image files or appends all to a video file.
 
     Args:
-        dst (str): Output video file or a directory.
+        dst (Path_): Output video file or a directory.
         shape (Ints): Output size as [C, H, W]. This is also used to reshape the
             input. Defaults to (3, 480, 640).
         frame_rate (int): Frame rate of the video. Defaults to 10.
@@ -1671,10 +1716,10 @@ class VideoWriterCV(VideoWriter):
     
     def __init__(
         self,
-        dst		  : str,
+        dst		  : Path_,
         shape     : Ints  = (3, 480, 640),
-        frame_rate: float = 10,
-        fourcc    : str   = ".mp4v",
+        frame_rate: float = 30,
+        fourcc    : str   = "mp4v",
         save_image: bool  = False,
         verbose   : bool  = False,
         *args, **kwargs
@@ -1699,10 +1744,14 @@ class VideoWriterCV(VideoWriter):
         else:
             video_file = self.dst.parent / f"{self.dst.stem}.mp4"
         create_dirs(paths=[video_file.parent])
-
-        fourcc			  = cv2.VideoWriter_fourcc(*self.fourcc)
+        
+        fourcc   		  = cv2.VideoWriter_fourcc(*self.fourcc)
         self.video_writer = cv2.VideoWriter(
-            video_file, fourcc, self.frame_rate, self.image_size[::-1]  # Must be in [W, H]
+            filename  = str(video_file),
+            fourcc    = fourcc,
+            fps       = float(self.frame_rate),
+            frameSize = self.image_size[::-1],  # Must be in [W, H]
+            isColor   = True
         )
 
         if self.video_writer is None:
@@ -1739,6 +1788,9 @@ class VideoWriterCV(VideoWriter):
                 raise ValueError(f"`image_file` must be given.")
             create_dirs(paths=[file.parent])
             cv2.imwrite(str(file), image)
+        
+        # IMPORTANT: Image must be in BGR format
+        image = image[:, :, ::-1]
         
         self.video_writer.write(image)
         self.index += 1
@@ -1791,7 +1843,7 @@ class VideoWriterFFmpeg(VideoWriter):
     
     def __init__(
         self,
-        dst		  : str,
+        dst		  : Path_,
         shape     : Ints  = (3, 480, 640),
         frame_rate: float = 10,
         pix_fmt   : str   = "yuv420p",
@@ -1822,7 +1874,7 @@ class VideoWriterFFmpeg(VideoWriter):
         else:
             video_file = self.dst.parent / f"{self.dst.stem}.mp4"
         create_dirs(paths=[video_file.parent])
-        
+
         if self.verbose:
             self.ffmpeg_process = (
                 ffmpeg

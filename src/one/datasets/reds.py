@@ -34,6 +34,7 @@ class REDS(ImageEnhancementDataset):
     links below. Downloads are available via Google Drive and SNU CVLab server.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -58,7 +59,8 @@ class REDS(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "reds",
+        root            : Path_               = DATA_DIR / "reds",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -72,6 +74,7 @@ class REDS(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -130,7 +133,39 @@ class REDS(ImageEnhancementDataset):
 
 @DATASETS.register(name="reds_blur")
 class REDSBlur(REDS):
-
+    
+    def __init__(
+        self,
+        name            : str                 = "reds_blur",
+        root            : Path_               = DATA_DIR / "reds",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -154,7 +189,39 @@ class REDSBlur(REDS):
 
 @DATASETS.register(name="reds_blur_compress")
 class REDSBlurCompress(REDS):
-
+    
+    def __init__(
+        self,
+        name            : str                 = "reds_blur_compress",
+        root            : Path_               = DATA_DIR / "reds",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
     def list_images(self):
         """
         List image files.
@@ -178,7 +245,39 @@ class REDSBlurCompress(REDS):
 
 @DATASETS.register(name="reds_low_res")
 class REDSLowRes(REDS):
-
+    
+    def __init__(
+        self,
+        name            : str                 = "reds_low_res",
+        root            : Path_               = DATA_DIR / "reds",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
     def list_images(self):
         """
         List image files.
@@ -205,11 +304,33 @@ class REDSDataModule(DataModule):
 
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reds",
-        name: str   = "reds",
+        name            : str                = "reds",
+        root            : Path_              = DATA_DIR / "reds",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -299,11 +420,33 @@ class REDSBlurDataModule(REDSDataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reds",
-        name: str   = "reds_blur",
+        name            : str                = "reds_blur",
+        root            : Path_              = DATA_DIR / "reds",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
   
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -377,11 +520,33 @@ class REDSBlurCompressDataModule(REDSDataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reds",
-        name: str   = "reds_blur_compress",
+        name            : str                = "reds_blur_compress",
+        root            : Path_              = DATA_DIR / "reds",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
   
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -455,11 +620,33 @@ class REDSLowResDataModule(REDSDataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "reds",
-        name: str   = "reds_low_res",
+        name            : str                = "reds_low_res",
+        root            : Path_              = DATA_DIR / "reds",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
   
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -532,10 +719,10 @@ class REDSLowResDataModule(REDSDataModule):
 
 def test_reds():
     cfg = {
-        "root": DATA_DIR / "reds",
-           # Root directory of dataset.
         "name": "reds",
             # Dataset's name.
+        "root": DATA_DIR / "reds",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

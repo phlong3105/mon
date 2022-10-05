@@ -31,6 +31,7 @@ class Snow100K(ImageEnhancementDataset):
     enhancement task.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -55,7 +56,8 @@ class Snow100K(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "snow100k",
+        root            : Path_               = DATA_DIR / "snow100k",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -69,6 +71,7 @@ class Snow100K(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -124,6 +127,38 @@ class Snow100KS(Snow100K):
     Snow100K-S Dataset.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "snow100ks",
+        root            : Path_               = DATA_DIR / "snow100k",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
     def list_images(self):
         """
         List image files.
@@ -168,6 +203,38 @@ class Snow100KM(Snow100K):
     Snow100K-M Dataset.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "snow100km",
+        root            : Path_               = DATA_DIR / "snow100k",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
     def list_images(self):
         """
         List image files.
@@ -205,12 +272,44 @@ class Snow100KM(Snow100K):
                 self.labels.append(Image(path=path, backend=self.backend))
     
 
-@DATASETS.register(name="snow100km")
+@DATASETS.register(name="snow100kl")
 class Snow100KL(Snow100K):
     """
     Snow100K-L Dataset.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "snow100kl",
+        root            : Path_               = DATA_DIR / "snow100k",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
     def list_images(self):
         """
         List image files.
@@ -257,11 +356,33 @@ class Snow100KDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "snow100k",
-        name: str   = "snow100k",
+        name            : str                = "snow100k",
+        root            : Path_              = DATA_DIR / "snow100k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -346,7 +467,37 @@ class Snow100KSDataModule(Snow100KDataModule):
     """
     Snow100K-S DataModule.
     """
-
+    
+    def __init__(
+        self,
+        name            : str                = "snow100ks",
+        root            : Path_              = DATA_DIR / "snow100k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -414,7 +565,37 @@ class Snow100KMDataModule(Snow100KDataModule):
     """
     Snow100K-M DataModule.
     """
-
+    
+    def __init__(
+        self,
+        name            : str                = "snow100km",
+        root            : Path_              = DATA_DIR / "snow100k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -482,7 +663,37 @@ class Snow100KLDataModule(Snow100KDataModule):
     """
     Snow100K-L DataModule.
     """
-
+    
+    def __init__(
+        self,
+        name            : str                = "snow100kl",
+        root            : Path_              = DATA_DIR / "snow100k",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -549,10 +760,10 @@ class Snow100KLDataModule(Snow100KDataModule):
 
 def test_snow100k():
     cfg = {
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
         "name": "snow100k",
             # Dataset's name.
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -600,10 +811,10 @@ def test_snow100k():
 
 def test_snow100ks():
     cfg = {
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
         "name": "snow100ks",
             # Dataset's name.
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -651,10 +862,10 @@ def test_snow100ks():
 
 def test_snow100km():
     cfg = {
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
         "name": "snow100km",
             # Dataset's name.
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -702,10 +913,10 @@ def test_snow100km():
 
 def test_snow100kl():
     cfg = {
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
         "name": "snow100kl",
             # Dataset's name.
+        "root": DATA_DIR / "snow100k",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

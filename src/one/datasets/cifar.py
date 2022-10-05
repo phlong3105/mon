@@ -152,6 +152,7 @@ class CIFAR10(ImageClassificationDataset):
     `CIFAR-10 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ Dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -210,6 +211,7 @@ class CIFAR10(ImageClassificationDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = "cifar10",
             root             = root,
             split            = split,
             shape            = shape,
@@ -321,6 +323,37 @@ class CIFAR100(CIFAR10):
         "key"     : "fine_label_names",
         "md5"     : "7973b15100ade9c7d40fb424638fde48",
     }
+    
+    def __init__(
+        self,
+        root            : Path_,
+        split           : str,
+        shape           : Ints,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = "cifar100",
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = root / "classlabels.json",
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
 
 
 @DATAMODULES.register(name="cifar10")
@@ -331,11 +364,33 @@ class CIFAR10DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cifar" / "cifar10",
-        name: str   = "cifar10",
+        name            : str                = "cifar10",
+        root            : Path_              = DATA_DIR / "cifar" / "cifar10",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     @property
     def num_workers(self) -> int:
@@ -431,11 +486,33 @@ class CIFAR100DataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cifar" / "cifar100",
-        name: str   = "cifar100",
+        name            : str                = "cifar100",
+        root            : Path_              = DATA_DIR / "cifar" / "cifar100",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     def prepare_data(self, *args, **kwargs):
         """
@@ -519,10 +596,10 @@ class CIFAR100DataModule(DataModule):
 
 def test_cifar10():
     cfg = {
-        "root": DATA_DIR / "cifar" / "cifar10",
-           # Root directory of dataset.
         "name": "cifar10",
             # Dataset's name.
+        "root": DATA_DIR / "cifar" / "cifar10",
+           # Root directory of dataset.
         "shape": [3, 32, 32],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
@@ -573,10 +650,10 @@ def test_cifar10():
 
 def test_cifar100():
     cfg = {
-        "root": DATA_DIR / "cifar" / "cifar100",
-           # Root directory of dataset.
         "name": "cifar100",
             # Dataset's name.
+        "root": DATA_DIR / "cifar" / "cifar100",
+            # Root directory of dataset.
         "shape": [3, 32, 32],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [

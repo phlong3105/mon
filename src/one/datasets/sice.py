@@ -35,6 +35,7 @@ class SICE(ImageEnhancementDataset):
     SICE dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -59,7 +60,8 @@ class SICE(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "sice",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -73,6 +75,7 @@ class SICE(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -129,6 +132,38 @@ class SICE1(SICE):
     SICE dataset with exposure level 1.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice1",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -171,6 +206,38 @@ class SICE2(SICE):
     SICE dataset with exposure level 2.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice2",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -213,6 +280,38 @@ class SICE3(SICE):
     SICE dataset with exposure level 3.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice3",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -255,6 +354,38 @@ class SICE4(SICE):
     SICE dataset with exposure level 4.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice4",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -297,6 +428,38 @@ class SICE5(SICE):
     SICE dataset with exposure level 5.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice5",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -338,6 +501,38 @@ class SICE6(SICE):
     SICE dataset with exposure level 6.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice6",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -380,6 +575,38 @@ class SICE7(SICE):
     SICE dataset with exposure level 7.
     """
     
+    def __init__(
+        self,
+        name            : str                 = "sice7",
+        root            : Path_               = DATA_DIR / "sice" / "supervised_resized",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+        
     def list_images(self):
         """
         List image files.
@@ -422,6 +649,7 @@ class SICEUnsupervised(UnlabeledImageDataset):
     SICE-Unsupervised dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -444,7 +672,8 @@ class SICEUnsupervised(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                = "sice_unsupervised",
+        root            : Path_              = DATA_DIR / "sice" / "unsupervised",
         split           : str                = "test",
         shape           : Ints               = (3, 720, 1280),
         transform       : Transforms_ | None = None,
@@ -457,6 +686,7 @@ class SICEUnsupervised(UnlabeledImageDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -499,11 +729,33 @@ class SICEDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "sice" / "supervised_resized",
-        name: str   = "sice",
+        name            : str                = "sice",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -589,6 +841,36 @@ class SICE1DataModule(SICEDataModule):
     SICE1 DataModule.
     """
     
+    def __init__(
+        self,
+        name            : str                = "sice1",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+    
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -656,6 +938,36 @@ class SICE2DataModule(SICEDataModule):
     """
     SICE2 DataModule.
     """
+    
+    def __init__(
+        self,
+        name            : str                = "sice2",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -725,6 +1037,36 @@ class SICE3DataModule(SICEDataModule):
     SICE1 DataModule.
     """
     
+    def __init__(
+        self,
+        name            : str                = "sice3",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+    
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -792,6 +1134,36 @@ class SICE4DataModule(SICEDataModule):
     """
     SICE4 DataModule.
     """
+    
+    def __init__(
+        self,
+        name            : str                = "sice4",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -861,6 +1233,36 @@ class SICE5DataModule(SICEDataModule):
     SICE5 DataModule.
     """
     
+    def __init__(
+        self,
+        name            : str                = "sice5",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+    
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -928,7 +1330,19 @@ class SICE6DataModule(SICEDataModule):
     """
     SICE6 DataModule.
     """
-    
+
+    def __init__(
+        self,
+        name: str = "sice6",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        *args, **kwargs
+    ):
+        super().__init__(
+            name=name,
+            root=root,
+            *args, **kwargs
+        )
+
     def setup(self, phase: ModelPhase_ | None = None):
         """
         There are also data operations you might want to perform on every GPU.
@@ -996,6 +1410,36 @@ class SICE7DataModule(SICEDataModule):
     """
     SICE7 DataModule.
     """
+    
+    def __init__(
+        self,
+        name            : str                = "sice7",
+        root            : Path_              = DATA_DIR / "sice" / "supervised_resized",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     def setup(self, phase: ModelPhase_ | None = None):
         """
@@ -1067,11 +1511,33 @@ class SICEUnsupervisedDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "sice" / "unsupervised",
-        name: str   = "sice_unsupervised",
+        name            : str                = "sice_unsupervised",
+        root            : Path_              = DATA_DIR / "sice" / "unsupervised",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -1192,10 +1658,10 @@ def resize_images(root: Path_, size: Ints):
 
 def test_sice():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised_resized",
-           # Root directory of dataset.
         "name": "sice",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised_resized",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1243,10 +1709,10 @@ def test_sice():
 
 def test_sice1():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice1",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1294,10 +1760,10 @@ def test_sice1():
 
 def test_sice2():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice2",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1345,10 +1811,10 @@ def test_sice2():
 
 def test_sice3():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice3",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1396,10 +1862,10 @@ def test_sice3():
 
 def test_sice4():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice4",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1447,10 +1913,10 @@ def test_sice4():
 
 def test_sice5():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice5",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1498,10 +1964,10 @@ def test_sice5():
 
 def test_sice6():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice6",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1549,10 +2015,10 @@ def test_sice6():
 
 def test_sice7():
     cfg = {
-        "root": DATA_DIR / "sice" / "supervised",
-           # Root directory of dataset.
         "name": "sice7",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "supervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -1600,10 +2066,10 @@ def test_sice7():
 
 def test_sice_unsupervised():
     cfg = {
-        "root": DATA_DIR / "sice" / "unsupervised",
-           # Root directory of dataset.
         "name": "sice_unsupervised",
             # Dataset's name.
+        "root": DATA_DIR / "sice" / "unsupervised",
+           # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,

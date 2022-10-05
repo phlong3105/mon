@@ -64,6 +64,7 @@ class MNIST(ImageClassificationDataset):
     MNIST <http://yann.lecun.com/exdb/mnist/> Dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
@@ -119,6 +120,7 @@ class MNIST(ImageClassificationDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = "mnist",
             root             = root,
             split            = split,
             shape            = shape,
@@ -226,7 +228,7 @@ class MNIST(ImageClassificationDataset):
         return "Split: {}".format("Train" if self.train is True else "Test")
 
 
-@DATASETS.register(name="fashionmnist")
+@DATASETS.register(name="fashion_mnist")
 class FashionMNIST(MNIST):
     """
     Fashion-MNIST <https://github.com/zalandoresearch/fashion-mnist> Dataset.
@@ -246,6 +248,37 @@ class FashionMNIST(MNIST):
         "Shirt", "Sneaker", "Bag", "Ankle boot"
     ]
     
+    def __init__(
+        self,
+        root            : Path_,
+        split           : str,
+        shape           : Ints,
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = "fashion_mnist",
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = root / "classlabels.json",
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+    
 
 @DATAMODULES.register(name="mnist")
 class MNISTDataModule(DataModule):
@@ -255,11 +288,33 @@ class MNISTDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "mnist" / "mnist",
-        name: str   = "mnist",
+        name            : str                = "mnist",
+        root            : Path_              = DATA_DIR / "mnist" / "mnist",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     @property
     def num_workers(self) -> int:
@@ -347,7 +402,7 @@ class MNISTDataModule(DataModule):
         self.classlabels = ClassLabels(mnist_classlabels)
 
 
-@DATAMODULES.register(name="fashionmnist")
+@DATAMODULES.register(name="fashion_mnist")
 class FashionMNISTDataModule(DataModule):
     """
     FashionMNIST DataModule.
@@ -355,11 +410,33 @@ class FashionMNISTDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "mnist" / "fashionmnist",
-        name: str   = "fashionmnist",
+        name            : str                = "fashion_mnist",
+        root            : Path_              = DATA_DIR / "mnist" / "fashion_mnist",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
     
     @property
     def num_workers(self) -> int:
@@ -451,10 +528,10 @@ class FashionMNISTDataModule(DataModule):
 
 def test_mnist():
     cfg = {
-        "root": DATA_DIR / "mnist" / "mnist",
-           # Root directory of dataset.
         "name": "mnist",
             # Dataset's name.
+        "root": DATA_DIR / "mnist" / "mnist",
+            # Root directory of dataset.
         "shape": [3, 32, 32],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [
@@ -505,10 +582,10 @@ def test_mnist():
 
 def test_fashion_mnist():
     cfg = {
-        "root": DATA_DIR / "mnist" / "fashionmnist",
-           # Root directory of dataset.
-        "name": "fashionmnist",
+        "name": "fashion_mnist",
             # Dataset's name.
+        "root": DATA_DIR / "mnist" / "fashion_mnist",
+            # Root directory of dataset.
         "shape": [3, 32, 32],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": [

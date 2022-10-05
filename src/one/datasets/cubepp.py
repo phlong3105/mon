@@ -30,6 +30,7 @@ class CubePP(ImageEnhancementDataset):
     CubePP dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -54,7 +55,8 @@ class CubePP(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "cubepp",
+        root            : Path_               = DATA_DIR / "cube++" / "cube++",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -68,6 +70,7 @@ class CubePP(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -117,12 +120,13 @@ class CubePP(ImageEnhancementDataset):
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
-@DATASETS.register(name="fusioncubepp")
+@DATASETS.register(name="fusion_cubepp")
 class FusionCubePP(ImageEnhancementDataset):
     """
     FusionCubePP dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -147,7 +151,8 @@ class FusionCubePP(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "fusion_cubepp",
+        root            : Path_               = DATA_DIR / "cube++" / "simplecube++_512",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -161,6 +166,7 @@ class FusionCubePP(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -210,12 +216,13 @@ class FusionCubePP(ImageEnhancementDataset):
                 self.labels.append(Image(path=path, backend=self.backend))
    
 
-@DATASETS.register(name="simplecubepp")
+@DATASETS.register(name="simple_cubepp")
 class SimpleCubePP(ImageEnhancementDataset):
     """
     SimpleCubePP dataset.
     
     Args:
+        name (str): Dataset's name.
         root (Path_): Root directory of dataset.
         split (str): Split to use. One of: ["train", "val", "test"].
         shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
@@ -240,7 +247,8 @@ class SimpleCubePP(ImageEnhancementDataset):
     
     def __init__(
         self,
-        root            : Path_,
+        name            : str                 = "simple_cubepp",
+        root            : Path_               = DATA_DIR / "cube++" / "simplecube++",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
         classlabels     : ClassLabels_ | None = None,
@@ -254,6 +262,7 @@ class SimpleCubePP(ImageEnhancementDataset):
         *args, **kwargs
     ):
         super().__init__(
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
@@ -311,11 +320,33 @@ class CubePPDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cube++" / "cube++",
-        name: str   = "cubepp",
+        name            : str                = "cubepp",
+        root            : Path_              = DATA_DIR / "cube++" / "cube++",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -395,7 +426,7 @@ class CubePPDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="fusioncubepp")
+@DATAMODULES.register(name="fusion_cubepp")
 class FusionCubePPDataModule(DataModule):
     """
     FusionCubePP DataModule.
@@ -403,11 +434,33 @@ class FusionCubePPDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cube++" / "simplecube++_512",
-        name: str   = "fusioncubepp",
+        name            : str                = "fusion_cubepp",
+        root            : Path_              = DATA_DIR / "cube++" / "simplecube++_512",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -487,7 +540,7 @@ class FusionCubePPDataModule(DataModule):
         pass
 
 
-@DATAMODULES.register(name="simplecubepp")
+@DATAMODULES.register(name="simple_cubepp")
 class SimpleCubePPDataModule(DataModule):
     """
     SimpleCubePP DataModule.
@@ -495,11 +548,33 @@ class SimpleCubePPDataModule(DataModule):
     
     def __init__(
         self,
-        root: Path_ = DATA_DIR / "cube++" / "simplecube++",
-        name: str   = "simplecubepp",
+        name: str = "simple_cubepp",
+        root            : Path_              = DATA_DIR / "cube++" / "simplecube++",
+        shape           : Ints               = (3, 512, 512),
+        transform       : Transforms_ | None = None,
+        target_transform: Transforms_ | None = None,
+        transforms      : Transforms_ | None = None,
+        batch_size      : int                = 1,
+        devices         : Devices            = 0,
+        shuffle         : bool               = True,
+        collate_fn      : Callable    | None = None,
+        verbose         : bool               = True,
         *args, **kwargs
     ):
-        super().__init__(root=root, name=name, *args, **kwargs)
+        super().__init__(
+            name             = name,
+            root             = root,
+            shape            = shape,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            batch_size       = batch_size,
+            devices          = devices,
+            shuffle          = shuffle,
+            collate_fn       = collate_fn,
+            verbose          = verbose,
+            *args, **kwargs
+        )
         
     def prepare_data(self, *args, **kwargs):
         """
@@ -583,10 +658,10 @@ class SimpleCubePPDataModule(DataModule):
 
 def test_cubepp():
     cfg = {
-        "root": DATA_DIR / "cube++" / "cube++",
-           # Root directory of dataset.
         "name": "cubepp",
             # Dataset's name.
+        "root": DATA_DIR / "cube++" / "cube++",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -634,10 +709,10 @@ def test_cubepp():
 
 def test_fusion_cubepp():
     cfg = {
-        "root": DATA_DIR / "cube++" / "simplecube++_512",
-           # Root directory of dataset.
-        "name": "fusioncubepp",
+        "name": "fusion_cubepp",
             # Dataset's name.
+        "root": DATA_DIR / "cube++" / "simplecube++_512",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
@@ -685,10 +760,10 @@ def test_fusion_cubepp():
 
 def test_simple_cubepp():
     cfg = {
-        "root": DATA_DIR / "cube++" / "simplecube++",
-           # Root directory of dataset.
-        "name": "simplecubepp",
+        "name": "simple_cubepp",
             # Dataset's name.
+        "root": DATA_DIR / "cube++" / "simplecube++",
+            # Root directory of dataset.
         "shape": [3, 512, 512],
             # Image shape as [C, H, W], [H, W], or [S, S].
         "transform": None,
