@@ -42,7 +42,7 @@ data = {
     ],
         # Functions/transforms that takes in an input and a target and returns
         # the transformed versions of both.
-    "cache_data": False,
+    "cache_data": True,
         # If True, cache data to disk for faster loading next time.
         # Defaults to False.
     "cache_images": False,
