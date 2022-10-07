@@ -353,8 +353,8 @@ class ModelCheckpoint(Checkpoint):
         
         # Print model's info
         if hasattr(pl_module, "params"):
-            self.logger.write(f"{'Model':<10}     : {pl_module.name}\n")
-            self.logger.write(f"{'Data':<10}      : {pl_module.fullname}\n")
+            self.logger.write(f"{'Model':<10}: {pl_module.name}\n")
+            self.logger.write(f"{'Data':<10}: {pl_module.fullname}\n")
             self.logger.write(f"{'Parameters':<10}: {pl_module.params}\n")
         
         # Print header

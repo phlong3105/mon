@@ -1277,6 +1277,7 @@ class ExtractFeature(Module):
     def __init__(
         self,
         index: int,
+        dim  : int = 1,
         *args, **kwargs
     ):
         super().__init__()
@@ -5280,7 +5281,7 @@ class DCEV2(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv7 = conv(
+        self.conv7 = Conv2d(
             in_channels  = mid_channels * 2,
             out_channels = out_channels,
             kernel_size  = kernel_size,

@@ -16,11 +16,11 @@ from one.vision.transformation import Resize
 # H1: - Basic ------------------------------------------------------------------
 
 model_name = "zerodcev2"
-model_cfg  = "zerodcev2-u4"
-data_name  = "lol"
+model_cfg  = "zerodcev2-s6"
+data_name  = "lol4k"
 fullname   = f"{model_cfg}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = "lol"
+project    = "lol4k"
 shape      = [3, 512, 512]
 
 
@@ -68,10 +68,10 @@ model = {
         # Model's layers configuration. It can be an external .yaml path or a
         # dictionary. Defaults to None means you should define each layer
         # manually in `self.parse_model()` method.
-    "project": project,
-		# Project name. Defaults to None.
     "root": root,
         # The root directory of the model. Defaults to RUNS_DIR.
+    "project": project,
+		# Project name. Defaults to None.
     "name": model_name,
         # Model's name. In case None is given, it will be
         # `self.__class__.__name__`. Defaults to None.
@@ -93,7 +93,7 @@ model = {
     "loss": None,
         # Loss function for training model. Defaults to None.
     "metrics": {
-	    "train": [{"name": "psnr"}],
+	    "train": None,
 		"val":   [{"name": "psnr"}, {"name": "ssim"}],
 		"test":  [{"name": "psnr"}, {"name": "ssim"}],
     },
@@ -124,7 +124,7 @@ callbacks = [
 	    "monitor": "checkpoint/loss/train_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint
 	        # only for the last epoch.
-		"mode": "min",
+	    "mode": "min",
 			# One of {min, max}. If `save_top_k != 0`, the decision to
 	        # overwrite the current save file is made based on either the
 	        # maximization or the minimization of the monitored quantity.

@@ -299,7 +299,7 @@ class LOL226(UnlabeledImageDataset):
     
     def __init__(
         self,
-        name            : str                = "lol",
+        name            : str                = "lol226",
         root            : Path_              = DATA_DIR / "lol",
         split           : str                = "train",
         shape           : Ints               = (3, 720, 1280),
@@ -2190,7 +2190,7 @@ def test_vv():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str , default="test_lol4k", help="The task to run")
+    parser.add_argument("--task", type=str , default="test_lol226", help="The task to run")
     args = parser.parse_args()
     return args
 
