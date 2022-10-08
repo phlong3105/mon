@@ -15,13 +15,13 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "finet-dehaze"
-model_cfg  = "finet"
-data_name  = "ohaze"
-fullname   = f"{model_name}-{data_name}"
+model_name = "zerodce"
+model_cfg  = "zerodce.yaml"
+data_name  = "sice_u"
+fullname   = f"{model_name}-sice"
 root       = RUNS_DIR / "train"
-project    = "finet"
-shape      = [3, 256, 256]
+project    = "sice"
+shape      = [3, 512, 512]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -50,7 +50,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 4,
+    "batch_size": 8,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
@@ -90,61 +90,23 @@ model = {
         # Model's running phase. Defaults to training.
     "pretrained": None,
         # Initialize weights from pretrained.
-    "loss": {"name": "psnr_loss", "max_val": 1.0, "weight": 0.5},
+    "loss": None,
         # Loss function for training model. Defaults to None.
-    "metrics": {
-	    "train": [{"name": "psnr"}],
-		"val":   [{"name": "psnr"}],
-		"test":  [{"name": "psnr"}, {"name": "ssim"}],
-    },
+    "metrics": None,
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [
         {
             "optimizer": {
 				"name": "adam",
-				"lr": 2e-4,
-				"weight_decay": 0,
+				"lr": 0.0001,
+				"weight_decay": 0.0001,
 				"betas": [0.9, 0.99],
-			},
-	        "lr_scheduler": {
-				"scheduler": {
-					"name": "cosine_annealing_lr",
-					"T_max": 400000,
-					"eta_min": 1e-7,
-					"last_epoch": -1
-				},
-				# REQUIRED: The scheduler measurement
-				"interval": "epoch",
-					# Unit of the scheduler's step size, could also be 'step'.
-					# 'epoch' updates the scheduler on epoch end whereas 'step'
-					# updates it after a optimizer update.
-				"frequency": 1,
-					# How many epochs/steps should pass between calls to
-					# `scheduler.step()`. 1 corresponds to updating the
-		            # learning rate after every epoch/step.
-				"monitor": "val_loss",
-					# Metric to monitor for schedulers like `ReduceLROnPlateau`
-				"strict": True,
-					# If set to `True`, will enforce that the value specified
-					# 'monitor' is available when the scheduler is updated,
-		            # thus stopping training if not found. If set to `False`,
-		            # it will only produce a warning
-				"name": None,
-					# If using the `LearningRateMonitor` callback to monitor
-		            # the learning rate progress, this keyword can be used to
-		            # specify a custom logged name
 			},
             "frequency": None,
         }
     ],
         # Optimizer(s) for training model. Defaults to None.
-    "debug": default.debug | {
-	    "every_best_epoch": True,
-			# Save only the best epochs. Defaults to True.
-		"every_n_epochs": 5,
-			# Number of epochs between debugging. To disable, set
-	        # `every_n_epochs=0`. Defaults to 1.
-    },
+    "debug": default.debug,
         # Debug configs. Defaults to None.
 	"verbose": True,
 		# Verbosity. Defaults to True.
@@ -155,10 +117,10 @@ model = {
 
 callbacks = [
     default.model_checkpoint | {
-	    "monitor": "checkpoint/psnr/train_epoch",
+	    "monitor": "checkpoint/loss/train_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint
 	        # only for the last epoch.
-		"mode": "max",
+		"mode": "min",
 			# One of {min, max}. If `save_top_k != 0`, the decision to
 	        # overwrite the current save file is made based on either the
 	        # maximization or the minimization of the monitored quantity.
@@ -179,4 +141,13 @@ trainer = default.trainer | {
         # Default path for logs and weights when no logger/ckpt_callback passed.
         # Can be remote file paths such as `s3://mybucket/path` or
         # 'hdfs://path/'. Defaults to os.getcwd().
+	"gradient_clip_val": 0.1,
+        # The value at which to clip gradients. Passing `gradient_clip_val=None`
+        # disables gradient clipping. If using Automatic Mixed Precision (AMP),
+        # the gradients will be unscaled before. Defaults to None.
+	"gradient_clip_algorithm": "norm",
+        # The gradient clipping algorithm to use.
+        # Pass `gradient_clip_algorithm="value"` to clip by  value, and
+        # `gradient_clip_algorithm="norm"` to clip by norm. By default, it will
+        # be set to "norm".
 }

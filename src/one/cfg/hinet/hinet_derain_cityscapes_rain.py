@@ -21,7 +21,7 @@ data_name  = "cityscapes_rain"
 fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / "train"
 project    = "hinet"
-shape      = [3, 256, 256]
+shape      = [3, 512, 512]
 
 
 # H1: - Data -------------------------------------------------------------------

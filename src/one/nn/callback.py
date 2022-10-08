@@ -673,9 +673,9 @@ class ModelCheckpoint(Checkpoint):
         self.best_model_path  = _op(self.best_k_models, key=self.best_k_models.get)  # type: ignore[arg-type]
         self.best_model_score = self.best_k_models[self.best_model_path]
         
-        is_current_new_best = str(filepath) == str(self.best_model_path)
-        epoch = monitor_candidates.pop("epoch")
-        step  = monitor_candidates.pop("step")
+        is_new_best = str(filepath) == str(self.best_model_path)
+        epoch       = monitor_candidates.pop("epoch")
+        step        = monitor_candidates.pop("step")
         for c, v in monitor_candidates.items():
             if "epoch" not in c:
                 continue
@@ -683,7 +683,7 @@ class ModelCheckpoint(Checkpoint):
             m = c.split("/")[0]
             c = f"train_{m}" if "train" in c else f"val_{m}"
             self.keys[c] = v
-        if is_current_new_best:
+        if is_new_best:
             if self.verbose and trainer.is_global_zero:
                 row1 = f"{epoch:>10d} {step:>10d} [red]{current:>16.6f}[default] "
                 row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "

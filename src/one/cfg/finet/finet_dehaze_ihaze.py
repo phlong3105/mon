@@ -139,6 +139,8 @@ model = {
     ],
         # Optimizer(s) for training model. Defaults to None.
     "debug": default.debug | {
+	    "every_best_epoch": True,
+			# Save only the best epochs. Defaults to True.
 		"every_n_epochs": 5,
 			# Number of epochs between debugging. To disable, set
 	        # `every_n_epochs=0`. Defaults to 1.

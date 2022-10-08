@@ -1404,6 +1404,8 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                 debug = Munch.fromDict(debug)
             self._debug = debug
         
+            if "every_best_epoch" not in self._debug:
+                self._debug.every_best_epoch = True
             if "every_n_epochs" not in self._debug:
                 self._debug.every_n_epochs = 1
             if "save_to_subdir" not in self._debug:
@@ -2140,9 +2142,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             
         # Debugging
         epoch = self.current_epoch + 1
-        if self.debug and \
-            epoch % self.debug.every_n_epochs == 0 and \
-            self.epoch_step < self.debug.max_n:
+        if self.debug \
+            and epoch % self.debug.every_n_epochs == 0 \
+            and self.epoch_step < self.debug.max_n:
             if self.trainer.is_global_zero:
                 self.show_results(
                     input    = input,
@@ -2154,7 +2156,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
                         "nrow" : input[0],
                     }
                 )
-
+            
         # Loss
         loss = loss.mean() if loss is not None else None
         self.ckpt_log_scalar(f"checkpoint/loss/val_step", loss)
@@ -2170,9 +2172,9 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         self.epoch_step += 1
         return {
             "loss"  : loss,
-            # "input" : input,
-            # "target": target,
-            # "pred"  : pred,
+            "input" : input,
+            "target": target,
+            "pred"  : pred,
         }
     
     def validation_epoch_end(self, outputs: EpochOutput):

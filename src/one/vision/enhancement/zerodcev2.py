@@ -215,32 +215,12 @@ cfgs = {
     "zerodcev2-s6": {
         "channels": 3,
         "backbone": [
-            # [from,  number, module,                      args(out_channels, ...)]
-            [-1,      1,      Identity,                    []],                                                                           # 0  (x)
-            [-1,      1,      ABSConv2dS,                  [32, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 1
-            [-1,      1,      ReLU,                        [True]],                                                                       # 2  (x1)
-            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 3
-            [-1,      1,      ReLU,                        [True]],                                                                       # 4  (x2)
-            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 5
-            [-1,      1,      ReLU,                        [True]],                                                                       # 6  (x3)
-            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 7
-            [-1,      1,      ReLU,                        [True]],                                                                       # 8  (x4)
-            [[6, 8],  1,      Concat,                      []],                                                                           # 9
-            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 10
-            [-1,      1,      ReLU,                        [True]],                                                                       # 11 (x5)
-            [[4, 11], 1,      Concat,                      []],                                                                           # 12
-            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 13
-            [-1,      1,      ReLU,                        [True]],                                                                       # 14 (x6)
-            [[2, 14], 1,      Concat,                      []],                                                                           # 15
-            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 16
-            [-1,      1,      ReLU,                        [True]],                                                                       # 17 (x7)
-            [ 2,      1,      ExtractFeatures,             [0, 16]],                                                                      # 18
-            [[2, 17], 1,      Concat,                      []],                                                                           # 19
-            [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 1, 0]],                                                       # 20 (a)
-            [-1,      1,      Tanh,                        []],                                                                           # 21
-        ],
-        "head": [
-            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                                                          # 22
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                                                    # 0  (x)
+            [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dS, act=HalfInstanceNorm2d)]],  # 1
+        ],                                                                                      
+        "head": [                                                                               
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                # 2
         ]
     },
     "zerodcev2-t1": {
