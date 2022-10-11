@@ -92,7 +92,11 @@ model = {
         # Initialize weights from pretrained.
     "loss": None,
         # Loss function for training model. Defaults to None.
-    "metrics": None,
+    "metrics": {
+	    "train": None,
+		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+    },
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [
         {

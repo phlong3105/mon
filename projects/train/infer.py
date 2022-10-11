@@ -101,7 +101,7 @@ hosts = {
         "source"     : DATA_DIR / "cityscapes" / "leftImg8bit_rain",
         "max_samples": None,
         "batch_size" : 1,
-        "img_size"   : (3, 256, 256),
+        "img_size"   : (3, 512, 512),
 		"devices"    : "0",
         "root"       : RUNS_DIR / "infer",
         "project"    : "hinet",

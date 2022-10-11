@@ -39,6 +39,13 @@ from one.core import *
 
 # H2: - Activation -------------------------------------------------------------
 
+def hard_sigmoid(input: Tensor, inplace: bool = False) -> Tensor:
+    if inplace:
+        return input.add_(3.0).clamp_(0.0, 6.0).div_(6.0)
+    else:
+        return F.relu6(input + 3.0) / 6.0
+
+
 class ArgMax(Module):
     """
     Find the indices of the maximum value of all elements in the input
@@ -233,7 +240,7 @@ class ChannelAttention(Module):
             x = avg_out or max_out
         x = self.act(x)
         return x
-    
+
 
 class PixelAttention(Module):
     """
@@ -379,7 +386,64 @@ class SpatialAttention(Module):
         x          = self.conv(x)
         x          = self.act(x)
         return x
+
+
+class SqueezeExcite(nn.Module):
+    def __init__(
+        self,
+        in_channels     : int,
+        se_ratio        : float           = 0.25,
+        reduced_base_chs: int      | None = None,
+        act             : Callable | None = ReLU,
+        gate_fn         : Callable | None = hard_sigmoid,
+        divisor         : int             = 4,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.gate_fn = gate_fn
+        reduced_channels = self.make_divisible(
+            v       = (reduced_base_chs or in_channels) * se_ratio,
+            divisor = divisor
+        )
+        self.avg_pool    = AdaptiveAvgPool2d(1)
+        self.conv_reduce = Conv2d(
+            in_channels  = in_channels,
+            out_channels = reduced_channels,
+            kernel_size  = 1,
+            bias         = True
+        )
+        self.act1        = to_act_layer(act=act, inplace=True)
+        self.conv_expand = Conv2d(
+            in_channels  = reduced_channels,
+            out_channels = in_channels,
+            kernel_size  = 1,
+            bias         = True
+        )
     
+    def make_divisible(self, v, divisor, min_value=None):
+        """
+        This function is taken from the original tf repo.
+        It ensures that all layers have a channel number that is divisible by 8
+        It can be seen here:
+        https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+        """
+        if min_value is None:
+            min_value = divisor
+        new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+        # Make sure that round down does not go down by more than 10%.
+        if new_v < 0.9 * v:
+            new_v += divisor
+        return new_v
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x    = input
+        x_se = self.avg_pool(x)
+        x_se = self.conv_reduce(x_se)
+        x_se = self.act1(x_se)
+        x_se = self.conv_expand(x_se)
+        x    = x * self.gate_fn(x_se)
+        return x
+
 
 class SupervisedAttentionModule(Module):
     """
@@ -469,7 +533,149 @@ class SupervisedAttentionModule(Module):
         x1   += fy
         pred  = x1
         return pred, img
+
+
+# H2: - Bottleneck -------------------------------------------------------------
+
+class GhostBottleneck(Module):
+    """
+    Ghost Bottleneck with optional SE.
     
+    References:
+        https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
+    """
+
+    def __init__(
+        self,
+        in_channels : int,
+        mid_channels: int,
+        out_channels: int,
+        kernel_size : Ints            = 3,
+        stride      : Ints            = 1,
+        padding     : Ints | str      = 0,
+        dilation    : Ints            = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        se_ratio    : float           = 0.0,
+        act         : Callable | None = ReLU,
+        *args, **kwargs
+    ):
+        super().__init__()
+        has_se      = se_ratio is not None and se_ratio > 0.0
+        self.stride = stride
+
+        # Point-wise expansion
+        self.ghost1 = GhostConv2d(
+            in_channels    = in_channels,
+            out_channels   = mid_channels,
+            kernel_size    = 1,
+            dw_kernel_size = 3,
+            stride         = stride,
+            padding        = padding,
+            dilation       = dilation,
+            groups         = groups,
+            bias           = bias,
+            padding_mode   = padding_mode,
+            device         = device,
+            dtype          = dtype,
+            act            = ReLU,
+        )
+
+        # Depth-wise convolution
+        if self.stride > 1:
+            self.conv_dw = Conv2d(
+                in_channels  = mid_channels,
+                out_channels = mid_channels,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = (kernel_size - 1) // 2,
+                dilation     = dilation,
+                groups       = mid_channels,
+                bias         = False,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            )
+            self.bn_dw = BatchNorm2d(mid_channels)
+
+        # Squeeze-and-excitation
+        if has_se:
+            self.se = SqueezeExcite(mid_channels, se_ratio=se_ratio)
+        else:
+            self.se = None
+
+        # Point-wise linear projection
+        self.ghost2 = GhostConv2d(
+            in_channels    = mid_channels,
+            out_channels   = out_channels,
+            kernel_size    = 1,
+            dw_kernel_size = 3,
+            stride         = stride,
+            padding        = padding,
+            dilation       = dilation,
+            groups         = groups,
+            bias           = bias,
+            padding_mode   = padding_mode,
+            device         = device,
+            dtype          = dtype,
+            act            = ReLU,
+        )
+        
+        # Shortcut
+        if in_channels == out_channels and self.stride == 1:
+            self.shortcut = Sequential()
+        else:
+            self.shortcut = Sequential(
+                Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = out_channels,
+                    kernel_size  = kernel_size,
+                    stride       = stride,
+                    padding      = (kernel_size - 1) // 2,
+                    dilation     = dilation,
+                    groups       = in_channels,
+                    bias         = False,
+                    padding_mode = padding_mode,
+                    device       = device,
+                    dtype        = dtype,
+                ),
+                BatchNorm2d(in_channels),
+                Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = out_channels,
+                    kernel_size  = 1,
+                    stride       = 1,
+                    padding      = 0,
+                    dilation     = dilation,
+                    groups       = groups,
+                    bias         = False,
+                    padding_mode = padding_mode,
+                    device       = device,
+                    dtype        = dtype,
+                ),
+                BatchNorm2d(out_channels),
+            )
+
+    def forward(self, input: Tensor) -> Tensor:
+        x        = input
+        residual = x
+        # 1st ghost bottleneck
+        x  = self.ghost1(x)
+        # Depth-wise convolution
+        if self.stride > 1:
+            x = self.conv_dw(x)
+            x = self.bn_dw(x)
+        # Squeeze-and-excitation
+        if self.se is not None:
+            x = self.se(x)
+        # 2nd ghost bottleneck
+        x  = self.ghost2(x)
+        x += self.shortcut(residual)
+        return x
+
 
 # H2: - Convolution ------------------------------------------------------------
 
@@ -816,6 +1022,80 @@ class DepthwiseSeparableConvReLU2d(Module):
         return x
 
 
+class GhostConv2d(Module):
+    """
+    Ghost Conv2d adopted from the paper: "GhostNet: More Features from Cheap
+    Operations," CVPR 2020.
+    
+    References:
+        https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
+    """
+
+    def __init__(
+        self,
+        in_channels   : int,
+        out_channels  : int,
+        ratio         : int                    = 2,
+        kernel_size   : Ints                   = 1,
+        dw_kernel_size: Ints                   = 3,
+        stride        : Ints                   = 1,
+        padding       : Ints | str             = 0,
+        dilation      : Ints                   = 1,
+        groups        : int                    = 1,
+        bias          : bool                   = True,
+        padding_mode  : str                    = "zeros",
+        device        : Any                    = None,
+        dtype         : Any                    = None,
+        act           : Callable | bool | None = ReLU,
+        *args, **kwargs
+    ):
+        super().__init__()
+        self.out_channels = out_channels
+        init_channels     = math.ceil(out_channels / ratio)
+        new_channels      = init_channels * (ratio - 1)
+        
+        self.primary_conv = Sequential(
+            Conv2d(
+                in_channels  = in_channels,
+                out_channels = init_channels,
+                kernel_size  = kernel_size,
+                stride       = stride,
+                padding      = kernel_size // 2,
+                dilation     = dilation,
+                groups       = groups,
+                bias         = False,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            BatchNorm2d(init_channels),
+            to_act_layer(act=act, inplace=True),
+        )
+        self.cheap_operation = Sequential(
+            nn.Conv2d(
+                in_channels  = init_channels,
+                out_channels = new_channels,
+                kernel_size  = dw_kernel_size,
+                stride       = 1,
+                padding      = dw_kernel_size // 2,
+                groups       = init_channels,
+                bias         = False,
+                padding_mode = padding_mode,
+                device       = device,
+                dtype        = dtype,
+            ),
+            BatchNorm2d(new_channels),
+            to_act_layer(act=act, inplace=True),
+        )
+        
+    def forward(self, input: Tensor) -> Tensor:
+        x   = input
+        x1  = self.primary_conv(x)
+        x2  = self.cheap_operation(x1)
+        out = torch.cat([x1, x2], dim=1)
+        return out[:, :self.out_channels, :, :]
+    
+
 class SubspaceBlueprintSeparableConv2d(Module):
     """
     Subspace Blueprint Separable Conv2d adopted from the paper:
@@ -859,7 +1139,7 @@ class SubspaceBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act1     = act(num_features=mid_channels) if act is not None else None
+        self.act1     = to_act_layer(act=act, num_features=mid_channels)
         self.pw_conv2 = Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -873,7 +1153,7 @@ class SubspaceBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act2    = act(num_features=out_channels) if act is not None else None
+        self.act2    = to_act_layer(act=act, num_features=out_channels)
         self.dw_conv = Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -946,7 +1226,7 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act = act(num_features=out_channels) if act is not None else None
+        self.act     = to_act_layer(act=act, num_features=out_channels)
         self.dw_conv = Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
