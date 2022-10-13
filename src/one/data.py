@@ -3320,11 +3320,11 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         meta   = self.images[index].meta
         
         if self.transform is not None:
-            input, *_  = self.transform(input=input, target=None, dataset=self)
+            input,  *_     = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
-            target, *_ = self.target_transform(input=target, target=None, dataset=self)
+            target, *_     = self.target_transform(input=target, target=None, dataset=self)
         if self.transforms is not None:
-            input, target = self.transforms(input=input, target=target, dataset=self)
+            input,  target = self.transforms(input=input, target=target, dataset=self)
         return input, target, meta
         
     def cache_images(self):
@@ -3368,14 +3368,14 @@ class ImageEnhancementDataset(LabeledImageDataset, metaclass=ABCMeta):
         input, target, meta = zip(*batch)  # Transposed
 
         if all(i.ndim == 3 for i in input):
-            input  = torch.stack(input,  0)
+            input  = torch.stack(input, 0)
         elif all(i.ndim == 4 for i in input):
-            input  = torch.cat(input,  0)
+            input  = torch.cat(input, 0)
         else:
             raise ValueError(
                 f"Expect 3 <= `input.ndim` and `target.ndim` <= 4."
             )
-        
+
         if all(is_tensor(t) and t.ndim == 3 for t in target):
             target = torch.stack(target, 0)
         elif all(is_tensor(t) and t.ndim == 4 for t in target):

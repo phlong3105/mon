@@ -82,7 +82,7 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcev2_s1_sice",
+		"cfg"        : "zerodcev2_s3_sice",
         "project"    : "sice",
         "weights"    : None,
         "batch_size" : 4,
@@ -104,18 +104,18 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws02": {
-		"cfg"        : "zerodcev2_s3_sice",
+		"cfg"        : "zerodcev2_s6_sice",
         "project"    : "sice",
         "weights"    : None,
         "batch_size" : 16,
         "img_size"   : None,  # (3, 512, 512),
         "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
     "vsw-ws03": {
-		"cfg"        : "zerodce_sice",
+		"cfg"        : "zerodcev2_s6_sice",
         "project"    : "sice",
         "weights"    : None,
         "batch_size" : 16,

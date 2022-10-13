@@ -379,10 +379,10 @@ class SICEPart2(ImageEnhancementDataset):
                 self.labels.append(Image(path=path, backend=self.backend))
                 
 
-@DATASETS.register(name="sice_part2_resized")
-class SICEPart2Resized(ImageEnhancementDataset):
+@DATASETS.register(name="sice_part2_512")
+class SICEPart2_512(ImageEnhancementDataset):
     """
-    SICE Part 2 Resized dataset.
+    SICE Part 2 512x512 dataset.
     
     Args:
         name (str): Dataset's name.
@@ -410,7 +410,7 @@ class SICEPart2Resized(ImageEnhancementDataset):
     
     def __init__(
         self,
-        name            : str                 = "sice_part2_resized",
+        name            : str                 = "sice_part2_512",
         root            : Path_               = DATA_DIR / "sice",
         split           : str                 = "train",
         shape           : Ints                = (3, 512, 512),
@@ -446,7 +446,7 @@ class SICEPart2Resized(ImageEnhancementDataset):
         """
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / "part2_1200x900" / "low"
+            pattern = self.root / "part2_512x512" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
                 description=f"Listing {self.__class__.classname} images"
@@ -465,7 +465,97 @@ class SICEPart2Resized(ImageEnhancementDataset):
                 description=f"Listing {self.__class__.classname} labels"
             ):
                 stem = str(img.path.parent.stem)
-                path = self.root / "part2_1200x900" / "high" / f"{stem}.jpg"
+                path = self.root / "part2_512x512" / "high" / f"{stem}.jpg"
+                self.labels.append(Image(path=path, backend=self.backend))
+
+
+@DATASETS.register(name="sice_part2_900")
+class SICEPart2_900(ImageEnhancementDataset):
+    """
+    SICE Part 2 900x1200 dataset.
+    
+    Args:
+        name (str): Dataset's name.
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        name            : str                 = "sice_part2_900",
+        root            : Path_               = DATA_DIR / "sice",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "part2_900x1200" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*/*")),
+                description=f"Listing {self.__class__.classname} images"
+            ):
+                if is_image_file(path):
+                    self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.classname} labels"
+            ):
+                stem = str(img.path.parent.stem)
+                path = self.root / "part2_900x1200" / "high" / f"{stem}.jpg"
                 self.labels.append(Image(path=path, backend=self.backend))
 
 
@@ -653,7 +743,7 @@ class SICEUDataModule(DataModule):
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            full_dataset = SICEPart1Low(
+            self.train = SICEPart1Low(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -663,17 +753,22 @@ class SICEUDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            train_size   = int(0.8 * len(full_dataset))
-            val_size     = len(full_dataset) - train_size
-            self.train, self.val = random_split(
-                full_dataset, [train_size, val_size]
+            self.val = SICEPart2_512(
+                root             = self.root,
+                split            = "train",
+                shape            = self.shape,
+                transform        = self.transform,
+                target_transform = self.target_transform,
+                transforms       = self.transforms,
+                verbose          = self.verbose,
+                **self.dataset_kwargs
             )
-            self.classlabels = getattr(full_dataset, "classlabels", None)
-            self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
+            self.classlabels = getattr(self.val, "classlabels", None)
+            self.collate_fn  = getattr(self.val, "collate_fn",  None)
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = SICEPart2Resized(
+            self.test = SICEPart2_900(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -712,17 +807,15 @@ def resize_images(root: Path_, size: Ints):
     images: list[Image] = []
     with progress_bar() as pbar:
         for path in pbar.track(
-            list(root.rglob("*.jpg")),
+            list(root.rglob("*")),
             description=f"Listing images"
         ):
-            images.append(Image(path=path))
+            if is_image_file(path):
+                images.append(Image(path=path))
        
         for image in pbar.track(images, description=f"Resizing images"):
-            img = image.load()
-            img = resize(
-                image = img,
-                size  = size,
-            )
+            img      = image.load()
+            img      = resize(image=img, size=size)
             path     = image.path
             rel_path = str(path).replace(str(root) + "/", "")
             rel_path = Path(rel_path)
@@ -841,9 +934,9 @@ def test_sice_unsupervised():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str , default="test_sice_unsupervised", help="The task to run.")
-    parser.add_argument("--root", type=str,  default=DATA_DIR / "sice",        help="Data root")
-    parser.add_argument("--size", type=int,  nargs="+", default=(3, 256, 256), help="Image size.")
+    parser.add_argument("--task", type=str ,            default="test_sice_unsupervised", help="The task to run.")
+    parser.add_argument("--root", type=str,             default=DATA_DIR / "sice",        help="Data root")
+    parser.add_argument("--size", type=int,  nargs="+", default=(3, 512, 512),            help="Image size.")
     args = parser.parse_args()
     return args
 
