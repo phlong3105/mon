@@ -10,7 +10,9 @@ from __future__ import annotations
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Module
+from torch.nn import Parameter
 
+from one.nn import Conv2d
 from one.vision.filtering.kernel import *
 
 
@@ -859,6 +861,36 @@ class BoxBlur(Module):
             normalized  = self.normalized
         )
 
+
+class FastSobel(Module):
+    """
+    References:
+        https://github.com/chaddy1004/sobel-operator-pytorch/blob/master/model.py
+    """
+    
+    def __init__(self):
+        super().__init__()
+        self.filter = Conv2d(
+            in_channels  = 1,
+            out_channels = 2,
+            kernel_size  = 3,
+            stride       = 1,
+            padding      = 0,
+            bias         = False,
+        )
+        gx = torch.tensor([[2.0, 0.0, -2.0], [4.0, 0.0, -4.0], [ 2.0,  0.0, -2.0]])
+        gy = torch.tensor([[2.0, 4.0,  2.0], [0.0, 0.0,  0.0], [-2.0, -4.0, -2.0]])
+        g  = torch.cat([gx.unsqueeze(0), gy.unsqueeze(0)], 0)
+        g  = g.unsqueeze(1)
+        self.filter.weight = Parameter(g, requires_grad=False)
+
+    def forward(self, input: Tensor) -> Tensor:
+        x = self.filter(input)
+        x = torch.mul(x, x)
+        x = torch.sum(x, dim=1, keepdim=True)
+        x = torch.sqrt(x)
+        return x
+    
 
 class GaussianBlur2d(Module):
     """

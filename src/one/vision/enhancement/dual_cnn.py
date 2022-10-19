@@ -168,8 +168,8 @@ class DualCNN(ImageEnhancementModel):
         import one.vision.transformation as t
         pred        = self.forward(input=input, *args, **kwargs)  # (detail, structure, output)
         crop_target = t.crop_tblr(target, 6, -6, 6, -6)
-        loss = 0.01 * self.loss(pred[1], crop_target) \
-               + self.loss(pred[-1], crop_target) if self.loss else None
+        loss        = 0.01 * self.loss(pred[1], crop_target) \
+                      + self.loss(pred[-1], crop_target) if self.loss else None
         return pred[-1], loss
 
     def on_fit_start(self):

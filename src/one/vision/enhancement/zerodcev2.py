@@ -28,6 +28,8 @@ class CombinedLoss(BaseLoss):
         exp_weight    : Floats = 10.0,
         col_weight    : Floats = 5.0,
         tv_weight     : Floats = 200.0,
+        channel_weight: Floats = 5.0,
+        edge_weight   : Floats = 5.0,
         reduction     : str    = "mean",
         *args, **kwargs
     ):
@@ -51,6 +53,14 @@ class CombinedLoss(BaseLoss):
             weight    = tv_weight,
             reduction = reduction,
         )
+        self.loss_channel = ChannelConsistencyLoss(
+            weight    = channel_weight,
+            reduction = reduction,
+        )
+        self.loss_edge = EdgeLoss(
+            weight    = edge_weight,
+            reduction = reduction,
+        )
      
     def forward(self, input: Tensors, target: Sequence[Tensor], **_) -> Tensor:
         import one.vision.transformation as t
@@ -62,12 +72,14 @@ class CombinedLoss(BaseLoss):
         else:
             raise TypeError()
         # input    = t.crop_tblr(input, 6, -6, 6, -6)
-        loss_spa = self.loss_spa(input=enhance, target=input)
-        loss_exp = self.loss_exp(input=enhance)
-        loss_col = self.loss_col(input=enhance)
-        loss_tv  = self.loss_tv(input=a)
+        loss_spa     = self.loss_spa(input=enhance, target=input)
+        loss_exp     = self.loss_exp(input=enhance)
+        loss_col     = self.loss_col(input=enhance)
+        loss_tv      = self.loss_tv(input=a)
+        loss_channel = self.loss_channel(input=enhance, target=input)
+        loss_edge    = self.loss_edge(input=enhance, target=input)
         # print(float(loss_spa), float(loss_exp), float(loss_col), float(loss_tv))
-        return loss_spa + loss_exp + loss_col + loss_tv
+        return loss_spa + loss_exp + loss_col + loss_tv + loss_channel + loss_edge
 
 
 # H1: - Model ------------------------------------------------------------------
@@ -181,6 +193,33 @@ cfgs = {
             [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                                         # 18
         ]
     },
+    "zerodcev2-s4-tiny": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,     args(out_channels, ...)]
+            [-1,      1,      Identity,   []],                                                                           # 0  (x)
+            [-1,      1,      ABSConv2dS, [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 1
+            [-1,      1,      ReLU,       [True]],                                                                       # 2  (x1)
+            [-1,      1,      ABSConv2dS, [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 3
+            [-1,      1,      ReLU,       [True]],                                                                       # 4  (x2)
+            [-1,      1,      ABSConv2dS, [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 5
+            [-1,      1,      ReLU,       [True]],                                                                       # 6  (x3)
+            [-1,      1,      ABSConv2dS, [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 7
+            [-1,      1,      ReLU,       [True]],                                                                       # 8  (x4)
+            [[6, 8],  1,      Concat,     []],                                                                           # 9
+            [-1,      1,      ABSConv2dS, [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 10
+            [-1,      1,      ReLU,       [True]],                                                                       # 11 (x5)
+            [[4, 11], 1,      Concat,     []],                                                                           # 12
+            [-1,      1,      ABSConv2dS, [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 13
+            [-1,      1,      ReLU,       [True]],                                                                       # 14 (x6)
+            [[2, 14], 1,      Concat,     []],                                                                           # 15
+            [-1,      1,      ABSConv2dS, [3,  3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 16 (a)
+            [-1,      1,      Tanh,       []],                                                                           # 17
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                                         # 18
+        ]
+    },
     "zerodcev2-s5": {
         "channels": 3,
         "backbone": [
@@ -212,14 +251,56 @@ cfgs = {
             [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                                                          # 22
         ]
     },
+    "zerodcev2-s5-tiny": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,                      args(out_channels, ...)]
+            [-1,      1,      Identity,                    []],                                                                           # 0  (x)
+            [-1,      1,      ABSConv2dS,                  [32, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 1
+            [-1,      1,      ReLU,                        [True]],                                                                       # 2  (x1)
+            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 3
+            [-1,      1,      ReLU,                        [True]],                                                                       # 4  (x2)
+            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 5
+            [-1,      1,      ReLU,                        [True]],                                                                       # 6  (x3)
+            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 7
+            [-1,      1,      ReLU,                        [True]],                                                                       # 8  (x4)
+            [[6, 8],  1,      Concat,                      []],                                                                           # 9
+            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 10
+            [-1,      1,      ReLU,                        [True]],                                                                       # 11 (x5)
+            [[4, 11], 1,      Concat,                      []],                                                                           # 12
+            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 13
+            [-1,      1,      ReLU,                        [True]],                                                                       # 14 (x6)
+            [[2, 14], 1,      Concat,                      []],                                                                           # 15
+            [-1,      1,      ABSConv2dS,                  [16, 3, 1, 1, 1, 1, True, "zeros", None, None, 0.25, 4, HalfInstanceNorm2d]],  # 16
+            [-1,      1,      ReLU,                        [True]],                                                                       # 17 (x7)
+            [ 2,      1,      ExtractFeatures,             [0, 16]],                                                                      # 18
+            [[2, 17], 1,      Concat,                      []],                                                                           # 19
+            [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 1, 0]],                                                       # 20 (a)
+            [-1,      1,      Tanh,                        []],                                                                           # 21
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                                                          # 22
+        ]
+    },
     "zerodcev2-s6": {
         "channels": 3,
         "backbone": [
             # [from,  number, module,   args(out_channels, ...)]
             [-1,      1,      Identity, []],                                                    # 0  (x)
             [-1,      1,      DCEV2,    [3, 32, partial(ABSConv2dS, act=HalfInstanceNorm2d)]],  # 1
-        ],                                                                                      
-        "head": [                                                                               
+        ],
+        "head": [
+            [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                # 2
+        ]
+    },
+    "zerodcev2-s6-tiny": {
+        "channels": 3,
+        "backbone": [
+            # [from,  number, module,   args(out_channels, ...)]
+            [-1,      1,      Identity, []],                                                    # 0  (x)
+            [-1,      1,      DCEV2,    [3, 16, partial(ABSConv2dS, act=HalfInstanceNorm2d)]],  # 1
+        ],
+        "head": [
             [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],                                # 2
         ]
     },

@@ -32,7 +32,8 @@ from one.vision.transformation import resize
 @DATASETS.register(name="sice")
 class SICE(ImageEnhancementDataset):
     """
-    SICE dataset.
+    Full SICE dataset consisting of Part 1 (360 sequences) and Part 2
+    (229 sequences).
     
     Args:
         name (str): Dataset's name.
@@ -130,7 +131,7 @@ class SICE(ImageEnhancementDataset):
 @DATASETS.register(name="sice_part1")
 class SICEPart1(ImageEnhancementDataset):
     """
-    SICE Part 1 dataset.
+    SICE Part 1 dataset consists of 360 multi-exposure sequences.
     
     Args:
         name (str): Dataset's name.
@@ -217,10 +218,102 @@ class SICEPart1(ImageEnhancementDataset):
                 self.labels.append(Image(path=path, backend=self.backend))
 
 
-@DATASETS.register(name="sice_part1_low")
-class SICEPart1Low(UnlabeledImageDataset):
+@DATASETS.register(name="sice_part1_512")
+class SICEPart1_512(ImageEnhancementDataset):
     """
-    SICE Part 1 Low dataset.
+    SICE Part 1 dataset consists of 360 multi-exposure sequences. Images are
+    resized to 3x512x512.
+    
+    Args:
+        name (str): Dataset's name.
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        name            : str                 = "sice_part1_512",
+        root            : Path_               = DATA_DIR / "sice",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "part1_512x512" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*/*")),
+                description=f"Listing {self.__class__.classname} images"
+            ):
+                if is_image_file(path):
+                    self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.classname} labels"
+            ):
+                stem = str(img.path.parent.stem)
+                path = self.root / "part1" / "high" / f"{stem}.jpg"
+                self.labels.append(Image(path=path, backend=self.backend))
+
+
+@DATASETS.register(name="sice_part1_512_low")
+class SICEPart1_512_Low(UnlabeledImageDataset):
+    """
+    SICE Part 1 dataset consists of 360 multi-exposure sequences. Images are
+    resized to 3x512x512. Only low-light images are included.
     
     Args:
         name (str): Dataset's name.
@@ -246,7 +339,7 @@ class SICEPart1Low(UnlabeledImageDataset):
     
     def __init__(
         self,
-        name            : str                = "sice_part1_low",
+        name            : str                = "sice_part1_512_low",
         root            : Path_              = DATA_DIR / "sice",
         split           : str                = "train",
         shape           : Ints               = (3, 512, 512),
@@ -280,9 +373,9 @@ class SICEPart1Low(UnlabeledImageDataset):
         """
         self.images: list[Image] = []
         with progress_bar() as pbar:
-            pattern = self.root / "part1_512x512_low"
+            pattern = self.root / "part1_512x512"
             for path in pbar.track(
-                list(pattern.rglob("*")),
+                list(pattern.rglob("*/*")),
                 description=f"Listing {self.__class__.classname} images"
             ):
                 if is_image_file(path):
@@ -292,7 +385,7 @@ class SICEPart1Low(UnlabeledImageDataset):
 @DATASETS.register(name="sice_part2")
 class SICEPart2(ImageEnhancementDataset):
     """
-    SICE Part 2 dataset.
+    SICE Part 2 dataset consists of 229 multi-exposure sequences.
     
     Args:
         name (str): Dataset's name.
@@ -377,12 +470,106 @@ class SICEPart2(ImageEnhancementDataset):
                 stem = str(img.path.parent.stem)
                 path = self.root / "part2" / "high" / f"{stem}.jpg"
                 self.labels.append(Image(path=path, backend=self.backend))
+
+
+@DATASETS.register(name="sice_part2_low")
+class SICEPart2_Low(ImageEnhancementDataset):
+    """
+    SICE Part 2 dataset consists of 229 multi-exposure sequences. Only low-light
+    images are used. Specifically, we choose the first three (resp. four)
+    low-light images if there are seven (resp. nine) images in a multi-exposure
+    sequence.
+    
+    Args:
+        name (str): Dataset's name.
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        name            : str                 = "sice_part2_low",
+        root            : Path_               = DATA_DIR / "sice",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "part2_low" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*/*")),
+                description=f"Listing {self.__class__.classname} images"
+            ):
+                if is_image_file(path):
+                    self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.classname} labels"
+            ):
+                stem = str(img.path.parent.stem)
+                path = self.root / "part2_low" / "high" / f"{stem}.jpg"
+                self.labels.append(Image(path=path, backend=self.backend))
                 
 
 @DATASETS.register(name="sice_part2_512")
 class SICEPart2_512(ImageEnhancementDataset):
     """
-    SICE Part 2 512x512 dataset.
+    SICE Part 2 dataset consists of 229 multi-exposure sequences. Images are
+    resized to 3x512x512.
     
     Args:
         name (str): Dataset's name.
@@ -469,10 +656,104 @@ class SICEPart2_512(ImageEnhancementDataset):
                 self.labels.append(Image(path=path, backend=self.backend))
 
 
+@DATASETS.register(name="sice_part2_512_low")
+class SICEPart2_512_Low(ImageEnhancementDataset):
+    """
+    SICE Part 2 dataset consists of 229 multi-exposure sequences. Images are
+    resized to 3x512x512. Only low-light images are used. Specifically, we
+    choose the first three (resp. four) low-light images if there are seven
+    (resp. nine) images in a multi-exposure sequence.
+    
+    Args:
+        name (str): Dataset's name.
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        name            : str                 = "sice_part2_512_low",
+        root            : Path_               = DATA_DIR / "sice",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "part2_512x512_low" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*/*")),
+                description=f"Listing {self.__class__.classname} images"
+            ):
+                if is_image_file(path):
+                    self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.classname} labels"
+            ):
+                stem = str(img.path.parent.stem)
+                path = self.root / "part2_512x512_low" / "high" / f"{stem}.jpg"
+                self.labels.append(Image(path=path, backend=self.backend))
+
+
 @DATASETS.register(name="sice_part2_900")
 class SICEPart2_900(ImageEnhancementDataset):
     """
-    SICE Part 2 900x1200 dataset.
+    SICE Part 2 dataset consists of 229 multi-exposure sequences. Images are
+    resized to 3x900x1200.
     
     Args:
         name (str): Dataset's name.
@@ -556,6 +837,99 @@ class SICEPart2_900(ImageEnhancementDataset):
             ):
                 stem = str(img.path.parent.stem)
                 path = self.root / "part2_900x1200" / "high" / f"{stem}.jpg"
+                self.labels.append(Image(path=path, backend=self.backend))
+
+
+@DATASETS.register(name="sice_part2_900_low")
+class SICEPart2_900_Low(ImageEnhancementDataset):
+    """
+    SICE Part 2 dataset consists of 229 multi-exposure sequences. Images are
+    resized to 3x900x1200. Only low-light images are used. Specifically, we
+    choose the first three (resp. four) low-light images if there are seven
+    (resp. nine) images in a multi-exposure sequence.
+    
+    Args:
+        name (str): Dataset's name.
+        root (Path_): Root directory of dataset.
+        split (str): Split to use. One of: ["train", "val", "test"].
+        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
+        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
+            None.
+        transform (Transforms_ | None): Functions/transforms that takes in an
+            input sample and returns a transformed version.
+            E.g, `transforms.RandomCrop`.
+        target_transform (Transforms_ | None): Functions/transforms that takes
+            in a target and returns a transformed version.
+        transforms (Transforms_ | None): Functions/transforms that takes in an
+            input and a target and returns the transformed versions of both.
+        cache_data (bool): If True, cache data to disk for faster loading next
+            time. Defaults to False.
+        cache_images (bool): If True, cache images into memory for faster
+            training (WARNING: large datasets may exceed system RAM).
+            Defaults to False.
+        backend (VisionBackend_): Vision backend to process image.
+            Defaults to VISION_BACKEND.
+        verbose (bool): Verbosity. Defaults to True.
+    """
+    
+    def __init__(
+        self,
+        name            : str                 = "sice_part2_900_low",
+        root            : Path_               = DATA_DIR / "sice",
+        split           : str                 = "train",
+        shape           : Ints                = (3, 512, 512),
+        classlabels     : ClassLabels_ | None = None,
+        transform       : Transforms_  | None = None,
+        target_transform: Transforms_  | None = None,
+        transforms      : Transforms_  | None = None,
+        cache_data      : bool                = False,
+        cache_images    : bool                = False,
+        backend         : VisionBackend_      = VISION_BACKEND,
+        verbose         : bool                = True,
+        *args, **kwargs
+    ):
+        super().__init__(
+            name             = name,
+            root             = root,
+            split            = split,
+            shape            = shape,
+            classlabels      = classlabels,
+            transform        = transform,
+            target_transform = target_transform,
+            transforms       = transforms,
+            cache_data       = cache_data,
+            cache_images     = cache_images,
+            backend          = backend,
+            verbose          = verbose,
+            *args, **kwargs
+        )
+     
+    def list_images(self):
+        """
+        List image files.
+        """
+        self.images: list[Image] = []
+        with progress_bar() as pbar:
+            pattern = self.root / "part2_900x1200_low" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*/*")),
+                description=f"Listing {self.__class__.classname} images"
+            ):
+                if is_image_file(path):
+                    self.images.append(Image(path=path, backend=self.backend))
+    
+    def list_labels(self):
+        """
+        List label files.
+        """
+        self.labels: list[Image] = []
+        with progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.classname} labels"
+            ):
+                stem = str(img.path.parent.stem)
+                path = self.root / "part2_900x1200_low" / "high" / f"{stem}.jpg"
                 self.labels.append(Image(path=path, backend=self.backend))
 
 
@@ -743,7 +1117,7 @@ class SICEUDataModule(DataModule):
 
         # Assign train/val datasets for use in dataloaders
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = SICEPart1Low(
+            self.train = SICEPart1_512_Low(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -753,7 +1127,7 @@ class SICEUDataModule(DataModule):
                 verbose          = self.verbose,
                 **self.dataset_kwargs
             )
-            self.val = SICEPart2_512(
+            self.val = SICEPart2_900_Low(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,
@@ -768,7 +1142,7 @@ class SICEUDataModule(DataModule):
             
         # Assign test datasets for use in dataloader(s)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = SICEPart2_900(
+            self.test = SICEPart2_900_Low(
                 root             = self.root,
                 split            = "train",
                 shape            = self.shape,

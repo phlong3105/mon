@@ -231,6 +231,57 @@ class CharbonnierEdgeLoss(BaseLoss):
                + self.weight[1] * edge_loss
 
 
+@LOSSES.register(name="channel_consistency_loss")
+class ChannelConsistencyLoss(BaseLoss):
+    """
+    Channel consistency loss mainly enhances the consistency between the
+    original image and the enhanced image in the channel pixel difference
+    through KL divergence, and suppresses the generation of noise information
+    and invalid features to improve the image enhancement effect.
+    
+    L_kl = KL[R−B][R′−B′] + KL[R−G][R′−G′] + KL[G−B][G′−B′]
+    """
+    
+    def __init__(
+        self,
+        weight    : Floats = 1.0,
+        reduction : str    = "mean",
+        log_target: bool   = False,
+        *args, **kwargs
+    ):
+        super().__init__(
+            weight    = weight,
+            reduction = reduction,
+            *args, **kwargs
+        )
+        self.name       = "channel_consistency_loss"
+        self.log_target = log_target
+    
+    def forward(self, input: Tensors, target: Tensor = None, **_) -> Tensor:
+        assert_same_shape(input, target)
+        r1    =  input[:, 0, :, :]
+        g1    =  input[:, 1, :, :]
+        b1    =  input[:, 2, :, :]
+        r2    = target[:, 0, :, :]
+        g2    = target[:, 1, :, :]
+        b2    = target[:, 2, :, :]
+        
+        d_rb1 = r1 - b1
+        d_rb2 = r2 - b2
+        d_rg1 = r1 - g1
+        d_rg2 = r2 - g2
+        d_gb1 = g1 - b1
+        d_gb2 = g2 - b2
+        
+        kl_rb = F.kl_div(d_rb1, d_rb2, reduction="mean", log_target=self.log_target)
+        kl_rg = F.kl_div(d_rg1, d_rg2, reduction="mean", log_target=self.log_target)
+        kl_gb = F.kl_div(d_gb1, d_gb2, reduction="mean", log_target=self.log_target)
+        
+        loss  = kl_rb + kl_rg + kl_gb
+        # loss  = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.weight[0] * loss
+        
+
 @LOSSES.register(name="color_constancy_loss")
 class ColorConstancyLoss(BaseLoss):
     """
