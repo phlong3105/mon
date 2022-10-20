@@ -82,10 +82,10 @@ def train(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcev2_s5_tiny_lol",
+		"cfg"        : "zerodcev2_s5_lol",
         "project"    : "lol",
         "weights"    : None,
-        "batch_size" : 4,
+        "batch_size" : 8,
         "img_size"   : None,  # (3, 256, 256),
         "accelerator": "auto",
 		"devices"    : 1,
@@ -93,10 +93,10 @@ hosts = {
 		"strategy"   : None,
 	},
     "lp-labdesktop02-ubuntu": {
-		"cfg"        : "zerodcev2_s2_sice",
-        "project"    : "sice",
+		"cfg"        : "zerodcev2_s5_lol",
+        "project"    : "lol",
         "weights"    : None,
-        "batch_size" : 4,
+        "batch_size" : 8,
         "img_size"   : None,  # (3, 256, 256),
         "accelerator": "auto",
 		"devices"    : 1,
@@ -104,10 +104,10 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws02": {
-		"cfg"        : "zerodcev2_s4_tiny_lol226",
+		"cfg"        : "zerodcev2_s1_lol226",
         "project"    : "lol226",
         "weights"    : None,
-        "batch_size" : 16,
+        "batch_size" : 8,
         "img_size"   : None,  # (3, 512, 512),
         "accelerator": "auto",
 		"devices"    : 1,
@@ -115,10 +115,10 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws03": {
-		"cfg"        : "zerodcev2_s4_tiny_lol226",
+		"cfg"        : "zerodcev2_s2_tiny_lol226",
         "project"    : "lol226",  # with edge_loss
         "weights"    : None,
-        "batch_size" : 16,
+        "batch_size" : 8,
         "img_size"   : None,  # (3, 256, 256),
         "accelerator": "auto",
 		"devices"    : 1,

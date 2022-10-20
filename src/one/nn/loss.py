@@ -588,6 +588,7 @@ class IlluminationSmoothnessLoss(BaseLoss):
 
 @LOSSES.register(name="mae_loss")
 @LOSSES.register(name="l1_loss")
+@METRICS.register(name="mae")
 class MAELoss(BaseLoss):
     """
     MAE (Mean Absolute Error or L1) loss.
@@ -613,6 +614,7 @@ class MAELoss(BaseLoss):
 
 @LOSSES.register(name="mse_loss")
 @LOSSES.register(name="l2_loss")
+@METRICS.register(name="mse")
 class MSELoss(BaseLoss):
     """
     MSE (Mean Squared Error or L2) loss.

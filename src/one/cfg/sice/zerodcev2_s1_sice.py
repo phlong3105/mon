@@ -95,7 +95,7 @@ model = {
     "metrics": {
 	    "train": None,
 		"val"  : [{"name": "psnr"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}, {"name": "mae"}],
     },
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [

@@ -16,11 +16,11 @@ from one.vision.transformation import Resize
 # H1: - Basic ------------------------------------------------------------------
 
 model_name = "zerodcev2"
-model_cfg  = "zerodcev2-s6"
-data_name  = "sice_u"
-fullname   = f"{model_cfg}-sice"
+model_cfg  = "zerodcev2-s1-tiny"
+data_name  = "lol"
+fullname   = f"{model_cfg}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = "sice"
+project    = "lol"
 shape      = [3, 512, 512]
 
 
@@ -94,8 +94,8 @@ model = {
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": None,
-		"val"  : [{"name": "psnr"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}, {"name": "mae"}],
+		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [
@@ -124,7 +124,7 @@ callbacks = [
 	    "monitor": "checkpoint/loss/train_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint
 	        # only for the last epoch.
-	    "mode": "min",
+		"mode": "min",
 			# One of {min, max}. If `save_top_k != 0`, the decision to
 	        # overwrite the current save file is made based on either the
 	        # maximization or the minimization of the monitored quantity.
