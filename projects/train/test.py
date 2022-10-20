@@ -14,6 +14,7 @@ from pytorch_lightning.callbacks import Checkpoint
 
 from one.data import *
 from one.datasets import *
+from one.nn import attempt_load
 from one.nn import BaseModel
 from one.nn import get_epoch
 from one.nn import get_global_step
@@ -36,8 +37,15 @@ def test(args: Munch | dict):
     data.setup(phase="testing")
     
     args.model.classlabels = data.classlabels
-    model: BaseModel       = MODELS.build_from_dict(cfg=args.model)
-
+    # model: BaseModel       = MODELS.build_from_dict(cfg=args.model)
+    model = attempt_load(
+        name        = args.model,
+        cfg         = args.cfg,
+        weights     = args.weights,
+        num_classes = args.num_classes,
+        phase       = "inference",
+    )
+    
     print_dict(args, title=model.fullname)
     console.log("[green]Done")
 
@@ -46,7 +54,7 @@ def test(args: Munch | dict):
     copy_file_to(file=args.cfg_file, dst=model.root)
     model.phase = "testing"
     
-    ckpt                 = get_latest_checkpoint(dirpath=model.weights_dir)
+    # ckpt                 = get_latest_checkpoint(dirpath=model.weights_dir)
     callbacks            = CALLBACKS.build_from_dictlist(cfgs=args.callbacks)
     enable_checkpointing = any(isinstance(cb, Checkpoint) for cb in callbacks)
     
@@ -59,11 +67,11 @@ def test(args: Munch | dict):
     args.trainer.default_root_dir     = model.root
     args.trainer.enable_checkpointing = enable_checkpointing
     args.trainer.logger               = logger
-    args.trainer.num_sanity_val_steps = (0 if (ckpt is not None) else args.trainer.num_sanity_val_steps)
+    # args.trainer.num_sanity_val_steps = (0 if (ckpt is not None) else args.trainer.num_sanity_val_steps)
     
     trainer               = Trainer(**args.trainer)
-    trainer.current_epoch = get_epoch(ckpt=ckpt)
-    trainer.global_step   = get_global_step(ckpt=ckpt)
+    # trainer.current_epoch = get_epoch(ckpt=ckpt)
+    # trainer.global_step   = get_global_step(ckpt=ckpt)
     console.log("[green]Done")
     
     # H2: - Training -----------------------------------------------------------
@@ -71,7 +79,7 @@ def test(args: Munch | dict):
     results = trainer.test(
         model       = model,
         dataloaders = data.test_dataloader,
-        ckpt_path   = ckpt,
+        # ckpt_path   = ckpt,
     )
     console.log(results)
     console.log("[green]Done")
@@ -81,30 +89,47 @@ def test(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "alexnet_cifar10",
-        "project"    : None,
-        "weights"    : "imagenet",
+		"cfg"        : "zerodcev2_s5_lol",
+        "project"    : "lol226",
+        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol4k.pt",
+        "batch_size" : 8,
+        "img_size"   : None,  # (3, 256, 256),
         "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 1,
 		"strategy"   : None,
 	},
-    "lp-imac.local": {
-		"cfg"        : "zerodce_lol226",
-        "project"    : None,
+    "lp-labdesktop02-ubuntu": {
+		"cfg"        : "zerodcev2_s5_lol",
+        "project"    : "lol",
         "weights"    : None,
-        "accelerator": "cpu",
+        "batch_size" : 8,
+        "img_size"   : None,  # (3, 256, 256),
+        "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
-    "lp-macbookpro.local": {
-		"cfg"        : "hinet_ihaze",
-        "project"    : None,
+    "vsw-ws02": {
+		"cfg"        : "zerodcev2_s1_lol226",
+        "project"    : "lol226",
         "weights"    : None,
-        "accelerator": "cpu",
+        "batch_size" : 8,
+        "img_size"   : None,  # (3, 512, 512),
+        "accelerator": "auto",
 		"devices"    : 1,
-        "max_epochs" : 200,
+        "max_epochs" : 500,
+		"strategy"   : None,
+	},
+    "vsw-ws03": {
+		"cfg"        : "zerodcev2_s2_tiny_lol226",
+        "project"    : "lol226",
+        "weights"    : None,
+        "batch_size" : 8,
+        "img_size"   : None,  # (3, 256, 256),
+        "accelerator": "auto",
+		"devices"    : 1,
+        "max_epochs" : 500,
 		"strategy"   : None,
 	},
 }
@@ -129,7 +154,7 @@ if __name__ == "__main__":
     hostname    = socket.gethostname().lower()
     host_args   = Munch(hosts[hostname])
     input_args  = vars(parse_args())
-    cfg         = input_args.get("cfg", None) or host_args.get("cfg", None)
+    cfg         = input_args.get("cfg",     None) or host_args.get("cfg",     None)
     project     = input_args.get("project", None) or host_args.get("project", None)
     
     if project is not None and project != "":

@@ -104,7 +104,7 @@ hosts = {
 		"strategy"   : None,
 	},
     "vsw-ws02": {
-		"cfg"        : "zerodcev2_s1_lol226",
+		"cfg"        : "zerodcev2_s1_tiny_lol226",
         "project"    : "lol226",
         "weights"    : None,
         "batch_size" : 8,
@@ -116,7 +116,7 @@ hosts = {
 	},
     "vsw-ws03": {
 		"cfg"        : "zerodcev2_s2_tiny_lol226",
-        "project"    : "lol226",  # with edge_loss
+        "project"    : "lol226",
         "weights"    : None,
         "batch_size" : 8,
         "img_size"   : None,  # (3, 256, 256),
