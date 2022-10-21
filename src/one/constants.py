@@ -16,6 +16,7 @@ SOURCE_ROOT_DIR  = __current_file.parents[0]         # "workspaces/one/src/one"
 CONTENT_ROOT_DIR = __current_file.parents[2]         # "workspaces/one"
 CFG_DIR          = SOURCE_ROOT_DIR  / "cfg"          # "workspaces/one/src/one/cfg"
 PRETRAINED_DIR   = CONTENT_ROOT_DIR / "pretrained"   # "workspaces/one/pretrained"
+PROJECTS_DIR     = CONTENT_ROOT_DIR / "projects"
 RUNS_DIR         = Path() / "runs"
 
 DATA_DIR         = os.getenv("DATA_DIR", None)       # In case we have set value in os.environ

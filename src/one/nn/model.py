@@ -8,8 +8,13 @@ Model and training-related components.
 from __future__ import annotations
 
 import platform
+from datetime import datetime
+from datetime import timedelta
 from timeit import default_timer as timer
 
+import onnx
+import tensorrt as trt
+import torch_tensorrt
 from munch import Munch
 from pytorch_lightning.accelerators import CUDAAccelerator
 from pytorch_lightning.accelerators import HPUAccelerator
@@ -614,6 +619,46 @@ class Trainer(pl.Trainer):
 
 # H1: - Inferrer ---------------------------------------------------------------
 
+def build_tensorrt_engine(
+    onnx_file : Path_,
+    batch_size: int = 1
+):
+    """
+    Initialize TensorRT engine and parse ONNX model.
+
+    Args:
+        onnx_file (Path_):
+        batch_size (int):
+    """
+    onnx_model = onnx.load(onnx_file)
+    onnx.checker.check_model(onnx_model)
+    
+    trt_logger = trt.Logger()
+    builder    = trt.Builder(trt_logger)
+    network    = builder.create_network()
+    parser     = trt.OnnxParser(network, trt_logger)
+
+    with open(str(onnx_file), "rb") as model:
+        console.log("Beginning ONNX file parsing.")
+        parser.parse(model.read())
+    console.log("Completed parsing of ONNX file.")
+    
+    # Allow TensorRT to use up to 1GB of GPU memory for tactic selection
+    builder.max_workspace_size = 1 << 30
+    # We have only one image in batch
+    builder.max_batch_size     = batch_size
+    # Use FP16 mode if possible
+    if builder.platform_has_fast_fp16:
+        builder.fp16_mode = True
+    
+    # Generate TensorRT engine optimized for the target platform
+    console.log("Building an engine...")
+    engine  = builder.build_cuda_engine(network)
+    context = engine.create_execution_context()
+    console.log("Completed creating Engine.")
+    return engine, context
+
+
 # H2: - Base Inferrer ----------------------------------------------------------
 
 class Inferrer(metaclass=ABCMeta):
@@ -632,6 +677,7 @@ class Inferrer(metaclass=ABCMeta):
         shape      : Ints  | None = None,
         device     : int   | str  = "cpu",
         phase      : ModelPhase_  = "training",
+        tensorrt   : bool         = True,
         save       : bool         = True,
         verbose    : bool         = True,
         *args, **kwargs
@@ -644,21 +690,18 @@ class Inferrer(metaclass=ABCMeta):
         self.batch_size  = batch_size
         self.device      = select_device(device=device, batch_size=batch_size)
         self.phase       = phase
+        self.tensorrt    = tensorrt
         self.save        = save
         self.verbose     = verbose
-        self.model       = None
+        
+        self.model       : BaseModel | None = None
         self.data_loader = None
         self.data_writer = None
+        self.logger      = None
         
-        """
-        if name == "exp":
-            self.name = f"exp_{get_next_version(str(self.root, name))}"
-        else:
-            self.name = name
-        """
         if self.project is not None and self.project != "":
             self.root = self.root / self.project
-        self.name       = f"{name}_{get_next_version(str(self.root), name)}"
+        self.name       = f"{name}-{get_next_version(str(self.root), name)}"
         self.output_dir = self.root / self.name
     
     @property
@@ -704,6 +747,12 @@ class Inferrer(metaclass=ABCMeta):
         """
         pass
     
+    def init_logger(self):
+        self.logger = open(self.output_dir / "log.txt", "a", encoding="utf-8")
+        self.logger.write(f"\n================================================================================\n")
+        self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n\n")
+        self.logger.flush()
+        
     @abstractmethod
     def run(self, model: BaseModel, source: Path_):
         """
@@ -752,11 +801,27 @@ class Inferrer(metaclass=ABCMeta):
         """
         if self.save:
             create_dirs(paths=[self.output_dir], recreate=True)
+        
         self.init_data_loader()
         self.init_data_writer()
-        
+        self.init_logger()
+
         self.model.phase = self.phase
-        self.model.to(self.device)
+        
+        # Initialize TensorRT
+        if self.tensorrt:
+            input_dims       = [self.batch_size].extend(self.shape)
+            # input_dims       = [1, 3, 512, 512]
+            inputs           = [torch_tensorrt.Input(input_dims)]
+            self.model       = self.model.to(self.device)
+            self.model.phase = "inference"
+            self.model       = torch_tensorrt.compile(
+                self.model.model,
+                inputs             = inputs,
+                enabled_precisions = {torch.half},
+            )
+        else:
+            self.model.to(self.device).half()
     
     @abstractmethod
     def on_run_end(self):
@@ -784,6 +849,7 @@ class VisionInferrer(Inferrer):
         shape      : Ints  | None = None,
         device     : int   | str  = "cpu",
         phase      : ModelPhase_  = "training",
+        tensorrt   : bool         = True,
         save       : bool         = True,
         verbose    : bool         = True,
         *args, **kwargs
@@ -798,6 +864,7 @@ class VisionInferrer(Inferrer):
             shape       = shape,
             device      = device,
             phase       = phase,
+            tensorrt    = tensorrt,
             save        = save,
             verbose     = verbose,
             *args, **kwargs
@@ -808,7 +875,9 @@ class VisionInferrer(Inferrer):
         Initialize data loader.
         """
         import one.vision.acquisition as io
-        if is_image_file(self.source) or is_dir(self.source):
+        if isinstance(self.source, (DataLoader, DataModule)):
+            pass
+        elif is_image_file(self.source) or is_dir(self.source):
             self.data_loader = io.ImageLoader(
                 source      = self.source,
                 max_samples = self.max_samples,
@@ -855,13 +924,22 @@ class VisionInferrer(Inferrer):
             )
         else:
             optimizer = None
-            
+        
+        # Print info
+        self.logger.write(f"{'Model':<21}: {model.name}\n")
+        self.logger.write(f"{'Data':<21}: {model.fullname}\n")
+        if hasattr(model, "params"):
+            self.logger.write(f"{'Parameters':<21}: {model.params}\n")
+        self.logger.write(f"{'TensorRT':<21}: {self.tensorrt}\n")
+        self.logger.write(f"{'Image Size':<21}: {self.shape}\n")
+        self.logger.flush()
+        
         step_times = []
         start_time = timer()
         with progress_bar() as pbar:
             for batch_idx, batch in pbar.track(
                 enumerate(self.data_loader),
-                total=len(self.data_loader),
+                total=int(len(self.data_loader) / self.batch_size),
                 description=f"[bright_yellow] Processing"
             ):
                 # Frame capture
@@ -873,9 +951,9 @@ class VisionInferrer(Inferrer):
                 # Process
                 step_start_time = timer()
                 if model.phase == ModelPhase.TRAINING:
-                    pred, loss = model.forward_loss(input=input, target=None)
+                    pred, loss = self.model.forward_loss(input=input, target=None)
                 else:
-                    pred, loss = model.forward(input=input), None
+                    pred, loss = self.model.forward(input=input), None
                 step_end_time   = timer()
                 step_times.append(step_end_time - step_start_time)
                 
@@ -915,17 +993,30 @@ class VisionInferrer(Inferrer):
                 
         end_time = timer()
         console.log(
-            f"Completed in {(end_time - start_time):.9f} seconds"
+            f"{'Total time':<21}: {(end_time - start_time):.9f} seconds"
         )
         console.log(
-            f"Average FPS at "
+            f"{'Average FPS':<21}: "
             f"{(1.0 / ((end_time - start_time) / len(step_times))):.9f}"
         )
         console.log(
-            f"Average forward pass FPS at "
+            f"{'Average FPS (forward)':<21}: "
             f"{(1.0 / (sum(step_times) / len(step_times))):.9f}"
         )
-        
+
+        self.logger.write(
+            f"{'Total time':<21}: {(end_time - start_time):.9f} seconds\n"
+        )
+        self.logger.write(
+            f"{'Average FPS':<21}: "
+            f"{(1.0 / ((end_time - start_time) / len(step_times))):.9f}\n"
+        )
+        self.logger.write(
+            f"{'Average FPS (forward)':<21}: "
+            f"{(1.0 / (sum(step_times) / len(step_times))):.9f}\n"
+        )
+        self.logger.flush()
+        self.logger.close()
         self.on_run_end()
         
     def preprocess(self, input: Tensor) -> tuple[Tensor, Ints, Ints]:
@@ -950,12 +1041,13 @@ class VisionInferrer(Inferrer):
                 input = resize(
                     image         = input,
                     size          = new_size,
-                    interpolation = InterpolationMode.BILINEAR
+                    interpolation = InterpolationMode.BICUBIC
                 )
             # images = [resize(i, self.shape) for i in images]
             # images = torch.stack(input)
         size1 = get_image_size(input)
-        input = input.to(self.device)
+
+        input = input.to(self.device).half()
         return input, size0, size1
 
     # noinspection PyMethodOverriding
@@ -984,10 +1076,11 @@ class VisionInferrer(Inferrer):
             pred = pred[-1]
         
         if size0 != size1:
+            pred = pred if isinstance(pred, Tensor) else torch.from_numpy(pred)
             pred = resize(
                 image         = pred,
                 size          = size0,
-                interpolation = InterpolationMode.BILINEAR
+                interpolation = InterpolationMode.BICUBIC
             )
         return pred
     
@@ -1007,10 +1100,11 @@ def attempt_load(
     name       : str,
     cfg        : Path_,
     weights    : Path_,
+    fullname   : str | None = None,
     num_classes: int | None = None,
     phase      : str        = "inference",
     *args, **kwargs
-):
+) -> BaseModel:
     if is_ckpt_file(weights):
         model = MODELS.build(
             name        = name,
@@ -1033,6 +1127,8 @@ def attempt_load(
             num_classes = num_classes,
             phase       = "inference",
         )
+    if fullname is not None:
+        model.fullname = fullname
     return model
 
 
@@ -1860,7 +1956,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
     def forward_loss(
         self,
         input : Tensor,
-        target: Tensor,
+        target: Tensor | None,
         *args, **kwargs
     ) -> tuple[Tensor, Tensor | None]:
         """
@@ -1870,7 +1966,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
 
         Args:
             input (Tensor): Input of shape [B, C, H, W].
-            target (Tensor): Ground-truth of shape [B, C, H, W].
+            target (Tensor | None): Ground-truth of shape [B, C, H, W].
             
         Returns:
             Predictions and loss value.
@@ -2350,17 +2446,15 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
-        elif self.dims is not None:
-            input_sample = torch.randn(self.dims)
         else:
             raise ValueError(f"`input_dims` must be defined.")
         
         self.to_onnx(
-            filepath      = filepath,
+            file_path     = filepath,
             input_sample  = input_sample,
             export_params = export_params
         )
-    
+        
     def export_to_torchscript(
         self,
         input_dims: Ints  | None = None,
@@ -2385,8 +2479,6 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
             
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
-        elif self.dims is not None:
-            input_sample = torch.randn(self.dims)
         else:
             raise ValueError(f"`input_dims` must be defined.")
         

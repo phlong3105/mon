@@ -4566,10 +4566,10 @@ def get_next_version(
         else:
             d = ""
         bn = os.path.basename(d)
-        if bn.startswith("version_") \
-            or bn.startswith("exp_") \
-            or (isinstance(prefix, str) and bn.startswith(prefix + "_")):
-            dir_ver = bn.split("_")[1].replace("/", "")
+        if bn.startswith("version-") \
+            or bn.startswith("exp-") \
+            or (isinstance(prefix, str) and bn.startswith(prefix + "-")):
+            dir_ver = bn.split("-")[-1].replace("/", "")
             existing_versions.append(int(dir_ver))
     if len(existing_versions) == 0:
         return 0

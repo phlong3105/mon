@@ -38,10 +38,12 @@ def test(args: Munch | dict):
     
     args.model.classlabels = data.classlabels
     # model: BaseModel       = MODELS.build_from_dict(cfg=args.model)
-    model = attempt_load(
+    model_fullname = str(args.weights.name)
+    model          = attempt_load(
         name        = args.model,
         cfg         = args.cfg,
         weights     = args.weights,
+        fullname    = model_fullname,
         num_classes = args.num_classes,
         phase       = "inference",
     )

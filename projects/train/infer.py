@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import argparse
 import socket
+
+import torch.cuda
+
 import one.vision
 
 from one.data import *
@@ -25,10 +28,12 @@ def infer(args: Munch | dict):
     console.rule("[bold red]1. INITIALIZATION")
     console.log(f"Machine: {args.hostname}")
     # Model
-    model = attempt_load(
+    model_fullname = str(args.weights.stem)
+    model          = attempt_load(
         name        = args.model,
         cfg         = args.cfg,
         weights     = args.weights,
+        fullname    = model_fullname,
         num_classes = args.num_classes,
         phase       = "inference",
     )
@@ -47,6 +52,7 @@ def infer(args: Munch | dict):
         shape       = args.shape,
         device      = args.devices,
         phase       = model.phase,
+        tensorrt    = args.tensorrt,
         save        = args.save,
         verbose     = args.verbose,
     )
@@ -62,34 +68,36 @@ def infer(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-        "model"      : "zerodce",
-        "cfg"        : "zerodce",
-        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol4k.pt",
-        "num_classes": None,
-        "source"     : DATA_DIR / "lol" / "train" / "low",  # / "lol" / "demo" / "landscapes.mp4",  #
-        "max_samples": None,
-        "batch_size" : 1,
-        "img_size"   : None,  # (3, 900, 1200),
-		"devices"    : "0",
+        "model"      : "zerodce++",
+        "cfg"        : "zerodce++",
+        "weights"    : PRETRAINED_DIR / "zerodce++" / "zerodce++-lol226.pt",
         "root"       : RUNS_DIR / "infer",
-        "project"    : "lol4k",
-        "name"       : "zerodce-lol4k",
-        "save"       : True,
-        "verbose"    : True,
-	},
-    "lp-labdesktop02-ubuntu": {
-        "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-s7",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s7-lol226.pt",
+        "project"    : "lol226",
+        "name"       : "zerodce++-lol226",
         "num_classes": None,
         "source"     : DATA_DIR / "lol" / "train" / "low",
         "max_samples": None,
         "batch_size" : 1,
-        "img_size"   : None,  # (3, 256, 256),
+        "img_size"   : (3, 512, 512),
 		"devices"    : "0",
+        "tensorrt"   : False,
+        "save"       : True,
+        "verbose"    : True,
+	},
+    "lp-labdesktop02-ubuntu": {
+        "model"      : "zerodce",
+        "cfg"        : "zerodce",
+        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol226.pt",
         "root"       : RUNS_DIR / "infer",
         "project"    : "lol226",
-        "name"       : "exp",
+        "name"       : "zerodce-lol226",
+        "num_classes": None,
+        "source"     : DATA_DIR / "lol" / "train" / "low",
+        "max_samples": None,
+        "batch_size" : 1,
+        "img_size"   : (3, 512, 512),
+		"devices"    : "0",
+        "tensorrt"   : False,
         "save"       : True,
         "verbose"    : True,
 	},
@@ -97,15 +105,16 @@ hosts = {
         "model"      : "zerodcev2",
         "cfg"        : "zerodcev2-s7",
         "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s7-lol226.pt",
+        "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
+        "name"       : "zerodcev2-s7-lol226",
         "num_classes": None,
         "source"     : DATA_DIR / "lol" / "train" / "low",  # DATA_DIR / "sice" / "part2_900x1200" / "low",
         "max_samples": None,
         "batch_size" : 1,
         "img_size"   : None,  # (3, 900, 1200),
 		"devices"    : "0",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "lol226",
-        "name"       : "zerodcev2-s7-lol226",
+        "tensorrt"   : True,
         "save"       : True,
         "verbose"    : True,
 	},
@@ -113,15 +122,16 @@ hosts = {
         "model"      : "zerodcev2",
         "cfg"        : "zerodcev2-s7",
         "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s7-lol226.pt",
+        "root"       : RUNS_DIR / "infer",
+        "project"    : "sice",
+        "name"       : "zerodcev2-s7-lol226",
         "num_classes": None,
         "source"     : DATA_DIR / "lol" / "train" / "low",  # DATA_DIR / "sice" / "part2_900x1200" / "low",
         "max_samples": None,
         "batch_size" : 1,
         "img_size"   : None,  # (3, 900, 1200),
 		"devices"    : "0",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "sice",
-        "name"       : "zerodcev2-s7-lol226",
+        "tensorrt"   : False,
         "save"       : True,
         "verbose"    : True,
 	},
@@ -133,15 +143,16 @@ def parse_args():
     parser.add_argument("--model",       type=str,                             help="Model name")
     parser.add_argument("--cfg",         type=str,                             help="Model config.")
     parser.add_argument("--weights",     type=str,                             help="Weights path.")
+    parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/project/name")
+    parser.add_argument("--project",     type=str,                             help="Save results to root/project/name")
+    parser.add_argument("--name",        type=str,                             help="Save results to root/project/name")
     parser.add_argument("--num-classes", type=int,                             help="Number of classes.")
     parser.add_argument("--source",      type=str,                             help="Data source.")
     parser.add_argument("--max-samples", type=int,                             help="Only process certain amount of samples.")
     parser.add_argument("--batch-size",  type=int,                             help="Total Batch size for all GPUs.")
     parser.add_argument("--img-size",    type=int, nargs="+",                  help="Image sizes.")
     parser.add_argument("--devices",     type=str,                             help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
-    parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/project/name")
-    parser.add_argument("--project",     type=str,                             help="Save results to root/project/name")
-    parser.add_argument("--name",        type=str,                             help="Save results to root/project/name")
+    parser.add_argument("--tensorrt",    action="store_true",                  help="Use TensorRT.")
     parser.add_argument("--save",        action="store_true",                  help="Save.")
     parser.add_argument("--verbose",     action="store_true",                  help="Display results.")
     args = parser.parse_args()
@@ -156,32 +167,34 @@ if __name__ == "__main__":
     model       = input_args.get("model",       None) or host_args.get("model",       None)
     cfg         = input_args.get("cfg",         None) or host_args.get("cfg",         None)
     weights     = input_args.get("weights",     None) or host_args.get("weights",     None)
+    root        = input_args.get("root",        None) or host_args.get("root",        None)
+    project     = input_args.get("project",     None) or host_args.get("project",     None)
+    name        = input_args.get("name",        None) or host_args.get("name",        None)
     num_classes = input_args.get("num_classes", None) or host_args.get("num_classes", None)
     source      = input_args.get("source",      None) or host_args.get("source",      None)
     max_samples = input_args.get("max_samples", None) or host_args.get("max_samples", None)
     batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None)
     shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None)
     devices     = input_args.get("devices",     None) or host_args.get("devices",     None)
-    root        = input_args.get("root",        None) or host_args.get("root",        None)
-    project     = input_args.get("project",     None) or host_args.get("project",     None)
-    name        = input_args.get("name",        None) or host_args.get("name",        None)
+    tensorrt    = input_args.get("tensorrt",    None) or host_args.get("tensorrt",    None)
     save        = input_args.get("save",        None) or host_args.get("save",        None)
     verbose     = input_args.get("verbose",     None) or host_args.get("verbose",     None)
-    
+
     args = Munch(
         hostname    = hostname,
         model       = model,
         cfg         = cfg,
         weights     = weights,
+        root        = root,
+        name        = name,
+        project     = project,
         num_classes = num_classes,
         source      = source,
         max_samples = max_samples,
         batch_size  = batch_size,
         shape       = shape,
         devices     = devices,
-        root        = root,
-        name        = name,
-        project     = project,
+        tensorrt    = tensorrt,
         save        = save,
         verbose     = verbose,
     )

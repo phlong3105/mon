@@ -349,12 +349,12 @@ class ModelCheckpoint(Checkpoint):
         print(self.root)
         self.logger = open(self.root / "log.txt", "a", encoding="utf-8")
         self.logger.write(f"\n================================================================================\n")
-        self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n")
+        self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n\n")
         
         # Print model's info
+        self.logger.write(f"{'Model':<10}: {pl_module.name}\n")
+        self.logger.write(f"{'Data':<10}: {pl_module.fullname}\n")
         if hasattr(pl_module, "params"):
-            self.logger.write(f"{'Model':<10}: {pl_module.name}\n")
-            self.logger.write(f"{'Data':<10}: {pl_module.fullname}\n")
             self.logger.write(f"{'Parameters':<10}: {pl_module.params}\n")
         
         # Print header
@@ -396,6 +396,7 @@ class ModelCheckpoint(Checkpoint):
             f"({((end_time - self.start_time) / 3600):.3f} hours)"
         )
         self.logger.flush()
+        self.logger.close()
     
     def on_train_batch_end(
         self,

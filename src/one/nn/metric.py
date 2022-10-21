@@ -13,7 +13,9 @@ from torch.nn.functional import mse_loss as mse
 from torchmetrics import *
 from torchmetrics.functional.image.psnr import _psnr_compute
 from torchmetrics.functional.image.psnr import _psnr_update
+from torchmetrics.functional.regression.mae import _mean_absolute_error_compute
 from torchmetrics.utilities import rank_zero_warn
+from torchmetrics.utilities.checks import _check_same_shape
 
 from one.constants import *
 from one.core import *
@@ -162,8 +164,56 @@ def ssim(
     return num / (den + eps)
 
 
-@METRICS.register(name="psnr_y")
+@METRICS.register(name="image_mean_absolute_error")
+@METRICS.register(name="image_mae")
+class ImageMeanAbsoluteError(Metric):
+    """
+    Computes Mean Absolute Error (MAE) for RGB images.
+    """
+    is_differentiable: bool   = True
+    higher_is_better : bool   = False
+    full_state_update: bool   = False
+    sum_abs_error    : Tensor
+    total            : Tensor
+
+    def __init__(
+        self,
+        denormalize: bool = True,
+        *args, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.denormalize = denormalize
+        self.add_state("sum_abs_error", default=tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("total",         default=tensor(0),   dist_reduce_fx="sum")
+
+    def update(self, preds: Tensor, target: Tensor):
+        """
+        Update state with predictions and targets.
+
+        Args:
+            preds (Tensor): Predictions from model.
+            target (Tensor): Ground truth values.
+        """
+        _check_same_shape(preds, target)
+        preds  = preds  if preds.is_floating_point  else preds.float()
+        target = target if target.is_floating_point else target.float()
+        if self.denormalize:
+            from one.vision.transformation import denormalize_simple
+            preds  = denormalize_simple(image=preds)
+            target = denormalize_simple(image=target)
+       
+        self.sum_abs_error += torch.sum(torch.abs(preds - target))
+        self.total         += target.numel()
+
+    def compute(self) -> Tensor:
+        """
+        Computes mean absolute error over state.
+        """
+        return _mean_absolute_error_compute(self.sum_abs_error, self.total)
+
+
 @METRICS.register(name="peak_signal_noise_ratio_y")
+@METRICS.register(name="psnr_y")
 class PeakSignalNoiseRatioY(Metric):
     """
     Computes `Computes Peak Signal-to-Noise Ratio` (PSNR) on Y channel only :
@@ -220,7 +270,7 @@ class PeakSignalNoiseRatioY(Metric):
         compute_on_step  : bool         = True,
         dist_sync_on_step: bool         = False,
         process_group    : Any | None   = None,
-    ) -> None:
+    ):
         super().__init__(
             compute_on_step   = compute_on_step,
             dist_sync_on_step = dist_sync_on_step,
@@ -307,8 +357,8 @@ class PeakSignalNoiseRatioY(Metric):
         )
 
 
-@METRICS.register(name="ssim2")
 @METRICS.register(name="structural_similarity_index_measure2")
+@METRICS.register(name="ssim2")
 class SSIM(nn.Module):
     """
     SSIM.
@@ -331,9 +381,9 @@ class SSIM(nn.Module):
         self.max_val     = max_val
         self.eps         = eps
         
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+    def forward(self, preds: Tensor, target: Tensor) -> Tensor:
         return ssim(
-            input       = input,
+            input       = preds,
             target      = target,
             window_size = self.window_size,
             max_val     = self.max_val,
@@ -354,6 +404,9 @@ METRICS.register(name="universal_image_quality_index",                   module=
 
 
 # H1: - Regression -------------------------------------------------------------
+
+METRICS.register(name="mae",                                      module=MeanAbsoluteError)
+METRICS.register(name="mse",                                      module=MeanSquaredError)
 
 METRICS.register(name="cosine_similarity",                        module=CosineSimilarity)
 METRICS.register(name="explained_variance",                       module=ExplainedVariance)

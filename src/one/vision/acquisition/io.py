@@ -1058,7 +1058,7 @@ class ImageLoader(BaseLoader):
                 
                 self.index += 1
             
-            images = torch.stack(images)
+            images = torch.stack(images,   dim=1)
             images = torch.squeeze(images, dim=0)
             return images, indexes, files, rel_paths
     
@@ -1378,7 +1378,7 @@ class VideoLoaderCV(VideoLoader):
                 
                 self.index += 1
 
-            images = torch.stack(images)
+            images = torch.stack(images,   dim=1)
             images = torch.squeeze(images, dim=0)
             return images, indexes, files, rel_paths
     
@@ -1572,7 +1572,7 @@ class VideoLoaderFFmpeg(VideoLoader):
                 
                 self.index += 1
 
-            images = torch.stack(images)
+            images = torch.stack(images,   dim=1)
             images = torch.squeeze(images, dim=0)
             return images, indexes, files, rel_paths
         

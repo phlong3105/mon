@@ -94,8 +94,8 @@ model = {
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": None,
-		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"val"  : [{"name": "psnr"}, {"name": "ssim"}, {"name": "image_mae"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}, {"name": "image_mae"}],
     },
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [

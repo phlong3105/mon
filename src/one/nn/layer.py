@@ -784,29 +784,17 @@ class AttentionSubspaceBlueprintSeparableConv2d(Module):
             dtype        = dtype,
         )
         self.simam = SimAM()
-        """
-        self.ca = ChannelAttention(
-            channels    = out_channels,
-            reduction   = 16,
-            kernel_size = 1,
-            groups      = 1
-        )
-        self.sa = SpatialAttention(kernel_size=7)
-        """
         
     def forward(self, input: Tensor) -> Tensor:
         x = input
         x = self.pw_conv1(x)
-        x = self.simam(x)
         if self.act1 is not None:
             x = self.act1(x)
         x = self.pw_conv2(x)
         if self.act2 is not None:
             x = self.act2(x)
         x = self.dw_conv(x)
-        # x = self.ca(x) * x
-        # x = self.sa(x) * x
-        # x = x + input
+        x = self.simam(x)
         return x
     
     def regularization_loss(self):
@@ -873,7 +861,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.sa = SpatialAttention(kernel_size=7)
+        self.simam = SimAM()
         
     def forward(self, input: Tensor) -> Tensor:
         x = input
@@ -881,9 +869,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(Module):
         if self.act is not None:
             x = self.act(x)
         x = self.dw_conv(x)
-        # x = self.ca(x) * x
-        x = self.sa(x) * x
-        # x = x + input
+        x = self.simam(x)
         return x
 
 
@@ -1863,9 +1849,14 @@ class Concat(Module):
     ):
         super().__init__()
         self.dim = dim
-        
+    
+    """
     def forward(self, input: Sequence[Tensor]) -> Tensor:
         return torch.cat(to_list(input), dim=self.dim)
+    """
+    
+    def forward(self, input: Tensor) -> Tensor:
+        return torch.cat(list(input), dim=self.dim)
 
 
 class Chuncat(Module):
@@ -5624,6 +5615,7 @@ class PixelwiseHigherOrderLECurve(Module):
         _, c1, _, _ = x.shape  # Should be 3
         _, c2, _, _ = a.shape  # Should be 3*n
         single_map  = True
+        
         if c2 == c1 * self.n:
             single_map = False
             a = torch.split(a, c1, dim=1)
@@ -5634,7 +5626,7 @@ class PixelwiseHigherOrderLECurve(Module):
                 f"Curve parameter maps `a` must be `3` or `3 * {self.n}`. "
                 f"But got: {c2}."
             )
-
+        
         # Estimate curve parameter
         for i in range(self.n):
             a_i = a if single_map else a[i]
