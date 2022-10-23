@@ -703,7 +703,9 @@ class Inferrer(metaclass=ABCMeta):
             self.root = self.root / self.project
         self.name       = f"{name}-{get_next_version(str(self.root), name)}"
         self.output_dir = self.root / self.name
-    
+        
+        console.log(f"Using: {self.device}.")
+        
     @property
     def phase(self) -> ModelPhase:
         return self._phase
@@ -930,6 +932,7 @@ class VisionInferrer(Inferrer):
         self.logger.write(f"{'Data':<21}: {model.fullname}\n")
         if hasattr(model, "params"):
             self.logger.write(f"{'Parameters':<21}: {model.params}\n")
+        self.logger.write(f"{'Device':<21}: {self.model.device}\n")
         self.logger.write(f"{'TensorRT':<21}: {self.tensorrt}\n")
         self.logger.write(f"{'Image Size':<21}: {self.shape}\n")
         self.logger.flush()

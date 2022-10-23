@@ -22,6 +22,7 @@ from one.vision.acquisition import to_image
 # mpl.use("wxAgg")
 
 plt.ion()
+plt.show()
 plt.switch_backend("qt5agg")
 plt.rcParams["savefig.bbox"] = "tight"
 
@@ -267,7 +268,7 @@ def imshow(
         squeeze = False,
         clear   = True
     )
-    move_figure(x=0, y=0)
+    # move_figure(x=0, y=0)
     
     for idx, img in enumerate(image):
         i   = int(idx / nrow)
@@ -285,8 +286,7 @@ def imshow(
     if save_cfg:
         filepath = save_cfg.pop("filepath")
         plt.savefig(filepath, **save_cfg)
-    
-    plt.show()
+
     plt.pause(wait_time)
     
 
@@ -393,7 +393,7 @@ def imshow_classification(
     )
     subfigs      = fig.subfigures(nrows=nrows, ncols=ncols)
     subfigs_flat = subfigs.flat
-    move_figure(x=0, y=0)
+    # move_figure(x=0, y=0)
     
     for idx, (img, label, color, scores) in enumerate(zip(image, label, colors, scores_topk)):
         subfig = subfigs_flat[idx]
@@ -430,7 +430,6 @@ def imshow_classification(
         filepath = save_cfg.pop("filepath")
         plt.savefig(filepath, **save_cfg)
 
-    plt.show()
     plt.pause(wait_time)
 
 
@@ -498,7 +497,7 @@ def imshow_enhancement(
         squeeze = False,
         clear   = True
     )
-    move_figure(x=0, y=0)
+    # move_figure(x=0, y=0)
     
     [ax.set_title(l) for ax, l in zip(axs[0], header)]
     for i, img in enumerate(image):
@@ -517,5 +516,4 @@ def imshow_enhancement(
         filepath = save_cfg.pop("filepath")
         plt.savefig(filepath, **save_cfg)
     
-    plt.show()
     plt.pause(wait_time)

@@ -3820,11 +3820,14 @@ def select_device(
         num_gpus    = torch.cuda.device_count()
         if num_gpus > 1 and batch_size:  # check that batch_size is compatible with device_count
             if batch_size % num_gpus != 0:
+                pass
+                '''
                 raise ValueError(
                     f"`batch-size` must be a multiple of GPU count {num_gpus}. "
                     f"But got: {batch_size} % {num_gpus} != 0."
                 )
-        
+                '''
+                
         x = [torch.cuda.get_device_properties(i) for i in range(num_gpus)]
         s = "Using CUDA "
         for i in range(0, num_gpus):

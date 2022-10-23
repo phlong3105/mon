@@ -322,7 +322,7 @@ class SimAM(Module):
         self.act      = Sigmoid()
         
     def forward(self, input: Tensor) -> Tensor:
-        x  = input
+        x = input
         # Spatial size
         b, c, h, w = x.size()
         n          = w * h - 1
@@ -788,13 +788,13 @@ class AttentionSubspaceBlueprintSeparableConv2d(Module):
     def forward(self, input: Tensor) -> Tensor:
         x = input
         x = self.pw_conv1(x)
+        x = self.simam(x)
         if self.act1 is not None:
             x = self.act1(x)
         x = self.pw_conv2(x)
         if self.act2 is not None:
             x = self.act2(x)
         x = self.dw_conv(x)
-        x = self.simam(x)
         return x
     
     def regularization_loss(self):
@@ -866,10 +866,11 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(Module):
     def forward(self, input: Tensor) -> Tensor:
         x = input
         x = self.pw_conv(x)
+        x = self.simam(x)
         if self.act is not None:
             x = self.act(x)
+
         x = self.dw_conv(x)
-        x = self.simam(x)
         return x
 
 
