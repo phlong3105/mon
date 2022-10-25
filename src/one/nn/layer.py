@@ -709,7 +709,6 @@ def conv2d_same(
     )
 
 
-
 class AttentionSubspaceBlueprintSeparableConv2d(Module):
     """
     Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
@@ -869,7 +868,6 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(Module):
         x = self.simam(x)
         if self.act is not None:
             x = self.act(x)
-
         x = self.dw_conv(x)
         return x
 
@@ -1413,7 +1411,6 @@ class UnconstrainedBlueprintSeparableConv2d(Module):
             x = self.act(x)
         x = self.dw_conv(x)
         return x
-
 
 
 ABSConv2dS           = AttentionSubspaceBlueprintSeparableConv2d
