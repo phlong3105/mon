@@ -11,6 +11,7 @@ import argparse
 import socket
 
 import torch.cuda
+from torch.backends import cudnn
 
 import one.vision
 
@@ -37,11 +38,14 @@ def infer(args: Munch | dict):
         num_classes = args.num_classes,
         phase       = "inference",
     )
+    # CuDNN
+    cudnn.benchmark = True
+    cudnn.enabled   = True
     print_dict(args, title=model.fullname)
     console.log("[green]Done")
 
     # H2: - Inferrer -----------------------------------------------------------
-    console.rule("[bold red]2. Inferrer")
+    console.rule("[bold red]2. INFERRER")
     inferrer = VisionInferrer(
         source      = args.source,
         project     = args.project,
@@ -69,20 +73,20 @@ def infer(args: Munch | dict):
 hosts = {
 	"lp-labdesktop01-ubuntu": {
         "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-s3-tiny",
-        "weights"    : PROJECTS_DIR / "train" / "runs" / "train" / "lol226" / "zerodcev2-s3-tiny-lol226" / "weights" / "best.pt",
+        "cfg"        : "zerodcev2-u5-tiny",
+        "weights"    : PROJECTS_DIR / "train" / "runs" / "train" / "lol226" / "zerodcev2-u5-tiny-lol226" / "weights" / "best.pt",
         "root"       : RUNS_DIR / "infer",
         "project"    : "lol226",
-        "name"       : "zerodcev2-s3-tiny-lol226",
+        "name"       : "zerodcev2-u5-tiny-lol226",
         "num_classes": None,
-        "source"     : DATA_DIR / "lol" / "train" / "low",
+        "source"     : DATA_DIR / "lol" / "train" / "low",  # / "sice" / "part2_900x1200_low" / "low",
         "max_samples": None,
         "batch_size" : 1,
-        "img_size"   : None,  # (3, 512, 512),
+        "img_size"   : (3, 512, 512),
 		"devices"    : 1,
         "tensorrt"   : False,
         "save"       : True,
-        "verbose"    : True,
+        "verbose"    : False,
 	},
     "lp-labdesktop02-ubuntu": {
         "model"      : "zerodce",
@@ -198,4 +202,4 @@ if __name__ == "__main__":
         save        = save,
         verbose     = verbose,
     )
-    infer(args)
+    infer(args=args)

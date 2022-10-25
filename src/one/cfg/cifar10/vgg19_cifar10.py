@@ -15,13 +15,13 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "zerodcev2"
-model_cfg  = "zerodcev2-s1-tiny"
-data_name  = "lol4k"
-fullname   = f"{model_cfg}-{data_name}"
+model_name = "vgg19"
+model_cfg  = "vgg19.yaml"
+data_name  = "cifar10"
+fullname   = f"{model_name}-{data_name}"
 root       = RUNS_DIR / "train"
-project    = "lol4k"
-shape      = [3, 512, 512]
+project    = None
+shape      = [3, 224, 224]
 
 
 # H1: - Data -------------------------------------------------------------------
@@ -31,17 +31,19 @@ data = {
         # Dataset's name.
     "shape": shape,
         # Image shape as [C, H, W], [H, W], or [S, S].
-    "transform": None,
+	"num_classes": 10,
+		# Number of classes in the dataset.
+    "transform": [
+        Resize(size=shape)
+    ],
         # Functions/transforms that takes in an input sample and returns a
         # transformed version.
     "target_transform": None,
-        # Functions/transforms that takes in a target and returns a transformed
-        # version.
-    "transforms": [
-        Resize(size=shape),
-    ],
-        # Functions/transforms that takes in an input and a target and returns
-        # the transformed versions of both.
+        # Functions/transforms that takes in a target and returns a
+        # transformed version.
+    "transforms": None,
+        # Functions/transforms that takes in an input and a target and
+        # returns the transformed versions of both.
     "cache_data": True,
         # If True, cache data to disk for faster loading next time.
         # Defaults to False.
@@ -50,7 +52,7 @@ data = {
         # large datasets may exceed system RAM). Defaults to False.
     "backend": VISION_BACKEND,
         # Vision backend to process image. Defaults to VISION_BACKEND.
-    "batch_size": 8,
+    "batch_size": 32,
         # Number of samples in one forward & backward pass. Defaults to 1.
     "devices" : 0,
         # The devices to use. Defaults to 0.
@@ -80,7 +82,7 @@ model = {
         # In case None is given, it will be `self.basename`. Defaults to None.
     "channels": 3,
         # Input channel. Defaults to 3.
-    "num_classes": None,
+    "num_classes": data["num_classes"],
         # Number of classes for classification or detection tasks.
         # Defaults to None.
     "classlabels": None,
@@ -90,13 +92,11 @@ model = {
         # Model's running phase. Defaults to training.
     "pretrained": None,
         # Initialize weights from pretrained.
-    "loss": None,
+    "loss": {"name": "cross_entropy_loss"},
         # Loss function for training model. Defaults to None.
-    "metrics": {
-	    "train": None,
-		"val"  : [{"name": "psnr"}, {"name": "ssim"}, {"name": "image_mae"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}, {"name": "image_mae"}],
-    },
+    "metrics": [
+		{"name": "accuracy", "num_classes": data["num_classes"]}
+	],
         # Metric(s) for validating and testing model. Defaults to None.
     "optimizers": [
         {
@@ -106,6 +106,7 @@ model = {
 				"weight_decay": 0.0001,
 				"betas": [0.9, 0.99],
 			},
+			"lr_scheduler": None,
             "frequency": None,
         }
     ],
@@ -121,10 +122,10 @@ model = {
 
 callbacks = [
     default.model_checkpoint | {
-	    "monitor": "checkpoint/loss/train_epoch",
+	    "monitor": "checkpoint/accuracy/val_epoch",
 		    # Quantity to monitor. Defaults to None which saves a checkpoint
 	        # only for the last epoch.
-	    "mode": "min",
+		"mode": "max",
 			# One of {min, max}. If `save_top_k != 0`, the decision to
 	        # overwrite the current save file is made based on either the
 	        # maximization or the minimization of the monitored quantity.
@@ -145,13 +146,4 @@ trainer = default.trainer | {
         # Default path for logs and weights when no logger/ckpt_callback passed.
         # Can be remote file paths such as `s3://mybucket/path` or
         # 'hdfs://path/'. Defaults to os.getcwd().
-	"gradient_clip_val": 0.1,
-        # The value at which to clip gradients. Passing `gradient_clip_val=None`
-        # disables gradient clipping. If using Automatic Mixed Precision (AMP),
-        # the gradients will be unscaled before. Defaults to None.
-	"gradient_clip_algorithm": "norm",
-        # The gradient clipping algorithm to use.
-        # Pass `gradient_clip_algorithm="value"` to clip by  value, and
-        # `gradient_clip_algorithm="norm"` to clip by norm. By default, it will
-        # be set to "norm".
 }

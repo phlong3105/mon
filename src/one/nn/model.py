@@ -812,8 +812,8 @@ class Inferrer(metaclass=ABCMeta):
         
         # Initialize TensorRT
         if self.tensorrt:
-            input_dims       = [self.batch_size].extend(self.shape)
-            # input_dims       = [1, 3, 512, 512]
+            # input_dims       = [self.batch_size].extend(self.shape)
+            input_dims       = [1, 3, 512, 512]
             inputs           = [torch_tensorrt.Input(input_dims)]
             self.model       = self.model.to(self.device)
             self.model.phase = "inference"
@@ -823,7 +823,7 @@ class Inferrer(metaclass=ABCMeta):
                 enabled_precisions = {torch.half},
             )
         else:
-            self.model.to(self.device).half()
+            self.model.to(self.device)
     
     @abstractmethod
     def on_run_end(self):
@@ -953,10 +953,12 @@ class VisionInferrer(Inferrer):
                 
                 # Process
                 step_start_time = timer()
-                if model.phase == ModelPhase.TRAINING:
-                    pred, loss = self.model.forward_loss(input=input, target=None)
-                else:
-                    pred, loss = self.model.forward(input=input), None
+                with torch.inference_mode():
+                    if model.phase == ModelPhase.TRAINING:
+                        pred, loss = self.model.forward_loss(input=input, target=None)
+                    else:
+                        pred, loss = self.model.forward(input=input), None
+                # torch.cuda.current_stream().synchronize()
                 step_end_time   = timer()
                 step_times.append(step_end_time - step_start_time)
                 
@@ -996,27 +998,27 @@ class VisionInferrer(Inferrer):
                 
         end_time = timer()
         console.log(
-            f"{'Total time':<21}: {(end_time - start_time):.9f} seconds"
+            f"{'Total time':<22}: {(end_time - start_time):.9f} seconds"
         )
         console.log(
-            f"{'Average FPS':<21}: "
-            f"{(1.0 / ((end_time - start_time) / len(step_times))):.9f}"
+            f"{'Average time':<22}: "
+            f"{((end_time - start_time) / len(step_times)):.9f} seconds"
         )
         console.log(
-            f"{'Average FPS (forward)':<21}: "
-            f"{(1.0 / (sum(step_times) / len(step_times))):.9f}"
+            f"{'Average time (forward)':<22}: "
+            f"{(sum(step_times) / len(step_times)):.9f} seconds"
         )
 
         self.logger.write(
-            f"{'Total time':<21}: {(end_time - start_time):.9f} seconds\n"
+            f"{'Total time':<22}: {(end_time - start_time):.9f} seconds\n"
         )
         self.logger.write(
-            f"{'Average FPS':<21}: "
-            f"{(1.0 / ((end_time - start_time) / len(step_times))):.9f}\n"
+            f"{'Average time':<22}: "
+            f"{((end_time - start_time) / len(step_times)):.9f} seconds\n"
         )
         self.logger.write(
-            f"{'Average FPS (forward)':<21}: "
-            f"{(1.0 / (sum(step_times) / len(step_times))):.9f}\n"
+            f"{'Average time (forward)':<22}: "
+            f"{(sum(step_times) / len(step_times)):.9f} seconds\n"
         )
         self.logger.flush()
         self.logger.close()
@@ -1050,7 +1052,7 @@ class VisionInferrer(Inferrer):
             # images = torch.stack(input)
         size1 = get_image_size(input)
 
-        input = input.to(self.device).half()
+        input = input.to(self.device)
         return input, size0, size1
 
     # noinspection PyMethodOverriding
