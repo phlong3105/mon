@@ -39,7 +39,7 @@ def measure(args: Munch | dict):
     # Metrics
     # brisque = pyiqa.create_metric(metric_name="brisque")
     # ilniqe  = pyiqa.create_metric(metric_name="ilniqe")
-    mae     = F.mse_loss
+    mae     = F.l1_loss
     niqe    = pyiqa.create_metric(metric_name="niqe")
     psnr    = pyiqa.create_metric(metric_name="psnr")
     ssim    = pyiqa.create_metric(metric_name="ssim")
@@ -84,13 +84,14 @@ def measure(args: Munch | dict):
                         interpolation = InterpolationMode.BICUBIC,
                         antialias     = True,
                     )
-                    
-            # brisque_values.append(brisque(pred))
-            # ilniqe_values.append(ilniqe(pred))
-            mae_values.append(mae(pred * 255, target * 255))
+
             niqe_values.append(niqe(pred))
-            psnr_values.append(psnr(pred, target))
-            ssim_values.append(ssim(pred, target))
+            if target is not None:
+                # brisque_values.append(brisque(pred))
+                # ilniqe_values.append(ilniqe(pred))
+                mae_values.append(mae(pred * 255, target * 255, reduction="mean"))
+                psnr_values.append(psnr(pred, target))
+                ssim_values.append(ssim(pred, target))
             num_items += 1
     console.log("[green]Done")
     
@@ -123,16 +124,30 @@ def measure(args: Munch | dict):
 
 hosts = {
     "lp-labdesktop01-ubuntu": {
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-s4-large-lol226-0" / "dcim",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-e-tiny-lol226-0" / "dcim",
+        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-b-large-lol226-0",
         "target"  : None,
-        "img_size": None,  # (3, 400, 600),
+        # "target"  : True,
+        # "img_size": None,
+        "img_size": (3, 400, 600),
         "save"    : True,
         "verbose" : False,
 	},
     "lp-labdesktop02-ubuntu": {
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-s4-lol226-0",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-s4-lol226-0",
         # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodce++-sice",
         "target"  : None,
+        # "img_size": None,
+        "img_size": (3, 400, 600),
+        "save"    : True,
+        "verbose" : False,
+	},
+    "lp-imac.local": {
+        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-c-tiny-lol226-0",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-e-large-lol226-0",
+        "target"  : True,
+        # "target"  : None,
+        # "img_size": None,
         "img_size": (3, 400, 600),
         "save"    : True,
         "verbose" : False,
@@ -161,20 +176,18 @@ if __name__ == "__main__":
     shape        = input_args.get("img_size", None) or host_args.get("img_size", None)
     save         = input_args.get("save",     None) or host_args.get("save",     None)
     verbose      = input_args.get("verbose",  None) or host_args.get("verbose",  None)
+
+    pred_files   = list(pred.rglob("*"))
+    pred_files   = [f for f in pred_files if is_image_file(f)]
     
-    # pred_dir   = PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodce-lol226" / "dcim"
-    # pred_dir   = PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-s4-large-lol226-0" / "dcim"
-    pred_files   = list(pred.rglob("*/*"))
-    target_files = []
-    for i, f in enumerate(pred_files):
-        stem = str(f.parent.stem)
-        file = DATA_DIR / "sice" / "part2_900x1200_low" / "high" / f"{stem}.jpg"
-        target_files.append(file)
-        
-    # target_files = None
-    # if target is not None:
-    #     target_files = sorted(list(target.rglob("*")))
-    
+    target_files = None
+    if target is not None:
+        target_files = []
+        for i, f in enumerate(pred_files):
+            stem = str(f.parent.stem)
+            file = DATA_DIR / "sice" / "part2_900x1200_low" / "high" / f"{stem}.jpg"
+            target_files.append(file)
+
     args = Munch(
         hostname     = hostname,
         pred_files   = pred_files,

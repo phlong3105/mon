@@ -12,9 +12,7 @@ from datetime import datetime
 from datetime import timedelta
 from timeit import default_timer as timer
 
-import onnx
-import tensorrt as trt
-import torch_tensorrt
+import torch.cuda
 from munch import Munch
 from pytorch_lightning.accelerators import CUDAAccelerator
 from pytorch_lightning.accelerators import HPUAccelerator
@@ -619,6 +617,7 @@ class Trainer(pl.Trainer):
 
 # H1: - Inferrer ---------------------------------------------------------------
 
+'''
 def build_tensorrt_engine(
     onnx_file : Path_,
     batch_size: int = 1
@@ -657,6 +656,7 @@ def build_tensorrt_engine(
     context = engine.create_execution_context()
     console.log("Completed creating Engine.")
     return engine, context
+'''
 
 
 # H2: - Base Inferrer ----------------------------------------------------------
@@ -809,21 +809,7 @@ class Inferrer(metaclass=ABCMeta):
         self.init_logger()
 
         self.model.phase = self.phase
-        
-        # Initialize TensorRT
-        if self.tensorrt:
-            # input_dims       = [self.batch_size].extend(self.shape)
-            input_dims       = [1, 3, 512, 512]
-            inputs           = [torch_tensorrt.Input(input_dims)]
-            self.model       = self.model.to(self.device)
-            self.model.phase = "inference"
-            self.model       = torch_tensorrt.compile(
-                self.model.model,
-                inputs             = inputs,
-                enabled_precisions = {torch.half},
-            )
-        else:
-            self.model.to(self.device)
+        self.model.to(self.device)
     
     @abstractmethod
     def on_run_end(self):
@@ -928,17 +914,20 @@ class VisionInferrer(Inferrer):
             optimizer = None
         
         # Print info
-        self.logger.write(f"{'Model':<21}: {model.name}\n")
-        self.logger.write(f"{'Data':<21}: {model.fullname}\n")
+        self.logger.write(f"{'Model':<22}: {model.name}\n")
+        self.logger.write(f"{'Data':<22}: {model.fullname}\n")
         if hasattr(model, "params"):
-            self.logger.write(f"{'Parameters':<21}: {model.params}\n")
-        self.logger.write(f"{'Device':<21}: {self.model.device}\n")
-        self.logger.write(f"{'TensorRT':<21}: {self.tensorrt}\n")
-        self.logger.write(f"{'Image Size':<21}: {self.shape}\n")
+            self.logger.write(f"{'Parameters':<22}: {model.params}\n")
+        # if self.shape is not None and is_sequence_of_length(self.shape, 3):
+        #     self.logger.write(f"{'MACs':<21}: {model.macs(self.shape)}\n")
+        self.logger.write(f"{'Device':<22}: {self.model.device}\n")
+        self.logger.write(f"{'TensorRT':<22}: {self.tensorrt}\n")
+        self.logger.write(f"{'Image Size':<22}: {self.shape}\n")
         self.logger.flush()
         
-        step_times = []
-        start_time = timer()
+        step_times  = []
+        used_memory = []
+        start_time  = timer()
         with progress_bar() as pbar:
             for batch_idx, batch in pbar.track(
                 enumerate(self.data_loader),
@@ -953,12 +942,15 @@ class VisionInferrer(Inferrer):
                 
                 # Process
                 step_start_time = timer()
-                with torch.inference_mode():
-                    if model.phase == ModelPhase.TRAINING:
-                        pred, loss = self.model.forward_loss(input=input, target=None)
-                    else:
-                        pred, loss = self.model.forward(input=input), None
-                # torch.cuda.current_stream().synchronize()
+                if model.phase == ModelPhase.TRAINING:
+                    pred, loss = self.model.forward_loss(input=input, target=None)
+                else:
+                    pred, loss = self.model.forward(input=input), None
+                
+                if torch.cuda.is_available():
+                    total, used, free = get_gpu_memory()
+                    used_memory.append(used)
+                
                 step_end_time   = timer()
                 step_times.append(step_end_time - step_start_time)
                 
@@ -998,26 +990,32 @@ class VisionInferrer(Inferrer):
                 
         end_time = timer()
         console.log(
-            f"{'Total time':<22}: {(end_time - start_time):.9f} seconds"
+            f"{'Used Memory':<22}: {(sum(used_memory) / len(used_memory)):.9f} GB"
         )
         console.log(
-            f"{'Average time':<22}: "
+            f"{'Total Time':<22}: {(end_time - start_time):.9f} seconds"
+        )
+        console.log(
+            f"{'Average Time':<22}: "
             f"{((end_time - start_time) / len(step_times)):.9f} seconds"
         )
         console.log(
-            f"{'Average time (forward)':<22}: "
+            f"{'Average Time (forward)':<22}: "
             f"{(sum(step_times) / len(step_times)):.9f} seconds"
         )
-
+        
         self.logger.write(
-            f"{'Total time':<22}: {(end_time - start_time):.9f} seconds\n"
+            f"{'Used Memory':<22}: {(sum(used_memory) / len(used_memory)):.9f} GB\n"
         )
         self.logger.write(
-            f"{'Average time':<22}: "
+            f"{'Total Time':<22}: {(end_time - start_time):.9f} seconds\n"
+        )
+        self.logger.write(
+            f"{'Average Time':<22}: "
             f"{((end_time - start_time) / len(step_times)):.9f} seconds\n"
         )
         self.logger.write(
-            f"{'Average time (forward)':<22}: "
+            f"{'Average Time (forward)':<22}: "
             f"{(sum(step_times) / len(step_times)):.9f} seconds\n"
         )
         self.logger.flush()
@@ -1186,10 +1184,22 @@ def parse_model(
                 args[j] = eval(a) if isinstance(a, str) else a  # eval strings
             except:
                 pass
-        # print(f, n, m, args)
         
         if m in [
             ABSConv2dS,
+            ABSConv2dS1,
+            ABSConv2dS2,
+            ABSConv2dS3,
+            ABSConv2dS4,
+            ABSConv2dS5,
+            ABSConv2dS6,
+            ABSConv2dS7,
+            ABSConv2dS8,
+            ABSConv2dS9,
+            ABSConv2dS10,
+            ABSConv2dS11,
+            ABSConv2dS12,
+            ABSConv2dS13,
             ABSConv2dU,
             BSConv2dS,
             BSConv2dU,
@@ -1199,7 +1209,7 @@ def parse_model(
             ConvReLU2d,
             ConvTranspose2d,
             DCE,
-            DCEV2,
+            ADCE,
             DepthwiseSeparableConv2d,
             DepthwiseSeparableConvReLU2d,
             EnhancementModule,
@@ -1309,7 +1319,7 @@ def parse_model(
             c2 = sum([ch[x] for x in f])
         else:
             c2 = ch[f]
-
+        
         # Append c2 as c1 for next layers
         if i == 0:
             ch = []
@@ -1332,7 +1342,7 @@ def parse_model(
             "module"   : t,
             "arguments": args,
         })
-        
+    
     return Sequential(*layers), sorted(save), info
 
 
@@ -1782,7 +1792,7 @@ class BaseModel(pl.LightningModule, metaclass=ABCMeta):
         if self._weights_dir is None:
             self._weights_dir = self.root / "weights"
         return self._weights_dir
-        
+    
     @staticmethod
     def create_metrics(metrics: Metrics_ | None) -> list[Metric] | None:
         if isinstance(metrics, Metric):

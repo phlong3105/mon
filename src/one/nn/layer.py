@@ -58,7 +58,7 @@ class ArgMax(Module):
     
     def __init__(
         self,
-        dim: int | None = None,
+        dim  : int | None = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -735,7 +735,8 @@ class AttentionSubspaceBlueprintSeparableConv2d(Module):
         dtype           : Any             = None,
         p               : float           = 0.25,
         min_mid_channels: int             = 4,
-        act             : Callable | None = None,
+        act1            : Callable | None = None,
+        act2            : Callable | None = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -754,7 +755,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act1     = act(num_features=mid_channels) if act is not None else None
+        self.act1     = act1(num_features=mid_channels) if act1 is not None else None
         self.pw_conv2 = Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -768,7 +769,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act2    = act(num_features=out_channels) if act is not None else None
+        self.act2    = act2(num_features=out_channels) if act2 is not None else None
         self.dw_conv = Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -801,6 +802,217 @@ class AttentionSubspaceBlueprintSeparableConv2d(Module):
         wwt = torch.mm(w, torch.transpose(w, 0, 1))
         i   = torch.eye(wwt.shape[0], device=wwt.device)
         return torch.norm(wwt - i, p="fro")
+
+
+class AttentionSubspaceBlueprintSeparableConv2d1(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        # x = self.simam(x)
+        # if self.act1 is not None:
+        #     x = self.act1(x)
+        x = self.pw_conv2(x)
+        # if self.act2 is not None:
+        #     x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d2(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        # x = self.simam(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        # if self.act2 is not None:
+        #    x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d3(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        # x = self.simam(x)
+        # if self.act1 is not None:
+        #    x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+           x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d4(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        # x = self.simam(x)
+        if self.act1 is not None:
+           x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+           x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d5(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.simam(x)
+        # if self.act1 is not None:
+        #    x = self.act1(x)
+        x = self.pw_conv2(x)
+        # if self.act2 is not None:
+        #    x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d6(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        # if self.act1 is not None:
+        #    x = self.act1(x)
+        x = self.pw_conv2(x)
+        x = self.simam(x)
+        # if self.act2 is not None:
+        #    x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d7(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        # if self.act1 is not None:
+        #    x = self.act1(x)
+        x = self.pw_conv2(x)
+        # if self.act2 is not None:
+        #    x = self.act2(x)
+        x = self.dw_conv(x)
+        x = self.simam(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d8(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.simam(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        # if self.act2 is not None:
+        #    x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d9(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.simam(x)
+        # if self.act1 is not None:
+        #     x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d10(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        x = self.simam(x)
+        #if self.act2 is not None:
+        #    x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d11(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        #if self.act1 is not None:
+        #    x = self.act1(x)
+        x = self.pw_conv2(x)
+        x = self.simam(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d12(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        x = self.simam(x)
+        return x
+
+
+class AttentionSubspaceBlueprintSeparableConv2d13(AttentionSubspaceBlueprintSeparableConv2d):
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        x = self.pw_conv1(x)
+        x = self.simam(x)
+        if self.act1 is not None:
+            x = self.act1(x)
+        x = self.pw_conv2(x)
+        if self.act2 is not None:
+            x = self.act2(x)
+        x = self.dw_conv(x)
+        
+        return x
+    
+
+ABSConv2dS1  = AttentionSubspaceBlueprintSeparableConv2d1
+ABSConv2dS2  = AttentionSubspaceBlueprintSeparableConv2d2
+ABSConv2dS3  = AttentionSubspaceBlueprintSeparableConv2d3
+ABSConv2dS4  = AttentionSubspaceBlueprintSeparableConv2d4
+ABSConv2dS5  = AttentionSubspaceBlueprintSeparableConv2d5
+ABSConv2dS6  = AttentionSubspaceBlueprintSeparableConv2d6
+ABSConv2dS7  = AttentionSubspaceBlueprintSeparableConv2d7
+ABSConv2dS8  = AttentionSubspaceBlueprintSeparableConv2d8
+ABSConv2dS9  = AttentionSubspaceBlueprintSeparableConv2d9
+ABSConv2dS10 = AttentionSubspaceBlueprintSeparableConv2d10
+ABSConv2dS11 = AttentionSubspaceBlueprintSeparableConv2d11
+ABSConv2dS12 = AttentionSubspaceBlueprintSeparableConv2d12
+ABSConv2dS13 = AttentionSubspaceBlueprintSeparableConv2d13
 
 
 class AttentionUnconstrainedBlueprintSeparableConv2d(Module):
@@ -5447,7 +5659,7 @@ class DCE(Module):
         return a
 
 
-class DCEV2(Module):
+class ADCE(Module):
     """
     """
     

@@ -54,6 +54,8 @@ dependencies:
   - xmltodict
 
   # CUDA
+  # - cudatoolkit=10.2
+  # - cudatoolkit=11.3
   # - cudatoolkit=11.6
   # - cudatoolkit-dev=11.6
   # - cudnn
@@ -90,13 +92,13 @@ dependencies:
   # Pip
   - pip
   - pip:
+      - flopco-pytorch
       - label-studio
       - mediapipe
       # - nvidia-pyindex
       # - nvidia-tensorrt
       # - opencv-python
       # - opencv-contrib-python
-      - ptflops
       # - pycuda
       - pyiqa
       - thop

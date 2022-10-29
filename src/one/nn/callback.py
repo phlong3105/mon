@@ -346,8 +346,7 @@ class ModelCheckpoint(Checkpoint):
         self.start_epoch       = trainer.current_epoch
         self.start_time        = timer()
         self.last_time_checked = time.monotonic()
-        print(self.root)
-        self.logger = open(self.root / "log.txt", "a", encoding="utf-8")
+        self.logger            = open(self.root / "log.txt", "a", encoding="utf-8")
         self.logger.write(f"\n================================================================================\n")
         self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n\n")
         

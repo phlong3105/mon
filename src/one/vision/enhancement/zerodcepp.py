@@ -231,3 +231,87 @@ class ZeroDCEPP(ImageEnhancementModel):
         pred = self.forward(input=input, *args, **kwargs)
         loss = self.loss(input, pred) if self.loss else None
         return pred[-1], loss
+
+
+class DSConv(Module):
+    
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__()
+        self.depth_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = 3,
+            stride       = 1,
+            padding      = 1,
+            groups       = in_channels,
+        )
+        self.point_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            groups       = 1,
+        )
+    
+    def forward(self, input: Tensor) -> Tensor:
+        output = self.depth_conv(input)
+        output = self.point_conv(output)
+        return output
+
+
+@MODELS.register(name="zerodce++-vanilla")
+class ZeroDCEPPVanilla(Module):
+    """
+    Original implementation of ZeroDCE++
+    
+    References:
+        https://github.com/Li-Chongyi/Zero-DCE_extension
+    """
+    
+    def __init__(self, scale_factor: float = 1.0):
+        super().__init__()
+        number_f          = 32
+        self.relu         = ReLU(inplace=True)
+        self.scale_factor = scale_factor
+        self.upsample     = UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        
+        self.conv1 = DSConv(3,            number_f)
+        self.conv2 = DSConv(number_f,     number_f)
+        self.conv3 = DSConv(number_f,     number_f)
+        self.conv4 = DSConv(number_f,     number_f)
+        self.conv5 = DSConv(number_f * 2, number_f)
+        self.conv6 = DSConv(number_f * 2, number_f)
+        self.conv7 = DSConv(number_f * 2, 3       )
+    
+    def enhance(self, x: Tensor, x_r: Tensor) -> Tensor:
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        return x
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x = input
+        if self.scale_factor == 1:
+            x_down = x
+        else:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+        
+        x1  = self.relu(self.conv1(x_down))
+        x2  = self.relu(self.conv2(x1))
+        x3  = self.relu(self.conv3(x2))
+        x4  = self.relu(self.conv4(x3))
+        x5  = self.relu(self.conv5(torch.cat([x3, x4], 1)))
+        x6  = self.relu(self.conv6(torch.cat([x2, x5], 1)))
+        x_r = F.tanh(self.conv7(torch.cat([x1, x6], 1)))
+        if self.scale_factor == 1:
+            x_r = x_r
+        else:
+            x_r = self.upsample(x_r)
+        x = self.enhance(x, x_r)
+        return x

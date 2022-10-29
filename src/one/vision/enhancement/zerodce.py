@@ -267,3 +267,58 @@ class ZeroDCE(ImageEnhancementModel):
         pred = self.forward(input=input, *args, **kwargs)
         loss = self.loss(input, pred) if self.loss else None
         return pred[-1], loss
+
+
+@MODELS.register(name="zerodce-vanilla")
+class ZeroDCEVanilla(Module):
+    """
+    Original implementation of ZeroDCE
+    
+    References:
+        https://github.com/Li-Chongyi/Zero-DCE
+    """
+    
+    def __init__(self):
+        super().__init__()
+        number_f     = 32
+        self.relu    = ReLU(inplace=True)
+        self.conv1 = Conv2d(3,            number_f, 3, 1, 1, bias=True)
+        self.conv2 = Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv3 = Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv4 = Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv5 = Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
+        self.conv6 = Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
+        self.conv7 = Conv2d(number_f * 2, 24,       3, 1, 1, bias=True)
+    
+    def enhance(self, x: Tensor, x_r: Tensor) -> Tensor:
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        x = x + x_r * (torch.pow(x, 2) - x)
+        return x
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x   = input
+        x1  = self.relu(self.conv1(x))
+        x2  = self.relu(self.conv2(x1))
+        x3  = self.relu(self.conv3(x2))
+        x4  = self.relu(self.conv4(x3))
+        x5  = self.relu(self.conv5(torch.cat([x3, x4], 1)))
+        x6  = self.relu(self.conv6(torch.cat([x2, x5], 1)))
+        x_r = F.tanh(self.conv7(torch.cat([x1, x6], 1)))
+        r1, r2, r3, r4, r5, r6, r7, r8 = torch.split(x_r, 3, dim=1)
+        
+        x = x + r1 * (torch.pow(x, 2) - x)
+        x = x + r2 * (torch.pow(x, 2) - x)
+        x = x + r3 * (torch.pow(x, 2) - x)
+        x = x + r4 * (torch.pow(x, 2) - x)
+        x = x + r5 * (torch.pow(x, 2) - x)
+        x = x + r6 * (torch.pow(x, 2) - x)
+        x = x + r7 * (torch.pow(x, 2) - x)
+        x = x + r8 * (torch.pow(x, 2) - x)
+        r = torch.cat([r1, r2, r3, r4, r5, r6, r7, r8], 1)
+        return x
