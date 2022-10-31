@@ -124,10 +124,10 @@ def measure(args: Munch | dict):
 
 hosts = {
     "lp-labdesktop01-ubuntu": {
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-e-tiny-lol226-0" / "dcim",
-        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-b-large-lol226-0",
-        "target"  : None,
-        # "target"  : True,
+        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-e-tiny-lol226-0" / "dcim",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-a-lol4k-0",
+        # "target"  : None,
+        "target"  : True,
         # "img_size": None,
         "img_size": (3, 400, 600),
         "save"    : True,

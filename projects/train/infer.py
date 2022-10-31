@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Training script.
+Inference script.
 """
 
 from __future__ import annotations
@@ -72,14 +72,14 @@ def infer(args: Munch | dict):
 hosts = {
 	"lp-labdesktop01-ubuntu": {
         "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-a-large",
-        "weights"    : PROJECTS_DIR / "train" / "runs" / "train" / "lol226" / "zerodcev2-a-large-lol226" / "weights" / "best.pt",
+        "cfg"        : "zerodcev2-d",
+        "weights"    : PROJECTS_DIR / "train" / "runs" / "train" / "lol4k" / "zerodcev2-d-lol4k" / "weights" / "best.pt",
         "root"       : RUNS_DIR / "infer",
-        "project"    : "lol226",
-        "name"       : "zerodcev2-a-large-lol226",
+        "project"    : "sice",
+        "name"       : "zerodcev2-d-lol4k",
         "num_classes": None,
-        "source"     : DATA_DIR / "lol" / "train" / "low",
-        # "source"     : DATA_DIR / "sice" / "part2_900x1200_low" / "low",
+        # "source"     : DATA_DIR / "lol" / "train" / "low",
+        "source"     : DATA_DIR / "sice" / "part2_900x1200_low" / "low",
         "max_samples": None,
         "batch_size" : 1,
         "img_size"   : None,

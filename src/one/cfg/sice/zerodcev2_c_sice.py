@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-b
 
 """
 Zero-DCE trained on LIME dataset.
@@ -15,12 +15,12 @@ from one.vision.transformation import Resize
 
 # H1: - Basic ------------------------------------------------------------------
 
-model_name = "zerodce"
-model_cfg  = "zerodce.yaml"
-data_name  = "lol4k"
-fullname   = f"{model_name}-{data_name}"
+model_name = "zerodcev2"
+model_cfg  = "zerodcev2-c"
+data_name  = "sice_u"
+fullname   = f"{model_cfg}-sice"
 root       = RUNS_DIR / "train"
-project    = "lol4k"
+project    = "sice"
 shape      = [3, 512, 512]
 
 
@@ -94,7 +94,7 @@ model = {
         # Loss function for training model. Defaults to None.
     "metrics": {
 	    "train": None,
-		"val"  : [{"name": "psnr"}, {"name": "ssim"}, {"name": "image_mae"}],
+		"val"  : [{"name": "psnr"}],
 		"test" : [{"name": "psnr"}, {"name": "ssim"}, {"name": "image_mae"}],
     },
         # Metric(s) for validating and testing model. Defaults to None.
