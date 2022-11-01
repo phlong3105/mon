@@ -905,10 +905,10 @@ class VisionInferrer(Inferrer):
         
         # Setup online learning
         if self.phase == ModelPhase.TRAINING:
-            optimizer = torch.optim.Adam(
+            optimizer = torch.optim.SGD(
                 params       = model.parameters(),
-                lr           = 0.001,
-                weight_decay = 0.001,
+                lr           = 0.01,
+                weight_decay = 0.01,
             )
         else:
             optimizer = None

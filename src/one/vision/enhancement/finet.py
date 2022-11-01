@@ -312,8 +312,8 @@ class FINet(ImageEnhancementModel):
    
     def init_weights(self, m: Module):
         pass
-    
-    
+
+
 @MODELS.register(name="finet-deblur")
 class FINetDeblur(FINet):
     """
@@ -567,8 +567,8 @@ class FINetDenoise(FINet):
             verbose     = verbose,
             *args, **kwargs
         )
-   
-   
+
+
 @MODELS.register(name="finet-denoise-x0.5")
 class FINetDenoise_x0_5(FINet):
     """

@@ -124,8 +124,8 @@ def measure(args: Munch | dict):
 
 hosts = {
     "lp-labdesktop01-ubuntu": {
-        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zeroadce-e-tiny-lol226-0" / "dcim",
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zeroadce-a-lol4k-0",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zeroadce-a-lol226-0",
+        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zeroadce-a-sice-0",
         # "target"  : None,
         "target"  : True,
         # "img_size": None,
