@@ -706,7 +706,7 @@ class HINetDehaze(HINet):
         )
         
         
-@MODELS.register(name="hinet_denoise")
+@MODELS.register(name="hinet-denoise")
 class HINetDenoise(HINet):
     """
     
