@@ -18,9 +18,9 @@ from one.core import Ints
 from one.core import MemoryUnit
 from one.vision.enhancement.zerodce import ZeroDCEVanilla
 from one.vision.enhancement.zerodcepp import ZeroDCEPPVanilla
-from one.vision.enhancement.zerodcev2 import ZeroDCEV2
-from one.vision.enhancement.zerodcev2 import ZeroDCEV2Debug
-from one.vision.enhancement.zerodcev2 import ZeroDCEV2TinyDebug
+from one.vision.enhancement.zeroadce import ZeroADCE
+from one.vision.enhancement.zeroadce import ZeroADCEDebug
+from one.vision.enhancement.zeroadce import ZeroADCETinyDebug
 
 
 # H1: - Functions --------------------------------------------------------------
@@ -72,37 +72,37 @@ def measure_speed(model, input_shape: Ints, repeat: int = 100, half: bool = True
 if __name__ == "__main__":
     shape  = (1, 3, 900, 1200)
     models = [
-        ZeroDCEV2(cfg="zerodcev2-a",       name="ZeroDCEV2-A"),
+        ZeroADCE(cfg="zerodcev2-a", name="ZeroDCEV2-A"),
         ZeroDCEVanilla(),
         ZeroDCEPPVanilla(),
-        ZeroDCEV2(cfg="zerodcev2-a",       name="ZeroDCEV2-A"),
-        ZeroDCEV2(cfg="zerodcev2-b",       name="ZeroDCEV2-B"),
-        ZeroDCEV2(cfg="zerodcev2-c",       name="ZeroDCEV2-C"),
-        ZeroDCEV2(cfg="zerodcev2-d",       name="ZeroDCEV2-D"),
-        ZeroDCEV2(cfg="zerodcev2-e",       name="ZeroDCEV2-E"),
-        ZeroDCEV2(cfg="zerodcev2-a-large", name="ZeroDCEV2-A-Large"),
-        ZeroDCEV2(cfg="zerodcev2-b-large", name="ZeroDCEV2-B-Large"),
-        ZeroDCEV2(cfg="zerodcev2-c-large", name="ZeroDCEV2-C-Large"),
-        ZeroDCEV2(cfg="zerodcev2-d-large", name="ZeroDCEV2-D-Large"),
-        ZeroDCEV2(cfg="zerodcev2-e-large", name="ZeroDCEV2-E-Large"),
-        ZeroDCEV2(cfg="zerodcev2-a-tiny",  name="ZeroDCEV2-A-Tiny"),
-        ZeroDCEV2(cfg="zerodcev2-b-tiny",  name="ZeroDCEV2-B-Tiny"),
-        ZeroDCEV2(cfg="zerodcev2-c-tiny",  name="ZeroDCEV2-C-Tiny"),
-        ZeroDCEV2(cfg="zerodcev2-d-tiny",  name="ZeroDCEV2-D-Tiny"),
-        ZeroDCEV2(cfg="zerodcev2-e-tiny",  name="ZeroDCEV2-E-Tiny"),
-        ZeroDCEV2(cfg="zerodcev2-abs1",    name="ZeroDCEV2-ABS1"),
-        ZeroDCEV2(cfg="zerodcev2-abs2",    name="ZeroDCEV2-ABS2"),
-        ZeroDCEV2(cfg="zerodcev2-abs3",    name="ZeroDCEV2-ABS3"),
-        ZeroDCEV2(cfg="zerodcev2-abs4",    name="ZeroDCEV2-ABS4"),
-        ZeroDCEV2(cfg="zerodcev2-abs5",    name="ZeroDCEV2-ABS5"),
-        ZeroDCEV2(cfg="zerodcev2-abs6",    name="ZeroDCEV2-ABS6"),
-        ZeroDCEV2(cfg="zerodcev2-abs7",    name="ZeroDCEV2-ABS7"),
-        ZeroDCEV2(cfg="zerodcev2-abs8",    name="ZeroDCEV2-ABS8"),
-        ZeroDCEV2(cfg="zerodcev2-abs9",    name="ZeroDCEV2-ABS9"),
-        ZeroDCEV2(cfg="zerodcev2-abs10",   name="ZeroDCEV2-ABS10"),
-        ZeroDCEV2(cfg="zerodcev2-abs11",   name="ZeroDCEV2-ABS11"),
-        ZeroDCEV2(cfg="zerodcev2-abs12",   name="ZeroDCEV2-ABS12"),
-        ZeroDCEV2(cfg="zerodcev2-abs13",   name="ZeroDCEV2-ABS13"),
+        ZeroADCE(cfg="zerodcev2-a", name="ZeroDCEV2-A"),
+        ZeroADCE(cfg="zerodcev2-b", name="ZeroDCEV2-B"),
+        ZeroADCE(cfg="zerodcev2-c", name="ZeroDCEV2-C"),
+        ZeroADCE(cfg="zerodcev2-d", name="ZeroDCEV2-D"),
+        ZeroADCE(cfg="zerodcev2-e", name="ZeroDCEV2-E"),
+        ZeroADCE(cfg="zerodcev2-a-large", name="ZeroDCEV2-A-Large"),
+        ZeroADCE(cfg="zerodcev2-b-large", name="ZeroDCEV2-B-Large"),
+        ZeroADCE(cfg="zerodcev2-c-large", name="ZeroDCEV2-C-Large"),
+        ZeroADCE(cfg="zerodcev2-d-large", name="ZeroDCEV2-D-Large"),
+        ZeroADCE(cfg="zerodcev2-e-large", name="ZeroDCEV2-E-Large"),
+        ZeroADCE(cfg="zerodcev2-a-tiny", name="ZeroDCEV2-A-Tiny"),
+        ZeroADCE(cfg="zerodcev2-b-tiny", name="ZeroDCEV2-B-Tiny"),
+        ZeroADCE(cfg="zerodcev2-c-tiny", name="ZeroDCEV2-C-Tiny"),
+        ZeroADCE(cfg="zerodcev2-d-tiny", name="ZeroDCEV2-D-Tiny"),
+        ZeroADCE(cfg="zerodcev2-e-tiny", name="ZeroDCEV2-E-Tiny"),
+        ZeroADCE(cfg="zerodcev2-abs1", name="ZeroDCEV2-ABS1"),
+        ZeroADCE(cfg="zerodcev2-abs2", name="ZeroDCEV2-ABS2"),
+        ZeroADCE(cfg="zerodcev2-abs3", name="ZeroDCEV2-ABS3"),
+        ZeroADCE(cfg="zerodcev2-abs4", name="ZeroDCEV2-ABS4"),
+        ZeroADCE(cfg="zerodcev2-abs5", name="ZeroDCEV2-ABS5"),
+        ZeroADCE(cfg="zerodcev2-abs6", name="ZeroDCEV2-ABS6"),
+        ZeroADCE(cfg="zerodcev2-abs7", name="ZeroDCEV2-ABS7"),
+        ZeroADCE(cfg="zerodcev2-abs8", name="ZeroDCEV2-ABS8"),
+        ZeroADCE(cfg="zerodcev2-abs9", name="ZeroDCEV2-ABS9"),
+        ZeroADCE(cfg="zerodcev2-abs10", name="ZeroDCEV2-ABS10"),
+        ZeroADCE(cfg="zerodcev2-abs11", name="ZeroDCEV2-ABS11"),
+        ZeroADCE(cfg="zerodcev2-abs12", name="ZeroDCEV2-ABS12"),
+        ZeroADCE(cfg="zerodcev2-abs13", name="ZeroDCEV2-ABS13"),
         # ZeroDCEV2Debug(),
         # ZeroDCEV2TinyDebug(),
     ]

@@ -124,8 +124,8 @@ def measure(args: Munch | dict):
 
 hosts = {
     "lp-labdesktop01-ubuntu": {
-        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-e-tiny-lol226-0" / "dcim",
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-a-lol4k-0",
+        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zeroadce-e-tiny-lol226-0" / "dcim",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zeroadce-a-lol4k-0",
         # "target"  : None,
         "target"  : True,
         # "img_size": None,
@@ -133,18 +133,9 @@ hosts = {
         "save"    : True,
         "verbose" : False,
 	},
-    "lp-labdesktop02-ubuntu": {
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-s4-lol226-0",
-        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodce++-sice",
-        "target"  : None,
-        # "img_size": None,
-        "img_size": (3, 400, 600),
-        "save"    : True,
-        "verbose" : False,
-	},
     "lp-imac.local": {
-        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zerodcev2-c-tiny-lol226-0",
-        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zerodcev2-e-large-lol226-0",
+        # "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "lol226" / "zeroadce-c-tiny-lol226-0",
+        "pred"    : PROJECTS_DIR / "train" / "runs" / "infer" / "sice" / "zeroadce-e-large-lol226-0",
         "target"  : True,
         # "target"  : None,
         # "img_size": None,

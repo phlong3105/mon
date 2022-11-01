@@ -57,66 +57,34 @@ def infer(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-        "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-u3",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-u3-lol226.pt",
+        "model"      : "zeroadce",
+        "cfg"        : "zeroadce",
+        "weights"    : PRETRAINED_DIR / "zeroadce" / "zeroadce-lol226.pt",
+        "root"       : RUNS_DIR / "infer",
+        "project"    : "lol226",
+        "name"       : "exp",
         "num_classes": None,
         "source"     : DATA_DIR / "lol226",
         "max_samples" : None,
         "batch_size" : 1,
-        "img_size"   : None,  # (3, 900, 1200),
+        "img_size"   : None,
 		"devices"    : "0",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "lol226",
-        "name"       : "exp",
-        "save"       : True,
-        "verbose"    : True,
-	},
-    "lp-labdesktop02-ubuntu": {
-        "model"      : "zerodcev2",
-        "cfg"        : "zerodcev2-s2",
-        "weights"    : PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s2-lol226.pt",
-        "num_classes": None,
-        "source"     : DATA_DIR / "lol226",
-        "max_samples": None,
-        "batch_size" : 1,
-        "img_size"   : None,  # (3, 256, 256),
-		"devices"    : "0",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "lol226",
-        "name"       : "exp",
-        "save"       : True,
-        "verbose"    : True,
-	},
-    "lp-imac.local": {
-        "model"      : "zerodce",
-        "cfg"        : "zerodce.yaml",
-        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol.pt",
-        "num_classes": None,
-        "source"     : DATA_DIR / "lol" / "test" / "low",
-        "max_samples" : None,
-        "batch_size" : 1,
-        "img_size"   : (3, 256, 256),
-		"devices"    : "cpu",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "lol_demo",
-        "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
 	},
     "vsw-ws02": {
         "model"      : "zerodcev2",
         "cfg"        : "zerodcev2_s2_lol_demo",
-        "weights"    :  None, # PRETRAINED_DIR / "zerodcev2" / "zerodcev2-s3-lol226.pt",
+        "weights"    : None,
+        "root"       : RUNS_DIR / "infer",
+        "project"    : "lol_demo",
+        "name"       : "exp",
         "num_classes": None,
         "source"     : DATA_DIR / "lol_demo" / "landscapes.mp4",
         "max_samples": None,
         "batch_size" : 1,
-        "img_size"   : None,  # (3, 512, 512),
+        "img_size"   : None,
 		"devices"    : "0",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "lol_demo",
-        "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
 	},
@@ -124,15 +92,15 @@ hosts = {
         "model"      : "zerodce",
         "cfg"        : "zerodce_lol_demo",
         "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol226.pt",
+        "root"       : RUNS_DIR / "infer",
+        "project"    : "lol_demo",
+        "name"       : "exp",
         "num_classes": None,
         "source"     : DATA_DIR / "lol_demo" / "truck.mp4",
         "max_samples": None,
         "batch_size" : 1,
-        "img_size"   : None, # (3, 256, 256),
+        "img_size"   : None,
 		"devices"    : "0",
-        "root"       : RUNS_DIR / "infer",
-        "project"    : "lol_demo",
-        "name"       : "exp",
         "save"       : True,
         "verbose"    : True,
 	},
@@ -144,15 +112,15 @@ def parse_args():
     parser.add_argument("--model",       type=str,                             help="Model name")
     parser.add_argument("--cfg",         type=str,                             help="Model config.")
     parser.add_argument("--weights",     type=str,                             help="Weights path.")
+    parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/project/name")
+    parser.add_argument("--project",     type=str,                             help="Save results to root/project/name")
+    parser.add_argument("--name",        type=str,                             help="Save results to root/project/name")
     parser.add_argument("--num-classes", type=int,                             help="Number of classes.")
     parser.add_argument("--source",      type=str,                             help="Data source.")
     parser.add_argument("--max-samples", type=int,                             help="Only process certain amount of samples.")
     parser.add_argument("--batch-size",  type=int,                             help="Total Batch size for all GPUs.")
     parser.add_argument("--img-size",    type=int, nargs="+",                  help="Image sizes.")
     parser.add_argument("--devices",     type=str,                             help="Will be mapped to either gpus, tpu_cores, num_processes or ipus based on the accelerator type.")
-    parser.add_argument("--root",        type=str, default=RUNS_DIR / "infer", help="Save results to root/project/name")
-    parser.add_argument("--project",     type=str,                             help="Save results to root/project/name")
-    parser.add_argument("--name",        type=str,                             help="Save results to root/project/name")
     parser.add_argument("--save",        action="store_true",                  help="Save.")
     parser.add_argument("--verbose",     action="store_true",                  help="Display results.")
     args = parser.parse_args()
@@ -174,15 +142,15 @@ if __name__ == "__main__":
     # model       = input_args.get("model",       None) or host_args.get("model",       None)
     cfg         = input_args.get("cfg",         None) or host_args.get("cfg",         None)
     weights     = input_args.get("weights",     None) or host_args.get("weights",     None)
+    root        = input_args.get("root",        None) or host_args.get("root",        None)
+    project     = input_args.get("project",     None) or host_args.get("project",     None)
+    name        = input_args.get("name",        None) or host_args.get("name",        None)
     num_classes = input_args.get("num_classes", None) or host_args.get("num_classes", None)
     source      = input_args.get("source",      None) or host_args.get("source",      None)
     max_samples = input_args.get("max_samples", None) or host_args.get("max_samples", None)
     batch_size  = input_args.get("batch_size",  None) or host_args.get("batch_size",  None)
     shape       = input_args.get("img_size",    None) or host_args.get("img_size",    None)
     devices     = input_args.get("devices",     None) or host_args.get("devices",     None)
-    root        = input_args.get("root",        None) or host_args.get("root",        None)
-    project     = input_args.get("project",     None) or host_args.get("project",     None)
-    name        = input_args.get("name",        None) or host_args.get("name",        None)
     save        = input_args.get("save",        None) or host_args.get("save",        None)
     verbose     = input_args.get("verbose",     None) or host_args.get("verbose",     None)
     
@@ -194,15 +162,15 @@ if __name__ == "__main__":
         },
         cfg         = cfg,
         weights     = weights,
+        root        = root,
+        project     = project,
+        name        = name,
         num_classes = num_classes,
         source      = source,
         max_samples = max_samples,
         batch_size  = batch_size,
         shape       = shape,
         devices     = devices,
-        root        = root,
-        name        = name,
-        project     = project,
         save        = save,
         verbose     = verbose,
     )

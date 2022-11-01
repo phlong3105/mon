@@ -91,25 +91,14 @@ def test(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"cfg"        : "zerodcev2_s5_lol",
+		"cfg"        : "zeroadce_s5_lol",
         "project"    : "lol226",
-        "weights"    : PRETRAINED_DIR / "zerodce" / "zerodce-lol4k.pt",
+        "weights"    : PRETRAINED_DIR / "zeroadce" / "zeroadce-lol4k.pt",
         "batch_size" : 8,
         "img_size"   : None,  # (3, 256, 256),
         "accelerator": "auto",
 		"devices"    : 1,
         "max_epochs" : 1,
-		"strategy"   : None,
-	},
-    "lp-labdesktop02-ubuntu": {
-		"cfg"        : "zerodcev2_s5_lol",
-        "project"    : "lol",
-        "weights"    : None,
-        "batch_size" : 8,
-        "img_size"   : None,  # (3, 256, 256),
-        "accelerator": "auto",
-		"devices"    : 1,
-        "max_epochs" : 500,
 		"strategy"   : None,
 	},
     "vsw-ws02": {
