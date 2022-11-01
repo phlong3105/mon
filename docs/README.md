@@ -1,10 +1,3 @@
----
-layout: default
-title: Home
-nav_order: 1
-permalink: /
----
-
 ![One](data/one.png) 
 
 ---
@@ -12,10 +5,10 @@ permalink: /
 # One Research Framework
 `One` is a comprehensive research repository for code, framework, and knowledge base of my work related to computer vision, machine learning, and deep learning.
 
-[Getting Started](#getting-started){: .btn .btn-primary .fs-3 .mb-4 .mb-md-0 } 
-[Knowledge Base](#knowledge-base){: .btn .fs-3 .mb-4 .mb-md-0 } 
-[Cite](#cite){: .btn .fs-3 .mb-4 .mb-md-0 } 
-[Contact](#contact){: .btn .fs-3 .mb-4 .mb-md-0 } 
+[Getting Started](#getting-started) &nbsp;
+[Knowledge Base](#knowledge-base) &nbsp;
+[Cite](#cite) &nbsp;
+[Contact](#contact) &nbsp;
 
 ---
 
@@ -30,19 +23,18 @@ permalink: /
 
 ### Directory
 ```text
-one               # root directory
- |__ data         # contains data
+one                  # Root directory
+ |__ data            # Contains data
  |__ docs
- |__ install      # helpful installation scripts       
- |__ pretrained   # pretrained models weights
- |__ projects      # 
+ |__ install         # Helpful installation scripts       
+ |__ pretrained      # Pretrained models weights
+ |__ projects        # 
  |     |__ project1
- |	   |__ project2
+ |     |__ project2
  |__ src
- |     |__ one
- |     |__ ..
- |__ tests
- |__ third_party
+ |     |__ one       # Main source code
+ |__ tests			 # Testing scripts
+ |__ third_party     # Third-party libraries
 ```
 
 ### Installation using `conda`
