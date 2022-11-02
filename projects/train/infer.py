@@ -71,12 +71,12 @@ def infer(args: Munch | dict):
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-        "model"      : "zeroadce",
-        "cfg"        : "zeroadce-a",
-        "weights"    : PROJECTS_DIR / "train" / "runs" / "train" / "lol226" / "zeroadce-a-lol226" / "weights" / "best.pt",
+        "model"      : "hinet",
+        "cfg"        : "hinet-derain",
+        "weights"    : PROJECTS_DIR / "train" / "runs" / "train" / "hinet" / "hinet-derain-cityscapes_rain" / "weights" / "best.pt",
         "root"       : RUNS_DIR / "infer",
-        "project"    : "lol226",
-        "name"       : "demo",
+        "project"    : "hinet",
+        "name"       : "hinet-derain-cityscapes_rain",
         "num_classes": None,
         "source"     : DATA_DIR / "lol" / "train" / "low",
         # "source"     : DATA_DIR / "lol" / "demo" / "landscapes.mp4",

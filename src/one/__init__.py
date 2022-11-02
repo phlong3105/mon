@@ -37,4 +37,4 @@ from .vision import *
 """
 
 __author__  = "Long H. Pham"
-__version__ = "1.1.3"
+__version__ = "1.1.4"
