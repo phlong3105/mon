@@ -73,5 +73,3 @@ If you find our work useful, please cite the following:
 ## Contact
 If you have any questions, feel free to contact `Long Pham` 
 ([longpham3105@gmail.com](longpham3105@gmail.com) or [phlong@skku.edu](phlong@skku.edu))
-
-<script type="text/javascript" id="clustrmaps" src="//clustrmaps.com/map_v2.js?d=JUeNLvGJNmhIBDXVZ8UaNFwKXabm78dcdcwW8trsAXQ&cl=ffffff&w=a"></script>
