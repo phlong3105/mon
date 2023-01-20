@@ -35,14 +35,14 @@ from mon.foundation import error_console, math
 # region Conversion
 
 def correct_image_dimension(image: Image) -> Image:
-    """Corrects the dimensionality of :param:`image` to the correct format used
-    by :mod:`matplotlib` and :mod:`cv2`.
+    """Correct the dimensionality of an image to the correct format used by
+    :mod:`matplotlib` and :mod:`cv2`.
     
     Args:
-        image: Image to be corrected.
+        image: An image to be corrected.
     
     Returns:
-        Corrected image ready to be used.
+        A corrected image ready to be used.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim <= 4
@@ -63,15 +63,15 @@ def correct_image_dimension(image: Image) -> Image:
 
 
 def correct_tensor_dimension(image: torch.Tensor) -> Image:
-    """Corrects the dimensionality of :param:`image` to the correct format used
-    by :mod:`torch`. It should be a :class:`torch.Tensor` in channel-first
-    format and has shape [..., 1 or B, C, H, W]
+    """Correct the dimensionality of image to the correct format used by
+    :mod:`torch`. It should be a :class:`torch.Tensor` in channel-first format
+    and has shape [..., 1 or B, C, H, W]
 
     Args:
-        image: Image to be corrected.
+        image: An image to be corrected.
 
     Returns:
-        Corrected image ready to be used.
+        A corrected image ready to be used.
     """
     assert isinstance(image, torch.Tensor)
     assert 3 <= image.ndim <= 5
@@ -88,13 +88,13 @@ def correct_tensor_dimension(image: torch.Tensor) -> Image:
 
 
 def to_channel_first(image: Image) -> Image:
-    """Converts :param:`image` to channel first format.
+    """Convert an image to the channel-first format.
     
     Args:
-        image: Image to be converted.
+        image: An image to be converted.
     
     Returns:
-        A channel first image.
+        A channel-first image.
     """
     if is_channel_first(image):
         return image
@@ -126,13 +126,13 @@ def to_channel_first(image: Image) -> Image:
 
 
 def to_channel_last(image: Image) -> Image:
-    """Converts :param:`image` to channel last format.
+    """Convert an image to the channel-last format.
 
     Args:
-        image: Image to be converted.
+        image: An image to be converted.
 
     Returns:
-        A channel last image.
+        A channel-last image.
     """
     if is_channel_last(image):
         return image
@@ -168,18 +168,17 @@ def to_image(
     keepdim    : bool = True,
     denormalize: bool = False,
 ) -> np.ndarray:
-    """Converts :param:`image` from :class:`torch.Tensor` to
-    :class:`np.ndarray`.
+    """Convert an image from :class:`torch.Tensor` to :class:`np.ndarray`.
     
     Args:
-        image: Image of shape [..., C, H, W] to be converted.
-        keepdim: If True, the function will keep the dimensions of the input
-            tensor. Defaults to True.
-        denormalize: If True, the image will be denormalized to [0, 255].
-            Defaults to False.
+        image: An image of shape [..., C, H, W] to be converted.
+        keepdim: If True, keep the dimensions of the input tensor. Defaults to
+            True.
+        denormalize: If True, denormalize the image to [0, 255]. Defaults to
+            False.
         
     Returns:
-        An image in :class:`np.ndarray`.
+        An :class:`np.ndarray` image.
     """
     assert isinstance(image, torch.Tensor)
     assert 3 <= image.ndim <= 4
@@ -196,11 +195,11 @@ def to_image(
 
 
 def to_pil_image(image: Image) -> PIL.Image:
-    """Converts :param:`image` from :class:`torch.Tensor` or
-    :class:`np.ndarray` to :class:`PIL.Image`.
+    """Convert an image from :class:`torch.Tensor` or :class:`np.ndarray` to
+    :class:`PIL.Image`.
     
     Args:
-        image: Image to be converted.
+        image: An image to be converted.
     
     Returns:
         A :class:`PIL.Image` image.
@@ -222,14 +221,14 @@ def to_tensor(
     keepdim  : bool = True,
     normalize: bool = False,
 ) -> torch.Tensor:
-    """Converts :param:`image` from :class:`PIL.Image` or :class:`np.ndarray`
-    to :class:`torch.Tensor`. Optionally, convert :param:`image` to
-    channel-first format and normalize it.
+    """Convert an image from :class:`PIL.Image` or :class:`np.ndarray` to
+    :class:`torch.Tensor`. Optionally, convert :param:`image` to channel-first
+    format and normalize it.
     
     Args:
-        image: Image to be converted.
-        keepdim: If True, the channel dimension will be kept. If False unsqueeze
-            the image to match the shape [..., C, H, W]. Defaults to True
+        image: An image to be converted.
+        keepdim: If True, keep the channel dimension. If False unsqueeze the
+            image to match the shape [..., C, H, W]. Defaults to True
         normalize: If True, normalize the image to [0, 1]. Defaults to False
     
     Returns:
@@ -276,12 +275,12 @@ def to_tensor(
 # region Image Property
 
 def check_image_size(size: Ints, stride: int = 32) -> int:
-    """If the input :param:`size` is not a multiple of the :param:`stride`,
+    """If the input :param:`size` isn't a multiple of the :param:`stride`,
     then the image size is updated to the next multiple of the stride.
     
     Args:
-        size: The size of the image.
-        stride: The stride of the network. Defaults to 32.
+        size: A size of the image.
+        stride: A stride of the network. Defaults to 32.
     
     Returns:
         A new size of the image.
@@ -302,14 +301,10 @@ def check_image_size(size: Ints, stride: int = 32) -> int:
 
 
 def get_image_center(image: Image) -> Image:
-    """Returns the coordinates of the center of :param:`image` as (x=h/2,
-    y=w/2).
+    """Return the center of a given image specified as (x=h/2, y=w/2).
     
     Args:
-        image: Image in arbitrary type.
-    
-    Returns:
-        The center values of the image.
+        image: An image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     h, w = get_image_hw(image)
@@ -325,14 +320,11 @@ def get_image_center(image: Image) -> Image:
 
 
 def get_image_center4(image: Image) -> Image:
-    """Returns the coordinates of the center of :param:`image` as (x=h/2,
-    y=w/2, x=h/2, y=w/2).
+    """Return the center of a given image specified as (x=h/2, y=w/2, x=h/2,
+    y=w/2).
     
     Args:
-        image: Image in arbitrary type.
-    
-    Returns:
-        The center values of the image.
+        image: An image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     h, w = get_image_hw(image)
@@ -348,13 +340,10 @@ def get_image_center4(image: Image) -> Image:
 
 
 def get_image_hw(image: Image) -> Int2T :
-    """Returns height and width value of :param:`image`.
+    """Return height and width value of an image.
     
     Args:
-        image: Image in arbitrary format.
-    
-    Returns:
-        The height and width of the image.
+        image: An image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
@@ -367,13 +356,10 @@ def get_image_hw(image: Image) -> Int2T :
     
 
 def get_image_shape(image: Image) -> Int3T :
-    """Returns channel, height, and width value of :param:`image`.
+    """Return channel, height, and width value of an image.
     
     Args:
-        image: Image in arbitrary format.
-    
-    Returns:
-        The shape of the image as [C, H, W].
+        image: An image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
@@ -389,13 +375,10 @@ get_image_size: TypeAlias = get_image_hw
 
 
 def get_num_channels(image: Image) -> int:
-    """Returns the number of channels of :param:`image`.
+    """Return the number of channels of an image.
 
     Args:
-        image: Image to get the number of channels from.
-
-    Returns:
-        The number of channels of :param:`image`.
+        image: An image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim <= 4
@@ -415,10 +398,10 @@ def get_num_channels(image: Image) -> int:
 
 
 def to_size(size: Ints) -> tuple[int, int]:
-    """Casts :param:`size` of arbitrary format into standard [H, W].
+    """Casts a size object to the standard [H, W].
 
     Args:
-        size: The size of the image, windows, kernels, etc.
+        size: A size of the image, windows, kernels, etc.
 
     Returns:
         A size in [H, W] format.
@@ -438,15 +421,11 @@ def to_size(size: Ints) -> tuple[int, int]:
 # region Image Format (Value Type and Channel Type)
 
 def is_channel_first(image: Image) -> bool:
-    """Returns True if :param:`image` is currently in channel first format. It
-    is assumed that if the first dimension is the smallest, then it's channel
-    first.
+    """Return True if an image is in the channel-first format. It is assumed
+    that if the first dimension is the smallest.
     
     Args:
-        image: Image to be checked.
-
-    Returns:
-        True if :param:`image` is in channel fist format.
+        image: An image to be checked.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim <= 5
@@ -472,22 +451,17 @@ def is_channel_first(image: Image) -> bool:
 
 
 def is_channel_last(image: Image) -> bool:
-    """Returns True if :param:`image` is currently in channel last format
-    (default). It is assumed that if the first dimension is the smallest, then
-    it's channel first.
+    """Return True if an image is in the channel-first format.
     
     Args:
-        image: Image to be checked.
-
-    Returns:
-        True if :param:`image` is in channel last format.
+        image: An image to be checked.
     """
     return not is_channel_first(image=image)
 
 
 def is_color_image(image: Image) -> bool:
-    """Returns True if :param:`image` is currently a colored image. It is
-    assumed that the image has 3 or 4 channels.
+    """Return True if an image is a color image. It is assumed that the image
+    has 3 or 4 channels.
     """
     if get_num_channels(image) in [3, 4]:
         return True
@@ -495,7 +469,7 @@ def is_color_image(image: Image) -> bool:
 
 
 def is_integer_image(image: Image) -> bool:
-    """Returns True if the given :param:`image` is integer-encoded."""
+    """Return True ian image is integer-encoded."""
     assert isinstance(image, torch.Tensor | np.ndarray)
     c = get_num_channels(image=image)
     if c == 1:
@@ -504,7 +478,7 @@ def is_integer_image(image: Image) -> bool:
 
 
 def is_normalized(image: Image) -> bool:
-    """Returns True if the given :param:`image` is normalized."""
+    """Return True if an image is normalized."""
     assert isinstance(image, torch.Tensor | np.ndarray)
     if isinstance(image, torch.Tensor):
         return abs(torch.max(image)) <= 1.0
@@ -518,7 +492,7 @@ def is_normalized(image: Image) -> bool:
 
 
 def is_one_hot_image(image: Image) -> bool:
-    """Returns True if the given :param:`image` is one-hot encoded."""
+    """Return True if an image is one-hot encoded."""
     assert isinstance(image, torch.Tensor | np.ndarray)
     c = get_num_channels(image)
     if c > 1:
@@ -532,22 +506,21 @@ def denormalize_mean_std(
     std  : FloatAnyT = (0.229, 0.224, 0.225),
     eps  : float     = 1e-6,
 ) -> torch.Tensor:
-    """Denormalizes :param:`image` with mean and standard deviation.
+    """Denormalize an image with mean and standard deviation.
     
     image[channel] = (image[channel] * std[channel]) + mean[channel]
     where `mean` is [M_1, ..., M_n] and `std` [S_1, ..., S_n] for `n` channels.
 
     Args:
-        image: Image of shape [..., C, H, W] to be adjusted, where ... means it
-            can have an arbitrary number of leading dimensions.
-        mean: Sequence of means for each channel. Defaults to
+        image: An image of shape [..., C, H, W] to be adjusted.
+        mean: A sequence of means for each channel. Defaults to
             (0.485, 0.456, 0.406).
-        std: Sequence of standard deviations for each channel. Defaults to
+        std: A sequence of standard deviations for each channel. Defaults to
             (0.229, 0.224, 0.225).
-        eps: Avoid zero division. Defaults to 1e-6.
+        eps: A scalar value to avoid zero divisions. Defaults to 1e-6.
         
     Returns:
-        Denormalized image with same size as input.
+        A denormalized image.
     """
     assert isinstance(image, torch.Tensor)
     assert 3 <= image.ndim
@@ -587,22 +560,21 @@ def normalize_mean_std(
     std  : FloatAnyT = (0.229, 0.224, 0.225),
     eps  : float     = 1e-6,
 ) -> torch.Tensor:
-    """Normalizes :param:`image` with mean and standard deviation.
+    """Normalize :param:`image` with mean and standard deviation.
     
     image[channel] = (image[channel] * std[channel]) + mean[channel]
     where `mean` is [M_1, ..., M_n] and `std` [S_1, ..., S_n] for `n` channels.
 
     Args:
-        image: Image of shape [..., C, H, W] to be adjusted, where ... means it
-            can have an arbitrary number of leading dimensions.
-        mean: Sequence of means for each channel. Defaults to
+        image: An image of shape [..., C, H, W] to be adjusted.
+        mean: A sequence of means for each channel. Defaults to
             (0.485, 0.456, 0.406).
-        std: Sequence of standard deviations for each channel. Defaults to
+        std: A sequence of standard deviations for each channel. Defaults to
             (0.229, 0.224, 0.225).
-        eps: Avoid zero division. Defaults to 1e-6.
+        eps: A scalar value to avoid zero divisions. Defaults to 1e-6.
         
     Returns:
-        Normalized image with same size as input.
+        A normalized image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
@@ -643,19 +615,18 @@ def normalize_by_range(
     new_min: float        = 0.0,
     new_max: float        = 1.0,
 ) -> torch.Tensor:
-    """Normalizes :param:`image` from range [:param:`min`, :param:`max`] to
-    [:param:`new_min`, :param:`new_max`].
+    """Normalize an image from the range [:param:`min`, :param:`max`] to
+    the [:param:`new_min`, :param:`new_max`].
     
     Args:
-        image: Image of shape [..., C, H, W] to be adjusted, where ... means it
-            can have an arbitrary number of leading dimensions.
-        min: Current minimum pixel value of the image. Defaults to 0.0.
-        max: Current maximum pixel value of the image. Defaults to 255.0.
-        new_min: New minimum pixel value of the image. Defaults to 0.0.
-        new_max: New minimum pixel value of the image. Defaults to 1.0.
+        image: An image of shape [..., C, H, W] to be adjusted.
+        min: The current minimum pixel value of the image. Defaults to 0.0.
+        max: The current maximum pixel value of the image. Defaults to 255.0.
+        new_min: A new minimum pixel value of the image. Defaults to 0.0.
+        new_max: A new minimum pixel value of the image. Defaults to 1.0.
         
     Returns:
-        Normalized image with same size as input.
+        A normalized image.
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
@@ -685,18 +656,18 @@ def add_weighted(
     beta  : float,
     gamma : float = 0.0,
 ) -> torch.Tensor:
-    """Calculates the weighted sum of two image tensors as follows:
+    """Calculate the weighted sum of two image tensors as follows:
         output = image1 * alpha + image2 * beta + gamma
 
     Args:
-        image1: First image of shape [..., C, H, W].
-        alpha: Weight of the :param:`image1` elements.
-        image2: Second image of same shape as :param:`image1`.
-        beta: Weight of the :param:`image2` elements.
-        gamma: Scalar added to each sum. Defaults to 0.0.
+        image1: The first image of shape [..., C, H, W].
+        alpha: The weight of the :param:`image1` elements.
+        image2: The second image of same shape as :param:`image1`.
+        beta: The weight of the :param:`image2` elements.
+        gamma: A scalar added to each sum. Defaults to 0.0.
 
     Returns:
-        Weighted image of shape [..., C, H, W].
+        A weighted image of shape [..., C, H, W].
     """
     assert isinstance(image1, torch.Tensor) and isinstance(image2, torch.Tensor)
     assert image1.shape == image2.shape

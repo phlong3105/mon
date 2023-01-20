@@ -31,7 +31,7 @@ def letterbox_resize(
     scale_fill: bool        = False,
     scale_up  : bool        = True,
 ):
-    """Resizes image to a `stride`-pixel-multiple rectangle.
+    """Resize qn image to a `stride`-pixel-multiple rectangle.
     
     Notes:
         For YOLOv5, stride = 32.
@@ -48,7 +48,7 @@ def letterbox_resize(
     
     # Scale ratio (new / old)
     r = min(size[0] / old_size[0], size[1] / old_size[1])
-    if not scale_up:  # only scale down, do not scale up (for better test mAP)
+    if not scale_up:  # only scale down, don't scale up (for better test mAP)
         r = min(r, 1.0)
 
     # Compute padding
@@ -92,15 +92,13 @@ def resize(
     interpolation: InterpolationModeType = "bilinear",
     antialias    : bool | None           = None,
 ) -> torch.Tensor:
-    """Resizes an image. Adapted from:
-    :meth:`torchvision.transforms.functional.resize`
+    """Resize an image. Adapted from: :meth:`torchvision.transforms.functional.resize`
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        size: Desired output size of shape [C, H, W].
-        interpolation: Interpolation method. Defaults to "bilinear".
-        antialias: Defaults to None.
+        image: An image of shape [..., C, H, W] to be resized.
+        size: An output size of shape [C, H, W].
+        interpolation: An interpolation method. Defaults to “bilinear”.
+        antialias: If True, perform antialias. Defaults to None.
         
     Returns:
         Resized image of shape [..., C, H, W].
@@ -130,18 +128,16 @@ def resize_crop(
     size         : Ints | None           = None,
     interpolation: InterpolationModeType = "bilinear",
 ) -> torch.Tensor:
-    """Crops and resizes an image. Notably used in
-    :class:`~torchvision.transforms.RandomResizedCrop`.
+    """Crop and resize an image. Notably used in :class:`~torchvision.transforms.RandomResizedCrop`.
 
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        top: Vertical component of the top left corner of the crop box.
-        left: Horizontal component of the top left corner of the crop box.
-        height: Height of the crop box.
-        width: Width of the crop box.
-        size: Desired output size of shape [C, H, W]. Defaults to None.
-        interpolation: Interpolation method. Defaults to "bilinear".
+        image: An image of shape [..., C, H, W] to be resized.
+        top: The vertical component of the top left corner of the crop box.
+        left: The horizontal component of the top left corner of the crop box.
+        height: The height of the crop box.
+        width: The width of the crop box.
+        size: An output size of shape [C, H, W]. Defaults to None.
+        interpolation: An interpolation method. Defaults to “bilinear”.
         
     Returns:
         Resized crop image of shape [..., C, H, W].

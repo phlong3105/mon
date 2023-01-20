@@ -16,17 +16,17 @@ from torch.nn import functional
 # region Dark Channel Prior
 
 def get_dark_channel(image: torch.Tensor, size: int = 15) -> torch.Tensor:
-    """Gets the dark channel prior in a :param:`image` data.
+    """Get the dark channel prior in an given image.
 
     References:
         https://github.com/liboyun/ZID/blob/master/utils/dcp.py
 
     Args:
-        image: Image of shape [B, 3, H, W] to be transformed.
-        size: Window size. Defaults to 15.
+        image: An image of shape [B, 3, H, W].
+        size: A Window size. Defaults to 15.
 
     Returns:
-        Dark channel prior of shape [B, 1, H, W].
+        A dark channel prior of shape [B, 1, H, W].
     """
     assert isinstance(image, torch.Tensor)
     assert image.ndim == 4
@@ -50,21 +50,19 @@ def get_atmosphere_channel(
     p    : float = 0.0001,
     size : int   = 15
 ) -> torch.Tensor:
-    """Gets the atmosphere light in an RGB image.
+    """Get the atmosphere light in an RGB image.
     
     References:
         https://github.com/liboyun/ZID/blob/master/utils/dcp.py
         
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed,
-            where ... means it can have arbitrary several leading
-            dimensions.
-        p: percentage of pixels for estimating atmosphere light.
-            Defaults to 0.0001.
-        size: window size. Defaults to 15.
+        image: An image of shape [..., 3, H, W].
+        p: A percentage of pixels for estimating atmosphere light. Defaults to
+            0.0001.
+        size: A window size. Defaults to 15.
         
     Returns:
-       Atmosphere light ([0, L-1]) for each channel.
+       An atmosphere light ([0, L-1]) for each channel.
     """
     assert isinstance(image, torch.Tensor)
     assert image.ndim == 4

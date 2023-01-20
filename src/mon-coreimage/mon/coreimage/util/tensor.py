@@ -28,8 +28,8 @@ import torch
 
 @multipledispatch.dispatch(torch.Tensor, torch.Tensor)
 def is_same_shape(input1: torch.Tensor, input2: torch.Tensor) -> bool:
-    """Returns True if two tensors have the same shape. Otherwise, return
-    False. """
+    """Return True if two tensors have the same shape. Otherwise, return False.
+    """
     return input1.shape == input2.shape
 
 # endregion
@@ -38,16 +38,16 @@ def is_same_shape(input1: torch.Tensor, input2: torch.Tensor) -> bool:
 # region Mutating Operations
 
 def _to_3d_tensor(input: torch.Tensor) -> torch.Tensor:
-    """Converts a 2D or 4D tensor to a 3D tensor.
+    """Convert a 2D or 4D tensor to a 3D tensor.
     
     If the input is a 2D tensor, add a new axis at the beginning.
     If the input is a 4D tensor with the first dimension being 1, remove the
     first dimension.
     
     Args:
-        input: The input tensor.
+        input: An input tensor.
     
-    Returns:
+    Return:
         A 3D tensor of shape [C, H, W].
     """
     assert isinstance(input, torch.Tensor)
@@ -63,7 +63,7 @@ def _to_3d_tensor(input: torch.Tensor) -> torch.Tensor:
 
 
 def _to_4d_tensor(input: torch.Tensor) -> torch.Tensor:
-    """Converts a 2D, 3D, or 5D tensor to a 4D tensor.
+    """Convert a 2D, 3D, or 5D tensor to a 4D tensor.
     
     If the input is a 2D tensor, add 2 new axes at the beginning.
     If the input is a 3D tensor, add a new axis at the beginning.
@@ -71,9 +71,9 @@ def _to_4d_tensor(input: torch.Tensor) -> torch.Tensor:
     first dimension.
     
     Args:
-        input: The input tensor.
+        input: An input tensor.
     
-    Returns:
+    Return:
         A 4D tensor of shape [B, C, H, W].
     """
     assert isinstance(input, torch.Tensor)
@@ -92,7 +92,7 @@ def _to_4d_tensor(input: torch.Tensor) -> torch.Tensor:
 
 
 def _to_5d_tensor(input: torch.Tensor) -> torch.Tensor:
-    """Converts a 2D, 3D, 4D, or 6D tensor to a 5D tensor.
+    """Convert a 2D, 3D, 4D, or 6D tensor to a 5D tensor.
     
     If the input is a 2D tensor, add 3 new axes at the beginning.
     If the input is a 3D tensor, add 2 new axes at the beginning.
@@ -101,9 +101,9 @@ def _to_5d_tensor(input: torch.Tensor) -> torch.Tensor:
     first dimension.
     
     Args:
-        input: The input tensor.
+        input: An input tensor.
     
-    Returns:
+    Return:
         A 5D tensor of shape [*, B, C, H, W].
     """
     assert isinstance(input, torch.Tensor)
@@ -132,9 +132,9 @@ def eye_like(n: int, input: torch.Tensor) -> torch.Tensor:
     
     Args:
         n: The number of rows and columns in the output tensor.
-        input: The input tensor.
+        input: An input tensor.
     
-    Returns:
+    Return:
         A tensor of shape (input.shape[0], n, n).
     """
     if not n > 0:
@@ -145,12 +145,12 @@ def eye_like(n: int, input: torch.Tensor) -> torch.Tensor:
 
 
 def to_3d_tensor(input: Any) -> torch.Tensor:
-    """Converts an arbitrary input to a 3D tensor.
+    """Convert an arbitrary input to a 3D tensor.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
+    Return:
         A 3D tensor of shape [C, H, W].
     """
     if isinstance(input, dict):
@@ -174,12 +174,12 @@ def to_3d_tensor(input: Any) -> torch.Tensor:
 
 
 def to_4d_tensor(input: Any) -> torch.Tensor:
-    """Converts an arbitrary input to a 4D tensor.
+    """Convert an arbitrary input to a 4D tensor.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
+    Return:
         A 4D tensor of shape [B, C, H, W].
     """
     if isinstance(input, dict):
@@ -205,12 +205,12 @@ def to_4d_tensor(input: Any) -> torch.Tensor:
 
 
 def to_5d_tensor(input: Any) -> torch.Tensor:
-    """Converts an arbitrary input to a 5D tensor.
+    """Convert an arbitrary input to a 5D tensor.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
+    Return:
         A 5D tensor of shape [*, B, C, H, W].
     """
     if isinstance(input, dict):
@@ -236,13 +236,13 @@ def to_5d_tensor(input: Any) -> torch.Tensor:
 
 
 def to_list_of_3d_tensor(input: Any) -> list[torch.Tensor]:
-    """Converts arbitrary input to a list of 3D tensors.
+    """Convert arbitrary input to a list of 3D tensors.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
-        List of 3D tensors of shape [C, H, W].
+    Return:
+        A list of 3D tensors of shape [C, H, W].
     """
     if isinstance(input, dict):
         input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]
@@ -267,13 +267,13 @@ def to_list_of_3d_tensor(input: Any) -> list[torch.Tensor]:
 
 
 def to_list_of_4d_tensor(input: Any) -> list[torch.Tensor]:
-    """Converts arbitrary input to a list of 4D tensors.
+    """Convert arbitrary input to a list of 4D tensors.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
-        List of 3D tensors of shape [B, C, H, W].
+    Return:
+        A list of 3D tensors of shape [B, C, H, W].
     """
     if isinstance(input, dict):
         input = list(input.values())                                            # dict -> list[Tensor | np.ndarray]
@@ -300,14 +300,14 @@ def to_list_of_4d_tensor(input: Any) -> list[torch.Tensor]:
 
 
 def upcast(input: torch.Tensor) -> torch.Tensor:
-    """Protects from numerical overflows in multiplications by upcasting to
-    the equivalent higher type.
+    """Protect from numerical overflows in multiplications by upcasting to the
+    equivalent higher type.
 
     Args:
-        input: Tensor of arbitrary type.
+        input: A tensor of arbitrary type.
 
-    Returns:
-        Tensor of higher type.
+    Return:
+        A tensor of higher type.
     """
     assert isinstance(input, torch.Tensor)
     if input.dtype in (torch.float16, torch.float32, torch.float64):
@@ -318,13 +318,13 @@ def upcast(input: torch.Tensor) -> torch.Tensor:
 
 
 def vec_like(n: int, input: torch.Tensor) -> torch.Tensor:
-    """Creates a vector of zeros with the same shape as the input.
+    """Create a vector of zeros with the same shape as the input.
 
     Args:
         n: The number of elements in the vector.
-        input: The input tensor.
+        input: An input tensor.
     
-    Returns:
+    Return:
         A tensor of zeros with the same shape as the input tensor.
     """
     if not n > 0:

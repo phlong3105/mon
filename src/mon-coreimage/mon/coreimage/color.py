@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements utility functions for colors in images. Here we focus
+"""This module implements functions for handling colors in images. Here we focus
 on two main color formats: RGB (default) and BGR (cv2). """
 
 from __future__ import annotations
@@ -34,18 +34,16 @@ def bgr_to_grayscale(
     image      : torch.Tensor,
     rgb_weights: Float3T | torch.Tensor | None = (0.299, 0.587, 0.114),
 ) -> torch.Tensor:
-    """Converts :param:`image` from BGR to grayscale.
+    """Convert an image from BGR to grayscale.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        rgb_weights: Weights that will be applied on each channel (RGB). Sum of
-            the weights should add up to 1.0 ([0.299, 0.587, 0.114] or 255
-            ([76, 150, 29]). Defaults to (0.299, 0.587, 0.114).
+        image: An image of shape [..., 3, H, W] to be transformed.
+        rgb_weights: The weights applying on each channel (RGB). Sum of
+            the weights should add up to 1.0 ([0.299, 0.587, 0.114] (normalized)
+            or 255 ([76, 150, 29]). Defaults to (0.299, 0.587, 0.114).
         
     Returns:
-        Grayscale image of shape [..., 1, H, W].
+        A grayscale image of shape [..., 1, H, W].
     """
     rgb       = bgr_to_rgb(image=image)
     grayscale = rgb_to_grayscale(image=rgb, rgb_weights=rgb_weights)
@@ -53,16 +51,15 @@ def bgr_to_grayscale(
 
 
 def bgr_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
-    """Converts :param:`image` from BGR to HSV.
+    """Convert an image from BGR to HSV.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        eps: Scalar to enforce numerical stability. Defaults to `1e-8`.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0]..
+        eps: A scalar to enforce numerical stability. Defaults to 1e-8.
 
     Returns:
-        HSV image of shape [..., 3, H, W]. H channel values are in the range
+        A HSV image of shape [..., 3, H, W]. H channel values are in the range
         [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
     rgb = bgr_to_rgb(image=image)
@@ -71,17 +68,15 @@ def bgr_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
 
 
 def bgr_to_lab(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from BGR to Lab. Image data is assumed to be in
-    the range of [0.0 1.0]. Lab color is computed using the D65 illuminant and
-    Observer 2.
+    """Convert an image from BGR to Lab. Lab color is computed using the D65
+    illuminant and Observer 2.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        Lab image of shape [..., 3, H, W]. L channel values are  in the range
+        A Lab image of shape [..., 3, H, W]. L channel values are in the range
         [0, 100]. a and b are in the range [-127, 127].
     """
     rgb = bgr_to_rgb(image=image)
@@ -90,17 +85,16 @@ def bgr_to_lab(image: torch.Tensor) -> torch.Tensor:
 
 
 def bgr_to_luv(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    """Converts :param:`image` from BGR to Luv. Luv color is computed using the
+    """Convert an image from BGR to Luv. Luv color is computed using the
     D65 illuminant and Observer 2.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        eps: For numerically stability when dividing. Defaults to 1e-12.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        eps: A scalar to enforce numerical stability. Defaults to 1e-12.
 
     Returns:
-        Luv image of shape [..., 3, H, W].
+        A Luv image of shape [..., 3, H, W].
     """
     rgb = bgr_to_rgb(image=image)
     luv = rgb_to_luv(image=rgb, eps=eps)
@@ -108,15 +102,14 @@ def bgr_to_luv(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 
 
 def bgr_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from BGR to RGB.
+    """Convert an image from BGR to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed, The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) \
            and image.ndim >= 3 and image.shape[-3] == 3
@@ -128,20 +121,16 @@ def bgr_to_rgba(
     image    : torch.Tensor,
     alpha_val: float | torch.Tensor
 ) -> torch.Tensor:
-    """Converts :param:`image` from BGR to RGBA. Convert first to RGB, then add
+    """Convert an image from BGR to RGBA. Convert first to RGB, then add an
     alpha channel.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
         alpha_val: A float number or tensor for the alpha value.
 
     Returns:
-        RGBA image of shape [..., 3, H, W].
-
-    Notes:
-        Current functionality is NOT supported by Torchscript.
+        A RGBA image of shape [..., 3, H, W].
     """
     rgb  = bgr_to_rgb(image=image)
     rgba = rgb_to_rgba(image=rgb, alpha_val=alpha_val)
@@ -149,15 +138,14 @@ def bgr_to_rgba(
 
 
 def bgr_to_xyz(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from BGR to XYZ.
+    """Convert an image from BGR to XYZ.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        XYZ image of shape [..., 3, H, W].
+        A XYZ image of shape [..., 3, H, W].
     """
     rgb = bgr_to_rgb(image=image)
     xyz = bgr_to_xyz(image=rgb)
@@ -165,15 +153,14 @@ def bgr_to_xyz(image: torch.Tensor) -> torch.Tensor:
 
 
 def bgr_to_ycrcb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from BGR to YCrCb.
+    """Convert an image from BGR to YCrCb.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        YCrCb image of shape [..., 3, H, W].
+        An YCrCb image of shape [..., 3, H, W].
     """
     rgb   = bgr_to_rgb(image=image)
     ycrcb = rgb_to_ycrcb(image=rgb)
@@ -181,15 +168,14 @@ def bgr_to_ycrcb(image: torch.Tensor) -> torch.Tensor:
 
 
 def bgr_to_yuv(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from BGR to YUV.
+    """Convert an image from BGR to YUV.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        YUV image of shape [..., 3, H, W].
+        An YUV image of shape [..., 3, H, W].
     """
     rgb = bgr_to_rgb(image=image)
     yuv = rgb_to_yuv(image=rgb)
@@ -201,15 +187,14 @@ def bgr_to_yuv(image: torch.Tensor) -> torch.Tensor:
 # region Grayscale
 
 def grayscale_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from grayscale to RGB.
+    """Convert an image from grayscale to RGB.
     
     Args:
-        image: Image of shape [..., 1, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 1, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
         
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) \
            and image.ndim >= 3 and image.shape[-3] == 1
@@ -222,16 +207,15 @@ def grayscale_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region HSV
 
 def hsv_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from HSV to BGR.
+    """Convert an image from HSV to BGR.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. H channel
-            values are assumed to be in the range [0.0 2pi]. S and V are in the
-            range [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0]. H channel values are in the
+            range [0.0 2pi]. S and V are in the range [0.0, 1.0].
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = hsv_to_rgb(image=image)
     bgr = rgb_to_bgr(image=rgb)
@@ -239,16 +223,15 @@ def hsv_to_bgr(image: torch.Tensor) -> torch.Tensor:
 
 
 def hsv_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from HSV to RGB.
+    """Convert an image from HSV to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. H channel
-            values are assumed to be in the range [0.0 2pi]. S and V are in the
-            range [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0]. H channel values are to be in
+            the range [0.0 2pi]. S and V are in the range [0.0, 1.0].
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     h       = image[..., 0, :, :] / (2 * math.pi)
     s       = image[..., 1, :, :]
@@ -273,15 +256,14 @@ def hsv_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region LinearRGB
 
 def linear_rgb_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from linear RGB to sRGB.
+    """Convert an image from linear RGB to sRGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        sRGB image of shape [..., 3, H, W].
+        A sRGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     threshold = 0.0031308
@@ -298,17 +280,16 @@ def linear_rgb_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region Lab
 
 def lab_to_bgr(image: torch.Tensor, clip: bool = True) -> torch.Tensor:
-    """Converts :param:`image` from Lab to BGR.
+    """Convert an image from Lab to BGR.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        clip: Whether to apply clipping to insure output BGR values in range
-            [0.0 1.0]. Defaults to True.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        clip: Whether to apply clipping to insure output BGR values in the range
+            of [0.0 1.0]. Defaults to True.
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = lab_to_rgb(image=image, clip=clip)
     bgr = rgb_to_bgr(image=rgb)
@@ -316,17 +297,16 @@ def lab_to_bgr(image: torch.Tensor, clip: bool = True) -> torch.Tensor:
     
 
 def lab_to_rgb(image: torch.Tensor, clip: bool = True) -> torch.Tensor:
-    """Converts :param:`image` from  Lab to RGB.
+    """Convert an image from  Lab to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        clip: Whether to apply clipping to insure output RGB values in range
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        clip: Whether to apply clipping to insure output RGB values in the range
             [0.0 1.0]. Defaults to True.
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     L         = image[..., 0, :, :]
@@ -365,16 +345,15 @@ def lab_to_rgb(image: torch.Tensor, clip: bool = True) -> torch.Tensor:
 # region Luv
 
 def luv_to_bgr(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    """Converts :param:`image` from Luv to BGR.
+    """Convert an image from Luv to BGR.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        eps: For numerically stability when dividing. Defaults to 1e-12.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        eps: A scalar to enforce numerical stability. Defaults to 1e-12.
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = luv_to_rgb(image=image, eps=eps)
     bgr = rgb_to_bgr(image=rgb)
@@ -382,16 +361,15 @@ def luv_to_bgr(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 
 
 def luv_to_rgb(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    """Converts :param:`image` from Luv to RGB.
+    """Convert an image from Luv to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        eps: For numerically stability when dividing. Defaults to 1e-12.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        eps: A scalar to enforce numerical stability. Defaults to 1e-12.
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.torch.Tensor) and image.shape[-3] == 3
     L       = image[..., 0, :, :]
@@ -422,15 +400,14 @@ def luv_to_rgb(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
 # region RGB
 
 def rgb_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGB to BGR.
+    """Convert an image from RGB to BGR.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) \
            and image.ndim >= 3 and image.shape[-3] == 3
@@ -442,18 +419,17 @@ def rgb_to_grayscale(
     image      : torch.Tensor,
     rgb_weights: Float3T | torch.Tensor | None = None,
 ) -> torch.Tensor:
-    """Converts :param:`image` from RGB to grayscale.
+    """Convert an image from RGB to grayscale.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        rgb_weights: Weights that will be applied on each channel (RGB). Sum of
-            the weights should add up to 1.0 ([0.299, 0.587, 0.114] or 255
-            ([76, 150, 29]). Defaults to None.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        rgb_weights: The weights applying on each channel (RGB). Sum of
+            the weights should add up to 1.0 ([0.299, 0.587, 0.114] (normalized)
+            or 255 ([76, 150, 29]). Defaults to (0.299, 0.587, 0.114).
         
     Returns:
-        Grayscale image of shape [..., 1, H, W].
+        A grayscale image of shape [..., 1, H, W].
     """
     assert isinstance(image, torch.Tensor) \
            and image.ndim >= 3 and image.shape[-3] in [1, 3]
@@ -494,16 +470,15 @@ def rgb_to_grayscale(
 
 
 def rgb_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
-    """Converts :param:`image` from RGB to HSV.
+    """Convert an image from RGB to HSV.
     
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
         eps: Scalar to enforce numerical stability. Defaults to 1e-8.
 
     Returns:
-        HSV image of shape [..., 3, H, W]. H channel values are in the range
+        A HSV image of shape [..., 3, H, W]. H channel values are in the range
         [0.0 2pi]. S and V are in the range [0.0, 1.0].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
@@ -526,17 +501,16 @@ def rgb_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
 
 
 def rgb_to_lab(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGB to Lab. Lab color is computed using the
+    """Convert an image from RGB to Lab. Lab color is computed using the
     D65 illuminant and Observer 2.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        Lab image of shape [..., 3, H, W]. L channel values are in the range [0,
-        100]. a and b are in the range [-127, 127].
+        A Lab image of shape [..., 3, H, W]. L channel values are in the range
+        [0, 100]. a and b are in the range [-127, 127].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     
@@ -567,15 +541,14 @@ def rgb_to_lab(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_linear_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGB to linear RGB.
+    """Convert an image from RGB to linear RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+       image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        Linear RGB image of shape [..., 3, H, W].
+        A Linear RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     linear_rgb = torch.where(
@@ -587,17 +560,16 @@ def rgb_to_linear_rgb(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_luv(image: torch.Tensor, eps: float = 1e-12) -> torch.Tensor:
-    """Converts :param:`image` from RGB to Luv. Luv color is computed using the
+    """Convert an image from RGB to Luv. Luv color is computed using the
     D65 illuminant and Observer 2.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
-        eps: For numerically stability when dividing. Defaults to 1e-12.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
+        eps: Scalar to enforce numerical stability. Defaults to 1e-12.
 
     Returns:
-        Luv image of shape [..., 3, H, W].
+        A Luv image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     
@@ -632,16 +604,15 @@ def rgb_to_rgba(
     image    : torch.Tensor,
     alpha_val: float | torch.Tensor,
 ) -> torch.Tensor:
-    """Converts :param:`image` from RGB to RGBA.
+    """Convert an image from RGB to RGBA.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
         alpha_val: A float number or tensor for the alpha value.
 
     Returns:
-        RGBA image of shape [..., 4, H, W]
+        A RGBA image of shape [..., 4, H, W]
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     if not isinstance(alpha_val, float | torch.Tensor):
@@ -658,15 +629,14 @@ def rgb_to_rgba(
 
 
 def rgb_to_xyz(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGB to XYZ.
+    """Convert an image from RGB to XYZ.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        XYZ image of shape [..., 3, H, W].
+        A XYZ image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     r   = image[..., 0, :, :]
@@ -680,15 +650,14 @@ def rgb_to_xyz(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_ycrcb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGB to YCrCb.
+    """Convert an image from RGB to YCrCb.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        YCrCb image of shape [..., 3, H, W].
+        An YCrCb image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     r     = image[..., 0, :, :]
@@ -703,15 +672,14 @@ def rgb_to_ycrcb(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_yuv(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGB to  YUV.
+    """Convert an image from RGB to  YUV.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        YUV image of shape [..., 3, H, W].
+        An YUV image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     r   = image[..., 0, :, :]
@@ -725,14 +693,13 @@ def rgb_to_yuv(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgb_to_yuv420(image: torch.Tensor) -> Sequence[torch.Tensor]:
-    """Converts :param:`image` from RGB to YUV 420 (sub-sampled). Input need to
+    """Convert an image from RGB to YUV 420 (sub-sampled). The Input needs to
     be padded to be evenly divisible by 2 horizontal and vertical. This function
     will output chroma siting [0.5, 0.5].
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
         A Tensor containing the Y plane with shape [..., 1, H, W]
@@ -751,18 +718,17 @@ def rgb_to_yuv420(image: torch.Tensor) -> Sequence[torch.Tensor]:
 
 
 def rgb_to_yuv422(image: torch.Tensor) -> Sequence[torch.Tensor]:
-    """Converts :param:`image` from RGB to YUV 422 (sub-sampled). Input need to
-    be padded to be evenly divisible by 2 vertical. This function will output
+    """Convert an image from RGB to YUV 422 (sub-sampled). The input needs to
+    be padded to be evenly divisible by vertical 2. This function will output
     chroma siting (0.5).
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-       A Tensor containing the Y plane with shape [..., 1, H, W].
-       A Tensor containing the UV planes with shape [..., 2, H, W/2].
+       A tensor containing the Y plane with shape [..., 1, H, W].
+       A tensor containing the UV planes with shape [..., 2, H, W/2].
     """
     assert isinstance(image, torch.Tensor) \
            and image.ndim >= 3 \
@@ -781,16 +747,14 @@ def rgb_to_yuv422(image: torch.Tensor) -> Sequence[torch.Tensor]:
 # region RGBA
 
 def rgba_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGBA to BGR. Convert to RGB first, then to
-    BGR.
+    """Convert an image from RGBA to BGR. Convert to RGB first, then to BGR.
 
     Args:
-        image: Image of shape [..., 4, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 4, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = rgba_to_rgb(image=image)
     bgr = rgb_to_bgr(image=rgb)
@@ -798,15 +762,14 @@ def rgba_to_bgr(image: torch.Tensor) -> torch.Tensor:
 
 
 def rgba_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from RGBA to RGB.
+    """Convert an image from RGBA to RGB.
 
     Args:
-        image: Image of shape [..., 4, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 4, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 4
     r, g, b, a = torch.chunk(image, image.shape[-3], dim=-3)
@@ -823,15 +786,14 @@ def rgba_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region XYZ
 
 def xyz_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from XYZ to BGR.
+    """Convert an image from XYZ to BGR.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = xyz_to_rgb(image=image)
     bgr = rgb_to_bgr(image=rgb)
@@ -839,15 +801,14 @@ def xyz_to_bgr(image: torch.Tensor) -> torch.Tensor:
 
 
 def xyz_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from XYZ to RGB.
+    """Convert an image from XYZ to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     x   = image[..., 0, :, :]
@@ -865,15 +826,14 @@ def xyz_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region YCrCb
 
 def ycrcb_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from YCrCb to BGR.
+    """Convert an image from YCrCb to BGR.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = ycrcb_to_rgb(image=image)
     bgr = rgb_to_bgr(image=rgb)
@@ -881,15 +841,14 @@ def ycrcb_to_bgr(image: torch.Tensor) -> torch.Tensor:
 
 
 def ycrcb_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from YCrCb to RGB.
+    """Convert an image from YCrCb to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0].
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are in the range of [0.0, 1.0].
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] == 3
     y          = image[..., 0, :, :]
@@ -910,16 +869,15 @@ def ycrcb_to_rgb(image: torch.Tensor) -> torch.Tensor:
 # region YUV
 
 def yuv_to_bgr(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from YUV to RGB.
+    """Convert an image from YUV to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0] for luma and [-0.5, 0.5]
-            for chroma.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are assumed to be in the range of [0.0, 1.0] for luma and
+            [-0.5, 0.5] for chroma.
 
     Returns:
-        BGR image of shape [..., 3, H, W].
+        A BGR image of shape [..., 3, H, W].
     """
     rgb = yuv_to_rgb(image=image)
     bgr = rgb_to_bgr(image=rgb)
@@ -927,16 +885,15 @@ def yuv_to_bgr(image: torch.Tensor) -> torch.Tensor:
 
 
 def yuv_to_rgb(image: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from YUV to RGB.
+    """Convert an image from YUV to RGB.
 
     Args:
-        image: Image of shape [..., 3, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions. Image data is
-            assumed to be in the range of [0.0, 1.0] for luma and [-0.5, 0.5]
-            for chroma.
+        image: An image of shape [..., 3, H, W] to be transformed. The image
+            pixels are assumed to be in the range of [0.0, 1.0] for luma and
+            [-0.5, 0.5] for chroma.
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image, torch.torch.Tensor) and image.shape[-3] == 3
     y   = image[..., 0, :, :]
@@ -950,21 +907,19 @@ def yuv_to_rgb(image: torch.Tensor) -> torch.Tensor:
 
 
 def yuv420_to_rgb(image_y: torch.Tensor, image_uv: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from YUV420 to RGB. Image data is assumed to be
-    in the range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input need
+    """Convert an image from YUV420 to RGB. The image data is assumed to be
+    in the range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input needs
     to be padded to be evenly divisible by 2 horizontal and vertical. This
     function assumed chroma siting is [0.5, 0.5].
 
     Args:
         image_y: Y (luma) image plane of shape [..., 1, H, W] to be converted to
-            RGB, where ... means it can have an arbitrary number of leading
-            dimensions.
+            RGB.
         image_uv: UV (chroma) image planes of shape [..., 2, H/2, W/2] to be
-            converted to RGB, where ... means it can have an arbitrary number of
-            leading dimensions.
+            converted to RGB.
 
     Returns:
-        RGB image of shape [..., 3, H, W].
+        A RGB image of shape [..., 3, H, W].
     """
     assert isinstance(image_y,  torch.torch.Tensor) and image_y.shape[-3]  == 1
     assert isinstance(image_uv, torch.torch.Tensor) and image_uv.shape[-3] == 2
@@ -992,7 +947,7 @@ def yuv420_to_rgb(image_y: torch.Tensor, image_uv: torch.Tensor) -> torch.Tensor
 
 
 def yuv422_to_rgb(image_y: torch.Tensor, image_uv: torch.Tensor) -> torch.Tensor:
-    """Converts :param:`image` from YUV422 to RGB. Image data is assumed to be
+    """Convert an image from YUV422 to RGB. Image data is assumed to be
     in the range of [0.0, 1.0] for luma and [-0.5, 0.5] for chroma. Input need
     to be padded to be evenly divisible by 2 vertical. This function assumed
     chroma siting is (0.5).

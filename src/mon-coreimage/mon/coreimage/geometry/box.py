@@ -48,22 +48,7 @@ def affine_box(
     center    : Ints  | None = None,
     drop_ratio: float        = 0.0,
 ) -> torch.Tensor:
-    """
-    The affine_box function applies an affine transformation on the bounding box.
-    
-    :param box:torch.Tensor: Specify the bounding box
-    :param image_size:Ints: Clip the bounding boxes to a certain size
-    :param angle:float|int: Specify the rotation angle in degrees,
-    :param translate:Ints: Translate the bounding box by a specific amount
-    :param scale:float|int: Scale the bounding box
-    :param shear:Floats: Shear the image
-    :param center:Ints|None=None: Specify the center of rotation
-    :param drop_ratio:float=0.0: Drop bounding boxes that are
-    :param : Determine whether to drop a bounding box or not
-    :return: The transformed box
-    :doc-author: Trelent
-    """
-    """Applies affine transformation on the bounding box.
+    """Apply an affine transformation on the bounding box.
     
     References:
         https://www.thepythoncode.com/article/image-transformations-using-opencv-in-python
@@ -72,12 +57,12 @@ def affine_box(
         box: Bounding boxes of shape [N, 4]. They are expected to be in
             (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The image size of shape [H, W].
-        angle: The rotation angle in degrees, between -180 and 180, clockwise
+        angle: A rotation angle in degrees, between -180 and 180, clockwise
             direction.
-        translate: The horizontal and vertical translations (post-rotation
+        translate: horizontal and vertical translations (post-rotation
             translation).
-        scale: The overall scale.
-        shear: The shear angle has a value in degrees, between -180 to 180,
+        scale: An overall scale.
+        shear: A shear angle has a value in degrees, between -180 to 180,
             clockwise direction. If a sequence is specified, the first value
             corresponds to a shear parallel to the x-axis, while the second
             value corresponds to a shear parallel to the y-axis.
@@ -89,7 +74,7 @@ def affine_box(
             Defaults to 0.0.
         
     Returns:
-        Transformed box of shape [N, 4].
+        A transformed box of shape [N, 4].
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     
@@ -154,15 +139,13 @@ def clip_box(
     image_size: Ints,
     drop_ratio: float = 0.0,
 ) -> torch.Tensor:
-    """Clips bounding boxes to :param:`image_size` and removes the bounding
-    boxes which lose too much area as a result of the augmentation. Both sets of
-    boxes are expected to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
-    `0 <= y1 < y2`.
+    """Clip bounding boxes to an image size and removes the bounding boxes,
+    which lose too much area as a result of the augmentation.
     
     Args:
         box: Bounding boxes of shape [N, 4], They are expected to be in
             (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        image_size: The image size of shape [H, W].
+        image_size: An image size of shape [H, W].
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
@@ -201,7 +184,7 @@ def horizontal_flip_box(
         image_center: The center of the image.
         
     Returns:
-        Flipped boxes of shape [N, 4].
+        Flipped bounding boxes of shape [N, 4].
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     assert isinstance(image_center, torch.Tensor) and image_center.ndim == 1
@@ -220,13 +203,13 @@ def horizontal_translate_box(
     center    : Ints | None = None,
     drop_ratio: float       = 0.0,
 ) -> torch.Tensor:
-    """Translates bounding boxes horizontally.
+    """Translate bounding boxes horizontally.
 
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The original image size.
-        magnitude: The horizontal translation magnitude.
+        magnitude: A horizontal translation magnitude.
         center: The center of affine transformation. If None, use the center of the
             image. Defaults to None.
         drop_ratio: If the fraction of a bounding box left in the image after
@@ -254,13 +237,13 @@ def rotate_box(
     center    : Ints | None = None,
     drop_ratio: float       = 0.0,
 ) -> torch.Tensor:
-    """Rotates the bounding box by the given magnitude.
+    """Rotate the bounding box by the given magnitude.
 
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The original image size.
-        angle: The angle to rotate the bounding box.
+        angle: An angle to rotate the bounding box.
         center: The center of affine transformation. If None, use the center of
             the image. Defaults to None.
         drop_ratio: If the fraction of a bounding box left in the image after
@@ -269,7 +252,7 @@ def rotate_box(
             Defaults to 0.0.
             
     Returns:
-        Translated boxes of shape [N, 4].
+        A translated boxes of shape [N, 4].
     """
     box = affine_box(
         box        = box,
@@ -292,7 +275,7 @@ def scale_box(
     keep_shape: bool          = False,
     drop_ratio: float         = 0.0,
 ) -> torch.Tensor:
-    """Scales bounding boxes coordinates by the given factor or by inferring
+    """Scale bounding boxes coordinates by the given factor or by inferring
     from current image size and new size.
     
     References:
@@ -302,8 +285,8 @@ def scale_box(
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         cur_size: The current image size.
-        new_size: The new image size. Defaults to None.
-        factor: The desired scaling factor in each direction. If scalar, the value
+        new_size: A new image size. Defaults to None.
+        factor: A desired scaling factor in each direction. If scalar, the value
             is used for both the vertical and horizontal direction. Defaults to
             (1.0, 1.0).
         keep_shape: When True, translate the scaled bounding boxes. Defaults to
@@ -314,7 +297,7 @@ def scale_box(
             Defaults to 0.0.
             
     Returns:
-        Scaled bounding boxes of shape [N, 4].
+        A scaled bounding boxes of shape [N, 4].
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     h0, w0 = util.to_size(cur_size)  # H, W
@@ -349,14 +332,14 @@ def scale_box_original(
     new_size  : Ints,
     ratio_pad = None,
 ) -> torch.Tensor:
-    """Scales bounding boxes coordinates (from the :param:`cur_size`) to the
+    """Scale bounding boxes coordinates (from the :param:`cur_size`) to the
     :param:`new_size`.
 
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         cur_size: The current size.
-        new_size: The new size.
+        new_size: A new size.
         ratio_pad: Defaults to None.
         
     Returns:
@@ -390,14 +373,14 @@ def shear_box(
     center    : Ints | None = None,
     drop_ratio: float       = 0.0,
 ) -> torch.Tensor:
-    """Shears bounding boxes coordinates by the given magnitude.
+    """Shear bounding boxes.
     
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The original image size.
-        magnitude: Shear magnitude.
-        center:  The center of affine transformation. If None, use the center of the
+        magnitude: A shear magnitude.
+        center: The center of affine transformation. If None, use the center of the
             image. Defaults to None.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
@@ -427,15 +410,15 @@ def translate_box(
     center    : Ints | None = None,
     drop_ratio: float       = 0.0,
 ) -> torch.Tensor:
-    """Translates the bounding box by the given magnitude.
+    """Translate bounding boxes.
 
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The original image size.
-        magnitude: Translation magnitude.
-        center:  The center of affine transformation. If None, use the center of the
-            image. Defaults to None.
+        magnitude: A translation magnitude.
+        center: The center of affine transformation. If None, use the center of
+            the image. Defaults to None.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
@@ -461,15 +444,15 @@ def vertical_flip_box(
     box         : torch.Tensor,
     image_center: torch.Tensor,
 ) -> torch.Tensor:
-    """Flips boxes vertically, which are specified by their (cx, cy, w, h) norm
-    coordinates.
+    """Flip bounding boxes vertically, which are specified by their (cx, cy, w,
+    h) norm coordinates.
 	
 	Reference:
 		https://blog.paperspace.com/data-augmentation-for-bounding-boxes/
 	
     Args:
         box: Bounding boxes of shape [N, 4] to be flipped.
-        image_center: Center of the image.
+        image_center: The center of the image.
         
     Returns:
         Flipped boxes of shape [N, 4].
@@ -490,15 +473,15 @@ def vertical_translate_box(
     center    : Ints | None = None,
     drop_ratio: float       = 0.0,
 ) -> torch.Tensor:
-    """Translates the bounding box in vertical direction.
+    """Translate bounding boxes in vertical direction.
 
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
         x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The original image size.
-        magnitude: Vertically translation.
-        center: The center of affine transformation. If None, use the center of the
-            image. Defaults to None.
+        magnitude: A vertically translation.
+        center: The center of affine transformation. If None, use the center of
+            the image. Defaults to None.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
@@ -522,7 +505,7 @@ def vertical_translate_box(
 # region Box Format Conversion
 
 def box_cxcyar_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h)
+    """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -531,10 +514,10 @@ def box_cxcyar_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, a, r) format which will be converted.
+        box: Bounding boxes in (cx, cy, a, r) format.
         
     Returns:
-        Boxes in (cx, cy, r, h) format.
+        Bounding boxes in (cx, cy, r, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -546,7 +529,7 @@ def box_cxcyar_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcyar_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
+    """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -555,10 +538,10 @@ def box_cxcyar_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, a, r) format which will be converted.
+        box: Bounding boxes in (cx, cy, a, r) format.
         
     Returns:
-        Boxes in (cx, cy, w, h) format.
+        Bounding boxes in (cx, cy, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -574,7 +557,7 @@ def box_cxcyar_to_cxcywhnorm(
     height: int,
     width : int
 ) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
+    """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
     norm format.
     
     (cx, cy) refers to center of bounding box.
@@ -586,12 +569,12 @@ def box_cxcyar_to_cxcywhnorm(
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, a, r) format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, a, r) format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, w, h) norm format.
+        Bounding boxes in (cx, cy, w, h) norm format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -607,7 +590,7 @@ def box_cxcyar_to_cxcywhnorm(
 
 
 def box_cxcyar_to_xywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (x, y, w, h)
+    """Convert bounding boxes from (cx, cy, a, r) format to (x, y, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -616,10 +599,10 @@ def box_cxcyar_to_xywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, a, r) format which will be converted.
+        box: Bounding boxes in (cx, cy, a, r) format.
         
     Returns:
-        Boxes in (x, y, w, h) format.
+        Bounding boxes in (x, y, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -633,7 +616,7 @@ def box_cxcyar_to_xywh(box: torch.Tensor) -> torch.Tensor:
 
     
 def box_cxcyar_to_xyxy(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, a, r) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from (cx, cy, a, r) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -642,10 +625,10 @@ def box_cxcyar_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, a, r) format which will be converted.
+        box: Bounding boxes in (cx, cy, a, r) format.
         
     Returns:
-        Boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in (x1, y1, x2, y2) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -661,7 +644,7 @@ def box_cxcyar_to_xyxy(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcyrh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r)
+    """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -670,10 +653,10 @@ def box_cxcyrh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, r, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, r, h) format.
         
     Returns:
-        Boxes in (cx, cy, a, r) format.
+        Bounding boxes in (cx, cy, a, r) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -686,7 +669,7 @@ def box_cxcyrh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcyrh_to_cxcywh(box: torch.Tensor) ->torch. Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
+    """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -695,10 +678,10 @@ def box_cxcyrh_to_cxcywh(box: torch.Tensor) ->torch. Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, r, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, r, h) format.
         
     Returns:
-        Boxes in (cx, cy, w, h) format.
+        Bounding boxes in (cx, cy, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -713,7 +696,7 @@ def box_cxcyrh_to_cxcywh_norm(
     height: int,
     width : int
 ) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
+    """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
     norm format.
     
     (cx, cy) refers to center of bounding box.
@@ -725,12 +708,12 @@ def box_cxcyrh_to_cxcywh_norm(
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, r, h) format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, r, h) format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        box: Boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in (cx, cy, w, h) norm format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -745,7 +728,7 @@ def box_cxcyrh_to_cxcywh_norm(
 
 
 def box_cxcyrh_to_xywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (x, y, w, h)
+    """Convert bounding boxes from (cx, cy, r, h) format to (x, y, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -754,10 +737,10 @@ def box_cxcyrh_to_xywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, r, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, r, h) format.
         
     Returns:
-        Boxes in (x, y, w, h) format.
+        Bounding boxes in (x, y, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -770,7 +753,7 @@ def box_cxcyrh_to_xywh(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcyrh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, r, h) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from (cx, cy, r, h) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -779,10 +762,10 @@ def box_cxcyrh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, r, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, r, h) format.
         
     Returns:
-        Boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in (x1, y1, x2, y2) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -797,7 +780,7 @@ def box_cxcyrh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r)
+    """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -806,10 +789,10 @@ def box_cxcywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, w, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, w, h) format.
         
     Returns:
-        Boxes in (cx, cy, a, r) format.
+        Bounding boxes in (cx, cy, a, r) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -821,7 +804,7 @@ def box_cxcywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
+    """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -830,10 +813,10 @@ def box_cxcywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, w, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, w, h) format.
         
     Returns:
-        Boxes in (cx, cy, r, h) format.
+        Bounding boxes in (cx, cy, r, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -848,7 +831,7 @@ def box_cxcywh_to_cxcywh_norm(
     height: int,
     width : int
 ) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
+    """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -860,12 +843,12 @@ def box_cxcywh_to_cxcywh_norm(
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, w, h) format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, w, h) format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, r, h) norm format.
+        Bounding boxes in (cx, cy, r, h) norm format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -879,7 +862,7 @@ def box_cxcywh_to_cxcywh_norm(
     
 
 def box_cxcywh_to_xywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (x, y, w, h)
+    """Convert bounding boxes from (cx, cy, w, h) format to (x, y, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -888,10 +871,10 @@ def box_cxcywh_to_xywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, w, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, w, h) format.
         
     Returns:
-        Boxes in (x, y, w, h) format.
+        Bounding boxes in (x, y, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -903,7 +886,7 @@ def box_cxcywh_to_xywh(box: torch.Tensor) -> torch.Tensor:
     
 
 def box_cxcywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from (cx, cy, w, h) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -912,10 +895,10 @@ def box_cxcywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
     
     Args:
-        box: Boxes in (cx, cy, w, h) format which will be converted.
+        box: Bounding boxes in (cx, cy, w, h) format.
         
     Returns:
-        Boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in (x1, y1, x2, y2) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box              = util.upcast(box)
@@ -929,7 +912,7 @@ def box_cxcywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_cxcywh_norm_to_cxcyar(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a,
+    """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a,
     r) format.
     
     (cx, cy) refers to center of bounding box.
@@ -941,12 +924,12 @@ def box_cxcywh_norm_to_cxcyar(box: torch.Tensor, height: int, width: int) -> tor
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, w, h) norm format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, w, h) norm format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, a, r) format.
+        Bounding boxes in (cx, cy, a, r) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                                  = util.upcast(box)
@@ -960,7 +943,7 @@ def box_cxcywh_norm_to_cxcyar(box: torch.Tensor, height: int, width: int) -> tor
 
 
 def box_cxcywh_norm_to_cxcyrh(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, r,
+    """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, r,
     h) format.
     
     (cx, cy) refers to center of bounding box.
@@ -972,12 +955,12 @@ def box_cxcywh_norm_to_cxcyrh(box: torch.Tensor, height: int, width: int) -> tor
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, w, h) norm format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, w, h) norm format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, r, h) format.
+        Bounding boxes in (cx, cy, r, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                                  = util.upcast(box)
@@ -991,7 +974,7 @@ def box_cxcywh_norm_to_cxcyrh(box: torch.Tensor, height: int, width: int) -> tor
 
 
 def box_cxcywh_norm_to_cxcywh(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (cx, cy, w, h)
+    """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1003,12 +986,12 @@ def box_cxcywh_norm_to_cxcywh(box: torch.Tensor, height: int, width: int) -> tor
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, w, h) norm format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, w, h) norm format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, w, h) format.
+        Bounding boxes in (cx, cy, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                                  = util.upcast(box)
@@ -1022,7 +1005,7 @@ def box_cxcywh_norm_to_cxcywh(box: torch.Tensor, height: int, width: int) -> tor
 
 
 def box_cxcywh_norm_to_xywh(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (x, y, w, h)
+    """Convert bounding boxes from (cx, cy, w, h) norm format to (x, y, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1034,12 +1017,12 @@ def box_cxcywh_norm_to_xywh(box: torch.Tensor, height: int, width: int) -> torch
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, w, h) norm format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, w, h) norm format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (x, y, w, h) format.
+        Bounding boxes in (x, y, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                                  = util.upcast(box)
@@ -1053,7 +1036,7 @@ def box_cxcywh_norm_to_xywh(box: torch.Tensor, height: int, width: int) -> torch
    
    
 def box_cxcywh_norm_to_xyxy(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (cx, cy, w, h) norm format to (x1, y1, x2,
+    """Convert bounding boxes from (cx, cy, w, h) norm format to (x1, y1, x2,
     y2) format.
     
     (cx, cy) refers to center of bounding box.
@@ -1065,12 +1048,12 @@ def box_cxcywh_norm_to_xyxy(box: torch.Tensor, height: int, width: int) -> torch
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (cx, cy, w, h) norm format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (cx, cy, w, h) norm format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in (x1, y1, x2, y2) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                                  = util.upcast(box)
@@ -1084,8 +1067,7 @@ def box_cxcywh_norm_to_xyxy(box: torch.Tensor, height: int, width: int) -> torch
 
 
 def box_xywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, a, r)
-    format.
+    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, a, r) format.
     
     (cx, cy) refers to the center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
@@ -1093,10 +1075,10 @@ def box_xywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x, y, w, h) format which will be converted.
+        box: Bounding boxes in (x, y, w, h) format.
        
     Returns:
-        Boxes in (cx, cy, a, r) format.
+        Bounding boxes in (cx, cy, a, r) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box            = util.upcast(box)
@@ -1110,8 +1092,7 @@ def box_xywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_xywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, r, h)
-    format.
+    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, r, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
@@ -1119,10 +1100,10 @@ def box_xywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x, y, w, h) format which will be converted.
+        box: Bounding boxes in (x, y, w, h) format.
        
     Returns:
-        Boxes in (cx, cy, r, h) format.
+        Bounding boxes in (cx, cy, r, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box            = util.upcast(box)
@@ -1135,8 +1116,7 @@ def box_xywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     
 
 def box_xywh_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, w, h)
-    format.
+    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, w, h) format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
@@ -1144,10 +1124,10 @@ def box_xywh_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x, y, w, h) format which will be converted.
+        box: Bounding boxes in (x, y, w, h) format.
        
     Returns:
-        Boxes in (cx, cy, w, h) format.
+        Bounding boxes in (cx, cy, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box            = util.upcast(box)
@@ -1159,24 +1139,24 @@ def box_xywh_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_xywh_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (cx, cy, w, h) norm
+    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, w, h) norm
     format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
     (w, h) refers to width and height of bounding box.
-    _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
+    _norm refers to the normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (x, y, w, h) format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (x, y, w, h) format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, w, h) norm format.
+        Bounding boxes in (cx, cy, w, h) norm format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box            = util.upcast(box)
@@ -1192,7 +1172,7 @@ def box_xywh_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch
 
 
 def box_xywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x, y, w, h) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from (x, y, w, h) format to (x1, y1, x2, y2)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1201,10 +1181,10 @@ def box_xywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x, y, w, h) format which will be converted.
+        box: Bounding boxes in (x, y, w, h) format.
        
     Returns:
-        Boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in (x1, y1, x2, y2) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box            = util.upcast(box)
@@ -1216,7 +1196,7 @@ def box_xywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_xyxy_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)
+    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1225,10 +1205,10 @@ def box_xyxy_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x1, y1, x2, y2) format which will be converted.
+        box: Bounding boxes in (x1, y1, x2, y2) format.
        
     Returns:
-        Boxes in (cx, cy, a, r) format.
+        Bounding boxes in (cx, cy, a, r) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                = util.upcast(box)
@@ -1244,7 +1224,7 @@ def box_xyxy_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     
 
 def box_xyxy_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, r, h)
+    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, r, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1253,10 +1233,10 @@ def box_xyxy_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x1, y1, x2, y2) format which will be converted.
+        box: Bounding boxes in (x1, y1, x2, y2) format.
        
     Returns:
-        Boxes in (cx, cy, r, h) format.
+        Bounding boxes in (cx, cy, r, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                = util.upcast(box)
@@ -1271,7 +1251,7 @@ def box_xyxy_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_xyxy_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
+    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1280,10 +1260,10 @@ def box_xyxy_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x1, y1, x2, y2) format which will be converted.
+        box: Bounding boxes in (x1, y1, x2, y2) format.
        
     Returns:
-        Boxes in (cx, cy, w, h) format.
+        Bounding boxes in (cx, cy, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                = util.upcast(box)
@@ -1297,24 +1277,24 @@ def box_xyxy_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
 
 
 def box_xyxy_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
+    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
     norm format.
     
     (cx, cy) refers to center of bounding box.
     (a, r) refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
     (w, h) refers to width and height of bounding box.
-    _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
+    _norm refers to the normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Boxes in (x1, y1, x2, y2) format which will be converted.
-        height: Height of the image.
-        width: Width of the image.
+        box: Bounding boxes in (x1, y1, x2, y2) format.
+        height: The height of the image.
+        width: The width of the image.
         
     Returns:
-        Boxes in (cx, cy, w, h) norm format.
+        Bounding boxes in (cx, cy, w, h) norm format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                = util.upcast(box)
@@ -1332,7 +1312,7 @@ def box_xyxy_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch
 
 
 def box_xyxy_to_xywh(box: torch.Tensor) -> torch.Tensor:
-    """Converts bounding boxes from (x1, y1, x2, y2) format to (x, y, w, h)
+    """Convert bounding boxes from (x1, y1, x2, y2) format to (x, y, w, h)
     format.
     
     (cx, cy) refers to center of bounding box.
@@ -1341,10 +1321,10 @@ def box_xyxy_to_xywh(box: torch.Tensor) -> torch.Tensor:
     (w, h) refers to width and height of bounding box.
    
     Args:
-        box: Boxes in (x1, y1, x2, y2) format which will be converted.
+        box: Bounding boxes in (x1, y1, x2, y2) format.
        
     Returns:
-        Boxes in (x, y, w, h) format.
+        Bounding boxes in (x, y, w, h) format.
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     box                = util.upcast(box)
@@ -1360,13 +1340,12 @@ def box_xyxy_to_xywh(box: torch.Tensor) -> torch.Tensor:
 # region Box Property
 
 def compute_box_area(box: torch.Tensor) -> torch.Tensor:
-    """Computes the area of bounding box(es), which are specified by their
+    """Compute the area of bounding box(es), which are specified by their
     (x1, y1, x2, y2) coordinates.
     
     Args:
-        box: Bounding boxes for which the area will be computed. They are
-            expected to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0
-            <= y1 < y2`.
+        box: Bounding boxes in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
+            `0 <= y1 < y2`.
     
     Returns:
         The area for each box.
@@ -1381,7 +1360,7 @@ def compute_box_area(box: torch.Tensor) -> torch.Tensor:
 def compute_box_intersection_union(
     box1: torch.Tensor, box2: torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Computes the intersection and union of two set of boxes. Both sets of
+    """Compute the intersection and union of two sets of boxes. Both sets of
     boxes are expected to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
     `0 <= y1 < y2`.
     
@@ -1389,8 +1368,8 @@ def compute_box_intersection_union(
     with slight modifications.
     
     Args:
-        box1: First set of boxes of shape [N, 4].
-        box2: Second set of boxes of shape [N, 4].
+        box1: The first set of boxes of shape [N, 4].
+        box2: The second set of boxes of shape [N, 4].
         
     Returns:
         Intersection.
@@ -1409,13 +1388,13 @@ def compute_box_intersection_union(
 
 
 def compute_box_iou(box1: torch.Tensor, box2: torch.Tensor) -> torch.Tensor:
-    """Returns intersection-over-union (Jaccard index) between two sets of
+    """Return the intersection-over-union (Jaccard index) between two sets of
     boxes. Both sets of boxes are expected to be in (x1, y1, x2, y2) format with
     `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Args:
-        box1: First set of boxes of shape [N, 4].
-        box2: Second set of boxes of shape [M, 4].
+        box1: The first set of boxes of shape [N, 4].
+        box2: The second set of boxes of shape [M, 4].
     
     Returns:
         The NxM matrix containing the pairwise IoU values for every element
@@ -1427,15 +1406,15 @@ def compute_box_iou(box1: torch.Tensor, box2: torch.Tensor) -> torch.Tensor:
 
 
 def compute_box_iou_old(box1: torch.Tensor, box2: torch.Tensor) -> torch.Tensor:
-    """From SORT: Computes IOU between two sets of boxes.
+    """From SORT: Compute IOU between two sets of boxes.
     
     Return intersection-over-union (Jaccard index) between two sets of boxes.
     Both sets of boxes are expected to be in (x1, y1, x2, y2) format with
     `0 <= x1 < x2` and `0 <= y1 < y2`.
 
     Args:
-        box1: First set of boxes of shape [N, 4].
-        box2: Second set of boxes of shape [M, 4].
+        box1: The first set of boxes of shape [N, 4].
+        box2: The second set of boxes of shape [M, 4].
     
     Returns:
         The NxM matrix containing the pairwise IoU values for every element in
@@ -1465,8 +1444,8 @@ def generate_box(
     width  : torch.Tensor,
     height : torch.Tensor
 ) -> torch.Tensor:
-    """Generates 2D bounding boxes according to the provided start coords,
-    width and height.
+    """Generate 2D bounding boxes according to the provided start coords, width
+    and height.
 
     Args:
         x_start: Tensor containing the x coordinates of the bounding boxes to be
@@ -1532,7 +1511,7 @@ def generate_box(
 
 
 def get_box_center(box: torch.Tensor) -> torch.Tensor:
-    """Computes the center of bounding box(es), which are specified by their
+    """Compute the center of bounding box(es), which are specified by their
     (x1, y1, x2, y2) coordinates.
     
     Args:
@@ -1551,14 +1530,14 @@ def get_box_center(box: torch.Tensor) -> torch.Tensor:
     
 
 def get_box_corners(box: torch.Tensor) -> torch.Tensor:
-    """Gets corners of bounding boxes.
+    """Get corners of bounding boxes.
     
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Returns:
-        Tensor of shape `N x 8` containing N bounding boxes each described by
+        A tensor of shape `N x 8` containing N bounding boxes each described by
         their corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
@@ -1614,7 +1593,7 @@ def get_box_corners_points(box: torch.Tensor) -> torch.Tensor:
     
 
 def get_enclosing_box(box: torch.Tensor) -> torch.Tensor:
-    """Gets an enclosing box for rotated corners of a bounding box.
+    """Get an enclosing box for rotated corners of a bounding box.
     
     Args:
         box: Bounding of shape [N, 8], containing N bounding boxes each

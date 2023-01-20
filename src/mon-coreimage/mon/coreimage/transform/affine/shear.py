@@ -26,16 +26,15 @@ def horizontal_shear(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Shears an image horizontally.
+    """Shear an image horizontally.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         magnitude: Shear angle value in degrees between -180 to 180, clockwise
             direction.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -43,17 +42,17 @@ def horizontal_shear(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A sheared image of shape [..., C, H, W].
     """
     image = base.affine(
         image         = image,
@@ -79,18 +78,17 @@ def shear(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Shears an image.
+    """Shear an image.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        magnitude: Shear angle value in degrees between -180 to 180, clockwise
+        image: An image of shape [..., C, H, W] to be transformed.
+        magnitude: Shear angle value in degrees between -180 to 180, a clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -98,17 +96,17 @@ def shear(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A transformed image of shape [..., C, H, W].
     """
     image = base.affine(
         image         = image,
@@ -136,42 +134,41 @@ def shear_image_box(
     padding_mode : PaddingModeType       = "constant",
     drop_ratio   : float                 = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Shears an image and a bounding box.
+    """Shear an image and a bounding box.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-        it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         box: Bounding box of shape [N, 4] to be sheared.
         magnitude: Shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
-        keep_shape: If True, expands the output image to  make it large enough
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
+        keep_shape: If True, expands the output image to make it large enough
             to hold the entire rotated image. If False or omitted, make the
             output image the same size as the input image. Note that the
             :param:`keep_shape` flag assumes rotation around the center and no
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         drop_ratio: If the fraction of a bounding box left in the image
             after being clipped is less than :param:`drop_ratio` the bounding
             box is dropped. If :param:`drop_ratio` == 0, don't drop any bounding
             boxes. Defaults to 0.0.
         
     Returns:
-        Rotated image of shape [..., C, H, W].
-        Rotated bounding box of shape [N, 4].
+        A rotated image of shape [..., C, H, W].
+        A rotated bounding box of shape [N, 4].
     """
     image, box = base.affine_image_box(
         image         = image,
@@ -199,34 +196,33 @@ def vertical_shear(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Shears an image vertically.
+    """Shear an image vertically.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         magnitude: Shear angle value in degrees between -180 to 180, clockwise
             direction.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
-        keep_shape: If True, expands the output image to  make it large enough
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
+        keep_shape: If True, expands the output image to make it large enough
             to hold the entire rotated image. If False or omitted, make the
             output image the same size as the input image. Note that the
             :param:`keep_shape` flag assumes rotation around the center and no
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A transformed image of shape [..., C, H, W].
     """
     image = base.affine(
         image         = image,

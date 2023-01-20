@@ -27,15 +27,14 @@ def horizontal_translate(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Translates an image in horizontal direction.
+    """Translate an image in horizontal direction.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        magnitude: Horizontal translation (post-rotation translation)
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        image: An image of shape [..., C, H, W] to be transformed.
+        magnitude: A horizontal translation (post-rotation translation)
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -43,17 +42,17 @@ def horizontal_translate(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill 
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A transformed image of shape [..., C, H, W].
     """
     image = base.affine(
         image         = image,
@@ -81,20 +80,19 @@ def horizontal_translate_image_box(
     padding_mode : PaddingModeType       = "constant",
     drop_ratio   : float                 = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Translates an image and a bounding box in horizontal direction.
+    """Translate an image and a bounding box in horizontal direction.
     
     References:
         https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
         
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        box: Box of shape [N, 4] to be translated. They are expected to be in
+        image: An image of shape [..., C, H, W] to be transformed.
+        box: A box of shape [N, 4] to be translated. It is expected to be in
             (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        magnitude: Horizontal translation (post-rotation translation).
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        magnitude: A horizontal translation (post-rotation translation).
+        center: The center of the affine transformation. If None, use the center
+        of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -102,22 +100,22 @@ def horizontal_translate_image_box(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param`drop_ratio` == 0, don't drop any bounding boxes.
             Defaults to 0.0.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
-        Translated box of shape [N, 4].
+        A transformed image of shape [..., C, H, W].
+        A translated box of shape [N, 4].
     """
     image, box = base.affine_image_box(
         image         = image,
@@ -145,16 +143,15 @@ def translate(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Translates an image.
+    """Translate an image.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         magnitude: Horizontal and vertical translations (post-rotation
             translation).
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -162,17 +159,17 @@ def translate(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A transformed image of shape [..., C, H, W].
     """
     image = base.affine(
         image         = image,
@@ -200,21 +197,20 @@ def translate_image_box(
     padding_mode : PaddingModeType       = "constant",
     drop_ratio   : float                 = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Translates an image and a bounding box.
+    """Translate an image and a bounding box.
     
     References:
         https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
         
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        box: Box of shape [N, 4] to be translated. They are expected to be in
+        image: An image of shape [..., C, H, W] to be transformed.
+        box: A box of shape [N, 4] to be translated. It is expected to be in
             (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         magnitude: Horizontal and vertical translations (post-rotation
             translation).
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -222,22 +218,22 @@ def translate_image_box(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
             Defaults to 0.0.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
-        Translated box of shape [N, 4].
+        A transformed image of shape [..., C, H, W].
+        A translated box of shape [N, 4].
     """
     image, box = base.affine_image_box(
         image         = image,
@@ -265,15 +261,14 @@ def vertical_translate(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Translates an image in vertical direction.
+    """Translate an image in vertical direction.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        magnitude: Vertical translation (post-rotation translation)
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        image: An image of shape [..., C, H, W] to be transformed.
+        magnitude: A vertical translation (post-rotation translation)
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -281,17 +276,17 @@ def vertical_translate(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A transformed image of shape [..., C, H, W].
     """
     image = base.affine(
         image         = image,
@@ -319,20 +314,19 @@ def vertical_translate_image_box(
     padding_mode : PaddingModeType       = "constant",
     drop_ratio   : float                 = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Translates an image and a bounding box in vertical direction.
+    """Translate an image and a bounding box in vertical direction.
     
     References:
         https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
         
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        box: Box of shape [N, 4] to be translated. They are expected to be in
+        image: An image of shape [..., C, H, W] to be transformed.
+        box: A box of shape [N, 4] to be translated. It is expected to be in
             (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         magnitude: Vertical translation (post-rotation translation).
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -340,22 +334,22 @@ def vertical_translate_image_box(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
             Defaults to 0.0.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
-        Translated box of shape [N, 4].
+        A transformed image of shape [..., C, H, W].
+        A translated box of shape [N, 4].
     """
     image, box = base.affine_image_box(
         image         = image,

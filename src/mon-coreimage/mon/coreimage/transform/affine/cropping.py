@@ -18,19 +18,18 @@ from mon.coreimage.typing import Ints
 
 
 def center_crop(image: torch.Tensor, output_size: Ints) -> torch.Tensor:
-    """Crops an image at the center. If image size is smaller than output size
-    along any edge, image is padded with 0 and then center cropped.
+    """Crop an image at the center. If the image size is smaller than the output
+    size along any edge, the image is padded with 0 and then center cropped.
 
     Args:
-        image: Image of shape [..., C, H, W] to be cropped, where ... means an
-            arbitrary number of leading dimensions.
-        output_size: Desired output size of the crop. If size is an int instead
-            of sequence like (h, w), a square crop (size, size) is made. If
+        image: An image of shape [..., C, H, W] to be cropped,.
+        output_size: An output size of the crop. If size is an int instead of
+            sequence like (h, w), a square crop (size, size) is made. If
             provided a sequence of length 1, it will be interpreted as (size[0],
             size[0]).
         
     Returns:
-        Cropped image of shape [..., C, H, W].
+        A cropped image of shape [..., C, H, W].
     """
     output_size      = util.to_size(output_size)
     image_h, image_w = util.get_image_size(image)
@@ -67,18 +66,17 @@ def crop_tblr(
     left   : int,
     right  : int,
 ) -> torch.Tensor:
-    """Crops an image with top + bottom + left + right value.
+    """Crop an image with top + bottom + left + right value.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        top: Top padding.
-        bottom: Bottom padding.
-        left: Left padding.
-        right: Right padding.
+        image: An image of shape [..., C, H, W] to be transformed.
+        top: The top padding.
+        bottom: The bottom padding.
+        left: The left padding.
+        right: The right padding.
         
     Returns:
-        Cropped image of shape [..., C, H, W].
+        A cropped image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor)
     bottom = -bottom if bottom > 0 else bottom
@@ -95,18 +93,17 @@ def crop(
     height : int,
     width  : int,
 ) -> torch.Tensor:
-    """Crops an image at specified location and output size.
+    """Crop an image at specified location and output size.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        top: Vertical component of the top left corner of the crop box.
-        left: Horizontal component of the top left corner of the crop box.
-        height: Height of the crop box.
-        width: Width of the crop box.
+        image: An image of shape [..., C, H, W] to be transformed.
+        top: The Vertical component of the top left corner of the crop box.
+        left: The Horizontal component of the top left corner of the crop box.
+        height: The height of the crop box.
+        width: The width of the crop box.
         
     Returns:
-        Cropped image of shape [..., C, H, W].
+        A cropped image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor)
     h, w   = util.get_image_size(image)
@@ -129,13 +126,13 @@ def crop(
 
 
 def crop_zero_region(image: torch.Tensor) -> torch.Tensor:
-    """Crops the zero region around the non-zero region in image.
+    """Crop the zero regions around the non-zero region in an image.
     
     Args:
-        image: Image of shape [C, H, W]to with zeros background.
+        image: An image of shape [C, H, W] with zeros background.
         
     Returns:
-        Cropped image of shape [C, H, W].
+        A cropped image of shape [C, H, W].
     """
     assert isinstance(image, torch.Tensor)
     if util.is_channel_last(image):
@@ -158,22 +155,20 @@ def five_crop(
 ) -> tuple[
     torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor
 ]:
-    """Crops an image into four corners and the central crop.
+    """Crop an image into four corners, and the central crop.
     
     Notes:
         This transform returns a tuple of images and there may be a mismatch in
         the number of inputs and targets your `Dataset` returns.
     
     Args:
-        image: Image of shape [..., C, H, W] to be cropped, where ... means an
-            arbitrary number of leading dimensions.
-        size: Desired output size of the crop. If size is an int instead of
-            sequence like (h, w), a square crop (size, size) is made. If
-            provided a sequence of length 1, it will be interpreted as (size[0],
-            size[0]).
+        image: An image of shape [..., C, H, W] to be cropped.
+        size: An output size of the crop. If size is an int instead of sequence
+            like (h, w), a square crop (size, size) is made. If provided a
+            sequence of length 1, it will be interpreted as (size[0], size[0]).
 
     Returns:
-        Tuple of corresponding top left, top right, bottom left, bottom right
+        a tuple of corresponding top left, top right, bottom left, bottom right
         and center crop.
     """
     size = util.to_size(size)
@@ -199,8 +194,8 @@ def ten_crop(
     size : Ints,
     vflip: bool = False,
 ) -> tuple[torch.Tensor, ...]:
-    """Generates ten cropped images from the given image. Crop the given image
-    into four corners and the central crop plus the flipped version of these
+    """Generate ten cropped images from the given image. Crop the given image
+    into four corners, and the central crop plus the flipped version of these
     (horizontal flipping is used by default).
    
     Notes:
@@ -208,12 +203,10 @@ def ten_crop(
         mismatch in the number of inputs and targets your `Dataset` returns.
 
     Args:
-        image: Image of shape [..., C, H, W] to be cropped, where ... means an
-            arbitrary number of leading dimensions.
-        size: Desired output size of the crop. If size is an int instead of
-            sequence like (h, w), a square crop (size, size) is made. If
-            provided a sequence of length 1, it will be interpreted as (size[0],
-            size[0]).
+        image: An image of shape [..., C, H, W] to be cropped.
+        size: An output size of the crop. If size is an int instead of sequence
+            like (h, w), a square crop (size, size) is made. If provided a
+            sequence of length 1, it will be interpreted as (size[0], size[0]).
         vflip: Use vertical flipping instead of horizontal. Defaults to False.
 
     Returns:

@@ -29,15 +29,15 @@ def blend(
     alpha : float,
     gamma : float = 0.0
 ) -> torch.Tensor:
-    """Blends 2 images together:
+    """Blend 2 images together using the formula:
         output = :param:`image1` * alpha + :param:`image2` * beta + gamma
 
     Args:
-        image1: Source image of shape [..., C, H, W].
-        image2: Second image of shape [..., C, H, W] that we want to blend on
-            top of :param:`image1`.
-        alpha: Alpha transparency of the overlay.
-        gamma: Scalar added to each sum. Defaults to 0.0.
+        image1: A source image of shape [..., C, H, W].
+        image2: A n overlay image of shape [..., C, H, W] that we want to blend
+            on top of :param:`image1`.
+        alpha: An alpha transparency of the overlay.
+        gamma: A scalar added to each sum. Defaults to 0.0.
 
     Returns:
         Blended image of shape [..., C, H, W].
@@ -54,19 +54,19 @@ def blend(
 
 def adjust_brightness(
     image            : torch.Tensor,
-    brightness_factor: float,
+    brightness_factor: float = 1.0
 ) -> torch.Tensor:
-    """Adjusts the brightness of the given :param:`image`.
+    """Adjust the brightness of a given image.
 
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-            means it can have an arbitrary number of leading dimensions.
-        brightness_factor: How much to adjust the brightness. Can be any
-            non-negative number. 0 gives a black image, 1 gives the original
-            image while 2 increases the brightness by a factor of 2.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        brightness_factor: A factor determining how much to adjust the
+            brightness. Can be any non-negative number. 0 gives a black image, 1
+            gives the original image while 2 increases the brightness by a
+            factor of 2. Defaults to 1.
         
     Returns:
-        Brightness adjusted image of shape [..., 1 or 3, H, W].
+        A brightness adjusted image of shape [..., 1 or 3, H, W].
     """
     assert brightness_factor >= 0
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
@@ -83,17 +83,16 @@ def adjust_contrast(
     image          : torch.Tensor,
     contrast_factor: float,
 ) -> torch.Tensor:
-    """Adjusts the contrast of the given :param:`image`.
+    """Adjust the contrast of a given image.
 
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-            means it can have an arbitrary number of leading dimensions.
-        contrast_factor: How much to adjust the contrast. Can be any
-            non-negative number. 0 gives a solid gray image, 1 gives the
-            original image while 2 increases the contrast by a factor of 2.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        contrast_factor: A factor determining how much to adjust the contrast.
+            Can be any non-negative number. 0 gives a solid gray image, 1 gives
+            the original image while 2 increases the contrast by a factor of 2.
 
     Returns:
-        Contrast adjusted image of shape [..., 1 or 3, H, W].
+        A contrast adjusted image of shape [..., 1 or 3, H, W].
     """
     assert contrast_factor >= 0
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
@@ -117,18 +116,18 @@ def adjust_gamma(
     gamma: float,
     gain : float = 1.0,
 ) -> torch.Tensor:
-    """Adjusts the gamma of the given :param:`image`.
+    """Adjust the gamma of a given image.
 
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-            means it can have an arbitrary number of leading dimensions.
-        gamma: How much to adjust the gamma. Can be any non-negative number. 0
-            gives a black image, 1 gives the original image while 2 increases
-            the brightness by a factor of 2.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+            
+        gamma: A factor determining how much to adjust the gamma. Can be any
+            non-negative number. 0 gives a black image, 1 gives the original
+            image while 2 increases the brightness by a factor of 2.
         gain: Default to 1.0.
         
     Returns:
-        Gamma adjusted image of shape [..., 1 or 3, H, W].
+        A gamma adjusted image of shape [..., 1 or 3, H, W].
     """
     assert gamma >= 0
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
@@ -142,30 +141,30 @@ def adjust_gamma(
 
 
 def adjust_hue(image: torch.Tensor, hue_factor: float) -> torch.Tensor:
-    """Adjusts the hue of the given :param:`image`.
+    """Adjust the hue of a given image.
 
     The image hue is adjusted by converting the image to HSV and cyclically
     shifting the intensities in the hue channel (H). The image is then converted
-    back to original image mode.
+    back to the original image mode.
 
-    :param:`hue_factor` is the amount of shift in H channel and must be in the
-    interval `[-0.5, 0.5]`.
+    :param:`hue_factor` is the amount of shift in the H-channel and must be in
+    the interval `[-0.5, 0.5]`.
 
     See `Hue`_ for more details.
 
     .. _Hue: https://en.wikipedia.org/wiki/Hue
 
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-            means it can have an arbitrary number of leading dimensions.
-        hue_factor: How much to shift the hue channel. Should be in [-0.5, 0.5].
-            0.5 and -0.5 give complete reversal of hue channel in HSV space in
-            positive and negative direction respectively. 0 means no shift.
-            Therefore, both -0.5 and 0.5 will give an image with complementary
-            colors while 0 gives the original image.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        hue_factor: A factor determining how much to shift the hue channel.
+            Should be in [-0.5, 0.5]. 0.5 and -0.5 give a complete reversal of
+            the hue channel in HSV space in positive and negative direction
+            respectively. 0 means no shift. Therefore, both -0.5 and 0.5 will
+            give an image with complementary colors while 0 gives the original
+            image.
 
     Returns:
-        Hue adjusted image of shape [..., 1 or 3, H, W].
+        A hue adjusted image of shape [..., 1 or 3, H, W].
     """
     assert -0.5 <= hue_factor <= 0.5
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
@@ -190,17 +189,16 @@ def adjust_saturation(
     image            : torch.Tensor,
     saturation_factor: float,
 ) -> torch.Tensor:
-    """Adjusts the color saturation of the given :param:`image`.
+    """Adjust the color saturation of a given image.
 
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-            means it can have an arbitrary number of leading dimensions.
-        saturation_factor: How much to adjust the saturation. 0 will give a
-            black and white image, 1 will give the original image while 2 will
-            enhance the saturation by a factor of 2.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        saturation_factor: A factor determining how much to adjust the
+            saturation. 0 will give a black and white image, 1 will give the
+            original image while 2 will enhance the saturation by a factor of 2.
 
     Returns:
-        Saturation adjusted image of shape [..., 1 or 3, H, W].
+        A saturation adjusted image of shape [..., 1 or 3, H, W].
     """
     assert saturation_factor >= 0
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
@@ -219,17 +217,16 @@ def adjust_sharpness(
     image           : torch.Tensor,
     sharpness_factor: float,
 ) -> torch.Tensor:
-    """Adjusts the sharpness of the given :param:`image`.
+    """Adjust the sharpness of a given image.
     
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted , where ...
-            means it can have an arbitrary number of leading dimensions.
-        sharpness_factor: How much to adjust the sharpness. 0 will give a black
-            and white image, 1 will give the original image while 2 will enhance
-            the saturation by a factor of 2.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        sharpness_factor: A factor determining how much to adjust the sharpness.
+            0 will give a black and white image, 1 will give the original image
+            while 2 will enhance the saturation by a factor of 2.
     
     Returns:
-        Sharpness adjusted image of shape [..., 1 or 3, H, W].
+        A sharpness adjusted image of shape [..., 1 or 3, H, W].
     """
     assert sharpness_factor >= 0
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
@@ -250,15 +247,14 @@ def adjust_sharpness(
 # region Advanced Adjustment
 
 def autocontrast(image: torch.Tensor) -> torch.Tensor:
-    """Maximizes contrast of an image by remapping its pixels per channel so
-    that the lowest becomes black and the lightest becomes white.
+    """Maximize the contrast of an image by remapping its pixels per channel so
+    that the lowest becomes black, and the lightest becomes white.
     
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-        means it can have an arbitrary number of leading dimensions.
-    
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        
     Returns:
-        Auto-contrast adjusted image of shape [..., 1 or 3, H, W].
+        An auto-contrast adjusted image of shape [..., 1 or 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3] and image.ndim >= 3
     bound            = 1.0 if image.is_floating_point() else 255.0
@@ -280,19 +276,18 @@ def erase(
     w      : int,
     v      : torch.Tensor,
 ) -> torch.Tensor:
-    """Erases value in :param:`image` with given value.
+    """Erase a value in an image.
 
     Args:
-        image: Image of shape [..., C, H, W] to be adjusted, where ... means it
-            can have an arbitrary number of leading dimensions.
-        i: i in (i,j) i.e coordinates of the upper left corner.
-        j: j in (i,j) i.e coordinates of the upper left corner.
-        h: Height of the erased region.
-        w: Width of the erased region.
-        v: Erasing value.
+        image: An image of shape [..., C, H, W] to be transformed.
+        i: The i in (i, j) i.e. x-coordinates of the upper left corner.
+        j: The j in (i, j) i.e. y-coordinates of the upper left corner.
+        h: The height of the erased region.
+        w: The width of the erased region.
+        v: The erasing value.
 
     Returns:
-        Erased image of shape [..., C, H, W].
+        An erased image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.ndim >= 3
     image = image.clone()
@@ -301,16 +296,16 @@ def erase(
 
 
 def equalize(image: torch.Tensor) -> torch.Tensor:
-    """Equalizes the histogram of the given :param:`image` by applying a non-linear
-    mapping to the input in order to create a uniform distribution of grayscale
-    values in the output.
+    """Equalize the histogram of a given image by applying a non-linear mapping
+    to the input to create a uniform distribution of grayscale values in the
+    output.
     
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be adjusted, where ...
-            means it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+            
     
     Returns:
-        Equalized image of shape [..., 1 or 3, H, W].
+        An equalized image of shape [..., 1 or 3, H, W].
     """
     assert isinstance(image, torch.Tensor) \
            and image.shape[-3] in [1, 3] \
@@ -327,14 +322,13 @@ def equalize(image: torch.Tensor) -> torch.Tensor:
 
 
 def invert(image: torch.Tensor) -> torch.Tensor:
-    """Inverts the colors of an RGB/grayscale image.
+    """Invert the colors of an RGB/grayscale image.
     
     Args:
-        image: Image of shape [..., 1 or 3, H, W] to be transformed, where ...
-            means it can have an arbitrary number of leading dimensions.
-      
+        image: An image of shape [..., 1 or 3, H, W] to be transformed.
+        
     Returns:
-        Inverted image of shape [..., 1 or 3, H, W].
+        An Inverted image of shape [..., 1 or 3, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
     image = image.clone()
@@ -348,16 +342,14 @@ def invert(image: torch.Tensor) -> torch.Tensor:
 
 
 def posterize(image: torch.Tensor, bits: int) -> torch.Tensor:
-    """Posterizes an image by reducing the number of bits for each color
-    channel.
+    """Posterize an image by reducing some bits for each color channel.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where .. means
-            it can have an arbitrary number of leading dimensions.
-        bits: Number of bits to keep for each channel (0-8).
+        image: An image of shape [..., C, H, W] to be transformed.
+        bits: A number of bits to keep for each channel (0-8).
         
     Returns:
-        Posterized image of shape [..., C, H, W].
+        A posterized image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
     image = image.clone()
@@ -371,16 +363,15 @@ def posterize(image: torch.Tensor, bits: int) -> torch.Tensor:
 
 
 def solarize(image: torch.Tensor, threshold: float) -> torch.Tensor:
-    """Solarizes an RGB/grayscale image by inverting all pixel values above a
+    """Solarize an RGB/grayscale image by inverting all pixel values preceding a
     threshold.
 
     Args:
-        image:Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        threshold: All pixels equal or above this value are inverted.
+        image: An image of shape [..., C, H, W] to be transformed.
+        threshold: All pixels equal or preceding this value are inverted.
         
     Returns:
-        Solarized image of shape [..., C, H, W].
+        A solarized image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor) and image.shape[-3] in [1, 3]
     image = image.clone()

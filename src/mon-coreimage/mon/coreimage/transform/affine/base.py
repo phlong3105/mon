@@ -37,42 +37,41 @@ def affine(
     fill         : Floats                = 0.0,
     padding_mode : PaddingModeType       = "constant",
 ) -> torch.Tensor:
-    """Applies affine transformation on the image keeping image center
+    """Apply an affine transformation on an image keeping image center
     invariant.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        angle: Rotation angle in degrees between -180 and 180, clockwise
+        image: An image of shape [..., C, H, W] to be transformed.
+        angle: A rotation angle in degrees between -180 and 180, clockwise
             direction.
         translate: Horizontal and vertical translations (post-rotation
             translation).
-        scale: Overall scale.
-        shear: Shear angle value in degrees between -180 to 180, clockwise
+        scale: An overall scale.
+        shear: A shear angle value in degrees between -180 to 180, a clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
-        keep_shape: If True, expands the output image to  make it large enough
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
+        keep_shape: If True, expands the output image to make it large enough
             to hold the entire rotated image. If False or omitted, make the
             output image the same size as the input image. Note that the
             :param:`keep_shape` flag assumes rotation around the center and no
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom bands respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
+        A transformed image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor)
 
@@ -156,25 +155,25 @@ def affine_image_box(
     padding_mode : PaddingModeType       = "constant",
     drop_ratio   : float                 = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Applies affine transformation on the image keeping image center invariant.
+    """Apply an affine transformation on an image keeping image center 
+    invariant.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
             x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
-        angle: Rotation angle in degrees between -180 and 180, clockwise
+        angle: A rotation angle in degrees between -180 and 180, clockwise
             direction.
         translate: Horizontal and vertical translations (post-rotation
             translation).
-        scale: Overall scale.
-        shear: Shear angle value in degrees between -180 to 180, clockwise
+        scale: An overall scale.
+        shear: A shear angle value in degrees between -180 to 180, clockwise
             direction. If a sequence is specified, the first value corresponds
             to a shear parallel to the x-axis, while the second value
             corresponds to a shear parallel to the y-axis.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
+        center: The center of the affine transformation. If None, use the center
+            of the image. Defaults to None.
+        interpolation: An interpolation mode. Defaults to “bilinear”.
         keep_shape: If True, expands the output image to make it large enough to
             hold the entire rotated image. If False or omitted, make the output
             image the same size as the input image. Note that the
@@ -182,22 +181,22 @@ def affine_image_box(
             translation. Defaults to True.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
+        padding_mode: A padding mode. Defaults to “constant”.
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
-        dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
-        Defaults to 0.0.
+            dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
+            Defaults to 0.0.
         
     Returns:
-        Transformed image of shape [..., C, H, W].
-        Transformed box of shape [N, 4].
+        A transformed image of shape [..., C, H, W].
+        A transformed box of shape [N, 4].
     """
     assert isinstance(box, torch.Tensor) and box.ndim == 2
     image_size = util.get_image_size(image)
@@ -239,7 +238,7 @@ def pad(
     """Pads an image with fill value.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
+        image: An image of shape [..., C, H, W] to be transformed, where ... means
             it can have an arbitrary number of leading dimensions.
         padding: Padding on each border. If a single int is provided this is
             used to pad all borders. If sequence of length 2 is provided this is
@@ -248,8 +247,8 @@ def pad(
             and bottom borders respectively.
         fill: Pixel values for the area outside the transformed image.
             - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
+            - If a sequence of length 2, it is used to fill
+              left/right/top/bottom band respectively.
             - If a sequence of length 3, it is used to fill R, G, B channels
               respectively.
             - If a sequence of length 4, it is used to fill each band
@@ -269,7 +268,7 @@ def pad(
               on the edge. For example, padding [1, 2, 3, 4] with 2 elements on
               both sides in symmetric mode will result in
               [2, 1, 1, 2, 3, 4, 4, 3].
-             Default: "constant".
+            Default: "constant".
         
     Returns:
         Padded image of shape [..., C, H, W].
@@ -310,8 +309,8 @@ def pad(
     need_cast = False
     image     = image.clone()
     if (padding_mode != "constant") and image.dtype not in (torch.float32, torch.float64):
-        # Here we temporary cast input tensor to float until pytorch issue is
-        # resolved: https://github.com/pytorch/pytorch/issues/40763
+        # Here we temporarily cast the input tensor to float until the Pytorch
+        # issue is resolved: https://github.com/pytorch/pytorch/issues/40763
         need_cast = True
         image     = image.to(torch.float32)
     if padding_mode in ("reflect", "replicate"):

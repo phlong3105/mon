@@ -16,14 +16,13 @@ from mon.coreimage import geometry, util
 
 
 def horizontal_flip(image: torch.Tensor) -> torch.Tensor:
-    """Flips an image horizontally.
+    """Flip an image horizontally.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         
     Returns:
-        Flipped imag eof shape [..., C, H, W].
+        A flipped imag eof shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor)
     image = image.clone()
@@ -35,16 +34,15 @@ def horizontal_flip_image_box(
     image: torch.Tensor,
     box  : torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Flips an image and a bounding box horizontally.
+    """Flip an image and a bounding box horizontally.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        box: Box of shape [N, 4] to be transformed.
+        image: An image of shape [..., C, H, W] to be transformed.
+        box: A box of shape [N, 4] to be transformed.
         
     Returns:
-        Flipped image of shape [..., C, H, W].
-        Flipped box of shape [N, 4].
+        A flipped image of shape [..., C, H, W].
+        A flipped box of shape [N, 4].
     """
     center = util.get_image_center4(image)
     image  = horizontal_flip(image=image)
@@ -53,14 +51,13 @@ def horizontal_flip_image_box(
 
     
 def vertical_flip(image: torch.Tensor) -> torch.Tensor:
-    """Flips an image vertically.
+    """Flip an image vertically.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
+        image: An image of shape [..., C, H, W] to be transformed.
         
     Returns:
-        Flipped image of shape [..., C, H, W].
+        A flipped image of shape [..., C, H, W].
     """
     assert isinstance(image, torch.Tensor)
     image = image.clone()
@@ -72,16 +69,15 @@ def vertical_flip_image_box(
     image: torch.Tensor,
     box  : torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Flips image and bounding box vertically.
+    """Flip image and bounding box vertically.
     
     Args:
-        image: Image of shape [..., C, H, W] to be transformed, where ... means
-            it can have an arbitrary number of leading dimensions.
-        box: Box of shape [N, 4] to be transformed.
+        image: An image of shape [..., C, H, W] to be transformed.
+        box: A box of shape [N, 4] to be transformed.
         
     Returns:
-        Flipped image of shape [..., C, H, W].
-        Flipped box of shape [N, 4].
+        A flipped image of shape [..., C, H, W].
+        A flipped box of shape [N, 4].
     """
     center = util.get_image_center4(image)
     image  = vertical_flip(image=image)

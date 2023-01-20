@@ -23,7 +23,7 @@ import torch
 
 @multipledispatch.dispatch(np.ndarray, np.ndarray)
 def is_same_shape(input1: np.ndarray, input2: np.ndarray) -> bool:
-    """Returns True if two arrays have the same shape. Otherwise, return False.
+    """Return True if two arrays have the same shape. Otherwise, return False.
     """
     return input1.shape == input2.shape
 
@@ -33,16 +33,16 @@ def is_same_shape(input1: np.ndarray, input2: np.ndarray) -> bool:
 # region Mutating Operations
 
 def _to_3d_array(input: np.ndarray) -> np.ndarray:
-    """Converts a 2D or 4D array to a 3D array.
+    """Convert a 2D or 4D array to a 3D array.
     
     If the input is a 2D array, add a new axis at the beginning.
     If the input is a 4D array with the first dimension being 1, remove the
     first dimension.
     
     Args:
-        input: The input array.
+        input: An input array.
     
-    Returns:
+    Return:
         A 3D array of shape [H, W, C].
     """
     assert isinstance(input, np.ndarray)
@@ -58,7 +58,7 @@ def _to_3d_array(input: np.ndarray) -> np.ndarray:
 
 
 def _to_4d_array(input: np.ndarray) -> np.ndarray:
-    """Converts a 2D, 3D, or 5D array to a 4D array.
+    """Convert a 2D, 3D, or 5D array to a 4D array.
     
     If the input is a 2D array, add 2 new axes at the beginning.
     If the input is a 3D array, add a new axis at the beginning.
@@ -66,9 +66,9 @@ def _to_4d_array(input: np.ndarray) -> np.ndarray:
     first dimension.
     
     Args:
-        input: The input array.
+        input: An input array.
     
-    Returns:
+    Return:
         A 4D array of shape [B, H, W, C].
     """
     assert isinstance(input, np.ndarray)
@@ -87,7 +87,7 @@ def _to_4d_array(input: np.ndarray) -> np.ndarray:
 
 
 def _to_5d_array(input: np.ndarray) -> np.ndarray:
-    """Converts a 2D, 3D, 4D, or 6D array to a 5D array.
+    """Convert a 2D, 3D, 4D, or 6D array to a 5D array.
     
     If the input is a 2D array, add 3 new axes at the beginning.
     If the input is a 3D array, add 2 new axes at the beginning.
@@ -96,9 +96,9 @@ def _to_5d_array(input: np.ndarray) -> np.ndarray:
     first dimension.
     
     Args:
-        input: The input array.
+        input: An input array.
     
-    Returns:
+    Return:
         A 5D array of shape [*, B, H, W, C].
     """
     assert isinstance(input, np.ndarray)
@@ -118,12 +118,12 @@ def _to_5d_array(input: np.ndarray) -> np.ndarray:
 
 
 def to_3d_array(input: Any) -> np.ndarray:
-    """Converts an arbitrary input to a 3D array.
+    """Convert an arbitrary input to a 3D array.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
+    Return:
         A 3D array of shape [H, W, C].
     """
     if isinstance(input, dict):
@@ -147,12 +147,12 @@ def to_3d_array(input: Any) -> np.ndarray:
 
 
 def to_4d_array(input: Any) -> np.ndarray:
-    """Converts an arbitrary input to a 4D array.
+    """Convert an arbitrary input to a 4D array.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
+    Return:
         A 4D array of shape [B, H, W, C].
     """
     if isinstance(input, dict):
@@ -178,12 +178,12 @@ def to_4d_array(input: Any) -> np.ndarray:
 
 
 def to_5d_array(input) -> np.ndarray:
-    """Converts an arbitrary input to a 5D array.
+    """Convert an arbitrary input to a 5D array.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
+    Return:
         A 5D array of shape [*, B, H, W, C].
     """
     if isinstance(input, dict):
@@ -209,13 +209,13 @@ def to_5d_array(input) -> np.ndarray:
 
 
 def to_list_of_3d_array(input: Any) -> list[np.ndarray]:
-    """Converts arbitrary input to a list of 3D arrays.
+    """Convert arbitrary input to a list of 3D arrays.
    
     Args:
-        input: Input of arbitrary type.
+        input: An Input of arbitrary type.
         
-    Returns:
-        List of 3D arrays of shape [H, W, C].
+    Return:
+        A list of 3D arrays of shape [H, W, C].
     """
     if isinstance(input, dict):
         input = list(input.values())                                            # list[Tensor | np.ndarray]
@@ -243,13 +243,13 @@ def to_list_of_3d_array(input: Any) -> list[np.ndarray]:
 
 
 def to_list_of_4d_array(input) -> list[np.ndarray]:
-    """Converts arbitrary input to a list of 4D arrays.
+    """Convert arbitrary input to a list of 4D arrays.
    
     Args:
-        input: Input of arbitrary type.
+        input: An input of arbitrary type.
         
-    Returns:
-        List of 4D arrays of shape [B, H, W, C].
+    Return:
+       A list of 4D arrays of shape [B, H, W, C].
     """
     if isinstance(input, dict):
         input = list(input.values())                                            # list[Tensor | np.ndarray]
@@ -283,7 +283,7 @@ def upcast(input: np.ndarray) -> np.ndarray:
     Args:
         input (Tensor): Array of arbitrary type.
     
-    Returns:
+    Return:
         Array of higher type.
     """
     if not isinstance(input, np.ndarray):
