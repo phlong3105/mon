@@ -5,7 +5,7 @@
 <div align = center>
 	<a align="center" href="http://phlong.net/mon/">Documentation</a>
 	<br>
-	<p>`MON` is a scientific codebase covers a wide range of research topics in computer vision, machine learning, and deep learning.</p>
+	<p>`MON` is a scientific codebase covering a wide range of research topics in computer vision, machine learning, and deep learning.</p>
 </div>
 
 ## Quick Installation
