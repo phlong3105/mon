@@ -1,0 +1,17 @@
+# general things to ignore
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+*.so
+*~
+
+/.idea/
+/.sync/
+/data/
+/pretrained/
+/project/
+/src/archive/
+/src/mon-training/mon/training/runs/

@@ -1,0 +1,129 @@
+# mkdocs.yml
+
+# Colors: [
+#  red, pink, purple, deep purple, indigo, blue, light blue, cyan, teal, green,
+#  light green, lime, yellow, amber, orange, deep orange, brown, grey,
+#  blue grey, black, white
+# ]
+
+site_name: MON
+
+copyright: Copyright &copy; 2021 - 2023 Long H. Pham
+
+theme:
+  name: "material"
+  favicon: assets/one-40.png
+  features:
+    - announce.dismiss
+    - header.autohide
+    # - navigation.expand
+    - navigation.indexes
+    # - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    # - navigation.tabs
+    # - navigation.tabs.sticky
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  font:
+    text: Roboto
+  icon:
+    repo: fontawesome/brands/github
+  language: en
+  logo: assets/one-80.png
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra:
+  consent:
+    title: Cookie consent
+    description: >- 
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/phlong3105/mon
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/LongPham3105
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/long-pham-1755807a
+
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+
+markdown_extensions:
+  # Python Markdown
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  # Python Markdown Extensions
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+nav:
+  - Home: index.md
+  - "Get Started":
+      - "Installation": get-started/installation.md
+  - "Explanation":
+      - explanation/index.md
+      - "BaseModel": explanation/base-model.md
+  - "Tutorials":
+      - tutorials/index.md
+  - "How-To":
+      - how-to/index.md
+  - "Reference":
+      - reference/index.md
+
+plugins:
+  - mkdocstrings
+  - search
+  # - social
+
+repo_url: https://github.com/phlong3105/mon

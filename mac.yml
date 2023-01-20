@@ -1,0 +1,86 @@
+#
+# - Install   : conda env create -f environment.yml
+# - Update    : conda env update --name one --file environment.yml
+# - Update pip: pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
+#
+
+name    : mon
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - mamba
+  - pip                   # PyPA recommended tool for installing Python packages.
+  - poetry
+  - setuptools
+  # CUDA
+  # - cudatoolkit=11.7      # CUDA Toolkit - Including CUDA runtime.
+  # - cudatoolkit-dev=11.7  # Develop, Optimize and Deploy GPU-accelerated Apps.
+  # - cudnn                 # NVIDIA's cuDNN deep neural network acceleration library.
+  # Database
+  - psycopg2              # Python-PostgreSQL Database Adapter.
+  # Data Structure
+  - libprotobuf           # Protocol Buffers - Google's data interchange format.
+  # GitHub
+  - git                   # Distributed version control system.
+  - git-lfs               # An open source Git extension for versioning large files.
+  # Image
+  - librsvg               # A library to render SVG files using cairo.
+  - libiconv              # Provides iconv for systems which don't have one (or that cannot convert from/to Unicode).
+  - opencv                # Computer vision and machine learning software library.
+  # Scientific
+  - openblas              # OpenBLAS is an optimized BLAS library.
+  - pip:
+      # CUDA
+      - pynvml            # Python Bindings for the NVIDIA Management Library.
+      # Documentation
+      - markdown          # Python implementation of Markdown.
+      - mkdocs            # Project documentation with Markdown.
+      - mkdocstrings      # Automatic documentation from sources, for MkDocs.
+      - mkdocs-material   # A Material Design theme for mkdocs.
+      - sphinx            # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
+      - sphinx-paramlinks # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
+      # Image
+      - ffmpeg-python     # Python bindings for FFmpeg - with complex filtering support.
+      - pillow            # Pillow is the friendly PIL fork by Alex Clark and Contributors.
+      # Network
+      - requests          # Requests is an elegant and simple HTTP library for Python, built with ♥
+      # Plot
+      - matplotlib        # Publication quality figures in Python.
+      - tensorboard       # TensorFlow's Visualization Toolkit.
+      # PyTorch
+      - einops            # A new flavour of deep learning operations.
+      - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
+      - lightning         #
+      - piqa              # PyTorch Image Quality Assessment package.
+      - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
+      - torch             # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - torchaudio        # Simple audio I/O for pytorch.
+      - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
+      - torchvision       # Image and video datasets and models for torch deep learning.
+      # Ray
+      - ray[tune]         # Ray is a fast and simple framework for building and running distributed applications.
+      # Scientific
+      - filterpy          # Kalman filters and other optimal and non-optimal estimation filters in Python.
+      - numpy             # The fundamental package for scientific computing with Python.
+      - scipy             # Scientific Library for Python.
+      - scikit-learn      # A set of python modules for machine learning and data mining.
+      # Syntax
+      - munch             # A dot-accessible dictionary (a la JavaScript objects).
+      - multipledispatch  # Multiple dispatch.
+      - mypy              # Optional static typing for Python.
+      - pyhumps           # Convert strings (and dictionary keys) between snake case, camel case and pascal case in Python.
+      - PyYAML            # YAML parser and emitter for Python.
+      - sortedcontainers  # Python Sorted Container Types: SortedList, SortedDict, and SortedSet.
+      - typing_extensions
+      - validators        # Python Data Validation for Humans.
+      - xmltodict         # Makes working with XML feel like you are working with JSON.
+      # Third-party
+      - label-studio      #
+      # UI
+      - PyQt6             # Python bindings for the Qt cross-platform application toolkit.
+      - rich              # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
+      - tqdm              # Fast, Extensible Progress Meter.

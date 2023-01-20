@@ -1,0 +1,48 @@
+#
+#     /\_____/\
+#    /  o   o  \
+#   ( ==  ^  == )
+#    )         (
+#   (           )
+#  ( (  )   (  ) )
+# (__(__)___(__)__)
+#
+[tool.poetry]
+name          = "mon-vision"
+version       = "1.2.0"
+description   = "MON's vision library."
+license       = "MIT"
+authors       = [
+    "Long H. Pham <longpham3105@gmail.com>"
+]
+maintainers   = [
+    "Long H. Pham <longpham3105@gmail.com>",
+]
+# readme        = "README.md"
+# repository    = "https://github.com/phlong3105/one"
+# documentation = "https://github.com/phlong3105/one/docs"
+keywords      = ["computer vision", "image processing"]
+classifiers   = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+]
+packages = [
+    {include = "mon"}
+]
+include  = []
+exclude  = []
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+
+# [tool.poetry.group.macos.dependencies]
+
+
+[build-system]
+requires        = ["poetry-core"]
+build-backend   = "poetry.core.masonry.api"
