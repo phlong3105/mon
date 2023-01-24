@@ -15,7 +15,7 @@ from typing import Sequence
 import torch
 from torch import nn
 
-from mon import foundation
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base, common
 from mon.coreml.typing import Int2T
@@ -70,7 +70,7 @@ class FFA(base.SameChannelsLayerParsingMixin, nn.Module):
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
         x = input
         assert isinstance(x, Sequence) and len(x) == self.num_groups
-        w = self.ca(torch.cat(foundation.to_list(x), dim=1))
+        w = self.ca(torch.cat(core.to_list(x), dim=1))
         w = w.view(-1, self.num_groups, self.channels)[:, :, :, None, None]
         y = w[:, 0, ::] * x[0]
         for i in range(1, len(x)):

@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""":mod:`mon.vision.dataset.base.label` module implements multiple label types
-used in vision tasks and datasets. We try to support all possible data types:
-:class:`torch.Tensor`, :class:`np.ndarray`, or :class:`Sequence`, but we
-prioritize :class:`torch.Tensor`.
+"""This module implements multiple label types used in vision tasks and
+datasets. We try to support all possible data types: :class:`torch.Tensor`,
+:class:`np.ndarray`, or :class:`Sequence`, but we prioritize
+:class:`torch.Tensor`.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "COCODetectionsLabel", "COCOKeypointsLabel", "ClassificationLabel",
-    "ClassificationsLabel", "DetectionLabel", "DetectionsLabel", "HeatmapLabel",
-    "ImageLabel", "KITTIDetectionsLabel", "KeypointLabel", "KeypointsLabel",
-    "PolylineLabel", "PolylinesLabel", "RegressionLabel", "SegmentationLabel",
-    "TemporalDetectionLabel", "VOCDetectionsLabel", "YOLODetectionsLabel",
+    "ClassLabel", "ClassLabels", "COCODetectionsLabel", "COCOKeypointsLabel",
+    "ClassificationLabel", "ClassificationsLabel", "DetectionLabel",
+    "DetectionsLabel", "HeatmapLabel", "ImageLabel", "KITTIDetectionsLabel",
+    "KeypointLabel", "KeypointsLabel", "PolylineLabel", "PolylinesLabel",
+    "RegressionLabel", "SegmentationLabel", "TemporalDetectionLabel",
+    "VOCDetectionsLabel", "YOLODetectionsLabel",
 ]
 
 import uuid
@@ -23,23 +24,27 @@ from typing import Sequence
 import numpy as np
 import torch
 
-from mon import coreimage as ci, coreml, foundation
+from mon import core, coreimage as ci, coreml
+from mon.vision import constant
 from mon.vision.typing import (
     BBoxType, DictType, Image, IntAnyT, LogitsType, MaskType, PathType,
     PointsType, VisionBackendType,
 )
 
+ClassLabel  = coreml.ClassLabel
+ClassLabels = coreml.ClassLabels
+
 
 # region Classification
 
 class ClassificationLabel(coreml.Label):
-    """:class:`ClassificationLabel` implements a classification label for an
-    image.
+    """A classification label for an image.
     
     Args:
-        id: Class id of the classification label. Defaults to -1 means unknown.
-        label: Label string. Defaults to "".
-        confidence: Confidence value in [0.0, 1.0] for the classification.
+        id: A class ID of the classification label. Defaults to -1 means
+            unknown.
+        label: A label string. Defaults to ““.
+        confidence: A confidence value in [0.0, 1.0] for the classification.
             Defaults to 1.0.
         logits: Logits associated with the labels. Defaults to None.
     """
@@ -64,17 +69,16 @@ class ClassificationLabel(coreml.Label):
         
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.tensor([self.id], dtype=torch.int64)
         
 
 class ClassificationsLabel(coreml.Label):
-    """:class:`ClassificationsLabel` implements a list of classification labels
-    for an image. It is used for multi-labels or multi-classes classification
-    tasks.
+    """A list of classification labels for an image. It is used for multi-labels
+    or multi-classes classification tasks.
 
     Args:
-        classifications: List of :class:`ClassificationLabel` objects.
+        classifications: A list of :class:`ClassificationLabel` objects.
         logits: Logits associated with the labels.
     """
     
@@ -92,7 +96,7 @@ class ClassificationsLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.stack([c.tensor for c in self.classifications], dim=0)
 
 # endregion
@@ -101,20 +105,20 @@ class ClassificationsLabel(coreml.Label):
 # region Object Detection
 
 class DetectionLabel(coreml.Label):
-    """:class:`DetectionLabel` implements an object detection label. Usually,
-    it is represented as a list of bounding boxes (for object with multiple
-    parts created by occlusion) and an instance mask.
+    """An object detection label. Usually, it is represented as a list of
+    bounding boxes (for an object with multiple parts created by an occlusion),
+    and an instance mask.
     
     Args:
-        index: Index for the object. Defaults to -1.
-        id: Class id of the detection label. Defaults to -1 means unknown.
+        index: An index for the object. Defaults to -1.
+        id: A class ID of the detection label. Defaults to -1 means unknown.
         label: Label string. Defaults to "".
-        bbox: List of relative bounding boxes' coordinates in the range of
+        bbox: A list of relative bounding boxes' coordinates in the range of
             [0.0, 1.0] in the normalized xywh format.
         mask: Instance segmentation masks for the object within its bounding
             box, which should be a binary (0/1) 2D sequence or a binary integer
             tensor. Defaults to None
-        confidence: Confidence value in [0.0, 1.0] for the detection. Defaults
+        confidence: A confidence value in [0.0, 1.0] for the detection. Defaults
             to 1.0.
     """
     
@@ -144,24 +148,24 @@ class DetectionLabel(coreml.Label):
 
     @classmethod
     def from_mask(cls, mask: MaskType, label: str, **kwargs) -> DetectionLabel:
-        """Creates a :class:`DetectionLabel` object with its :param:`mask`
+        """Create a :class:`DetectionLabel` object with its :param:`mask`
         attribute populated from the given full image mask. The instance mask
         for the object is extracted by computing the bounding rectangle of the
         non-zero values in the image mask.
         
         Args:
             mask: A binary (0/1) 2D sequence or a binary integer tensor.
-            label: The label string.
+            label: A label string.
             **kwargs: Additional attributes for the :class:`DetectionLabel`.
         
-        Returns:
+        Return:
             A :class:`DetectionLabel` object.
         """
         raise NotImplementedError(f"This function has not been implemented!")
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.FloatTensor(
             [
                 self.index, self.id, self.bbox[0], self.bbox[1], self.bbox[2],
@@ -175,17 +179,17 @@ class DetectionLabel(coreml.Label):
         tolerance: int  = 2,
         filled   : bool = True
     ) -> PolylineLabel:
-        """Returns a :class:`PolylineLabel` object of this instance. If the
+        """Return a :class:`PolylineLabel` object of this instance. If the
         detection has a mask, the returned polyline will trace the boundary of
-        the mask; otherwise, the polyline will trace the bounding box itself.
+        the mask. Otherwise, the polyline will trace the bounding box itself.
         
         Args:
             tolerance: A tolerance, in pixels, when generating an approximate
                 polyline for the instance mask. Typical values are 1-3 pixels.
                 Defaults to 2.
             filled: If True, the polyline should be filled. Defaults to True.
-       
-        Returns:
+        
+        Return:
             A :class:`PolylineLabel` object.
         """
         raise NotImplementedError(f"This function has not been implemented!")
@@ -196,10 +200,10 @@ class DetectionLabel(coreml.Label):
         frame_size: IntAnyT  | None = None,
         target    : int             = 255
     ) -> SegmentationLabel:
-        """Returns a :class:`SegmentationLabel` object of this instance. The
+        """Return a :class:`SegmentationLabel` object of this instance. The
         detection must have an instance mask, i.e., :param:`mask` attribute must
-        be populated. You must provide either :param:`mask` or
-        :param:`frame_size` to use this method.
+        be populated. You must give either :param:`mask` or :param:`frame_size`
+        to use this method.
         
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
@@ -211,15 +215,14 @@ class DetectionLabel(coreml.Label):
                 color mask, just pass in the :param:`id` attribute. Defaults to
                 255.
         
-        Returns:
+        Return:
             A :class:`SegmentationLabel` object.
         """
         raise NotImplementedError(f"This function has not been implemented!")
 
 
 class DetectionsLabel(coreml.Label):
-    """:class:`DetectionsLabel` implements a list of object detection labels in
-    an image.
+    """A list of object detection labels in an image.
     
     Args:
         detections: A list of :class:`DetectionLabel` objects.
@@ -233,7 +236,7 @@ class DetectionsLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.stack([d.tensor for d in self.detections], dim=0)
     
     def to_polylines(
@@ -241,18 +244,18 @@ class DetectionsLabel(coreml.Label):
         tolerance: int  = 2,
         filled   : bool = True
     ) -> PolylinesLabel:
-        """Returns a :class:`PolylinesLabel` object of this instance. For
+        """Return a :class:`PolylinesLabel` object of this instance. For
         detections with masks, the returned polylines will trace the boundaries
-        of the masks; otherwise, the polylines will trace the bounding boxes
+        of the masks. Otherwise, the polylines will trace the bounding boxes
         themselves.
         
         Args:
-            tolerance: A tolerance, in pixels, when generating an  approximate
+            tolerance: A tolerance, in pixels, when generating an approximate
                 polyline for the instance mask. Typical values are 1-3 pixels.
                 Defaults to 2.
             filled: If True, the polyline should be filled. Defaults to True.
        
-        Returns:
+        Return:
             A :class:`PolylinesLabel` object.
         """
         print(f"This function has not been implemented!")
@@ -263,7 +266,7 @@ class DetectionsLabel(coreml.Label):
         frame_size: IntAnyT  | None = None,
         target    : int             = 255
     ) -> SegmentationLabel:
-        """Returns a :class:`SegmentationLabel` object of this instance. Only
+        """Return a :class:`SegmentationLabel` object of this instance. Only
         detections with instance masks (i.e., their :param:`mask` attributes
         populated) will be rendered.
         
@@ -277,58 +280,53 @@ class DetectionsLabel(coreml.Label):
                 color mask, just pass in the :param:`id` attribute. Defaults to
                 255.
         
-        Returns:
+        Return:
             A :class:`SegmentationLabel` object.
         """
         print(f"This function has not been implemented!")
 
 
 class COCODetectionsLabel(DetectionsLabel):
-    """:class:`COCODetectionsLabel` implements a list of object detection
-    labels in COCO format.
-    """
+    """A list of object detection labels in COCO format."""
     pass
 
 
 class KITTIDetectionsLabel(DetectionsLabel):
-    """:class:`KITTIDetectionsLabel` implements a list of object detection
-    labels in KITTI format.
-    """
+    """A list of object detection labels in KITTI format."""
     pass
 
 
 class VOCDetectionsLabel(DetectionsLabel):
-    """:class:`VOCDetectionsLabel` implements a list of object detection labels
-    in VOC format. One VOCDetections corresponds to one image and one annotation
-    `.xml` file.
+    """A list of object detection labels in VOC format. One VOCDetections
+    corresponds to one image and one annotation `.xml` file.
     
     Args:
-        folder: Folder that contains the images.
+        folder: The folder that contains the images.
         filename: Name of the physical file that exists in the folder.
         path: Absolute path where the image file is present.
         source: Specifies the original location of the file in a database. Since
-            we do not use a database, it is set to "Unknown" by default.
+            we don't use a database, it is set to “Unknown” by default.
         size: Specify the width, height, depth of an image. If the image is
-            black and white then the depth will be 1. For color images, depth
+            black and white, then the depth will be 1. For color images, depth
             will be 3.
         segmented: Signify if the images contain annotations that are non-linear
-            (irregular) in shape - commonly referred to as polygons. Defaults to
+            (irregular) in shape—commonly called polygons. Defaults to
             0 (linear shape).
-        object: Contains the object details. If you have multiple annotations
+        object: Contains the object details. If you have multiple annotations,
             then the object tag with its contents is repeated. The components of
             the object tags are:
-            - name: This is the name of the object that we are trying to
+            - name: This is the name of the object that we're trying to
               identify (i.e., class_id).
             - pose: Specify the skewness or orientation of the image. Defaults
-              to "Unspecified", which means that the image is not skewed.
+              to “Unspecified”, which means that the image isn't skewed.
             - truncated: Indicates that the bounding box specified for the
-              object does not correspond to the full extent of the object. For
-              example, if an object is visible partially in the image then we
-              set truncated to 1. If the object is fully visible then set
+              object doesn't correspond to the full extent of the object. For
+              example, if an object is visible partially in the image, then we
+              set truncated to 1. If the object is fully visible, then the set
               truncated to 0.
             - difficult: An object is marked as difficult when the object is
               considered difficult to recognize. If the object is difficult to
-              recognize then we set difficult to 1 else set it to 0.
+               recognize, then we set difficult to 1 else set it to 0.
             - bndbox: Axis-aligned rectangle specifying the extent of the object
               visible in the image.
         classlabels: ClassLabel object. Defaults to None.
@@ -336,19 +334,19 @@ class VOCDetectionsLabel(DetectionsLabel):
     
     def __init__(
         self,
-        folder     : str      = "",
-        filename   : str      = "",
-        path       : PathType = "",
-        source     : DictType = {"database": "Unknown"},
-        size       : DictType = {"width": 0, "height": 0, "depth": 3},
-        segmented  : int      = 0,
-        classlabels: coreml.ClassLabels | None = None,
+        folder     : str                = "",
+        filename   : str                = "",
+        path       : PathType           = "",
+        source     : DictType           = {"database": "Unknown"},
+        size       : DictType           = {"width": 0, "height": 0, "depth": 3},
+        segmented  : int                = 0,
+        classlabels: ClassLabels | None = None,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.folder      = folder
         self.filename    = filename
-        self.path        = foundation.Path(path)
+        self.path        = core.Path(path)
         self.source      = source
         self.size        = size
         self.segmented   = segmented
@@ -358,26 +356,26 @@ class VOCDetectionsLabel(DetectionsLabel):
     def from_file(
         cls,
         path       : PathType,
-        classlabels: coreml.ClassLabels | None = None
+        classlabels: ClassLabels | None = None
     ) -> VOCDetectionsLabel:
-        """Creates a :class:`VOCDetections` object from a `.xml` file.
+        """Create a :class:`VOCDetections` object from a `.xml` file.
         
         Args:
             path: Path to the `.xml` file.
             classlabels: :class:`ClassLabels` object. Defaults to None.
             
-        Returns:
+        Return:
             A :class:`VOCDetections` object.
         """
-        path = foundation.Path(path)
+        path = core.Path(path)
         assert path.is_xml_file()
         
-        xml_data = foundation.load_from_file(path)
+        xml_data = core.load_from_file(path)
         assert "annotation" in xml_data
        
         annotation = xml_data["annotation"]
         folder     = annotation.get("folder",   "")
-        filename   = annotation.get("filename", "")
+        filename   = annotation.get("file_name", "")
         image_path = annotation.get("path",     "")
         source     = annotation.get("source",   {"database": "Unknown"})
         size       = annotation.get("size",     {"width": 0, "height": 0, "depth": 3})
@@ -402,7 +400,7 @@ class VOCDetectionsLabel(DetectionsLabel):
 
             if name.isnumeric():
                 id = int(name)
-            elif isinstance(classlabels, coreml.ClassLabels):
+            elif isinstance(classlabels, ClassLabels):
                 id = classlabels.get_id(key="name", value=name)
             else:
                 id = -1
@@ -431,22 +429,21 @@ class VOCDetectionsLabel(DetectionsLabel):
 
 
 class YOLODetectionsLabel(DetectionsLabel):
-    """:class:`YOLODetectionsLabel` implements a list of object detection
-    labels in YOLO format. YOLO label consists of several bounding boxes. One
-    YOLO label corresponds to one image and one annotation file.
-    """
+    """A list of object detection labels in YOLO format. YOLO label consists of
+    several bounding boxes. One YOLO label corresponds to one image and one
+    annotation file. """
     
     @classmethod
     def from_file(cls, path: PathType) -> YOLODetectionsLabel:
-        """Creates a :class:`YOLODetectionsLabel` object from a `.txt` file.
+        """Create a :class:`YOLODetectionsLabel` object from a `.txt` file.
         
         Args:
             path: Path to the annotation `.txt` file.
         
-        Returns:
+        Return:
             A :class:`YOLODetections` object.
         """
-        path = foundation.Path(path)
+        path = core.Path(path)
         assert path.is_txt_file()
         
         detections: list[DetectionLabel] = []
@@ -466,10 +463,10 @@ class YOLODetectionsLabel(DetectionsLabel):
         
 
 class TemporalDetectionLabel(coreml.Label):
-    """:class:`TemporalDetectionLabel` implements an object detection label in
-    a video whose support is defined by a start and end frame. Usually, it is
-    represented as a list of bounding boxes (for object with multiple parts
-    created by occlusion) and an instance mask.
+    """An object detection label in a video whose support is defined by a start
+    and end frame. Usually, it is represented as a list of bounding boxes (for
+    an object with multiple parts created by an occlusion), and an instance
+    mask.
     """
     
     @property
@@ -482,7 +479,7 @@ class TemporalDetectionLabel(coreml.Label):
 # region Heatmap
 
 class HeatmapLabel(coreml.Label):
-    """:class:`HeatmapLabel` implements a heatmap label in an image.
+    """A heatmap label in an image.
     
     Args:
         map: A 2D numpy array.
@@ -502,24 +499,23 @@ class HeatmapLabel(coreml.Label):
 # region Image
 
 class ImageLabel(coreml.Label):
-    """:class:`HeatmapLabel` implements a ground-truth image label for an
-    image.
+    """A ground-truth image label for an image.
     
     References:
         https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image
     
     Args:
-        id: ID of the image. This can be an integer or a string. This attribute
-            is useful for batch processing where you want to keep the objects in
-            the correct frame sequence.
-        name: Name of the image. Defaults to None.
-        path: Path to the image file. Defaults to None.
-        image: Ground-truth image to be loaded. Defaults to None.
+        id: An ID of the image. This can be an integer or a string. This
+            attribute is useful for batch processing where you want to keep the
+            objects in the correct frame sequence.
+        name: A name of the image. Defaults to None.
+        path: A path to the image file. Defaults to None.
+        image: A ground-truth image to be loaded. Defaults to None.
         load_on_create: If True, the image will be loaded into memory when the
             object is created. Defaults to False.
         keep_in_memory: If True, the image will be loaded into memory and kept
             there. Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
     """
     
     to_rgb   : bool = True
@@ -531,10 +527,10 @@ class ImageLabel(coreml.Label):
         id            : int                 = uuid.uuid4().int,
         name          : str          | None = None,
         path          : PathType     | None = None,
-        image         : Image | None = None,
+        image         : Image        | None = None,
         load_on_create: bool                = False,
         keep_in_memory: bool                = False,
-        backend       : VisionBackendType   = ci.VISION_BACKEND,
+        backend       : VisionBackendType   = constant.VISION_BACKEND,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -544,12 +540,12 @@ class ImageLabel(coreml.Label):
         self.backend        = backend
         
         if path is not None:
-            path = foundation.Path(path)
+            path = core.Path(path)
             assert path.is_image_file()
-        self.path: foundation.Path = path
+        self.path: core.Path = path
         
         if name is None:
-            name = str(foundation.Path(path).name) \
+            name = str(core.Path(path).name) \
                 if path.is_image_file() else f"{id}"
         self.name = name
         
@@ -574,14 +570,14 @@ class ImageLabel(coreml.Label):
             keep_in_memory: If True, the image will be loaded into memory and
                 kept there. Defaults to False.
             
-        Returns:
-            Returns image Tensor of shape [1, C, H, W] to caller.
+        Return:
+            An image Tensor of shape [1, C, H, W] to caller.
         """
         self.keep_in_memory = keep_in_memory
         
-        if path.is_image_file():
-            self.path = foundation.Path(path)
-        self.path.is_image_file()
+        if path is not None and core.is_image_file(path=path):
+            self.path = core.Path(path)
+        assert self.path.is_image_file()
         
         image = ci.read_image(
             path      = self.path,
@@ -600,8 +596,8 @@ class ImageLabel(coreml.Label):
         
     @property
     def meta(self) -> dict:
-        """Returns a dictionary of metadata about the object. The dictionary
-        includes id, name, path, and shape of the image.
+        """Return a dictionary of metadata about the object. The dictionary
+        includes ID, name, path, and shape of the image.
         """
         return {
             "id"   : self.id,
@@ -612,7 +608,7 @@ class ImageLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         if self.keep_in_memory:
             return self.image
         else:
@@ -624,12 +620,11 @@ class ImageLabel(coreml.Label):
 # region Keypoint
 
 class KeypointLabel(coreml.Label):
-    """:class:`KeypointLabel` implements a list keypoints label for a single
-    object in an image.
+    """A list keypoints label for a single object in an image.
     
     Args:
         index: An index for the polyline. Defaults to -1.
-        id: The class id of the polyline label. Defaults to -1 means unknown.
+        id: The class ID of the polyline label. Defaults to -1 means unknown.
         label: The label string. Defaults to "".
         points: A list of lists of (x, y) points in [0, 1] x [0, 1].
         confidence: A confidence in [0.0, 1.0] for the detection.
@@ -664,8 +659,7 @@ class KeypointLabel(coreml.Label):
 
 
 class KeypointsLabel(coreml.Label):
-    """:class:`KeypointsLabel` implements a list of keypoints labels for
-    multiple objects in an image.
+    """A list of keypoint labels for multiple objects in an image.
     
     Args:
         keypoints: A list of :class:`KeypointLabel` objects.
@@ -679,14 +673,12 @@ class KeypointsLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.stack([k.tensor for k in self.keypoints], dim=0)
 
 
 class COCOKeypointsLabel(KeypointsLabel):
-    """:class:`KeypointsLabel` implements a list of keypoints labels for
-    multiple objects in COCO format.
-    """
+    """A list of keypoint labels for multiple objects in COCO format."""
     pass
 
 # endregion
@@ -695,16 +687,17 @@ class COCOKeypointsLabel(KeypointsLabel):
 # region Polyline
 
 class PolylineLabel(coreml.Label):
-    """:class:`PolylineLabel` implements a set of semantically related
-    polylines or polygons for a single object in an image.
+    """A set of semantically related polylines or polygons for a single object
+    in an image.
     
     Args:
         index: An index for the polyline. Defaults to -1.
-        id: The class id of the polyline label. Defaults to -1 means unknown.
+        id: The class ID of the polyline label. Defaults to -1 means unknown.
         label: The label string. Defaults to "".
         points: A list of lists of (x, y) points in `[0, 1] x [0, 1]` describing
             the vertices of each shape in the polyline.
-        closed: Whether the shapes are closed, i.e., and edge should be drawn
+        closed: Whether the shapes are closed, in other words, and edge should
+            be drawn.
         from the last vertex to the first vertex of each shape. Defaults to
             False.
         filled: Whether the polyline represents polygons, i.e., shapes that
@@ -745,7 +738,7 @@ class PolylineLabel(coreml.Label):
         tolerance: int = 2,
         **kwargs
     ) -> PolylineLabel:
-        """Creates a :class:`PolylineLabel` instance with its :param:`mask`
+        """Create a :class:`PolylineLabel` instance with its :param:`mask`
         attribute populated from the given full image mask. The instance mask
         for the object is extracted by computing the bounding rectangle of the
         non-zero values in the image mask.
@@ -753,20 +746,20 @@ class PolylineLabel(coreml.Label):
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
                 to which to add this object. Defaults to None.
-            label: Label string. Defaults to "".
+            label: A label string. Defaults to ““.
             tolerance: A tolerance, in pixels, when generating approximate
                 polygons for each region. Typical values are 1-3 pixels.
                 Defaults to 2.
             **kwargs: additional attributes for the :class:`PolylineLabel`.
         
-        Returns:
+        Return:
             A :class:`PolylineLabel` object.
         """
         pass
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         raise NotImplementedError(f"This function has not been implemented!")
     
     def to_detection(
@@ -774,23 +767,23 @@ class PolylineLabel(coreml.Label):
         mask_size : IntAnyT | None = None,
         frame_size: IntAnyT | None = None,
     ) -> DetectionLabel:
-        """Returns a :class:`DetectionLabel` object of this instance whose
+        """Return a :class:`DetectionLabel` object of this instance whose
         bounding box tightly encloses the polyline. If a :param:`mask_size` is
-        provided, an instance mask of the specified size encoding the polyline's
+        provided, an instance mask of the specified size encoding the polyline
         shape is included.
        
         Alternatively, if a :param:`frame_size` is provided, the required mask
-        size is then computed based off of the polyline points and
+        size is then computed based off the polyline points and
         :param:`frame_size`.
         
         Args:
             mask_size: An optional shape at which to render an instance mask
                 for the polyline.
             frame_size: Used when no :param:`mask_size` is provided. An optional
-                shape of the frame containing this polyline that is used to
+                shape of the frame containing this polyline that's used to
                 compute the required :param:`mask_size`.
         
-        Returns:
+        Return:
             A :class:`DetectionLabel` object.
         """
         pass
@@ -802,7 +795,7 @@ class PolylineLabel(coreml.Label):
         target    : int             = 255,
         thickness : int             = 1,
     ) -> SegmentationLabel:
-        """Returns a :class:`SegmentationLabel` object of this class. Only
+        """Return a :class:`SegmentationLabel` object of this class. Only
         object with instance masks (i.e., their :param:`mask` attributes
         populated) will be rendered.
         
@@ -818,15 +811,14 @@ class PolylineLabel(coreml.Label):
             thickness: The thickness, in pixels, at which to render (non-filled)
                 polylines. Defaults to 1.
                 
-        Returns:
+        Return:
             A :class:`SegmentationLabel` object.
         """
         pass
 
 
 class PolylinesLabel(coreml.Label):
-    """:class:`KeypointsLabel` implements a list of polylines or polygons
-    labels for multiple objects in an image.
+    """A list of polylines or polygon labels for multiple objects in an image.
     
     Args:
         polylines: A list of :class:`PolylineLabel` objects.
@@ -840,7 +832,7 @@ class PolylinesLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.stack([p.tensor for p in self.polylines], dim=0)
     
     def to_detections(
@@ -848,13 +840,13 @@ class PolylinesLabel(coreml.Label):
         mask_size : IntAnyT | None = None,
         frame_size: IntAnyT | None = None,
     ) -> DetectionsLabel:
-        """Returns a :class:`DetectionsLabel` object of this instance whose
-        bounding boxes tightly encloses the polylines. If a :param:`mask_size`
+        """Return a :class:`DetectionsLabel` object of this instance whose
+        bounding boxes tightly enclose the polylines. If a :param:`mask_size`
         is provided, an instance mask of the specified size encoding the
-        polyline's shape is included.
+        polyline shape is included.
        
         Alternatively, if a :param:`frame_size` is provided, the required mask
-        size is then computed based off of the polyline points and
+        size is then computed based off the polyline points and
         :param:`frame_size`.
         
         Args:
@@ -864,7 +856,7 @@ class PolylinesLabel(coreml.Label):
                 shape of the frame containing this polyline that is used to
                 compute the required :param:`mask_size`.
         
-        Returns:
+        Return:
             A :class:`DetectionsLabel` object.
         """
         pass
@@ -876,7 +868,7 @@ class PolylinesLabel(coreml.Label):
         target    : int             = 255,
         thickness : int             = 1,
     ) -> SegmentationLabel:
-        """Returns a :class:`SegmentationLabel` object of this instance. Only
+        """Return a :class:`SegmentationLabel` object of this instance. Only
         polylines with instance masks (i.e., their :param:`mask` attributes
         populated) will be rendered.
         
@@ -892,7 +884,7 @@ class PolylinesLabel(coreml.Label):
             thickness: The thickness, in pixels, at which to render (non-filled)
                 polylines. Defaults to 1.
                 
-        Returns:
+        Return:
             A :class:`SegmentationLabel` object.
         """
         pass
@@ -903,7 +895,7 @@ class PolylinesLabel(coreml.Label):
 # region Regression
 
 class RegressionLabel(coreml.Label):
-    """:class:`RegressionLabel` implements a single regression value.
+    """A single regression value.
     
     Args:
         value: The regression value.
@@ -924,7 +916,7 @@ class RegressionLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         return torch.FloatTensor([self.value])
     
 # endregion
@@ -933,11 +925,10 @@ class RegressionLabel(coreml.Label):
 # region Segmentation
 
 class SegmentationLabel(coreml.Label):
-    """:class:`RegressionLabel` implements a semantic segmentation label in an
-    image.
+    """A semantic segmentation label in an image.
 
     Args:
-        id: The id of the image. This can be an integer or a string. This
+        id: The ID of the image. This can be an integer or a string. This
             attribute is useful for batch processing where you want to keep the
             objects in the correct frame sequence.
         name: The name of the image. Defaults to None.
@@ -948,7 +939,7 @@ class SegmentationLabel(coreml.Label):
             object is created. Defaults to False.
         keep_in_memory: If True, the image will be loaded into memory and kept
             there. Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
     """
 
     to_rgb   : bool = True
@@ -963,7 +954,7 @@ class SegmentationLabel(coreml.Label):
         mask          : MaskType | None   = None,
         load_on_create: bool              = False,
         keep_in_memory: bool              = False,
-        backend       : VisionBackendType = ci.VISION_BACKEND,
+        backend       : VisionBackendType = constant.VISION_BACKEND,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -973,12 +964,12 @@ class SegmentationLabel(coreml.Label):
         self.backend        = backend
         
         if path is not None:
-            path = foundation.Path(path)
+            path = core.Path(path)
             assert path.is_image_file()
-        self.path: foundation.Path = path
+        self.path: core.Path = path
         
         if name is None:
-            name = str(foundation.Path(path).name) \
+            name = str(core.Path(path).name) \
                 if path.is_image_file() else f"{id}"
         self.name = name
         
@@ -1003,13 +994,13 @@ class SegmentationLabel(coreml.Label):
             keep_in_memory: If True, the image will be loaded into memory and
                 kept there. Defaults to False.
             
-        Returns:
-            Returns image Tensor of shape [1, C, H, W] to caller.
+        Return:
+            Return image Tensor of shape [1, C, H, W] to caller.
         """
         self.keep_in_memory = keep_in_memory
         
         if path.is_image_file():
-            self.path = foundation.Path(path)
+            self.path = core.Path(path)
         assert self.path.is_image_file()
         
         mask = ci.read_image(
@@ -1029,7 +1020,7 @@ class SegmentationLabel(coreml.Label):
         
     @property
     def meta(self) -> dict:
-        """Returns a dictionary of metadata about the object."""
+        """Return a dictionary of metadata about the object."""
         return {
             "id"   : self.id,
             "name" : self.name,
@@ -1039,7 +1030,7 @@ class SegmentationLabel(coreml.Label):
     
     @property
     def tensor(self) -> torch.Tensor:
-        """Returns the label in :class:`torch.Tensor` format."""
+        """The label in :class:`torch.Tensor` format."""
         if self.mask is None:
             self.load()
         return self.mask

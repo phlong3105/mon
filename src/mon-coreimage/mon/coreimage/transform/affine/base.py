@@ -16,7 +16,7 @@ from torchvision.transforms import (
     functional_tensor as functional_t,
 )
 
-from mon import foundation
+from mon import core
 from mon.coreimage import constant, geometry, util
 from mon.coreimage.typing import (
     Floats, InterpolationModeType, Ints, PaddingModeType,
@@ -79,7 +79,7 @@ def affine(
     if isinstance(angle, int):
         angle = float(angle)
     
-    translate = foundation.to_list(translate)
+    translate = core.to_list(translate)
     assert isinstance(translate, list) and len(translate) == 2
    
     if isinstance(scale, int):
@@ -136,7 +136,7 @@ def affine(
         img           = image,
         matrix        = matrix,
         interpolation = interpolation.value,
-        fill          = foundation.to_list(fill)
+        fill          = core.to_list(fill)
     )
     return image
 
@@ -289,7 +289,7 @@ def pad(
             f"But got: {len(padding)}."
         )
     
-    padding = functional_t._parse_pad_padding(foundation.to_list(padding))
+    padding = functional_t._parse_pad_padding(core.to_list(padding))
 
     if not isinstance(padding_mode, constant.PaddingMode):
         padding_mode = constant.PaddingMode.from_value(value=padding_mode)

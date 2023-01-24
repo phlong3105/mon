@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""":mod:`mon.vision.dataset.base.dataset` module implements multiple dataset
-types used in vision tasks and datasets. We try to support all possible data
-types: :class:`torch.Tensor`, :class:`np.ndarray`, or :class:`Sequence`, but we
-prioritize :class:`torch.Tensor`.
+"""This module implements multiple dataset types used in vision tasks and
+datasets. We try to support all possible data types: :class:`torch.Tensor`,
+:class:`np.ndarray`, or :class:`Sequence`, but we prioritize
+:class:`torch.Tensor`.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "COCODetectionDataset", "ImageClassificationDataset",
-    "ImageClassificationDirectoryTree", "ImageDetectionDataset",
-    "ImageDirectoryDataset", "ImageEnhancementDataset", "ImageLabelsDataset",
-    "ImageSegmentationDataset", "LabeledDataset", "LabeledImageDataset",
-    "LabeledVideoDataset", "UnlabeledDataset", "UnlabeledImageDataset",
-    "UnlabeledVideoDataset", "VOCDetectionDataset",
+    "COCODetectionDataset", "DataModule", "Dataset",
+    "ImageClassificationDataset", "ImageClassificationDirectoryTree",
+    "ImageDetectionDataset", "ImageDirectoryDataset", "ImageEnhancementDataset",
+    "ImageLabelsDataset", "ImageSegmentationDataset", "LabeledDataset",
+    "LabeledImageDataset", "LabeledVideoDataset", "UnlabeledDataset",
+    "UnlabeledImageDataset", "UnlabeledVideoDataset", "VOCDetectionDataset",
     "VideoClassificationDataset", "VideoDetectionDataset", "VideoLabelsDataset",
     "YOLODetectionDataset",
 ]
@@ -28,43 +28,56 @@ import cv2
 import munch
 import torch
 
-from mon import coreimage as ci, coreml, foundation
-from mon.foundation import console
+from mon import core, coreimage as ci, coreml
+from mon.vision import constant
 from mon.vision.dataset.base import label
+from mon.vision.transform import transform as t
 from mon.vision.typing import (
-    ClassLabelsType, DictType, Image, Ints, PathsType, PathType, TransformsType,
+    ClassLabelsType, DictType, Ints, PathsType, PathType, TransformsType,
     VisionBackendType,
 )
+
+Dataset          = coreml.Dataset
+UnlabeledDataset = coreml.UnlabeledDataset
+LabeledDataset   = coreml.LabeledDataset
+DataModule       = coreml.DataModule
+
+
+# region Helper Function
+# TODO: Add default transform if None is given
+def parse_transform(
+    transform: TransformsType | None = None,
+    shape    : Ints                  = (3, 256, 256),
+) -> TransformsType:
+    if transform is None \
+        or (isinstance(transform, list | tuple) and len(transform) == 0):
+        transform = [t.Resize(size=shape)]
+    
+
+# endregion
 
 
 # region Unlabeled Dataset
 
-class UnlabeledDataset(coreml.Dataset, ABC):
-    """:class:`UnlabeledDataset` implements the base class for all datasets
-    that represent an unlabeled collection of data samples.
-    """
-    pass
-
-
 class UnlabeledImageDataset(UnlabeledDataset, ABC):
-    """:class:`UnlabeledDataset` implements the base class for datasets that
-    represent an unlabeled collection of images. This is mainly used for
-    unsupervised learning tasks.
+    """The base class for datasets that represent an unlabeled collection of
+    images. This is mainly used for unsupervised learning tasks.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -72,14 +85,15 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
         self,
         name        : str,
         root        : PathType,
-        split       : str,
-        shape       : Ints,
-        transform   : TransformsType | None = None,
-        transforms  : TransformsType | None = None,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        backend     : VisionBackendType     = ci.VISION_BACKEND,
-        verbose     : bool                  = True,
+        split       : str                    = "train",
+        shape       : Ints                   = (3, 256, 256),
+        classlabels : ClassLabelsType | None = None,
+        transform   : TransformsType  | None = None,
+        transforms  : TransformsType  | None = None,
+        cache_data  : bool                   = False,
+        cache_images: bool                   = False,
+        backend     : VisionBackendType      = constant.VISION_BACKEND,
+        verbose     : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -92,8 +106,9 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
             verbose    = verbose,
             *args, **kwargs
         )
-        self.backend = ci.VisionBackend.from_value(backend)
-        self.images: list[Image] = []
+        self.backend     = constant.VisionBackend.from_value(backend)
+        self.classlabels = coreml.ClassLabels.from_value(classlabels)
+        self.images: list[label.ImageLabel] = []
         
         cache_file = self.root / f"{self.split}.cache"
         if cache_data or not cache_file.is_file():
@@ -110,7 +125,7 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
             self.cache_images()
     
     def __len__(self) -> int:
-        """Returns the length of the images list."""
+        """Return the length of :attr:`images`."""
         return len(self.images)
     
     def __getitem__(
@@ -120,13 +135,13 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
         torch.Tensor | None,
         DictType     | None
     ]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
 
         Args:
             index: The index of the sample to be retrieved.
 
-        Returns:
+        Return:
             Sample of shape [1, C, H, W], optionally transformed by the
                 respective transforms.
             Metadata of image.
@@ -142,42 +157,42 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
         
     @abstractmethod
     def list_images(self):
-        """Lists image files."""
+        """List image files."""
         pass
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
     
     def verify(self):
-        """Verifies and checks data."""
+        """Verify and check data."""
         if not len(self.images) > 0:
             raise RuntimeError(f"No images in dataset.")
-        console.log(f"Number of samples: {len(self.images)}.")
+        core.console.log(f"Number of samples: {len(self.images)}.")
     
     def cache_data(self, path: PathType):
-        """Caches data to :param:`path`."""
+        """Cache data to :param:`path`."""
         cache = {"images": self.images}
         torch.save(cache, str(path))
     
     def cache_images(self):
-        """Caches images into memory for faster training (WARNING: large
+        """Cache images into memory for a faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"Caching {self.__class__.classname} {self.split} images"
+                description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        core.console.log(f"Images have been cached.")
     
     def reset(self):
-        """Resets and starts over."""
+        """Reset and start over."""
         pass
     
     def close(self):
-        """Stops and releases."""
+        """Stop and release."""
         pass
     
     @staticmethod
@@ -191,7 +206,7 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
         :class:`torch.utils.data.DataLoader` wrapper.
         
         Args:
-            batch: a list of tuples of (input, meta).
+            batch: A list of tuples of (input, meta).
         """
         input, target, meta = zip(*batch)  # Transposed
         if all(i.ndim == 3 for i in input):
@@ -211,22 +226,20 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
 
 
 class UnlabeledVideoDataset(UnlabeledDataset, ABC):
-    """:class:`UnlabeledVideoDataset` implements the base class for datasets
-    that represent an unlabeled collection of video. This is mainly used for
-    unsupervised learning tasks.
+    """The base class for datasets that represent an unlabeled collection of
+    videos. This is mainly used for unsupervised learning tasks.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
-        num_images: Only process certain amount of samples. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
+        max_samples: Only process a certain amount of samples. Defaults to None.
+        transform: Transformations performing on the input.
+        transforms: Transformations performing on both the input and target.
         api_preference: Preferred Capture API backends to use. Can be used to
             enforce a specific reader implementation. Two most used options are:
             [cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900]. See more:
@@ -239,23 +252,25 @@ class UnlabeledVideoDataset(UnlabeledDataset, ABC):
         self,
         name          : str,
         root          : PathType,
-        split         : str,
-        shape         : Ints,
-        max_samples   : int            | None = None,
-        transform     : TransformsType | None = None,
-        transforms    : TransformsType | None = None,
-        api_preference: int                   = cv2.CAP_FFMPEG,
-        verbose       : bool                  = True,
+        split         : str                    = "train",
+        shape         : Ints                   = (3, 256, 256),
+        classlabels   : ClassLabelsType | None = None,
+        max_samples   : int             | None = None,
+        transform     : TransformsType  | None = None,
+        transforms    : TransformsType  | None = None,
+        api_preference: int                    = cv2.CAP_FFMPEG,
+        verbose       : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
-            name       = name,
-            root       = root,
-            split      = split,
-            shape      = shape,
-            transform  = transform,
-            transforms = transforms,
-            verbose    = verbose,
+            name        = name,
+            root        = root,
+            split       = split,
+            shape       = shape,
+            classlabels = classlabels,
+            transform   = transform,
+            transforms  = transforms,
+            verbose     = verbose,
             *args, **kwargs
         )
         self.api_preference   = api_preference
@@ -270,12 +285,12 @@ class UnlabeledVideoDataset(UnlabeledDataset, ABC):
         self.verify()
     
     def __iter__(self):
-        """Returns an iterator object starting at index 0."""
+        """Return an iterator object starting at index 0."""
         self.reset()
         return self
     
     def __len__(self) -> int:
-        """Returns the length of the images list."""
+        """An alias of :attr:`num_images`."""
         return self.num_images
     
     def __getitem__(self, index: int) -> tuple[
@@ -283,13 +298,13 @@ class UnlabeledVideoDataset(UnlabeledDataset, ABC):
         torch.Tensor | None, 
         DictType     | None
     ]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
 
         Args:
             index: The index of the sample to be retrieved.
 
-        Returns:
+        Return:
             Sample of shape [1, C, H, W], optionally transformed by the
                 respective transforms.
             Metadata of image.
@@ -327,12 +342,12 @@ class UnlabeledVideoDataset(UnlabeledDataset, ABC):
         
     @abstractmethod
     def list_source(self):
-        """Lists video file."""
+        """List the video file."""
         pass
     
     def init_video_capture(self):
         source = str(self.source)
-        if foundation.is_video_file(path=source):
+        if core.is_video_file(path=source):
             self.video_capture = cv2.VideoCapture(source, self.api_preference)
             num_images         = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
         else:
@@ -344,22 +359,22 @@ class UnlabeledVideoDataset(UnlabeledDataset, ABC):
             self.num_images = self.max_samples
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
     
     def verify(self):
-        """Verifies and checks data."""
+        """Verify and check data."""
         if not self.num_images > 0:
             raise RuntimeError(f"No images in dataset.")
-        console.log(f"Number of samples: {self.num_images}.")
+        core.console.log(f"Number of samples: {self.num_images}.")
 
     def reset(self):
-        """Resets and starts over."""
+        """Reset and start over."""
         if isinstance(self.video_capture, cv2.VideoCapture):
             self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
     
     def close(self):
-        """Stops and releases the current :attr:`video_capture` object."""
+        """Stop and release the current :attr:`video_capture` object."""
         if isinstance(self.video_capture, cv2.VideoCapture) \
             and self.video_capture:
             self.video_capture.release()
@@ -395,25 +410,23 @@ class UnlabeledVideoDataset(UnlabeledDataset, ABC):
 
 
 class ImageDirectoryDataset(UnlabeledImageDataset):
-    """:class:`ImageDirectoryDataset` implements a directory of images starting
-    from a root directory.
+    """A directory of images starting from a root directory.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -421,14 +434,15 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         self,
         name        : str,
         root        : PathType,
-        split       : str,
-        shape       : Ints,
-        transform   : TransformsType | None = None,
-        transforms  : TransformsType | None = None,
-        cache_data  : bool                  = False,
-        cache_images: bool                  = False,
-        backend     : VisionBackendType     = ci.VISION_BACKEND,
-        verbose     : bool                  = True,
+        split       : str                    = "train",
+        shape       : Ints                    = (3, 256, 256),
+        classlabels : ClassLabelsType | None = None,
+        transform   : TransformsType  | None = None,
+        transforms  : TransformsType  | None = None,
+        cache_data  : bool                   = False,
+        cache_images: bool                   = False,
+        backend     : VisionBackendType      = constant.VISION_BACKEND,
+        verbose     : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -436,6 +450,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
             root         = root,
             split        = split,
             shape        = shape,
+            classlabels  = classlabels,
             transform    = transform,
             transforms   = transforms,
             cache_data   = cache_data,
@@ -446,21 +461,21 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         )
         
     def list_images(self):
-        """Lists image files."""
-        assert isinstance(self.root, foundation.Path) and self.root.is_dir()
+        """List image files."""
+        assert isinstance(self.root, core.Path) and self.root.is_dir()
         
-        with foundation.rich.progress_bar() as pbar:
+        with core.rich.progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 pattern.rglob("*"),
-                description=f"[bright_yellow]Listing {self.__class__.classname} "
+                description=f"[bright_yellow]Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
                 if path.is_image_file():
-                    self.images.append(Image(path=path, backend=self.backend))
+                    self.images.append(label.ImageLabel(path=path, backend=self.backend))
                     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
 
 # endregion
@@ -468,34 +483,26 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
 
 # region Labeled Dataset
 
-class LabeledDataset(coreml.Dataset, ABC):
-    """:class:`LabeledDataset` implements the base class for datasets that
-    represent an unlabeled collection of data samples.
-    """
-    pass
-
-
 class LabeledImageDataset(LabeledDataset, ABC):
-    """:class:`LabeledImageDataset` implements the base class for datasets that
-    represent an unlabeled collection of images.
+    """The base class for datasets that represent an unlabeled collection of
+    images.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -503,15 +510,15 @@ class LabeledImageDataset(LabeledDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_data      : bool                   = False,
         cache_images    : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
@@ -526,9 +533,9 @@ class LabeledImageDataset(LabeledDataset, ABC):
             verbose          = verbose,
             *args, **kwargs
         )
-        self.backend     = ci.VisionBackend.from_value(backend)
+        self.backend     = constant.VisionBackend.from_value(backend)
         self.classlabels = coreml.ClassLabels.from_value(classlabels)
-        self.images: list[Image] = []
+        self.images: list[label.ImageLabel] = []
         if not hasattr(self, "labels"):
             self.labels = []
         
@@ -549,7 +556,7 @@ class LabeledImageDataset(LabeledDataset, ABC):
             self.cache_images()
     
     def __len__(self) -> int:
-        """Returns the length of the images list."""
+        """Return the length of :attr:`images`."""
         return len(self.images)
     
     @abstractmethod
@@ -558,72 +565,72 @@ class LabeledImageDataset(LabeledDataset, ABC):
         Any,
         DictType | None
     ]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
         
         Args:
           index: The index of the sample to be retrieved.
 
-        Returns:
+        Return:
             Sample of shape [1, C, H, W], optionally transformed by the
                 respective transforms.
-            Target, depending on label type.
+            Target, depending on the label type.
             Metadata of image.
         """
         pass
     
     @abstractmethod
     def list_images(self):
-        """Lists image files."""
+        """List image files."""
         pass
 
     @abstractmethod
     def list_labels(self):
-        """Lists label files."""
+        """List label files."""
         pass
 
     @abstractmethod
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
 
     def verify(self):
-        """Verifies and checks data."""
+        """Verify and check data."""
         if not (len(self.images) == len(self.labels) and len(self.images) > 0):
             raise RuntimeError(
                 f"Number of images and labels must be the same. "
                 f"But got: {len(self.images)} != {len(self.labels)}"
             )
-        console.log(f"Number of {self.split} samples: {len(self.images)}.")
+        core.console.log(f"Number of {self.split} samples: {len(self.images)}.")
         
     def cache_data(self, path: PathType):
-        """Caches data to :param:`path`."""
+        """Cache data to :param:`path`."""
         cache = {
             "images": self.images,
             "labels": self.labels,
         }
         torch.save(cache, str(path))
-        console.log(f"Caches data to: {path}")
+        core.console.log(f"Cache data to: {path}")
     
     @abstractmethod
     def cache_images(self):
-        """Caches images into memory for faster training (WARNING: large
+        """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
         pass
     
     def reset(self):
-        """Resets and starts over."""
+        """Reset and start over."""
         pass
     
     def close(self):
-        """Stops and releases."""
+        """Stop and release."""
         pass
     
 
 class LabeledVideoDataset(LabeledDataset, ABC):
-    """:class:`LabeledVideoDataset` implements the base class for datasets that
-    represent an unlabeled collection of video.
+    """The base class for datasets that represent an unlabeled collection of
+    videos.
     """
     pass
 
@@ -633,27 +640,26 @@ class LabeledVideoDataset(LabeledDataset, ABC):
 # region Classification
 
 class ImageClassificationDataset(LabeledImageDataset, ABC):
-    """:class:`LabeledVideoDataset` implements the base class for labeled
-    datasets consisting of images and their associated classification labels
-    stored in a simple JSON format.
+    """The base class for labeled datasets consisting of images, and their
+    associated classification labels stored in a simple JSON format.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        shape: The desired datapoint shape preferably in a channel-last format.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -661,19 +667,23 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_data      : bool                   = False,
         cache_images    : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
         self.labels: list[label.ClassificationsLabel] = []
+        if transform is None:
+            transform = [
+                t.Resize(size=shape),
+            ]
         super().__init__(
             name             = name,
             root             = root,
@@ -695,13 +705,13 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
         int,
         DictType | None
     ]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
         
         Args:
           index: The index of the sample to be retrieved.
 
-        Returns:
+        Return:
             Sample of shape [1, C, H, W], optionally transformed by the
                 respective transforms.
             Classification labels.
@@ -720,16 +730,16 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
         return input, target, meta
         
     def cache_images(self):
-        """Caches images into memory for faster training (WARNING: large
+        """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"Caching {self.__class__.classname} {self.split} images"
+                description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        core.console.log(f"Images have been cached.")
 
     @staticmethod
     def collate_fn(batch) -> tuple[
@@ -762,28 +772,27 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
     
 
 class VideoClassificationDataset(LabeledVideoDataset, ABC):
-    """:class:`VideoClassificationDataset` implements the base class for
-    datasets that represent a collection of videos and a set of associated
-    classification labels.
+    """The base class for datasets that represent a collection of videos, and a
+    set of associated classification labels.
     """
     pass
 
 
 class ImageClassificationDirectoryTree(ImageClassificationDataset):
-    """:class:`ImageClassificationDirectoryTree` implements a directory tree
-    whose sub-folders define an image classification dataset.
+    """A directory tree whose sub-folders define an image classification
+    dataset.
     """
     
     def list_images(self):
-        """Lists image files."""
+        """List image files."""
         pass
 
     def list_labels(self):
-        """Lists label files."""
+        """List label files."""
         pass
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
 
 # endregion
@@ -792,26 +801,25 @@ class ImageClassificationDirectoryTree(ImageClassificationDataset):
 # region Object Detection
 
 class ImageDetectionDataset(LabeledImageDataset, ABC):
-    """:class:`ImageDetectionDataset` implements the base class for datasets
-    that represent a collection of images and a set of associated detections.
+    """The base class for datasets that represent a collection of images, and a
+    set of associated detections.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -819,15 +827,15 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_images    : bool                   = False,
         cache_data      : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
@@ -853,13 +861,13 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
         torch.Tensor,
         DictType | None
     ]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
         
         Args:
           index: The index of the sample to be retrieved.
 
-        Returns:
+        Return:
             Sample of shape [1, C, H, W], optionally transformed by the
                 respective transforms.
             Bounding boxes of shape [N, 7].
@@ -878,19 +886,19 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
         return input, target, meta
         
     def cache_images(self):
-        """Caches images into memory for faster training (WARNING: large
+        """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"Caching {self.__class__.classname} {self.split} images"
+                description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        core.console.log(f"Images have been cached.")
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
         
     @staticmethod
@@ -921,35 +929,33 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
 
     
 class VideoDetectionDataset(LabeledVideoDataset, ABC):
-    """:class:`VideoDetectionDataset` implements the base class for datasets
-    that represent a collection of videos and a set of associated video
-    detections.
+    """The base class for datasets that represent a collection of videos and a
+    set of associated video detections.
     """
     pass
 
 
 class COCODetectionDataset(ImageDetectionDataset, ABC):
-    """:class:`COCODetectionDataset` implements the base class for labeled
-    datasets consisting of images and their associated object detections saved
-    in `COCO Object Detection Format <https://cocodataset.org/#format-data>`.
+    """The base class for labeled datasets consisting of images, and their
+    associated object detections saved in `COCO Object Detection Format
+    <https://cocodataset.org/#format-data>`.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -957,15 +963,15 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_images    : bool                   = False,
         cache_data      : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
@@ -986,10 +992,10 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
         )
     
     def list_labels(self):
-        """Lists label files."""
+        """List label files."""
         json_file = self.annotation_file()
         assert json_file.is_json_file()
-        json_data = foundation.load_from_file(json_file)
+        json_data = core.load_from_file(json_file)
         assert isinstance(json_data, dict | munch.Munch)
         
         info	    = json_data.get("info", 	   None)
@@ -1025,36 +1031,35 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
         
     @abstractmethod
     def annotation_file(self) -> PathType:
-        """Returns the path to json annotation file."""
+        """Return the path to json annotation file."""
         pass
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
     
 
 class VOCDetectionDataset(ImageDetectionDataset, ABC):
-    """:class:`VOCDetectionDataset` implements the base class for labeled
-    datasets consisting of images and their associated object detections saved
-    in `PASCAL VOC format <https://host.robots.ox.ac.uk/pascal/VOC>`.
+    """The base class for labeled datasets consisting of images, and their
+    associated object detections saved in `PASCAL VOC format
+    <https://host.robots.ox.ac.uk/pascal/VOC>`.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -1062,15 +1067,15 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_images    : bool                   = False,
         cache_data      : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
@@ -1091,7 +1096,7 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
         )
     
     def list_labels(self):
-        """Lists label files."""
+        """List label files."""
         files = self.annotation_files()
         if not (len(files) == len(self.images) and len(self.images) > 0):
             raise RuntimeError(
@@ -1100,10 +1105,10 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
             )
         
         self.labels: list[label.VOCDetectionsLabel] = []
-        with foundation.rich.progress_bar() as pbar:
+        with core.rich.progress_bar() as pbar:
             for f in pbar.track(
                 files,
-                description=f"Listing {self.__class__.classname} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels.append(
                     label.VOCDetectionsLabel.from_file(
@@ -1114,36 +1119,32 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
                 
     @abstractmethod
     def annotation_files(self) -> PathsType:
-        """Returns the path to json annotation files."""
+        """Return the path to json annotation files."""
         pass
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
     
 
 class YOLODetectionDataset(ImageDetectionDataset, ABC):
-    """:class:`YOLODetectionDataset` implements the base class for labeled
-    datasets consisting of images and their associated object detections saved
-    in `YOLO format`.
+    """The base class for labeled datasets consisting of images, and their
+    associated object detections saved in `YOLO format`.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+        shape: The desired datapoint shape preferably in a channel-last format.
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -1151,15 +1152,15 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_images    : bool                   = False,
         cache_data      : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
@@ -1180,7 +1181,7 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
         )
     
     def list_labels(self):
-        """Lists label files."""
+        """List label files."""
         files = self.annotation_files()
         if not (len(files) == len(self.images) and len(self.images) > 0):
             raise RuntimeError(
@@ -1189,20 +1190,20 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
             )
         
         self.labels: list[label.YOLODetectionsLabel] = []
-        with foundation.rich.progress_bar() as pbar:
+        with core.rich.progress_bar() as pbar:
             for f in pbar.track(
                 files,
-                description=f"Listing {self.__class__.classname} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels.append(label.YOLODetectionsLabel.from_file(path=f))
         
     @abstractmethod
     def annotation_files(self) -> PathsType:
-        """Returns the path to json annotation files."""
+        """Return the path to json annotation files."""
         pass
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         pass
     
 # endregion
@@ -1211,27 +1212,23 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
 # region Image Enhancement
 
 class ImageEnhancementDataset(LabeledImageDataset, ABC):
-    """:class:`ImageEnhancementDataset` implements the base class for datasets
-    that represent a collection of images and a set of associated enhanced
-    images.
+    """The base class for datasets that represent a collection of images, and a
+    set of associated enhanced images.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+        shape: The desired datapoint shape preferably in a channel-last format.
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -1239,19 +1236,19 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_data      : bool                   = False,
         cache_images    : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
-        self.labels: list[Image] = []
+        self.labels: list[label.ImageLabel] = []
         super().__init__(
             name             = name,
             root             = root,
@@ -1273,13 +1270,13 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         torch.Tensor,
         DictType | None
     ]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
         
         Args:
             index: The index of the sample to be retrieved.
 
-        Returns:
+        Return:
             Sample of shape [1, C, H, W], optionally transformed by the
                 respective transforms.
             Target of shape [1, C, H, W], optionally transformed by the
@@ -1289,7 +1286,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         input  = self.images[index].tensor
         target = self.labels[index].tensor
         meta   = self.images[index].meta
-        
+
         if self.transform is not None:
             input,  *_     = self.transform(input=input, target=None, dataset=self)
         if self.target_transform is not None:
@@ -1299,27 +1296,27 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         return input, target, meta
         
     def cache_images(self):
-        """Caches images into memory for faster training (WARNING: large
+        """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"Caching {self.__class__.classname} {self.split} images"
+                description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        core.console.log(f"Images have been cached.")
         
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
-                description=f"Caching {self.__class__.classname} {self.split} labels"
+                description=f"Caching {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
-        console.log(f"Labels have been cached.")
+        core.console.log(f"Labels have been cached.")
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         keep = []
         for i, (img, lab) in enumerate(zip(self.images, self.labels)):
             if img.path.is_image_file() and lab.path.is_image_file():
@@ -1333,7 +1330,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         torch.Tensor | None,
         list
     ]:
-        """ Collate function used to fused input items together when using
+        """Collate function used to fused input items together when using
         :attr:`batch_size` > 1. This is used in the
         :class:`torch.utils.data.DataLoader` wrapper.
         """
@@ -1362,27 +1359,23 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
 # region Segmentation
 
 class ImageSegmentationDataset(LabeledImageDataset, ABC):
-    """:class:`ImageSegmentationDataset` implement the base class for datasets
-    that represent a collection of images and a set of associated semantic
-    segmentations.
+    """The base class for datasets that represent a collection of images and a
+    set of associated semantic segmentations.
     
     Args:
-        name: Dataset name.
-        root: Root directory of dataset.
-        split: Split to use. One of: ["train", "val", "test"].
-        shape: Image of shape [H, W, C], [H, W], or [S, S].
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+        shape: The desired datapoint shape preferably in a channel-last format.
         classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        transform: Functions/transforms that takes in an input sample and
-            returns a transformed version. E.g, `transforms.RandomCrop`.
-        target_transform: Functions/transforms that takes in a target and
-            returns a transformed version.
-        transforms: Functions/transforms that takes in an input and a target and
-            returns the transformed versions of both.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
         cache_images: If True, cache images into memory for faster training
             (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: Image processing backend. Defaults to VISION_BACKEND.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
         verbose: Verbosity. Defaults to True.
     """
     
@@ -1390,15 +1383,15 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
         classlabels     : ClassLabelsType | None = None,
         transform       : TransformsType  | None = None,
         target_transform: TransformsType  | None = None,
         transforms      : TransformsType  | None = None,
         cache_data      : bool                   = False,
         cache_images    : bool                   = False,
-        backend         : VisionBackendType      = ci.VISION_BACKEND,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
         verbose         : bool                   = True,
         *args, **kwargs
     ):
@@ -1420,13 +1413,13 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         )
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, dict]:
-        """Returns the sample and metadata, optionally transformed by the
+        """Return the sample and metadata, optionally transformed by the
         respective transforms.
         
         Args:
             index: The index of the sample to be retrieved.
           
-        Returns:
+        Return:
             input: Input sample, optionally transformed by the respective
                 transforms.
             target: Semantic segmentation mask, optionally transformed by the
@@ -1446,27 +1439,27 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         return input, target, meta
     
     def cache_images(self):
-        """Caches images into memory for faster training (WARNING: large
+        """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
-                description=f"Caching {self.__class__.classname} {self.split} images"
+                description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        core.console.log(f"Images have been cached.")
         
-        with foundation.rich.download_bar() as pbar:
+        with core.rich.download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
-                description=f"Caching {self.__class__.classname} {self.split} labels"
+                description=f"Caching {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
-        console.log(f"Labels have been cached.")
+        core.console.log(f"Labels have been cached.")
     
     def filter(self):
-        """Filters unwanted samples."""
+        """Filter unwanted samples."""
         keep = []
         for i, (img, lab) in enumerate(zip(self.images, self.labels)):
             if img.path.is_image_file() and lab.path.is_image_file():
@@ -1508,17 +1501,15 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
 # region Multitask
 
 class ImageLabelsDataset(LabeledImageDataset, ABC):
-    """:class:`ImageLabelsDataset` implements the base class for datasets that
-    represent a collection of images and a set of associated multitask
-    predictions.
+    """The base class for datasets that represent a collection of images, and a
+    set of associated multitask predictions.
     """
     pass
 
 
 class VideoLabelsDataset(LabeledVideoDataset, ABC):
-    """:class:`VideoLabelsDataset` implements the base class for datasets that
-    represent a collection of videos and a set of associated multitask
-    predictions.
+    """The base class for datasets that represent a collection of videos, and a
+    set of associated multitask predictions.
     """
     pass
 

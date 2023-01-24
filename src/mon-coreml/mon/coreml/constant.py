@@ -11,11 +11,16 @@ __all__ = [
     "ACCELERATOR", "CALLBACK", "DATAMODULE", "DATASET", "LAYER", "LOGGER",
     "LOSS", "LR_SCHEDULER", "MODEL", "METRIC", "ModelPhase", "OPTIMIZER",
     "Reduction", "STRATEGY", "TRANSFORM",
+    # Extend :mod:`mon.core.constant`
+    "CONTENT_ROOT_DIR", "DATA_DIR", "DOCS_DIR", "FILE_HANDLER", "ImageFormat",
+    "MemoryUnit", "PRETRAINED_DIR", "PROJECTS_DIR", "RUNS_DIR",
+    "SOURCE_ROOT_DIR", "SNIPPET_DIR", "SRC_DIR", "VideoFormat",
 ]
 
 from typing import TYPE_CHECKING
 
-from mon import foundation
+from mon import core
+from mon.core.constant import *
 from mon.coreml import factory
 
 if TYPE_CHECKING:
@@ -24,26 +29,26 @@ if TYPE_CHECKING:
 
 # region Factory
 
-ACCELERATOR  = foundation.Factory(name="Accelerator")
-CALLBACK     = foundation.Factory(name="Callback")
-DATAMODULE   = foundation.Factory(name="DataModule")
-DATASET      = foundation.Factory(name="Dataset")
-LAYER        = foundation.Factory(name="Layer")
-LOGGER       = foundation.Factory(name="Logger")
-LOSS         = foundation.Factory(name="Loss")
+ACCELERATOR  = core.Factory(name="Accelerator")
+CALLBACK     = core.Factory(name="Callback")
+DATAMODULE   = core.Factory(name="DataModule")
+DATASET      = core.Factory(name="Dataset")
+LAYER        = core.Factory(name="Layer")
+LOGGER       = core.Factory(name="Logger")
+LOSS         = core.Factory(name="Loss")
 LR_SCHEDULER = factory.LRSchedulerFactory(name="LRScheduler")
-METRIC       = foundation.Factory(name="Metric")
-MODEL        = foundation.Factory(name="Model")
+METRIC       = core.Factory(name="Metric")
+MODEL        = core.Factory(name="Model")
 OPTIMIZER    = factory.OptimizerFactory(name="Optimizer")
-STRATEGY     = foundation.Factory(name="Strategy")
-TRANSFORM    = foundation.Factory(name="Transform")
+STRATEGY     = core.Factory(name="Strategy")
+TRANSFORM    = core.Factory(name="Transform")
 
 # endregion
 
 
 # region Enum
 
-class ModelPhase(foundation.Enum):
+class ModelPhase(core.Enum):
     """Model training phases."""
     
     TRAINING  = "training"
@@ -97,7 +102,7 @@ class ModelPhase(foundation.Enum):
         return None
 
 
-class Reduction(foundation.Enum):
+class Reduction(core.Enum):
     """Tensor reduction options"""
     
     NONE         = "none"

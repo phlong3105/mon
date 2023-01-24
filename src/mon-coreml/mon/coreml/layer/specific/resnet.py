@@ -244,7 +244,7 @@ class ResNetBlock(base.LayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1 = args[2]
         c2 = args[3]
         ch.append(c2)

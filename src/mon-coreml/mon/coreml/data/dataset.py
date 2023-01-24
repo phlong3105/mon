@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 __all__ = [
-    "ChainDataset", "ConcatDataset", "Dataset", "IterableDataset", "Subset",
-    "TensorDataset", "random_split",
+    "ChainDataset", "ConcatDataset", "Dataset", "IterableDataset",
+    "LabeledDataset", "Subset", "TensorDataset", "UnlabeledDataset",
+    "random_split",
 ]
 
 from abc import ABC, abstractmethod
@@ -16,7 +17,8 @@ from typing import Any, TYPE_CHECKING
 from torch.utils.data import dataset
 from torch.utils.data.dataset import *
 
-from mon.foundation import pathlib
+from mon import core
+from mon.coreml.data import transform as t
 
 if TYPE_CHECKING:
     from mon.coreml.typing import TransformsType, Ints, PathType
@@ -39,7 +41,9 @@ class Dataset(dataset.Dataset, ABC):
         name: The dataset name.
         root: The root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-        shape: The data shape.
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
@@ -50,8 +54,8 @@ class Dataset(dataset.Dataset, ABC):
         self,
         name            : str,
         root            : PathType,
-        split           : str,
-        shape           : Ints,
+        split           : str                   = "train",
+        shape           : Ints                  = (3, 256, 256),
         transform       : TransformsType | None = None,
         target_transform: TransformsType | None = None,
         transforms      : TransformsType | None = None,
@@ -59,31 +63,31 @@ class Dataset(dataset.Dataset, ABC):
         *args, **kwargs
     ):
         self.name    = name
-        self.root    = pathlib.Path(root)
+        self.root    = core.Path(root)
         self.split   = split
         self.shape   = shape
         self.verbose = verbose
         
         if transform is None:
             transform = transform
-        elif isinstance(transform, transform.ComposeTransform):
+        elif isinstance(transform, t.ComposeTransform):
             transform = transform
         else:
-            transform = transform.ComposeTransform(transforms=transform)
+            transform = t.ComposeTransform(transforms=transform)
 
         if target_transform is None:
             target_transform = target_transform
-        elif isinstance(target_transform, transform.ComposeTransform):
+        elif isinstance(target_transform, t.ComposeTransform):
             target_transform = target_transform
         else:
-            target_transform = transform.ComposeTransform(transforms=target_transform)
+            target_transform = t.ComposeTransform(transforms=target_transform)
         
         if transforms is None:
             transforms = transforms
-        elif isinstance(transforms, transform.ComposeTransform):
+        elif isinstance(transforms, t.ComposeTransform):
             transforms = transforms
         else:
-            transforms = transform.ComposeTransform(transforms=transforms)
+            transforms = t.ComposeTransform(transforms=transforms)
         
         self.transform        = transform
         self.target_transform = target_transform
@@ -125,7 +129,6 @@ class Dataset(dataset.Dataset, ABC):
         body = [f"Number of datapoints: {self.__len__()}"]
         if self.root is not None:
             body.append(f"Root location: {self.root}")
-        body += self.extra_repr().splitlines()
         if hasattr(self, "transforms") and self.transforms is not None:
             body += [repr(self.transforms)]
         lines = [head] + [" " * self._repr_indent + line for line in body]
@@ -133,18 +136,6 @@ class Dataset(dataset.Dataset, ABC):
     
     def __del__(self):
         self.close()
-        
-    def _format_transform_repr(
-        self,
-        transform: object,
-        head     : str
-    ) -> list[str]:
-        lines = transform.__repr__().splitlines()
-        return [f"{head}{lines[0]}"] \
-            + ["{}{}".format(" " * len(head), line) for line in lines[1:]]
-
-    def extra_repr(self) -> str:
-        return ""
     
     @abstractmethod
     def reset(self):
@@ -155,5 +146,19 @@ class Dataset(dataset.Dataset, ABC):
     def close(self):
         """Stops and releases."""
         pass
+
+
+class UnlabeledDataset(Dataset, ABC):
+    """The base class for all datasets that represent an unlabeled collection of
+    data samples.
+    """
+    pass
+
+
+class LabeledDataset(Dataset, ABC):
+    """The base class for datasets that represent an unlabeled collection of
+    data samples.
+    """
+    pass
 
 # endregion

@@ -15,13 +15,13 @@ from typing import Any
 from torch import nn
 from torchvision.ops.misc import *
 
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, attention, conv, linear, normalization,
 )
 from mon.coreml.typing import CallableType, Int2T
-from mon.foundation import math
 
 
 # region Attention Blueprint Separable Convolution
@@ -61,7 +61,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
     ):
         super().__init__()
         assert 0.0 <= p <= 1.0
-        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        mid_channels  = min(in_channels, max(min_mid_channels, core.math.ceil(p * in_channels)))
         self.pw_conv1 = conv.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
@@ -198,8 +198,8 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
 
 ABSConv2dS = AttentionSubspaceBlueprintSeparableConv2d
 ABSConv2dU = AttentionUnconstrainedBlueprintSeparableConv2d
-constant.LAYER.register(ABSConv2dS)
-constant.LAYER.register(ABSConv2dU)
+constant.LAYER.register(module=ABSConv2dS)
+constant.LAYER.register(module=ABSConv2dU)
 
 # endregion
 

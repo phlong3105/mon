@@ -19,6 +19,7 @@ __all__ = [
     "to_size", "to_tensor",
 ]
 
+import copy
 import functools
 from typing import TypeAlias
 
@@ -27,9 +28,9 @@ import PIL.Image
 import torch
 from torchvision.transforms import functional
 
+from mon import core
 from mon.coreimage.typing import FloatAnyT, Image, Int2T, Int3T, Ints
 from mon.coreimage.util import tensor
-from mon.foundation import error_console, math
 
 
 # region Conversion
@@ -52,12 +53,12 @@ def correct_image_dimension(image: Image) -> Image:
     if image.ndim == 2:
         pass
     elif image.ndim == 3:
-        if image[-1] == 1:
+        if image.shape[-1] == 1:
             # Grayscale for proper plt.imshow needs to be [H, W]
             image = image.squeeze(-1)
     elif image.ndim == 4:  # [..., C, H, W] -> [..., H, W, C]
         image = image.permute(0, 2, 3, 1)
-        if image[-1] == 1:
+        if image.shape[-1] == 1:
             image = image.squeeze(-1)
     return image
 
@@ -239,9 +240,9 @@ def to_tensor(
     if isinstance(image, torch.Tensor | np.ndarray):
         assert 2 <= image.ndim <= 4
     
-    image = image.clone()
     # Handle :class:`PIL.Image`
     if functional._is_pil_image(image):
+        image          = copy.deepcopy(image)
         mode           = image.mode
         mode_to_nptype = {"I": np.int32, "I;16": np.int16, "F": np.float32}
         image          = np.array(image, mode_to_nptype.get(image.mode, np.uint8), copy=True)
@@ -250,6 +251,7 @@ def to_tensor(
     
     # Handle :class:`np.ndarray`
     if functional._is_numpy(image):
+        image = image.copy()
         image = torch.from_numpy(image).contiguous()
     
     # Channel first format
@@ -291,9 +293,9 @@ def check_image_size(size: Ints, stride: int = 32) -> int:
         elif len(size) == 2:  # [H, W]
             size = size[0]
         
-    new_size = math.make_divisible(size, int(stride))  # ceil gs-multiple
+    new_size = core.math.make_divisible(size, int(stride))  # ceil gs-multiple
     if new_size != size:
-        error_console.log(
+        core.error_console.log(
             "WARNING: image_size %g must be multiple of max stride %g, "
             "updating to %g" % (size, stride, new_size)
         )

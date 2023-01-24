@@ -14,22 +14,24 @@ from torch.nn import Sequential
 from mon.coreml.layer import base
 from mon.coreml.layer.common import *
 from mon.coreml.layer.specific import *
+from mon.coreml.typing import DictType
 
 
 # region Model Parsing
 
 def parse_model(
-    d : dict      | None = None,
-    ch: list[int] | None = None,
+    d      : DictType  | None = None,
+    ch     : list[int] | None = None,
+    hparams: DictType  | None = None,
 ) -> tuple[Sequential, list[int], list[dict]]:
     """Build the model. We inherit the same idea of model parsing in YOLOv5.
     
     Each layer should have the following attributes:
         - i: index of the layer.
-        - f: from, i.e., the current layer receive output from the f-th layer.
-             For example: -1 means from previous layer; -2 means from 2 previous
-             layers; [99, 101] means from the 99th and 101st layers. This
-             attribute is used in forward pass.
+        - f: from, i.e., the current layer receives output from the f-th layer.
+             For example: -1 means from a previous layer; -2 means from 2
+             previous layers; [99, 101] means from the 99th and 101st layers.
+             This attribute is used in forward pass.
         - t: type of the layer using this script:
             t = str(m)[8:-2].replace("__main__.", "")
         - np: number of parameters using the following script:
@@ -41,7 +43,10 @@ def parse_model(
         ch: The first layer's input channels. If given, it will be used to
             further calculate the next layer's input channels. Defaults to None
             means defines each layer in_ and out_channels manually.
-    
+        hparams: Layer's hyperparameters. They are used to change the values of
+            :param:`args`. Usually used in grid search or random search during
+            training. Defaults to None.
+        
     Returns:
         A Sequential model.
         A list of layer index to save the features during forward pass.
@@ -70,9 +75,9 @@ def parse_model(
                 pass
         
         if isinstance(m, base.HeadLayerParsingMixin):
-            args, ch = m.parse_layer(f=f, args=args, nc=nc, ch=ch, hparams=None)
+            args, ch = m.parse_layer(f=f, args=args, nc=nc, ch=ch, hparams=hparams)
         elif isinstance(m, base.LayerParsingMixin):
-            args, ch = m.parse_layer(f=f, args=args, ch=ch, hparams=None)
+            args, ch = m.parse_layer(f=f, args=args, ch=ch, hparams=hparams)
         
         # Create layers
         m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)

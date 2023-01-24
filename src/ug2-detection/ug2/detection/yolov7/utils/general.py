@@ -17,7 +17,6 @@ import pandas as pd
 import torch
 import torchvision
 import yaml
-
 from utils.google_utils import gsutil_getsize
 from utils.metrics import fitness
 from utils.torch_utils import init_torch_seeds
@@ -163,7 +162,7 @@ def check_dataset(dict):
             if s and len(s):  # download script
                 print('Downloading %s ...' % s)
                 if s.startswith('http') and s.endswith('.zip'):  # URL
-                    f = Path(s).name  # filename
+                    f = Path(s).name  # file_name
                     torch.hub.download_url_to_file(s, f)
                     r = os.system('unzip -q %s -d ../ && rm %s' % (f, f))  # unzip
                 else:  # bash script

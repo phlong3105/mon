@@ -10,8 +10,8 @@ __all__ = [
     "CallbackType", "CallbacksType", "ClassLabelsType", "EpochOutput",
     "LRSchedulerType", "LRSchedulersType", "LoggerType", "LoggersType",
     "LossType", "LossesType", "MetricType", "MetricsType", "ModelPhaseType",
-    "OptimizerType", "OptimizersType", "ReductionType", "StepOutput",
-    "TransformType", "TransformsType",
+    "OptimizerType", "OptimizersType", "PretrainedType", "ReductionType",
+    "StepOutput", "TransformType", "TransformsType",
     # Extend :mod:`mon.foundation.typing`
     "CallableType", "ConfigType", "DictType", "Float1T", "Float2T", "Float3T",
     "Float4T", "Float5T", "Float6T", "FloatAnyT", "Floats", "ImageFormatType",
@@ -23,8 +23,8 @@ from typing import Any, Collection, Sequence, TypeAlias
 
 import torch
 
+from mon.core.typing import *
 from mon.coreml import callback, constant, data, logger, loss, metric, optimizer
-from mon.foundation.typing import *
 
 StepOutput      : TypeAlias = torch.Tensor | dict[str, Any]
 EpochOutput     : TypeAlias = list[StepOutput]

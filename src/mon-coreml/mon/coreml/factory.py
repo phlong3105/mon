@@ -14,10 +14,10 @@ import copy
 import humps
 from torch import nn, optim
 
-from mon import foundation
+from mon import core
 
 
-class OptimizerFactory(foundation.Factory):
+class OptimizerFactory(core.Factory):
     """The factory for registering and building optimizers."""
     
     def build(
@@ -92,7 +92,7 @@ class OptimizerFactory(foundation.Factory):
         return optimizers if len(optimizers) > 0 else None
 
 
-class LRSchedulerFactory(foundation.Factory):
+class LRSchedulerFactory(core.Factory):
     """The factory for registering and building learning rate schedulers."""
     
     def build(

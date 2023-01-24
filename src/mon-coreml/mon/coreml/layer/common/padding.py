@@ -16,10 +16,10 @@ import torch
 from torch import nn
 from torch.nn import functional
 
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.typing import Int2T, IntAnyT
-from mon.foundation import math
 
 
 # region Helper Function
@@ -33,7 +33,7 @@ def get_same_padding(
     """Calculate asymmetric TensorFlow-like 'same' padding value for 1
     dimension of the convolution.
     """
-    return max((math.ceil(x / stride) - 1) * stride +
+    return max((core.math.ceil(x / stride) - 1) * stride +
                (kernel_size - 1) * dilation + 1 - x, 0)
 
 

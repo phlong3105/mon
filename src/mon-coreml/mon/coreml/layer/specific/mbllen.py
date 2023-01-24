@@ -97,4 +97,4 @@ class EnhancementModule(base.PassThroughLayerParsingMixin, nn.Module):
 
 
 EM = EnhancementModule
-constant.LAYER.register(EM)
+constant.LAYER.register(module=EM)

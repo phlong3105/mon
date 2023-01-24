@@ -15,8 +15,8 @@ from typing import TYPE_CHECKING
 import lightning
 from torch.utils import data
 
+from mon import core
 from mon.coreml.data import label
-from mon.foundation import builtins, console, pathlib, rich
 
 if TYPE_CHECKING:
     from mon.coreml.typing import (
@@ -32,7 +32,8 @@ class DataModule(lightning.LightningDataModule, ABC):
     Args:
         name: A datamodule's name.
         root: A root directory where the data is stored.
-        shape: The desired datapoint shape preferably in channel-last format.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
@@ -49,7 +50,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         self,
         name            : str,
         root            : PathType,
-        shape           : Ints,
+        shape           : Ints                  = (3, 256, 256),
         transform       : TransformsType | None = None,
         target_transform: TransformsType | None = None,
         transforms      : TransformsType | None = None,
@@ -62,7 +63,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     ):
         super().__init__()
         self.name             = name
-        self.root             = pathlib.Path(root)
+        self.root             = core.Path(root)
         self.shape            = shape
         self.transform        = transform
         self.target_transform = target_transform
@@ -86,7 +87,7 @@ class DataModule(lightning.LightningDataModule, ABC):
 
     @devices.setter
     def devices(self, devices: Ints | Strs):
-        self._devices = builtins.to_list(devices)
+        self._devices = core.to_list(devices)
 
     @property
     def num_classes(self) -> int:
@@ -214,7 +215,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         
     def summarize(self):
         """Print a summary."""
-        table = rich.table.Table(header_style="bold magenta")
+        table = core.rich.table.Table(header_style="bold magenta")
         table.add_column(" ", style="dim")
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Desc")
@@ -225,6 +226,6 @@ class DataModule(lightning.LightningDataModule, ABC):
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "shape",       f"{self.shape}")
         table.add_row("7", "num_workers", f"{self.num_workers}")
-        console.log(table)
+        core.console.log(table)
 
 # endregion

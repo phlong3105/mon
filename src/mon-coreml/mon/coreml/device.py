@@ -15,7 +15,7 @@ from typing import Any
 
 import torch
 
-from mon.foundation import console
+from mon import core
 
 
 # region Device Selection
@@ -75,7 +75,7 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
     # CPU
     cpu_request = device.lower() in ["cpu", "default"]
     if cpu_request:
-        console.log(f"Using CPU\n")
+        core.console.log(f"Using CPU\n")
         return torch.device("cpu")
     
     # GPU / CUDA
@@ -98,17 +98,17 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
         for i in range(0, num_gpus):
             if i == 1:
                 s = " " * len(s)
-            console.log(
+            core.console.log(
                 "%sdevice%g _CudaDeviceProperties(name='%s', total_memory=%dMB)" %
                   (s, i, x[i].name, x[i].total_memory / bytes_to_mb)
             )
         # Here we select the first cuda device by default
         os.environ["CUDA_VISIBLE_DEVICES"] = "cuda:0"
-        console.log(f"")
+        core.console.log(f"")
         return torch.device("cuda:0")
     
     # If nothing works, just use CPU
-    console.log(f"Using CPU\n")
+    core.console.log(f"Using CPU\n")
     return torch.device("cpu")
 
 # endregion

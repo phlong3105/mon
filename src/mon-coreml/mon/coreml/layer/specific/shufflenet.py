@@ -124,7 +124,7 @@ class InvertedResidual(base.LayerParsingMixin, nn.Module):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         if isinstance(f, list | tuple):
             c1, c2 = ch[f[0]], args[0]
         else:

@@ -8,12 +8,13 @@ import requests
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.ops import DeformConv2d
 from PIL import Image
 from torch.cuda import amp
-
 from utils.datasets import letterbox
-from utils.general import non_max_suppression, make_divisible, scale_coords, increment_path, xyxy2xywh
+from utils.general import (
+    increment_path, make_divisible, non_max_suppression,
+    scale_coords, xyxy2xywh,
+)
 from utils.plots import color_list, plot_one_box
 from utils.torch_utils import time_synchronized
 
@@ -879,7 +880,7 @@ class autoShape(nn.Module):
     @torch.no_grad()
     def forward(self, imgs, size=640, augment=False, profile=False):
         # Inference from various sources. For height=640, width=1280, RGB images example inputs are:
-        #   filename:   imgs = 'data/samples/zidane.jpg'
+        #   file_name:   imgs = 'data/samples/zidane.jpg'
         #   URI:             = 'https://github.com/ultralytics/yolov5/releases/download/v1.0/zidane.jpg'
         #   OpenCV:          = cv2.imread('image.jpg')[:,:,::-1]  # HWC BGR to RGB x(640,1280,3)
         #   PIL:             = Image.open('image.jpg')  # HWC x(640,1280,3)
@@ -897,11 +898,11 @@ class autoShape(nn.Module):
         n, imgs = (len(imgs), imgs) if isinstance(imgs, list) else (1, [imgs])  # number of images, list of images
         shape0, shape1, files = [], [], []  # image and inference shapes, filenames
         for i, im in enumerate(imgs):
-            f = f'image{i}'  # filename
-            if isinstance(im, str):  # filename or uri
+            f = f'image{i}'  # file_name
+            if isinstance(im, str):  # file_name or uri
                 im, f = np.asarray(Image.open(requests.get(im, stream=True).raw if im.startswith('http') else im)), im
             elif isinstance(im, Image.Image):  # PIL Image
-                im, f = np.asarray(im), getattr(im, 'filename', f) or f
+                im, f = np.asarray(im), getattr(im, 'file_name', f) or f
             files.append(Path(f).with_suffix('.jpg').name)
             if im.shape[0] < 5:  # image in CHW
                 im = im.transpose((1, 2, 0))  # reverse dataloader .transpose(2, 0, 1)

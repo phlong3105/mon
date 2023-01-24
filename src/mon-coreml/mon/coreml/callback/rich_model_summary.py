@@ -14,9 +14,9 @@ __all__ = [
 from lightning.pytorch import utilities
 from lightning.pytorch.utilities import model_summary
 
+from mon import core
 from mon.coreml import constant
 from mon.coreml.callback import base
-from mon.foundation import console, rich
 
 
 # region Rich Model Summary
@@ -32,7 +32,7 @@ class RichModelSummary(base.ModelSummary):
 
     Raises:
         ModuleNotFoundError:
-            If required :mod:`rich` package is not installed on the device.
+            If required :mod:`rich` package isn't installed on the device.
     """
 
     def __init__(self, max_depth: int = 1):
@@ -50,7 +50,7 @@ class RichModelSummary(base.ModelSummary):
         trainable_parameters: int,
         model_size          : float,
     ):
-        table = rich.table.Table(header_style="bold magenta")
+        table = core.rich.table.Table(header_style="bold magenta")
         table.add_column(" ", style="dim")
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Type")
@@ -66,7 +66,7 @@ class RichModelSummary(base.ModelSummary):
         for row in rows:
             table.add_row(*row)
 
-        console.log(table)
+        core.console.log(table)
 
         parameters = []
         for param in [trainable_parameters,
@@ -76,7 +76,7 @@ class RichModelSummary(base.ModelSummary):
                 model_summary.get_human_readable_count(int(param)), 10)
             )
         
-        grid = rich.table.Table.grid(expand=True)
+        grid = core.rich.table.Table.grid(expand=True)
         grid.add_column()
         grid.add_column()
 
@@ -85,6 +85,6 @@ class RichModelSummary(base.ModelSummary):
         grid.add_row(f"[bold]Total params[/]: {parameters[2]}")
         grid.add_row(f"[bold]Total estimated model params size (MB)[/]: {parameters[3]}")
 
-        console.log(grid)
+        core.console.log(grid)
 
 # endregion

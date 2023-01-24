@@ -30,7 +30,7 @@ class Transform(nn.Module, ABC):
     
     Args:
         p: The probability determines whether the transformation is applied.
-            Defaults to None means process as normal.
+            Defaults to None mean process as normal.
     """
     
     def __init__(self, p: float | None = None, *args, **kwargs):
@@ -184,7 +184,7 @@ class ComposeTransform(nn.Sequential):
     
     def __repr__(self) -> str:
         format_string = self.__class__.__name__ + "("
-        for t in self.transforms:
+        for t in self:
             format_string += "\n"
             format_string += f"    {t}"
         format_string += "\n)"

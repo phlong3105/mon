@@ -226,7 +226,7 @@ def model_info(model, verbose=False, img_size=640):
 
 
 def load_classifier(name='resnet101', n=2):
-    # Loads a pretrained model reshaped to n-class output
+    # Loads a weights model reshaped to n-class output
     model = torchvision.models.__dict__[name](pretrained=True)
 
     # ResNet model properties

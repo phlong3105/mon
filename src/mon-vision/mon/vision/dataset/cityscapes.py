@@ -1,30 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Cityscapes dataset and datamodule.
-"""
+"""This module implements Cityscape datasets and datamodules."""
 
 from __future__ import annotations
 
-import argparse
+__all__ = [
+    "CityscapesFog", "CityscapesFogDataModule", "CityscapesLOL",
+    "CityscapesLOLDataModule", "CityscapesRain", "CityscapesRainDataModule",
+    "CityscapesSemantic", "CityscapesSnow", "CityscapesSnowDataModule",
+    "cityscapes_classlabels",
+]
 
-import matplotlib.pyplot as plt
+import argparse
+import glob
+
 from torch.utils.data import random_split
 
-from one.constants import *
-from one.core import *
-from one.data import ClassLabels
-from one.data import ClassLabels_
-from one.data import DataModule
-from one.data import Image
-from one.data import ImageEnhancementDataset
-from one.data import ImageSegmentationDataset
-from one.plot import imshow_enhancement
-from one.vision.transformation import Resize
+from mon import core
+from mon.vision import constant, visualize
+from mon.vision.dataset import base
+from mon.vision.transform import transform as t
+from mon.vision.typing import (
+    CallableType, ClassLabelsType, Ints,
+    ModelPhaseType, PathType, Strs, TransformType, VisionBackendType,
+)
 
-
-# H1: - Dataset ----------------------------------------------------------------
+# region ClassLabels
 
 cityscapes_classlabels = [
     { "name"          : "unlabeled"           , "id": 0 , "trainId": 255, "category": "void"        , "catId": 0, "hasInstances": False, "ignoreInEval": True , "color": [0  , 0  , 0  ] },
@@ -64,37 +66,36 @@ cityscapes_classlabels = [
     { "name"          : "license plate"       , "id": -1, "trainId": -1 , "category": "vehicle"     , "catId": 7, "hasInstances": False, "ignoreInEval": True , "color": [0  , 0  , 142] }
 ]
 
+# endregion
 
-@DATASETS.register(name="cityscapes-fog")
-class CityscapesFog(ImageEnhancementDataset):
-    """
+
+# region Dataset
+
+@constant.DATASET.register(name="cityscapes-fog")
+class CityscapesFog(base.ImageEnhancementDataset):
+    """Cityscapes-Fog.
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        beta (float | list | str | None): Additional information on the
-            attenuation coefficient. One of the values in `self.betas`. Can
-            also be a list to include multiple betas. When `all`, `*`, or
-            `None`, all betas will be included. Defaults to "*".
-        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        beta: Additional information on the attenuation coefficient. One of the
+            values in :attr:`betas`. Can be a list to include multiple beta
+            values. When "all", "*", or None, all beta values will be included.
+            Defaults to "*".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     betas = [0.005, 0.01, 0.02]
@@ -102,18 +103,18 @@ class CityscapesFog(ImageEnhancementDataset):
     def __init__(
         self,
         name            : str                       = "cityscapes-fog",
-        root            : Path_                     = DATA_DIR / "cityscapes",
+        root            : PathType                  = constant.DATA_DIR / "cityscapes",
         split           : str                       = "train",
         beta            : float | list | str | None = "*",
         extra           : bool                      = False,
-        shape           : Ints                      = (3, 512, 512),
-        classlabels     : ClassLabels_ | None       = None,
-        transform       : Transforms_  | None       = None,
-        target_transform: Transforms_  | None       = None,
-        transforms      : Transforms_  | None       = None,
+        shape           : Ints                      = (3, 256, 256),
+        classlabels     : ClassLabelsType | None    = None,
+        transform       : TransformType   | None    = None,
+        target_transform: TransformType   | None    = None,
+        transforms      : TransformType   | None    = None,
         cache_data      : bool                      = False,
         cache_images    : bool                      = False,
-        backend         : VisionBackend_            = VISION_BACKEND,
+        backend         : VisionBackendType         = constant.VISION_BACKEND,
         verbose         : bool                      = True,
         *args, **kwargs
     ):
@@ -148,13 +149,11 @@ class CityscapesFog(ImageEnhancementDataset):
         self._beta = beta
 
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train`, `val`, or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train', 'val', or 'test'. Get: {self.split}."
             )
         
         image_patterns = [
@@ -167,77 +166,74 @@ class CityscapesFog(ImageEnhancementDataset):
         image_paths = []
         for pattern in image_patterns:
             image_paths += glob.glob(str(pattern))
-        image_paths = unique(image_paths)
+        image_paths = core.unique(image_paths)
         
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for path in pbar.track(
                 image_paths,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
                 path       = str(img.path)
                 postfix    = path[path.find("_foggy_beta"):]
                 label_path = path.replace(postfix, ".png")
                 label_path = label_path.replace("leftImg8bit-foggy", "leftImg8bit")
-                self.labels.append(Image(path=label_path, backend=self.backend))
+                self.labels.append(
+                    base.ImageLabel(path=label_path, backend=self.backend)
+                )
            
      
-@DATASETS.register(name="cityscapes-lol")
-class CityscapesLOL(ImageEnhancementDataset):
-    """
+@constant.DATASET.register(name="cityscapes-lol")
+class CityscapesLOL(base.ImageEnhancementDataset):
+    """Cityscapes-LOL.
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                 = "cityscapes-lol",
-        root            : Path_               = DATA_DIR / "cityscapes",
-        split           : str                 = "train",
-        shape           : Ints                = (3, 512, 512),
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "cityscapes-lol",
+        root            : PathType               = constant.DATA_DIR / "cityscapes",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = None,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -257,81 +253,74 @@ class CityscapesLOL(ImageEnhancementDataset):
         )
     
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "val"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `val`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'val'. Get: {self.split}."
             )
-
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             pattern = self.root / "leftImg8bit-lol" / self.split
             for path in pbar.track(
                 list(pattern.rglob("low/*.png")),
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("low", "high"))
-                self.labels.append(Image(path=path, backend=self.backend))
+                path = core.Path(str(img.path).replace("low", "high"))
+                self.labels.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
           
           
-@DATASETS.register(name="cityscapes-rain")
-class CityscapesRain(ImageEnhancementDataset):
-    """
+@constant.DATASET.register(name="cityscapes-rain")
+class CityscapesRain(base.ImageEnhancementDataset):
+    """Cityscapes-Rain.
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        alpha (float | list | str | None): One of the values in `self.alphas`.
-            Can also be a list to include multiple alphas. When `all`, `*`, or
-            `None`, all alphas will be included. Defaults to "*".
-        beta (float | list | str | None): Additional information on the
-            attenuation coefficient. One of the values in `self.betas`. Can
-            also be a list to include multiple betas. When `all`, `*`, or `None`,
-            all betas will be included. Defaults to "*".
-        drop_size (float | list | str | None): One of the values in
-            `self.drop_sizes`. Can also be a list to include multiple drop
-            sizes. When `all`, `*`, or `None`, all drop sizes will be included.
+        name: A datamodule name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        alpha: One of the values in :attr:`alphas`. Can be a list to include
+            multiple alpha values. When "all", "*", or None, all alpha values
+            will be included. Defaults to "*".
+        beta: Additional information on the attenuation coefficient. One of the
+            values in :attr:`betas`. Can be a list to include multiple beta
+            values. When "all", "*", or None, all beta values will be included.
             Defaults to "*".
-        pattern (int | list | str | None): Rain pattern. One of the values in
-            `self.patterns`. Can also be a list to include multiple patterns.
-            When `all`, `*`, or `None`, all drop sizes will be included.
-            Defaults to "*".
-        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        drop_size: One of the values in :attr:`drop_sizes`. Can be a list to
+            include multiple drop sizes. When "all", "*", or None, all drop
+            sizes will be included. Defaults to "*".
+        pattern: Rain pattern. One of the values in :attr:`patterns`. Can be a
+            list to include multiple pattern values. When "all", "*", or None,
+            all drop sizes will be included. Defaults to "*".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     alphas     = [0.01,  0.02,  0.03]
@@ -342,20 +331,20 @@ class CityscapesRain(ImageEnhancementDataset):
     def __init__(
         self,
         name            : str                       = "cityscapes-rain",
-        root            : Path_                     = DATA_DIR / "cityscapes",
+        root            : PathType                  = constant.DATA_DIR / "cityscapes",
         split           : str                       = "train",
         alpha           : float | list | str | None = "*",
         beta            : float | list | str | None = "*",
         drop_size       : float | list | str | None = "*",
         pattern         : int   | list | str | None = "*",
-        shape           : Ints                      = (3, 512, 512),
-        classlabels     : ClassLabels_ | None       = None,
-        transform       : Transforms_  | None       = None,
-        target_transform: Transforms_  | None       = None,
-        transforms      : Transforms_  | None       = None,
+        shape           : Ints                      = (3, 256, 256),
+        classlabels     : ClassLabelsType | None    = None,
+        transform       : TransformType   | None    = None,
+        target_transform: TransformType   | None    = None,
+        transforms      : TransformType   | None    = None,
         cache_data      : bool                      = False,
         cache_images    : bool                      = False,
-        backend         : VisionBackend_            = VISION_BACKEND,
+        backend         : VisionBackendType         = constant.VISION_BACKEND,
         verbose         : bool                      = True,
         *args, **kwargs
     ):
@@ -425,13 +414,11 @@ class CityscapesRain(ImageEnhancementDataset):
         self._pattern = pattern
         
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "val"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `val`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports :param:`split`: "
+                f"'train' or 'val'. Get: {self.split}."
             )
         
         image_patterns  = []
@@ -456,96 +443,74 @@ class CityscapesRain(ImageEnhancementDataset):
         for pattern in image_patterns:
             for image_path in glob.glob(str(pattern)):
                 image_paths.append(image_path)
-        image_paths = unique(image_paths)  # Remove all duplicates files
+        image_paths = core.unique(image_paths)  # Remove all duplicates files
             
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for path in pbar.track(
                 image_paths,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
                 path       = str(img.path)
                 postfix    = path[path.find("_rain_alpha"):]
                 label_path = path.replace(postfix, ".png")
                 label_path = label_path.replace("leftImg8bit-rain", "leftImg8bit")
-                self.labels.append(Image(path=label_path, backend=self.backend))
+                self.labels.append(
+                    base.ImageLabel(path=label_path, backend=self.backend)
+                )
 
 
-@DATASETS.register(name="cityscapes-snow")
-class CityscapesSnow(ImageEnhancementDataset):
-    """
+@constant.DATASET.register(name="cityscapes-snow")
+class CityscapesSnow(base.ImageEnhancementDataset):
+    """Cityscapes-Snow.
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        alpha (float | list | str | None): One of the values in `self.alphas`.
-            Can also be a list to include multiple alphas. When `all`, `*`, or
-            `None`, all alphas will be included. Defaults to "*".
-        beta (float | list | str | None): Additional information on the
-            attenuation coefficient. One of the values in `self.betas`. Can
-            also be a list to include multiple betas. When `all`, `*`, or `None`,
-            all betas will be included. Defaults to "*".
-        drop_size (float | list | str | None): One of the values in
-            `self.drop_sizes`. Can also be a list to include multiple drop
-            sizes. When `all`, `*`, or `None`, all drop sizes will be included.
-            Defaults to "*".
-        pattern (int | list | str | None): Rain pattern. One of the values in
-            `self.patterns`. Can also be a list to include multiple patterns.
-            When `all`, `*`, or `None`, all drop sizes will be included.
-            Defaults to "*".
-        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        name: A datamodule name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                       = "cityscapes-snow",
-        root            : Path_                     = DATA_DIR / "cityscapes",
-        split           : str                       = "train",
-        alpha           : float | list | str | None = "*",
-        beta            : float | list | str | None = "*",
-        drop_size       : float | list | str | None = "*",
-        pattern         : int   | list | str | None = "*",
-        shape           : Ints                      = (3, 512, 512),
-        classlabels     : ClassLabels_ | None       = None,
-        transform       : Transforms_  | None       = None,
-        target_transform: Transforms_  | None       = None,
-        transforms      : Transforms_  | None       = None,
-        cache_data      : bool                      = False,
-        cache_images    : bool                      = False,
-        backend         : VisionBackend_            = VISION_BACKEND,
-        verbose         : bool                      = True,
+        name            : str                    = "cityscapes-snow",
+        root            : PathType               = constant.DATA_DIR / "cityscapes",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = None,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -565,74 +530,69 @@ class CityscapesSnow(ImageEnhancementDataset):
         )
     
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
         
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             pattern = self.root / "leftImg8bit-snow" / self.split
             for path in pbar.track(
                 list(pattern.rglob("*Snow/*")),
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                if is_image_file(path):
-                    self.images.append(Image(path=path, backend=self.backend))
+                if path.is_image_file():
+                    self.images.append(
+                        base.ImageLabel(path=path, backend=self.backend)
+                    )
                 
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
                 parent = str(img.path.parent.name)
-                path   = Path(str(img.path).replace(parent, "gt"))
-                self.labels.append(Image(path=path, backend=self.backend))
+                path   = core.Path(str(img.path).replace(parent, "gt"))
+                self.labels.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
                 
 
-@DATASETS.register(name="cityscapes-semantic")
-class CityscapesSemantic(ImageSegmentationDataset):
-    """
+@constant.DATASET.register(name="cityscapes-semantic")
+class CityscapesSemantic(base.ImageSegmentationDataset):
+    """Cityscapes Semantic Segmentation.
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        quality (str): Quality of the semantic segmentation mask to use. One of
-            the values in `self.qualities`. Defaults to "gtFine".
-        encoding (str): Format to use when creating the semantic segmentation
-            mask. One of the values in `self.encodings`. Defaults to "id".
-        extra (bool): Should use extra data? Those in the `train_extra` split
+        name: A datamodule name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        quality: The quality of the semantic segmentation mask to use. One of
+            the values in :attr:`qualities`. Defaults to "gtFine".
+        encoding: The format to use when creating the semantic segmentation
+            mask. One of the values in :attr:`encodings`. Defaults to "id".
+        extra: Should use extra data? Those in the `train_extra` split
             are only available for `quality=gtCoarse`. Defaults to False.
-        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
 
     qualities = ["gtFine", "gtCoarse"]
@@ -640,21 +600,21 @@ class CityscapesSemantic(ImageSegmentationDataset):
     
     def __init__(
         self,
-        name            : str                 = "cityscapes-semantic",
-        root            : Path_               = DATA_DIR / "cityscapes",
-        split           : str                 = "train",
-        quality         : str                 = "gtFine",
-        encoding        : str                 = "id",
-        extra           : bool                = False,
-        shape           : Ints                = (3, 512, 512),
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "cityscapes-semantic",
+        root            : PathType               = constant.DATA_DIR / "cityscapes",
+        split           : str                    = "train",
+        quality         : str                    = "gtFine",
+        encoding        : str                    = "id",
+        extra           : bool                   = False,
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = cityscapes_classlabels,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         self.quality = quality
@@ -666,19 +626,12 @@ class CityscapesSemantic(ImageSegmentationDataset):
             raise ValueError(f"Cityscapes Semantic dataset does not supports "
                              f"`encoding`: `{encoding}`.")
         
-        path = os.path.join(root, quality, f"classlabels.json")
-        if classlabels is None:
-            if not os.path.isfile(path):
-                classlabels = ClassLabels.from_file(path)
-            else:
-                classlabels = ClassLabels.from_list(cityscapes_classlabels)
-        
         super().__init__(
             name             = name,
             root             = root,
             split            = split,
             shape            = shape,
-            classlabels      = classlabels,
+            classlabels      = classlabels or cityscapes_classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -690,20 +643,19 @@ class CityscapesSemantic(ImageSegmentationDataset):
         )
     
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.quality == "gtCoarse":
             if self.split not in ["train", "val"]:
-                console.log(
-                    f"{self.__class__.classname} dataset only supports "
-                    f"`split`: `train` or `val`. Get: {self.split}."
+                core.console.log(
+                    f"{self.__class__.__name__} dataset only supports "
+                    f":param:`split`: 'train' or 'val'. Get: {self.split}."
                 )
         else:
             if self.split not in ["train", "val", "test"]:
-                console.log(
-                    f"{self.__class__.classname} dataset only supports "
-                    f"`split`: `train`, `val`, or `test`. Get: {self.split}."
+                core.console.log(
+                    f"{self.__class__.__name__} dataset only supports "
+                    f":param:`split`: 'train', 'val', or 'test'. "
+                    f"Get: {self.split}."
                 )
         
         image_patterns = [self.root / "leftImg8bit" / self.split / "*" / "*.png"]
@@ -716,53 +668,73 @@ class CityscapesSemantic(ImageSegmentationDataset):
         for pattern in image_patterns:
             image_paths += glob.glob(str(pattern))
         
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for path in pbar.track(
                 image_paths,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
                 path       = str(img.path)
                 prefix     = path.replace("_leftImg8bit.png", "")
                 prefix     = prefix.replace("leftImg8bit", self.quality)
                 label_path = f"{prefix}_{self.quality}_{self.encodings}.png"
-                self.labels.append(Image(path=label_path, backend=self.backend))
+                self.labels.append(
+                    base.ImageLabel(path=label_path, backend=self.backend)
+                )
                 
+# endregion
 
-# H1: - Datamodule -------------------------------------------------------------
 
-@DATAMODULES.register(name="cityscapes-fog")
-class CityscapesFogDataModule(DataModule):
-    """
+# region Datamodule
+
+@constant.DATAMODULE.register(name="cityscapes-fog")
+class CityscapesFogDataModule(base.DataModule):
+    """Cityscapes-Fog DataModule
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "cityscapes-fog",
-        root            : Path_              = DATA_DIR / "cityscapes",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "cityscapes-fog",
+        root            : PathType             = constant.DATA_DIR / "cityscapes",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -781,8 +753,7 @@ class CityscapesFogDataModule(DataModule):
         )
         
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
+        """Use this method to do things that might write to disk or that need
         to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
@@ -790,29 +761,27 @@ class CityscapesFogDataModule(DataModule):
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{CityscapesFogDataModule.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             self.train = CityscapesFog(
                 root             = self.root,
                 split            = "train",
@@ -836,8 +805,8 @@ class CityscapesFogDataModule(DataModule):
             self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloader
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = CityscapesFog(
                 root             = self.root,
                 split            = "test",
@@ -857,30 +826,44 @@ class CityscapesFogDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels.from_list(cityscapes_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=cityscapes_classlabels)
 
 
-@DATAMODULES.register(name="cityscapes-lol")
-class CityscapesLOLDataModule(DataModule):
-    """
+@constant.DATAMODULE.register(name="cityscapes-lol")
+class CityscapesLOLDataModule(base.DataModule):
+    """Cityscapes-LOL DataModule
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "cityscapes-lol",
-        root            : Path_              = DATA_DIR / "cityscapes",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "cityscapes-lol",
+        root            : PathType             = constant.DATA_DIR / "cityscapes",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -899,8 +882,7 @@ class CityscapesLOLDataModule(DataModule):
         )
         
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
+        """Use this method to do things that might write to disk, or that need
         to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
@@ -908,29 +890,27 @@ class CityscapesLOLDataModule(DataModule):
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{CityscapesLOLDataModule.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             self.train = CityscapesLOL(
                 root             = self.root,
                 split            = "train",
@@ -954,8 +934,8 @@ class CityscapesLOLDataModule(DataModule):
             self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = CityscapesFog(
                 root             = self.root,
                 split            = "val",
@@ -975,30 +955,44 @@ class CityscapesLOLDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels.from_list(cityscapes_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=cityscapes_classlabels)
 
 
-@DATAMODULES.register(name="cityscapes-rain")
-class CityscapesRainDataModule(DataModule):
-    """
+@constant.DATAMODULE.register(name="cityscapes-rain")
+class CityscapesRainDataModule(base.DataModule):
+    """Cityscapes-Rain datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "cityscapes-rain",
-        root            : Path_              = DATA_DIR / "cityscapes",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "cityscapes-rain",
+        root            : PathType             = constant.DATA_DIR / "cityscapes",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1017,8 +1011,7 @@ class CityscapesRainDataModule(DataModule):
         )
         
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
+        """Use this method to do things that might write to disk, or that need
         to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
@@ -1026,29 +1019,27 @@ class CityscapesRainDataModule(DataModule):
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{CityscapesRainDataModule.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             self.train = CityscapesRain(
                 root             = self.root,
                 split            = "train",
@@ -1072,8 +1063,8 @@ class CityscapesRainDataModule(DataModule):
             self.classlabels = getattr(self.train, "classlabels", None)
             self.collate_fn  = getattr(self.train, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = CityscapesRain(
                 root             = self.root,
                 split            = "val",
@@ -1093,30 +1084,44 @@ class CityscapesRainDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels.from_list(cityscapes_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=cityscapes_classlabels)
 
 
-@DATAMODULES.register(name="cityscapes-snow")
-class CityscapesSnowDataModule(DataModule):
-    """
+@constant.DATAMODULE.register(name="cityscapes-snow")
+class CityscapesSnowDataModule(base.DataModule):
+    """Cityscapes-Snow DataModule
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "cityscapes-snow",
-        root            : Path_              = DATA_DIR / "cityscapes",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "cityscapes-snow",
+        root            : PathType             = constant.DATA_DIR / "cityscapes",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1135,8 +1140,7 @@ class CityscapesSnowDataModule(DataModule):
         )
         
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
+        """Use this method to do things that might write to disk, or that need
         to be done only from a single GPU in distributed settings.
             - Download.
             - Tokenize.
@@ -1144,29 +1148,27 @@ class CityscapesSnowDataModule(DataModule):
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{CityscapesSnowDataModule.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = CityscapesSnow(
                 root             = self.root,
                 split            = "train",
@@ -1185,8 +1187,8 @@ class CityscapesSnowDataModule(DataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = CityscapesRain(
                 root             = self.root,
                 split            = "test",
@@ -1206,52 +1208,50 @@ class CityscapesSnowDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels.from_list(cityscapes_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=cityscapes_classlabels)
         
+# endregion
 
-# H1: - Test -------------------------------------------------------------------
+
+# region Test
 
 def test_cityscapes_fog():
     cfg = {
         "name": "cityscapes-fog",
-            # Dataset's name.
-        "root": DATA_DIR / "cityscapes",
-            # Root directory of dataset.
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "cityscapes",
+            # A root directory where the data is stored.
         "beta": "*",
-            # Additional information on the attenuation coefficient.
-            # One of: [0.005, 0.01, 0.02]. Can also be a list to include
-            # multiple betas. When `all`, `*`, or `None`, all betas will be
-            # included. Defaults to "*".
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # Additional information on the attenuation coefficient. One of the
+            # values in :attr:`betas`. Can be a list to include multiple beta
+            # values. When "all", "*", or None, all betas will be included.
+            # Defaults to "*".
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -1264,45 +1264,47 @@ def test_cityscapes_fog():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    result              = {"image" : input, "target": target}
+    result              = {"image": input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
     
 
 def test_cityscapes_lol():
     cfg = {
         "name": "cityscapes-lol",
-            # Dataset's name.
-        "root": DATA_DIR / "cityscapes",
-            # Root directory of dataset.
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "cityscapes",
+            # A root directory where the data is stored.
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -1317,60 +1319,62 @@ def test_cityscapes_lol():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
 
 def test_cityscapes_rain():
     cfg = {
         "name": "cityscapes-rain",
-            # Dataset's name.
-        "root": DATA_DIR / "cityscapes",
-            # Root directory of dataset.
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "cityscapes",
+            # A root directory where the data is stored.
         "alpha": "*",
-            # One of: [0.01, 0.02, 0.03]. Can also be a list to include multiple
-            # alphas. When `all`, `*`, or `None`, all alphas will be included.
-            # Defaults to "*".
+            # One of: [0.01, 0.02, 0.03]. Can be a list to include multiple
+            # alpha values. When "all", "*", or None, all alpha values will be
+            # included. Defaults to "*".
         "beta": "*",
-            # Additional information on the attenuation coefficient.
-            # One of: [0.005, 0.01, 0.02]. Can also be a list to include
-            # multiple betas. When `all`, `*`, or `None`, all betas will be
+            # Additional information on the attenuation coefficient. One of:
+            # [0.005, 0.01, 0.02]. Can be a list to include multiple beta
+            # values. When "all", "*", or None, all beta values will be
             # included. Defaults to "*".
         "drop_size": "*",
             # One of: [0.002, 0.005, 0.01]. Can also be a list to include
-            # multiple drop sizes. When `all`, `*`, or `None`, all drop sizes
+            # multiple drop sizes. When "all", "*", or None, all drop sizes
             # will be included. Defaults to "*".
         "pattern": "*",
             # Rain pattern. One of: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].
-            # Can also be a list to include multiple patterns. When `all`, `*`,
-            # or `None`, all drop sizes will be included. Defaults to "*".
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # Can be a list to include multiple patterns. When "all", "*",
+            # or None, all drop sizes will be included. Defaults to "*".
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -1385,43 +1389,45 @@ def test_cityscapes_rain():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
 
 def test_cityscapes_snow():
     cfg = {
         "name": "cityscapes-snow",
-            # Dataset's name.
-        "root": DATA_DIR / "cityscapes",
-            # Root directory of dataset.
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "cityscapes",
+            # A root directory where the data is stored.
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -1436,11 +1442,17 @@ def test_cityscapes_snow():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
-    
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
-# H1: - Main -------------------------------------------------------------------
+# endregion
+
+
+# region Main
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -1459,3 +1471,5 @@ if __name__ == "__main__":
         test_cityscapes_rain()
     elif args.task == "test-cityscapes-snow":
         test_cityscapes_snow()
+
+# endregion

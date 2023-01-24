@@ -16,19 +16,16 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import Image, ExifTags
+from PIL import ExifTags, Image
 from torch.utils.data import Dataset
 from tqdm import tqdm
-
-import pickle
-from copy import deepcopy
-#from pycocotools import mask as maskUtils
-from torchvision.utils import save_image
-from torchvision.ops import roi_pool, roi_align, ps_roi_pool, ps_roi_align
-
-from utils.general import check_requirements, xyxy2xywh, xywh2xyxy, xywhn2xyxy, xyn2xy, segment2box, segments2boxes, \
-    resample_segments, clean_str
+from utils.general import (
+    check_requirements, clean_str, resample_segments,
+    segment2box, segments2boxes, xyn2xy, xywh2xyxy, xywhn2xyxy, xyxy2xywh,
+)
 from utils.torch_utils import torch_distributed_zero_first
+
+# from pycocotools import mask as maskUtils
 
 # Parameters
 help_url = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
@@ -1276,7 +1273,7 @@ def extract_boxes(path='../coco/'):  # from utils.datasets import *; extract_box
 
                 for j, x in enumerate(lb):
                     c = int(x[0])  # class
-                    f = (path / 'classifier') / f'{c}' / f'{path.stem}_{im_file.stem}_{j}.jpg'  # new filename
+                    f = (path / 'classifier') / f'{c}' / f'{path.stem}_{im_file.stem}_{j}.jpg'  # new file_name
                     if not f.parent.is_dir():
                         f.parent.mkdir(parents=True)
 

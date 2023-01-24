@@ -22,7 +22,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon import foundation
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.typing import CallableType, Int2T
@@ -49,7 +49,7 @@ class FReLU(base.PassThroughLayerParsingMixin, nn.Module):
         *args, **kwargs
     ):
         super().__init__()
-        k         = foundation.to_2tuple(k)
+        k         = core.to_2tuple(k)
         self.conv = nn.Conv2d(c1, c1, k, 1, 1, groups=c1)
         self.act  = nn.BatchNorm2d(c1)
     

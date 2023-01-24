@@ -7,30 +7,32 @@ CIFAR datasets and datamodules.
 
 from __future__ import annotations
 
+__all__ = [
+    "FashionMNIST", "FashionMNISTDataModule", "MNIST", "MNISTDataModule",
+    "fashion_mnist_classlabels", "mnist_classlabels",
+]
+
 import argparse
 from urllib.error import URLError
 
-from matplotlib import pyplot as plt
+import torch
 from torch.utils.data import random_split
-from torchvision.datasets.mnist import read_image_file
-from torchvision.datasets.mnist import read_label_file
-from torchvision.datasets.utils import check_integrity
-from torchvision.datasets.utils import download_and_extract_archive
+from torchvision.datasets.mnist import read_image_file, read_label_file
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_and_extract_archive,
+)
 
-from one.constants import *
-from one.core import *
-from one.data import Classification
-from one.data import ClassLabels
-from one.data import ClassLabels_
-from one.data import DataModule
-from one.data import Image
-from one.data import ImageClassificationDataset
-from one.plot import imshow_classification
-from one.vision.acquisition import to_tensor
-from one.vision.transformation import Resize
+from mon import core, coreimage as ci
+from mon.vision import constant, visualize
+from mon.vision.dataset import base
+from mon.vision.transform import transform as t
+from mon.vision.typing import (
+    CallableType, ClassLabelsType, Ints, ModelPhaseType, PathType,
+    Strs, TransformType, VisionBackendType,
+)
 
-
-# H1: - Dataset ----------------------------------------------------------------
+# region ClassLabels
 
 mnist_classlabels = [
     { "name": "0", "id": 0 },
@@ -45,7 +47,7 @@ mnist_classlabels = [
     { "name": "9", "id": 9 }
 ]
 
-fashionmnist_classlabels = [
+fashion_mnist_classlabels = [
     { "name": "T-shirt/top", "id": 0 },
     { "name": "Trouser",     "id": 1 },
     { "name": "Pullover",    "id": 2 },
@@ -58,34 +60,35 @@ fashionmnist_classlabels = [
     { "name": "Ankle boot",  "id": 9 }
 ]
 
+# endregion
 
-@DATASETS.register(name="mnist")
-class MNIST(ImageClassificationDataset):
-    """
-    MNIST <http://yann.lecun.com/exdb/mnist/> Dataset.
+
+# region Dataset
+
+@constant.DATASET.register(name="mnist")
+class MNIST(base.ImageClassificationDataset):
+    """MNIST dataset.
+    
+    References:
+        http://yann.lecun.com/exdb/mnist/
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     mirrors       = [
@@ -107,25 +110,26 @@ class MNIST(ImageClassificationDataset):
     
     def __init__(
         self,
-        root            : Path_,
-        split           : str,
-        shape           : Ints,
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "mnist",
+        root            : PathType               = constant.DATA_DIR / "mnist" / "mnist",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 32, 32),
+        classlabels     : ClassLabelsType | None = mnist_classlabels,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
-            name             = "mnist",
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
-            classlabels      = root / "classlabels.json",
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -137,13 +141,11 @@ class MNIST(ImageClassificationDataset):
         )
     
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
         
         if not self._check_exists():
@@ -154,27 +156,27 @@ class MNIST(ImageClassificationDataset):
         data       = torch.unsqueeze(data, -1)
         data       = data.repeat(1, 1, 1, 3)
         
-        self.images: list[Image] = [
-            Image(
-                image          = to_tensor(img, keepdim=False, normalize=True),
+        self.images: list[base.ImageLabel] = [
+            base.ImageLabel(
+                image          = ci.to_tensor(img, keepdim=False, normalize=True),
                 keep_in_memory = True
             )
             for img in data
         ]
         
     def list_labels(self):
-        """
-        List label files.
-        """
+        """List label files."""
         label_file = f"{'train' if self.split == 'train' else 't10k'}-labels-idx1-ubyte"
         data       = read_label_file(self.root / "raw" / label_file)
-        self.labels: list[Classification] = [Classification(id=l) for l in data]
+        self.labels: list[base.ClassificationLabel] = [
+            base.ClassificationLabel(id=l) for l in data
+        ]
         
     def filter(self):
         pass
     
     def _check_legacy_exist(self):
-        processed_folder = self.root / self.__class__.classname / "processed"
+        processed_folder = self.root / self.__class__.__name__ / "processed"
         if not processed_folder.exists():
             return False
 
@@ -192,7 +194,7 @@ class MNIST(ImageClassificationDataset):
     
     def _check_exists(self) -> bool:
         return all(
-            check_integrity(self.root / "raw" / Path(url).stem)
+            check_integrity(self.root / "raw" / core.Path(url).stem)
             for url, _ in self.resources
         )
 
@@ -201,15 +203,15 @@ class MNIST(ImageClassificationDataset):
         if self._check_exists():
             return
 
-        raw_folder = self.root / self.__class__.classname / "raw"
-        create_dirs([raw_folder])
+        raw_folder = self.root / self.__class__.__name__ / "raw"
+        core.create_dirs([raw_folder])
 
         # Download files
         for filename, md5 in self.resources:
             for mirror in self.mirrors:
                 url = "{}{}".format(mirror, filename)
                 try:
-                    console.log("Downloading {}".format(url))
+                    core.console.log("Downloading {}".format(url))
                     download_and_extract_archive(
                         url,
                         download_root = raw_folder,
@@ -217,10 +219,10 @@ class MNIST(ImageClassificationDataset):
                         md5           = md5
                     )
                 except URLError as error:
-                    console.log("Failed to download (trying next):\n{}".format(error))
+                    core.console.log("Failed to download (trying next):\n{}".format(error))
                     continue
                 finally:
-                    console.log()
+                    core.console.log()
                 break
             else:
                 raise RuntimeError("Error downloading {}".format(filename))
@@ -229,10 +231,30 @@ class MNIST(ImageClassificationDataset):
         return "Split: {}".format("Train" if self.train is True else "Test")
 
 
-@DATASETS.register(name="fashion_mnist")
+@constant.DATASET.register(name="fashion-mnist")
 class FashionMNIST(MNIST):
-    """
-    Fashion-MNIST <https://github.com/zalandoresearch/fashion-mnist> Dataset.
+    """Fashion-MNIST dataset.
+    
+    References:
+        https://github.com/zalandoresearch/fashion-mnist
+    
+    Args:
+        name: A datamodule name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
+            Defaults to False.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     mirrors   = [
@@ -251,25 +273,26 @@ class FashionMNIST(MNIST):
     
     def __init__(
         self,
-        root            : Path_,
-        split           : str,
-        shape           : Ints,
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "fashion-mnist",
+        root            : PathType               = constant.DATA_DIR / "mnist" / "fashion-mnist",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 32, 32),
+        classlabels     : ClassLabelsType | None = fashion_mnist_classlabels,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
-            name             = "fashion_mnist",
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
-            classlabels      = root / "classlabels.json",
+            classlabels      = classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -279,29 +302,46 @@ class FashionMNIST(MNIST):
             verbose          = verbose,
             *args, **kwargs
         )
+
+# endregion
+
+
+# region Datamodule
+
+@constant.DATAMODULE.register(name="mnist")
+class MNISTDataModule(base.DataModule):
+    """MNIST datamodule.
     
-
-# H1: - Datamodule -------------------------------------------------------------
-
-@DATAMODULES.register(name="mnist")
-class MNISTDataModule(DataModule):
-    """
-    MNIST DataModule.
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "mnist",
-        root            : Path_              = DATA_DIR / "mnist" / "mnist",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "mnist",
+        root            : PathType             = constant.DATA_DIR / "mnist" / "mnist",
+        shape           : Ints                 = (3, 32, 32),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -321,45 +361,41 @@ class MNISTDataModule(DataModule):
     
     @property
     def num_workers(self) -> int:
+        """The number of workers used in the data loading pipeline.
+        Set to: 4 * the number of :attr:`devices` to avoid a bottleneck.
         """
-        Returns number of workers used in the data loading pipeline.
-        """
-        # Set `num_workers` = 4 * the number of gpus to avoid bottleneck
         return 1
     
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]MNIST[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = MNIST(
                 root             = self.root,
                 split            = "train",
@@ -378,8 +414,8 @@ class MNISTDataModule(DataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = MNIST(
                 root             = self.root,
                 split            = "test",
@@ -399,31 +435,44 @@ class MNISTDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels(mnist_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=mnist_classlabels)
 
 
-@DATAMODULES.register(name="fashion-mnist")
-class FashionMNISTDataModule(DataModule):
-    """
-    FashionMNIST DataModule.
+@constant.DATAMODULE.register(name="fashion-mnist")
+class FashionMNISTDataModule(base.DataModule):
+    """Fashion-MNIST datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "fashion-mnist",
-        root            : Path_              = DATA_DIR / "mnist" / "fashion-mnist",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "fashion-mnist",
+        root            : PathType             = constant.DATA_DIR / "mnist" / "fashion-mnist",
+        shape           : Ints                 = (3, 32, 32),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -443,45 +492,41 @@ class FashionMNISTDataModule(DataModule):
     
     @property
     def num_workers(self) -> int:
+        """The number of workers used in the data loading pipeline.
+        Set to: 4 * the number of :attr:`devices` to avoid a bottleneck.
         """
-        Returns number of workers used in the data loading pipeline.
-        """
-        # Set `num_workers` = 4 * the number of gpus to avoid bottleneck
         return 1
     
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]Fashion-MNIST[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = FashionMNIST(
                 root             = self.root,
                 split            = "train",
@@ -500,8 +545,8 @@ class FashionMNISTDataModule(DataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = FashionMNIST(
                 root             = self.root,
                 split            = "test",
@@ -521,47 +566,45 @@ class FashionMNISTDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels(mnist_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=fashion_mnist_classlabels)
+
+# endregion
 
 
-# H1: - Test -------------------------------------------------------------------
+# region Test
 
 def test_mnist():
     cfg = {
         "name": "mnist",
-            # Dataset's name.
-        "root": DATA_DIR / "mnist" / "mnist",
-            # Root directory of dataset.
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "mnist" / "mnist",
+            # A root directory where the data is stored.
         "shape": [3, 32, 32],
-            # Image shape as [C, H, W], [H, W], or [S, S].
-        "transform": [
-            Resize(size=[3, 32, 32])
-        ],
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
+        "transform": None,
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
-        "transforms": None,
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
-        "cache_data": True,
+            # Transformations performing on the target.
+        "transforms": [
+            t.Resize(size=[3, 32, 32]),
+        ],
+            # Transformations performing on both the input and target.
+        "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -574,48 +617,46 @@ def test_mnist():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow_classification(
+    visualize.imshow_classification(
         winname     = "image",
         image       = input,
         target      = target,
         classlabels = dm.classlabels
     )
-    plt.show(block=True)
+    visualize.plt.show(block=True)
 
 
 def test_fashion_mnist():
     cfg = {
         "name": "fashion-mnist",
-            # Dataset's name.
-        "root": DATA_DIR / "mnist" / "fashion-mnist",
-            # Root directory of dataset.
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "mnist" / "fashion-mnist",
+            # A root directory where the data is stored.
         "shape": [3, 32, 32],
-            # Image shape as [C, H, W], [H, W], or [S, S].
-        "transform": [
-            Resize(size=[3, 32, 32])
-        ],
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
+        "transform": None,
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
-        "transforms": None,
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
-        "cache_data": True,
+            # Transformations performing on the target.
+        "transforms": [
+            t.Resize(size=[3, 32, 32]),
+        ],
+            # Transformations performing on both the input and target.
+        "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -628,16 +669,18 @@ def test_fashion_mnist():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow_classification(
+    visualize.imshow_classification(
         winname     = "image",
         image       = input,
         target      = target,
         classlabels = dm.classlabels
     )
-    plt.show(block=True)
+    visualize.plt.show(block=True)
+
+# endregion
 
 
-# H1: - Main -------------------------------------------------------------------
+# region Main
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -652,3 +695,5 @@ if __name__ == "__main__":
         test_mnist()
     elif args.task == "test-fashion-mnist":
         test_fashion_mnist()
+
+# endregion

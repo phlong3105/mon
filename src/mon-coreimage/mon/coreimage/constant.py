@@ -11,13 +11,18 @@ __all__ = [
     "AppleRGB", "BBoxFormat", "BasicRGB", "BorderType", "CFA", "DistanceMetric",
     "IMG_MEAN", "IMG_STD", "InterpolationMode", "PaddingMode", "RGB",
     "VISION_BACKEND", "VisionBackend",
+    # Extend :mod:`mon.core.constant`
+    "CONTENT_ROOT_DIR", "DATA_DIR", "DOCS_DIR", "FILE_HANDLER", "ImageFormat",
+    "MemoryUnit", "PRETRAINED_DIR", "PROJECTS_DIR", "RUNS_DIR",
+    "SOURCE_ROOT_DIR", "SNIPPET_DIR", "SRC_DIR", "VideoFormat",
 ]
 
 from typing import TYPE_CHECKING
 
 import cv2
 
-from mon import foundation
+from mon import core
+from mon.core.constant import *
 
 if TYPE_CHECKING:
     from mon.coreimage.typing import (
@@ -33,8 +38,8 @@ IMG_STD          = [0.229, 0.224, 0.225]
 
 # region Enum
 
-class AppleRGB(foundation.Enum):
-    """:class:`AppleRGB` defines Apple's 12 RGB colors."""
+class AppleRGB(core.Enum):
+    """Apple's 12 RGB colors."""
     
     GRAY   = (128, 128, 128)
     RED    = (255,  59,  48)
@@ -51,8 +56,8 @@ class AppleRGB(foundation.Enum):
     WHITE  = (255, 255, 255)
 
 
-class BasicRGB(foundation.Enum):
-    """:class:`BasicRGB` defines 12 basic RGB colors."""
+class BasicRGB(core.Enum):
+    """12 basic RGB colors."""
     
     BLACK   = (  0,   0,   0)
     WHITE   = (255, 255, 255)
@@ -72,8 +77,8 @@ class BasicRGB(foundation.Enum):
     NAVY    = (  0,   0, 128)
     
 
-class BBoxFormat(foundation.Enum):
-    """:class:`BBoxFormat` defines different bounding box formats."""
+class BBoxFormat(core.Enum):
+    """Bounding box formats."""
     
     CXCYAR      = "cxcyar"
     CXCYRH      = "cxcyrh"
@@ -151,7 +156,7 @@ class BBoxFormat(foundation.Enum):
         return None
 
 
-class BorderType(foundation.Enum):
+class BorderType(core.Enum):
     
     CONSTANT      = "constant"
     CIRCULAR      = "circular"
@@ -223,7 +228,7 @@ class BorderType(foundation.Enum):
         return None
 
 
-class CFA(foundation.Enum):
+class CFA(core.Enum):
     """Define the configuration of the color filter array.
 
     So far only bayer images is supported and the enum sets the pixel order for
@@ -248,7 +253,7 @@ class CFA(foundation.Enum):
     GR = 3
 
 
-class DistanceMetric(foundation.Enum):
+class DistanceMetric(core.Enum):
     
     BRAYCURTIS         = "braycurtis"
     CANBERRA           = "canberra"
@@ -377,7 +382,7 @@ class DistanceMetric(foundation.Enum):
         return None
 
 
-class InterpolationMode(foundation.Enum):
+class InterpolationMode(core.Enum):
     
     BICUBIC       = "bicubic"
     BILINEAR      = "bilinear"
@@ -504,7 +509,7 @@ class InterpolationMode(foundation.Enum):
         return None
 
 
-class PaddingMode(foundation.Enum):
+class PaddingMode(core.Enum):
     
     CONSTANT      = "constant"
     # For torch compatibility
@@ -605,7 +610,7 @@ class PaddingMode(foundation.Enum):
         return None
 
 
-class RGB(foundation.Enum):
+class RGB(core.Enum):
     """138 RGB colors."""
     
     MAROON                  = (128,   0,   0)
@@ -749,7 +754,7 @@ class RGB(foundation.Enum):
     WHITE                   = (255, 255, 255)
 
 
-class VisionBackend(foundation.Enum):
+class VisionBackend(core.Enum):
     
     CV      = "cv"
     FFMPEG  = "ffmpeg"
@@ -822,6 +827,6 @@ class VisionBackend(foundation.Enum):
         return VISION_BACKEND
 
 
-VISION_BACKEND = VisionBackend.PIL
+VISION_BACKEND = VisionBackend.CV
 
 # endregion

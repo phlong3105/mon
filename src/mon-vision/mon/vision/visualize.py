@@ -7,90 +7,101 @@ Plotting functions.
 
 from __future__ import annotations
 
+__all__ = [
+    "get_grid_size", "imshow", "imshow_classification", "imshow_enhancement",
+    "make_image_grid", "move_figure", "plt"
+]
+
+from typing import Collection, Sequence
+
+import matplotlib
+import numpy as np
+import torch
+import torchvision
 from matplotlib import pyplot as plt
-from one.core import *
-from one.data import ClassLabels
-from one.vision.acquisition import to_image
-from torch import Tensor
+
+from mon import core, coreimage as ci, coreml
+from mon.coreml.typing import Strs
 
 # mpl.use("wxAgg")
 
 plt.ion()
 plt.show()
-plt.switch_backend("qt5agg")
+# plt.switch_backend("qt6agg")
 plt.rcParams["savefig.bbox"] = "tight"
 
 
-# H1: - Positioning ------------------------------------------------------------
+# region Window Positioning
 
-def get_grid_size(n: int, nrow: int | None = 8) -> tuple[int, int]:
-    """
-    It takes a number of items and a maximum number of items per row, and
-    returns the number of rows and columns needed to display the items in a
-    grid.
-
+def get_grid_size(n: int, nrow: int | None = 4) -> tuple[int, int]:
+    """Calculate the number of rows and columns needed to display the items
+    in a grid.
+    
     Args:
-        n (int): The number of items to be plotted.
-        nrow (int | None): The maximum number of items to display in a row.
-            The final grid size is (n / nrow, nrow). If None, then the number
-            of items in a row will be the same as the number of items in the
-            list. Defaults to 8.
-
+        n: The number of items.
+        nrow: The number of items in a row. The final grid size is
+            (:param:`n` / :param:`nrow`, :param:`nrow`). If None, put all items
+            in a single row. Defaults to 4.
+    
     Returns:
-        A tuple of the number of rows and columns.
+        A tuple (nrows, ncols), where nrows is the number of rows and ncols is
+        the number of columns.
     """
     if isinstance(nrow, int) and nrow > 0:
         ncols = nrow
     else:
         ncols = n
-    nrows = math.ceil(n / ncols)
+    nrows = core.math.ceil(n / ncols)
     return nrows, ncols
 
 
 def make_image_grid(
-    images: Tensors,
-    nrow: int | None = 8,
-    denormalize: bool = False,
-) -> Tensor:
-    """
-    Make a grid of images.
+    images     : torch.Tensor | Sequence[torch.Tensor],
+    nrow       : int | None = 8,
+    denormalize: bool       = False,
+) -> torch.Tensor:
+    """Make a grid of images.
 
     Args:
-        images (Tensor):
-
-        nrow (int | None): The maximum number of items to display in a row.
-            The final grid size is (n / nrow, nrow). If None, then the number
-            of items in a row will be the same as the number of items in the
-            list. Defaults to 8.
-        denormalize (bool): If True, the image will be denormalized to
-            [0, 255]. Defaults to True.
+        images:
+        nrow: The maximum number of items to display in a row. The final grid
+            size is (n / nrow, nrow). If None, then the number of items in a row
+            will be the same as the number of items in the list. Defaults to 8.
+        denormalize: If True, denormalize the image to [0, 255]. Defaults to
+            True.
 
     Returns:
-        Image grid tensor.
+        An image grid tensor.
     """
     nrow = nrow if isinstance(nrow, int) and nrow > 0 else 8
-    images = to_3d_tensor_list(images)
-    images = t.denormalize(images) if denormalize else images
+    images = ci.to_list_of_3d_tensor(input=images)
+    images = ci.denormalize_image(image=images) if denormalize else images
     return torchvision.utils.make_grid(tensor=images, nrow=nrow)
 
 
 def move_figure(x: int, y: int):
-    """Move figure's upper left corner to pixel (x, y)."""
-    mngr = plt.get_current_fig_manager()
-    fig = plt.gcf()
+    """Move the matplotlib figure around the window. The upper-left corner to
+    the location specified by :param:`(x,  y)`.
+    """
+    mngr    = plt.get_current_fig_manager()
+    fig     = plt.gcf()
     backend = matplotlib.get_backend()
     
     if backend == "TkAgg":
         mngr.window.wm_geometry("+%d+%d" % (x, y))
     elif backend == "WXAgg":
         mngr.window.SetPosition((x, y))
-    else:  # This works for QT and GTK. You can also use window.setGeometry
+    else:  # This works for QT and GTK. You can use window.setGeometry
         mngr.window.move(x, y)
 
+# endregion
+
+
+# region Show
 
 def imshow(
     winname    : str,
-    image      : Tensor,
+    image      : torch.Tensor,
     label      : Strs | None = None,
     denormalize: bool        = True,
     scale      : int         = 1,
@@ -99,38 +110,34 @@ def imshow(
     nrow       : int  | None = 8,
     wait_time  : float       = 0.01
 ):
-    """
-    Show an image tensor in a window using matplotlib.
+    """Show an image tensor in a window using matplotlib.
     
     Args:
-        winname (str): The name of the window to display the image in.
-        image (Tensor): The images to be displayed. Can be a 3D tensor
-            [C, H, W] or 4D tensor of shape [B, C, H, W].
-        label (Strs | None): Sequence of images' labels string.
-            Defaults to None.
-        denormalize (bool): If True, the image will be denormalized to
-            [0, 255]. Defaults to True.
-        scale (int): Scale the size of matplotlib figure. Defaults to 1 means
-            size x 1.
-        save_cfg (dict | None): Save figure config. Defaults to None.
-        max_n (int | None): Show max n images if `image` has a batch size
-            of more than `max_n` images. Defaults to None means show all.
-        nrow (int | None): The maximum number of items to display in a row.
-            The final grid size is (n / nrow, nrow). If None, then the number
-            of items in a row will be the same as the number of items in the
-            list. Defaults to 8.
-        wait_time (float): Wait some time (in seconds) to display the figure
-            then reset. Defaults to 0.01.
+        winname: The name of the window to display the image in.
+        image: The images to be displayed. Can be a 3D tensor [C, H, W] or 4D
+            tensor of shape [B, C, H, W].
+        label: Sequence of images' labels string. Defaults to None.
+        denormalize: If True, denormalize the image to [0, 255]. Defaults to
+            True.
+        scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
+        save_cfg: Save figure config. Defaults to None.
+        max_n: Show max n images if :param:`image` has a batch size of more than
+            :param:`max_n` images. Defaults to None means show all.
+        nrow: The maximum number of items to display in a row. The final grid
+            size is (n / nrow, nrow). If None, then the number of items in a row
+            will be the same as the number of items in the list. Defaults to 8.
+        wait_time: Wait for some time (in seconds) to display the figure then
+            reset. Defaults to 0.01.
     """
     # Prepare image and label
-    image = to_3d_tensor_list(image)
+    image = ci.to_list_of_3d_tensor(input=image)
     max_n = max_n if isinstance(max_n, int) else len(image)
     image = image[: max_n]
     
     if label is not None:
-        label = to_list(label)
+        label = core.to_list(input=label)
         label = label[:max_n]
-        assert_same_length(image, label)
+        assert len(image) == len(label)
     
     # Draw figure
     n            = len(image)
@@ -149,7 +156,7 @@ def imshow(
     for idx, img in enumerate(image):
         i   = int(idx / nrow)
         j   = int(idx % nrow)
-        img = to_image(image=img, keepdim=False, denormalize=denormalize)
+        img = ci.to_image(image=img, keepdim=False, denormalize=denormalize)
         axs[i, j].imshow(np.asarray(img), aspect="auto")
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         if label is not None:
@@ -168,64 +175,58 @@ def imshow(
 
 def imshow_classification(
     winname    : str,
-    image 	   : Tensor,
-    pred	   : Tensor | None      = None,
-    target	   : Tensor | None      = None,
-    label	   : Strs   | None      = None,
-    classlabels: ClassLabels | None = None,
-    top_k	   : int  | None    	= 5,
-    denormalize: bool               = True,
-    scale      : int                = 1,
-    save_cfg   : dict | None        = None,
-    max_n      : int  | None 		= None,
-    nrow       : int  | None        = 8,
-    wait_time  : float              = 0.01,
+    image 	   : torch.Tensor,
+    pred	   : torch.Tensor       | None = None,
+    target	   : torch.Tensor       | None = None,
+    label	   : Strs               | None = None,
+    classlabels: coreml.ClassLabels | None = None,
+    top_k	   : int                | None = 5,
+    denormalize: bool                      = True,
+    scale      : int                       = 1,
+    save_cfg   : dict               | None = None,
+    max_n      : int                | None = None,
+    nrow       : int                | None = 8,
+    wait_time  : float                     = 0.01,
 ):
-    """
-    Show classification results on images using matplotlib.
+    """Show classification results on images using matplotlib.
     
     Args:
-        winname (str): The name of the window to display the image in.
-        image (Tensor): The images to be displayed. Can be a 3D tensor
-            [C, H, W] or 4D tensor of shape [B, C, H, W].
-        pred (Tensor | None): Predicted classes probabilities. Can be a tensor
-            of shape [B, N] where N is the total number of all classes in the
-            dataset. Defaults to None.
-        target (Tensor | None): A sequence of ground-truths id.
-            Defaults to None.
-        label (Strs | None): Sequence of images' labels string.
-            Defaults to None.
-        classlabels (ClassLabels | None): ClassLabels objects that contains all
-            class labels in the datasets. Defaults to None.
-        top_k (int | None): Show only the top k classes' probabilities. If None
-            then shows all. Defaults to 5.
-        denormalize (bool): If True, the image will be denormalized to
-            [0, 255]. Defaults to True.
-        scale (int): Scale the size of matplotlib figure. Defaults to 1 means
-            size x 1.
-        save_cfg (dict | None): Save figure config. Defaults to None.
-        max_n (int | None): Show max n images if `image` has a batch size
-            of more than `max_n` images. Defaults to None means show all.
-        nrow (int | None): The maximum number of items to display in a row.
-            The final grid size is (n / nrow, nrow). If None, then the number
-            of items in a row will be the same as the number of items in the
-            list. Defaults to 8.
-        wait_time (float): Wait some time (in seconds) to display the figure
-            then reset. Defaults to 0.
+        winname: The name of the window to display the image in.
+        image: The images to be displayed. Can be a 3D tensor [C, H, W] or 4D
+            tensor of shape [B, C, H, W].
+        pred: Predicted classes probabilities. Can be a tensor of shape [B, N]
+            where N is the total number of all classes in the dataset. Defaults
+            to None.
+        target: A sequence of ground-truths ID. Defaults to None.
+        label: A sequence of images' labels strings. Defaults to None.
+        classlabels: ClassLabels objects that contain all class labels in the
+            datasets. Defaults to None.
+        top_k: Show only the top k classes' probabilities. If None then shows
+            all. Defaults to 5.
+        denormalize: If True, denormalize the image [0, 255]. Defaults to True.
+        scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
+        save_cfg: Save figure config. Defaults to None.
+        max_n: Show max n images if :param:`image` has a batch size of more than
+            :param:`max_n` images. Defaults to None means show all.
+        nrow: The maximum number of items to display in a row. The final grid
+            size is (n / nrow, nrow). If None, then the number of items in a row
+            will be the same as the number of items in the list. Defaults to 8.
+        wait_time: Wait for some time (in seconds) to display the figure then
+            reset. Defaults to 0.
     """
     # Prepare image and label
-    image = to_3d_tensor_list(image)
+    image = ci.to_list_of_3d_tensor(input=image)
     max_n = max_n if isinstance(max_n, int) else len(image)
     top_k = top_k if isinstance(top_k, int) else (
-        len(classlabels.list) if isinstance(classlabels, ClassLabels) else 5
+        len(classlabels) if isinstance(classlabels, coreml.ClassLabels) else 5
     )
     image = image[: max_n]
 
     scores_topk = None
     pred_topk   = None
     pred_top1   = None
-    if isinstance(pred, Tensor):
-        assert_tensor_of_ndim(pred, 2)
+    if isinstance(pred, torch.Tensor):
+        assert isinstance(pred, torch.Tensor) and pred.ndim == 2
         pred          = pred.clone()
         probs, idxes  = torch.sort(pred, dim=1)
         scores_topk   = probs[:max_n, -top_k:][:, ::].tolist()
@@ -234,7 +235,7 @@ def imshow_classification(
     else:
         scores_topk   = [[0.0] * top_k for _ in range(len(image))]
         
-    if isinstance(classlabels, ClassLabels):
+    if isinstance(classlabels, coreml.ClassLabels):
         if pred_topk:
             pred_topk = [[classlabels.get_name(key="id", value=v) for v in p]
                           for p in pred_topk]
@@ -246,7 +247,7 @@ def imshow_classification(
             target    = [classlabels.get_name(key="id", value=v) for v in target]
             
     label = label[:max_n] if label is not None else [f"" for _ in range(len(image))]
-    assert_same_length(image, label)
+    assert len(image) == len(label)
     
     if pred_top1 is not None and target is not None:
         label  = [f"{l} \n pred={p} gt={t}"        for (l, p, t) in zip(label, pred_top1, target)]
@@ -281,7 +282,7 @@ def imshow_classification(
             ax.tick_params(axis="x", direction="in", pad=-10)
             ax.tick_params(axis="y", direction="in", pad=-10)
         # Image
-        img = to_image(image=img, keepdim=False, denormalize=denormalize)
+        img = ci.to_image(image=img, keepdim=False, denormalize=denormalize)
         axs[0].imshow(np.asarray(img), aspect="auto")
         # Classlabels
         pps = axs[1].barh(y_pos, scores, align="center", color="deepskyblue")
@@ -320,30 +321,26 @@ def imshow_enhancement(
     nrow       : int  | None = 8,
     wait_time  : float       = 0.01,
 ):
-    """
-    Show image enhancement results using matplotlib.
+    """Show image enhancement results using matplotlib.
     
     Args:
-        winname (str): The name of the window to display the image in.
-        image (Collection): A collection of images to be displayed. Each item
-            is a 4D tensor of shape [B, C, H, W] represented an image type
-            (i.e, input, pred, target, enhanced image, ...). If given a
-            dictionary, the key will be used as the column label.
-        label (Strs | None): Sequence of images' labels string.
-            Defaults to None.
-        denormalize (bool): If True, the image will be denormalized to
-            [0, 255]. Defaults to True.
-        scale (int): Scale the size of matplotlib figure. Defaults to 1 means
-            size x 1.
-        save_cfg (dict | None): Save figure config. Defaults to None.
-        max_n (int | None): Show max n images if `image` has a batch size
-            of more than `max_n` images. Defaults to None means show all.
-        nrow (int | None): The maximum number of items to display in a row.
-            The final grid size is (n / nrow, nrow). If None, then the number
-            of items in a row will be the same as the number of items in the
-            list. Defaults to 8.
-        wait_time (float): Wait some time (in seconds) to display the figure
-            then reset. Defaults to 0.
+        winname: The name of the window to display the image in.
+        image: A collection of images to be displayed. Each item is a 4D tensor
+            of shape [B, C, H, W] represented an image type (i.e, input, pred,
+            target, enhanced image, ...). If given a dictionary, the key will be
+            used as the column label.
+        label: A sequence of images' labels string. Defaults to None.
+        denormalize: If True, denormalize the image to [0, 255]. Defaults to
+            True.
+        scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
+        save_cfg: Save figure config. Defaults to None.
+        max_n: Show max n images if :param:`image` has a batch size of more than
+            :param:`max_n` images. Defaults to None means show all.
+        nrow: The maximum number of items to display in a row. The final grid
+            size is (n / nrow, nrow). If None, then the number of items in a row
+            will be the same as the number of items in the list. Defaults to 8.
+        wait_time: Wait for some time (in seconds) to display the figure then
+            reset. Defaults to 0.
     """
     # Prepare image and label
     if isinstance(image, dict):
@@ -351,16 +348,16 @@ def imshow_enhancement(
     else:
         header = ["" for _ in range(len(image))]
         
-    image = to_4d_tensor_list(image)
-    image = [to_3d_tensor_list(i) for i in image]
+    image = ci.to_list_of_4d_tensor(input=image)
+    image = [ci.to_list_of_3d_tensor(input=i) for i in image]
     max_n = max_n if isinstance(max_n, int) else len(image[0])
     image = [i[: max_n] for i in image]
 
-    assert_same_length(image, header)
+    assert len(image) == len(header)
     if label is not None:
-        label = to_list(label)
+        label = core.to_list(label)
         label = label[:max_n]
-        assert_same_length(image[0], label)
+        assert len(image[0]) == len(label)
 
     # Draw figure
     ncols    = len(image)
@@ -378,7 +375,7 @@ def imshow_enhancement(
     [ax.set_title(l) for ax, l in zip(axs[0], header)]
     for i, img in enumerate(image):
         for j, im in enumerate(img):
-            im = to_image(image=im, keepdim=False, denormalize=denormalize)
+            im = ci.to_image(image=im, keepdim=False, denormalize=denormalize)
             axs[j, i].imshow(np.asarray(im), aspect="auto")
             axs[j, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         # if label is not None:
@@ -393,3 +390,5 @@ def imshow_enhancement(
         plt.savefig(filepath, **save_cfg)
     
     plt.pause(wait_time)
+
+# endregion

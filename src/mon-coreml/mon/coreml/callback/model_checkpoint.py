@@ -26,10 +26,10 @@ import numpy as np
 import torch
 from lightning.pytorch.utilities import cloud_io, logger
 
+from mon.core import console, error_console, pathlib, RUNS_DIR, yaml
 from mon.coreml import constant
 from mon.coreml.callback import base
 from mon.coreml.typing import PathType
-from mon.foundation import console, error_console, pathlib, RUNS_DIR, yaml
 
 
 # region Model Checkpoint Callback
@@ -62,7 +62,7 @@ class ModelCheckpoint(base.Checkpoint):
             :paramref:`~pytorch_lightning.trainer.trainer.Trainer.weights_save_path`
             arguments and if the Trainer uses a logger, the path will also
             contain logger name and version.
-        filename: Checkpoint filename. Can contain named formatting options to
+        filename: Checkpoint file_name. Can contain named formatting options to
             be autofilled. Defaults to None and will be set to {epoch}-{step}.
         monitor: Quantity to monitor. Defaults to None which saves a checkpoint
             only for the last epoch.
@@ -122,11 +122,11 @@ class ModelCheckpoint(base.Checkpoint):
               `every_n_epochs` and `check_val_every_n_epoch` evenly divide E.
         auto_insert_metric_name:
             - When True, the checkpoints filenames will contain the metric name.
-              For example, `filename='checkpoint_{epoch:02d}-{acc:02.0f}` with
+              For example, `file_name='checkpoint_{epoch:02d}-{acc:02.0f}` with
               epoch `1` and acc `1.12` will resolve to `checkpoint_epoch=01-acc=01.ckpt`.
             - Is useful to set it to False when metric names contain `/` as this
               will result in extra folders. For example,
-              `filename='epoch={epoch}-step={step}-val_acc={val/acc:.2f}', auto_insert_metric_name=False`
+              `file_name='epoch={epoch}-step={step}-val_acc={val/acc:.2f}', auto_insert_metric_name=False`
         verbose: Verbosity mode. Defaults to False.
     """
 
@@ -829,7 +829,7 @@ class ModelCheckpoint(base.Checkpoint):
         filename: str | None = None,
         ver     : int | None = None
     ) -> PathType:
-        """Generates a filename according to the defined template."""
+        """Generates a file_name according to the defined template."""
         filename = filename or self.filename
         filename = self._format_checkpoint_name(
             filename                = filename,

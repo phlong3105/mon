@@ -16,7 +16,7 @@ from torchvision.transforms import (
     functional_tensor as functional_t,
 )
 
-from mon import foundation
+from mon import core
 from mon.coreimage import constant, util
 from mon.coreimage.transform.affine import cropping
 from mon.coreimage.typing import InterpolationModeType, Ints
@@ -113,7 +113,7 @@ def resize(
     
     return functional_t.resize(
         img           = image,
-        size          = foundation.to_list(size),  # H, W
+        size          = core.to_list(size),  # H, W
         interpolation = str(interpolation.value),
         antialias     = antialias
     )

@@ -105,7 +105,7 @@ class DenseBlock(base.LayerParsingMixin, nn.ModuleDict):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1           = args[0]
         out_channels = args[1]
         num_layers   = args[2]
@@ -144,7 +144,7 @@ class DenseTransition(base.LayerParsingMixin, nn.Module):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1 = args[0]
         c2 = c1 // 2
         ch.append(c2)

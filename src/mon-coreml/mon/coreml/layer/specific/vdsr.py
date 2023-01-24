@@ -15,10 +15,10 @@ from typing import Any
 import torch
 from torch import nn
 
+from mon.core import math
 from mon.coreml import constant
 from mon.coreml.layer import base, common
 from mon.coreml.typing import Int2T
-from mon.foundation import math
 
 
 @constant.LAYER.register()

@@ -30,9 +30,9 @@ import torch.cuda
 from lightning.pytorch import accelerators, strategies
 from torch import distributed
 
+from mon import core
 from mon.coreml import constant
 from mon.coreml.typing import CallableType
-from mon.foundation import console
 
 # region Accelerator
 
@@ -127,23 +127,23 @@ def set_distributed_backend(strategy: str | CallableType, cudnn: bool = True):
     """
     if torch.backends.cudnn.is_available():
         torch.backends.cudnn.enabled = cudnn
-        console.log(
+        core.console.log(
             f"cuDNN available: [bright_green]True[/bright_green], "
             f"used:" + "[bright_green]True" if cudnn else "[red]False"
         )
     else:
-        console.log(f"cuDNN available: [red]False")
+        core.console.log(f"cuDNN available: [red]False")
     
     if strategy in ["ddp"] or isinstance(strategy, DDPStrategy):
         if platform.system() == "Windows":
             os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
-            console.log(
+            core.console.log(
                 "Running on a Windows machine, set torch distributed backend "
                 "to gloo."
             )
         elif platform.system() == "Linux":
             os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "nccl"
-            console.log(
+            core.console.log(
                 "Running on a Unix machine, set torch distributed backend "
                 "to nccl."
             )

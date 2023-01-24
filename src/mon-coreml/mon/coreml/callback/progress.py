@@ -16,8 +16,8 @@ import torch
 from lightning.pytorch.callbacks import progress
 from lightning.pytorch.callbacks.progress import *
 
+from mon import core
 from mon.coreml import constant
-from mon.foundation import console, rich
 
 # region Callback
 
@@ -35,7 +35,7 @@ class RichProgressBar(progress.RichProgressBar):
     def _init_progress(self, trainer: lightning.Trainer):
         if self.is_enabled and (self.progress is None or self._progress_stopped):
             self._reset_progress_bar_ids()
-            self._console = console
+            self._console = core.console
             # self._console: Console = Console(**self._console_kwargs)
             self._console.clear_live()
             self._metric_component = rich_progress.MetricsTextColumn(
@@ -56,12 +56,12 @@ class RichProgressBar(progress.RichProgressBar):
     def configure_columns(self, trainer: lightning.Trainer) -> list:
         if torch.cuda.is_available():
             return [
-                rich.progress.TextColumn(
-                    rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S.%f]"),
+                core.rich.progress.TextColumn(
+                    core.rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S.%f]"),
                     justify = "left",
                     style   = "log.time"
                 ),
-                rich.progress.TextColumn("[progress.description][{task.description}]"),
+                core.rich.progress.TextColumn("[progress.description][{task.description}]"),
                 rich_progress.CustomBarColumn(
                     complete_style = self.theme.progress_bar,
                     finished_style = self.theme.progress_bar_finished,
@@ -69,23 +69,23 @@ class RichProgressBar(progress.RichProgressBar):
                 ),
                 rich_progress.BatchesProcessedColumn(style="progress.download"),
                 "•",
-                rich.GPUMemoryUsageColumn(),
+                core.rich.GPUMemoryUsageColumn(),
                 "•",
                 rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
                 "•",
-                rich.progress.TimeRemainingColumn(),
+                core.rich.progress.TimeRemainingColumn(),
                 ">",
-                rich.progress.TimeElapsedColumn(),
-                rich.progress.SpinnerColumn(),
+                core.rich.progress.TimeElapsedColumn(),
+                core.rich.progress.SpinnerColumn(),
             ]
         else:
             return [
-                rich.progress.TextColumn(
-                    rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S.%f]"),
+                core.rich.progress.TextColumn(
+                    core.rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S.%f]"),
                     justify = "left",
                     style   = "log.time"
                 ),
-                rich.progress.TextColumn("[progress.description][{task.description}]"),
+                core.rich.progress.TextColumn("[progress.description][{task.description}]"),
                 rich_progress.CustomBarColumn(
                     complete_style = self.theme.progress_bar,
                     finished_style = self.theme.progress_bar_finished,
@@ -95,10 +95,10 @@ class RichProgressBar(progress.RichProgressBar):
                 "•",
                 rich_progress.ProcessingSpeedColumn(style="progress.data.speed"),
                 "•",
-                rich.progress.TimeRemainingColumn(),
+                core.rich.progress.TimeRemainingColumn(),
                 ">",
-                rich.progress.TimeElapsedColumn(),
-                rich.progress.SpinnerColumn(),
+                core.rich.progress.TimeElapsedColumn(),
+                core.rich.progress.SpinnerColumn(),
             ]
 
 # endregion

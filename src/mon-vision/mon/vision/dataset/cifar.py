@@ -1,33 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-CIFAR datasets and datamodules.
-"""
+"""This module implements CIFAR datasets and datamodules."""
 
 from __future__ import annotations
+
+__all__ = [
+    "CIFAR10", "CIFAR100", "CIFAR10DataModule", "CIFAR100DataModule",
+    "cifar_10_classlabels", "cifar_100_classlabels",
+]
 
 import argparse
 import pickle
 
-from matplotlib import pyplot as plt
+import numpy as np
 from torch.utils.data import random_split
-from torchvision.datasets.utils import check_integrity
-from torchvision.datasets.utils import download_and_extract_archive
+from torchvision.datasets.utils import (
+    check_integrity,
+    download_and_extract_archive,
+)
 
-from one.constants import *
-from one.core import *
-from one.data import Classification
-from one.data import ClassLabels
-from one.data import ClassLabels_
-from one.data import DataModule
-from one.data import Image
-from one.data import ImageClassificationDataset
-from one.plot import imshow_classification
-from one.vision.acquisition import to_tensor
-from one.vision.transformation import Resize
+from mon import core, coreimage as ci
+from mon.vision import constant, visualize
+from mon.vision.dataset import base
+from mon.vision.transform import transform as t
+from mon.vision.typing import (
+    CallableType, ClassLabelsType, Ints, ModelPhaseType, PathType, Strs,
+    TransformType, VisionBackendType,
+)
 
-cifar10_classlabels = [
+# region ClassLabels
+
+cifar_10_classlabels  = [
     { "name": "airplane",   "id": 0 },
     { "name": "automobile", "id": 1 },
     { "name": "bird",       "id": 2 },
@@ -40,7 +44,7 @@ cifar10_classlabels = [
     { "name": "truck",      "id": 9 }
 ]
 
-cifar100_classlabels = [
+cifar_100_classlabels = [
     { "name": "beaver"           , "superclass": "aquatic mammals"               , "id": 0 },
     { "name": "dolphin"          , "superclass": "aquatic mammals"               , "id": 1 },
     { "name": "otter"            , "superclass": "aquatic mammals"               , "id": 2 },
@@ -143,39 +147,38 @@ cifar100_classlabels = [
     { "name": "tractor"          , "superclass": "vehicles 2"                    , "id": 99 }
   ]
 
+# endregion
 
-# H1: - Dataset ----------------------------------------------------------------
 
-@DATASETS.register(name="cifar10")
-class CIFAR10(ImageClassificationDataset):
-    """
-    `CIFAR-10 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ Dataset.
+# region Dataset
+
+@constant.DATASET.register(name="cifar-10")
+class CIFAR10(base.ImageClassificationDataset):
+    """CIFAR-10.
+    
+    References:
+        https://www.cs.toronto.edu/~kriz/cifar.html
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image of shape [H, W, C], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 32, 32).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
-    base_folder = "cifar10"
+    base_folder = "cifar-10"
     url         = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
     filename    = "cifar10.tar.gz"
     tgz_md5     = "c58f30108f718f92721af3b95e74349a"
@@ -190,32 +193,33 @@ class CIFAR10(ImageClassificationDataset):
         ["test_batch", "40351d587109b95175f43aff81a1287e"],
     ]
     meta        = {
-        "filename": "batches.meta",
+        "file_name": "batches.meta",
         "key"     : "label_names",
         "md5"     : "5ff9c542aee3614f3951f8cda6e48888",
     }
     
     def __init__(
         self,
-        root            : Path_,
-        split           : str,
-        shape           : Ints,
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "cifar-10",
+        root            : PathType               = constant.DATA_DIR / "cifar" / "cifar-10",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 32, 32),
+        classlabels     : ClassLabelsType | None = cifar_10_classlabels,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
-            name             = "cifar10",
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
-            classlabels      = root / "classlabels.json",
+            classlabels      = classlabels or cifar_10_classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -227,21 +231,17 @@ class CIFAR10(ImageClassificationDataset):
         )
     
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"CIFAR-10 dataset only supports `split`: `train` or `test`. "
-                f"Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
         
         if not self._check_integrity():
             self.download()
             
-        downloaded_list = self.train_list \
-            if self.split == "train" \
-            else self.test_list
+        downloaded_list = self.train_list if self.split == "train" else self.test_list
         
         images = []
         labels = []
@@ -255,27 +255,28 @@ class CIFAR10(ImageClassificationDataset):
                 else:
                     labels.extend(entry["fine_labels"])
 
-        images = np.vstack(images).reshape(-1, 3, 32, 32)
+        images = np.vstack(images).reshape(shape=(-1, 3, 32, 32))
         images = images.transpose((0, 2, 3, 1))  # convert to HWC
-        self.images: list[Image] = [
-            Image(
-                image          = to_tensor(img, keepdim=False, normalize=True),
-                keep_in_memory = True
+        self.images: list[base.ImageLabel] = [
+            base.ImageLabel(
+                image          = ci.to_tensor(image=img, keepdim=False, normalize=True),
+                keep_in_memory = True,
             )
             for img in images
         ]
-        self.labels: list[Classification] = [
-            Classification(id=l) for l in labels
+        self.labels: list[base.ClassificationLabel] = [
+            base.ClassificationLabel(id=l) for l in labels
         ]
         
     def list_labels(self):
+        """List label files."""
         pass
 
     def filter(self):
         pass
     
     def _load_meta(self):
-        path = self.root / self.meta["filename"]
+        path = self.root / self.meta["file_name"]
         if not check_integrity(path, self.meta["md5"]):
             raise RuntimeError(
                 "Dataset metadata file not found or corrupted. You can use "
@@ -296,7 +297,7 @@ class CIFAR10(ImageClassificationDataset):
 
     def download(self):
         if self._check_integrity():
-            console.log("Files already downloaded and verified")
+            core.console.log(f"Files already downloaded and verified")
             return
         download_and_extract_archive(
             self.url, self.root.parent, filename=self.filename, md5=self.tgz_md5
@@ -306,45 +307,66 @@ class CIFAR10(ImageClassificationDataset):
         return "Split: {}".format("Train" if self.train is True else "Test")
 
 
-@DATASETS.register(name="cifar100")
+@constant.DATASET.register(name="cifar-100")
 class CIFAR100(CIFAR10):
-    """
-    CIFAR-100 <https://www.cs.toronto.edu/~kriz/cifar.html>_ Dataset.
+    """CIFAR-100.
+    
+    References:
+        https://www.cs.toronto.edu/~kriz/cifar.html
+    
+    Args:
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 32, 32).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
+            Defaults to False.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
-    base_folder = "cifar100"
+    base_folder = "cifar-100"
     url         = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
     filename    = "cifar100.tar.gz"
     tgz_md5     = "eb9058c3a382ffc7106e4002c42a8d85"
     train_list  = [["train", "16019d7e3df5f24257cddd939b257f8d"], ]
     test_list   = [["test", "f0ef6b0ae62326f3e7ffdfab6717acfc"], ]
     meta        = {
-        "filename": "meta",
+        "file_name": "meta",
         "key"     : "fine_label_names",
         "md5"     : "7973b15100ade9c7d40fb424638fde48",
     }
     
     def __init__(
         self,
-        root            : Path_,
-        split           : str,
-        shape           : Ints,
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "cifar-100",
+        root            : PathType               = constant.DATA_DIR / "cifar" / "cifar-100",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 32, 32),
+        classlabels     : ClassLabelsType | None = cifar_100_classlabels,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
-            name             = "cifar100",
+            name             = name,
             root             = root,
             split            = split,
             shape            = shape,
-            classlabels      = root / "classlabels.json",
+            classlabels      =classlabels or cifar_100_classlabels,
             transform        = transform,
             target_transform = target_transform,
             transforms       = transforms,
@@ -355,28 +377,45 @@ class CIFAR100(CIFAR10):
             *args, **kwargs
         )
 
+# endregion
 
-# H1: - Datamodule -------------------------------------------------------------
 
-@DATAMODULES.register(name="cifar10")
-class CIFAR10DataModule(DataModule):
-    """
-    CIFAR-10 DataModule.
+# region Datamodule
+
+@constant.DATAMODULE.register(name="cifar-10")
+class CIFAR10DataModule(base.DataModule):
+    """CIFAR-10 datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 32, 32).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "cifar10",
-        root            : Path_              = DATA_DIR / "cifar" / "cifar10",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "cifar-10",
+        root            : PathType             = constant.DATA_DIR / "cifar" / "cifar-10",
+        shape           : Ints                 = (3, 32, 32),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -396,45 +435,41 @@ class CIFAR10DataModule(DataModule):
     
     @property
     def num_workers(self) -> int:
+        """The number of workers used in the data loading pipeline.
+        Set to: 4 * the number of :attr:`devices` to avoid a bottleneck.
         """
-        Returns number of workers used in the data loading pipeline.
-        """
-        # Set `num_workers` = 4 * the number of gpus to avoid bottleneck
         return 1
     
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:`train` and :attr:'val'.
+                - "testing"  : prepares :attr:`test`.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]CIFAR-10[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = CIFAR10(
                 root             = self.root,
                 split            = "train",
@@ -453,8 +488,8 @@ class CIFAR10DataModule(DataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = CIFAR10(
                 root             = self.root,
                 split            = "test",
@@ -474,31 +509,44 @@ class CIFAR10DataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels.from_list(cifar10_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=cifar_10_classlabels)
 
 
-@DATAMODULES.register(name="cifar100")
-class CIFAR100DataModule(DataModule):
-    """
-    CIFAR-100 DataModule.
+@constant.DATAMODULE.register(name="cifar-100")
+class CIFAR100DataModule(base.DataModule):
+    """CIFAR-100 datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 32, 32).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "cifar100",
-        root            : Path_              = DATA_DIR / "cifar" / "cifar100",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "cifar-100",
+        root            : PathType             = constant.DATA_DIR / "cifar" / "cifar-100",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -517,38 +565,35 @@ class CIFAR100DataModule(DataModule):
         )
     
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:`train` and :attr:'val'.
+                - "testing"  : prepares :attr:`test`.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]CIFAR-100[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
+        
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = CIFAR100(
                 root             = self.root,
                 split            = "train",
@@ -567,8 +612,8 @@ class CIFAR100DataModule(DataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = CIFAR100(
                 root             = self.root,
                 split            = "test",
@@ -588,47 +633,45 @@ class CIFAR100DataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
-        self.classlabels = ClassLabels.from_list(cifar100_classlabels)
+        """Load all the class-labels of the dataset."""
+        self.classlabels = base.ClassLabels.from_value(value=cifar_100_classlabels)
+
+# endregion
 
 
-# H1: - Test -------------------------------------------------------------------
+# region Test
 
-def test_cifar10():
+def test_cifar_10():
     cfg = {
-        "name": "cifar10",
-            # Dataset's name.
-        "root": DATA_DIR / "cifar" / "cifar10",
-           # Root directory of dataset.
+        "name": "cifar-10",
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "cifar" / "cifar-10",
+            # A root directory where the data is stored.
         "shape": [3, 32, 32],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 32, 32).
         "transform": [
-            Resize(size=[3, 32, 32])
+            t.Resize(size=[3, 32, 32]),
         ],
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": None,
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -641,48 +684,46 @@ def test_cifar10():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow_classification(
+    visualize.imshow_classification(
         winname     = "image",
         image       = input,
         target      = target,
         classlabels = dm.classlabels
     )
-    plt.show(block=True)
+    visualize.plt.show(block=True)
 
 
-def test_cifar100():
+def test_cifar_100():
     cfg = {
-        "name": "cifar100",
-            # Dataset's name.
-        "root": DATA_DIR / "cifar" / "cifar100",
-            # Root directory of dataset.
+        "name": "cifar-100",
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "cifar" / "cifar100",
+            # A root directory where the data is stored.
         "shape": [3, 32, 32],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 32, 32).
         "transform": [
-            Resize(size=[3, 32, 32])
+            t.Resize(size=[3, 32, 32])
         ],
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": None,
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": True,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -695,27 +736,31 @@ def test_cifar100():
     # Visualize one sample
     data_iter           = iter(dm.train_dataloader)
     input, target, meta = next(data_iter)
-    imshow_classification(
+    visualize.imshow_classification(
         winname     = "image",
         image       = input,
         target      = target,
         classlabels = dm.classlabels
     )
-    plt.show(block=True)
+    visualize.plt.show(block=True)
+
+# endregion
 
 
-# H1: - Main -------------------------------------------------------------------
+# region Main
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str , default="test-cifar10", help="The task to run")
+    parser.add_argument("--task", type=str , default="test-cifar-10", help="The task to run")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.task == "test-cifar10":
-        test_cifar10()
-    elif args.task == "test-cifar100":
-        test_cifar100()
+    if args.task == "test-cifar-10":
+        test_cifar_10()
+    elif args.task == "test-cifar-100":
+        test_cifar_100()
+
+# endregion

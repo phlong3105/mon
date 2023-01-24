@@ -17,9 +17,9 @@ import munch
 import numpy as np
 import torch
 
-from mon import foundation
-from mon.foundation import (
-    console, error_console, file_handler, pathlib, rich,
+from mon import core
+from mon.core import (
+    console, file_handler, pathlib, rich,
 )
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 # region Label
 
 class Label(ABC):
-    """The base class for all label classes. A label instance represent a
+    """The base class for all label classes. A label instance represents a
     logical collection of data associated with a particular task.
     """
     
@@ -51,7 +51,7 @@ class Label(ABC):
 
 class ClassLabel(munch.Munch, Label):
     """A class-label represents a class pre-defined in a dataset. It consists of
-    basic attributes such as: id, name, and color.
+    basic attributes such as id, name, and color.
     """
 
     @property
@@ -65,7 +65,7 @@ class ClassLabels(list):
     
     Notes:
         We inherit the standard Python :class:`list` to take advantage of the
-        built-in functionality.
+        built-in functions.
     """
     
     def __init__(self, iterable: Sequence[ClassLabel]):
@@ -127,14 +127,16 @@ class ClassLabels(list):
             return cls.from_dict(value)
         if isinstance(value, list | tuple):
             return cls(value)
-        if isinstance(value, str | foundation.Path):
+        if isinstance(value, str | core.Path):
             return cls.from_file(value)
+        """
         error_console.log(
             f":param:`value` must be a :class:`ClassLabels`, :class:`dict`, "
             f":class:`munch.Munch`, :class:`str`, or "
             f":class:`mon.foundation.Path`. "
             f"But got: {type(value)}."
         )
+        """
         return None
     
     @property

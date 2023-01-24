@@ -27,7 +27,7 @@ import PIL.Image
 import torch
 import torchvision
 
-from mon import foundation
+from mon import core
 from mon.coreimage import color, constant, util
 from mon.coreimage.typing import (
     Image, Images, Ints, PathsType, PathType, Strs, VisionBackendType,
@@ -95,7 +95,7 @@ def read_image(
     to_rgb   : bool              = True,
     to_tensor: bool              = True,
     normalize: bool              = True,
-    backend  : VisionBackendType = constant.VisionBackend.CV
+    backend  : VisionBackendType = constant.VISION_BACKEND
 ) -> Image:
     """Read an image from a filepath. Optionally, convert it to RGB format, and
     :class:`torch.Tensor` type of shape [1, C, H, W].
@@ -208,7 +208,7 @@ class Loader(ABC):
         *args, **kwargs
     ):
         super().__init__()
-        self.source      = foundation.Path(source)
+        self.source      = core.Path(source)
         self.batch_size  = batch_size
         self.to_rgb      = to_rgb
         self.to_tensor   = to_tensor
@@ -275,7 +275,7 @@ class ImageLoader(Loader):
         to_tensor: If True, convert the image from :class:`np.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
-        backend: Image processing backend. Default to “cv“.
+        backend: Image processing backend. Default to VISION_BACKEND.
         verbose: Verbosity mode of video loader backend. Defaults to False.
     """
 
@@ -287,7 +287,7 @@ class ImageLoader(Loader):
         to_rgb     : bool              = True,
         to_tensor  : bool              = True,
         normalize  : bool              = True,
-        backend    : VisionBackendType = constant.VisionBackend.CV,
+        backend    : VisionBackendType = constant.VISION_BACKEND,
         verbose    : bool              = False,
     ):
         self.images  = []
@@ -357,8 +357,8 @@ class ImageLoader(Loader):
             ]
         elif isinstance(self.source, str):
             self.images = [
-                foundation.Path(i) for i in glob.glob(self.source)
-                if foundation.is_image_file(i)
+                core.Path(i) for i in glob.glob(self.source)
+                if core.is_image_file(i)
             ]
         else:
             raise IOError(f"Error when listing image files.")
@@ -619,11 +619,11 @@ class VideoLoaderCV(VideoLoader):
     def init(self):
         """Initialize the data source."""
         source = str(self.source)
-        if foundation.is_video_file(source):
+        if core.is_video_file(source):
             self.video_capture = cv2.VideoCapture(source, self.api_preference)
             num_images         = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
             self.frame_rate    = int(self.video_capture.get(cv2.CAP_PROP_FPS))
-        elif foundation.is_video_stream(source):
+        elif core.is_video_stream(source):
             self.video_capture = cv2.VideoCapture(source, self.api_preference)  # stream
             num_images         = -1
             self.video_capture.set(cv2.CAP_PROP_BUFFERSIZE, self.batch_size)
@@ -852,9 +852,9 @@ def write_image_cv(
     assert 2 <= image.ndim <= 3
     
     # Write image
-    dir      = foundation.Path(dir)
-    foundation.create_dirs(paths=[dir])
-    name     = foundation.Path(name)
+    dir      = core.Path(dir)
+    core.create_dirs(paths=[dir])
+    name     = core.Path(name)
     stem     = name.stem
     ext      = extension  # name.suffix
     ext      = f"{name.suffix}"   if ext == ""      else ext
@@ -895,9 +895,9 @@ def write_image_pil(
     image = Image.fromarray(image.astype(np.uint8))
     
     # Write image
-    dir      = foundation.Path(dir)
-    foundation.create_dirs(paths=[dir])
-    name     = foundation.Path(name)
+    dir      = core.Path(dir)
+    core.create_dirs(paths=[dir])
+    name     = core.Path(name)
     stem     = name.stem
     ext      = name.suffix
     ext      = f".{extension}"    if ext == ""      else ext
@@ -937,9 +937,9 @@ def write_image_torch(
     assert 2 <= image.ndim <= 3
     
     # Write image
-    dir      = foundation.Path(dir)
-    foundation.create_dirs(paths=[dir])
-    name     = foundation.Path(name)
+    dir      = core.Path(dir)
+    core.create_dirs(paths=[dir])
+    name     = core.Path(name)
     stem     = name.stem
     ext      = extension  # name.suffix
     ext      = f"{name.suffix}"   if ext == ""      else ext
@@ -1107,13 +1107,13 @@ class Writer(ABC):
     def __init__(
         self,
         dst        : PathType,
-        shape      : Ints  = (3, 480, 640),
+        shape      : Ints = (3, 480, 640),
         denormalize: bool = True,
-        verbose    : bool  = False,
+        verbose    : bool = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.dst	     = foundation.Path(dst)
+        self.dst	     = core.Path(dst)
         self.shape       = shape
         self.image_size  = util.to_size(size=shape)
         self.denormalize = denormalize
@@ -1250,13 +1250,13 @@ class ImageWriter(Writer):
         create_dirs(paths=[parent_dir])
         cv2.imwrite(output_file, image)
         """
-        if isinstance(file, foundation.Path):
+        if isinstance(file, core.Path):
             file = self.dst / f"{file.stem}{self.extension}"
         elif isinstance(file, str):
             file = self.dst / file
         else:
             raise ValueError(f":param:`file` must be given.")
-        file = foundation.Path(file)
+        file = core.Path(file)
         write_image_torch(
             image       = image,
             dir         = file.parent,
@@ -1371,7 +1371,7 @@ class VideoWriterCV(VideoWriter):
             video_file = self.dst / f"result.mp4"
         else:
             video_file = self.dst.parent / f"{self.dst.stem}.mp4"
-        foundation.create_dirs(paths=[video_file.parent])
+        core.create_dirs(paths=[video_file.parent])
         
         fourcc   		  = cv2.VideoWriter_fourcc(*self.fourcc)
         self.video_writer = cv2.VideoWriter(
@@ -1407,11 +1407,11 @@ class VideoWriterCV(VideoWriter):
                 True.
         """
         if self.save_image:
-            assert isinstance(file, foundation.Path | str)
+            assert isinstance(file, core.Path | str)
             write_image_cv(
                 image       = image,
                 dir         = self.dst,
-                name        = f"{foundation.Path(file).stem}.png",
+                name        = f"{core.Path(file).stem}.png",
                 prefix      = "",
                 extension   = ".png",
                 denormalize = denormalize or self.denormalize
@@ -1497,7 +1497,7 @@ class VideoWriterFFmpeg(VideoWriter):
             video_file = self.dst / f"result.mp4"
         else:
             video_file = self.dst.parent / f"{self.dst.stem}.mp4"
-        foundation.create_dirs(paths=[video_file.parent])
+        core.create_dirs(paths=[video_file.parent])
 
         if self.verbose:
             self.ffmpeg_process = (
@@ -1540,11 +1540,11 @@ class VideoWriterFFmpeg(VideoWriter):
                 True.
         """
         if self.save_image:
-            assert isinstance(file, foundation.Path | str)
+            assert isinstance(file, core.Path | str)
             write_image_cv(
                 image       = image,
                 dir         = self.dst,
-                name        = f"{foundation.Path(file).stem}.png",
+                name        = f"{core.Path(file).stem}.png",
                 prefix      = "",
                 extension   = ".png",
                 denormalize = denormalize or self.denormalize

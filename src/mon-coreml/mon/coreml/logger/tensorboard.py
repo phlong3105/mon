@@ -82,7 +82,7 @@ class FileWriter(tensorboard.FileWriter):
             flush_secs: How often, in seconds, to flush the pending events and
                 summaries to disk. Default is every two minutes.
             filename_suffix: Suffix added to all event filenames in the
-                :param:`log_dir` directory. More details on filename
+                :param:`log_dir` directory. More details on file_name
                 construction
                 in :class:`tensorboard.summary.writer.event_file_writer.EventFileWriter`.
         """

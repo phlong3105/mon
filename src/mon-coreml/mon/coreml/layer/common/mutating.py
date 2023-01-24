@@ -19,7 +19,7 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops.misc import Permute
 
-from mon import foundation
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base
 
@@ -50,7 +50,7 @@ class ExtractFeature(base.LayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = args[0]
         ch.append(c2)
         return args, ch
@@ -82,7 +82,7 @@ class ExtractFeatures(base.LayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = args[1] - args[0]
         ch.append(c2)
         return args, ch
@@ -298,7 +298,7 @@ class Foldcut(base.PassThroughLayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = ch[f] // 2
         ch.append(c2)
         return args, ch
@@ -333,7 +333,7 @@ class InterpolateConcat(base.ConcatLayerParsingMixin, nn.Module):
                 y.append(functional.interpolate(input=x_i, size=(h, w)))
             else:
                 y.append(x_i)
-        y = torch.cat(foundation.to_list(y), dim=self.dim)
+        y = torch.cat(core.to_list(y), dim=self.dim)
         return y
 
 
@@ -343,7 +343,7 @@ class Join(base.MergingLayerParsingMixin, nn.Module):
     
     def forward(self, input: Sequence[torch.Tensor]) -> list[torch.Tensor]:
         x = input
-        y = foundation.to_list(x)
+        y = core.to_list(x)
         return y
     
 

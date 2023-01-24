@@ -1,73 +1,68 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Snow100K dataset and datamodule.
-"""
+"""This module implements Snow100K datasets and datamodules."""
 
 from __future__ import annotations
 
+__all__ = [
+    "Snow100K", "Snow100KDataModule", "Snow100KL", "Snow100KLDataModule",
+    "Snow100KM", "Snow100KMDataModule", "Snow100KSDataModule", "Snow100KSmall",
+]
+
 import argparse
 
-import matplotlib.pyplot as plt
 from torch.utils.data import random_split
 
-from one.constants import *
-from one.core import *
-from one.data import ClassLabels_
-from one.data import DataModule
-from one.data import Image
-from one.data import ImageEnhancementDataset
-from one.plot import imshow_enhancement
-from one.vision.transformation import Resize
+from mon import core
+from mon.vision import constant, visualize
+from mon.vision.dataset import base
+from mon.vision.transform import transform as t
+from mon.vision.typing import (
+    CallableType, ClassLabelsType, Ints, ModelPhaseType, PathType,
+    Strs, TransformType, VisionBackendType,
+)
 
 
-# H1: - Dataset ----------------------------------------------------------------
+# region Dataset
 
-@DATASETS.register(name="snow100k")
-class Snow100K(ImageEnhancementDataset):
-    """
-    Snow100K dataset consists of multiple datasets related to snow100k removal
-    enhancement task.
+@constant.DATASET.register(name="snow100k")
+class Snow100K(base.ImageEnhancementDataset):
+    """Snow100K dataset.
     
     Args:
-        name (str): Dataset's name.
-        root (Path_): Root directory of dataset.
-        split (str): Split to use. One of: ["train", "val", "test"].
-        shape (Ints): Image shape as [C, H, W], [H, W], or [S, S].
-        classlabels (ClassLabels_ | None): ClassLabels object. Defaults to
-            None.
-        transform (Transforms_ | None): Functions/transforms that takes in an
-            input sample and returns a transformed version.
-            E.g, `transforms.RandomCrop`.
-        target_transform (Transforms_ | None): Functions/transforms that takes
-            in a target and returns a transformed version.
-        transforms (Transforms_ | None): Functions/transforms that takes in an
-            input and a target and returns the transformed versions of both.
-        cache_data (bool): If True, cache data to disk for faster loading next
-            time. Defaults to False.
-        cache_images (bool): If True, cache images into memory for faster
-            training (WARNING: large datasets may exceed system RAM).
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
             Defaults to False.
-        backend (VisionBackend_): Vision backend to process image.
-            Defaults to VISION_BACKEND.
-        verbose (bool): Verbosity. Defaults to True.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                 = "snow100k",
-        root            : Path_               = DATA_DIR / "snow100k",
-        split           : str                 = "train",
-        shape           : Ints                = (3, 512, 512),
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "snow100k",
+        root            : PathType               = constant.DATA_DIR / "snow100k",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = None,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -87,60 +82,77 @@ class Snow100K(ImageEnhancementDataset):
         )
      
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
             
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("synthetic", "gt"))
-                self.labels.append(Image(path=path, backend=self.backend))
+                path = core.Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
 
 
-@DATASETS.register(name="snow100k-small")
+@constant.DATASET.register(name="snow100k-small")
 class Snow100KSmall(Snow100K):
-    """
-    Snow100K-S Dataset.
+    """Snow100K-S dataset.
+    
+    Args:
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
+            Defaults to False.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                 = "snow100k-small",
-        root            : Path_               = DATA_DIR / "snow100k",
-        split           : str                 = "train",
-        shape           : Ints                = (3, 512, 512),
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "snow100k-small",
+        root            : PathType               = constant.DATA_DIR / "snow100k",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = None,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -160,63 +172,80 @@ class Snow100KSmall(Snow100K):
         )
      
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
             
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / self.split
             else:
                 pattern = self.root / self.split / "small"
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("synthetic", "gt"))
-                self.labels.append(Image(path=path, backend=self.backend))
+                path = core.Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
                 
 
-@DATASETS.register(name="snow100k-medium")
+@constant.DATASET.register(name="snow100k-medium")
 class Snow100KM(Snow100K):
-    """
-    Snow100K-M Dataset.
+    """Snow100K-M dataset.
+    
+    Args:
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
+            Defaults to False.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                 = "snow100k-medium",
-        root            : Path_               = DATA_DIR / "snow100k",
-        split           : str                 = "train",
-        shape           : Ints                = (3, 512, 512),
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "snow100k-medium",
+        root            : PathType               = constant.DATA_DIR / "snow100k",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = None,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -236,62 +265,80 @@ class Snow100KM(Snow100K):
         )
      
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
             
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / self.split
             else:
                 pattern = self.root / self.split / "medium"
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} {self.split} labels"
+                description=f"Listing {self.__class__.__name__} "
+                            f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("synthetic", "gt"))
-                self.labels.append(Image(path=path, backend=self.backend))
+                path = core.Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
 
-@DATASETS.register(name="snow100k-large")
+@constant.DATASET.register(name="snow100k-large")
 class Snow100KL(Snow100K):
-    """
-    Snow100K-L Dataset.
+    """Snow100K-L dataset.
+    
+    Args:
+        name: A dataset name.
+        root: A root directory where the data is stored.
+        split: The data split to use. One of: ["train", "val", "test"].
+            Defaults to "train".
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Defaults to None.
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        cache_data: If True, cache data to disk for faster loading next time.
+            Defaults to False.
+        cache_images: If True, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Defaults to False.
+        backend: The image processing backend. Defaults to VISION_BACKEND.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                 = "snow100k-large",
-        root            : Path_               = DATA_DIR / "snow100k",
-        split           : str                 = "train",
-        shape           : Ints                = (3, 512, 512),
-        classlabels     : ClassLabels_ | None = None,
-        transform       : Transforms_  | None = None,
-        target_transform: Transforms_  | None = None,
-        transforms      : Transforms_  | None = None,
-        cache_data      : bool                = False,
-        cache_images    : bool                = False,
-        backend         : VisionBackend_      = VISION_BACKEND,
-        verbose         : bool                = True,
+        name            : str                    = "snow100k-large",
+        root            : PathType               = constant.DATA_DIR / "snow100k",
+        split           : str                    = "train",
+        shape           : Ints                   = (3, 256, 256),
+        classlabels     : ClassLabelsType | None = None,
+        transform       : TransformType   | None = None,
+        target_transform: TransformType   | None = None,
+        transforms      : TransformType   | None = None,
+        cache_data      : bool                   = False,
+        cache_images    : bool                   = False,
+        backend         : VisionBackendType      = constant.VISION_BACKEND,
+        verbose         : bool                   = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -311,64 +358,81 @@ class Snow100KL(Snow100K):
         )
      
     def list_images(self):
-        """
-        List image files.
-        """
+        """List image files."""
         if self.split not in ["train", "test"]:
-            console.log(
-                f"{self.__class__.classname} dataset only supports `split`: "
-                f"`train` or `test`. Get: {self.split}."
+            core.console.log(
+                f"{self.__class__.__name__} dataset only supports "
+                f":param:`split`: 'train' or 'test'. Get: {self.split}."
             )
             
-        self.images: list[Image] = []
-        with progress_bar() as pbar:
+        self.images: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / self.split
             else:
                 pattern = self.root / self.split / "large"
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} images"
             ):
-                self.images.append(Image(path=path, backend=self.backend))
+                self.images.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
     
     def list_labels(self):
-        """
-        List label files.
-        """
-        self.labels: list[Image] = []
-        with progress_bar() as pbar:
+        """List label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.rich.progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing {self.__class__.classname} "
+                description=f"Listing {self.__class__.__name__} "
                             f"{self.split} labels"
             ):
-                path = Path(str(img.path).replace("synthetic", "gt"))
-                self.labels.append(Image(path=path, backend=self.backend))
+                path = core.Path(str(img.path).replace("synthetic", "gt"))
+                self.labels.append(
+                    base.ImageLabel(path=path, backend=self.backend)
+                )
                 
+# endregion
 
-# H1: - Datamodule -------------------------------------------------------------
 
-@DATAMODULES.register(name="snow100k")
-class Snow100KDataModule(DataModule):
-    """
-    Snow100K DataModule.
+# region Datamodule
+
+@constant.DATAMODULE.register(name="snow100k")
+class Snow100KDataModule(base.DataModule):
+    """Snow100K datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "snow100k",
-        root            : Path_              = DATA_DIR / "snow100k",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "snow100k",
+        root            : PathType             = constant.DATA_DIR / "snow100k",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -387,38 +451,35 @@ class Snow100KDataModule(DataModule):
         )
         
     def prepare_data(self, *args, **kwargs):
-        """
-        Use this method to do things that might write to disk or that need
-        to be done only from a single GPU in distributed settings.
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
             - Download.
             - Tokenize.
         """
         if self.classlabels is None:
             self.load_classlabels()
     
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100K.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = Snow100K(
                 root             = self.root,
                 split            = "train",
@@ -437,8 +498,8 @@ class Snow100KDataModule(DataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = Snow100K(
                 root             = self.root,
                 split            = "test",
@@ -458,31 +519,44 @@ class Snow100KDataModule(DataModule):
         self.summarize()
         
     def load_classlabels(self):
-        """
-        Load ClassLabels.
-        """
+        """Load all the class-labels of the dataset."""
         pass
 
 
-@DATAMODULES.register(name="snow100k-small")
+@constant.DATAMODULE.register(name="snow100k-small")
 class Snow100KSDataModule(Snow100KDataModule):
-    """
-    Snow100K-S DataModule.
+    """Snow100K-S datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "snow100k-small",
-        root            : Path_              = DATA_DIR / "snow100k",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "snow100k-small",
+        root            : PathType             = constant.DATA_DIR / "snow100k",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -500,29 +574,27 @@ class Snow100KSDataModule(Snow100KDataModule):
             *args, **kwargs
         )
         
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100KSmall.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = Snow100KSmall(
                 root             = self.root,
                 split            = "train",
@@ -541,8 +613,8 @@ class Snow100KSDataModule(Snow100KDataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = Snow100KSmall(
                 root             = self.root,
                 split            = "test",
@@ -562,25 +634,40 @@ class Snow100KSDataModule(Snow100KDataModule):
         self.summarize()
 
 
-@DATAMODULES.register(name="snow100k-medium")
+@constant.DATAMODULE.register(name="snow100k-medium")
 class Snow100KMDataModule(Snow100KDataModule):
-    """
-    Snow100K-M DataModule.
+    """Snow100K-M datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "snow100k-medium",
-        root            : Path_              = DATA_DIR / "snow100k",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "snow100k-medium",
+        root            : PathType             = constant.DATA_DIR / "snow100k",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -598,29 +685,27 @@ class Snow100KMDataModule(Snow100KDataModule):
             *args, **kwargs
         )
         
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100KM.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = Snow100KM(
                 root             = self.root,
                 split            = "train",
@@ -639,8 +724,8 @@ class Snow100KMDataModule(Snow100KDataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = Snow100KM(
                 root             = self.root,
                 split            = "test",
@@ -660,25 +745,40 @@ class Snow100KMDataModule(Snow100KDataModule):
         self.summarize()
 
 
-@DATAMODULES.register(name="snow100k-large")
+@constant.DATAMODULE.register(name="snow100k-large")
 class Snow100KLDataModule(Snow100KDataModule):
-    """
-    Snow100K-L DataModule.
+    """Snow100K-L datamodule.
+    
+    Args:
+        name: A datamodule's name.
+        root: A root directory where the data is stored.
+        shape: The desired datapoint shape preferably in a channel-last format.
+            Defaults to (3, 256, 256).
+        transform: Transformations performing on the input.
+        target_transform: Transformations performing on the target.
+        transforms: Transformations performing on both the input and target.
+        batch_size: The number of samples in one forward pass. Defaults to 1.
+        devices: A list of devices to use. Defaults to 0.
+        shuffle: If True, reshuffle the datapoints at the beginning of every
+            epoch. Defaults to True.
+        collate_fn: The function used to fused datapoint together when using
+            :param:`batch_size` > 1.
+        verbose: Verbosity. Defaults to True.
     """
     
     def __init__(
         self,
-        name            : str                = "snow100k-large",
-        root            : Path_              = DATA_DIR / "snow100k",
-        shape           : Ints               = (3, 512, 512),
-        transform       : Transforms_ | None = None,
-        target_transform: Transforms_ | None = None,
-        transforms      : Transforms_ | None = None,
-        batch_size      : int                = 1,
-        devices         : Devices            = 0,
-        shuffle         : bool               = True,
-        collate_fn      : Callable    | None = None,
-        verbose         : bool               = True,
+        name            : str                  = "snow100k-large",
+        root            : PathType             = constant.DATA_DIR / "snow100k",
+        shape           : Ints                 = (3, 256, 256),
+        transform       : TransformType | None = None,
+        target_transform: TransformType | None = None,
+        transforms      : TransformType | None = None,
+        batch_size      : int                  = 1,
+        devices         : Ints | Strs          = 0,
+        shuffle         : bool                 = True,
+        collate_fn      : CallableType  | None = None,
+        verbose         : bool                 = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -696,29 +796,27 @@ class Snow100KLDataModule(Snow100KDataModule):
             *args, **kwargs
         )
         
-    def setup(self, phase: ModelPhase_ | None = None):
-        """
-        There are also data operations you might want to perform on every GPU.
-
-        Todos:
+    def setup(self, phase: ModelPhaseType | None = None):
+        """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
-            - Perform train/val/test splits.
-            - Apply transforms (defined explicitly in your datamodule or
-              assigned in init).
-            - Define collate_fn for you custom dataset.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
 
         Args:
-            phase (ModelPhase_ | None):
-                Stage to use: [None, ModelPhase.TRAINING, ModelPhase.TESTING].
-                Set to None to setup all train, val, and test data.
+            phase: The model phase. One of:
+                - "training" : prepares :attr:'train' and :attr:'val'.
+                - "testing"  : prepares :attr:'test'.
+                - "inference": prepares :attr:`predict`.
+                - None:      : prepares all.
                 Defaults to None.
         """
-        console.log(f"Setup [red]{Snow100KL.classname}[/red] datasets.")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = constant.ModelPhase.from_value(phase) if phase is not None else phase
 
         # Assign train/val datasets for use in dataloaders
-        if phase in [None, ModelPhase.TRAINING]:
+        if phase in [None, constant.ModelPhase.TRAINING]:
             full_dataset = Snow100KL(
                 root             = self.root,
                 split            = "train",
@@ -737,8 +835,8 @@ class Snow100KLDataModule(Snow100KDataModule):
             self.classlabels = getattr(full_dataset, "classlabels", None)
             self.collate_fn  = getattr(full_dataset, "collate_fn",  None)
             
-        # Assign test datasets for use in dataloader(s)
-        if phase in [None, ModelPhase.TESTING]:
+        # Assign test datasets for use in dataloaders
+        if phase in [None, constant.ModelPhase.TESTING]:
             self.test = Snow100KL(
                 root             = self.root,
                 split            = "test",
@@ -756,43 +854,43 @@ class Snow100KLDataModule(Snow100KDataModule):
             self.load_classlabels()
 
         self.summarize()
-        
 
-# H1: - Test -------------------------------------------------------------------
+# endregion
+
+
+# region Test
 
 def test_snow100k():
     cfg = {
         "name": "snow100k",
-            # Dataset's name.
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "snow100k",
+            # A root directory where the data is stored.
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -807,43 +905,45 @@ def test_snow100k():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
 
 def test_snow100k_small():
     cfg = {
         "name": "snow100k-small",
-            # Dataset's name.
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "snow100k",
+            # A root directory where the data is stored.
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -858,43 +958,45 @@ def test_snow100k_small():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
 
 def test_snow100k_medium():
     cfg = {
         "name": "snow100k-medium",
-            # Dataset's name.
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "snow100k",
+            # A root directory where the data is stored.
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -909,43 +1011,45 @@ def test_snow100k_medium():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
 
 def test_snow100k_large():
     cfg = {
         "name": "snow100k-large",
-            # Dataset's name.
-        "root": DATA_DIR / "snow100k",
-           # Root directory of dataset.
-        "shape": [3, 512, 512],
-            # Image shape as [C, H, W], [H, W], or [S, S].
+            # A datamodule's name.
+        "root": constant.DATA_DIR / "snow100k",
+            # A root directory where the data is stored.
+        "shape": [3, 256, 256],
+            # The desired datapoint shape preferably in a channel-last format.
+            # Defaults to (3, 256, 256).
         "transform": None,
-            # Functions/transforms that takes in an input sample and returns a
-            # transformed version.
+            # Transformations performing on the input.
         "target_transform": None,
-            # Functions/transforms that takes in a target and returns a
-            # transformed version.
+            # Transformations performing on the target.
         "transforms": [
-            Resize(size=[3, 512, 512])
+            t.Resize(size=[3, 256, 256]),
         ],
-            # Functions/transforms that takes in an input and a target and
-            # returns the transformed versions of both.
+            # Transformations performing on both the input and target.
         "cache_data": False,
             # If True, cache data to disk for faster loading next time.
             # Defaults to False.
         "cache_images": False,
             # If True, cache images into memory for faster training (WARNING:
             # large datasets may exceed system RAM). Defaults to False.
-        "backend": VISION_BACKEND,
-            # Vision backend to process image. Defaults to VISION_BACKEND.
+        "backend": constant.VISION_BACKEND,
+            # The image processing backend. Defaults to VISION_BACKEND.
         "batch_size": 8,
-            # Number of samples in one forward & backward pass. Defaults to 1.
+            # The number of samples in one forward pass. Defaults to 1.
         "devices" : 0,
-            # The devices to use. Defaults to 0.
+            # A list of devices to use. Defaults to 0.
         "shuffle": True,
-            # If True, reshuffle the data at every training epoch.
+            # If True, reshuffle the datapoints at the beginning of every epoch.
             # Defaults to True.
         "verbose": True,
             # Verbosity. Defaults to True.
@@ -960,11 +1064,17 @@ def test_snow100k_large():
     input, target, meta = next(data_iter)
     result              = {"image" : input, "target": target}
     label               = [(m["name"]) for m in meta]
-    imshow_enhancement(winname="image", image=result, label=label)
-    plt.show(block=True)
-    
+    visualize.imshow_enhancement(
+        winname = "image",
+        image   = result,
+        label   = label
+    )
+    visualize.plt.show(block=True)
 
-# H1: - Main -------------------------------------------------------------------
+# endregion
+
+
+# region Main
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -983,3 +1093,5 @@ if __name__ == "__main__":
         test_snow100k_medium()
     elif args.task == "test-snow100k-large":
         test_snow100k_large()
+
+# endregion

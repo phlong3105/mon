@@ -16,10 +16,9 @@ from typing import Any
 import torch
 
 import mon.coreml
-from mon import foundation
+from mon import core
 from mon.coreml import constant, model
 from mon.coreml.typing import Ints, ModelPhaseType, PathType
-from mon.foundation import console
 
 
 class Inferrer(ABC):
@@ -28,7 +27,7 @@ class Inferrer(ABC):
     def __init__(
         self,
         source     : PathType  | None = None,
-        root       : PathType  | None = foundation.RUNS_DIR / "infer",
+        root       : PathType  | None = constant.RUNS_DIR / "infer",
         project    : str              = "",
         name       : str              = "exp",
         max_samples: int       | None = None,
@@ -63,10 +62,10 @@ class Inferrer(ABC):
         
         if self.project is not None and self.project != "":
             self.root = self.root / self.project
-        self.name = f"{name}-{foundation.get_next_file_version(str(self.root), name)}"
+        self.name = f"{name}-{core.get_next_file_version(str(self.root), name)}"
         self.output_dir = self.root / self.name
         
-        console.log(f"Using: {self.device}.")
+        core.console.log(f"Using: {self.device}.")
     
     @property
     def phase(self) -> constant.ModelPhase:
@@ -77,15 +76,15 @@ class Inferrer(ABC):
         self._phase = constant.ModelPhase.from_value(phase)
     
     @property
-    def root(self) -> foundation.Path:
+    def root(self) -> core.Path:
         return self._root
     
     @root.setter
     def root(self, root: PathType | None):
         if root is None:
-            root = foundation.RUNS_DIR / "infer"
+            root = core.RUNS_DIR / "infer"
         else:
-            root = foundation.Path(root)
+            root = core.Path(root)
         self._root = root
     
     @abstractmethod
@@ -162,7 +161,7 @@ class Inferrer(ABC):
     def on_run_start(self):
         """Call before :meth:`run` starts."""
         if self.save:
-            foundation.create_dirs(paths=[self.output_dir], recreate=True)
+            core.create_dirs(paths=[self.output_dir], recreate=True)
         
         self.init_data_loader()
         self.init_data_writer()

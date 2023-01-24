@@ -11,10 +11,13 @@ from tqdm import tqdm
 
 from models.experimental import attempt_load
 from utils.datasets import create_dataloader
-from utils.general import coco80_to_coco91_class, check_dataset, check_file, check_img_size, check_requirements, \
-    box_iou, non_max_suppression, scale_coords, xyxy2xywh, xywh2xyxy, set_logging, increment_path, colorstr
+from utils.general import (
+    box_iou, check_dataset, check_file, check_img_size,
+    coco80_to_coco91_class, colorstr, increment_path, non_max_suppression,
+    scale_coords, set_logging, xywh2xyxy, xyxy2xywh,
+)
 from utils.metrics import ap_per_class, ConfusionMatrix
-from utils.plots import plot_images, output_to_target, plot_study_txt
+from utils.plots import output_to_target, plot_images, plot_study_txt
 from utils.torch_utils import select_device, time_synchronized, TracedModel
 
 
@@ -341,7 +344,7 @@ if __name__ == '__main__':
         # python test.py --task study --data coco.yaml --iou 0.65 --weights yolov7.pt
         x = list(range(256, 1536 + 128, 128))  # x axis (image sizes)
         for w in opt.weights:
-            f = f'study_{Path(opt.data).stem}_{Path(w).stem}.txt'  # filename to save to
+            f = f'study_{Path(opt.data).stem}_{Path(w).stem}.txt'  # file_name to save to
             y = []  # y axis
             for i in x:  # img-size
                 print(f'\nRunning {f} point {i}...')

@@ -13,8 +13,8 @@ import lightning
 from lightning.pytorch.trainer import *
 from lightning.pytorch.utilities import _HPU_AVAILABLE, _IPU_AVAILABLE
 
+from mon import core
 from mon.coreml import strategy
-from mon.foundation import console
 
 
 # region Trainer
@@ -206,21 +206,21 @@ class Trainer(lightning.Trainer):
         gpu_used = isinstance(
             self.accelerator, (strategy.CUDAAccelerator, strategy.MPSAccelerator)
         )
-        console.log(
+        core.console.log(
             f"GPU available: {gpu_available}{gpu_type}, used: {gpu_used}."
         )
         
         num_ipus = self.num_devices if isinstance(
             self.accelerator, strategy.IPUAccelerator
         ) else 0
-        console.log(
+        core.console.log(
             f"IPU available: {_IPU_AVAILABLE}, using: {num_ipus} IPUs."
         )
         
         num_hpus = self.num_devices if isinstance(
             self.accelerator, strategy.HPUAccelerator
         ) else 0
-        console.log(
+        core.console.log(
             f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs."
         )
         
@@ -228,21 +228,21 @@ class Trainer(lightning.Trainer):
         if strategy.CUDAAccelerator.is_available() and not isinstance(
             self.accelerator, strategy.CUDAAccelerator
         ):
-            console.log(
+            core.console.log(
                 f"GPU available but not used. Set `accelerator` and `devices` "
                 f"using `Trainer(accelerator='gpu', devices="
                 f"{strategy.CUDAAccelerator.auto_device_count()})`.",
             )
         
         if _IPU_AVAILABLE and not isinstance(self.accelerator, strategy.IPUAccelerator):
-            console.log(
+            core.console.log(
                 f"IPU available but not used. Set `accelerator` and `devices` "
                 f"using `Trainer(accelerator='ipu', devices="
                 f"{strategy.IPUAccelerator.auto_device_count()})`."
             )
         
         if _HPU_AVAILABLE and not isinstance(self.accelerator, strategy.HPUAccelerator):
-            console.log(
+            core.console.log(
                 f"HPU available but not used. Set `accelerator` and `devices` "
                 f"using `Trainer(accelerator='hpu', devices="
                 f"{strategy.HPUAccelerator.auto_device_count()})`."
@@ -251,7 +251,7 @@ class Trainer(lightning.Trainer):
         if strategy.MPSAccelerator.is_available() and not isinstance(
             self.accelerator, strategy.MPSAccelerator
         ):
-            console.log(
+            core.console.log(
                 f"MPS available but not used. Set `accelerator` and `devices` "
                 f"using `Trainer(accelerator='mps', devices="
                 f"{strategy.MPSAccelerator.auto_device_count()})`."

@@ -23,13 +23,13 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops import misc as torchvision_misc
 
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, normalization, padding as pad,
 )
 from mon.coreml.typing import CallableType, Int2T
-from mon.foundation import math
 
 
 # region Convolution
@@ -217,8 +217,8 @@ class Conv2dTF(base.ConvLayerParsingMixin, nn.Conv2d):
         img_h, img_w       = x.size()[-2:]
         kernel_h, kernel_w = self.weight.size()[-2:]
         stride_h, stride_w = self.stride
-        output_h = math.ceil(img_h / stride_h)
-        output_w = math.ceil(img_w / stride_w)
+        output_h = core.math.ceil(img_h / stride_h)
+        output_w = core.math.ceil(img_w / stride_w)
         pad_h    = max((output_h - 1) * self.stride[0] + (kernel_h - 1) * self.dilation[0] + 1 - img_h, 0)
         pad_w    = max((output_w - 1) * self.stride[1] + (kernel_w - 1) * self.dilation[1] + 1 - img_w, 0)
         if pad_h > 0 or pad_w > 0:
@@ -316,7 +316,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
         *args, **kwargs
     ):
         super().__init__()
-        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
+        mid_channels  = min(in_channels, max(min_mid_channels, core.math.ceil(p * in_channels)))
         self.pw_conv1 = Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
@@ -446,8 +446,8 @@ class UnconstrainedBlueprintSeparableConv2d(
 
 BSConv2dS = SubspaceBlueprintSeparableConv2d
 BSConv2dU = UnconstrainedBlueprintSeparableConv2d
-constant.LAYER.register(BSConv2dS)
-constant.LAYER.register(BSConv2dU)
+constant.LAYER.register(module=BSConv2dS)
+constant.LAYER.register(module=BSConv2dU)
 
 # endregion
 
@@ -602,7 +602,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         self.out_channels = out_channels
-        init_channels     = math.ceil(out_channels / ratio)
+        init_channels     = core.math.ceil(out_channels / ratio)
         new_channels      = init_channels * (ratio - 1)
         
         self.primary_conv = nn.Sequential(

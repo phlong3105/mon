@@ -12,7 +12,7 @@ __all__ = [
     "BasicRGBType", "BorderTypeType", "CFAType", "DistanceMetricType", "Image",
     "Images", "InterpolationModeType", "MaskType", "PaddingModeType",
     "PaddingModeType", "PointsType", "RGBType", "VisionBackendType",
-    # Extend :mod:`mon.foundation.typing`
+    # Extend :mod:`mon.core.typing`
     "CallableType", "ConfigType", "DictType", "Float1T", "Float2T", "Float3T",
     "Float4T", "Float5T", "Float6T", "FloatAnyT", "Floats", "ImageFormatType",
     "Int1T", "Int2T", "Int3T", "Int4T", "Int5T", "Int6T", "IntAnyT", "Ints",
@@ -24,8 +24,8 @@ from typing import Sequence, TypeAlias
 import numpy
 import torch
 
+from mon.core.typing import *
 from mon.coreimage import constant
-from mon.foundation.typing import *
 
 BBoxType             : TypeAlias = torch.Tensor | numpy.ndarray | Sequence[float]
 Image                : TypeAlias = torch.Tensor | numpy.ndarray

@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # TorchScript export
     try:
         print('\nStarting TorchScript export with torch %s...' % torch.__version__)
-        f = opt.weights.replace('.pt', '.torchscript.pt')  # filename
+        f = opt.weights.replace('.pt', '.torchscript.pt')  # file_name
         ts = torch.jit.trace(model, img, strict=False)
         ts.save(f)
         print('TorchScript export success, saved as %s' % f)
@@ -96,7 +96,7 @@ if __name__ == '__main__':
             else:
                 print('quantization only supported on macOS, skipping...')
 
-        f = opt.weights.replace('.pt', '.mlmodel')  # filename
+        f = opt.weights.replace('.pt', '.mlmodel')  # file_name
         ct_model.save(f)
         print('CoreML export success, saved as %s' % f)
     except Exception as e:
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     # TorchScript-Lite export
     try:
         print('\nStarting TorchScript-Lite export with torch %s...' % torch.__version__)
-        f = opt.weights.replace('.pt', '.torchscript.ptl')  # filename
+        f = opt.weights.replace('.pt', '.torchscript.ptl')  # file_name
         tsl = torch.jit.trace(model, img, strict=False)
         tsl = optimize_for_mobile(tsl)
         tsl._save_for_lite_interpreter(f)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
         import onnx
 
         print('\nStarting ONNX export with onnx %s...' % onnx.__version__)
-        f = opt.weights.replace('.pt', '.onnx')  # filename
+        f = opt.weights.replace('.pt', '.onnx')  # file_name
         model.eval()
         output_names = ['classes', 'boxes'] if y is None else ['output']
         dynamic_axes = None

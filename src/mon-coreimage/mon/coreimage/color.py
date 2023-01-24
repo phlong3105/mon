@@ -23,9 +23,9 @@ from typing import cast, Sequence
 import torch
 from torch.nn import functional
 
+from mon import core
 from mon.coreimage import util
 from mon.coreimage.typing import Float3T
-from mon.foundation import math
 
 
 # region BGR
@@ -233,7 +233,7 @@ def hsv_to_rgb(image: torch.Tensor) -> torch.Tensor:
     Returns:
         A RGB image of shape [..., 3, H, W].
     """
-    h       = image[..., 0, :, :] / (2 * math.pi)
+    h       = image[..., 0, :, :] / (2 * core.math.pi)
     s       = image[..., 1, :, :]
     v       = image[..., 2, :, :]
     hi      = torch.floor(h * 6) % 6
@@ -495,7 +495,7 @@ def rgb_to_hsv(image: torch.Tensor, eps: float = 1e-8) -> torch.Tensor:
     h           = torch.stack((h1, h2, h3), dim=-3) / deltac.unsqueeze(-3)
     h           = torch.gather(h, dim=-3, index=argmax_rgb.unsqueeze(-3)).squeeze(-3)
     h           = (h / 6.0) % 1.0
-    h          *= 2.0 * math.pi  # We return 0/2pi output
+    h          *= 2.0 * core.math.pi  # We return 0/2pi output
     hsv         = torch.stack((h, s, v), dim=-3)
     return hsv
 

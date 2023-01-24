@@ -21,6 +21,7 @@ from mon.coreml.layer import *
 from mon.coreml.logger import *
 from mon.coreml.loop import *
 from mon.coreml.metric import *
+from mon.coreml.model import *
 from mon.coreml.optimizer import *
 from mon.coreml.strategy import *
 from mon.coreml.util import *

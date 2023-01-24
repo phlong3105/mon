@@ -31,9 +31,9 @@ import cv2
 import numpy as np
 import torch
 
+from mon import core
 from mon.coreimage import util
 from mon.coreimage.typing import Floats, Ints
-from mon.foundation import math
 
 
 # region Affine Transform
@@ -106,7 +106,7 @@ def affine_box(
     angle  = -angle
     r      = cv2.getRotationMatrix2D(center=center, angle=angle, scale=scale)
     t      = translate
-    s      = [math.radians(-shear[0]), math.radians(-shear[1])]
+    s      = [core.math.radians(-shear[0]), core.math.radians(-shear[1])]
     m      = np.float32([[r[0, 0]       , s[0] + r[0, 1], r[0, 2] + t[0] + (-s[0] * center[1])],
                          [s[1] + r[1, 0], r[1, 1]       , r[1, 2] + t[1] + (-s[1] * center[0])],
                          [0             , 0             , 1]])

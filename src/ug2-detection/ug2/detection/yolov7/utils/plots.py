@@ -17,7 +17,6 @@ import torch
 import yaml
 from PIL import Image, ImageDraw, ImageFont
 from scipy.signal import butter, filtfilt
-
 from utils.general import xywh2xyxy, xyxy2xywh
 from utils.metrics import fitness
 
@@ -172,7 +171,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
                     label = '%s' % cls if labels else '%s %.1f' % (cls, conf[j])
                     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
 
-        # Draw image filename labels
+        # Draw image file_name labels
         if paths:
             label = Path(paths[i]).name[:40]  # trim to 40 char
             t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
@@ -393,7 +392,7 @@ def plot_results_overlay(start=0, stop=0):  # from utils.plots import *; plot_re
 
             ax[i].set_title(t[i])
             ax[i].legend()
-            ax[i].set_ylabel(f) if i == 0 else None  # add filename
+            ax[i].set_ylabel(f) if i == 0 else None  # add file_name
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 

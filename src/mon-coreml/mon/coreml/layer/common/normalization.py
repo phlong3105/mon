@@ -23,12 +23,12 @@ import torchvision
 from torch import nn
 from torch.nn import functional
 
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import activation, linear
 from mon.coreml.typing import CallableType
 from mon.coreml.util import random
-from mon.foundation import math
 
 
 # region Batch Normalization
@@ -185,7 +185,7 @@ class FractionalInstanceNorm2dOld(
         self.ratio       = ratio
         self.selection   = selection
         super().__init__(
-            num_features        = math.ceil(num_features * self.ratio),
+            num_features        = core.math.ceil(num_features * self.ratio),
             eps                 = eps,
             momentum            = momentum,
             affine              = affine,
@@ -225,7 +225,7 @@ class FractionalInstanceNorm2dOld(
                 y1       = torch.index_select(x, 1, y1_idxes)
                 y2       = torch.index_select(x, 1, y2_idxes)
             elif self.selection == "interleave":
-                skip     = int(math.floor(self.in_channels / self.num_features))
+                skip     = int(core.math.floor(self.in_channels / self.num_features))
                 y1_idxes = []
                 for i in range(0, self.in_channels, skip):
                     if len(y1_idxes) < self.num_features:
@@ -317,18 +317,18 @@ class FractionalInstanceNorm2d(
             )
         if scheme is "half":
             self.alpha  = torch.zeros(num_features)
-            self.alpha[0:math.ceil(num_features * 0.5)] = 1
+            self.alpha[0:core.math.ceil(num_features * 0.5)] = 1
         elif scheme is "bipartite":
             self.alpha  = torch.zeros(num_features)
-            self.alpha[0:math.ceil(num_features * p)]   = 1
+            self.alpha[0:core.math.ceil(num_features * p)]   = 1
         elif scheme is "checkerboard":
-            in_channels = math.ceil(num_features * p)
-            step_size   = int(math.floor(in_channels / num_features))
+            in_channels = core.math.ceil(num_features * p)
+            step_size   = int(core.math.floor(in_channels / num_features))
             self.alpha  = torch.zeros(num_features)
             for i in range(0, in_channels, step_size):
                 self.alpha[i] = 1
         elif scheme is "random":
-            in_channels = math.ceil(num_features * p)
+            in_channels = core.math.ceil(num_features * p)
             rand        = random.sample(range(in_channels), num_features)
             self.alpha  = torch.zeros(num_features)
             for i in rand:
@@ -344,11 +344,11 @@ class FractionalInstanceNorm2d(
                 self.Flatten(),
                 linear.Linear(
                     in_features  = num_features,
-                    out_features = math.ceil(num_features * p),
+                    out_features = core.math.ceil(num_features * p),
                 ),
                 activation.ReLU(),
                 linear.Linear(
-                    in_features  = math.ceil(num_features * p),
+                    in_features  = core.math.ceil(num_features * p),
                     out_features = num_features,
                 )
             )
@@ -433,7 +433,7 @@ class HalfInstanceNorm2d(
         *args, **kwargs
     ):
         super().__init__(
-            num_features        = math.ceil(num_features / 2),
+            num_features        = core.math.ceil(num_features / 2),
             eps                 = eps,
             momentum            = momentum,
             affine              = affine,

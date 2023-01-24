@@ -18,7 +18,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon import foundation
+from mon import core
 from mon.coreml import constant
 from mon.coreml.layer import base, common
 from mon.coreml.typing import CallableType, Int2T
@@ -46,9 +46,9 @@ class InceptionBasicConv2d(base.ConvLayerParsingMixin, nn.Module):
         *args, **kwargs
     ):
         super().__init__()
-        kernel_size = foundation.to_2tuple(kernel_size)
-        stride      = foundation.to_2tuple(stride)
-        dilation    = foundation.to_2tuple(dilation)
+        kernel_size = core.to_2tuple(kernel_size)
+        stride      = core.to_2tuple(stride)
+        dilation    = core.to_2tuple(dilation)
         self.conv = common.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
@@ -148,7 +148,7 @@ class Inception(base.LayerParsingMixin, nn.Module):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1        = args[0]
         ch1x1     = args[1]
         ch3x3     = args[3]
@@ -235,7 +235,7 @@ class InceptionA(base.LayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = cls.base_out_channels + args[1]
         ch.append(c2)
         return args, ch
@@ -291,7 +291,7 @@ class InceptionB(base.LayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1 = args[0]
         c2 = cls.base_out_channels + c1
         ch.append(c2)
@@ -389,7 +389,7 @@ class InceptionC(base.LayerParsingMixin, nn.Module):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = cls.base_out_channels
         ch.append(c2)
         return args, ch
@@ -458,7 +458,7 @@ class InceptionD(base.LayerParsingMixin, nn.Module):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1 = args[0]
         c2 = cls.base_out_channels + c1
         ch.append(c2)
@@ -554,7 +554,7 @@ class InceptionE(base.LayerParsingMixin, nn.Module):
         return y
     
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = cls.base_out_channels
         ch.append(c2)
         return args, ch

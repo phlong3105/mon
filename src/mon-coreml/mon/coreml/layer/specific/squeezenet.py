@@ -60,7 +60,7 @@ class Fire(base.LayerParsingMixin, nn.Module):
         return y
 
     @classmethod
-    def parse_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         expand1x1_planes = args[2]
         expand3x3_planes = args[3]
         c2               = expand1x1_planes + expand3x3_planes

@@ -1,14 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""":mod:`mon.vision.transform` module implements image transformations.
-"""
+"""This module implements image transformations."""
 
 from __future__ import annotations
-
-__all__ = [
-    "ToImage",
-]
 
 import math
 from typing import Any
@@ -18,6 +13,7 @@ import PIL.Image
 import torch
 
 from mon import coreimage as ci, coreml
+from mon.vision import constant
 from mon.vision.typing import (
     Float3T, Floats, Image, InterpolationModeType, Ints, PaddingModeType,
 )
@@ -25,42 +21,8 @@ from mon.vision.typing import (
 
 # region Affine
 
-@coreml.TRANSFORM.register(name="affine")
+@constant.TRANSFORM.register(name="affine")
 class Affine(coreml.Transform):
-    """:class:`Affine` applies affine transformation on the given images
-    keeping image center invariant.
-    
-    Args:
-        angle: Rotation angle in degrees between -180 and 180, clockwise
-            direction.
-        translate: Horizontal and vertical translations (post-rotation
-            translation).
-        scale: Overall scale.
-        shear: Shear angle value in degrees between -180 to 180, clockwise
-            direction. If a sequence is specified, the first value corresponds
-            to a shear parallel to the x-axis, while the second value
-            corresponds to a shear parallel to the y-axis.
-        center: Center of affine transformation. If None, use the center of the
-            image. Defaults to None.
-        interpolation: Desired interpolation mode. Default to "bilinear".
-        keep_shape: If True, expands the output image to  make it large enough
-            to hold the entire rotated image. If False or omitted, make the
-            output image the same size as the input image. Note that the
-            :param:`keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode: Desired padding mode. Defaults to "constant".
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(
         self,
@@ -121,15 +83,9 @@ class Affine(coreml.Transform):
 
 # region Color
 
-@coreml.TRANSFORM.register(name="rgb_to_bgr")
+@constant.TRANSFORM.register(name="rgb_to_bgr")
 class RGBToBGR(coreml.Transform):
-    """:class:`RGBToBGR` converts the given images from RGB to BGR.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+   
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
         
@@ -143,17 +99,8 @@ class RGBToBGR(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="rgb_to_grayscale")
+@constant.TRANSFORM.register(name="rgb_to_grayscale")
 class RGBToGrayscale(coreml.Transform):
-    """:class:`RGBToGrayscale` converts the given images from RGB to grayscale.
-    
-    Args:
-        rgb_weights: Weights that will be applied on each channel (RGB). Sum of
-            the weights should add up to 1.0 ([0.299, 0.587, 0.114] or 255
-            ([76, 150, 29]). Defaults to None.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(
         self,
@@ -175,15 +122,8 @@ class RGBToGrayscale(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="rgb_to_hsv")
+@constant.TRANSFORM.register(name="rgb_to_hsv")
 class RGBToHSV(coreml.Transform):
-    """:class:`RGBToHSV` converts the given images from RGB to HSV.
-    
-    Args:
-        eps: Scalar to enforce numerical stability. Defaults to 1e-8.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(
         self,
@@ -205,15 +145,9 @@ class RGBToHSV(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="rgb_to_lab")
+@constant.TRANSFORM.register(name="rgb_to_lab")
 class RGBToLab(coreml.Transform):
-    """:class:`RGBToLab` converts the given images from RGB to Lab.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+   
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
         
@@ -227,16 +161,9 @@ class RGBToLab(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="rgb_to_linear_rgb")
+@constant.TRANSFORM.register(name="rgb_to_linear_rgb")
 class RGBToLinearRGB(coreml.Transform):
-    """:class:`RGBToLinearRGB` converts the given images from RGB to Linear
-    RGB.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
         
@@ -251,15 +178,9 @@ class RGBToLinearRGB(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="rgb_to_luv")
+@constant.TRANSFORM.register(name="rgb_to_luv")
 class RGBToLUV(coreml.Transform):
-    """:class:`RGBToLUV` converts the given images from RGB to LUV.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
         
@@ -273,15 +194,8 @@ class RGBToLUV(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="rgb_to_rgba")
+@constant.TRANSFORM.register(name="rgb_to_rgba")
 class RGBToRGBA(coreml.Transform):
-    """:class:`RGBToRGBA` converts the given images from RGB to RGBA.
-
-    Args:
-        alpha_val: A float number or tensor for the alpha value.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(
         self,
@@ -304,14 +218,8 @@ class RGBToRGBA(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="rgb_to_xyz")
+@constant.TRANSFORM.register(name="rgb_to_xyz")
 class RGBToXYZ(coreml.Transform):
-    """:class:`RGBToXyz` converts the given images from RGB to XYZ.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -326,14 +234,8 @@ class RGBToXYZ(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="rgb_to_ycrcb")
+@constant.TRANSFORM.register(name="rgb_to_ycrcb")
 class RGBToYCrCb(coreml.Transform):
-    """:class:`RGBToYCrCb` converts the given images from RGB to YCrCb.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -348,14 +250,8 @@ class RGBToYCrCb(coreml.Transform):
         return input, target
 
 
-@coreml.TRANSFORM.register(name="rgb_to_yuv")
+@constant.TRANSFORM.register(name="rgb_to_yuv")
 class RGBToYUV(coreml.Transform):
-    """:class:`RGBToYUV` converts the given images from RGB to YUV.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -370,14 +266,8 @@ class RGBToYUV(coreml.Transform):
         return input, target
         
         
-@coreml.TRANSFORM.register(name="rgb_to_yuv420")
+@constant.TRANSFORM.register(name="rgb_to_yuv420")
 class RGBToYUV420(coreml.Transform):
-    """:class:`RGBToYUV420` converts the given images from RGB to YUV420.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -392,14 +282,8 @@ class RGBToYUV420(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="rgb_to_yuv422")
+@constant.TRANSFORM.register(name="rgb_to_yuv422")
 class RGBToYUV422(coreml.Transform):
-    """:class:`RGBToYUV422` converts the given images from RGB to YUV422.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -414,14 +298,8 @@ class RGBToYUV422(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="rgba_to_bgr")
+@constant.TRANSFORM.register(name="rgba_to_bgr")
 class RGBAToBGR(coreml.Transform):
-    """:class:`RGBAToBGR` converts the given images from RGBA to BGR.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -437,14 +315,8 @@ class RGBAToBGR(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="rgba_to_rgb")
+@constant.TRANSFORM.register(name="rgba_to_rgb")
 class RGBaToRGB(coreml.Transform):
-    """:class:`RGBAToRGB` converts the given images from RGBA to RGB.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -463,18 +335,8 @@ class RGBaToRGB(coreml.Transform):
 
 # region Conversion
 
-@coreml.TRANSFORM.register(name="denormalize")
+@constant.TRANSFORM.register(name="denormalize")
 class Denormalize(coreml.Transform):
-    """:Class:`Denormalize` denormalizes the given images.
-    
-    Args:
-        min: Current minimum pixel value of the image. Defaults to 0.0.
-        max: Current maximum pixel value of the image. Defaults to 255.0.
-        new_min: New minimum pixel value of the image. Defaults to 0.0.
-        new_max: New minimum pixel value of the image. Defaults to 1.0.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(
         self,
@@ -513,19 +375,9 @@ class Denormalize(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="normalize")
+@constant.TRANSFORM.register(name="normalize")
 class Normalize(coreml.Transform):
-    """:class:`Normalize` normalizes the given images.
- 
-    Args:
-        min: Current minimum pixel value of the image. Defaults to 0.0.
-        max: Current maximum pixel value of the image. Defaults to 255.0.
-        new_min: New minimum pixel value of the image. Defaults to 0.0.
-        new_max: New minimum pixel value of the image. Defaults to 1.0.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+
     def __init__(
         self,
         min    : float        = 0.0,
@@ -563,18 +415,9 @@ class Normalize(coreml.Transform):
         return input, target
 
 
-@coreml.TRANSFORM.register(name="to_image")
+@constant.TRANSFORM.register(name="to_image")
 class ToImage(coreml.Transform):
-    """:class:`RGBAToRGB` converts the given images from
-    :class:`torch.torch.Tensor` to :class:`np.ndarray`.
 
-    Args:
-        keepdim: If True, the function will keep the dimensions of the input
-            tensor. Defaults to True.
-        denormalize: If True, the image will be denormalized to [0, 255].
-            Defaults to False.
-    """
-    
     def __init__(
         self,
         keepdim    : bool = True,
@@ -602,18 +445,9 @@ class ToImage(coreml.Transform):
         ) if target is not None else None
 
 
-@coreml.TRANSFORM.register(name="to_tensor")
+@constant.TRANSFORM.register(name="to_tensor")
 class ToTensor(coreml.Transform):
-    """:class:`RGBAToRGB` converts the given images from :class:`PIL.Image` or
-    :class:`np.ndarray` to :class:`torch.torch.Tensor`. Optionally, convert
-    :param:`image` to channel-first format and normalize it.
-    
-    Args:
-        keepdim: If True, the channel dimension will be kept. If False unsqueeze
-            the image to match the shape [..., C, H, W]. Defaults to True
-        normalize: If True, normalize the image to [0, 1]. Defaults to False
-    """
-    
+
     def __init__(
         self,
         keepdim  : bool = False,
@@ -646,21 +480,9 @@ class ToTensor(coreml.Transform):
 
 # region Crop
 
-@coreml.TRANSFORM.register(name="center_crop")
+@constant.TRANSFORM.register(name="center_crop")
 class CenterCrop(coreml.Transform):
-    """:class:`CenterCrop` crops the given images at the center. If image size
-    is smaller than output size along any edge, image is padded with 0 and then
-    center cropped.
 
-    Args:
-        output_size: Desired output size of the crop. If size is an int instead
-            of sequence like (h, w), a square crop (size, size) is made. If
-            provided a sequence of length 1, it will be interpreted as (size[0],
-            size[0]).
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
     def __init__(
         self,
         output_size: Ints,
@@ -681,20 +503,9 @@ class CenterCrop(coreml.Transform):
         return input, target
     
     
-@coreml.TRANSFORM.register(name="crop")
+@constant.TRANSFORM.register(name="crop")
 class Crop(coreml.Transform):
-    """:class:`Crop` crops the given images at specified location and output
-    size.
-    
-    Args:
-        top: Vertical component of the top left corner of the crop box.
-        left: Horizontal component of the top left corner of the crop box.
-        height: Height of the crop box.
-        width: Width of the crop box.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         top    : int,
@@ -732,20 +543,9 @@ class Crop(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="five_crop")
+@constant.TRANSFORM.register(name="five_crop")
 class FiveCrop(coreml.Transform):
-    """:class:`FiveCrop` crops the given images into four corners and the
-    central crop.
 
-    Args:
-        size: Desired output size of the crop. If size is an int instead of
-            sequence like (h, w), a square crop (size, size) is made. If
-            provided a sequence of length 1, it will be interpreted as (size[0],
-            size[0]).
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
     def __init__(
         self,
         size : Ints,
@@ -769,26 +569,9 @@ class FiveCrop(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="ten_crop")
+@constant.TRANSFORM.register(name="ten_crop")
 class TenCrop(coreml.Transform):
-    """:class:`TenCrop` generates ten cropped images from the given image. Crop
-    the given image into four corners and the central crop plus the flipped
-    version of these (horizontal flipping is used by default).
-   
-    Notes:
-        This transform returns a tuple of images and there may be a mismatch
-        in the number of inputs and targets your `Dataset` returns.
 
-    Args:
-        size: Desired output size of the crop. If size is an int instead of
-            sequence like (h, w), a square crop (size, size) is made. If
-            provided a sequence of length 1, it will be interpreted as (size[0],
-            size[0]).
-        vflip: Use vertical flipping instead of horizontal. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
     def __init__(
         self,
         size : Ints,
@@ -819,15 +602,9 @@ class TenCrop(coreml.Transform):
 
 # region Flip
 
-@coreml.TRANSFORM.register(name="hflip")
-@coreml.TRANSFORM.register(name="horizontal_flip")
+@constant.TRANSFORM.register(name="hflip")
+@constant.TRANSFORM.register(name="horizontal_flip")
 class HorizontalFlip(coreml.Transform):
-    """:class:`HorizontalFlip` flips the given images horizontally.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -843,16 +620,9 @@ class HorizontalFlip(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="hflip_image_box")
-@coreml.TRANSFORM.register(name="horizontal_flip_image_box")
+@constant.TRANSFORM.register(name="hflip_image_box")
+@constant.TRANSFORM.register(name="horizontal_flip_image_box")
 class HorizontalFlipImageBox(coreml.Transform):
-    """:class:`HorizontalFlipImageBox` flips an image and a bounding box
-    horizontally.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -866,15 +636,9 @@ class HorizontalFlipImageBox(coreml.Transform):
         return ci.horizontal_flip_image_box(image=input, box=target)
 
 
-@coreml.TRANSFORM.register(name="vflip")
-@coreml.TRANSFORM.register(name="vertical_flip")
+@constant.TRANSFORM.register(name="vflip")
+@constant.TRANSFORM.register(name="vertical_flip")
 class VerticalFlip(coreml.Transform):
-    """:class:`VerticalFlip` flips the given images vertically.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -889,17 +653,10 @@ class VerticalFlip(coreml.Transform):
         return input, target
     
     
-@coreml.TRANSFORM.register(name="vflip_image_box")
-@coreml.TRANSFORM.register(name="vertical_flip_image_box")
+@constant.TRANSFORM.register(name="vflip_image_box")
+@constant.TRANSFORM.register(name="vertical_flip_image_box")
 class VerticalFlipImageBox(coreml.Transform):
-    """:class:`VerticalFlipImageBox` flips an image and a bounding box
-    vertically.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
         
@@ -916,18 +673,9 @@ class VerticalFlipImageBox(coreml.Transform):
 
 # region Intensity
 
-@coreml.TRANSFORM.register(name="adjust_brightness")
+@constant.TRANSFORM.register(name="adjust_brightness")
 class AdjustBrightness(coreml.Transform):
-    """:class:`AdjustBrightness` adjusts brightness of the given images.
-
-    Args:
-        brightness_factor: How much to adjust the brightness. Can be any
-            non-negative number. 0 gives a black image, 1 gives the original
-            image while 2 increases the brightness by a factor of 2.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+   
     def __init__(
         self,
         brightness_factor: float,
@@ -953,18 +701,9 @@ class AdjustBrightness(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="adjust_contrast")
+@constant.TRANSFORM.register(name="adjust_contrast")
 class AdjustContrast(coreml.Transform):
-    """:class:`AdjustContrast` adjusts the contrast of the given images.
 
-    Args:
-        contrast_factor: How much to adjust the contrast. Can be any
-            non-negative number. 0 gives a solid gray image, 1 gives the
-            original image while 2 increases the contrast by a factor of 2.
-        p: Probability of the image being adjusted. Defaults to None means
-        process as normal.
-    """
-    
     def __init__(
         self,
         contrast_factor: float,
@@ -990,19 +729,9 @@ class AdjustContrast(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="adjust_gamma")
+@constant.TRANSFORM.register(name="adjust_gamma")
 class AdjustGamma(coreml.Transform):
-    """:class:`AdjustGamma` adjusts the gamma of the given images.
 
-    Args:
-        gamma: How much to adjust the gamma. Can be any non-negative number. 0
-            gives a black image, 1 gives the original image while 2 increases
-            the brightness by a factor of 2.
-        gain: Default to 1.0.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
     def __init__(
         self,
         gamma: float,
@@ -1032,20 +761,9 @@ class AdjustGamma(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="adjust_hue")
+@constant.TRANSFORM.register(name="adjust_hue")
 class AdjustHue(coreml.Transform):
-    """:class:`AdjustHue` adjusts thr hue of the given images.
 
-    Args:
-        hue_factor: How much to shift the hue channel. Should be in [-0.5, 0.5].
-            0.5 and -0.5 give complete reversal of hue channel in HSV space in
-            positive and negative direction respectively. 0 means no shift.
-            Therefore, both -0.5 and 0.5 will give an image with complementary
-            colors while 0 gives the original image.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
     def __init__(
         self,
         hue_factor: float,
@@ -1071,18 +789,8 @@ class AdjustHue(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="adjust_saturation")
+@constant.TRANSFORM.register(name="adjust_saturation")
 class AdjustSaturation(coreml.Transform):
-    """:class:`AdjustSaturation` adjusts the color saturation of the given
-    images.
-
-    Args:
-        saturation_factor: How much to adjust the saturation. 0 will give a
-            black and white image, 1 will give the original image while 2 will
-            enhance the saturation by a factor of 2.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(
         self,
@@ -1109,17 +817,8 @@ class AdjustSaturation(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="adjust_sharpness")
+@constant.TRANSFORM.register(name="adjust_sharpness")
 class AdjustSharpness(coreml.Transform):
-    """:class:`AdjustSharpness` adjust the sharpness of the given images.
-
-    Args:
-        sharpness_factor: How much to adjust the sharpness. 0 will give a black
-            and white image, 1 will give the original image while 2 will enhance
-            the saturation by a factor of 2.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(
         self,
@@ -1146,17 +845,9 @@ class AdjustSharpness(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="autocontrast")
+@constant.TRANSFORM.register(name="autocontrast")
 class AutoContrast(coreml.Transform):
-    """:class:`AutoContrast` maximizes the contrast of the given images by
-    remapping its pixels per channel so that the lowest becomes black and the
-    lightest becomes white.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
     
@@ -1170,30 +861,9 @@ class AutoContrast(coreml.Transform):
         return input, target
     
 
-@coreml.TRANSFORM.register(name="color_jitter")
+@constant.TRANSFORM.register(name="color_jitter")
 class ColorJitter(coreml.Transform):
-    """:class:`ColorJitter` randomly changes the brightness, contrast,
-    saturation and hue of the given images.
-    
-    Args:
-        brightness: How much to jitter the brightness. :param:`brightness` is
-            chosen uniformly from [max(0, 1 - brightness), 1 + brightness] or
-            the given [min, max]. Should be non-negative numbers. Defaults to
-            0.0.
-        contrast: How much to jitter the contrast. :param:`contrast` is chosen
-            uniformly from [max(0, 1 - contrast), 1 + contrast] or the given
-            [min, max]. Should be non-negative numbers. Defaults to 0.0.
-        saturation: How much to jitter the saturation. :param:`saturation` is
-            chosen uniformly from [max(0, 1 - saturation), 1 + saturation] or
-            the given [min, max]. Should be non-negative numbers. Defaults to
-            0.0.
-        hue: How much to jitter the hue. :param:`hue` is chosen uniformly from
-            [-hue, hue] or the given [min, max]. Should have 0 <= hue <= 0.5 or
-            -0.5 <= min <= max <= 0.5. Defaults to 0.0.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
+
     def __init__(
         self,
         brightness: Floats | None = 0.0,
@@ -1264,23 +934,6 @@ class ColorJitter(coreml.Transform):
         float | None,
         float | None
     ]:
-        """Gets the parameters for the randomized transform to be applied on
-        image.
-
-        Args:
-            brightness: The range from which the `brightness_factor` is chosen
-                uniformly. Pass None to turn off the transformation.
-            contrast: The range from which the `contrast_factor` is chosen
-                uniformly. Pass None to turn off the transformation.
-            saturation: The range from which the `saturation_factor` is chosen
-                uniformly. Pass None to turn off the transformation.
-            hue: The range from which the `hue_factor` is chosen uniformly. Pass
-                None to turn off the transformation.
-
-        Returns:
-            The parameters used to apply the randomized transform along with
-                their random order.
-        """
         fn_idx = torch.randperm(4)
         b = None if brightness is None \
             else float(torch.empty(1).uniform_(brightness[0], brightness[1]))
@@ -1329,22 +982,9 @@ class ColorJitter(coreml.Transform):
         return input, target
 
 
-@coreml.TRANSFORM.register(name="erase")
+@constant.TRANSFORM.register(name="erase")
 class Erase(coreml.Transform):
-    """:class:`Erase` erases value of the given images.
 
-    Args:
-        image: Image of shape [..., C, H, W] to be adjusted, where ... means it
-            can have an arbitrary number of leading dimensions.
-        i: i in (i,j) i.e coordinates of the upper left corner.
-        j: j in (i,j) i.e coordinates of the upper left corner.
-        h: Height of the erased region.
-        w: Width of the erased region.
-        v: Erasing value.
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
-    
     def __init__(
         self,
         i: int,
@@ -1386,16 +1026,8 @@ class Erase(coreml.Transform):
         return input, target
 
 
-@coreml.TRANSFORM.register(name="equalize")
+@constant.TRANSFORM.register(name="equalize")
 class Equalize(coreml.Transform):
-    """:class:`Equalize` equalizes histograms of the given images by applying a
-    non-linear mapping to the input in order to create a uniform distribution of
-    grayscale values in the output.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to None means
-            process as normal.
-    """
     
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -1410,15 +1042,8 @@ class Equalize(coreml.Transform):
         return input, target
         
 
-@coreml.TRANSFORM.register(name="invert")
+@constant.TRANSFORM.register(name="invert")
 class Invert(coreml.Transform):
-    """
-    Invert the colors of an RGB/grayscale image.
-    
-    Args:
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
 
     def __init__(self, p: float | None = None, *args, **kwargs):
         super().__init__(p=p, *args, **kwargs)
@@ -1433,16 +1058,8 @@ class Invert(coreml.Transform):
                ci.invert(image=target) if target is not None else None
 
 
-@coreml.TRANSFORM.register(name="posterize")
+@constant.TRANSFORM.register(name="posterize")
 class Posterize(coreml.Transform):
-    """
-    Posterize an image by reducing the number of bits for each color channel.
-
-    Args:
-        bits: Number of bits to keep for each channel (0-8).
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
@@ -1464,33 +1081,14 @@ class Posterize(coreml.Transform):
                    if target is not None else None
 
 
-@coreml.TRANSFORM.register(name="random_erase")
+@constant.TRANSFORM.register(name="random_erase")
 class RandomErase(coreml.Transform):
-    """
-    Randomly selects a rectangle region in an image torch.Tensor and erases its
-    pixels.
-    
-    References:
-        'Random Erasing Data Augmentation' by Zhong et al. See https://arxiv.org/abs/1708.04896
-    
-    Args:
-        scale: Range of proportion of erased area against input image.
-        ratio: Range of aspect ratio of erased area.
-        value (int | float | str | tuple | list): Erasing value. Defaults to 0.
-            If a single int, it is used to erase all pixels. If a tuple of
-            length 3, it is used to erase R, G, B channels respectively. If a
-            str of `random`, erasing each pixel with random values.
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         scale  : Floats                           = (0.02, 0.33),
         ratio  : Floats                           = (0.3, 3.3),
         value  : int | float | str | tuple | list = 0,
-        inplace: bool                             = False,
         p      : float | None                     = None,
         *args, **kwargs
     ):
@@ -1513,7 +1111,6 @@ class RandomErase(coreml.Transform):
         self.scale   = scale
         self.ratio   = ratio
         self.value   = value
-        self.inplace = inplace
         
     @staticmethod
     def get_params(
@@ -1522,21 +1119,6 @@ class RandomErase(coreml.Transform):
         ratio: Floats,
         value: list[float] | None = None
     ) -> tuple[int, int, int, int, torch.Tensor]:
-        """Get parameters for `erase` for a random erasing.
-
-        Args:
-            image (torch.Tensor): torch.Tensor image to be erased.
-            scale: Range of proportion of erased area against input
-                image.
-            ratio: Range of aspect ratio of erased area.
-            value (list[float] | None): Erasing value. If None, it is
-                interpreted as "random" (erasing each pixel with random values).
-                If `len(value)` is 1, it is interpreted as a number, i.e.
-                `value[0]`.
-
-        Returns:
-            Params (i, j, h, w, v) to be passed to `erase` for random erasing.
-        """
         img_c, img_h, img_w = ci.get_image_shape(image)
         area                = img_h * img_w
 
@@ -1597,7 +1179,6 @@ class RandomErase(coreml.Transform):
                 h       = h,
                 w       = w,
                 v       = v,
-                inplace = self.inplace,
             ), \
             ci.erase(
                 image   = target,
@@ -1606,21 +1187,11 @@ class RandomErase(coreml.Transform):
                 h       = h,
                 w       = w,
                 v       = v,
-                inplace = self.inplace,
             ) if target is not None else None
     
 
-@coreml.TRANSFORM.register(name="solarize")
+@constant.TRANSFORM.register(name="solarize")
 class Solarize(coreml.Transform):
-    """
-    Solarize an RGB/grayscale image by inverting all pixel values above a
-    threshold.
-
-    Args:
-        threshold: All pixels equal or above this value are inverted.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
@@ -1637,46 +1208,31 @@ class Solarize(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return ci.solarize(image=input,  threshold=self.threshold), \
-               ci.solarize(image=target, threshold=self.threshold) \
-                   if target is not None else None
+        input  = ci.solarize(image=input,  threshold=self.threshold)
+        target = ci.solarize(image=target, threshold=self.threshold)\
+            if target is not None else None
+        return input, target
 
 # endregion
 
 
 # region Resize
 
-@coreml.TRANSFORM.register(name="resize")
+@constant.TRANSFORM.register(name="resize")
 class Resize(coreml.Transform):
-    """
-    Resize an image. Adapted from: `torchvision.transforms.functional.resize()`
-    
-    Args:
-        image (torch.Tensor): Image of shape [..., C, H, W] to be transformed,
-            where ... means it can have an arbitrary number of leading
-            dimensions.
-        size: Desired output size of shape [C, H, W].
-        interpolation (InterpolationModeType): Interpolation method.
-        antialias (bool, None): Defaults to None.
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         size         : Ints,
         interpolation: InterpolationModeType = "bilinear",
-        antialias    : bool  | None       = None,
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        antialias    : bool  | None          = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
         self.size          = size
         self.interpolation = interpolation
         self.antialias     = antialias
-        self.inplace       = inplace
     
     def forward(
         self,
@@ -1684,44 +1240,24 @@ class Resize(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.resize(
+        input  = ci.resize(
                 image         = input,
                 size          = self.size,
                 interpolation = self.interpolation,
                 antialias     = self.antialias,
-                inplace       = self.inplace,
-            ), \
-            ci.resize(
+        )
+        target = ci.resize(
                 image         = target,
                 size          = self.size,
                 interpolation = self.interpolation,
                 antialias     = self.antialias,
-                inplace       = self.inplace,
-            ) if target is not None else None
-    
+        ) if target is not None else None
+        return input, target
+        
 
-@coreml.TRANSFORM.register(name="resized_crop")
-class ResizedCrop(coreml.Transform):
-    """
-    Crop and resize an image.
-    
-    Notably used in :class:`~torchvision.transforms.RandomResizedCrop`.
+@constant.TRANSFORM.register(name="resize_crop")
+class ResizeCrop(coreml.Transform):
 
-    Args:
-        top: Vertical component of the top left corner of the crop box.
-        left: Horizontal component of the top left corner of the crop box.
-        height: Height of the crop box.
-        width: Width of the crop box.
-        size: Desired output size of shape [C, H, W].
-            Defaults to None.
-        interpolation (InterpolationModeType): Interpolation method.
-            Defaults to "bilinear".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
     def __init__(
         self,
         top          : int,
@@ -1730,8 +1266,7 @@ class ResizedCrop(coreml.Transform):
         width        : int,
         size         : list[int],
         interpolation: InterpolationModeType = "bilinear",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -1741,7 +1276,6 @@ class ResizedCrop(coreml.Transform):
         self.width         = width
         self.size          = size
         self.interpolation = interpolation
-        self.inplace       = inplace
     
     def forward(
         self,
@@ -1749,74 +1283,43 @@ class ResizedCrop(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.resized_crop(
-                image= input,
-                top           = self.top,
-                left          = self.left,
-                height        = self.height,
-                width         = self.width,
-                size          = self.size,
-                interpolation = self.interpolation,
-                inplace       = self.inplace,
-            ), \
-            ci.resized_crop(
-                image= target,
-                top           = self.top,
-                left          = self.left,
-                height        = self.height,
-                width         = self.width,
-                size          = self.size,
-                interpolation = self.interpolation,
-                inplace       = self.inplace
-            ) if target is not None else None
+        input = ci.resize_crop(
+            image         = input,
+            top           = self.top,
+            left          = self.left,
+            height        = self.height,
+            width         = self.width,
+            size          = self.size,
+            interpolation = self.interpolation,
+        )
+        target = ci.resize_crop(
+            image         = target,
+            top           = self.top,
+            left          = self.left,
+            height        = self.height,
+            width         = self.width,
+            size          = self.size,
+            interpolation = self.interpolation,
+        ) if target is not None else None
+        return input, target
 
 # endregion
 
 
 # region Rotate
 
-@coreml.TRANSFORM.register(name="rotate")
+@constant.TRANSFORM.register(name="rotate")
 class Rotate(coreml.Transform):
-    """
-    Rotate an image.
-    
-    Args:
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Defaults to True.
-            Note that the `keep_shape` flag assumes rotation around the center
-            and no translation.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         angle        : float,
-        center       : Ints | None  = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -1826,7 +1329,6 @@ class Rotate(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
     
     def forward(
         self,
@@ -1834,72 +1336,40 @@ class Rotate(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.rotate(
-                image         = input,
-                angle         = self.angle,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.rotate(
-                image         = target,
-                angle         = self.angle,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.rotate(
+            image         = input,
+            angle         = self.angle,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.rotate(
+            image         = target,
+            angle         = self.angle,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
 
 
-@coreml.TRANSFORM.register(name="rotate_hflip")
-@coreml.TRANSFORM.register(name="rotate_horizontal_flip")
+@constant.TRANSFORM.register(name="rotate_hflip")
+@constant.TRANSFORM.register(name="rotate_horizontal_flip")
 class RotateHorizontalFlip(coreml.Transform):
-    """
-    Rotate an image, then flips it horizontally.
-    
-    Args:
-        angle: Angle to rotate the image.
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         angle        : float,
-        center       : Ints | None  = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -1909,7 +1379,6 @@ class RotateHorizontalFlip(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
         
     def forward(
         self,
@@ -1917,75 +1386,40 @@ class RotateHorizontalFlip(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.rotate_horizontal_flip(
-                image         = input,
-                angle         = self.angle,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.rotate_horizontal_flip(
-                image         = target,
-                angle         = self.angle,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.rotate_horizontal_flip(
+            image         = input,
+            angle         = self.angle,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.rotate_horizontal_flip(
+            image         = target,
+            angle         = self.angle,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
     
 
-@coreml.TRANSFORM.register(name="rotate_vflip")
-@coreml.TRANSFORM.register(name="rotate_vertical_flip")
+@constant.TRANSFORM.register(name="rotate_vflip")
+@constant.TRANSFORM.register(name="rotate_vertical_flip")
 class RotateVerticalFlip(coreml.Transform):
-    """
-    Rotate an image, then flips it vertically.
-    
-    Args:
-        image (torch.Tensor): Image of shape [..., C, H, W] to be transformed,
-            where ... means it can have an arbitrary number of leading
-            dimensions.
-        angle: Angle to rotate the image.
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to  make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Horizontal translation (post-rotation translation).
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         angle        : float,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -1995,7 +1429,6 @@ class RotateVerticalFlip(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
         
     def forward(
         self,
@@ -2003,77 +1436,44 @@ class RotateVerticalFlip(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.rotate_vertical_flip(
-                image         = input,
-                angle         = self.angle,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.rotate_vertical_flip(
-                image         = target,
-                angle         = self.angle,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.rotate_vertical_flip(
+            image         = input,
+            angle         = self.angle,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.rotate_vertical_flip(
+            image         = target,
+            angle         = self.angle,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
 
 # endregion
 
 
 # region Shear
 
-@coreml.TRANSFORM.register(name="hshear")
-@coreml.TRANSFORM.register(name="horizontal_shear")
+@constant.TRANSFORM.register(name="hshear")
+@constant.TRANSFORM.register(name="horizontal_shear")
 class HorizontalShear(coreml.Transform):
-    """
-    Shear an image horizontally.
-    
-    Args:
-        magnitude: Shear angle value in degrees between -180 to 180,
-            clockwise direction.
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode. Defaults to
-            "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         magnitude    : float,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2083,7 +1483,6 @@ class HorizontalShear(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
         
     def forward(
         self,
@@ -2091,74 +1490,39 @@ class HorizontalShear(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.horizontal_shear(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.horizontal_shear(
-                image         = target,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.horizontal_shear(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.horizontal_shear(
+            image         = target,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
     
 
-@coreml.TRANSFORM.register(name="shear")
+@constant.TRANSFORM.register(name="shear")
 class Shear(coreml.Transform):
-    """
-    Shear an image.
-    
-    Args:
-        magnitude: Shear angle value in degrees between -180 to 180,
-            clockwise direction. If a sequence is specified, the first value
-            corresponds to a shear parallel to the x-axis, while the second
-            value corresponds to a shear parallel to the y-axis.
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         magnitude    : list[float],
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2168,7 +1532,6 @@ class Shear(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
         
     def forward(
         self,
@@ -2176,73 +1539,40 @@ class Shear(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.shear(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.shear(
-                image         = target,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.shear(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.shear(
+            image         = target,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
 
 
-@coreml.TRANSFORM.register(name="yshear")
-@coreml.TRANSFORM.register(name="vertical_shear")
+@constant.TRANSFORM.register(name="yshear")
+@constant.TRANSFORM.register(name="vertical_shear")
 class VerticalShear(coreml.Transform):
-    """
-    Shear an image vertically.
-    
-    Args:
-        magnitude: Shear angle value in degrees between -180 to 180,
-            clockwise direction.
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to  make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         magnitude    : float,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2252,7 +1582,6 @@ class VerticalShear(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
         
     def forward(
         self,
@@ -2260,76 +1589,44 @@ class VerticalShear(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.vertical_shear(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.vertical_shear(
-                image         = target,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
-
+        input = ci.vertical_shear(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.vertical_shear(
+            image         = target,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
+        
 # endregion
 
 
 # region Translate
 
-@coreml.TRANSFORM.register(name="htranslate")
-@coreml.TRANSFORM.register(name="horizontal_translate")
+@constant.TRANSFORM.register(name="htranslate")
+@constant.TRANSFORM.register(name="horizontal_translate")
 class HorizontalTranslate(coreml.Transform):
-    """
-    Translate an image in horizontal direction.
-    
-    Args:
-        magnitude: Horizontal translation (post-rotation translation)
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode. Defaults to
-            "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         magnitude    : int,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2339,7 +1636,6 @@ class HorizontalTranslate(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
     
     def forward(
         self,
@@ -2347,79 +1643,40 @@ class HorizontalTranslate(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.horizontal_translate(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.horizontal_translate(
-                image         = target,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.horizontal_translate(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.horizontal_translate(
+            image         = target,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
       
 
-@coreml.TRANSFORM.register(name="htranslate_image_box")
-@coreml.TRANSFORM.register(name="horizontal_translate_image_box")
+@constant.TRANSFORM.register(name="htranslate_image_box")
+@constant.TRANSFORM.register(name="horizontal_translate_image_box")
 class HorizontalTranslateImageBox(coreml.Transform):
-    """
-    Translate an image and a bounding box in horizontal direction.
-    
-    References:
-        https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
-        
-    Args:
-        magnitude: Horizontal translation (post-rotation translation).
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode. Defaults to
-            "constant".
-        drop_ratio: If the fraction of a bounding box left in the image
-            after being clipped is less than `drop_ratio` the bounding box is
-            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
-            Defaults to 0.0.
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         magnitude    : int,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2429,13 +1686,12 @@ class HorizontalTranslateImageBox(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
     
     # noinspection PyMethodOverriding
     def forward(
         self, input: torch.Tensor, target: torch.Tensor, *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return ci.horizontal_translate_image_box(
+        input, target = ci.horizontal_translate_image_box(
             image         = input,
             box           = target,
             magnitude     = self.magnitude,
@@ -2444,53 +1700,22 @@ class HorizontalTranslateImageBox(coreml.Transform):
             keep_shape    = self.keep_shape,
             fill          = self.fill,
             padding_mode  = self.padding_mode,
-            inplace       = self.inplace,
         )
+        return input, target
 
 
-@coreml.TRANSFORM.register(name="translate")
+@constant.TRANSFORM.register(name="translate")
 class Translate(coreml.Transform):
-    """
-    Translate an image.
-    
-    Args:
-        magnitude: Horizontal and vertical translations (post-rotation
-            translation).
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
-    
+
     def __init__(
         self,
         magnitude    : Ints,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2500,7 +1725,6 @@ class Translate(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
     
     def forward(
         self,
@@ -2508,82 +1732,39 @@ class Translate(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.translate(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.translate(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
+        input = ci.translate(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.translate(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
 
 
-@coreml.TRANSFORM.register(name="translate_image_box")
+@constant.TRANSFORM.register(name="translate_image_box")
 class TranslateImageBox(coreml.Transform):
-    """
-    Translate an image and a bounding box.
-    
-    References:
-        https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
-        
-    Args:
-        box (torch.Tensor): Box of shape [N, 4] to be translated. They are expected
-            to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
-            `0 <= y1 < y2`.
-        magnitude: Horizontal and vertical translations (post-rotation
-            translation).
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        drop_ratio: If the fraction of a bounding box left in the image
-            after being clipped is less than `drop_ratio` the bounding box is
-            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
-            Defaults to 0.0.
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         magnitude    : Ints,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2593,13 +1774,12 @@ class TranslateImageBox(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
     
     # noinspection PyMethodOverriding
     def forward(
         self, input: torch.Tensor, target: torch.Tensor, *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return ci.translate_image_box(
+        input, target = ci.translate_image_box(
             image         = input,
             box           = target,
             magnitude     = self.magnitude,
@@ -2608,53 +1788,23 @@ class TranslateImageBox(coreml.Transform):
             keep_shape    = self.keep_shape,
             fill          = self.fill,
             padding_mode  = self.padding_mode,
-            inplace       = self.inplace,
         )
+        return input, target
     
 
-@coreml.TRANSFORM.register(name="vtranslate")
-@coreml.TRANSFORM.register(name="vertical_translate")
+@constant.TRANSFORM.register(name="vtranslate")
+@constant.TRANSFORM.register(name="vertical_translate")
 class VerticalTranslate(coreml.Transform):
-    """
-    Translate an image in vertical direction.
-    
-    Args:
-        magnitude: Vertical translation (post-rotation translation)
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
     
     def __init__(
         self,
         magnitude    : int,
-        center       : Ints | None  = None,
+        center       : Ints  | None          = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None = None,
+        p            : float | None          = None,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2664,7 +1814,6 @@ class VerticalTranslate(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
         
     def forward(
         self,
@@ -2672,79 +1821,40 @@ class VerticalTranslate(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        return \
-            ci.vertical_translate(
-                image         = input,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ), \
-            ci.vertical_translate(
-                image         = target,
-                magnitude     = self.magnitude,
-                center        = self.center,
-                interpolation = self.interpolation,
-                keep_shape    = self.keep_shape,
-                fill          = self.fill,
-                padding_mode  = self.padding_mode,
-                inplace       = self.inplace,
-            ) if target is not None else None
-
-
-@coreml.TRANSFORM.register(name="vtranslate_image_box")
-@coreml.TRANSFORM.register(name="vertical_translate_image_box")
-class VerticalTranslateImageBox(coreml.Transform):
-    """
-    Translate an image and a bounding box in vertical direction.
+        input = ci.vertical_translate(
+            image         = input,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        )
+        target = ci.vertical_translate(
+            image         = target,
+            magnitude     = self.magnitude,
+            center        = self.center,
+            interpolation = self.interpolation,
+            keep_shape    = self.keep_shape,
+            fill          = self.fill,
+            padding_mode  = self.padding_mode,
+        ) if target is not None else None
+        return input, target
     
-    References:
-        https://blog.paperspace.com/data-augmentation-bounding-boxes-scaling-translation/
-        
-    Args:
-        magnitude: Vertical translation (post-rotation translation).
-        center: Center of affine transformation. If None, use the
-            center of the image. Defaults to None.
-        interpolation (InterpolationModeType): Desired interpolation mode.
-            Default to "bilinear".
-        keep_shape: If True, expands the output image to make it large
-            enough to hold the entire rotated image. If False or omitted, make
-            the output image the same size as the input image. Note that the
-            `keep_shape` flag assumes rotation around the center and no
-            translation. Defaults to True.
-        fill: Pixel values for the area outside the transformed image.
-            - If a single number, the value is used for all borders.
-            - If a sequence of length 2, it is used to fill band left/right and
-              top/bottom respectively
-            - If a sequence of length 3, it is used to fill R, G, B channels
-              respectively.
-            - If a sequence of length 4, it is used to fill each band
-              (left, right, top, bottom) respectively.
-            Defaults to 0.0.
-        padding_mode (PaddingModeType): Desired padding mode.
-            Defaults to "constant".
-        drop_ratio: If the fraction of a bounding box left in the image
-            after being clipped is less than `drop_ratio` the bounding box is
-            dropped. If `drop_ratio==0`, don't drop any bounding boxes.
-            Defaults to 0.0.
-        inplace: If True, make this operation inplace. Defaults to False.
-        p: Probability of the image being adjusted. Defaults to
-            None means process as normal.
-    """
+
+@constant.TRANSFORM.register(name="vtranslate_image_box")
+@constant.TRANSFORM.register(name="vertical_translate_image_box")
+class VerticalTranslateImageBox(coreml.Transform):
     
     def __init__(
         self,
         magnitude    : int,
-        center       : Ints | None        = None,
+        center       : Ints | None           = None,
         interpolation: InterpolationModeType = "bilinear",
-        keep_shape   : bool               = True,
-        fill         : Floats             = 0.0,
+        keep_shape   : bool                  = True,
+        fill         : Floats                = 0.0,
         padding_mode : PaddingModeType       = "constant",
-        inplace      : bool               = False,
-        p            : float | None       = None,
+        inplace      : bool                  = False,
         *args, **kwargs
     ):
         super().__init__(p=p, *args, **kwargs)
@@ -2754,13 +1864,12 @@ class VerticalTranslateImageBox(coreml.Transform):
         self.keep_shape    = keep_shape
         self.fill          = fill
         self.padding_mode  = padding_mode
-        self.inplace       = inplace
     
     # noinspection PyMethodOverriding
     def forward(
         self, input: torch.Tensor, target: torch.Tensor, *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return ci.vertical_translate_image_box(
+        input, target = ci.vertical_translate_image_box(
             image         = input,
             box           = target,
             magnitude     = self.magnitude,
@@ -2769,7 +1878,7 @@ class VerticalTranslateImageBox(coreml.Transform):
             keep_shape    = self.keep_shape,
             fill          = self.fill,
             padding_mode  = self.padding_mode,
-            inplace       = self.inplace,
         )
+        return input, target
 
 # endregion
