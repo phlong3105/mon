@@ -43,8 +43,10 @@ exclude  = []
 [tool.poetry.dependencies]
 python           = ">=3.10"
 "mon-core"       = { path="src/mon-core",      develop=true }
-"mon-coreml"     = { path="src/mon-coreml",    develop=true }
 "mon-coreimage"  = { path="src/mon-coreimage", develop=true }
+"mon-coreml"     = { path="src/mon-coreml",    develop=true }
+"mon-vision"     = { path="src/mon-vision",    develop=true }
+
 
 # [tool.poetry.group.dev.dependencies]
 

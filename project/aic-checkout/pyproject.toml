@@ -8,9 +8,9 @@
 # (__(__)___(__)__)
 #
 [tool.poetry]
-name          = "aic-tss"
-version       = "1.2.0"
-description   = "The codebase for Traffic Surveillance Systems in AI City Challenge."
+name          = "aic-checkout"
+version       = "1.0.0"
+description   = "The solution for AI City Challenge: Multi-Class Product Counting & Recognition for Automated Retail Checkout."
 license       = "MIT"
 authors       = [
     "Long H. Pham <longpham3105@gmail.com>"
@@ -31,9 +31,7 @@ classifiers   = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-packages = [
-    {include = "aic"}
-]
+packages = []
 include  = []
 exclude  = []
 

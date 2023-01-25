@@ -8,12 +8,12 @@
 # (__(__)___(__)__)
 #
 [tool.poetry]
-name          = "ug2"
-version       = "1.2.0"
-description   = "MON's codebase for UG2+ challenge."
+name          = "aic-tss"
+version       = "1.0.0"
+description   = "The solution for AI City Challenge."
 license       = "MIT"
 authors       = [
-    "Long H. Pham <longpham3105@gmail.com>",
+    "Long H. Pham <longpham3105@gmail.com>"
 ]
 maintainers   = [
     "Long H. Pham <longpham3105@gmail.com>",
@@ -21,7 +21,7 @@ maintainers   = [
 # readme        = "README.md"
 # repository    = "https://github.com/phlong3105/one"
 # documentation = "https://github.com/phlong3105/one/docs"
-keywords      = ["image enhancement", "object detection"]
+keywords      = ["core", "image processing"]
 classifiers   = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -31,9 +31,7 @@ classifiers   = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-packages = [
-    {include = "ug2"}
-]
+packages = []
 include  = []
 exclude  = []
 

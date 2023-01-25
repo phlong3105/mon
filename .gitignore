@@ -12,13 +12,7 @@ __pycache__/
 /.sync/
 /data/
 /pretrained/
-/project/
 
+/project/*/data
+/project/**/runs
 /src/archive/
-/src/aic-its/aic/its/data/
-/src/aic-retail/aic/retail/data/
-/src/aic-tss/aic/tss/data/
-/src/mon-training/mon/training/data/
-/src/mon-training/mon/training/runs/
-/src/ug2-detection/ug2/detection/data/
-/src/ug2-enhancement/ug2/enhancement/data/

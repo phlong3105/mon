@@ -8,9 +8,9 @@
 # (__(__)___(__)__)
 #
 [tool.poetry]
-name          = "aic-retail"
-version       = "1.2.0"
-description   = "The codebase for retail business in AI City Challenge."
+name          = "ug2-derain"
+version       = "1.0.0"
+description   = "The solution for UG2+: Single Image Deraining."
 license       = "MIT"
 authors       = [
     "Long H. Pham <longpham3105@gmail.com>"
@@ -31,9 +31,7 @@ classifiers   = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-packages = [
-    {include = "aic"}
-]
+packages = []
 include  = []
 exclude  = []
 
