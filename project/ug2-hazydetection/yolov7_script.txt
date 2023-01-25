@@ -4,12 +4,12 @@
 - Installation:
 sudo nvidia-docker run --name yolov7 -it \
 -v "/mnt/workspace/mon/data/":/data/ \
--v "/mnt/workspace/mon/src/ug2-detection/ug2/detection/yolov7/":/yolov7 \
+-v "/mnt/workspace/mon/project/ug2-hazydetection/yolov7/":/yolov7 \
 --shm-size=64g nvcr.io/nvidia/pytorch:21.08-py3
 
 sudo nvidia-docker run --name yolov7 -it \
 -v "/home/longpham/workspace/mon/data/":/data/ \
--v "/home/longpham/workspace/mon/src/ug2-detection/ug2/detection/yolov7/":/yolov7 \
+-v "/home/longpham/workspace/mon/project/ug2-hazydetection/yolov7/":/yolov7 \
 --shm-size=64g nvcr.io/nvidia/pytorch:21.08-py3
 
 apt update
@@ -26,10 +26,23 @@ python train_aux.py \
 --hyp data/hyp.scratch.custom.yaml \
 --epochs 100 \
 --batch-size 4 \
---img-size 1856 \
+--img-size 1280 \
 --workers 8 \
 --device 0 \
---name yolov7-e6e-visdrone-1856 \
+--name yolov7-e6e-visdrone-1280 \
+
+python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
+--weights "weights/yolov7-e6e_training.pt" \
+--cfg "cfg/training/yolov7-e6e.yaml" \
+--data "data/visdrone.yaml" \
+--hyp data/hyp.scratch.custom.yaml \
+--epochs 100 \
+--batch-size 4 \
+--img-size 1856 \
+--workers 4 \
+--device 0,1 \
+--sync-bn \
+--name yolov7-e6e-visdrone-1856
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
 --weights "weights/yolov7-e6e_training.pt" \
@@ -39,23 +52,10 @@ python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_a
 --epochs 100 \
 --batch-size 4 \
 --img-size 2560 \
---workers 4 \
---device 0,1 \
---sync-bn \
---name yolov7-e6e-visdrone-2560
-
-python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
---weights "weights/yolov7-e6e_training.pt" \
---cfg "cfg/training/yolov7-e6e.yaml" \
---data "data/visdrone.yaml" \
---hyp data/hyp.scratch.custom.yaml \
---epochs 100 \
---batch-size 8 \
---img-size 1280 \
 --workers 8 \
 --device 0,1 \
 --sync-bn \
---name yolov7-e6e-visdrone-1280
+--name yolov7-e6e-visdrone-2560
 
 
 - Test:
