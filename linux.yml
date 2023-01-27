@@ -18,7 +18,7 @@ dependencies:
   - setuptools
   # CUDA                  
   - cudatoolkit=11.7      # CUDA Toolkit - Including CUDA runtime.
-  - cudatoolkit-dev=11.7  # Develop, Optimize and Deploy GPU-accelerated Apps.
+  # - cudatoolkit-dev=11.7  # Develop, Optimize and Deploy GPU-accelerated Apps.
   - cudnn                 # NVIDIA's cuDNN deep neural network acceleration library.
   # Database              
   - psycopg2              # Python-PostgreSQL Database Adapter.

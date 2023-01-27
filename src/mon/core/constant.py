@@ -9,8 +9,8 @@ from __future__ import annotations
 
 __all__ = [
     "CONTENT_ROOT_DIR", "DATA_DIR", "DOCS_DIR", "FILE_HANDLER", "ImageFormat",
-    "MemoryUnit", "PRETRAINED_DIR", "PROJECTS_DIR", "RUNS_DIR",
-    "SOURCE_ROOT_DIR", "SNIPPET_DIR", "SRC_DIR", "VideoFormat",
+    "MemoryUnit", "PROJECT_DIR", "RUN_DIR", "SNIPPET_DIR", "SOURCE_ROOT_DIR",
+    "VideoFormat", "WEIGHT_DIR",
 ]
 
 
@@ -31,17 +31,16 @@ SOURCE_ROOT_DIR  = __current_file.parents[1]          # "mon/src/"
 CONTENT_ROOT_DIR = __current_file.parents[3]          # "mon"
 DOCS_DIR         = CONTENT_ROOT_DIR / "docs"          # "mon/docs"
 SNIPPET_DIR      = CONTENT_ROOT_DIR / "snippet"       # "mon/snippet"
-SRC_DIR          = CONTENT_ROOT_DIR / "src"           # "mon/src"
-PRETRAINED_DIR   = CONTENT_ROOT_DIR / "weights"       # "mon/weights"
-PROJECTS_DIR     = CONTENT_ROOT_DIR / "projects"      # "mon/projects"
-RUNS_DIR         = pathlib.Path()   / "runs"
+PROJECT_DIR      = CONTENT_ROOT_DIR / "project"       # "mon/project"
+WEIGHT_DIR       = CONTENT_ROOT_DIR / "weight"        # "mon/weight"
+RUN_DIR          = pathlib.Path()   / "run"
 DATA_DIR         = os.getenv("DATA_DIR", None)        # If we've set value in the os.environ
 if DATA_DIR is None:                                  
     DATA_DIR = pathlib.Path("/data")                  # Run from Docker container
 else:                                                 
     DATA_DIR = pathlib.Path(DATA_DIR)                 
 if not DATA_DIR.is_dir():                             
-    DATA_DIR = CONTENT_ROOT_DIR / "data"              # Run from `one` package
+    DATA_DIR = CONTENT_ROOT_DIR / "data"
 if not DATA_DIR.is_dir():
     DATA_DIR = ""
 

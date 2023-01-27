@@ -13,8 +13,8 @@ __all__ = [
     "Reduction", "STRATEGY", "TRANSFORM",
     # Extend :mod:`mon.core.constant`
     "CONTENT_ROOT_DIR", "DATA_DIR", "DOCS_DIR", "FILE_HANDLER", "ImageFormat",
-    "MemoryUnit", "PRETRAINED_DIR", "PROJECTS_DIR", "RUNS_DIR",
-    "SOURCE_ROOT_DIR", "SNIPPET_DIR", "SRC_DIR", "VideoFormat",
+    "MemoryUnit", "PROJECT_DIR", "RUN_DIR", "SNIPPET_DIR", "SOURCE_ROOT_DIR",
+    "VideoFormat", "WEIGHT_DIR",
 ]
 
 from typing import TYPE_CHECKING

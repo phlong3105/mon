@@ -1,8 +1,8 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from utils.image_io import *
-from utils.imresize import imresize
+from ..utils.image_io import *
+from ..utils.imresize import imresize
 
 class Downsampler(nn.Module):
     """

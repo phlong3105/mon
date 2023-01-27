@@ -1,14 +1,16 @@
 from collections import namedtuple
 
+import munch
 import torch.nn as nn
 from cv2.ximgproc import guidedFilter
 
-from net import *
-from net.losses import StdLoss
-from net.vae_model import VAE
-from utils.dcp import get_atmosphere
-from utils.image_io import *
-from utils.imresize import np_imresize
+import mon
+from .net import *
+from .net.losses import StdLoss
+from .net.vae_model import VAE
+from .utils.dcp import get_atmosphere
+from .utils.image_io import *
+from .utils.imresize import np_imresize
 
 DehazeResult = namedtuple("DehazeResult", ['learned', 't', 'a'])
 
@@ -171,15 +173,33 @@ class Dehaze(object):
             return np.array([np.clip(refine_t, 0, 1)])
 
 
-def dehaze(image_name, image, num_iter=500, output_path="output/"):
-    image = prepare_hazy_image(image)
-    dh    = Dehaze(image_name, image, num_iter, clip=True, output_path=output_path)
-    dh.optimize()
-    dh.finalize()
+def dehaze(args: munch.Munch, num_iter: int = 500):
+    assert args.image is not None and mon.Path(args.image).is_dir()
+    image_dir = mon.Path(args.image)
+    if args.output is None:
+        output_dir = image_dir.parent / "dehaze/zid"
+    else:
+        output_dir = mon.Path(args.dst)
+    mon.create_dirs(paths=[output_dir])
+    
+    image_files = list(image_dir.rglob("*"))
+    image_files = [f for f in image_files if f.is_image_file()]
+    image_files = sorted(image_files)
+    with mon.progress_bar() as pbar:
+        for f in pbar.track(
+            sequence    = image_files,
+            total       = len(image_files),
+            description = f"[bright_yellow] Dehazing"
+        ):
+            name  = str(f.name)
+            image = prepare_hazy_image(name)
+            dh    = Dehaze(name, image, num_iter, clip=True, output_path=str(output_dir) + "/")
+            dh.optimize()
+            dh.finalize()
+            save_image(name + "_original", np.clip(image, 0, 1), dh.output_path)
 
-    save_image(image_name + "_original", np.clip(image, 0, 1), dh.output_path)
 
-
+"""
 if __name__ == "__main__":
     torch.cuda.set_device(0)
     
@@ -189,3 +209,4 @@ if __name__ == "__main__":
 
     hazy_img = prepare_hazy_image(hazy_add)
     dehaze(name, hazy_img, num_iter=500, output_path="output/")
+"""

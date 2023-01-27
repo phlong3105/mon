@@ -22,8 +22,8 @@ __all__ = [
     "CallbackType", "CallbacksType", "ClassLabelsType", "EpochOutput",
     "LRSchedulerType", "LRSchedulersType", "LoggerType", "LoggersType",
     "LossType", "LossesType", "MetricType", "MetricsType", "ModelPhaseType",
-    "OptimizerType", "OptimizersType", "PretrainedType", "ReductionType",
-    "StepOutput", "TransformType", "TransformsType",
+    "OptimizerType", "OptimizersType", "ReductionType", "StepOutput",
+    "TransformType", "TransformsType", "WeightsType",
 ]
 
 from typing import Sequence, TypeAlias

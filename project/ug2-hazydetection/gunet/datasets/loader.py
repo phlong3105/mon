@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 from torch.utils.data import Dataset
-from utils import hwc_to_chw, read_img
+from ..utils import hwc_to_chw, read_img
 
 
 def augment(imgs=[], size=256, edge_decay=0., data_augment=True):
@@ -122,4 +122,4 @@ class SingleLoader(Dataset):
 		img_name = self.img_names[idx]
 		img = read_img(os.path.join(self.root_dir, img_name)) * 2 - 1
 
-		return {'img': hwc_to_chw(img), 'filename': img_name}
+		return {'source': hwc_to_chw(img), 'filename': img_name}

@@ -69,7 +69,7 @@ class ClassLabels(list):
     """
     
     def __init__(self, iterable: Sequence[ClassLabel]):
-        """Creates a :class:`ClassLabels` object from a sequence. Each item in
+        """Create a :class:`ClassLabels` object from a sequence. Each item in
         the list is a dictionary describing a :class:`ClassLabel` object.
         """
         assert isinstance(iterable, list | tuple) \
@@ -96,7 +96,7 @@ class ClassLabels(list):
     
     @classmethod
     def from_dict(cls, d: dict) -> ClassLabels:
-        """Creates a :class:`ClassLabels` object from a dictionary :param:`d`.
+        """Create a :class:`ClassLabels` object from a dictionary :param:`d`.
         The dictionary must contain the key "classlabels" and it's corresponding
         value is a list of dictionary. Each item in the list
         :param:`d["classlabels"]` is a dictionary describing a
@@ -109,7 +109,7 @@ class ClassLabels(list):
         
     @classmethod
     def from_file(cls, path: PathType) -> ClassLabels:
-        """Creates a :class:`ClassLabels` object from the content of a ".json"
+        """Create a :class:`ClassLabels` object from the content of a ".json"
         file specified by the :param:`path`.
         """
         path = pathlib.Path(path)
@@ -118,7 +118,7 @@ class ClassLabels(list):
     
     @classmethod
     def from_value(cls, value: ClassLabelsType) -> ClassLabels | None:
-        """Creates a :class:`ClassLabels` object from an arbitrary
+        """Create a :class:`ClassLabels` object from an arbitrary
         :param:`value`.
         """
         if isinstance(value, ClassLabels):
@@ -145,13 +145,13 @@ class ClassLabels(list):
         return self
     
     def color_legend(self, height: int | None = None) -> np.array:
-        """Creates a legend figure of all the classlabels.
+        """Create a legend figure of all the classlabels.
         
         Args:
             height: The height of the legend. If None, it will be
                 25px * :meth:`__len__`.
         
-        Returns:
+        Return:
             An RGB color legend figure.
         """
         num_classes = len(self)
@@ -185,14 +185,14 @@ class ClassLabels(list):
         key                 : str  = "id",
         exclude_negative_key: bool = True,
     ) -> list:
-        """Returns a list of colors corresponding to the items in :attr:`self`.
+        """Return a list of colors corresponding to the items in :attr:`self`.
         
         Args:
             key: The key to search for. Defaults to "id".
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             A list of colors.
         """
         labels_colors = []
@@ -213,14 +213,14 @@ class ClassLabels(list):
         key                 : str  = "id",
         exclude_negative_key: bool = True,
     ) -> list:
-        """Returns a list of IDs corresponding to the items in :attr:`self`.
+        """Return a list of IDs corresponding to the items in :attr:`self`.
         
         Args:
             key: The key to search for. Defaults to "id".
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             A list of IDs.
         """
         ids = []
@@ -237,13 +237,13 @@ class ClassLabels(list):
         return {c["name"]: c for c in self.classes}
 
     def names(self, exclude_negative_key: bool = True) -> list:
-        """Returns a list of names corresponding to the items in :attr:`self`.
+        """Return a list of names corresponding to the items in :attr:`self`.
         
         Args:
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             A list of IDs.
         """
         names = []
@@ -268,7 +268,7 @@ class ClassLabels(list):
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             The number of items (classes) in the dataset.
         """
         count = 0
@@ -280,7 +280,7 @@ class ClassLabels(list):
         return count
 
     def get_class(self, key: str = "id", value: Any = None) -> dict | None:
-        """Returns the item (class-label) matching the given :param:`key` and
+        """Return the item (class-label) matching the given :param:`key` and
         :param:`value`.
         """
         for c in self:
@@ -289,27 +289,27 @@ class ClassLabels(list):
         return None
     
     def get_class_by_name(self, name: str) -> dict | None:
-        """Returns the item (class-label) with the :param:`key` is "name" and
+        """Return the item (class-label) with the :param:`key` is "name" and
         value matching the given :param:`name`.
         """
         return self.get_class(key="name", value=name)
 
     def get_id(self, key: str = "id", value: Any = None) -> int | None:
-        """Returns the ID of the item (class-label) matching the given
+        """Return the ID of the item (class-label) matching the given
         :param:`key` and :param:`value`.
         """
         classlabel: dict = self.get_class(key=key, value=value)
         return classlabel["id"] if classlabel is not None else None
     
     def get_id_by_name(self, name: str) -> int | None:
-        """Returns the name of the item (class-label) with the :param:`key` is
+        """Return the name of the item (class-label) with the :param:`key` is
         "name" and value matching the given :param:`name`.
         """
         classlabel = self.get_class_by_name(name=name)
         return classlabel["id"] if classlabel is not None else None
     
     def get_name(self, key: str = "id", value: Any = None) -> str | None:
-        """Returns the name of the item (class-label) with the :param:`key` is
+        """Return the name of the item (class-label) with the :param:`key` is
         "name" and value matching the given :param:`name`.
         """
         c = self.get_class(key=key, value=value)
@@ -320,7 +320,7 @@ class ClassLabels(list):
         return None
     
     def print(self):
-        """Prints all items (class-labels) using in rich format."""
+        """Print all items (class-labels) using in rich format."""
         if len(self) <= 0:
             console.log("[yellow]No class is available.")
             return
@@ -345,7 +345,7 @@ class ClassLabels(list, Label):
 
     @classmethod
     def from_list(cls, l: list[dict | munch.Munch]) -> ClassLabels:
-        """Creates a :class:`ClassLabels` object from a list. Each item in the
+        """Create a :class:`ClassLabels` object from a list. Each item in the
         list is a dictionary describing a :class:`ClassLabel` object.
         """
         assert isinstance(l, list)
@@ -355,7 +355,7 @@ class ClassLabels(list, Label):
     
     @classmethod
     def from_dict(cls, d: dict) -> ClassLabels:
-        """Creates a :class:`ClassLabels` object from a dictionary :param:`d`.
+        """Create a :class:`ClassLabels` object from a dictionary :param:`d`.
         The dictionary must contain the key "classlabels" and it's corresponding
         value is a list of dictionary. Each item in the list
         :param:`d["classlabels"]` is a dictionary describing a
@@ -366,7 +366,7 @@ class ClassLabels(list, Label):
         
     @classmethod
     def from_file(cls, path: PathType) -> ClassLabels:
-        """Creates a :class:`ClassLabels` object from the content of a ".json"
+        """Create a :class:`ClassLabels` object from the content of a ".json"
         file specified by the :param:`path`.
         """
         path = pathlib.Path(path)
@@ -375,7 +375,7 @@ class ClassLabels(list, Label):
     
     @classmethod
     def from_value(cls, value: ClassLabelsType) -> ClassLabels | None:
-        """Creates a :class:`ClassLabels` object from an arbitrary
+        """Create a :class:`ClassLabels` object from an arbitrary
         :param:`value`.
         """
         if isinstance(value, ClassLabels):
@@ -403,13 +403,13 @@ class ClassLabels(list, Label):
         return self.classlabels
 
     def color_legend(self, height: int | None = None) -> np.array:
-        """Creates a legend figure of all the classlabels.
+        """Create a legend figure of all the classlabels.
         
         Args:
             height: The height of the legend. If None, it will be
                 25px * len(:attr:`classlabels`).
         
-        Returns:
+        Return:
             An RGB color legend figure.
         """
         num_classes = len(self.classes)
@@ -443,7 +443,7 @@ class ClassLabels(list, Label):
         key                 : str  = "id",
         exclude_negative_key: bool = True,
     ) -> list:
-        """Returns a list of colors corresponding to the items in
+        """Return a list of colors corresponding to the items in
         :attr:`classlabels`.
         
         Args:
@@ -451,7 +451,7 @@ class ClassLabels(list, Label):
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             A list of colors.
         """
         labels_colors = []
@@ -474,7 +474,7 @@ class ClassLabels(list, Label):
         key                 : str  = "id",
         exclude_negative_key: bool = True,
     ) -> list:
-        """Returns a list of IDs corresponding to the items in
+        """Return a list of IDs corresponding to the items in
         :attr:`classlabels`.
         
         Args:
@@ -482,7 +482,7 @@ class ClassLabels(list, Label):
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             A list of IDs.
         """
         ids = []
@@ -501,14 +501,14 @@ class ClassLabels(list, Label):
         return {c["name"]: c for c in self.classes}
 
     def names(self, exclude_negative_key: bool = True) -> list:
-        """Returns a list of names corresponding to the items in
+        """Return a list of names corresponding to the items in
         :attr:`classlabels`.
         
         Args:
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             A list of IDs.
         """
         names = []
@@ -533,7 +533,7 @@ class ClassLabels(list, Label):
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
-        Returns:
+        Return:
             The number of classes in the dataset.
         """
         count = 0
@@ -549,14 +549,14 @@ class ClassLabels(list, Label):
         key  : str              = "id",
         value: int | str | None = None
     ) -> dict | None:
-        """Returns the classlabel matching the given :param:`key` and
+        """Return the classlabel matching the given :param:`key` and
         :param:`value`.
         
         Args:
             key: The key to search for. Defaults to "id".
             value: The value of the :param:`key` to search for. Defaults to None.
         
-        Returns:
+        Return:
             A dictionary of the classlabel that matches the :param:`key` and
             :param:`value`. Return None if such classlabel cannot be found.
         """
@@ -566,12 +566,12 @@ class ClassLabels(list, Label):
         return None
     
     def get_class_by_name(self, name: str) -> dict | None:
-        """Returns the classlabel matching the given :param:`name`.
+        """Return the classlabel matching the given :param:`name`.
         
         Args:
             name: The name of the classlabel you want to get.
         
-        Returns:
+        Return:
             A dictionary of the classlabel matching the given :param:`name`.
             Return None if such classlabel cannot be found.
         """
@@ -583,14 +583,14 @@ class ClassLabels(list, Label):
         key  : str              = "id",
         value: int | str | None = None
     ) -> int | None:
-        """Returns the id of the class label that matches the given key and
+        """Return the id of the class label that matches the given key and
         value.
         
         Args:
            key: The key to search for. Defaults to "id".
            value: The value of the key to search for. Defaults to None.
         
-        Returns:
+        Return:
             The id of the class.
         """
         classlabel: dict = self.get_class(key=key, value=value)
@@ -602,7 +602,7 @@ class ClassLabels(list, Label):
         Args:
             name: The name of the class you want to get the ID of.
         
-        Returns:
+        Return:
             The id of the class.
         """
         classlabel = self.get_class_by_name(name=name)
@@ -619,7 +619,7 @@ class ClassLabels(list, Label):
             key: The key to search for. Defaults to "id".
             value: The value of the key to search for. Defaults to None.
         
-        Returns:
+        Return:
             The name of the class.
         """
         c = self.get_class(key=key, value=value)
@@ -639,11 +639,11 @@ class ClassLabels(list, Label):
 
     @property
     def tensor(self) -> torch.Tensor | None:
-        """Returns the label in tensor format."""
+        """Return the label in tensor format."""
         return None
     
     def print(self):
-        """Prints all classes using `rich` format."""
+        """Print all classes using `rich` format."""
         if not (self.classes and len(self.classes) > 0):
             console.log("[yellow]No class is available.")
             return
@@ -660,7 +660,7 @@ def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
     Args:
         labels: A list of :class:`ClassLabel`s.
     
-    Returns:
+    Return:
         The :class:`ClassLabel` object that has the most votes.
     """
     # Count number of appearance of each label.

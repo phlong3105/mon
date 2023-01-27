@@ -31,21 +31,16 @@ classifiers   = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-packages = []
+packages = [
+    { include="zid" },
+]
 include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-python        = ">=3.10"
-ffmped-python = "*"
-opencv-python = "*"
-pillow        = "*"
-matplotlib    = "*"
-torch         = "*"
-numpy         = "*"
+python = ">=3.10"
 
 # [tool.poetry.group.macos.dependencies]
-
 
 [build-system]
 requires        = ["poetry-core"]

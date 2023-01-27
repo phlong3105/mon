@@ -27,7 +27,7 @@ class Inferrer(ABC):
     def __init__(
         self,
         source     : PathType  | None = None,
-        root       : PathType  | None = constant.RUNS_DIR / "infer",
+        root       : PathType  | None = constant.RUN_DIR / "infer",
         project    : str              = "",
         name       : str              = "exp",
         max_samples: int       | None = None,
@@ -82,7 +82,7 @@ class Inferrer(ABC):
     @root.setter
     def root(self, root: PathType | None):
         if root is None:
-            root = core.RUNS_DIR / "infer"
+            root = core.RUN_DIR / "infer"
         else:
             root = core.Path(root)
         self._root = root

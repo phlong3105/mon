@@ -125,6 +125,7 @@ def _to_5d_tensor(input: torch.Tensor) -> torch.Tensor:
     return input
 
 
+@multipledispatch.dispatch(int, torch.Tensor)
 def eye_like(n: int, input: torch.Tensor) -> torch.Tensor:
     """Create a tensor of shape `(n, n)` with ones on the diagonal and zeros
     everywhere else, and then repeats it along the batch dimension to match the
@@ -299,6 +300,7 @@ def to_list_of_4d_tensor(input: Any) -> list[torch.Tensor]:
     raise TypeError(f"Cannot convert `input` to a list of 4D tensor.")
 
 
+@multipledispatch.dispatch(torch.Tensor)
 def upcast(input: torch.Tensor) -> torch.Tensor:
     """Protect from numerical overflows in multiplications by upcasting to the
     equivalent higher type.
@@ -317,6 +319,7 @@ def upcast(input: torch.Tensor) -> torch.Tensor:
     return input
 
 
+@multipledispatch.dispatch(int, torch.Tensor)
 def vec_like(n: int, input: torch.Tensor) -> torch.Tensor:
     """Create a vector of zeros with the same shape as the input.
 

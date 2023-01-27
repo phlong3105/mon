@@ -467,6 +467,7 @@ def train(hyp, opt, device, tb_writer=None):
                 torch.save(ckpt, last)
                 if best_fitness == fi:
                     torch.save(ckpt, best)
+                """
                 if (best_fitness == fi) and (epoch >= 200):
                     torch.save(ckpt, wdir / 'best_{:03d}.pt'.format(epoch))
                 if epoch == 0:
@@ -475,6 +476,7 @@ def train(hyp, opt, device, tb_writer=None):
                     torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
                 elif epoch >= (epochs-5):
                     torch.save(ckpt, wdir / 'epoch_{:03d}.pt'.format(epoch))
+                """
                 if wandb_logger.wandb:
                     if ((epoch + 1) % opt.save_period == 0 and not final_epoch) and opt.save_period != -1:
                         wandb_logger.log_model(

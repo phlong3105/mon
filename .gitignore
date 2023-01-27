@@ -14,8 +14,7 @@ __pycache__/
 /.idea/
 /.sync/
 /data/
-/pretrained/
-
 /project/*/data
 /project/**/runs
 /src/archive/
+/weight/

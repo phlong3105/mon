@@ -504,7 +504,7 @@ def vertical_translate_box(
 
 # region Box Format Conversion
 
-def box_cxcyar_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyar_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h)
     format.
     
@@ -519,16 +519,21 @@ def box_cxcyar_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, r, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
-    w                = torch.sqrt(a * r)
-    h                = a / w
-    box              = torch.stack((cx, cy, r, h), -1)
-    return box
+    w = torch.sqrt(a * r)
+    h = a / w
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, r, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, r, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcyar_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyar_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
     format.
     
@@ -543,20 +548,25 @@ def box_cxcyar_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
-    w                = torch.sqrt(a * r)
-    h                = a / w
-    box              = torch.stack((cx, cy, w, h), -1)
-    return box
+    w = torch.sqrt(a * r)
+    h = a / w
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
 def box_cxcyar_to_cxcywhnorm(
-    box   : torch.Tensor,
+    box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
-) -> torch.Tensor:
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
     norm format.
     
@@ -576,20 +586,25 @@ def box_cxcyar_to_cxcywhnorm(
     Returns:
         Bounding boxes in (cx, cy, w, h) norm format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
-    w                = torch.sqrt(a * r)
-    h                = (a / w)
-    cx_norm          = cx / width
-    cy_norm          = cy / height
-    w_norm           = w / width
-    h_norm           = h / height
-    box              = torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
-    return box
+    w       = torch.sqrt(a * r)
+    h       = (a / w)
+    cx_norm = cx / width
+    cy_norm = cy / height
+    w_norm  = w / width
+    h_norm  = h / height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcyar_to_xywh(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyar_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, a, r) format to (x, y, w, h)
     format.
     
@@ -604,18 +619,23 @@ def box_cxcyar_to_xywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x, y, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
-    w                = torch.sqrt(a * r)
-    h                = a / w
-    x                = cx - (w / 2.0)
-    y                = cy - (h / 2.0)
-    box              = torch.stack((x, y, w, h), -1)
-    return box
+    w = torch.sqrt(a * r)
+    h = a / w
+    x = cx - (w / 2.0)
+    y = cy - (h / 2.0)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x, y, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x, y, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
     
-def box_cxcyar_to_xyxy(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyar_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, a, r) format to (x1, y1, x2, y2)
     format.
     
@@ -630,20 +650,25 @@ def box_cxcyar_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x1, y1, x2, y2) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
-    w                = torch.sqrt(a * r)
-    h                = a / w
-    x1               = cx - (w / 2.0)
-    y1               = cy - (h / 2.0)
-    x2               = cx + (w / 2.0)
-    y2               = cy + (h / 2.0)
-    box              = torch.stack((x1, y1, x2, y2), -1)
-    return box
+    w  = torch.sqrt(a * r)
+    h  = a / w
+    x1 = cx - (w / 2.0)
+    y1 = cy - (h / 2.0)
+    x2 = cx + (w / 2.0)
+    y2 = cy + (h / 2.0)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x1, y1, x2, y2), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x1, y1, x2, y2), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcyrh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyrh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r)
     format.
     
@@ -658,17 +683,22 @@ def box_cxcyrh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, a, r) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
-    w                = r * h
-    a                = w * h
-    r                = w / h
-    box              = torch.stack((cx, cy, a, r), -1)
-    return box
+    w = r * h
+    a = w * h
+    r = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, a, r), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, a, r), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcyrh_to_cxcywh(box: torch.Tensor) ->torch. Tensor:
+def box_cxcyrh_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
     format.
     
@@ -683,19 +713,24 @@ def box_cxcyrh_to_cxcywh(box: torch.Tensor) ->torch. Tensor:
     Returns:
         Bounding boxes in (cx, cy, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
-    w                = r * h
-    box              = torch.stack((cx, cy, w, h), -1)
-    return box
+    w   = r * h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
 def box_cxcyrh_to_cxcywh_norm(
-    box   : torch.Tensor,
+    box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
-) -> torch.Tensor:
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
     norm format.
     
@@ -715,19 +750,24 @@ def box_cxcyrh_to_cxcywh_norm(
     Returns:
         box: Bounding boxes in (cx, cy, w, h) norm format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box     = util.upcast(box)
     cx, cy, r, h, *_ = box.T
-    w                = r * h
-    cx_norm          = cx / width
-    cy_norm          = cy / height
-    w_norm           = w  / width
-    h_norm           = h  / height
-    box              = torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
-    return box
+    w       = r * h
+    cx_norm = cx / width
+    cy_norm = cy / height
+    w_norm  = w  / width
+    h_norm  = h  / height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcyrh_to_xywh(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyrh_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, r, h) format to (x, y, w, h)
     format.
     
@@ -742,17 +782,22 @@ def box_cxcyrh_to_xywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x, y, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
-    w                = r * h
-    x                = cx - w / 2.0
-    y                = cy - h / 2.0
-    box              = torch.stack((x, y, w, h), -1)
-    return box
+    w = r * h
+    x = cx - w / 2.0
+    y = cy - h / 2.0
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x, y, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x, y, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcyrh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
+def box_cxcyrh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, r, h) format to (x1, y1, x2, y2)
     format.
     
@@ -767,19 +812,24 @@ def box_cxcyrh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x1, y1, x2, y2) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
-    w                = r * h
-    x1               = cx - w / 2.0
-    y1               = cy - h / 2.0
-    x2               = cx + w / 2.0
-    y2               = cy + h / 2.0
-    box              = torch.stack((x1, y1, x2, y2), -1)
-    return box
+    w  = r * h
+    x1 = cx - w / 2.0
+    y1 = cy - h / 2.0
+    x2 = cx + w / 2.0
+    y2 = cy + h / 2.0
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x1, y1, x2, y2), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x1, y1, x2, y2), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
+def box_cxcywh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r)
     format.
     
@@ -794,16 +844,19 @@ def box_cxcywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, a, r) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
-    a                = w * h
-    r                = w / h
-    box              = torch.stack((cx, cy, a, r), -1)
-    return box
+    a = w * h
+    r = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, a, r), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, a, r), -1)
+    else:
+        raise ValueError(f"box must be a `Tensor` or `np.ndarray`.")
 
 
-def box_cxcywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
+def box_cxcywh_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
     format.
     
@@ -818,19 +871,24 @@ def box_cxcywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, r, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
-    r                = w / h
-    box              = torch.stack((cx, cy, r, h), -1)
-    return box
+    r   = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, r, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, r, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
 def box_cxcywh_to_cxcywh_norm(
-    box   : torch.Tensor,
+    box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
-) -> torch.Tensor:
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
     format.
     
@@ -850,18 +908,23 @@ def box_cxcywh_to_cxcywh_norm(
     Returns:
         Bounding boxes in (cx, cy, r, h) norm format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box     = util.upcast(box)
     cx, cy, w, h, *_ = box.T
-    cx_norm          = cx / width
-    cy_norm          = cy / height
-    w_norm           = w  / width
-    h_norm           = h  / height
-    box              = torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
-    return box
+    cx_norm = cx / width
+    cy_norm = cy / height
+    w_norm  = w  / width
+    h_norm  = h  / height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
     
 
-def box_cxcywh_to_xywh(box: torch.Tensor) -> torch.Tensor:
+def box_cxcywh_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) format to (x, y, w, h)
     format.
     
@@ -876,16 +939,21 @@ def box_cxcywh_to_xywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x, y, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
-    x                = cx - w / 2.0
-    y                = cy - h / 2.0
-    box              = torch.stack((x, y, w, h), -1)
-    return box
+    x = cx - w / 2.0
+    y = cy - h / 2.0
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x, y, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x, y, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
     
 
-def box_cxcywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
+def box_cxcywh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) format to (x1, y1, x2, y2)
     format.
     
@@ -900,18 +968,27 @@ def box_cxcywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x1, y1, x2, y2) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box              = util.upcast(box)
+    box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
-    x1               = cx - w / 2.0
-    y1               = cy - h / 2.0
-    x2               = cx + w / 2.0
-    y2               = cy + h / 2.0
-    box              = torch.stack((x1, y1, x2, y2), -1)
-    return box
+    x1 = cx - w / 2.0
+    y1 = cy - h / 2.0
+    x2 = cx + w / 2.0
+    y2 = cy + h / 2.0
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x1, y1, x2, y2), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x1, y1, x2, y2), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcywh_norm_to_cxcyar(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_cxcywh_norm_to_cxcyar(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a,
     r) format.
     
@@ -931,18 +1008,27 @@ def box_cxcywh_norm_to_cxcyar(box: torch.Tensor, height: int, width: int) -> tor
     Returns:
         Bounding boxes in (cx, cy, a, r) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                                  = util.upcast(box)
+    box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
-    cx                                   = cx_norm * width
-    cy                                   = cy_norm * height
-    a                                    = (w_norm * width) * (h_norm * height)
-    r                                    = (w_norm * width) / (h_norm * height)
-    box                                  = torch.stack((cx, cy, a, r), -1)
-    return box
+    cx = cx_norm * width
+    cy = cy_norm * height
+    a  = (w_norm * width) * (h_norm * height)
+    r  = (w_norm * width) / (h_norm * height)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, a, r), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, a, r), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcywh_norm_to_cxcyrh(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_cxcywh_norm_to_cxcyrh(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, r,
     h) format.
     
@@ -962,18 +1048,27 @@ def box_cxcywh_norm_to_cxcyrh(box: torch.Tensor, height: int, width: int) -> tor
     Returns:
         Bounding boxes in (cx, cy, r, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                                  = util.upcast(box)
+    box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
-    cx                                   = cx_norm * width
-    cy                                   = cy_norm * height
-    r                                    = (w_norm * width) / (h_norm * height)
-    h                                    = h_norm * height
-    box                                  = torch.stack((cx, cy, r, h), -1)
-    return box
+    cx = cx_norm * width
+    cy = cy_norm * height
+    r  = (w_norm * width) / (h_norm * height)
+    h  = h_norm * height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, r, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, r, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcywh_norm_to_cxcywh(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_cxcywh_norm_to_cxcywh(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, w, h)
     format.
     
@@ -993,18 +1088,27 @@ def box_cxcywh_norm_to_cxcywh(box: torch.Tensor, height: int, width: int) -> tor
     Returns:
         Bounding boxes in (cx, cy, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                                  = util.upcast(box)
+    box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
-    cx                                   = cx_norm * width
-    cy                                   = cy_norm * height
-    w                                    = w_norm  * width
-    h                                    = h_norm  * height
-    box                                  = torch.stack((cx, cy, w, h), -1)
-    return box
+    cx = cx_norm * width
+    cy = cy_norm * height
+    w  = w_norm  * width
+    h  = h_norm  * height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_cxcywh_norm_to_xywh(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_cxcywh_norm_to_xywh(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) norm format to (x, y, w, h)
     format.
     
@@ -1024,18 +1128,27 @@ def box_cxcywh_norm_to_xywh(box: torch.Tensor, height: int, width: int) -> torch
     Returns:
         Bounding boxes in (x, y, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                                  = util.upcast(box)
+    box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
-    w                                    = w_norm * width
-    h                                    = h_norm * height
-    x                                    = (cx_norm * width) - (w / 2.0)
-    y                                    = (cy_norm * height) - (h / 2.0)
-    box                                  = torch.stack((x, y, w, h), -1)
-    return box
+    w = w_norm * width
+    h = h_norm * height
+    x = (cx_norm * width) - (w / 2.0)
+    y = (cy_norm * height) - (h / 2.0)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x, y, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x, y, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
    
    
-def box_cxcywh_norm_to_xyxy(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_cxcywh_norm_to_xyxy(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (cx, cy, w, h) norm format to (x1, y1, x2,
     y2) format.
     
@@ -1055,18 +1168,23 @@ def box_cxcywh_norm_to_xyxy(box: torch.Tensor, height: int, width: int) -> torch
     Returns:
         Bounding boxes in (x1, y1, x2, y2) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                                  = util.upcast(box)
+    box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
-    x1                                   = width  * (cx_norm - w_norm / 2)
-    y1                                   = height * (cy_norm - h_norm / 2)
-    x2                                   = width  * (cx_norm + w_norm / 2)
-    y2                                   = height * (cy_norm + h_norm / 2)
-    box                                  = torch.stack((x1, y1, x2, y2), -1)
-    return box
+    x1 = width  * (cx_norm - w_norm / 2)
+    y1 = height * (cy_norm - h_norm / 2)
+    x2 = width  * (cx_norm + w_norm / 2)
+    y2 = height * (cy_norm + h_norm / 2)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x1, y1, x2, y2), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x1, y1, x2, y2), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
+def box_xywh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x, y, w, h) format to (cx, cy, a, r) format.
     
     (cx, cy) refers to the center of bounding box.
@@ -1080,18 +1198,23 @@ def box_xywh_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, a, r) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box            = util.upcast(box)
+    box = util.upcast(box)
     x, y, w, h, *_ = box.T
-    cx             = x + (w / 2.0)
-    cy             = y + (h / 2.0)
-    a              = w * h
-    r              = w / h
-    box            =  torch.stack((cx, cy, a, r), -1)
-    return box
+    cx = x + (w / 2.0)
+    cy = y + (h / 2.0)
+    a  = w * h
+    r  = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, a, r), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, a, r), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
+def box_xywh_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x, y, w, h) format to (cx, cy, r, h) format.
     
     (cx, cy) refers to center of bounding box.
@@ -1105,17 +1228,22 @@ def box_xywh_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, r, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box            = util.upcast(box)
+    box = util.upcast(box)
     x, y, w, h, *_ = box.T
-    cx             = x + (w / 2.0)
-    cy             = y + (h / 2.0)
-    r              = w / h
-    box            = torch.stack((cx, cy, r, h), -1)
-    return box
+    cx = x + (w / 2.0)
+    cy = y + (h / 2.0)
+    r  = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, r, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, r, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
     
 
-def box_xywh_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
+def box_xywh_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x, y, w, h) format to (cx, cy, w, h) format.
     
     (cx, cy) refers to center of bounding box.
@@ -1129,16 +1257,25 @@ def box_xywh_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box            = util.upcast(box)
+    box = util.upcast(box)
     x, y, w, h, *_ = box.T
-    cx             = x + (w / 2.0)
-    cy             = y + (h / 2.0)
-    box            =  torch.stack((cx, cy, w, h), -1)
-    return box
+    cx = x + (w / 2.0)
+    cy = y + (h / 2.0)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xywh_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_xywh_to_cxcywh_norm(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x, y, w, h) format to (cx, cy, w, h) norm
     format.
     
@@ -1158,20 +1295,25 @@ def box_xywh_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch
     Returns:
         Bounding boxes in (cx, cy, w, h) norm format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box            = util.upcast(box)
+    box = util.upcast(box)
     x, y, w, h, *_ = box.T
-    cx             = x + (w / 2.0)
-    cy             = y + (h / 2.0)
-    cx_norm        = cx / width
-    cy_norm        = cy / height
-    w_norm         = w  / width
-    h_norm         = h  / height
-    box            = torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
-    return box
+    cx      = x + (w / 2.0)
+    cy      = y + (h / 2.0)
+    cx_norm = cx / width
+    cy_norm = cy / height
+    w_norm  = w  / width
+    h_norm  = h  / height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
+def box_xywh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x, y, w, h) format to (x1, y1, x2, y2)
     format.
     
@@ -1186,16 +1328,21 @@ def box_xywh_to_xyxy(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x1, y1, x2, y2) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box            = util.upcast(box)
+    box = util.upcast(box)
     x, y, w, h, *_ = box.T
-    x2             = x + w
-    y2             = y + h
-    box            = torch.stack((x, y, x2, y2), -1)
-    return box
+    x2 = x + w
+    y2 = y + h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x, y, x2, y2), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x, y, x2, y2), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xyxy_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
+def box_xyxy_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)
     format.
     
@@ -1210,20 +1357,25 @@ def box_xyxy_to_cxcyar(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, a, r) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                = util.upcast(box)
+    box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
-    w                  = x2 - x1
-    h                  = y2 - y1
-    cx                 = x1 + (w / 2.0)
-    cy                 = y1 + (h / 2.0)
-    a                  = w * h
-    r                  = w / h
-    box                = torch.stack((cx, cy, a, r), -1)
-    return box
+    w  = x2 - x1
+    h  = y2 - y1
+    cx = x1 + (w / 2.0)
+    cy = y1 + (h / 2.0)
+    a  = w * h
+    r  = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, a, r), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, a, r), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
     
 
-def box_xyxy_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
+def box_xyxy_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, r, h)
     format.
     
@@ -1238,19 +1390,24 @@ def box_xyxy_to_cxcyrh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, r, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                = util.upcast(box)
+    box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
-    w                  = x2 - x1
-    h                  = y2 - y1
-    cx                 = x1 + (w / 2.0)
-    cy                 = y1 + (h / 2.0)
-    r                  = w / h
-    box                = torch.stack((cx, cy, r, h), -1)
-    return box
+    w  = x2 - x1
+    h  = y2 - y1
+    cx = x1 + (w / 2.0)
+    cy = y1 + (h / 2.0)
+    r  = w / h
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, r, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, r, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xyxy_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
+def box_xyxy_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
     format.
     
@@ -1265,18 +1422,27 @@ def box_xyxy_to_cxcywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (cx, cy, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                = util.upcast(box)
+    box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
-    w                  = x2 - x1
-    h                  = y2 - y1
-    cx                 = x1 + (w / 2.0)
-    cy                 = y1 + (h / 2.0)
-    box                = torch.stack((cx, cy, w, h), -1)
-    return box
+    w  = x2 - x1
+    h  = y2 - y1
+    cx = x1 + (w / 2.0)
+    cy = y1 + (h / 2.0)
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xyxy_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch.Tensor:
+def box_xyxy_to_cxcywh_norm(
+    box   : torch.Tensor | np.ndarray,
+    height: int,
+    width : int
+) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
     norm format.
     
@@ -1296,22 +1462,27 @@ def box_xyxy_to_cxcywh_norm(box: torch.Tensor, height: int, width: int) -> torch
     Returns:
         Bounding boxes in (cx, cy, w, h) norm format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                = util.upcast(box)
+    box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
-    w                  = x2 - x1
-    h                  = y2 - y1
-    cx                 = x1 + (w / 2.0)
-    cy                 = y1 + (h / 2.0)
-    cx_norm            = cx / width
-    cy_norm            = cy / height
-    w_norm             = w  / width
-    h_norm             = h  / height
-    box                = torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
-    return box
+    w       = x2 - x1
+    h       = y2 - y1
+    cx      = x1 + (w / 2.0)
+    cy      = y1 + (h / 2.0)
+    cx_norm = cx / width
+    cy_norm = cy / height
+    w_norm  = w  / width
+    h_norm  = h  / height
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx_norm, cy_norm, w_norm, h_norm), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def box_xyxy_to_xywh(box: torch.Tensor) -> torch.Tensor:
+def box_xyxy_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Convert bounding boxes from (x1, y1, x2, y2) format to (x, y, w, h)
     format.
     
@@ -1326,20 +1497,25 @@ def box_xyxy_to_xywh(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Bounding boxes in (x, y, w, h) format.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                = util.upcast(box)
+    box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
-    w                  = x2 - x1
-    h                  = y2 - y1
-    box                = torch.stack((x1, y1, w, h), -1)
-    return box
+    w = x2 - x1
+    h = y2 - y1
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x1, y1, w, h), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((x1, y1, w, h), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 # endregion
 
 
 # region Box Property
 
-def compute_box_area(box: torch.Tensor) -> torch.Tensor:
+def compute_box_area(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Compute the area of bounding box(es), which are specified by their
     (x1, y1, x2, y2) coordinates.
     
@@ -1350,10 +1526,9 @@ def compute_box_area(box: torch.Tensor) -> torch.Tensor:
     Returns:
         The area for each box.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box                = util.upcast(box)
+    box  = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
-    area               = (x2 - x1) * (y2 - y1)
+    area = (x2 - x1) * (y2 - y1)
     return area
 
 
@@ -1510,7 +1685,7 @@ def generate_box(
     return box
 
 
-def get_box_center(box: torch.Tensor) -> torch.Tensor:
+def get_box_center(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Compute the center of bounding box(es), which are specified by their
     (x1, y1, x2, y2) coordinates.
     
@@ -1521,15 +1696,20 @@ def get_box_center(box: torch.Tensor) -> torch.Tensor:
     Returns:
         The center for each box of shape [N, 2].
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
-    box          = util.upcast(box)
-    box          = box_xyxy_to_cxcywh(box)
+    box = util.upcast(box)
+    box = box_xyxy_to_cxcywh(box)
     cx, cy, w, h = box.T
-    center       = torch.stack((cx, cy), -1)
-    return center
+    if isinstance(box, torch.Tensor):
+        return torch.stack((cx, cy), -1)
+    elif isinstance(box, np.ndarray):
+        return np.stack((cx, cy), -1)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
     
 
-def get_box_corners(box: torch.Tensor) -> torch.Tensor:
+def get_box_corners(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Get corners of bounding boxes.
     
     Args:
@@ -1540,7 +1720,6 @@ def get_box_corners(box: torch.Tensor) -> torch.Tensor:
         A tensor of shape `N x 8` containing N bounding boxes each described by
         their corner co-ordinates (x1 y1 x2 y2 x3 y3 x4 y4).
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
     width   = (box[:, 2] - box[:, 0]).reshape(-1, 1)
     height  = (box[:, 3] - box[:, 1]).reshape(-1, 1)
     x1      = box[:, 0].reshape(-1, 1)
@@ -1551,11 +1730,17 @@ def get_box_corners(box: torch.Tensor) -> torch.Tensor:
     y3      = y1 + height
     x4      = box[:, 2].reshape(-1, 1)
     y4      = box[:, 3].reshape(-1, 1)
-    corners = torch.stack((x1, y1, x2, y2, x3, y3, x4, y4))
-    return corners
+    if isinstance(box, torch.Tensor):
+        return torch.stack((x1, y1, x2, y2, x3, y3, x4, y4))
+    elif isinstance(box, np.ndarray):
+        return np.hstack((x1, y1, x2, y2, x3, y3, x4, y4))
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
-def get_box_corners_points(box: torch.Tensor) -> torch.Tensor:
+def get_box_corners_points(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Get corners of bounding boxes as points.
     
     Args:
@@ -1565,7 +1750,6 @@ def get_box_corners_points(box: torch.Tensor) -> torch.Tensor:
     Returns:
         Corners.
     """
-    assert isinstance(box, torch.Tensor)
     if box.ndim == 2:
         width  = (box[:, 2] - box[:, 0]).reshape(-1, 1)
         height = (box[:, 3] - box[:, 1]).reshape(-1, 1)
@@ -1588,11 +1772,17 @@ def get_box_corners_points(box: torch.Tensor) -> torch.Tensor:
         y3     = y1 + height
         x4     = box[2]
         y4     = box[3]
-    corners = torch.tensor([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
-    return corners
+    if isinstance(box, torch.Tensor):
+        return torch.tensor([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])
+    elif isinstance(box, np.ndarray):
+        return np.array([[x1, y1], [x2, y2], [x3, y3], [x4, y4]], np.int32)
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
     
 
-def get_enclosing_box(box: torch.Tensor) -> torch.Tensor:
+def get_enclosing_box(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Get an enclosing box for rotated corners of a bounding box.
     
     Args:
@@ -1603,15 +1793,24 @@ def get_enclosing_box(box: torch.Tensor) -> torch.Tensor:
         Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1, x2,
             y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
     x_    = box[:, [0, 2, 4, 6]]
     y_    = box[:, [1, 3, 5, 7]]
-    x1    = torch.min(x_, 1).reshape(-1, 1)
-    y1    = torch.min(y_, 1).reshape(-1, 1)
-    x2    = torch.max(x_, 1).reshape(-1, 1)
-    y2    = torch.max(y_, 1).reshape(-1, 1)
-    final = torch.stack((x1, y1, x2, y2, box[:, 8:]))
-    return final
+    if isinstance(box, torch.Tensor):
+        x1    = torch.min(x_, 1).reshape(-1, 1)
+        y1    = torch.min(y_, 1).reshape(-1, 1)
+        x2    = torch.max(x_, 1).reshape(-1, 1)
+        y2    = torch.max(y_, 1).reshape(-1, 1)
+        return torch.stack((x1, y1, x2, y2, box[:, 8:]))
+    elif isinstance(box, np.ndarray):
+        x1    = np.min(x_, 1).reshape(-1, 1)
+        y1    = np.min(y_, 1).reshape(-1, 1)
+        x2    = np.max(x_, 1).reshape(-1, 1)
+        y2    = np.max(y_, 1).reshape(-1, 1)
+        return np.hstack((x1, y1, x2, y2, box[:, 8:]))
+    else:
+        raise TypeError(
+            f":param:`box` must be a :class`torch.Tensor` or :class:`np.ndarray`."
+        )
 
 
 def nms(

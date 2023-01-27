@@ -276,6 +276,7 @@ def to_list_of_4d_array(input) -> list[np.ndarray]:
     )
 
 
+@multipledispatch.dispatch(np.ndarray)
 def upcast(input: np.ndarray) -> np.ndarray:
     """Protects from numerical overflows in multiplications by upcasting to
     the equivalent higher type.

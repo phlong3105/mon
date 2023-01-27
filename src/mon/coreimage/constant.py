@@ -8,13 +8,13 @@ package.
 from __future__ import annotations
 
 __all__ = [
-    "AppleRGB", "BBoxFormat", "BasicRGB", "BorderType", "CFA", "DistanceMetric",
-    "IMG_MEAN", "IMG_STD", "InterpolationMode", "PaddingMode", "RGB",
-    "VISION_BACKEND", "VisionBackend",
+    "AppleRGB", "BBoxFormat", "BasicRGB", "BorderType", "CFA", "DISTANCE",
+    "DistanceMetric", "IMG_MEAN", "IMG_STD", "InterpolationMode", "PaddingMode",
+    "RGB", "VISION_BACKEND", "VisionBackend",
     # Extend :mod:`mon.core.constant`
     "CONTENT_ROOT_DIR", "DATA_DIR", "DOCS_DIR", "FILE_HANDLER", "ImageFormat",
-    "MemoryUnit", "PRETRAINED_DIR", "PROJECTS_DIR", "RUNS_DIR",
-    "SOURCE_ROOT_DIR", "SNIPPET_DIR", "SRC_DIR", "VideoFormat",
+    "MemoryUnit", "PROJECT_DIR", "RUN_DIR", "SNIPPET_DIR", "SOURCE_ROOT_DIR",
+    "VideoFormat", "WEIGHT_DIR",
 ]
 
 from typing import TYPE_CHECKING
@@ -32,9 +32,15 @@ if TYPE_CHECKING:
 
 
 # DEFAULT_CROP_PCT = 0.875
-IMG_MEAN         = [0.485, 0.456, 0.406]
-IMG_STD          = [0.229, 0.224, 0.225]
+IMG_MEAN = [0.485, 0.456, 0.406]
+IMG_STD  = [0.229, 0.224, 0.225]
 
+
+# region Factory
+
+DISTANCE = core.Factory(name="Distance")
+
+# endregion
 
 # region Enum
 

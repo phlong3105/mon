@@ -31,7 +31,7 @@ from mon.coreml import (constant, data as d, loss as l, metric as m)
 if TYPE_CHECKING:
     from mon.coreml.typing import (
         ClassLabelsType, ConfigType, DictType, EpochOutput, Ints, LossesType,
-        MetricsType, ModelPhaseType, OptimizersType, PathType, PretrainedType,
+        MetricsType, ModelPhaseType, OptimizersType, PathType, WeightsType,
         StepOutput,
     )
 
@@ -205,10 +205,10 @@ def attempt_load(
     phase      : str               = "inference",
     strict     : bool              = True,
     file_name  : str        | None = None,
-    model_dir  : PathType   | None = constant.PRETRAINED_DIR,
+    model_dir  : PathType   | None = constant.WEIGHT_DIR,
     debugging  : bool              = True
 ):
-    """Try to create a model from the given configuration and load a weights
+    """Try to create a model from the given configuration and load pretrained
     weights.
     
     Args:
@@ -444,12 +444,12 @@ class Model(lightning.LightningModule, ABC):
         channels   : int                    = 3,
         num_classes: int             | None = None,
         classlabels: ClassLabelsType | None = None,
-        weights    : PretrainedType   	    = False,
+        weights    : WeightsType   	        = False,
         # For management
         name       : str             | None = None,
         variant    : str             | None = None,
         fullname   : str             | None = None,
-        root       : PathType               = constant.RUNS_DIR,
+        root       : PathType               = constant.RUN_DIR,
         project    : str             | None = None,
         # For training
         phase      : ModelPhaseType         = "training",
@@ -560,7 +560,7 @@ class Model(lightning.LightningModule, ABC):
         return self._weights
     
     @weights.setter
-    def weights(self, weights: PretrainedType = False):
+    def weights(self, weights: WeightsType = False):
         if isinstance(weights, dict | munch.Munch):
             pass
         elif weights is True and len(self.pretrained_weights):
@@ -604,7 +604,7 @@ class Model(lightning.LightningModule, ABC):
     @root.setter
     def root(self, root: PathType):
         if root is None:
-            root = constant.RUNS_DIR / "train"
+            root = constant.RUN_DIR / "train"
         else:
             root = core.Path(root)
         self._root = root
@@ -614,14 +614,20 @@ class Model(lightning.LightningModule, ABC):
         if self._root.name != self.fullname:
             self._root = self._root / self.fullname
 
-        self._debug_dir   = self._root / "debugs"
-        self._weights_dir = self._root / "weights"
+        self._debug_dir = self._root / "debug"
+        self._ckpt_dir  = self._root / "weight"
     
     @property
     @abstractmethod
     def cfg_dir(self) -> PathType:
         pass
-    
+        
+    @property
+    def ckpt_dir(self) -> PathType:
+        if self._ckpt_dir is None:
+            self._ckpt_dir = self.root / "weight"
+        return self._ckpt_dir
+        
     @property
     def debug_dir(self) -> PathType:
         if self._debug_dir is None:
@@ -648,15 +654,9 @@ class Model(lightning.LightningModule, ABC):
                           f"{(self.epoch_step + 1):06}.jpg"
     
     @property
-    def pretrained_dir(self) -> PathType:
-        return constant.PRETRAINED_DIR / self.name
-        
-    @property
-    def weights_dir(self) -> PathType:
-        if self._weights_dir is None:
-            self._weights_dir = self.root / "weights"
-        return self._weights_dir
-        
+    def weight_dir(self) -> PathType:
+        return constant.WEIGHT_DIR / self.name
+    
     @property
     def debug(self) -> munch.Munch | None:
         return self._debug
@@ -882,12 +882,12 @@ class Model(lightning.LightningModule, ABC):
         and shapes between the current model and weights.
         """
         if isinstance(self.weights, dict | munch.Munch | str | core.Path):
-            core.create_dirs(paths=[self.pretrained_dir])
+            core.create_dirs(paths=[self.weight_dir])
             self.model = attempt_load(
                 model	  = self.model,
                 weights   = self.weights,
                 strict	  = False,
-                model_dir = self.pretrained_dir,
+                model_dir = self.weight_dir,
             )
             if self.verbose:
                 core.console.log(f"Load weights from: {self.weights}!")
@@ -1055,7 +1055,7 @@ class Model(lightning.LightningModule, ABC):
         core.create_dirs(
             paths = [
                 self.root,
-                self.weights_dir,
+                self.ckpt_dir,
                 self.debug_dir
             ]
         )
@@ -1287,7 +1287,7 @@ class Model(lightning.LightningModule, ABC):
         core.create_dirs(
             paths=[
                 self.root,
-                self.weights_dir,
+                self.ckpt_dir,
                 self.debug_dir
             ]
         )

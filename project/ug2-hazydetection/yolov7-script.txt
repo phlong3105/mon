@@ -1,7 +1,11 @@
-- Website: https://github.com/WongKinYiu/yolov7
+##########
+# YOLOv7 #
+##########
+https://github.com/WongKinYiu/yolov7
 
-
-- Installation:
+################
+# Installation #
+################
 sudo nvidia-docker run --name yolov7 -it \
 -v "/mnt/workspace/mon/data/":/data/ \
 -v "/mnt/workspace/mon/project/ug2-hazydetection/yolov7/":/yolov7 \
@@ -17,32 +21,33 @@ apt install -y zip htop screen libgl1-mesa-glx
 pip install seaborn thop
 cd /yolov7
 
-
-- Train:
+#########
+# Train #
+#########
 python train_aux.py \
 --weights "weights/yolov7-e6e_training.pt" \
 --cfg "cfg/training/yolov7-e6e.yaml" \
---data "data/visdrone.yaml" \
+--data "data/visdrone-a2i2-of.yaml" \
 --hyp "data/hyp.scratch.custom.yaml" \
 --epochs 100 \
 --batch-size 4 \
 --img-size 1280 \
 --workers 8 \
 --device 0 \
---name yolov7-e6e-visdrone-1280 \
+--name yolov7-e6e-visdrone-a2i2-of-1280 \
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
 --weights "weights/yolov7-e6e_training.pt" \
 --cfg "cfg/training/yolov7-e6e.yaml" \
---data "data/visdrone.yaml" \
+--data "data/visdrone-a2i2-of.yaml" \
 --hyp "data/hyp.scratch.custom.yaml" \
 --epochs 100 \
---batch-size 8 \
+--batch-size 4 \
 --img-size 1856 \
 --workers 4 \
 --device 0,1 \
 --sync-bn \
---name yolov7-e6e-visdrone-1856 \
+--name yolov7-e6e-visdrone-a2i2-of-1856 \
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
 --weights "weights/yolov7-e6e_training.pt" \
@@ -50,15 +55,16 @@ python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_a
 --data "data/visdrone.yaml" \
 --hyp data/hyp.scratch.custom.yaml \
 --epochs 100 \
---batch-size 4 \
---img-size 2176 \
+--batch-size 8 \
+--img-size 1280 \
 --workers 8 \
 --device 0,1 \
 --sync-bn \
---name yolov7-e6e-visdrone-2176 \
+--name yolov7-e6e-visdrone-1280 \
 
-
-- Test:
+########
+# Test #
+########
 python test.py \
 --weights "runs/train/yolov7-e6e-visdrone-1280/best.pt" \
 --data "data/visdrone.yaml" \
@@ -70,8 +76,9 @@ python test.py \
 --augment \
 --name yolov7-e6e-visdrone-1280
 
-
-- Infer:
+#########
+# Infer #
+#########
 python detect.py \
 --weights "runs/train/yolov7-e6e-visdrone-1280/best.pt" \
 --source "../data/ai2i-haze/dry-run/images/" \

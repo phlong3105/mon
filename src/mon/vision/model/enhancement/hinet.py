@@ -17,7 +17,7 @@ from mon.vision import constant
 from mon.vision.model.enhancement import base
 from mon.vision.typing import (
     ClassLabelsType, ConfigType, DictType, LossesType,
-    MetricsType, ModelPhaseType, OptimizersType, PathType, PretrainedType,
+    MetricsType, ModelPhaseType, OptimizersType, PathType, WeightsType,
 )
 
 
@@ -285,12 +285,12 @@ class HINet(base.ImageEnhancementModel):
         channels   : int                    = 3,
         num_classes: int             | None = None,
         classlabels: ClassLabelsType | None = None,
-        weights    : PretrainedType   	    = False,
+        weights    : WeightsType   	    = False,
         # For management
         name       : str             | None = "hinet",
         variant    : str             | None = None,
         fullname   : str             | None = "hinet",
-        root       : PathType               = constant.RUNS_DIR,
+        root       : PathType               = constant.RUN_DIR,
         project    : str             | None = None,
         # For training
         phase      : ModelPhaseType         = "training",
@@ -337,7 +337,7 @@ class HINet(base.ImageEnhancementModel):
         if isinstance(self.pretrained, dict | munch.Munch) \
             and self.pretrained["name"] in ["gopro", "reds", "sidd", "rain13k"]:
             state_dict = coreml.load_state_dict_from_path(
-                model_dir=self.pretrained_dir, **self.pretrained
+                model_dir=self.weight_dir, **self.pretrained
             )
             state_dict = state_dict["params"]
             """

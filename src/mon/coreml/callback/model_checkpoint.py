@@ -26,7 +26,7 @@ import numpy as np
 import torch
 from lightning.pytorch.utilities import cloud_io, logger
 
-from mon.core import console, error_console, pathlib, RUNS_DIR, yaml
+from mon.core import console, error_console, pathlib, RUN_DIR, yaml
 from mon.coreml import constant
 from mon.coreml.callback import base
 from mon.coreml.typing import PathType
@@ -143,7 +143,7 @@ class ModelCheckpoint(base.Checkpoint):
     
     def __init__(
         self,
-        root                   : PathType         = RUNS_DIR,
+        root                   : PathType         = RUN_DIR,
         filename               : str       | None = None,
         monitor                : str       | None = None,
         save_last              : bool             = None,

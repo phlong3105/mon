@@ -36,7 +36,9 @@ classifiers   = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-packages = []
+packages = [
+    {include="mon", from="src"},
+]
 include  = []
 exclude  = []
 
@@ -46,7 +48,6 @@ python       = ">=3.10"
 # "mon-image"  = { path="src/mon-image",  develop=true }
 # "mon-coreml" = { path="src/mon-coreml", develop=true }
 # "mon-vision" = { path="src/mon-vision", develop=true }
-
 
 # [tool.poetry.group.dev.dependencies]
 
