@@ -450,15 +450,15 @@ def assign_moving_objects_to_mois(
 	
 	if shape_type == "polygon":
 		for o in objs:
-			if o.moi_id is None:
-				o.moi_id = find_moi_for_box(
+			if o.moi_uid is None:
+				o.moi_uid = find_moi_for_box(
 					box  = o.current_box,
 					mois = polygon_mois
 				)
 	elif shape_type == "line":
 		for o in objs:
-			if o.moi_id is None:
-				o.moi_id = find_best_matched_moi(
+			if o.moi_uid is None:
+				o.moi_uid = find_best_matched_moi(
 					object_track = o.trajectory,
 					mois         = line_mois
 				)[0]

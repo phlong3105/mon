@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""":mod:`mon.coreimage.geometry.box` package implements geometry functions for
-bounding box.
-"""
+"""This module implements geometry functions for bounding boxes."""
 
 from __future__ import annotations
 

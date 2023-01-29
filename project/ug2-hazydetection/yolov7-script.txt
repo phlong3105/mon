@@ -39,7 +39,7 @@ python train_aux.py \
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
 --weights "weights/yolov7-e6e_training.pt" \
 --cfg "cfg/training/yolov7-e6e.yaml" \
---data "data/visdrone-a2i2-of.yaml" \
+--data "data/visdrone-a2i2.yaml" \
 --hyp "data/hyp.scratch.custom.yaml" \
 --epochs 100 \
 --batch-size 4 \
@@ -47,7 +47,7 @@ python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_a
 --workers 4 \
 --device 0,1 \
 --sync-bn \
---name yolov7-e6e-visdrone-a2i2-of-1856 \
+--name yolov7-e6e-visdrone-a2i2-1856 \
 
 python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
 --weights "weights/yolov7-e6e_training.pt" \

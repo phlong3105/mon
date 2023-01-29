@@ -35,7 +35,6 @@ Exemption:
 - collections.abc module
 - typing_extensions module
 
-
 ## 2. Packaging Layout
 There are two layouts for structuring a Python project: `src` or `non-src`.
 
@@ -78,3 +77,27 @@ Rule:
   you just need to gather a bunch of third-party code together and write 
   running/main scripts. You can also write executable notebooks.
 - `src` layout, anything else.
+
+## 3. Naming Things: Singular or Plural
+Rule:
+  - Use singular nouns, except for words that don't have singular forms (i.e.,
+    news, weights, etc.).
+
+Reasons:
+- **Reason 1 (Convenience)**: It is easier come out with singular names, than with
+plural ones. Objects can have irregular plurals or not plural at all, but will
+always have a singular one (with few exceptions like News). 
+- **Reason 2 (Aesthetic and Order)**: Especially in master-detail scenarios, this
+reads better, aligns better by name, and has more logical order (Master first,
+Detail second):
+  ```
+  Good:
+    1.Order
+    2.OrderDetail 
+   
+  Compared to:
+    1.OrderDetails
+    2.Orders
+  ```
+
+See more: https://stackoverflow.com/questions/338156/table-naming-dilemma-singular-vs-plural-names

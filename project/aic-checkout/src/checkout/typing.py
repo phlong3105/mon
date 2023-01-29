@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "DetectionsType",
     "Ints",
     "PathType",
     "PathsType",
@@ -13,13 +14,14 @@ __all__ = [
     "UIDType",
 ]
 
-from typing import TypeAlias
+from typing import Sequence, TypeAlias
 
 import numpy as np
 
+from checkout.data import detection
 from mon.typing import *
 
-PointsType: TypeAlias = np.ndarray | list | tuple
-UIDType   : TypeAlias = int | str
 
-
+DetectionsType: TypeAlias = detection.Detection | Sequence[detection.Detection]
+PointsType    : TypeAlias = np.ndarray | list | tuple
+UIDType       : TypeAlias = int | str

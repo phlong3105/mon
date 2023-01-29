@@ -6,22 +6,24 @@
 from __future__ import annotations
 
 __all__ = [
-    "Object",
-    "MovingObject",
-    "MovingState",
+    "MovingObject", "MovingState", "Object", "TemporalObject",
 ]
 
 import uuid
-from abc import ABC
+from abc import ABC, abstractmethod
 from collections import Counter
 from timeit import default_timer as timer
-from typing import Optional, Union
+from typing import Sequence, TYPE_CHECKING, Union
 
 import cv2
 import numpy as np
 
 import mon
-from checkout.typing import UIDType
+from checkout import rmoi, tracking
+from checkout.data import detection
+
+if TYPE_CHECKING:
+    from checkout.typing import Ints, UIDType
 
 
 # region MovingState
@@ -40,189 +42,165 @@ class MovingState(mon.Enum):
 
 # region Object
 
-class Object:
-    """The base class for all persistent objects.
-    
-    Requires:
-        It is required to be subclassed with the motion model. If you want
-        to use it without tracking or counting functions.
+class Object(ABC):
+    """The base class for all objects."""
+    pass
+
+
+class TemporalObject(Object, list):
+    """An object that persists throughout several frames. It contains all
+    detected instances in consecutive frames. The list is sorted in a timely
+    manner.
     
     Args:
+        iterable: The first detected instance of this object, or a list of
+            detected instances.
         uid: The object unique ID.
-        detections: A list of all detection instances of this object.
         timestamp: The time when the object is created.
         frame_index: The frame index when the object is created.
     """
-
-    # MARK: Magic Functions
-
+    
     def __init__(
         self,
-        uid        : UIDType                 = uuid.uuid4().int,
-        detection  : Union[list, Detection] | None = None,
-        timestamp  : float 					   	      = timer(),
-        frame_index: int                              = -1,
+        iterable   : Sequence[detection.Detection],
+        uid        : UIDType = uuid.uuid4().int,
+        timestamp  : float 	 = timer(),
+        frame_index: int     = -1,
     ):
-        super().__init__()
-        self.id_         = uid
+        assert isinstance(iterable, list | tuple) \
+               and all(isinstance(i, detection.Detection) for i in iterable)
+        super().__init__(i for i in iterable)
+        self.uid         = uid
         self.timestamp   = timestamp
         self.frame_index = frame_index
-        self.detections: list[Detection] = []
-        
-        if isinstance(detection, Detection):
-            self.detections = [detection]
-        else:
-            self.detections = (detection if (detection is not None) else [])
+    
+    def __setitem__(self, index: int, item: detection.Detection):
+        assert isinstance(item, detection.Detection)
+        super().__setitem__(index, item)
+    
+    def insert(self, index: int, item: detection.Detection):
+        assert isinstance(item, detection.Detection)
+        super().insert(index, item)
 
-    # MARK: Properties
+    def append(self, item: detection.Detection):
+        assert isinstance(item, detection.Detection)
+        super().append(item)
+
+    def extend(self, other):
+        if isinstance(other, type(self)):
+            super().extend(other)
+        else:
+            super().extend(item for item in other)
+    
+    @property
+    def classlabels(self) -> list:
+        return [d.classlabel for d in self]
 
     @property
-    def class_labels(self) -> list:
-        """Get the list of all class_labels of the object."""
-        return [d.classlabel for d in self.detections]
-
+    def first(self) -> np.ndarray:
+        return self[0]
+    
     @property
     def first_box(self) -> np.ndarray:
-        """Get the first det_box of the object."""
-        return self.detections[0].box
+        return self[0].box
+
+    @property
+    def current(self) -> detection.Detection:
+        return self[-1]
     
     @property
     def current_box(self) -> np.ndarray:
-        """Get the latest det_box of the object."""
-        return self.detections[-1].box
+        return self[-1].box
     
     @property
     def current_box_center(self) -> np.ndarray:
-        """Get the latest center of the object."""
-        return self.detections[-1].box_center
+        return self[-1].box_center
     
     @property
     def current_box_corners_points(self) -> np.ndarray:
-        """Get the latest corners of bounding boxes as points."""
-        return get_box_corners_points(self.detections[-1].box)
-
+        return mon.get_box_corners_points(box=self[-1].box)
+    
     @property
     def current_confidence(self) -> float:
-        """Get the latest confidence score."""
-        return self.detections[-1].confidence
+        return self[-1].confidence
 
     @property
-    def current_class_label(self) -> dict:
-        """Get the latest label of the object."""
-        return self.detections[-1].classlabel
+    def current_classlabel(self) -> dict:
+        return self[-1].classlabel
 
     @property
     def current_frame_index(self) -> int:
-        """Get the latest frame index of the object."""
-        return self.detections[-1].frame_index
-
-    @property
-    def current_instance(self) -> Detection:
-        """Get the latest measurement of the object."""
-        return self.detections[-1]
+        return self[-1].frame_index
 
     @property
     def current_polygon(self) -> np.ndarray:
-        """Get the latest polygon of the object."""
-        return self.detections[-1].polygon
+        return self[-1].polygon
 
     @property
     def current_roi_id(self) -> Union[int, str]:
-        """Get the latest ROI's id of the object."""
-        return self.detections[-1].roi_uid
+        return self[-1].roi_uid
 
     @property
     def current_timestamp(self) -> float:
-        """Get the last time the object has been updated."""
-        return self.detections[-1].timestamp
+        return self[-1].timestamp
 
     @property
-    def label_by_majority(self) -> dict:
-        """Get the major class_label of the object."""
-        return majority_voting(self.class_labels)
+    def majority_label(self) -> dict:
+        return mon.majority_voting(labels=self.classlabels)
     
     @property
-    def label_id_by_majority(self) -> int:
-        """Get the most popular label's id of the object."""
-        return self.label_by_majority["id"]
+    def majority_label_id(self) -> int:
+        return self.majority_label["id"]
 
     @property
-    def roi_id_by_majority(self) -> Union[int, str]:
-        """Get the major ROI's id of the object."""
-        roi_id = Counter(self.roi_ids).most_common(1)
+    def majority_roi_uid(self) -> Union[int, str]:
+        """The major ROI's uid of the object."""
+        roi_id = Counter(self.roi_uids).most_common(1)
         return roi_id[0][0]
 
     @property
-    def roi_ids(self) -> list[Union[int, str]]:
-        """Get the list ROI's ids of the object."""
-        return [d.roi_uid for d in self.detections]
-
-    # MARK: Update
+    def roi_uids(self) -> list[UIDType]:
+        return [d.roi_uid for d in self]
     
-    def update(self, detection: Optional[Detection], **kwargs):
-        """Update with new measurement.
+    def update(self, detection: detection.Detection | None, **_):
+        """Update the object with a new detected instance."""
+        self.append(detection)
         
-        Args:
-            detection (Detection, optional):
-                Detection of the object.
-        """
-        self.detections.append(detection)
-
-    # MARK: Visualize
-    
     def draw(
         self,
         drawing: np.ndarray,
-        box    : bool            = True,
-        polygon: bool            = False,
-        label  : bool            = True,
-        color  : Optional[Color] = None
+        box    : bool        = True,
+        polygon: bool        = False,
+        label  : bool        = True,
+        color  : Ints | None = None
     ) -> np.ndarray:
-        """Draw the object into the `drawing`.
-        
-        Args:
-            drawing (np.ndarray):
-                Drawing canvas.
-            box (bool):
-                Should draw the detected box? Default: `True`.
-            polygon (bool):
-                Should draw polygon? Default: `False`.
-            label (bool):
-                Should draw label? Default: `True`.
-            color (tuple):
-                Primary color. Default: `None`.
-        """
-        color = (color if (color is not None) else self.label_by_majority["color"])
-        box   = self.current_box
-
-        if box is not None:
+        """Draw the current object on the :param:`drawing`."""
+        color = color or self.majority_label["color"]
+        if box:
+            b = self.current_box
             cv2.rectangle(
                 img       = drawing,
-                pt1       = (box[0], box[1]),
-                pt2       = (box[2], box[3]),
+                pt1       = (b[0], b[1]),
+                pt2       = (b[2], b[3]),
                 color     = color,
                 thickness = 2
             )
-            box_center = self.current_box_center.astype(int)
+            b_center = self.current_box_center.astype(int)
             cv2.circle(
                 img       = drawing,
-                center    = tuple(box_center),
+                center    = tuple(b_center),
                 radius    = 3,
                 thickness = -1,
                 color     = color
             )
-        
-        """
-        if polygon is not None:
+        if polygon:
             pts = self.current_polygon.reshape((-1, 1, 2))
             cv2.polylines(
                 img=drawing, pts=pts, isClosed=True, color=color, thickness=2
             )
-        """
-        
         if label is not None:
             box_tl     = box[0:2]
-            curr_label = self.label_by_majority
+            curr_label = self.majority_label
             font       = cv2.FONT_HERSHEY_SIMPLEX
             org        = (box_tl[0] + 5, box_tl[1])
             cv2.putText(
@@ -234,24 +212,22 @@ class Object:
                 color     = color,
                 thickness = 2,
             )
+        return drawing
+
+# endregion
 
 
-# MARK: - BaseMovingObject
+# region Moving Object
 
-class MovingObject(Object, ABC):
-    """Base Moving Object.
+class MovingObject(TemporalObject, ABC):
+    """The base class for all moving objects. Extend the :class:`Temporal` class
+    with additional functionalities: motion, moving state, and MOI.
 
-    Attributes:
-        motion (Motion):
-            Motion model.
-        moving_state (MovingState):
-            Current state of the moving object with respect to camera's
-            ROIs. Default: `Candidate`.
-        moi_id (int, str, optional):
-            ID of the MOI that the current moving object is best fitted to.
-            Default: `None`.
-        trajectory (np.ndarray):
-            Object trajectory as an array of detections' center points.
+    Args:
+        motion: A motion model.
+        moving_state: The current state of the moving object with respect to the
+            ROIs. Defaults to 'Candidate'.
+        moi_uid: The unique ID of the MOI. Defaults to None.
     """
 
     min_entering_distance: float = 0.0    # Min distance when an object enters the ROI to be `Confirmed`. Default: `0.0`.
@@ -261,51 +237,53 @@ class MovingObject(Object, ABC):
 
     def __init__(
         self,
-        motion      : Motion,
-        moving_state: MovingState               = MovingState.Candidate,
-        moi_id      : Optional[Union[int, str]] = None,
+        motion      : tracking.Motion,
+        moving_state: MovingState    = MovingState.Candidate,
+        moi_uid     : UIDType | None = None,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.motion       = motion
         self.moving_state = moving_state
-        self.moi_id       = moi_id
-        self.trajectory   = np.array([self.current_box_center])
+        self.moi_uid       = moi_uid
+        self.trajectory   = [self.current_box_center]
 
     @property
     def traveled_distance(self) -> float:
         """Return the traveled distance of the object."""
         if len(self.trajectory) < 2:
             return 0.0
-        return euclidean_distance(self.trajectory[0], self.trajectory[-1])
+        return mon.euclidean_distance(self.trajectory[0], self.trajectory[-1])
     
     def traveled_distance_between(self, start: int = -1, end: int = -2) -> float:
         """Return the recently traveled distance of the object between previous
-        and current frames."""
+        and current frames.
+        """
         step = abs(end - start)
         if len(self.trajectory) < step:
             return 0.0
-        return euclidean_distance(self.trajectory[start], self.trajectory[end])
+        return mon.euclidean_distance(self.trajectory[start], self.trajectory[end])
     
     @property
     def hits(self) -> int:
-        """Return the number of frame has that track appear."""
+        """The number of frames has that track appear."""
         return self.motion.hits
 
     @property
     def hit_streak(self) -> int:
-        """Return the number of `consecutive` frame has that track appear."""
+        """The number of `consecutive` frames has that track appear."""
         return self.motion.hit_streak
 
     @property
     def age(self) -> int:
-        """Return the number of frame while the track is alive,
-        from Candidate -> Deleted."""
+        """The number of frames while the track is alive, from
+        Candidate -> Deleted.
+        """
         return self.motion.age
 
     @property
     def time_since_update(self) -> int:
-        """Return the number of `consecutive` frame that track disappear."""
+        """The number of `consecutive` frames that track disappears."""
         return self.motion.time_since_update
 
     @property
@@ -314,15 +292,11 @@ class MovingObject(Object, ABC):
 
     @moving_state.setter
     def moving_state(self, moving_state: MovingState):
-        """Assign moving state.
-
-        Args:
-            moving_state (MovingState):
-                Object's moving state.
-        """
         if moving_state not in MovingState.keys():
-            raise ValueError(f"Moving state should be one of: "
-                             f"{MovingState.keys()}. But given {moving_state}.")
+            raise ValueError(
+                f"Moving state should be one of: {MovingState.keys()}. "
+                f"But got: {moving_state}."
+            )
         self._moving_state = moving_state
 
     @property
@@ -339,7 +313,7 @@ class MovingObject(Object, ABC):
 
     @property
     def is_countable(self) -> bool:
-        return True if (self.moi_id is not None) else False
+        return True if (self.moi_uid is not None) else False
 
     @property
     def is_to_be_counted(self) -> bool:
@@ -353,71 +327,61 @@ class MovingObject(Object, ABC):
     def is_exiting(self) -> bool:
         return self.moving_state == MovingState.Exiting
     
-    def update(self, detection: Detection, **kwargs):
-        """Update with value from a `Detection` object.
-
-        Args:
-            detection (Detection):
-                Detection of the object.
-        """
+    def update(self, detection: detection.Detection, **kwargs):
+        """Update the object with a new detected instance."""
         super(MovingObject, self).update(detection=detection, **kwargs)
         self.motion.update_motion_state(detection=detection)
         self.update_trajectory()
     
-    @abc.abstractmethod
+    @abstractmethod
     def update_trajectory(self):
         """Update trajectory with measurement's center point."""
         pass
     
-    @abc.abstractmethod
-    def update_moving_state(self, rois: list[ROI], **kwargs):
-        """Update the current state of the road_objects.
-        One recommendation of the state diagram is as follow:
+    @abstractmethod
+    def update_moving_state(self, rois: list[rmoi.ROI], **kwargs):
+        """Update the current state of the road_objects. One recommendation of
+        the state diagram is as follows:
 
-                (exist >= 10 frames)  (road_objects cross counting line)   (after being counted
-                (in roi)                                               by counter)
-        _____________          _____________                  ____________        ___________        ________
-        | Candidate | -------> | Confirmed | ---------------> | Counting | -----> | Counted | -----> | Exit |
-        -------------          -------------                  ------------        -----------        --------
-              |                       |                                                                  ^
-              |_______________________|__________________________________________________________________|
-                                (mark by tracker when road_objects's max age > threshold)
+        _____________      _____________      ____________      ___________      ________
+        | Candidate | ---> | Confirmed | ---> | Counting | ---> | Counted | ---> | Exit |
+        -------------      -------------      ------------      -----------      --------
+              |                 |                                                   ^
+              |_________________|___________________________________________________|
+                    (mark by a tracker when road_objects's max age > threshold)
         """
         pass
 
     def draw(self, drawing: np.ndarray, **kwargs) -> np.ndarray:
-        """Draw the object into the `drawing`.
-
-        Args:
-            drawing (np.ndarray):
-                Drawing canvas.
-        """
-        if self.moi_id is not None:
-            color = AppleRGB.values()[self.moi_id]
+        """Draw the current object on the :param:`drawing`."""
+        if self.moi_uid is not None:
+            color = mon.AppleRGB.values()[self.moi_uid]
         else:
-            color = self.label_by_majority["color"]
+            color = self.majority_label["color"]
             
         if self.is_confirmed:
-            # BaseObject.draw(self, drawing=drawing, label=False, **kwargs)
+            # TemporalObject.draw(self, drawing=drawing, label=False, **kwargs)
             self.draw_trajectory(drawing=drawing)
         elif self.is_counting:
-            # BaseObject.draw(self, drawing=drawing, label=True, **kwargs)
+            # TemporalObject.draw(self, drawing=drawing, label=True, **kwargs)
             self.draw_trajectory(drawing=drawing)
         elif self.is_counted:
-            Object.draw(self, drawing=drawing, label=True, color=color, **kwargs)
+            TemporalObject.draw(self, drawing=drawing, label=True, color=color, **kwargs)
             self.draw_trajectory(drawing=drawing)
         elif self.is_exiting:
-            Object.draw(self, drawing=drawing, label=True, color=color, **kwargs)
+            TemporalObject.draw(self, drawing=drawing, label=True, color=color, **kwargs)
             self.draw_trajectory(drawing=drawing)
+        return drawing
 
     def draw_trajectory(self, drawing: np.ndarray) -> np.ndarray:
-        if self.moi_id is not None:
-            color = AppleRGB.values()[self.moi_id]
+        """Draw the current trajectory on the :param:`drawing`."""
+        if self.moi_uid is not None:
+            color = mon.AppleRGB.values()[self.moi_uid]
         else:
-            color = self.label_by_majority["color"]
-            
+            color = self.majority_label["color"]
+    
         if self.trajectory is not None:
-            pts = self.trajectory.reshape((-1, 1, 2))
+            pts = np.array(self.trajectory).reshape((-1, 1, 2))
             cv2.polylines(
                 img       = drawing,
                 pts       = [pts.astype(int)],
@@ -433,3 +397,6 @@ class MovingObject(Object, ABC):
                     thickness = 2,
                     color     = color
                 )
+        return drawing
+    
+# endregion

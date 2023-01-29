@@ -13,10 +13,11 @@ __all__ = [
     "Images", "InterpolationModeType", "MaskType", "PaddingModeType",
     "PaddingModeType", "PointsType", "RGBType", "VisionBackendType",
     # Extend :mod:`mon.core.typing`
-    "CallableType", "ConfigType", "DictType", "Float1T", "Float2T", "Float3T",
+    "CallableType", "ConfigType", "DictType",  "Float1T", "Float2T", "Float3T",
     "Float4T", "Float5T", "Float6T", "FloatAnyT", "Floats", "ImageFormatType",
     "Int1T", "Int2T", "Int3T", "Int4T", "Int5T", "Int6T", "IntAnyT", "Ints",
-    "MemoryUnitType", "PathType", "PathsType", "Strs", "VideoFormatType",
+    "MemoryUnitType", "Number", "PathType", "PathsType", "Strs",
+    "VideoFormatType",
 ]
 
 from typing import Sequence, TypeAlias

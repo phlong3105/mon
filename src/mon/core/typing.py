@@ -11,7 +11,8 @@ __all__ = [
     "CallableType", "ConfigType", "DictType",  "Float1T", "Float2T", "Float3T",
     "Float4T", "Float5T", "Float6T", "FloatAnyT", "Floats", "ImageFormatType",
     "Int1T", "Int2T", "Int3T", "Int4T", "Int5T", "Int6T", "IntAnyT", "Ints",
-    "MemoryUnitType", "PathType", "PathsType", "Strs", "VideoFormatType",
+    "MemoryUnitType", "Number", "PathType", "PathsType", "Strs",
+    "VideoFormatType",
 ]
 
 import functools
@@ -31,6 +32,7 @@ _ScalarOrTuple4T  : TypeAlias = T | tuple[T, T, T, T]
 _ScalarOrTuple5T  : TypeAlias = T | tuple[T, T, T, T, T]
 _ScalarOrTuple6T  : TypeAlias = T | tuple[T, T, T, T, T, T]
 
+Number            : TypeAlias = int | float
 Strs              : TypeAlias = str | Sequence[str]
 
 Ints              : TypeAlias = int | Sequence[int]

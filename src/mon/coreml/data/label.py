@@ -76,15 +76,15 @@ class ClassLabels(list):
                and all(isinstance(i, ClassLabel) for i in iterable)
         super().__init__(i for i in iterable)
 
-    def __setitem__(self, index, item):
+    def __setitem__(self, index: int, item: ClassLabel):
         assert isinstance(item, ClassLabel)
         super().__setitem__(index, item)
     
-    def insert(self, index, item):
+    def insert(self, index: int, item: ClassLabel):
         assert isinstance(item, ClassLabel)
         super().insert(index, item)
 
-    def append(self, item):
+    def append(self, item: ClassLabel):
         assert isinstance(item, ClassLabel)
         super().append(item)
 
@@ -670,7 +670,7 @@ def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
         k = label.get("id")
         v = label_voting.get(k)
         if v:
-            label_voting[k] = v + 1
+            label_voting[k]  = v + 1
         else:
             unique_labels[k] = label
             label_voting[k]  = 1
