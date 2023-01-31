@@ -51,6 +51,7 @@ lost+found
 .!@#$recycle
 DfsrPrivate
 
+*.cache
 /data
 \data
 pycharm.env
