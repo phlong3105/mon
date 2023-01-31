@@ -1,0 +1,60 @@
+##########
+# YOLOv8 #
+##########
+https://docs.ultralytics.com/tasks/detection/
+
+################
+# Installation #
+################
+pip install ultralytics
+
+##################
+# Initialization #
+##################
+cd yolov8
+
+#########
+# Train #
+#########
+python train.py \
+--task "detect" \
+--mode "train" \
+--model "weight/yolov8x-det-coco.pt" \
+--data "data/visdrone-a2i2-of.yaml" \
+--epochs 100 \
+--batch 4 \
+--imgsz 1280 \
+--device 0 \
+--workers 8 \
+--save \
+--exist-ok \
+--pretrained \
+--project "../run/train" \
+--name "yolov8x-visdrone-a2i2-of-1280" \
+--resume
+
+python train.py \
+--task "detect" \
+--mode "train" \
+--model "weight/yolov8x-det-coco.pt" \
+--data "data/visdrone-a2i2-of.yaml" \
+--epochs 100 \
+--batch 4 \
+--imgsz 2160 \
+--device 0,1 \
+--workers 8 \
+--save \
+--exist-ok \
+--pretrained \
+--project "../run/train"
+--name "yolov8x-visdrone-a2i2-of-2160" \
+--resume
+
+########
+# Test #
+########
+
+
+#########
+# Infer #
+#########
