@@ -228,7 +228,7 @@ class A2I2HazeDet(base.ImageDetectionDataset):
                 for _, l in enumerate(labels):
                     id              = l[0]
                     box_xyxy        = torch.Tensor(l[1:5])
-                    box_cxcywh_norm = ci.box_xyxy_to_cxcywh_norm(
+                    box_cxcywh_norm = ci.box_xyxy_to_cxcywhn(
                         box    = box_xyxy,
                         height = shape[0],
                         width  = shape[1],

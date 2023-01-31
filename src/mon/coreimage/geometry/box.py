@@ -7,16 +7,16 @@ from __future__ import annotations
 
 __all__ = [
     "affine_box", "box_cxcyar_to_cxcyrh", "box_cxcyar_to_cxcywh",
-    "box_cxcyar_to_cxcywhnorm", "box_cxcyar_to_xywh", "box_cxcyar_to_xyxy",
-    "box_cxcyrh_to_cxcyar", "box_cxcyrh_to_cxcywh", "box_cxcyrh_to_cxcywh_norm",
-    "box_cxcyrh_to_xywh", "box_cxcyrh_to_xyxy", "box_cxcywh_norm_to_cxcyar",
-    "box_cxcywh_norm_to_cxcyrh", "box_cxcywh_norm_to_cxcywh",
-    "box_cxcywh_norm_to_xywh", "box_cxcywh_norm_to_xyxy",
-    "box_cxcywh_to_cxcyar", "box_cxcywh_to_cxcyrh", "box_cxcywh_to_cxcywh_norm",
+    "box_cxcyar_to_cxcywhn", "box_cxcyar_to_xywh", "box_cxcyar_to_xyxy",
+    "box_cxcyrh_to_cxcyar", "box_cxcyrh_to_cxcywh", "box_cxcyrh_to_cxcywhn",
+    "box_cxcyrh_to_xywh", "box_cxcyrh_to_xyxy", "box_cxcywhn_to_cxcyar",
+    "box_cxcywhn_to_cxcyrh", "box_cxcywhn_to_cxcywh",
+    "box_cxcywhn_to_xywh", "box_cxcywhn_to_xyxy",
+    "box_cxcywh_to_cxcyar", "box_cxcywh_to_cxcyrh", "box_cxcywh_to_cxcywhn",
     "box_cxcywh_to_xywh", "box_cxcywh_to_xyxy", "box_xywh_to_cxcyar",
-    "box_xywh_to_cxcyrh", "box_xywh_to_cxcywh", "box_xywh_to_cxcywh_norm",
+    "box_xywh_to_cxcyrh", "box_xywh_to_cxcywh", "box_xywh_to_cxcywhn",
     "box_xywh_to_xyxy", "box_xyxy_to_cxcyar", "box_xyxy_to_cxcyrh",
-    "box_xyxy_to_cxcywh", "box_xyxy_to_cxcywh_norm", "box_xyxy_to_xywh",
+    "box_xyxy_to_cxcywh", "box_xyxy_to_cxcywhn", "box_xyxy_to_xywh",
     "clip_box", "compute_box_area", "compute_box_intersection_union",
     "compute_box_iou", "compute_box_iou_old", "generate_box", "get_box_center",
     "get_box_corners", "get_box_corners_points", "get_enclosing_box",
@@ -53,7 +53,7 @@ def affine_box(
     
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in
-            (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+            [x1, y1, x2, y2] format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: The image size of shape [H, W].
         angle: A rotation angle in degrees, between -180 and 180, clockwise
             direction.
@@ -142,7 +142,7 @@ def clip_box(
     
     Args:
         box: Bounding boxes of shape [N, 4], They are expected to be in
-            (x1, y1, x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+            [x1, y1, x2, y2] format with `0 <= x1 < x2` and `0 <= y1 < y2`.
         image_size: An image size of shape [H, W].
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
@@ -172,7 +172,7 @@ def horizontal_flip_box(
     image_center: torch.Tensor
 ) -> torch.Tensor:
     """Horizontally flip boxes, which are specified by their normalized
-    (cx, cy, w, h) coordinates.
+    [cx, cy, w, h] coordinates.
     
     Reference:
 		https://blog.paperspace.com/data-augmentation-for-bounding-boxes/
@@ -503,19 +503,19 @@ def vertical_translate_box(
 # region Box Format Conversion
 
 def box_cxcyar_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, r, h)
+    """Convert bounding boxes from [cx, cy, a, r] format to [cx, cy, r, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, a, r) format.
+        box: Bounding boxes in [cx, cy, a, r] format.
         
     Returns:
-        Bounding boxes in (cx, cy, r, h) format.
+        Bounding boxes in [cx, cy, r, h] format.
     """
     box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
@@ -532,19 +532,19 @@ def box_cxcyar_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.nd
 
 
 def box_cxcyar_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
+    """Convert bounding boxes from [cx, cy, a, r] format to [cx, cy, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, a, r) format.
+        box: Bounding boxes in [cx, cy, a, r] format.
         
     Returns:
-        Bounding boxes in (cx, cy, w, h) format.
+        Bounding boxes in [cx, cy, w, h] format.
     """
     box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
@@ -560,29 +560,29 @@ def box_cxcyar_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.nd
         )
 
 
-def box_cxcyar_to_cxcywhnorm(
+def box_cxcyar_to_cxcywhn(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, a, r) format to (cx, cy, w, h)
+    """Convert bounding boxes from [cx, cy, a, r] format to [cx, cy, w, h]
     norm format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, a, r) format.
+        box: Bounding boxes in [cx, cy, a, r] format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, w, h) norm format.
+        Bounding boxes in [cx, cy, w, h] norm format.
     """
     box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
@@ -603,19 +603,19 @@ def box_cxcyar_to_cxcywhnorm(
 
 
 def box_cxcyar_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, a, r) format to (x, y, w, h)
+    """Convert bounding boxes from [cx, cy, a, r] format to [x, y, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, a, r) format.
+        box: Bounding boxes in [cx, cy, a, r] format.
         
     Returns:
-        Bounding boxes in (x, y, w, h) format.
+        Bounding boxes in [x, y, w, h] format.
     """
     box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
@@ -634,19 +634,19 @@ def box_cxcyar_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
 
     
 def box_cxcyar_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, a, r) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from [cx, cy, a, r] format to [x1, y1, x2, y2]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, a, r) format.
+        box: Bounding boxes in [cx, cy, a, r] format.
         
     Returns:
-        Bounding boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in [x1, y1, x2, y2] format.
     """
     box = util.upcast(box)
     cx, cy, a, r, *_ = box.T
@@ -667,19 +667,19 @@ def box_cxcyar_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
 
 
 def box_cxcyrh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, a, r)
+    """Convert bounding boxes from [cx, cy, r, h] format to [cx, cy, a, r]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, r, h) format.
+        box: Bounding boxes in [cx, cy, r, h] format.
         
     Returns:
-        Bounding boxes in (cx, cy, a, r) format.
+        Bounding boxes in [cx, cy, a, r] format.
     """
     box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
@@ -697,19 +697,19 @@ def box_cxcyrh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.nd
 
 
 def box_cxcyrh_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
+    """Convert bounding boxes from [cx, cy, r, h] format to [cx, cy, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, r, h) format.
+        box: Bounding boxes in [cx, cy, r, h] format.
         
     Returns:
-        Bounding boxes in (cx, cy, w, h) format.
+        Bounding boxes in [cx, cy, w, h] format.
     """
     box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
@@ -724,29 +724,29 @@ def box_cxcyrh_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.nd
         )
 
 
-def box_cxcyrh_to_cxcywh_norm(
+def box_cxcyrh_to_cxcywhn(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, r, h) format to (cx, cy, w, h)
+    """Convert bounding boxes from [cx, cy, r, h] format to [cx, cy, w, h]
     norm format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, r, h) format.
+        box: Bounding boxes in [cx, cy, r, h] format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        box: Bounding boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in [cx, cy, w, h] norm format.
     """
     box     = util.upcast(box)
     cx, cy, r, h, *_ = box.T
@@ -766,19 +766,19 @@ def box_cxcyrh_to_cxcywh_norm(
 
 
 def box_cxcyrh_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, r, h) format to (x, y, w, h)
+    """Convert bounding boxes from [cx, cy, r, h] format to [x, y, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, r, h) format.
+        box: Bounding boxes in [cx, cy, r, h] format.
         
     Returns:
-        Bounding boxes in (x, y, w, h) format.
+        Bounding boxes in [x, y, w, h] format.
     """
     box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
@@ -796,19 +796,19 @@ def box_cxcyrh_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
 
 
 def box_cxcyrh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, r, h) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from [cx, cy, r, h] format to [x1, y1, x2, y2]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, r, h) format.
+        box: Bounding boxes in [cx, cy, r, h] format.
         
     Returns:
-        Bounding boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in [x1, y1, x2, y2] format.
     """
     box = util.upcast(box)
     cx, cy, r, h, *_ = box.T
@@ -828,19 +828,19 @@ def box_cxcyrh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
 
 
 def box_cxcywh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, a, r)
+    """Convert bounding boxes from [cx, cy, w, h] format to [cx, cy, a, r]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) format.
+        box: Bounding boxes in [cx, cy, w, h] format.
         
     Returns:
-        Bounding boxes in (cx, cy, a, r) format.
+        Bounding boxes in [cx, cy, a, r] format.
     """
     box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
@@ -855,19 +855,19 @@ def box_cxcywh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.nd
 
 
 def box_cxcywh_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
+    """Convert bounding boxes from [cx, cy, w, h] format to [cx, cy, r, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) format.
+        box: Bounding boxes in [cx, cy, w, h] format.
         
     Returns:
-        Bounding boxes in (cx, cy, r, h) format.
+        Bounding boxes in [cx, cy, r, h] format.
     """
     box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
@@ -882,29 +882,29 @@ def box_cxcywh_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.nd
         )
 
 
-def box_cxcywh_to_cxcywh_norm(
+def box_cxcywh_to_cxcywhn(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) format to (cx, cy, r, h)
+    """Convert bounding boxes from [cx, cy, w, h] format to [cx, cy, r, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) format.
+        box: Bounding boxes in [cx, cy, w, h] format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, r, h) norm format.
+        Bounding boxes in [cx, cy, r, h] norm format.
     """
     box     = util.upcast(box)
     cx, cy, w, h, *_ = box.T
@@ -923,19 +923,19 @@ def box_cxcywh_to_cxcywh_norm(
     
 
 def box_cxcywh_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) format to (x, y, w, h)
+    """Convert bounding boxes from [cx, cy, w, h] format to [x, y, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) format.
+        box: Bounding boxes in [cx, cy, w, h] format.
         
     Returns:
-        Bounding boxes in (x, y, w, h) format.
+        Bounding boxes in [x, y, w, h] format.
     """
     box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
@@ -952,19 +952,19 @@ def box_cxcywh_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
     
 
 def box_cxcywh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from [cx, cy, w, h] format to [x1, y1, x2, y2]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) format.
+        box: Bounding boxes in [cx, cy, w, h] format.
         
     Returns:
-        Bounding boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in [x1, y1, x2, y2] format.
     """
     box = util.upcast(box)
     cx, cy, w, h, *_ = box.T
@@ -982,29 +982,29 @@ def box_cxcywh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
         )
 
 
-def box_cxcywh_norm_to_cxcyar(
+def box_cxcywhn_to_cxcyar(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, a,
-    r) format.
+    """Convert bounding boxes from [cx, cy, w, h] norm format to [cx, cy, a, r]
+    format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in [cx, cy, w, h] norm format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, a, r) format.
+        Bounding boxes in [cx, cy, a, r] format.
     """
     box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
@@ -1022,29 +1022,29 @@ def box_cxcywh_norm_to_cxcyar(
         )
 
 
-def box_cxcywh_norm_to_cxcyrh(
+def box_cxcywhn_to_cxcyrh(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, r,
-    h) format.
+    """Convert bounding boxes from [cx, cy, w, h] norm format to [cx, cy, r, h]
+    format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in [cx, cy, w, h] norm format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, r, h) format.
+        Bounding boxes in [cx, cy, r, h] format.
     """
     box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
@@ -1062,29 +1062,29 @@ def box_cxcywh_norm_to_cxcyrh(
         )
 
 
-def box_cxcywh_norm_to_cxcywh(
+def box_cxcywhn_to_cxcywh(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) norm format to (cx, cy, w, h)
+    """Convert bounding boxes from [cx, cy, w, h] norm format to [cx, cy, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in [cx, cy, w, h] norm format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, w, h) format.
+        Bounding boxes in [cx, cy, w, h] format.
     """
     box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
@@ -1102,29 +1102,29 @@ def box_cxcywh_norm_to_cxcywh(
         )
 
 
-def box_cxcywh_norm_to_xywh(
+def box_cxcywhn_to_xywh(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) norm format to (x, y, w, h)
+    """Convert bounding boxes from [cx, cy, w, h] norm format to [x, y, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in [cx, cy, w, h] norm format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (x, y, w, h) format.
+        Bounding boxes in [x, y, w, h] format.
     """
     box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
@@ -1142,29 +1142,29 @@ def box_cxcywh_norm_to_xywh(
         )
    
    
-def box_cxcywh_norm_to_xyxy(
+def box_cxcywhn_to_xyxy(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (cx, cy, w, h) norm format to (x1, y1, x2,
-    y2) format.
+    """Convert bounding boxes from [cx, cy, w, h] norm format to [x1, y1, x2, y2]
+    format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (cx, cy, w, h) norm format.
+        box: Bounding boxes in [cx, cy, w, h] norm format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in [x1, y1, x2, y2] format.
     """
     box = util.upcast(box)
     cx_norm, cy_norm, w_norm, h_norm, *_ = box.T
@@ -1183,18 +1183,18 @@ def box_cxcywh_norm_to_xyxy(
 
 
 def box_xywh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, a, r) format.
+    """Convert bounding boxes from [x, y, w, h] format to [cx, cy, a, r] format.
     
-    (cx, cy) refers to the center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to the center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x, y, w, h) format.
+        box: Bounding boxes in [x, y, w, h] format.
        
     Returns:
-        Bounding boxes in (cx, cy, a, r) format.
+        Bounding boxes in [cx, cy, a, r] format.
     """
     box = util.upcast(box)
     x, y, w, h, *_ = box.T
@@ -1213,18 +1213,18 @@ def box_xywh_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
 
 
 def box_xywh_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, r, h) format.
+    """Convert bounding boxes from [x, y, w, h] format to [cx, cy, r, h] format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x, y, w, h) format.
+        box: Bounding boxes in [x, y, w, h] format.
        
     Returns:
-        Bounding boxes in (cx, cy, r, h) format.
+        Bounding boxes in [cx, cy, r, h] format.
     """
     box = util.upcast(box)
     x, y, w, h, *_ = box.T
@@ -1242,18 +1242,18 @@ def box_xywh_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
     
 
 def box_xywh_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, w, h) format.
+    """Convert bounding boxes from [x, y, w, h] format to [cx, cy, w, h] format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x, y, w, h) format.
+        box: Bounding boxes in [x, y, w, h] format.
        
     Returns:
-        Bounding boxes in (cx, cy, w, h) format.
+        Bounding boxes in [cx, cy, w, h] format.
     """
     box = util.upcast(box)
     x, y, w, h, *_ = box.T
@@ -1269,29 +1269,29 @@ def box_xywh_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
         )
 
 
-def box_xywh_to_cxcywh_norm(
+def box_xywh_to_cxcywhn(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x, y, w, h) format to (cx, cy, w, h) norm
+    """Convert bounding boxes from [x, y, w, h] format to [cx, cy, w, h] norm
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to the normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (x, y, w, h) format.
+        box: Bounding boxes in [x, y, w, h] format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, w, h) norm format.
+        Bounding boxes in [cx, cy, w, h] norm format.
     """
     box = util.upcast(box)
     x, y, w, h, *_ = box.T
@@ -1312,19 +1312,19 @@ def box_xywh_to_cxcywh_norm(
 
 
 def box_xywh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x, y, w, h) format to (x1, y1, x2, y2)
+    """Convert bounding boxes from [x, y, w, h] format to [x1, y1, x2, y2]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x, y, w, h) format.
+        box: Bounding boxes in [x, y, w, h] format.
        
     Returns:
-        Bounding boxes in (x1, y1, x2, y2) format.
+        Bounding boxes in [x1, y1, x2, y2] format.
     """
     box = util.upcast(box)
     x, y, w, h, *_ = box.T
@@ -1341,19 +1341,19 @@ def box_xywh_to_xyxy(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarra
 
 
 def box_xyxy_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, a, r)
+    """Convert bounding boxes from [x1, y1, x2, y2] format to [cx, cy, a, r]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x1, y1, x2, y2) format.
+        box: Bounding boxes in [x1, y1, x2, y2] format.
        
     Returns:
-        Bounding boxes in (cx, cy, a, r) format.
+        Bounding boxes in [cx, cy, a, r] format.
     """
     box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
@@ -1374,19 +1374,19 @@ def box_xyxy_to_cxcyar(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
     
 
 def box_xyxy_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, r, h)
+    """Convert bounding boxes from [x1, y1, x2, y2] format to [cx, cy, r, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x1, y1, x2, y2) format.
+        box: Bounding boxes in [x1, y1, x2, y2] format.
        
     Returns:
-        Bounding boxes in (cx, cy, r, h) format.
+        Bounding boxes in [cx, cy, r, h] format.
     """
     box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
@@ -1406,19 +1406,19 @@ def box_xyxy_to_cxcyrh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
 
 
 def box_xyxy_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
+    """Convert bounding boxes from [x1, y1, x2, y2] format to [cx, cy, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x1, y1, x2, y2) format.
+        box: Bounding boxes in [x1, y1, x2, y2] format.
        
     Returns:
-        Bounding boxes in (cx, cy, w, h) format.
+        Bounding boxes in [cx, cy, w, h] format.
     """
     box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
@@ -1436,29 +1436,29 @@ def box_xyxy_to_cxcywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndar
         )
 
 
-def box_xyxy_to_cxcywh_norm(
+def box_xyxy_to_cxcywhn(
     box   : torch.Tensor | np.ndarray,
     height: int,
     width : int
 ) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x1, y1, x2, y2) format to (cx, cy, w, h)
+    """Convert bounding boxes from [x1, y1, x2, y2] format to [cx, cy, w, h]
     norm format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
     _norm refers to the normalized value in the range `[0.0, 1.0]`. For example:
         `x_norm = absolute_x / image_width`
         `height_norm = absolute_height / image_height`.
     
     Args:
-        box: Bounding boxes in (x1, y1, x2, y2) format.
+        box: Bounding boxes in [x1, y1, x2, y2] format.
         height: The height of the image.
         width: The width of the image.
         
     Returns:
-        Bounding boxes in (cx, cy, w, h) norm format.
+        Bounding boxes in [cx, cy, w, h] norm format.
     """
     box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
@@ -1481,19 +1481,19 @@ def box_xyxy_to_cxcywh_norm(
 
 
 def box_xyxy_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
-    """Convert bounding boxes from (x1, y1, x2, y2) format to (x, y, w, h)
+    """Convert bounding boxes from [x1, y1, x2, y2] format to [x, y, w, h]
     format.
     
-    (cx, cy) refers to center of bounding box.
-    (a, r) refers to area (width * height) and aspect ratio (width / height) of
+    [cx, cy] refers to center of bounding box.
+    [a, r] refers to area (width * height) and aspect ratio (width / height) of
         bounding box.
-    (w, h) refers to width and height of bounding box.
+    [w, h] refers to width and height of bounding box.
    
     Args:
-        box: Bounding boxes in (x1, y1, x2, y2) format.
+        box: Bounding boxes in [x1, y1, x2, y2] format.
        
     Returns:
-        Bounding boxes in (x, y, w, h) format.
+        Bounding boxes in [x, y, w, h] format.
     """
     box = util.upcast(box)
     x1, y1, x2, y2, *_ = box.T
@@ -1515,10 +1515,10 @@ def box_xyxy_to_xywh(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarra
 
 def compute_box_area(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Compute the area of bounding box(es), which are specified by their
-    (x1, y1, x2, y2) coordinates.
+    [x1, y1, x2, y2] coordinates.
     
     Args:
-        box: Bounding boxes in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
+        box: Bounding boxes in [x1, y1, x2, y2] format with `0 <= x1 < x2` and
             `0 <= y1 < y2`.
     
     Returns:
@@ -1534,7 +1534,7 @@ def compute_box_intersection_union(
     box1: torch.Tensor, box2: torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Compute the intersection and union of two sets of boxes. Both sets of
-    boxes are expected to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
+    boxes are expected to be in [x1, y1, x2, y2] format with `0 <= x1 < x2` and
     `0 <= y1 < y2`.
     
     Implementation from https://github.com/kuangliu/torchcv/blob/master/torchcv/utils/box.py
@@ -1562,7 +1562,7 @@ def compute_box_intersection_union(
 
 def compute_box_iou(box1: torch.Tensor, box2: torch.Tensor) -> torch.Tensor:
     """Return the intersection-over-union (Jaccard index) between two sets of
-    boxes. Both sets of boxes are expected to be in (x1, y1, x2, y2) format with
+    boxes. Both sets of boxes are expected to be in [x1, y1, x2, y2] format with
     `0 <= x1 < x2` and `0 <= y1 < y2`.
     
     Args:
@@ -1582,7 +1582,7 @@ def compute_box_iou_old(box1: torch.Tensor, box2: torch.Tensor) -> torch.Tensor:
     """From SORT: Compute IOU between two sets of boxes.
     
     Return intersection-over-union (Jaccard index) between two sets of boxes.
-    Both sets of boxes are expected to be in (x1, y1, x2, y2) format with
+    Both sets of boxes are expected to be in [x1, y1, x2, y2] format with
     `0 <= x1 < x2` and `0 <= y1 < y2`.
 
     Args:
@@ -1685,7 +1685,7 @@ def generate_box(
 
 def get_box_center(box: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
     """Compute the center of bounding box(es), which are specified by their
-    (x1, y1, x2, y2) coordinates.
+    [x1, y1, x2, y2] coordinates.
     
     Args:
         box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
@@ -1829,7 +1829,7 @@ def nms(
     
     Args:
         box: Bounding boxes of shape [N, 4] to perform NMS on. They are expected
-            to be in (x1, y1, x2, y2) format with `0 <= x1 < x2` and
+            to be in [x1, y1, x2, y2] format with `0 <= x1 < x2` and
             `0 <= y1 < y2`.
         scores: Scores for each one of the boxes.
         iou_threshold: Discards all overlapping boxes with

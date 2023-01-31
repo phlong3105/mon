@@ -67,15 +67,19 @@ sample
 ├── pyproject.toml
 ```
 
-Here’s a breakdown of the important behaviour differences between the src layout
-and the flat layout:
+Here’s a breakdown of the important behaviour differences between the `src`
+layout and the flat layout:
 - The `src` layout requires installation of the project to be able to run its
   code, and the `non-src` layout doesn't.
+- The `src` layout helps prevent accidental usage of the in-development copy of
+  the code.
+- The `src` layout helps enforce that an editable installation is only able to
+  import files that were meant to be importable.
 
 Rule:
 - `non-src` or flat layout, any single module or single Python script. It means
   you just need to gather a bunch of third-party code together and write 
-  running/main scripts. You can also write executable notebooks.
+  running/main scripts. You can write executable notebooks.
 - `src` layout, anything else.
 
 ## 3. Naming Things: Singular or Plural
@@ -84,12 +88,12 @@ Rule:
     news, weights, etc.).
 
 Reasons:
-- **Reason 1 (Convenience)**: It is easier come out with singular names, than with
-plural ones. Objects can have irregular plurals or not plural at all, but will
-always have a singular one (with few exceptions like News). 
-- **Reason 2 (Aesthetic and Order)**: Especially in master-detail scenarios, this
-reads better, aligns better by name, and has more logical order (Master first,
-Detail second):
+- **Reason 1 (Convenience)**: It is easier come out with singular names, than
+  with plural ones. Objects can have irregular plurals or not plural at all, but
+  will always have a singular one (with few exceptions like News).
+- **Reason 2 (Aesthetic and Order)**: Especially in master-detail scenarios,
+  this reads better, aligns better by name, and has more logical order (Master
+  first, Detail second):
   ```
   Good:
     1.Order

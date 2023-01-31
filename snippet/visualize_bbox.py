@@ -152,7 +152,7 @@ def visualize_bbox_yolo(args: munch.Munch):
                 b = [list(map(float, x[1:])) for x in l]
                 b = np.array(b)
                 b = torch.from_numpy(b)
-                b = mon.box_cxcywh_norm_to_xyxy(b, height=h, width=w)
+                b = mon.box_cxcywhn_to_xyxy(b, height=h, width=w)
                 b = b.numpy()
                 
                 org        = (50, 50)
@@ -197,7 +197,7 @@ def parse_args():
         "--box-format",
         type    = str,
         default = "yolo",
-        help    = "Bounding box format (i.e., xyxy, cxcywh, cxcywh_norm (yolo)."
+        help    = "Bounding box format (i.e., xyxy, cxcywh, cxcywhn (yolo)."
     )
     parser.add_argument(
         "--output",
@@ -213,7 +213,10 @@ def parse_args():
 if __name__ == "__main__":
     args = munch.Munch.fromDict(vars(parse_args()))
     assert args.box_format in [
-        "xyxy", "xywh", "cxcywh", "cxcywh_norm", "voc", "coco", "yolo",
+        "xyxy", "voc",
+        "xywh", "coco",
+        "cxcywh",
+        "cxcywhn", "yolo",
     ]
     if args.box_format in ["xyxy", "voc"]:
         visualize_bbox_voc(args=args)
@@ -221,7 +224,7 @@ if __name__ == "__main__":
         visualize_bbox_coco(args=args)
     elif args.box_format in ["cxcywh"]:
         pass
-    elif args.box_format in ["cxcywh_norm", "yolo"]:
+    elif args.box_format in ["cxcywhn", "yolo"]:
         visualize_bbox_yolo(args=args)
     
 # endregion

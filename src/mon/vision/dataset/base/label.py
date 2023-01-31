@@ -392,7 +392,7 @@ class VOCDetectionsLabel(DetectionsLabel):
             bndbox     = o.get["bndbox"]
             bbox       = torch.FloatTensor([bndbox["xmin"], bndbox["ymin"],
                                             bndbox["xmax"], bndbox["ymax"]])
-            bbox       = ci.box_xyxy_to_cxcywh_norm(box=bbox, height=height, width=width)
+            bbox       = ci.box_xyxy_to_cxcywhn(box=bbox, height=height, width=width)
             confidence = o.get("confidence", 1.0)
             truncated  = o.get("truncated" , 0)
             difficult  = o.get("difficult" , 0)

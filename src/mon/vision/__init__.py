@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import mon.vision.constant
 import mon.vision.typing
+from mon.vision.cfg import *
 from mon.vision.dataset import *
 from mon.vision.model import *
 from mon.vision.transform import *

@@ -15,6 +15,5 @@ __pycache__/
 /.sync/
 /data/
 /project/*/data
-/project/**/runs
+/project/*/run
 /src/archive/
-/weight/
