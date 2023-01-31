@@ -1,3 +1,4 @@
+import argparse
 from collections import namedtuple
 
 import munch
@@ -5,12 +6,12 @@ import torch.nn as nn
 from cv2.ximgproc import guidedFilter
 
 import mon
-from .net import *
-from .net.losses import StdLoss
-from .net.vae_model import VAE
-from .utils.dcp import get_atmosphere
-from .utils.image_io import *
-from .utils.imresize import np_imresize
+from net import *
+from net.losses import StdLoss
+from net.vae_model import VAE
+from utils.dcp import get_atmosphere
+from utils.image_io import *
+from utils.imresize import np_imresize
 
 DehazeResult = namedtuple("DehazeResult", ['learned', 't', 'a'])
 
@@ -199,10 +200,40 @@ def dehaze(args: munch.Munch, num_iter: int = 500):
             save_image(name + "_original", np.clip(image, 0, 1), dh.output_path)
 
 
+# region Main
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--image",
+        type    = str,
+        default = mon.DATA_DIR / "a2i2-haze/train/detection/haze/images",
+        help    = "Image directory."
+    )
+    parser.add_argument(
+        "--output",
+        type    = str,
+        default = None,
+        help    = "Output directory."
+    )
+    parser.add_argument(
+        "--verbose",
+        action = "store_true",
+        help   = "Display results."
+    )
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = munch.Munch.fromDict(vars(parse_args()))
+    dehaze(args=args, num_iter=500)
+
+
 """
 if __name__ == "__main__":
     torch.cuda.set_device(0)
-    
+
     hazy_add = 'data/hazy.png'
     name = "1400_3"
     print(name)
@@ -210,3 +241,5 @@ if __name__ == "__main__":
     hazy_img = prepare_hazy_image(hazy_add)
     dehaze(name, hazy_img, num_iter=500, output_path="output/")
 """
+
+# endregion

@@ -63,3 +63,48 @@ def detect(args: munch.Munch):
                 
             out_img = chw_to_hwc(output.detach().cpu().squeeze(0).numpy())
             write_img(os.path.join(output_dir, filename), out_img)
+
+
+
+# region Main
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--image",
+        type    = str,
+        default = mon.DATA_DIR / "a2i2-haze/train/detection/haze/images",
+        help    = "Image directory."
+    )
+    parser.add_argument(
+        "--output",
+        type    = str,
+        default = None,
+        help    = "Output directory."
+    )
+    parser.add_argument(
+        "--model",
+        type    = str,
+        default = "gunet_b",
+        help    = "Model name."
+    )
+    parser.add_argument(
+        "--weights",
+        type    = str,
+        default = "weights/haze4k/gunet_b.pth",
+        help    = "Weights path."
+    )
+    parser.add_argument(
+        "--verbose",
+        action = "store_true",
+        help   = "Display results."
+    )
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = munch.Munch.fromDict(vars(parse_args()))
+    detect(args=args)
+    
+# endregion
