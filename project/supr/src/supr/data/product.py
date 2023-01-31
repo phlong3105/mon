@@ -13,18 +13,18 @@ import cv2
 import numpy as np
 
 import mon
-from supr import constant, rmoi
+from supr import constant as c, rmoi
 from supr.data import base, hand
 
 
-# region Vehicle
+# region Product
 
 # noinspection PyMethodOverriding
 @constant.OBJECT.register(name="product")
 class Product(base.MovingObject):
     """The retail product class.
     
-    See more: :class:`object.MovingObject`.
+    See more: :class:`base.MovingObject`.
     """
     
     min_touched_landmarks: int = 1  # Min hand landmarks touching the object so that it is considered hand-handling.
@@ -33,12 +33,6 @@ class Product(base.MovingObject):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.untouches = 0
-    
-    def update_trajectory(self):
-        """Update trajectory with measurement's center point."""
-        d = mon.distance.euclidean(u=self.trajectory[-1], v=self.current_box_center)
-        if d >= self.min_traveled_distance:
-            self.trajectory.append(self.current_box_center)
     
     def update_moving_state(
         self,
@@ -56,22 +50,22 @@ class Product(base.MovingObject):
               |_________________|___________________________________________________|
                     (mark by a tracker when road_objects's max age > threshold)
         """
-        roi = next((roi for roi in rois if roi.uid == self.current_roi_id), None)
+        roi = next((roi for roi in rois if roi.uid == self.current.roi_uid), None)
         if roi is None:
             return
         
         # From Candidate --> Confirmed
         if self.is_candidate:
             entering_distance = roi.is_box_in_roi(
-                box              = self.current_box,
+                box              = self.current.box,
                 compute_distance = True,
             )
             if (
-                self.hit_streak >= Product.min_hit_streak
-                and entering_distance >= Product.min_entering_distance
-                and self.traveled_distance >= Product.min_traveled_distance
+                self.hit_streak >= self.min_hit_streak
+                and entering_distance >= self.min_entering_distance
+                and self.traveled_distance >= self.min_traveled_distance
             ):
-                self.moving_state = constant.MovingState.Confirmed
+                self.moving_state = c.MovingState.Confirmed
             
         # From Confirmed --> Counting
         elif self.is_confirmed:
@@ -84,33 +78,33 @@ class Product(base.MovingObject):
             # Method 2
             if hands is not None:
                 num_lms_touches = 0
-                box_points      = self.current_box_corners_points
+                box_points      = self.current.box_corners_points
                 for landmarks in hands.multi_hand_landmarks:
                     for l in landmarks:
                         if int(cv2.pointPolygonTest(box_points, l, True)) >= 0:
                             num_lms_touches += 1
-                if num_lms_touches < Product.min_touched_landmarks:
+                if num_lms_touches < self.min_touched_landmarks:
                     self.untouches += 1
                 else:
                     self.untouches = 0
 
-            if roi.is_box_in_roi(box=self.current_box) <= 0:
-                if self.untouches > Product.max_untouches_age:
-                    self.moving_state = constant.MovingState.Counted
+            if roi.is_box_in_roi(box=self.current.box) <= 0:
+                if self.untouches > self.max_untouches_age:
+                    self.moving_state = c.MovingState.Counted
                 # elif (roi.is_box_in_or_touch_roi(box_xyxy=self.first_box) > 0 or
                 #      self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance):
                 #    pass
                     # self.moving_state = MovingState.Counted
                 else:
-                    self.moving_state = constant.MovingState.Counting
+                    self.moving_state = c.MovingState.Counting
             
         # From Counting --> ToBeCounted
         elif self.is_counting:
             if (
-                roi.is_box_center_in_roi(box=self.current_box) < 0
+                roi.is_box_center_in_roi(box=self.current.box) < 0
                 or self.time_since_update >= self.max_age
             ):
-                self.moving_state = constant.MovingState.ToBeCounted
+                self.moving_state = c.MovingState.ToBeCounted
 
         # From ToBeCounted --> Counted
         # Perform when counting the vehicle
@@ -119,12 +113,12 @@ class Product(base.MovingObject):
         elif self.is_counted:
             if (
                 roi.is_box_center_in_roi(
-                    box              = self.current_box,
+                    box              = self.current.box,
                     compute_distance = True
                 ) <= 0
                 or self.time_since_update >= Product.max_age
             ):
-                self.moving_state = constant.MovingState.Exiting
+                self.moving_state = c.MovingState.Exiting
         
         # print(self.untouches, self.moving_state)
         

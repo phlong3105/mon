@@ -5,7 +5,5 @@
 
 from __future__ import annotations
 
-import supr.tracking.motion
 from supr.tracking.base import *
-from supr.tracking.motion import *
 from supr.tracking.sort import *

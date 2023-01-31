@@ -53,7 +53,7 @@ if [ "$task" == "train" ]; then
       --project "../run/train" \
       --name "yolov8x-visdrone-a2i2-of-2160" \
       # --resume
-  elif [ "$machine" == "vsw-ws03" ]; then
+  elif [ "$machine" == "VSW-WS03" ]; then
     python train.py \
       --task "detect" \
       --mode "train" \

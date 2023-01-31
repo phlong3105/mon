@@ -51,12 +51,12 @@ def parse_args():
     )
     parser.add_argument(
         "--model",
-        default = _CURRENT_DIR / "weight" / "yolov8n.pt",
+        default = "weight/yolov8n.pt",
         help    = "Path to model file, i.e. yolov8n.pt, yolov8n.yaml."
     )
     parser.add_argument(
         "--data",
-        default = _CURRENT_DIR / "data" / "visdrone-a2i2-of.yaml",
+        default = "data/visdrone-a2i2-of.yaml",
         help    = "Path to data file, i.e. i.e. coco128.yaml."
     )
     parser.add_argument(
@@ -107,7 +107,7 @@ def parse_args():
     )
     parser.add_argument(
         "--project",
-        default = _CURRENT_DIR / "run" / "train",
+        default = "run/train",
         help    = "Project name."
     )
     parser.add_argument(

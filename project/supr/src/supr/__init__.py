@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements the solution to AI City Challenge: Multi-Class
-Product Counting & Recognition for Automated Retail Checkout.
-"""
+"""This package implements a library for building surveillance applications."""
 
 from __future__ import annotations
 
@@ -13,5 +11,6 @@ from supr.camera import *
 from supr.data import *
 from supr.detection import *
 from supr.io import *
+from supr.motion import *
 from supr.rmoi import *
 from supr.tracking import *

@@ -8,9 +8,9 @@ __pycache__/
 *.so
 *~
 
+*.lock
 *.pt
 *.pth
-
 /.idea/
 /.sync/
 /data/

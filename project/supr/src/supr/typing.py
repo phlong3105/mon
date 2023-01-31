@@ -10,6 +10,7 @@ __all__ = [
     "InstancesType",
     "Ints",
     "MotionType",
+    "MovingStateType",
     "PathType",
     "PathsType",
     "PointsType",
@@ -20,10 +21,11 @@ from typing import Sequence, TypeAlias
 
 import numpy as np
 
-from supr import data, tracking
 from mon.typing import *
+from supr import constant, data, tracking
 
-InstancesType: TypeAlias = data.Instance | Sequence[data.Instance]
-MotionType   : TypeAlias = DictType | str | CallableType | tracking.Motion
-PointsType   : TypeAlias = np.ndarray | list | tuple
-UIDType      : TypeAlias = int | str
+InstancesType  : TypeAlias = data.Instance | Sequence[data.Instance]
+MovingStateType: TypeAlias = str | int | constant.MovingState
+MotionType     : TypeAlias = DictType | str | CallableType | tracking.Motion
+PointsType     : TypeAlias = np.ndarray | list | tuple
+UIDType        : TypeAlias = int | str

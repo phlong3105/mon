@@ -54,7 +54,7 @@ FILE_HANDLER = factory.Factory(name="FileHandler")
 # endregion
 
 
-# region enum.Enum
+# region Enum
 
 class ImageFormat(enum.Enum):
     """Image file formats."""

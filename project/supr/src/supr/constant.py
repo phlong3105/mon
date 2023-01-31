@@ -22,9 +22,14 @@ __all__ = [
 ]
 
 import os
+from typing import TYPE_CHECKING
 
 import mon
 from mon.constant import *
+
+if TYPE_CHECKING:
+    from supr.typing import MovingStateType
+
 
 # region Factory
 
@@ -67,5 +72,52 @@ class MovingState(mon.Enum):
     ToBeCounted = 4  # Mark object to be counted somewhere in this loop iteration.
     Counted     = 5  # Mark object has been counted.
     Exiting     = 6  # Mark object for exiting the ROI or image frame. Let's it die by itself.
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """Return a dictionary mapping strings to enums."""
+        return {
+            "candidate"    : cls.Candidate,
+            "confirmed"    : cls.Confirmed,
+            "counting"     : cls.Counting,
+            "to_be_counted": cls.ToBeCounted,
+            "counted"      : cls.Counted,
+            "existing"     : cls.Exiting,
+        }
+    
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """Return a dictionary mapping integers to enums."""
+        return {
+            0: cls.Candidate,
+            1: cls.Confirmed,
+            2: cls.Counting,
+            3: cls.ToBeCounted,
+            4: cls.Counted,
+            5: cls.Exiting,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> MovingState:
+        """Convert a string to an enum."""
+        assert value.lower() in cls.str_mapping()
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> MovingState:
+        """Convert an integer to an enum."""
+        assert value in cls.int_mapping()
+        return cls.int_mapping()[value]
 
+    @classmethod
+    def from_value(cls, value: MovingStateType) -> MovingState | None:
+        """Convert an arbitrary value to an enum."""
+        if isinstance(value, ImageFormat):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        return None
+    
 # endregion
