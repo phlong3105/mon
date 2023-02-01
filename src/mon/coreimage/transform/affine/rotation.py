@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "rotate", "rotate_horizontal_flip", "rotate_image_box",
+    "rotate", "rotate_horizontal_flip", "rotate_image_bbox",
     "rotate_vertical_flip",
 ]
 
@@ -30,7 +30,7 @@ def rotate(
     """Rotate an image.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
+        image: An image of shape [..., C, H, W].
         angle: Angle to rotate the image.
         center: The center of the affine transformation. If None, use the center
             of the image. Defaults to None.
@@ -81,7 +81,7 @@ def rotate_horizontal_flip(
     """Rotate an image, then flip it vertically.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
+        image: An image of shape [..., C, H, W].
         angle: Angle to rotate the image.
         center: The center of the affine transformation. If None, use the center
             of the image. Defaults to None.
@@ -114,13 +114,13 @@ def rotate_horizontal_flip(
         fill          = fill,
         padding_mode  = padding_mode,
     )
-    image = flipping.horizontal_flip(image=image)
+    image = flipping.flip_horizontal(image=image)
     return image
 
 
-def rotate_image_box(
+def rotate_image_bbox(
     image        : torch.Tensor,
-    box          : torch.Tensor,
+    bbox         : torch.Tensor,
     angle        : float,
     center       : Ints | None           = None,
     interpolation: InterpolationModeType = "bilinear",
@@ -129,11 +129,11 @@ def rotate_image_box(
     padding_mode : PaddingModeType       = "constant",
     drop_ratio   : float                 = 0.0,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Rotate an image and a bounding box.
+    """Rotate an image and a bounding bbox.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
-        box: Bounding box of shape [N, 4] to be rotated.
+        image: An image of shape [..., C, H, W].
+        bbox: Bounding boxes of shape [N, 4] and in [x1, y1, x2, y2] format.
         angle: Angle to rotate the image.
         center: The center of the affine transformation. If None, use the center
             of the image. Defaults to None.
@@ -153,18 +153,18 @@ def rotate_image_box(
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
         padding_mode: A padding mode. Defaults to “constant”.
-        drop_ratio: If the fraction of a bounding box left in the image after
-            being clipped is less than :param:`drop_ratio` the bounding box is
+        drop_ratio: If the fraction of a bounding bbox left in the image after
+            being clipped is less than :param:`drop_ratio` the bounding bbox is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
             Defaults to 0.0.
         
     Returns:
         A rotated image of shape [..., C, H, W].
-        A rotated bounding box of shape [N, 4].
+        A rotated bounding bbox of shape [N, 4].
     """
-    image, box = base.affine_image_box(
+    image, bbox = base.affine_image_bbox(
         image         = image,
-        box           = box,
+        bbox          = bbox,
         angle         = angle,
         translate     = [0, 0],
         scale         = 1.0,
@@ -176,7 +176,7 @@ def rotate_image_box(
         padding_mode  = padding_mode,
         drop_ratio    = drop_ratio,
     )
-    return image, box
+    return image, bbox
 
 
 def rotate_vertical_flip(
@@ -191,7 +191,7 @@ def rotate_vertical_flip(
     """Rotate an image, then flip it vertically.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
+        image: An image of shape [..., C, H, W].
         angle: Angle to rotate the image.
         center: The center of the affine transformation. If None, use the center
             of the image. Defaults to None.
@@ -224,5 +224,5 @@ def rotate_vertical_flip(
         fill          = fill,
         padding_mode  = padding_mode,
     )
-    image = flipping.vertical_flip(image=image)
+    image = flipping.flip_vertical(image=image)
     return image

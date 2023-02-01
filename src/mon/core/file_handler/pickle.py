@@ -22,7 +22,7 @@ from mon.core.typing import PathType
 class PickleHandler(base.FileHandler):
     """Pickle file handler."""
 
-    def load_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
         """Load content from a file.
 
         Args:
@@ -34,7 +34,7 @@ class PickleHandler(base.FileHandler):
         path = pathlib.Path(path)
         return load(path, **kwargs)
 
-    def dump_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
+    def write_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
         """Dump content from a serializable object to a file.
 
         Args:
@@ -45,7 +45,7 @@ class PickleHandler(base.FileHandler):
         kwargs.setdefault("protocol", 4)
         dump(obj, path, **kwargs)
 
-    def dump_to_str(self, obj: Any, **kwargs) -> str:
+    def write_to_string(self, obj: Any, **kwargs) -> str:
         """Dump content from a serializable object to a string.
 
         Args:
@@ -54,7 +54,7 @@ class PickleHandler(base.FileHandler):
         kwargs.setdefault("protocol", 2)
         return dumps(obj, **kwargs)
 
-    def load_from_file(self, path: PathType, mode: str = "r", **kwargs) -> Any:
+    def read_from_file(self, path: PathType, mode: str = "r", **kwargs) -> Any:
         """Load content from a file.
 
         Args:
@@ -65,9 +65,9 @@ class PickleHandler(base.FileHandler):
             File's content.
         """
         path = pathlib.Path(path)
-        return super().load_from_file(path, mode="rb", **kwargs)
+        return super().read_from_file(path, mode="rb", **kwargs)
 
-    def dump_to_file(self, obj: Any, path: PathType, mode: str = "w", **kwargs):
+    def write_to_file(self, obj: Any, path: PathType, mode: str = "w", **kwargs):
         """Dump content from a serializable object to a file.
 
         Args:
@@ -76,6 +76,6 @@ class PickleHandler(base.FileHandler):
             mode: The mode to open the file. Defaults to “w” means write.
         """
         path = pathlib.Path(path)
-        super().dump_to_file(obj, path, mode="wb", **kwargs)
+        super().write_to_file(obj, path, mode="wb", **kwargs)
 
 # endregion

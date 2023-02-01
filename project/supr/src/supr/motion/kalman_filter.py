@@ -20,11 +20,11 @@ from supr.motion import base
 # region Helper Function
 
 def box_xyxy_to_z(box: np.ndarray) -> np.ndarray:
-    """Convert a bounding box from [x1, y1, x2, y2] to the format used by Kalman
+    """Convert a bounding bbox from [x1, y1, x2, y2] to the format used by Kalman
     Filter [cx, cy, s, r], where:
         x1, y1 is the top left.
         x2, y2 is the bottom right.
-        cx, cy is the centre of the box.
+        cx, cy is the centre of the bbox.
         s is the scale/area.
         r is the aspect ratio.
     """
@@ -38,11 +38,11 @@ def box_xyxy_to_z(box: np.ndarray) -> np.ndarray:
 
 
 def box_x_to_xyxy(x: np.ndarray, score: float = None) -> np.ndarray:
-    """Covert a bounding box from the format used in Kalman Filter
+    """Covert a bounding bbox from the format used in Kalman Filter
     [cx, cy, s, r] to [x1, y1, x2, y2], where:
         x1, y1 is the top left.
         x2, y2 is the bottom right.
-        cx, cy is the centre of the box.
+        cx, cy is the centre of the bbox.
         s is the scale/area.
         r is the aspect ratio.
     """
@@ -67,7 +67,7 @@ def box_x_to_xyxy(x: np.ndarray, score: float = None) -> np.ndarray:
 
 @constant.MOTION.register(name="kf_box_motion")
 class KFBoxMotion(base.Motion):
-    """Model a moving object motion by using Kalman Filter on its bounding box
+    """Model a moving object motion by using Kalman Filter on its bounding bbox
     features. See more: :class:`Motion`.
     
     Attributes:
@@ -128,14 +128,14 @@ class KFBoxMotion(base.Motion):
             self.kf.x[0:4] = box_xyxy_to_z(instance.box)
         
     def update(self, instance: ins.Instance, **kwargs):
-        """Updates the state of the motion model with observed box.
+        """Updates the state of the motion model with observed bbox.
 
 		Args:
 			instance: An instance of the tracking object. Get the specific
 			    features used to update the motion model from new measurement of
 			    the object.
 		"""
-        assert hasattr(instance, "box")
+        assert hasattr(instance, "bbox")
         self.time_since_update = 0
         self.history           = []
         self.hits              += 1

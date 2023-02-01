@@ -88,7 +88,7 @@ class GTRain(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("*-R-*.png")),
@@ -102,7 +102,7 @@ class GTRain(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "

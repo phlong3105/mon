@@ -29,13 +29,13 @@ import torch
 from torchvision.transforms import functional
 
 from mon import core
-from mon.coreimage.typing import FloatAnyT, Image, Int2T, Int3T, Ints
+from mon.coreimage.typing import FloatAnyT, Int2T, Int3T, Ints, TensorOrArray
 from mon.coreimage.util import tensor
 
 
 # region Conversion
 
-def correct_image_dimension(image: Image) -> Image:
+def correct_image_dimension(image: np.ndarray) -> np.ndarray:
     """Correct the dimensionality of an image to the correct format used by
     :mod:`matplotlib` and :mod:`cv2`.
     
@@ -45,25 +45,25 @@ def correct_image_dimension(image: Image) -> Image:
     Returns:
         A corrected image ready to be used.
     """
-    assert isinstance(image, torch.Tensor | np.ndarray)
+    assert isinstance(image, np.ndarray)
     assert 3 <= image.ndim <= 4
     assert is_channel_last(image)
-   
-    image = image.clone()
+    
+    image = copy.deepcopy(image)
     if image.ndim == 2:
         pass
     elif image.ndim == 3:
         if image.shape[-1] == 1:
             # Grayscale for proper plt.imshow needs to be [H, W]
-            image = image.squeeze(-1)
+            image = np.squeeze(image, axis=-1)
     elif image.ndim == 4:  # [..., C, H, W] -> [..., H, W, C]
-        image = image.permute(0, 2, 3, 1)
+        image = np.transpose(image, (0, 2, 3, 1))
         if image.shape[-1] == 1:
-            image = image.squeeze(-1)
+            image = np.squeeze(image, axis=-1)
     return image
 
 
-def correct_tensor_dimension(image: torch.Tensor) -> Image:
+def correct_tensor_dimension(image: torch.Tensor) -> torch.Tensor:
     """Correct the dimensionality of image to the correct format used by
     :mod:`torch`. It should be a :class:`torch.Tensor` in channel-first format
     and has shape [..., 1 or B, C, H, W]
@@ -88,7 +88,7 @@ def correct_tensor_dimension(image: torch.Tensor) -> Image:
     return image
 
 
-def to_channel_first(image: Image) -> Image:
+def to_channel_first(image: TensorOrArray) -> TensorOrArray:
     """Convert an image to the channel-first format.
     
     Args:
@@ -102,9 +102,9 @@ def to_channel_first(image: Image) -> Image:
 
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim <= 5
-    image = image.clone()
     
     if isinstance(image, torch.Tensor):
+        image = image.clone()
         if image.ndim == 3:
             image = image.permute(2, 0, 1)
         elif image.ndim == 4:
@@ -112,6 +112,7 @@ def to_channel_first(image: Image) -> Image:
         elif image.ndim == 5:
             image = image.permute(0, 1, 4, 2, 3)
     elif isinstance(image, np.ndarray):
+        image = copy.deepcopy(image)
         if image.ndim == 3:
             image = np.transpose(image, (2, 0, 1))
         elif image.ndim == 4:
@@ -119,14 +120,14 @@ def to_channel_first(image: Image) -> Image:
         elif image.ndim == 5:
             image = np.transpose(image, (0, 1, 4, 2, 3))
     else:
-        raise ValueError(
+        raise TypeError(
             f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
             f"But got: {type(image)}."
         )
     return image
 
 
-def to_channel_last(image: Image) -> Image:
+def to_channel_last(image: TensorOrArray) -> TensorOrArray:
     """Convert an image to the channel-last format.
 
     Args:
@@ -140,9 +141,9 @@ def to_channel_last(image: Image) -> Image:
 
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim <= 5
-    image = image.clone()
     
     if isinstance(image, torch.Tensor):
+        image = image.clone()
         if image.ndim == 3:
             image = image.permute(1, 2, 0)
         elif image.ndim == 4:
@@ -150,6 +151,7 @@ def to_channel_last(image: Image) -> Image:
         elif image.ndim == 5:
             image = image.permute(0, 1, 3, 4, 2)
     elif isinstance(image, np.ndarray):
+        image = copy.deepcopy(image)
         if image.ndim == 3:
             image = np.transpose(image, (1, 2, 0))
         elif image.ndim == 4:
@@ -157,7 +159,7 @@ def to_channel_last(image: Image) -> Image:
         elif image.ndim == 5:
             image = np.transpose(image, (0, 1, 3, 4, 2))
     else:
-        raise ValueError(
+        raise TypeError(
             f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
             f"But got: {type(image)}."
         )
@@ -169,7 +171,7 @@ def to_image(
     keepdim    : bool = True,
     denormalize: bool = False,
 ) -> np.ndarray:
-    """Convert an image from :class:`torch.Tensor` to :class:`np.ndarray`.
+    """Convert an image from :class:`torch.Tensor` to :class:`numpy.ndarray`.
     
     Args:
         image: An image of shape [..., C, H, W] to be converted.
@@ -179,7 +181,7 @@ def to_image(
             False.
         
     Returns:
-        An :class:`np.ndarray` image.
+        An :class:`numpy.ndarray` image.
     """
     assert isinstance(image, torch.Tensor)
     assert 3 <= image.ndim <= 4
@@ -195,8 +197,8 @@ def to_image(
     return image
 
 
-def to_pil_image(image: Image) -> PIL.Image:
-    """Convert an image from :class:`torch.Tensor` or :class:`np.ndarray` to
+def to_pil_image(image: TensorOrArray) -> PIL.Image:
+    """Convert an image from :class:`torch.Tensor` or :class:`numpy.ndarray` to
     :class:`PIL.Image`.
     
     Args:
@@ -211,18 +213,18 @@ def to_pil_image(image: Image) -> PIL.Image:
     elif isinstance(image, np.ndarray):
         return PIL.Image.fromarray(image.astype(np.uint8), "RGB")
     else:
-        raise ValueError(
+        raise TypeError(
             f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
             f"But got: {type(image)}."
         )
 
 
 def to_tensor(
-    image    : Image | PIL.Image,
+    image    : TensorOrArray | PIL.Image,
     keepdim  : bool = True,
     normalize: bool = False,
 ) -> torch.Tensor:
-    """Convert an image from :class:`PIL.Image` or :class:`np.ndarray` to
+    """Convert an image from :class:`PIL.Image` or :class:`numpy.ndarray` to
     :class:`torch.Tensor`. Optionally, convert :param:`image` to channel-first
     format and normalize it.
     
@@ -249,7 +251,7 @@ def to_tensor(
         if mode == "1":
             image = 255 * image
     
-    # Handle :class:`np.ndarray`
+    # Handle :class:`numpy.ndarray`
     if functional._is_numpy(image):
         image = image.copy()
         image = torch.from_numpy(image).contiguous()
@@ -302,7 +304,7 @@ def check_image_size(size: Ints, stride: int = 32) -> int:
     return new_size
 
 
-def get_image_center(image: Image) -> Image:
+def get_image_center(image: TensorOrArray) -> TensorOrArray:
     """Return the center of a given image specified as (x=h/2, y=w/2).
     
     Args:
@@ -315,13 +317,13 @@ def get_image_center(image: Image) -> Image:
     elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2])
     else:
-        raise ValueError(
+        raise TypeError(
             f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
             f"But got: {type(image)}."
         )
 
 
-def get_image_center4(image: Image) -> Image:
+def get_image_center4(image: TensorOrArray) -> TensorOrArray:
     """Return the center of a given image specified as (x=h/2, y=w/2, x=h/2,
     y=w/2).
     
@@ -335,13 +337,13 @@ def get_image_center4(image: Image) -> Image:
     elif isinstance(image, np.ndarray):
         return np.array([h / 2, w / 2, h / 2, w / 2])
     else:
-        raise ValueError(
+        raise TypeError(
             f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
             f"But got: {type(image)}."
         )
 
 
-def get_image_hw(image: Image) -> Int2T :
+def get_image_hw(image: TensorOrArray) -> Int2T :
     """Return height and width value of an image.
     
     Args:
@@ -357,7 +359,7 @@ def get_image_hw(image: Image) -> Int2T :
         return image.shape[-3], image.shape[-2]
     
 
-def get_image_shape(image: Image) -> Int3T :
+def get_image_shape(image: TensorOrArray) -> Int3T :
     """Return channel, height, and width value of an image.
     
     Args:
@@ -376,7 +378,7 @@ def get_image_shape(image: Image) -> Int3T :
 get_image_size: TypeAlias = get_image_hw
 
 
-def get_num_channels(image: Image) -> int:
+def get_num_channels(image: TensorOrArray) -> int:
     """Return the number of channels of an image.
 
     Args:
@@ -422,7 +424,7 @@ def to_size(size: Ints) -> tuple[int, int]:
 
 # region Image Format (Value Type and Channel Type)
 
-def is_channel_first(image: Image) -> bool:
+def is_channel_first(image: TensorOrArray) -> bool:
     """Return True if an image is in the channel-first format. It is assumed
     that if the first dimension is the smallest.
     
@@ -452,7 +454,7 @@ def is_channel_first(image: Image) -> bool:
     return False
 
 
-def is_channel_last(image: Image) -> bool:
+def is_channel_last(image: TensorOrArray) -> bool:
     """Return True if an image is in the channel-first format.
     
     Args:
@@ -461,7 +463,7 @@ def is_channel_last(image: Image) -> bool:
     return not is_channel_first(image=image)
 
 
-def is_color_image(image: Image) -> bool:
+def is_color_image(image: TensorOrArray) -> bool:
     """Return True if an image is a color image. It is assumed that the image
     has 3 or 4 channels.
     """
@@ -470,7 +472,7 @@ def is_color_image(image: Image) -> bool:
     return False
 
 
-def is_integer_image(image: Image) -> bool:
+def is_integer_image(image: TensorOrArray) -> bool:
     """Return True ian image is integer-encoded."""
     assert isinstance(image, torch.Tensor | np.ndarray)
     c = get_num_channels(image=image)
@@ -479,7 +481,7 @@ def is_integer_image(image: Image) -> bool:
     return False
 
 
-def is_normalized(image: Image) -> bool:
+def is_normalized(image: TensorOrArray) -> bool:
     """Return True if an image is normalized."""
     assert isinstance(image, torch.Tensor | np.ndarray)
     if isinstance(image, torch.Tensor):
@@ -487,13 +489,13 @@ def is_normalized(image: Image) -> bool:
     elif isinstance(image, np.ndarray):
         return abs(np.amax(image)) <= 1.0
     else:
-        raise ValueError(
+        raise TypeError(
             f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
             f"But got: {type(image)}."
         )
 
 
-def is_one_hot_image(image: Image) -> bool:
+def is_one_hot_image(image: TensorOrArray) -> bool:
     """Return True if an image is one-hot encoded."""
     assert isinstance(image, torch.Tensor | np.ndarray)
     c = get_num_channels(image)
@@ -503,11 +505,11 @@ def is_one_hot_image(image: Image) -> bool:
 
 
 def denormalize_mean_std(
-    image: torch.Tensor,
+    image: TensorOrArray,
     mean : FloatAnyT = (0.485, 0.456, 0.406),
     std  : FloatAnyT = (0.229, 0.224, 0.225),
     eps  : float     = 1e-6,
-) -> torch.Tensor:
+) -> TensorOrArray:
     """Denormalize an image with mean and standard deviation.
     
     image[channel] = (image[channel] * std[channel]) + mean[channel]
@@ -524,44 +526,51 @@ def denormalize_mean_std(
     Returns:
         A denormalized image.
     """
-    assert isinstance(image, torch.Tensor)
+    assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
-    image = image.clone()
     
-    if not image.is_floating_point():
-        image = image.to(dtype=torch.get_default_dtype())
-    
-    shape  = image.shape
-    device = image.device
-    dtype  = image.dtype
-    if isinstance(mean, float):
-        mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
-    elif isinstance(mean, (list, tuple)):
-        mean = torch.as_tensor(mean, dtype=dtype, device=image.device)
-    elif isinstance(mean, torch.Tensor):
-        mean = mean.to(dtype=dtype, device=image.device)
-    
-    if isinstance(std, float):
-        std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
-    elif isinstance(std, (list, tuple)):
-        std = torch.as_tensor(std, dtype=dtype, device=image.device)
-    elif isinstance(std, torch.Tensor):
-        std = std.to(dtype=dtype, device=image.device)
-        
-    std_inv  = 1.0 / (std + eps)
-    mean_inv = -mean * std_inv
-    std_inv  = std_inv.view(-1, 1, 1)  if std_inv.ndim == 1  else std_inv
-    mean_inv = mean_inv.view(-1, 1, 1) if mean_inv.ndim == 1 else mean_inv
-    image.sub_(mean_inv).div_(std_inv)
+    if isinstance(image, torch.Tensor):
+        image  = image.clone()
+        image  = image.to(dtype=torch.get_default_dtype()) \
+            if not image.is_floating_point() else image
+        shape  = image.shape
+        device = image.devices
+        dtype  = image.dtype
+        if isinstance(mean, float):
+            mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
+        elif isinstance(mean, (list, tuple)):
+            mean = torch.as_tensor(mean, dtype=dtype, device=image.devices)
+        elif isinstance(mean, torch.Tensor):
+            mean = mean.to(dtype=dtype, device=image.devices)
+
+        if isinstance(std, float):
+            std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
+        elif isinstance(std, (list, tuple)):
+            std = torch.as_tensor(std, dtype=dtype, device=image.devices)
+        elif isinstance(std, torch.Tensor):
+            std = std.to(dtype=dtype, device=image.devices)
+            
+        std_inv  = 1.0 / (std + eps)
+        mean_inv = -mean * std_inv
+        std_inv  = std_inv.view(-1, 1, 1)  if std_inv.ndim == 1  else std_inv
+        mean_inv = mean_inv.view(-1, 1, 1) if mean_inv.ndim == 1 else mean_inv
+        image.sub_(mean_inv).div_(std_inv)
+    elif isinstance(image, np.ndarray):
+        raise NotImplementedError(f"This function has not been implemented.")
+    else:
+        raise TypeError(
+            f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
+            f"But got: {type(image)}."
+        )
     return image
 
 
 def normalize_mean_std(
-    image: torch.Tensor,
+    image: TensorOrArray,
     mean : FloatAnyT = (0.485, 0.456, 0.406),
     std  : FloatAnyT = (0.229, 0.224, 0.225),
     eps  : float     = 1e-6,
-) -> torch.Tensor:
+) -> TensorOrArray:
     """Normalize :param:`image` with mean and standard deviation.
     
     image[channel] = (image[channel] * std[channel]) + mean[channel]
@@ -580,43 +589,49 @@ def normalize_mean_std(
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
-    image = image.clone()
-    image = image.to(dtype=torch.float32)
     
-    if not image.is_floating_point():
-        image = image.to(dtype=torch.get_default_dtype())
+    if isinstance(image, torch.Tensor):
+        image  = image.clone()
+        image  = image.to(dtype=torch.get_default_dtype()) \
+            if not image.is_floating_point() else image
+        shape  = image.shape
+        device = image.devices
+        dtype  = image.dtype
+        if isinstance(mean, float):
+            mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
+        elif isinstance(mean, (list, tuple)):
+            mean = torch.as_tensor(mean, dtype=dtype, device=image.devices)
+        elif isinstance(mean, torch.Tensor):
+            mean = mean.to(dtype=dtype, device=image.devices)
         
-    shape  = image.shape
-    device = image.device
-    dtype  = image.dtype
-    if isinstance(mean, float):
-        mean = torch.tensor([mean] * shape[1], device=device, dtype=dtype)
-    elif isinstance(mean, (list, tuple)):
-        mean = torch.as_tensor(mean, dtype=dtype, device=image.device)
-    elif isinstance(mean, torch.Tensor):
-        mean = mean.to(dtype=dtype, device=image.device)
-    
-    if isinstance(std, float):
-        std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
-    elif isinstance(std, (list, tuple)):
-        std = torch.as_tensor(std, dtype=dtype, device=image.device)
-    elif isinstance(std, torch.Tensor):
-        std = std.to(dtype=dtype, device=image.device)
-    std  += eps
-    
-    mean  = mean.view(-1, 1, 1) if mean.ndim == 1 else mean
-    std   = std.view(-1, 1, 1)  if std.ndim == 1  else std
-    image.sub_(mean).div_(std)
+        if isinstance(std, float):
+            std = torch.tensor([std] * shape[1], device=device, dtype=dtype)
+        elif isinstance(std, (list, tuple)):
+            std = torch.as_tensor(std, dtype=dtype, device=image.devices)
+        elif isinstance(std, torch.Tensor):
+            std = std.to(dtype=dtype, device=image.devices)
+        std  += eps
+        
+        mean  = mean.view(-1, 1, 1) if mean.ndim == 1 else mean
+        std   = std.view(-1, 1, 1)  if std.ndim == 1  else std
+        image.sub_(mean).div_(std)
+    elif isinstance(image, np.ndarray):
+        raise NotImplementedError(f"This function has not been implemented.")
+    else:
+        raise TypeError(
+            f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
+            f"But got: {type(image)}."
+        )
     return image
 
 
 def normalize_by_range(
-    image  : torch.Tensor,
-    min    : float        = 0.0,
-    max    : float        = 255.0,
-    new_min: float        = 0.0,
-    new_max: float        = 1.0,
-) -> torch.Tensor:
+    image  : TensorOrArray,
+    min    : float = 0.0,
+    max    : float = 255.0,
+    new_min: float = 0.0,
+    new_max: float = 1.0,
+) -> TensorOrArray:
     """Normalize an image from the range [:param:`min`, :param:`max`] to
     the [:param:`new_min`, :param:`new_max`].
     
@@ -632,14 +647,21 @@ def normalize_by_range(
     """
     assert isinstance(image, torch.Tensor | np.ndarray)
     assert 3 <= image.ndim
-    image = image.clone()
-
-    if not image.is_floating_point():
-        image = image.to(dtype=torch.get_default_dtype())
     
-    ratio = (new_max - new_min) / (max - min)
-    image = (image - min) * ratio + new_min
-    # image = torch.clamp(image, new_min, new_max)
+    if isinstance(image, torch.Tensor):
+        image = image.clone()
+        image = image.to(dtype=torch.get_default_dtype()) \
+            if not image.is_floating_point() else image
+        ratio = (new_max - new_min) / (max - min)
+        image = (image - min) * ratio + new_min
+        # image = torch.clamp(image, new_min, new_max)
+    elif isinstance(image, np.ndarray):
+        raise NotImplementedError(f"This function has not been implemented.")
+    else:
+        raise TypeError(
+            f":param:`image` must be `torch.Tensor` or a `numpy.ndarray`. "
+            f"But got: {type(image)}."
+        )
     return image
 
 

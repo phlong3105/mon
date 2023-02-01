@@ -92,7 +92,7 @@ class DCIM(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "dcim"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -168,7 +168,7 @@ class LIME(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "lime"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -247,7 +247,7 @@ class LOL(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / self.split / "low" / "lol"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -262,7 +262,7 @@ class LOL(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -340,7 +340,7 @@ class LOL226(base.UnlabeledImageDataset):
         subdirs = ["dcim", "fusion", "lime", "mef", "npe", "vip", "vv"]
         
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for subdir in subdirs:
                 pattern = self.root / "train" / "low" / subdir
                 for path in pbar.track(
@@ -417,7 +417,7 @@ class LOL4K(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -493,7 +493,7 @@ class MEF(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "mef"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -569,7 +569,7 @@ class NPE(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "npe"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -645,7 +645,7 @@ class VIP(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "vip"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -721,7 +721,7 @@ class VV(base.UnlabeledImageDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "vv"
             for path in pbar.track(
                 list(pattern.rglob("*")),

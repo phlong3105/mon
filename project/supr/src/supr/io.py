@@ -86,7 +86,7 @@ class ProductCountingWriter:
 		mon.create_dirs(paths=[str(output.parent)])
 		self.output = output
 	
-	def write(self, products: list[data.Product]):
+	def append_results(self, products: list[data.Product]):
 		"""Write counting results.
 
 		Args:
@@ -99,7 +99,7 @@ class ProductCountingWriter:
 			line = f"{self.video_id} {class_id + 1} {int(p.timestamp)}\n"
 			self.lines.append(line)
 	
-	def dump(self):
+	def write_to_file(self):
 		"""Dump all content in :attr:`lines` to :attr:`output` file."""
 		if not self.output.is_txt_file():
 			self.init_writer()

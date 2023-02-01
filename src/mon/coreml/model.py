@@ -411,7 +411,7 @@ class Model(lightning.LightningModule, ABC):
             Defaults to None.
         classlabels: A :class:`ClassLabels` object that contains all labels in
             the dataset. Defaults to None.
-        weights: Initialize weights from weights.
+        weights: Initialize model's weights from weights.
             - If True, use the original weights described by the author
               (usually, ImageNet or COCO). By default, it is the first element
               in the `pretrained_weights` dictionary.

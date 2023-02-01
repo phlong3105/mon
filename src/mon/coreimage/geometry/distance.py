@@ -4,7 +4,7 @@
 """This module implements distance functions.
 
 In this module the array-like type can be np.ndarray, torch.Tensor, or
-Sequence[Number]. We try to support both :class:`np.ndarray` and
+Sequence[Number]. We try to support both :class:`numpy.ndarray` and
 :class:`torch.Tensor`.
 
 See Also:
@@ -51,7 +51,7 @@ def dice(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Dice dissimilarity between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.dice(u=u, v=v, w=w)
     else:
@@ -79,7 +79,7 @@ def hamming(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Hamming distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.hamming(u=u, v=v, w=w)
     else:
@@ -108,7 +108,7 @@ def jaccard(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Jaccard distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.jaccard(u=u, v=v, w=w)
     else:
@@ -137,7 +137,7 @@ def kulczynski1(u: Any, v: Any, *, w: Any = None) -> float | torch.Tensor:
         The Kulczynski 1 distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.kulczynski1(u=u, v=v, w=w)
     else:
@@ -166,7 +166,7 @@ def rogerstanimoto(u: Any, v: Any, *, w: Any = None) -> float | torch.Tensor:
         The Rogers-Tanimoto distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.rogerstanimoto(u=u, v=v, w=w)
     else:
@@ -195,7 +195,7 @@ def russellrao(u: Any, v: Any, *, w: Any = None) -> float | torch.Tensor:
         The Russell-Rao distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.russellrao(u=u, v=v, w=w)
     else:
@@ -225,7 +225,7 @@ def sokalmichener(u: Any, v: Any, *, w: Any = None) -> float | torch.Tensor:
         The Sokal-Michener distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.sokalmichener(u=u, v=v, w=w)
     else:
@@ -254,7 +254,7 @@ def sokalsneath(u: Any, v: Any, *, w: Any = None) -> float | torch.Tensor:
         The Sokal-Sneath distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.sokalsneath(u=u, v=v, w=w)
     else:
@@ -282,7 +282,7 @@ def yule(u: Any, v: Any, *, w: Any = None) -> float | torch.Tensor:
         The Yule distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.yule(u=u, v=v, w=w)
     else:
@@ -312,7 +312,7 @@ def braycurtis(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Bray-Curtis distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.braycurtis(u=u, v=v, w=w)
     else:
@@ -336,7 +336,7 @@ def canberra(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Canberra distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.canberra(u=u, v=v, w=w)
     else:
@@ -360,7 +360,7 @@ def chebyshev(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Chebyshev distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.chebyshev(u=u, v=v, w=w)
     else:
@@ -385,7 +385,7 @@ def cityblock(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.cityblock(u=u, v=v, w=w)
     else:
@@ -410,7 +410,7 @@ def correlation(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The correlation distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.correlation(u=u, v=v, w=w)
     else:
@@ -434,7 +434,7 @@ def cosine(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Cosine distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.cosine(u=u, v=v, w=w)
     else:
@@ -458,7 +458,7 @@ def euclidean(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         The Euclidean distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.euclidean(u=u, v=v, w=w)
     else:
@@ -483,7 +483,7 @@ def mahalanobis(u: Any, v: Any, VI: Any) -> float | torch.Tensor:
         The Mahalanobis distance between 1-D arrays :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.mahalanobis(u=u, v=v, VI=VI)
     else:
@@ -507,7 +507,7 @@ def minkowski(u: Any, v: Any, o: int = 2, w: Any = None) -> float | torch.Tensor
         The Minkowski distance between vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.minkowski(u=u, v=v, p=o, w=w)
     else:
@@ -533,7 +533,7 @@ def seuclidean(u: Any, v: Any, V: Any) -> float | torch.Tensor:
         :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.seuclidean(u=u, v=v, V=V)
     else:
@@ -558,7 +558,7 @@ def sqeuclidean(u: Any, v: Any, w: Any = None) -> float | torch.Tensor:
         :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.sqeuclidean(u=u, v=v, w=w)
     else:
@@ -580,7 +580,7 @@ def angle(u: Any, v: Any) -> float:
         The angle distance between directed vectors :param:`u` and :param:`v`.
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):
         vec1 = np.array([u[-1][0] - u[0][0], u[-1][1] - u[0][1]])
         vec2 = np.array([v[-1][0] - v[0][0], v[-1][1] - v[0][1]])
@@ -639,7 +639,7 @@ def directed_hausdorff(
         (3, 3)
     """
     if isinstance(u, torch.Tensor) and type(u) == type(v):
-        raise TypeError(f"This function has not been implemented.")
+        raise NotImplementedError(f"This function has not been implemented.")
     elif type(u) == type(v):  # For other cases, we use :mod:`scipy` package.
         return scipy.spatial.distance.directed_hausdorff(u=u, v=v, seed=seed)
     else:

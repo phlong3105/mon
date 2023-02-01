@@ -23,7 +23,7 @@ from mon.core.typing import PathType
 class XMLHandler(base.FileHandler):
     """XML file handler."""
 
-    def load_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
         """Load content from a file.
 
         Args:
@@ -35,7 +35,7 @@ class XMLHandler(base.FileHandler):
         doc = parse(path.read())
         return doc
 
-    def dump_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
+    def write_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
         """Dump content from a serializable object to a file.
 
         Args:
@@ -47,7 +47,7 @@ class XMLHandler(base.FileHandler):
         with open(path, "w") as path:
             path.write(unparse(obj, pretty=True))
 
-    def dump_to_str(self, obj: Any, **kwargs) -> str:
+    def write_to_string(self, obj: Any, **kwargs) -> str:
         """Dump content from a serializable object to a string.
 
         Args:

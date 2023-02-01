@@ -68,7 +68,7 @@ def reduce_loss(
         if weight is None:
             return torch.sum(loss)
         else:
-            if weight.device != loss.device:
+            if weight.devices != loss.device:
                 weight.to(loss.device)
             if weight.ndim != loss.ndim:
                 raise ValueError(
@@ -495,7 +495,7 @@ class EdgeLoss(Loss):
         return loss
         
     def conv_gauss(self, image: torch.Tensor) -> torch.Tensor:
-        if self.kernel.device != image.device:
+        if self.kernel.devices != image.device:
             self.kernel = self.kernel.to(image.device)
         n_channels, _, kw, kh = self.kernel.shape
         image = functional.pad(image, (kw // 2, kh // 2, kw // 2, kh // 2), mode="replicate")
@@ -780,8 +780,8 @@ class PerceptualLoss(Loss):
         self.vgg.freeze()
      
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        if self.vgg.device != input[0].device:
-            self.vgg = self.vgg.to(input[0].device)
+        if self.vgg.device != input[0].devices:
+            self.vgg = self.vgg.to(input[0].devices)
         input_feats  = self.vgg(input)
         target_feats = self.vgg(target)
         loss         = self.mse(input=input_feats, target=target_feats)
@@ -919,10 +919,10 @@ class StdLoss(Loss):
         self.mse    = MSELoss(reduction=reduction)
      
     def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        if self.blur.device != input[0].device:
-            self.blur = self.blur.to(input[0].device)
-        if self.image.device != input[0].device:
-            self.image = self.image.to(input[0].device)
+        if self.blur.device != input[0].devices:
+            self.blur = self.blur.to(input[0].devices)
+        if self.image.device != input[0].devices:
+            self.image = self.image.to(input[0].devices)
         
         input_mean = torch.mean(input, 1, keepdim=True)
         loss       = self.mse(

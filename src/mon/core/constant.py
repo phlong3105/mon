@@ -173,7 +173,7 @@ class MemoryUnit(enum.Enum):
         }
     
     @classmethod
-    def from_str(cls, value: str) -> MemoryUnit:
+    def create_from_str(cls, value: str) -> MemoryUnit:
         """Convert a string to an enum."""
         assert value.lower() in cls.str_mapping()
         return cls.str_mapping()[value.lower()]
@@ -190,7 +190,7 @@ class MemoryUnit(enum.Enum):
         if isinstance(value, MemoryUnit):
             return value
         if isinstance(value, str):
-            return cls.from_str(value)
+            return cls.create_from_str(value)
         if isinstance(value, int):
             return cls.from_int(value)
         return None

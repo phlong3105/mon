@@ -13,10 +13,10 @@ __all__ = [
     "MemoryUnitType", "Number", "PathType", "PathsType", "Strs",
     "VideoFormatType",
     # Extend :mod:`mon.coreimage.typing`
-    "AppleRGBType", "BBoxFormatType", "BBoxFormatType", "BBoxType",
-    "BasicRGBType", "BorderTypeType", "CFAType", "DistanceMetricType", "Image",
-    "Images", "InterpolationModeType", "MaskType", "PaddingModeType",
-    "PaddingModeType", "PointsType", "RGBType", "VisionBackendType",
+    "AppleRGBType", "BBoxFormatType", "BBoxFormatType", "BasicRGBType",
+    "BorderTypeType", "CFAType", "DistanceMetricType", "InterpolationModeType",
+    "PaddingModeType", "PaddingModeType", "RGBType", "TensorOrArray",
+    "VisionBackendType",
     # Extend :mod:`mon.coreml.typing`
     "CallbackType", "CallbacksType", "ClassLabelsType", "EpochOutput",
     "LRSchedulerType", "LRSchedulersType", "LoggerType", "LoggersType",

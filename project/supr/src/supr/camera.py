@@ -82,7 +82,7 @@ class Camera(ABC):
 
     @abstractmethod
     def draw(self, drawing: np.ndarray, elapsed_time: float) -> np.ndarray:
-        """Visualize the results on the drawing.
+        """Visualize the results on the image.
 
         Args:
             drawing (np.ndarray):
@@ -91,7 +91,7 @@ class Camera(ABC):
                 Elapsed time per iteration.
 
         Returns:
-            drawing (np.ndarray):
+            image (np.ndarray):
                 Drawn canvas.
         """
         pass

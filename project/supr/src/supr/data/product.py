@@ -20,7 +20,7 @@ from supr.data import base, hand
 # region Product
 
 # noinspection PyMethodOverriding
-@constant.OBJECT.register(name="product")
+@c.OBJECT.register(name="product")
 class Product(base.MovingObject):
     """The retail product class.
     
@@ -71,7 +71,7 @@ class Product(base.MovingObject):
         elif self.is_confirmed:
             # NOTE: Here we want to look for non-hand-handling objects
             # Method 1
-            # if (roi.is_box_in_or_touch_roi(box_xyxy=self.detections[0].box) > 0 or
+            # if (roi.is_box_in_or_touch_roi(box_xyxy=self.detections[0].bbox) > 0 or
             #     self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance):
             #    self.moving_state = MovingState.Counted
             
@@ -123,7 +123,7 @@ class Product(base.MovingObject):
         # print(self.untouches, self.moving_state)
         
     def draw(self, drawing: np.ndarray, **kwargs) -> np.ndarray:
-        """Draw the current object on the :param:`drawing`."""
+        """Draw the current object on the :param:`image`."""
         if self.moi_uid is not None:
             color = mon.AppleRGB.values()[self.moi_uid]
         else:
@@ -138,10 +138,10 @@ class Product(base.MovingObject):
             base.MovingObject.draw(self, drawing=drawing, label=True, color=color, **kwargs)
             self.draw_trajectory(drawing=drawing)
         elif self.is_counted:
-            # base.MovingObject.draw(self, drawing=drawing, label=False, color=color, **kwargs)
+            # base.MovingObject.draw(self, image=image, label=False, color=color, **kwargs)
             self.draw_trajectory(drawing=drawing)
         elif self.is_exiting:
-            # base.MovingObject.draw(self, drawing=drawing, label=True, color=color, **kwargs)
+            # base.MovingObject.draw(self, image=image, label=True, color=color, **kwargs)
             self.draw_trajectory(drawing=drawing)
         return drawing
     

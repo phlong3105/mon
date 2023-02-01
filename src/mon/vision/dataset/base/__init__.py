@@ -3,7 +3,7 @@
 
 """This package implements label and dataset types used in vision tasks and
 datasets. We try to support all possible data types: :class:`torch.Tensor`,
-:class:`np.ndarray`, or :class:`Sequence`, but we prioritize
+:class:`numpy.ndarray`, or :class:`Sequence`, but we prioritize
 :class:`torch.Tensor`.
 """
 

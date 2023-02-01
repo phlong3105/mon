@@ -36,7 +36,7 @@ class Instance:
     Attributes:
         uid: An unique ID. Defaults to None.
         roi_uid: The unique ID of the ROI containing the
-        box: A bounding box in (x1, y1, x2, y2) format.
+        box: A bounding bbox in (x1, y1, x2, y2) format.
         polygon: A list of points representing an instance mask. Defaults to
             None.
         confidence: A confidence score. Defaults to None.
@@ -68,20 +68,20 @@ class Instance:
         
     @property
     def box_cxcyrh(self):
-        return mon.box_xyxy_to_cxcyrh(box=self.box)
+        return mon.bbox_xyxy_to_cxcyrh(bbox=self.box)
 
     @property
     def box_center(self):
-        return mon.get_box_center(box=self.box)
+        return mon.get_bbox_center(bbox=self.box)
     
     @property
     def box_tl(self):
-        """The box's top left corner."""
+        """The bbox's top left corner."""
         return self.box[0:2]
 
     @property
     def box_corners_points(self) -> np.ndarray:
-        return mon.get_box_corners_points(box=self.box)
+        return mon.get_bbox_corners_points(bbox=self.box)
     
     def draw(
         self,
@@ -91,7 +91,7 @@ class Instance:
         label  : bool        = True,
         color  : Ints | None = None
     ) -> np.ndarray:
-        """Draw the current object on the :param:`drawing`."""
+        """Draw the current object on the :param:`image`."""
         color = color \
             or (self.classlabel["color"] if self.classlabel is not None
                 else (255, 255, 255))

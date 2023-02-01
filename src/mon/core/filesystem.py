@@ -8,9 +8,9 @@ and their components.
 from __future__ import annotations
 
 __all__ = [
-    "clear_cache", "copy_file_to", "create_dirs", "delete_files", "get_hash",
-    "get_latest_file", "get_next_file_version", "has_subdir", "list_files",
-    "list_subdirs",
+    "copy_file_to", "create_dirs", "delete_cache", "delete_files", "get_files",
+    "get_hash", "get_latest_file", "get_next_file_version", "get_subdirs",
+    "has_subdir",
 ]
 
 import glob
@@ -21,9 +21,9 @@ from mon.core import builtins, pathlib, rich
 from mon.core.typing import PathsType, PathType, Strs
 
 
-# region Filesystem
+# region Alteration
 
-def clear_cache(path: PathType, recursive: bool = True):
+def delete_cache(path: PathType, recursive: bool = True):
     r"""Clears cache files in a directory and subdirectories.
     
     Args:
@@ -33,6 +33,43 @@ def clear_cache(path: PathType, recursive: bool = True):
     """
     delete_files(files=path, extension=".cache", recursive=recursive)
 
+
+def delete_files(
+    files    : PathsType = "",
+    dirs     : PathsType = "",
+    extension: str       = "",
+    recursive: bool      = True
+):
+    """Delete files in directories recursively.
+    
+    Args:
+        files: A list of deleting files.
+        dirs: A list of directories to search for the :param:`files`.
+        extension: A specific file extension. Defaults to ““.
+        recursive: If True, recursively look for the :param:`files` in
+            subdirectories. Defaults to True.
+    """
+    files     = builtins.to_list(files)
+    files     = [pathlib.Path(f) for f in files if f is not None]
+    files     = [f for f in files if f.is_file()]
+    files     = builtins.unique(files)
+    dirs      = builtins.to_list(dirs)
+    dirs      = [pathlib.Path(d) for d in dirs if d is not None]
+    dirs      = builtins.unique(dirs)
+    extension = f".{extension}" if "." not in extension else extension
+    for d in dirs:
+        if recursive:
+            files += list(d.rglob(*{extension}))
+        else:
+            files += list(d.glob(extension))
+    for f in files:
+        rich.console.log(f"Deleting {f}.")
+        f.unlink()
+
+# endregion
+
+
+# region Creation
 
 def copy_file_to(file: PathType, dst: PathType):
     """Copy a file to a new directory.
@@ -68,45 +105,36 @@ def create_dirs(paths: PathsType, recreate: bool = False):
     except Exception as err:
         rich.console.log(f"Cannot create directory: {err}.")
 
+# endregion
 
-def delete_files(
-    files    : PathsType = "",
-    dirs     : PathsType = "",
-    extension: str       = "",
-    recursive: bool      = True
-):
-    """Delete files in directories recursively.
-    
-    Args:
-        files: A list of deleting files.
-        dirs: A list of directories to search for the :param:`files`.
-        extension: A specific file extension. Defaults to ““.
-        recursive: If True, recursively look for the :param:`files` in
-            subdirectories. Defaults to True.
-    """
-    files     = builtins.to_list(files)
-    files     = [pathlib.Path(f) for f in files if f is not None]
-    files     = [f for f in files if f.is_file()]
-    files     = builtins.unique(files)
-    dirs      = builtins.to_list(dirs)
-    dirs      = [pathlib.Path(d) for d in dirs if d is not None]
-    dirs      = builtins.unique(dirs)
-    extension = f".{extension}" if "." not in extension else extension
-    for d in dirs:
-        if recursive:
-            files += list(d.rglob(*{extension}))
-        else:
-            files += list(d.glob(extension))
-    for f in files:
-        rich.console.log(f"Deleting {f}.")
-        f.unlink()
 
+# region Obtainment
 
 def get_hash(files: PathsType) -> int:
     """Get the total size (in bytes) of all files."""
     files = builtins.to_list(files)
     files = [pathlib.Path(f) for f in files if f is not None]
     return sum(f.stat().st_size for f in files if f.is_file())
+
+
+def get_files(patterns: Strs) -> list[PathType]:
+    """List all files matching given patterns.
+    
+    Args:
+        patterns: A list of file patterns.
+    
+    Returns:
+        A list of unique file paths.
+    """
+    patterns    = builtins.to_list(patterns)
+    patterns    = [p for p in patterns if p is not None]
+    patterns    = builtins.unique(patterns)
+    image_paths = []
+    for pattern in patterns:
+        for abs_path in glob.glob(pattern):
+            if os.path.isfile(abs_path):
+                image_paths.append(pathlib.Path(abs_path))
+    return builtins.unique(image_paths)
 
 
 def get_latest_file(path: PathType) -> pathlib.Path | None:
@@ -162,30 +190,10 @@ def has_subdir(path: PathType, name: str) -> bool:
         path: A path to the directory.
         name: The name of the subdirectory to search for.
     """
-    return name in list_subdirs(path)
+    return name in get_subdirs(path)
 
 
-def list_files(patterns: Strs) -> list[PathType]:
-    """List all files matching given patterns.
-    
-    Args:
-        patterns: A list of file patterns.
-    
-    Returns:
-        A list of unique file paths.
-    """
-    patterns    = builtins.to_list(patterns)
-    patterns    = [p for p in patterns if p is not None]
-    patterns    = builtins.unique(patterns)
-    image_paths = []
-    for pattern in patterns:
-        for abs_path in glob.glob(pattern):
-            if os.path.isfile(abs_path):
-                image_paths.append(pathlib.Path(abs_path))
-    return builtins.unique(image_paths)
-
-
-def list_subdirs(path: PathType | None) -> list[PathType] | None:
+def get_subdirs(path: PathType | None) -> list[PathType] | None:
     """List all subdirectories inside a directory.
     
     Args:

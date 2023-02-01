@@ -61,9 +61,9 @@ class Motion(ABC):
         self.age               = age
         self.time_since_update = time_since_update
         self.history           = []
-        # Store all the `predict` position of track in z-bounding box value,
+        # Store all the `predict` position of track in z-bounding bbox value,
         # these positions appear while no bounding matches the track if any
-        # bounding box matches the track, then history = [].
+        # bounding bbox matches the track, then history = [].
     
     @abstractmethod
     def update(self, instance: ins.Instance, *args, **kwargs):

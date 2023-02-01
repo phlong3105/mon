@@ -98,7 +98,7 @@ class A2I2Haze(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / self.split / "dehazing" / "haze-images"
             for path in pbar.track(
                 list(pattern.rglob("*.jpg")),
@@ -112,7 +112,7 @@ class A2I2Haze(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} "
@@ -189,7 +189,7 @@ class A2I2HazeDet(base.ImageDetectionDataset):
             )
 
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / "train" / "detection" / "hazefree-images"
             elif self.split == "dry-run":
@@ -211,7 +211,7 @@ class A2I2HazeDet(base.ImageDetectionDataset):
         ann_files = self.annotation_files()
         
         self.labels: list[base.DetectionsLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for i in pbar.track(
                 range(len(ann_files)),
                 description=f"Listing {self.__class__.__name__} "
@@ -228,8 +228,8 @@ class A2I2HazeDet(base.ImageDetectionDataset):
                 for _, l in enumerate(labels):
                     id              = l[0]
                     box_xyxy        = torch.Tensor(l[1:5])
-                    box_cxcywh_norm = ci.box_xyxy_to_cxcywhn(
-                        box    = box_xyxy,
+                    box_cxcywh_norm = ci.bbox_xyxy_to_cxcywhn(
+                        bbox= box_xyxy,
                         height = shape[0],
                         width  = shape[1],
                     )

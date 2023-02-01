@@ -22,7 +22,7 @@ The documents are organized following the [Diátaxis framework](https://diataxis
 (four types: tutorials, how-to guides, technical reference, and explanation).
 
 - [Explanation](explanation/index.md): Explaining core API.
-- [Tutorials](tutorials/index.md): Example usages of the API.
+- [Tutorials](tutorial/index.md): Example usages of the API.
 - [How-To](how-to/index.md): Solutions to specific problems.
 - [Reference](reference/index.md): 
 

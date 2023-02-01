@@ -23,7 +23,7 @@ from mon.core.typing import PathType
 class YAMLHandler(base.FileHandler):
     """YAML file handler."""
     
-    def load_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
         """Load content from a file.
         
         Args:
@@ -35,7 +35,7 @@ class YAMLHandler(base.FileHandler):
         kwargs.setdefault("Loader", FullLoader)
         return load(path, **kwargs)
 
-    def dump_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
+    def write_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
         """Dump content from a serializable object to a file.
 
         Args:
@@ -46,7 +46,7 @@ class YAMLHandler(base.FileHandler):
         kwargs.setdefault("Dumper", Dumper)
         dump(obj, path, **kwargs)
 
-    def dump_to_str(self, obj: Any, **kwargs) -> str:
+    def write_to_string(self, obj: Any, **kwargs) -> str:
         """Dump content from a serializable object to a string.
 
         Args:

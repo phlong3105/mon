@@ -115,7 +115,7 @@ class RESIDEHSTS(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "sots" / "hsts"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -129,7 +129,7 @@ class RESIDEHSTS(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -218,7 +218,7 @@ class RESIDEITS(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "its" / self.split
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -232,7 +232,7 @@ class RESIDEITS(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -321,7 +321,7 @@ class RESIDEITSv2(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "its_v2"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -336,7 +336,7 @@ class RESIDEITSv2(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -425,7 +425,7 @@ class RESIDEOTS(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "ots"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.jpg")),
@@ -439,7 +439,7 @@ class RESIDEOTS(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -528,7 +528,7 @@ class RESIDESOTS(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "sots"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -542,7 +542,7 @@ class RESIDESOTS(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -631,7 +631,7 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "sots" / "indoor"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -645,7 +645,7 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -734,7 +734,7 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
             )
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "sots" / "outdoor"
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -748,7 +748,7 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing RESIDE-SOTS Outdoor {self.split} labels"

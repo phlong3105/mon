@@ -3,7 +3,7 @@
 
 """This module implements multiple label types used in vision tasks and
 datasets. We try to support all possible data types: :class:`torch.Tensor`,
-:class:`np.ndarray`, or :class:`Sequence`, but we prioritize
+:class:`numpy.ndarray`, or :class:`Sequence`, but we prioritize
 :class:`torch.Tensor`.
 """
 
@@ -27,8 +27,8 @@ import torch
 from mon import core, coreimage as ci, coreml
 from mon.vision import constant
 from mon.vision.typing import (
-    BBoxType, DictType, Image, IntAnyT, LogitsType, MaskType, PathType,
-    PointsType, VisionBackendType,
+    DictType, Image, IntAnyT, LogitsType, PathType, TensorOrArray,
+    VisionBackendType,
 )
 
 ClassLabel  = coreml.ClassLabel
@@ -116,7 +116,7 @@ class DetectionLabel(coreml.Label):
         bbox: A list of relative bounding boxes' coordinates in the range of
             [0.0, 1.0] in the normalized xywh format.
         mask: Instance segmentation masks for the object within its bounding
-            box, which should be a binary (0/1) 2D sequence or a binary integer
+            bbox, which should be a binary (0/1) 2D sequence or a binary integer
             tensor. Defaults to None
         confidence: A confidence value in [0.0, 1.0] for the detection. Defaults
             to 1.0.
@@ -124,12 +124,12 @@ class DetectionLabel(coreml.Label):
     
     def __init__(
         self,
-        index     : int             = -1,
-        id        : int             = -1,
-        label     : str             = "",
-        bbox      : BBoxType        = [],
-        mask      : MaskType | None = None,
-        confidence: float           = 1.0,
+        index     : int                  = -1,
+        id        : int                  = -1,
+        label     : str                  = "",
+        bbox      : TensorOrArray        = [],
+        mask      : TensorOrArray | None = None,
+        confidence: float                = 1.0,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -147,7 +147,7 @@ class DetectionLabel(coreml.Label):
         self.bbox = bbox
 
     @classmethod
-    def from_mask(cls, mask: MaskType, label: str, **kwargs) -> DetectionLabel:
+    def from_mask(cls, mask: TensorOrArray, label: str, **kwargs) -> DetectionLabel:
         """Create a :class:`DetectionLabel` object with its :param:`mask`
         attribute populated from the given full image mask. The instance mask
         for the object is extracted by computing the bounding rectangle of the
@@ -181,7 +181,7 @@ class DetectionLabel(coreml.Label):
     ) -> PolylineLabel:
         """Return a :class:`PolylineLabel` object of this instance. If the
         detection has a mask, the returned polyline will trace the boundary of
-        the mask. Otherwise, the polyline will trace the bounding box itself.
+        the mask. Otherwise, the polyline will trace the bounding bbox itself.
         
         Args:
             tolerance: A tolerance, in pixels, when generating an approximate
@@ -196,9 +196,9 @@ class DetectionLabel(coreml.Label):
         
     def to_segmentation(
         self,
-        mask      : MaskType | None = None,
-        frame_size: IntAnyT  | None = None,
-        target    : int             = 255
+        mask      : TensorOrArray | None = None,
+        frame_size: IntAnyT       | None = None,
+        target    : int                  = 255
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this instance. The
         detection must have an instance mask, i.e., :param:`mask` attribute must
@@ -262,9 +262,9 @@ class DetectionsLabel(coreml.Label):
     
     def to_segmentation(
         self,
-        mask      : MaskType | None = None,
-        frame_size: IntAnyT  | None = None,
-        target    : int             = 255
+        mask      : TensorOrArray | None = None,
+        frame_size: IntAnyT       | None = None,
+        target    : int                  = 255
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this instance. Only
         detections with instance masks (i.e., their :param:`mask` attributes
@@ -319,7 +319,7 @@ class VOCDetectionsLabel(DetectionsLabel):
               identify (i.e., class_id).
             - pose: Specify the skewness or orientation of the image. Defaults
               to “Unspecified”, which means that the image isn't skewed.
-            - truncated: Indicates that the bounding box specified for the
+            - truncated: Indicates that the bounding bbox specified for the
               object doesn't correspond to the full extent of the object. For
               example, if an object is visible partially in the image, then we
               set truncated to 1. If the object is fully visible, then the set
@@ -370,7 +370,7 @@ class VOCDetectionsLabel(DetectionsLabel):
         path = core.Path(path)
         assert path.is_xml_file()
         
-        xml_data = core.load_from_file(path)
+        xml_data = core.read_from_file(path)
         assert "annotation" in xml_data
        
         annotation = xml_data["annotation"]
@@ -392,7 +392,8 @@ class VOCDetectionsLabel(DetectionsLabel):
             bndbox     = o.get["bndbox"]
             bbox       = torch.FloatTensor([bndbox["xmin"], bndbox["ymin"],
                                             bndbox["xmax"], bndbox["ymax"]])
-            bbox       = ci.box_xyxy_to_cxcywhn(box=bbox, height=height, width=width)
+            bbox       = ci.bbox_xyxy_to_cxcywhn(
+                bbox=bbox, height=height, width=width)
             confidence = o.get("confidence", 1.0)
             truncated  = o.get("truncated" , 0)
             difficult  = o.get("difficult" , 0)
@@ -633,11 +634,11 @@ class KeypointLabel(coreml.Label):
     
     def __init__(
         self,
-        index     : int        = -1,
-        id        : int        = -1,
-        label     : str        = "",
-        points    : PointsType = [],
-        confidence: float      = 1.0,
+        index     : int           = -1,
+        id        : int           = -1,
+        label     : str           = "",
+        points    : TensorOrArray = [],
+        confidence: float         = 1.0,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -708,13 +709,13 @@ class PolylineLabel(coreml.Label):
     
     def __init__(
         self,
-        index     : int        = -1,
-        id        : int        = -1,
-        label     : str        = "",
-        points    : PointsType = [],
-        closed    : bool       = False,
-        filled    : bool       = False,
-        confidence: float      = 1.0,
+        index     : int           = -1,
+        id        : int           = -1,
+        label     : str           = "",
+        points    : TensorOrArray = [],
+        closed    : bool          = False,
+        filled    : bool          = False,
+        confidence: float         = 1.0,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -733,7 +734,7 @@ class PolylineLabel(coreml.Label):
     @classmethod
     def from_mask(
         cls,
-        mask     : MaskType,
+        mask     : TensorOrArray,
         label    : str = "",
         tolerance: int = 2,
         **kwargs
@@ -768,7 +769,7 @@ class PolylineLabel(coreml.Label):
         frame_size: IntAnyT | None = None,
     ) -> DetectionLabel:
         """Return a :class:`DetectionLabel` object of this instance whose
-        bounding box tightly encloses the polyline. If a :param:`mask_size` is
+        bounding bbox tightly encloses the polyline. If a :param:`mask_size` is
         provided, an instance mask of the specified size encoding the polyline
         shape is included.
        
@@ -790,10 +791,10 @@ class PolylineLabel(coreml.Label):
     
     def to_segmentation(
         self,
-        mask      : MaskType | None = None,
-        frame_size: IntAnyT  | None = None,
-        target    : int             = 255,
-        thickness : int             = 1,
+        mask      : TensorOrArray | None = None,
+        frame_size: IntAnyT       | None = None,
+        target    : int                  = 255,
+        thickness : int                  = 1,
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this class. Only
         object with instance masks (i.e., their :param:`mask` attributes
@@ -863,10 +864,10 @@ class PolylinesLabel(coreml.Label):
     
     def to_segmentation(
         self,
-        mask      : MaskType | None = None,
-        frame_size: IntAnyT  | None = None,
-        target    : int             = 255,
-        thickness : int             = 1,
+        mask      : TensorOrArray | None = None,
+        frame_size: IntAnyT       | None = None,
+        target    : int                  = 255,
+        thickness : int                  = 1,
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this instance. Only
         polylines with instance masks (i.e., their :param:`mask` attributes
@@ -948,13 +949,13 @@ class SegmentationLabel(coreml.Label):
     
     def __init__(
         self,
-        id            : int               = uuid.uuid4().int,
-        name          : str      | None   = None,
-        path          : PathType | None   = None,
-        mask          : MaskType | None   = None,
-        load_on_create: bool              = False,
-        keep_in_memory: bool              = False,
-        backend       : VisionBackendType = constant.VISION_BACKEND,
+        id            : int                    = uuid.uuid4().int,
+        name          : str           | None   = None,
+        path          : PathType      | None   = None,
+        mask          : TensorOrArray | None   = None,
+        load_on_create: bool                   = False,
+        keep_in_memory: bool                   = False,
+        backend       : VisionBackendType      = constant.VISION_BACKEND,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)

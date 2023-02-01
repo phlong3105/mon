@@ -40,7 +40,7 @@ class JSONHandler(base.FileHandler):
         raise TypeError(f"{type(obj)} is not supported for json dump.")
 
     # noinspection PyTypeChecker
-    def load_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
         """Load content from a file.
 
         Args:
@@ -52,7 +52,7 @@ class JSONHandler(base.FileHandler):
         return load(path)
 
     # noinspection PyTypeChecker
-    def dump_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
+    def write_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
         """Dump content from a serializable object to a file.
 
         Args:
@@ -63,7 +63,7 @@ class JSONHandler(base.FileHandler):
         kwargs.setdefault("default", self.set_default)
         dump(obj, path, **kwargs)
 
-    def dump_to_str(self, obj: Any, **kwargs) -> str:
+    def write_to_string(self, obj: Any, **kwargs) -> str:
         """Dump content from a serializable object to a string.
 
         Args:

@@ -12,18 +12,66 @@ __all__ = [
 from typing import TYPE_CHECKING
 
 import numpy as np
+import torch
 
 from supr import constant, data
 from supr.tracking import base
 
 if TYPE_CHECKING:
-    from supr.typing import CallableType, MotionType
-
+    from supr.typing import MotionType, ObjectType
 
 np.random.seed(0)
 
 
 # region Helper Function
+
+def compute_box_iou(
+    box1: torch.Tensor | np.ndarray,
+    box2: torch.Tensor | np.ndarray,
+) -> torch.Tensor | np.ndarray:
+    """From SORT: Compute IOU between two sets of boxes.
+    
+    Return intersection-over-union (Jaccard index) between two sets of boxes.
+    Both sets of boxes are expected to be in [x1, y1, x2, y2] format with
+    `0 <= x1 < x2` and `0 <= y1 < y2`.
+
+    Args:
+        box1: The first set of boxes of shape [N, 4].
+        box2: The second set of boxes of shape [M, 4].
+    
+    Returns:
+        The NxM matrix containing the pairwise IoU values for every element in
+        boxes1 and boxes2.
+    """
+    assert box1.ndim == 2
+    assert box2.ndim == 2
+    if isinstance(box1, torch.Tensor) and type(box1) == type(box2):
+        box1 = torch.unsqueeze(box1, 1)
+        box2 = torch.unsqueeze(box2, 0)
+        xx1  = torch.maximum(box1[..., 0], box2[..., 0])
+        yy1  = torch.maximum(box1[..., 1], box2[..., 1])
+        xx2  = torch.minimum(box1[..., 2], box2[..., 2])
+        yy2  = torch.minimum(box1[..., 3], box2[..., 3])
+        w    = torch.maximum(torch.Tensor(0.0), xx2 - xx1)
+        h    = torch.maximum(torch.Tensor(0.0), yy2 - yy1)
+    elif isinstance(box1, np.ndarray) and type(box1) == type(box2):
+        box1 = np.expand_dims(box1, 1)
+        box2 = np.expand_dims(box2, 0)
+        xx1  = np.maximum(box1[..., 0], box2[..., 0])
+        yy1  = np.maximum(box1[..., 1], box2[..., 1])
+        xx2  = np.minimum(box1[..., 2], box2[..., 2])
+        yy2  = np.minimum(box1[..., 3], box2[..., 3])
+        w    = np.maximum(0.0, xx2 - xx1)
+        h    = np.maximum(0.0, yy2 - yy1)
+    else:
+        raise TypeError
+    wh  = w * h
+    iou = wh / ((box1[..., 2] - box1[..., 0]) *
+                (box1[..., 3] - box1[..., 1]) +
+                (box2[..., 2] - box2[..., 0]) *
+                (box2[..., 3] - box2[..., 1]) - wh)
+    return iou
+
 
 def linear_assignment(cost_matrix):
     try:
@@ -48,30 +96,30 @@ class SORT(base.Tracker):
     
     Args:
         max_age: The time to store the track before deleting, that mean a track
-            could live upto :param:`max_age` frames with no match bounding box,
+            could live upto :param:`max_age` frames with no match bounding bbox,
             consecutive frame that track disappears. Defaults to 1.
-        min_hits: A number of frames, which has matching bounding box of the
+        min_hits: A number of frames, which has matching bounding bbox of the
             detected object before the object is considered becoming the track.
             Defaults to 3.
         iou_threshold: An Intersection-over-Union threshold between two tracks.
             Defaults to 0.3.
-        motion_model: A motion model. Defaults to 'KFBoxMotion'.
+        motion_type: A motion model. Defaults to 'KFBoxMotion'.
         object_type: An object type. Defaults to None.
     """
     
     def __init__(
         self,
-        max_age      : int                 = 1,
-        min_hits     : int                 = 3,
-        iou_threshold: float               = 0.3,
-        motion_model : MotionType          = "kf_box_motion",
-        object_type  : CallableType | None = data.MovingObject,
+        max_age      : int        = 1,
+        min_hits     : int        = 3,
+        iou_threshold: float      = 0.3,
+        motion_type  : MotionType = "kf_box_motion",
+        object_type  : ObjectType = data.MovingObject,
     ):
         super().__init__(
             max_age       = max_age,
             min_hits      = min_hits,
             iou_threshold = iou_threshold,
-            motion_model  = motion_model,
+            motion_type   = motion_type,
             object_type   = object_type,
         )
     
@@ -149,10 +197,12 @@ class SORT(base.Tracker):
                 instances.
         """
         if len(tracks) == 0:
-            return (np.empty((0, 2), dtype=int), np.arange(len(instances)),
-                    np.empty((0, 5), dtype=int))
+            return \
+                np.empty((0, 2), dtype=int), \
+                np.arange(len(instances)),\
+                np.empty((0, 5), dtype=int)
 
-        iou_matrix = compute_box_iou_old(instances, tracks)
+        iou_matrix = compute_box_iou(box1=instances, box2=tracks)
         
         if min(iou_matrix.shape) > 0:
             a = (iou_matrix > self.iou_threshold).astype(np.int32)
@@ -186,9 +236,10 @@ class SORT(base.Tracker):
         else:
             matched_indexes = np.concatenate(matched_indexes, axis=0)
 
-        return (matched_indexes,
-                np.array(unmatched_inst_indexes),
-                np.array(unmatched_trks_indexes))
+        return \
+            matched_indexes,\
+            np.array(unmatched_inst_indexes),\
+            np.array(unmatched_trks_indexes)
 
     def update_matched_tracks(
         self,
@@ -211,32 +262,12 @@ class SORT(base.Tracker):
             # self.tracks[track_idx].update_go_from_detection(measurement=detections[detection_idx])
             # self.tracks[track_idx].update_motion_state()
 
-    def create_new_tracks(
-        self,
-        unmatched_inst_indexes: list | np.ndarray,
-        instances             : list | np.ndarray
-    ):
-        """Create new tracks for new instances that haven't been matched to any
-        existing tracks.
-
-        Args:
-            unmatched_inst_indexes: A list of new instances' indexes of that
-                haven't been matched with any tracks.
-            instances: A list of new instances.
-        """
-        for i in unmatched_inst_indexes:
-            new_trk = self.object_type(
-                instance = instances[i],
-                motion   = self.motion_model(instances[i].box)
-            )
-            self.tracks.append(new_trk)
-
     def delete_dead_tracks(self):
         """Delete all dead tracks."""
         i = len(self.tracks)
         for trk in reversed(self.tracks):
-            # Get the current bounding box of Kalman Filter
-            d = trk.motion.current_motion_state()[0]
+            # Get the current bounding bbox of Kalman Filter
+            d = trk.motion.current()[0]
             """
             if (
                 (trk.time_since_update < 1) and

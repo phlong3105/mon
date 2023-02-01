@@ -614,8 +614,8 @@ class HorizontalFlip(coreml.Transform):
         input : torch.Tensor,
         target: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        input  = ci.horizontal_flip(image=input)
-        target = ci.horizontal_flip(image=target) \
+        input  = ci.flip_horizontal(image=input)
+        target = ci.flip_horizontal(image=target) \
             if target is not None else None
         return input, target
     
@@ -633,7 +633,7 @@ class HorizontalFlipImageBox(coreml.Transform):
         target: torch.Tensor,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return ci.horizontal_flip_image_box(image=input, box=target)
+        return ci.flip_image_bbox_horizontal(image=input, bbox=target)
 
 
 @constant.TRANSFORM.register(name="vflip")
@@ -648,8 +648,8 @@ class VerticalFlip(coreml.Transform):
         input : torch.Tensor,
         target: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        input  = ci.vertical_flip(image=input)
-        target = ci.vertical_flip(image=target) if target is not None else None
+        input  = ci.flip_vertical(image=input)
+        target = ci.flip_vertical(image=target) if target is not None else None
         return input, target
     
     
@@ -666,7 +666,7 @@ class VerticalFlipImageBox(coreml.Transform):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        return ci.vertical_flip_image_box(image=input, box=target)
+        return ci.flip_image_bbox_vertical(image=input, bbox=target)
 
 # endregion
 
@@ -1490,7 +1490,7 @@ class HorizontalShear(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        input = ci.horizontal_shear(
+        input = ci.shear_horizontal(
             image         = input,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1499,7 +1499,7 @@ class HorizontalShear(coreml.Transform):
             fill          = self.fill,
             padding_mode  = self.padding_mode,
         )
-        target = ci.horizontal_shear(
+        target = ci.shear_horizontal(
             image         = target,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1589,7 +1589,7 @@ class VerticalShear(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        input = ci.vertical_shear(
+        input = ci.shear_vertical(
             image         = input,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1598,7 +1598,7 @@ class VerticalShear(coreml.Transform):
             fill          = self.fill,
             padding_mode  = self.padding_mode,
         )
-        target = ci.vertical_shear(
+        target = ci.shear_vertical(
             image         = target,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1643,7 +1643,7 @@ class HorizontalTranslate(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        input = ci.horizontal_translate(
+        input = ci.translate_horizontal(
             image         = input,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1652,7 +1652,7 @@ class HorizontalTranslate(coreml.Transform):
             fill          = self.fill,
             padding_mode  = self.padding_mode,
         )
-        target = ci.horizontal_translate(
+        target = ci.translate_horizontal(
             image         = target,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1691,9 +1691,9 @@ class HorizontalTranslateImageBox(coreml.Transform):
     def forward(
         self, input: torch.Tensor, target: torch.Tensor, *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        input, target = ci.horizontal_translate_image_box(
+        input, target = ci.translate_image_bbox_horizontal(
             image         = input,
-            box           = target,
+            bbox= target,
             magnitude     = self.magnitude,
             center        = self.center,
             interpolation = self.interpolation,
@@ -1779,9 +1779,9 @@ class TranslateImageBox(coreml.Transform):
     def forward(
         self, input: torch.Tensor, target: torch.Tensor, *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        input, target = ci.translate_image_box(
+        input, target = ci.translate_image_bbox(
             image         = input,
-            box           = target,
+            bbox= target,
             magnitude     = self.magnitude,
             center        = self.center,
             interpolation = self.interpolation,
@@ -1821,7 +1821,7 @@ class VerticalTranslate(coreml.Transform):
         target: torch.Tensor | None = None,
         *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor | None]:
-        input = ci.vertical_translate(
+        input = ci.translate_vertical(
             image         = input,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1830,7 +1830,7 @@ class VerticalTranslate(coreml.Transform):
             fill          = self.fill,
             padding_mode  = self.padding_mode,
         )
-        target = ci.vertical_translate(
+        target = ci.translate_vertical(
             image         = target,
             magnitude     = self.magnitude,
             center        = self.center,
@@ -1869,9 +1869,9 @@ class VerticalTranslateImageBox(coreml.Transform):
     def forward(
         self, input: torch.Tensor, target: torch.Tensor, *args, **kwargs
     ) -> tuple[torch.Tensor, torch.Tensor]:
-        input, target = ci.vertical_translate_image_box(
+        input, target = ci.translate_image_bbox_vertical(
             image         = input,
-            box           = target,
+            bbox= target,
             magnitude     = self.magnitude,
             center        = self.center,
             interpolation = self.interpolation,

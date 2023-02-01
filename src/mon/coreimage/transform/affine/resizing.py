@@ -132,10 +132,10 @@ def resize_crop(
 
     Args:
         image: An image of shape [..., C, H, W] to be resized.
-        top: The vertical component of the top left corner of the crop box.
-        left: The horizontal component of the top left corner of the crop box.
-        height: The height of the crop box.
-        width: The width of the crop box.
+        top: The vertical component of the top left corner of the crop bbox.
+        left: The horizontal component of the top left corner of the crop bbox.
+        height: The height of the crop bbox.
+        width: The width of the crop bbox.
         size: An output size of shape [C, H, W]. Defaults to None.
         interpolation: An interpolation method. Defaults to “bilinear”.
         

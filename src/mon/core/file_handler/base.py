@@ -8,7 +8,7 @@ helper functions.
 from __future__ import annotations
 
 __all__ = [
-    "FileHandler", "dump_to_file", "load_from_file", "merge_files",
+    "FileHandler", "write_to_file", "read_from_file", "merge_files",
 ]
 
 from abc import ABC, abstractmethod
@@ -26,7 +26,7 @@ class FileHandler(ABC):
     """
     
     @abstractmethod
-    def load_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
+    def read_from_fileobj(self, path: PathType | TextIO, **kwargs) -> Any:
         """Load content from a file.
         
         Args:
@@ -38,7 +38,7 @@ class FileHandler(ABC):
         pass
         
     @abstractmethod
-    def dump_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
+    def write_to_fileobj(self, obj: Any, path: PathType | TextIO, **kwargs):
         """Dump content from a serializable object to a file.
         
         Args:
@@ -48,7 +48,7 @@ class FileHandler(ABC):
         pass
     
     @abstractmethod
-    def dump_to_str(self, obj: Any, **kwargs) -> str:
+    def write_to_string(self, obj: Any, **kwargs) -> str:
         """Dump content from a serializable object to a string.
         
         Args:
@@ -56,7 +56,7 @@ class FileHandler(ABC):
         """
         pass
 
-    def load_from_file(self, path: PathType, mode: str = "r", **kwargs) -> Any:
+    def read_from_file(self, path: PathType, mode: str = "r", **kwargs) -> Any:
         """Load content from a file.
         
         Args:
@@ -67,9 +67,9 @@ class FileHandler(ABC):
             File's content.
         """
         with open(path, mode) as f:
-            return self.load_from_fileobj(f, **kwargs)
+            return self.read_from_fileobj(f, **kwargs)
 
-    def dump_to_file(self, obj: Any, path: PathType, mode: str = "w", **kwargs):
+    def write_to_file(self, obj: Any, path: PathType, mode: str = "w", **kwargs):
         """Dump content from a serializable object to a file.
         
         Args:
@@ -78,10 +78,10 @@ class FileHandler(ABC):
             mode: The mode to open the file. Defaults to “w” means write.
         """
         with open(path, mode) as f:
-            self.dump_to_fileobj(obj, f, **kwargs)
+            self.write_to_fileobj(obj, f, **kwargs)
 
 
-def dump_to_file(
+def write_to_file(
     obj        : Any,
     path       : PathType | TextIO,
     file_format: str      | None = None,
@@ -102,11 +102,11 @@ def dump_to_file(
     
     handler: FileHandler = constant.FILE_HANDLER.build(name=file_format)
     if path is None:
-        handler.dump_to_str(obj, **kwargs)
+        handler.write_to_string(obj, **kwargs)
     elif isinstance(path, str):
-        handler.dump_to_file(obj, path, **kwargs)
+        handler.write_to_file(obj, path, **kwargs)
     elif hasattr(path, "write"):
-        handler.dump_to_fileobj(obj, path, **kwargs)
+        handler.write_to_fileobj(obj, path, **kwargs)
     else:
         raise TypeError(
             f":param:`path` must be a filename or a file-object. "
@@ -114,7 +114,7 @@ def dump_to_file(
         )
 
 
-def load_from_file(
+def read_from_file(
     path       : PathType | TextIO,
     file_format: str | None = None,
     **kwargs
@@ -135,9 +135,9 @@ def load_from_file(
 
     handler: FileHandler = constant.FILE_HANDLER.build(name=file_format)
     if isinstance(path, pathlib.Path | str):
-        data = handler.load_from_file(path, **kwargs)
+        data = handler.read_from_file(path, **kwargs)
     elif hasattr(path, "read"):
-        data = handler.load_from_fileobj(path, **kwargs)
+        data = handler.read_from_fileobj(path, **kwargs)
     else:
         raise TypeError(
             f":param:`path` must be a :class:`pathlib.Path`, a :class:`str` or "
@@ -165,7 +165,7 @@ def merge_files(
     # Read data
     data = None
     for p in in_paths:
-        d = load_from_file(p)
+        d = read_from_file(p)
         if isinstance(d, list):
             data = [] if data is None else data
             data += d
@@ -179,7 +179,7 @@ def merge_files(
             )
     
     # Dump data
-    dump_to_file(
+    write_to_file(
         obj         = data,
         path        = out_path,
         file_format = file_format,

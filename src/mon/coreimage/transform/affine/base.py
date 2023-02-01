@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "affine", "affine_image_box", "pad",
+    "affine", "affine_image_bbox", "pad",
 ]
 
 import torch
@@ -41,7 +41,7 @@ def affine(
     invariant.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
+        image: An image of shape [..., C, H, W].
         angle: A rotation angle in degrees between -180 and 180, clockwise
             direction.
         translate: Horizontal and vertical translations (post-rotation
@@ -141,9 +141,9 @@ def affine(
     return image
 
 
-def affine_image_box(
+def affine_image_bbox(
     image        : torch.Tensor,
-    box          : torch.Tensor,
+    bbox         : torch.Tensor,
     angle        : float,
     translate    : Ints,
     scale        : float,
@@ -159,9 +159,8 @@ def affine_image_box(
     invariant.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
-        box: Bounding boxes of shape [N, 4]. They are expected to be in (x1, y1,
-            x2, y2) format with `0 <= x1 < x2` and `0 <= y1 < y2`.
+        image: An image of shape [..., C, H, W].
+        bbox: Bounding boxes of shape [N, 4] and in [x1, y1, x2, y2] format.
         angle: A rotation angle in degrees between -180 and 180, clockwise
             direction.
         translate: Horizontal and vertical translations (post-rotation
@@ -189,16 +188,16 @@ def affine_image_box(
               (left, right, top, bottom) respectively.
             Defaults to 0.0.
         padding_mode: A padding mode. Defaults to “constant”.
-        drop_ratio: If the fraction of a bounding box left in the image after
-            being clipped is less than :param:`drop_ratio` the bounding box is
+        drop_ratio: If the fraction of a bounding bbox left in the image after
+            being clipped is less than :param:`drop_ratio` the bounding bbox is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
             Defaults to 0.0.
         
     Returns:
         A transformed image of shape [..., C, H, W].
-        A transformed box of shape [N, 4].
+        A transformed bbox of shape [N, 4].
     """
-    assert isinstance(box, torch.Tensor) and box.ndim == 2
+    assert isinstance(bbox, torch.Tensor) and bbox.ndim == 2
     image_size = util.get_image_size(image)
     image = affine(
         image         = image,
@@ -212,8 +211,8 @@ def affine_image_box(
         fill          = fill,
         padding_mode  = padding_mode,
     )
-    box = geometry.affine_box(
-        box        = box,
+    bbox = geometry.affine_bbox(
+        bbox       = bbox,
         image_size = image_size,
         angle      = angle,
         translate  = translate,
@@ -222,7 +221,7 @@ def affine_image_box(
         center     = center,
         drop_ratio = drop_ratio,
     )
-    return image, box
+    return image, bbox
 
 # endregion
 
@@ -238,7 +237,7 @@ def pad(
     """Pads an image with fill value.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed, where ... means
+        image: An image of shape [..., C, H, W]., where ... means
             it can have an arbitrary number of leading dimensions.
         padding: Padding on each border. If a single int is provided this is
             used to pad all borders. If sequence of length 2 is provided this is

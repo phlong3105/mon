@@ -23,7 +23,7 @@ def load_config(cfg: ConfigType) -> munch.Munch:
     object using :class:`munch.Munch`.
     """
     if isinstance(cfg, pathlib.Path | str):
-        d = file_handler.load_from_file(path=cfg)
+        d = file_handler.read_from_file(path=cfg)
     elif isinstance(cfg, munch.Munch | dict):
         d = cfg
     else:

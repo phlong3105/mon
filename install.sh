@@ -10,7 +10,6 @@ current_dir=$(dirname "$script_path")
 root_dir=$current_dir
 # root_dir=$(dirname "$current_dir")
 
-
 # Add channels
 echo -e "\nAdding channels"
 conda config --append channels conda-forge
@@ -29,7 +28,7 @@ mamba update --a --y
 pip install --upgrade pip
 echo -e "... Done"
 
-
+# Install 'mon' env
 case "$OSTYPE" in
   linux*)
     echo -e "\nLinux / WSL"
@@ -108,6 +107,9 @@ case "$OSTYPE" in
     ;;
 esac
 
+# Install 'mon' package
+conda activate mon
+poetry install
 
 # Set environment variables
 # shellcheck disable=SC2162
@@ -132,14 +134,12 @@ then
 fi
 echo -e "... Done"
 
-
 # Setup Resilio Sync
 echo -e "\nSetting Resilio Sync"
 rsync_dir="${root_dir}/.sync"
 mkdir -p "${rsync_dir}"
 cp "IgnoreList" "${rsync_dir}/IgnoreList"
 echo -e "... Done"
-
 
 # Cleanup everything
 conda clean --a --y

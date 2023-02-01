@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 
-import mon
+import torch
+
 from mon import core
 
 console = core.console
 
-print(mon.Path().absolute())
+a = torch.Tensor([[10, 10, 10, 10]])
+print(len(a))
 
 # t = timeit.Timer("import mon.foundation")
 # print(t.timeit(number = 1000000))

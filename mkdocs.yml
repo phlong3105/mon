@@ -12,7 +12,7 @@ copyright: Copyright &copy; 2021 - 2023 Long H. Pham
 
 theme:
   name: "material"
-  favicon: assets/one-40.png
+  favicon: asset/one-40.png
   features:
     - announce.dismiss
     - header.autohide
@@ -34,7 +34,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   language: en
-  logo: assets/one-80.png
+  logo: asset/one-80.png
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
@@ -70,10 +70,10 @@ extra:
       link: https://www.linkedin.com/in/long-pham-1755807a
 
 extra_css:
-  - stylesheets/extra.css
+  - stylesheet/extra.css
 
 extra_javascript:
-  - javascripts/extra.js
+  - javascript/extra.js
 
 markdown_extensions:
   # Python Markdown
@@ -115,7 +115,7 @@ nav:
       - explanation/index.md
       - "BaseModel": explanation/base-model.md
   - "Tutorials":
-      - tutorials/index.md
+      - tutorial/index.md
   - "How-To":
       - how-to/index.md
   - "Reference":

@@ -1,115 +1,84 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base class for all detector models. It defines an unify template to
-guarantee the input and output of all object_detectors are the same.
-"""
+"""This module implements the base class for all detectors."""
 
 from __future__ import annotations
 
-import abc
-from typing import Optional
+__all__ = [
+    "Detector",
+]
+
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 import numpy as np
 from torch import Tensor
 
-from aic.objects.detection import Detection
-from onevision import ClassLabels
-from onevision import Int3T
-from onevision import select_device
+import mon
+from supr.data import instance as ins
 
-__all__ = [
-    "BaseDetector",
-]
+if TYPE_CHECKING:
+    from supr.typing import (
+        ClassLabelsType, ConfigType, DictType, Int3T, Ints, Strs, WeightsType
+    )
 
 
-# MARK: - BaseDetector
+# region Detector
 
-class BaseDetector(metaclass=abc.ABCMeta):
-    """Base Detector.
+class Detector(ABC):
+    """The base class for all detectors.
 
-    Attributes:
-        name (str):
-            Name of the detector model.
-        model (nn.Module):
-            Detector model.
-        model_cfg (dict, optional):
-            Detector model's config.
-        class_labels (ClassLabels, optional):
-            List of all labels' dicts.
-        allowed_ids (np.ndarray, optional):
-            Array of all class_labels' ids. Default: `None`.
-        weights (str, optional):
-            Path to the pretrained weights. Default: `None`.
-        shape (Int3T, optional):
-            Input size as [H, W, C]. This is also used to resize the image.
-            Default: `None`.
-        min_confidence (float, optional):
-            Detection confidence threshold. Remove all detections that have a
-            confidence lower than this value. If `None`, don't perform
-            suppression. Default: `0.5`.
-        nms_max_overlap (float, optional):
-            Maximum measurement overlap (non-maxima suppression threshold).
-            If `None`, don't perform suppression. Default: `0.4`.
-        device (str, optional):
-            Cuda device, i.e. 0 or 0,1,2,3 or cpu. Default: `None` means CPU.
-        resize_original (bool):
-            Should resize the predictions back to original image resolution?
-            Default: `False`.
+    Args:
+        cfg: A detector model's config.
+        classlabels: A list of all labels' dicts.
+        weights: A path to the pretrained weights. Defaults to None.
+        shape: The desired model's input shape preferably in a channel-last
+            format. Defaults to (3, 256, 256).
+        conf_thres: An object confidence threshold. Defaults to 0.5.
+        iou_thres: An IOU threshold for NMS. Defaults to 0.4.
+        devices: A list of devices to use. Defaults to 'cpu'.
     """
-
-    # MARK: Magic Functions
-
+    
     def __init__(
         self,
-        name           : str,
-        model_cfg      : Optional[dict],
-        class_labels   : ClassLabels,
-        weights        : Optional[str]   = None,
-        shape          : Optional[Int3T] = None,
-        min_confidence : Optional[float] = 0.5,
-        nms_max_overlap: Optional[float] = 0.4,
-        device         : Optional[str]   = None,
-        *args, **kwargs
+        cfg        : ConfigType,
+        classlabels: ClassLabelsType,
+        weights    : WeightsType | None = None,
+        shape      : Int3T              = (3, 256, 256),
+        conf_thres : float              = 0.5,
+        iou_thres  : float              = 0.4,
+        devices    : Ints | Strs        = "cpu",
     ):
         super().__init__()
-        self.name            = name
         self.model           = None
-        self.model_cfg       = model_cfg
-        self.class_labels    = class_labels
-        self.allowed_ids     = self.class_labels.ids(key="train_id")
+        self.cfg             = cfg
+        self.classlabels     = mon.ClassLabels.from_value(value=classlabels)
+        self.allowed_ids     = self.classlabels.ids(key="train_id")
         self.weights         = weights
         self.shape           = shape
-        self.min_confidence  = min_confidence
-        self.nms_max_overlap = nms_max_overlap
-        self.device          = select_device(device)
+        self.conf_thres      = conf_thres
+        self.iou_thres       = iou_thres
+        self.devices         = mon.select_device(device=devices)
+        self.half            = self.devices.type != "cpu"
         self.resize_original = False
-        self.half            = self.device.type != "cpu"
-
-        # NOTE: Load model
+        # Load model
         self.init_model()
-
-    # MARK: Configure
-
-    @abc.abstractmethod
+    
+    @abstractmethod
     def init_model(self):
-        """Create and load model from weights."""
+        """Create model."""
         pass
 
-    # MARK: Process
-
-    def detect(self, indexes: np.ndarray, images: np.ndarray) -> list[list[Detection]]:
+    def detect(self, indexes: np.ndarray, images: np.ndarray) -> list[list[ins.Instance]]:
         """Detect objects in the images.
 
         Args:
-            indexes (np.ndarray):
-                Image indexes.
-            images (np.ndarray[B, H, W, C]):
-                Images.
+            indexes: Image indexes.
+            images: Images.
 
         Returns:
-            detections (list):
-                List of `Detection` objects.
+            A list of :class:`data.Instance` objects.
         """
         # NOTE: Safety check
         if self.model is None:
@@ -121,39 +90,35 @@ class BaseDetector(metaclass=abc.ABCMeta):
         # NOTE: Postprocess
         detections = self.postprocess(indexes=indexes, images=images, input=input, pred=pred)
         # NOTE: Suppression
-        detections = self.suppress_wrong_labels(detections=detections)
+        detections = self.suppress_wrong_labels(instances=detections)
 
         return detections
 
-    @abc.abstractmethod
+    @abstractmethod
     def forward(self, input: Tensor) -> Tensor:
         """Forward pass.
 
         Args:
-            input (Tensor[B, C, H, W]):
-                Input.
+            input: Input tensor of shape [B, C, H, W].
 
         Returns:
-            pred (Tensor):
-                Predictions.
+            Predictions.
         """
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def preprocess(self, images: np.ndarray) -> Tensor:
         """Preprocess the input images to model's input image.
 
         Args:
-            images (np.ndarray[B, H, W, C]):
-                Images.
+            images: Images.
 
         Returns:
-            input (Tensor):
-                Models' input.
+            Input tensor of shape [B, H, W, C].
         """
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def postprocess(
         self,
         indexes: np.ndarray,
@@ -162,87 +127,79 @@ class BaseDetector(metaclass=abc.ABCMeta):
         pred   : Tensor,
         *args, **kwargs
     ) -> list:
-        """Postprocess the prediction.
+        """Postprocess predictions.
 
         Args:
-            indexes (np.ndarray):
-                Image indexes.
-            images (np.ndarray[B, H, W, C]):
-                Images.
-            input (Tensor[B, C, H, W]):
-                Input.
-            pred (Tensor):
-               Prediction.
+            indexes: Image indexes.
+            images: Images.
+            input: Input tensor.
+            pred: Predictions.
 
         Returns:
-            detections (list):
-                List of `Detection` objects.
+            A 2-D list of :class:`data.Instance` objects.
         """
         pass
 
-    def suppress_wrong_labels(self, detections: list) -> list[Detection]:
+    def suppress_wrong_labels(
+        self,
+        instances: list[list[ins.Instance]],
+    ) -> list[list[ins.Instance]]:
         """Suppress all detections with wrong labels.
 
         Args:
-            detections (list):
-                List of `Detection` objects of shape [B, ...], where B is the
-                number of batch.
+            instances: A 2-D list of :class:`data.Instance` objects.
 
         Returns:
-            valid_detections (list):
-                List of valid `Detection` objects of shape [B, ...], where B
-                is the number of batch.
+            A 2-D list of valid :class:`data.Instance` objects.
         """
-        valid_detections = []
-        for dets in detections:
-            valid_dets = [d for d in dets if self.is_correct_label(d.class_label)]
-            valid_detections.append(valid_dets)
-        return valid_detections
-
-    def suppress_low_confident(self, detections: list) -> list[Detection]:
+        valid_instances = []
+        for ins in instances:
+            valid_ins = [d for d in ins if self.is_correct_label(d.class_label)]
+            valid_instances.append(valid_ins)
+        return valid_instances
+    
+    def suppress_low_confident(
+        self,
+        instances: list[list[ins.Instance]],
+    ) -> list[list[ins.Instance]]:
         """Suppress detections with low confidence scores.
 
         Args
-            detections (list):
-                List of valid `Detection` objects of shape [B, ...], where B is
-                the number of batch.
-
-        Returns:
-            valid_detections (list):
-                List of high-confident `Detection` objects of shape [B, ...],
-                where B is the number of batch.
-        """
-        if self.min_confidence is None:
-            return detections
+            instances: A 2-D list of :class:`data.Instance` objects.
         
-        valid_detections = []
-        for dets in detections:
-            valid_dets = [d for d in dets if (d.confidence >= self.min_confidence)]
-            valid_detections.append(valid_dets)
-        return valid_detections
+        Returns:
+             A 2-D list of :class:`data.Instance` objects.
+        """
+        if self.conf_thres is None:
+            return instances
+        
+        valid_instances = []
+        for ins in instances:
+            valid_ins = [d for d in ins if (d.confidence >= self.conf_thres)]
+            valid_instances.append(valid_ins)
+        return valid_instances
 
-    def suppress_non_max(self, detections: list) -> list[Detection]:
+    def perform_nms(
+        self,
+        instances: list[list[ins.Instance]],
+    ) -> list[list[ins.Instance]]:
         """Suppress overlapping detections (high-level). Original code from:
         .. [1] http://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/
 
         Args:
-            detections (list):
-                List of high-confident `Detection` objects of shape [B, ...],
-                where B is the number of batch.
+            instances: A 2-D list of :class:`data.Instance` objects.
 
         Returns:
-            valid_detections (list):
-                List of non-overlapped `Detection` objects of shape [B, ...],
-                where B is the number of batch.
+            A 2-D list of non-overlapped :class:`data.Instance` objects.
         """
-        if self.nms_max_overlap is None:
-            return detections
+        if self.iou_thres is None:
+            return instances
         
-        valid_detections = []
-        for dets in detections:
+        valid_instances = []
+        for ins in instances:
             # NOTE: Extract measurement bounding boxes and scores
-            boxes  = np.array([d.box        for d in dets])
-            scores = np.array([d.confidence for d in dets])
+            boxes  = np.array([d.box        for d in ins])
+            scores = np.array([d.confidence for d in ins])
 
             # NOTE: Extract road_objects indices that survive
             # non-max-suppression
@@ -278,28 +235,20 @@ class BaseDetector(metaclass=abc.ABCMeta):
                     overlap = (w * h) / area[idxs[:last]]
                     idxs    = np.delete(
                         idxs, np.concatenate((
-                            [last], np.where(overlap > self.nms_max_overlap)[0]
+                            [last], np.where(overlap > self.iou_thres)[0]
                         ))
                     )
 
-            # NOTE: Get exactly the vehicles surviving non-max-suppression
-            valid_dets = [dets[i] for i in indices]
-            valid_detections.append(valid_dets)
+            # Get exactly the vehicles surviving non-max-suppression
+            valid_ins = [ins[i] for i in indices]
+            valid_instances.append(valid_ins)
 
-        return valid_detections
+        return valid_instances
 
-    # MARK: Utils
-
-    def is_correct_label(self, label: dict) -> bool:
-        """Check if the label is allowed in our application.
-
-        Args:
-            label (dict):
-                Label dict.
-
-        Returns:
-            True or false.
-        """
+    def is_correct_label(self, label: DictType) -> bool:
+        """Check if the label is allowed."""
         if label["id"] in self.allowed_ids:
             return True
         return False
+
+# endregion

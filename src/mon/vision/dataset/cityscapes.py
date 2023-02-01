@@ -169,7 +169,7 @@ class CityscapesFog(base.ImageEnhancementDataset):
         image_paths = core.unique(image_paths)
         
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for path in pbar.track(
                 image_paths,
                 description=f"Listing {self.__class__.__name__} "
@@ -182,7 +182,7 @@ class CityscapesFog(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -261,7 +261,7 @@ class CityscapesLOL(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "leftImg8bit-lol" / self.split
             for path in pbar.track(
                 list(pattern.rglob("low/*.png")),
@@ -275,7 +275,7 @@ class CityscapesLOL(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -446,7 +446,7 @@ class CityscapesRain(base.ImageEnhancementDataset):
         image_paths = core.unique(image_paths)  # Remove all duplicates files
             
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for path in pbar.track(
                 image_paths,
                 description=f"Listing {self.__class__.__name__} "
@@ -459,7 +459,7 @@ class CityscapesRain(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -538,7 +538,7 @@ class CityscapesSnow(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "leftImg8bit-snow" / self.split
             for path in pbar.track(
                 list(pattern.rglob("*Snow/*")),
@@ -553,7 +553,7 @@ class CityscapesSnow(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -669,7 +669,7 @@ class CityscapesSemantic(base.ImageSegmentationDataset):
             image_paths += glob.glob(str(pattern))
         
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for path in pbar.track(
                 image_paths,
                 description=f"Listing {self.__class__.__name__} "
@@ -682,7 +682,7 @@ class CityscapesSemantic(base.ImageSegmentationDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "

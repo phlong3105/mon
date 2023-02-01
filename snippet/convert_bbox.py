@@ -18,7 +18,7 @@ import mon
 # region Functions
 
 def convert_bbox_coco_to_yolo(args: munch.Munch):
-    """Convert bounding box to YOLO format."""
+    """Convert bounding bbox to YOLO format."""
     assert args.image is not None and mon.Path(args.image).is_dir()
     assert args.label is not None and mon.Path(args.label).is_dir()
     image_dir  = mon.Path(args.image)
@@ -32,7 +32,7 @@ def convert_bbox_coco_to_yolo(args: munch.Munch):
     image_files = list(image_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
-    with mon.rich.progress_bar() as pbar:
+    with mon.rich.get_progress_bar() as pbar:
         for i in pbar.track(
             sequence    = range(len(image_files)),
             total       = len(image_files),
@@ -48,7 +48,7 @@ def convert_bbox_coco_to_yolo(args: munch.Munch):
                 b = [list(map(float, x[1:])) for x in l]
                 b = np.array(b)
                 b = torch.from_numpy(b)
-                b = mon.box_xywh_to_cxcywhn(b, height=h, width=w)
+                b = mon.bbox_xywh_to_cxcywhn(b, height=h, width=w)
                 b = b.numpy()
             with open(label_file_yolo, "w") as out_file:
                 for j, x in enumerate(b):
@@ -57,7 +57,7 @@ def convert_bbox_coco_to_yolo(args: munch.Munch):
 
 
 def convert_bbox_voc_to_yolo(args: munch.Munch):
-    """Convert bounding box to YOLO format."""
+    """Convert bounding bbox to YOLO format."""
     assert args.image is not None and mon.Path(args.image).is_dir()
     assert args.label is not None and mon.Path(args.label).is_dir()
     image_dir  = mon.Path(args.image)
@@ -71,7 +71,7 @@ def convert_bbox_voc_to_yolo(args: munch.Munch):
     image_files = list(image_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
-    with mon.rich.progress_bar() as pbar:
+    with mon.rich.get_progress_bar() as pbar:
         for i in pbar.track(
             sequence    = range(len(image_files)),
             total       = len(image_files),
@@ -88,7 +88,7 @@ def convert_bbox_voc_to_yolo(args: munch.Munch):
                 b = [list(map(float, x[1:])) for x in l]
                 b = np.array(b)
                 b = torch.from_numpy(b)
-                b = mon.box_xyxy_to_cxcywhn(b, height=h, width=w)
+                b = mon.bbox_xyxy_to_cxcywhn(b, height=h, width=w)
                 b = b.numpy()
             with open(label_file_yolo, "w") as out_file:
                 for j, x in enumerate(b):
@@ -112,19 +112,19 @@ def parse_args():
         "--label",
         type    = str,
         default = mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc",
-        help    = "Bounding box directory."
+        help    = "Bounding bbox directory."
     )
     parser.add_argument(
         "--from-format",
         type    = str,
         default = "voc",
-        help    = "Bounding box format (i.e., xyxy, cxcywh, cxcywh_norm (yolo)."
+        help    = "Bounding bbox format (i.e., xyxy, cxcywh, cxcywh_norm (yolo)."
     )
     parser.add_argument(
         "--to-format",
         type    = str,
         default = "yolo",
-        help    = "Bounding box format (i.e., xyxy, cxcywh, cxcywh_norm (yolo)."
+        help    = "Bounding bbox format (i.e., xyxy, cxcywh, cxcywh_norm (yolo)."
     )
     parser.add_argument(
         "--output",

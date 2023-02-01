@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements cropping transformations. """
+"""This module implements cropping transformations."""
 
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def crop_tblr(
     """Crop an image with top + bottom + left + right value.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
+        image: An image of shape [..., C, H, W].
         top: The top padding.
         bottom: The bottom padding.
         left: The left padding.
@@ -96,11 +96,11 @@ def crop(
     """Crop an image at specified location and output size.
     
     Args:
-        image: An image of shape [..., C, H, W] to be transformed.
-        top: The Vertical component of the top left corner of the crop box.
-        left: The Horizontal component of the top left corner of the crop box.
-        height: The height of the crop box.
-        width: The width of the crop box.
+        image: An image of shape [..., C, H, W].
+        top: The Vertical component of the top left corner of the crop bbox.
+        left: The Horizontal component of the top left corner of the crop bbox.
+        height: The height of the crop bbox.
+        width: The width of the crop bbox.
         
     Returns:
         A cropped image of shape [..., C, H, W].
@@ -217,8 +217,8 @@ def ten_crop(
     assert isinstance(size, list | tuple) and len(size) == 2
     first_five = five_crop(image, size)
     if vflip:
-        image = flipping.vertical_flip(image=image)
+        image = flipping.flip_vertical(image=image)
     else:
-        image = flipping.horizontal_flip(image=image)
+        image = flipping.flip_horizontal(image=image)
     second_five = five_crop(image, size)
     return first_five + second_five

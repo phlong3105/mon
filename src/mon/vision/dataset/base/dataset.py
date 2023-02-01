@@ -3,7 +3,7 @@
 
 """This module implements multiple dataset types used in vision tasks and
 datasets. We try to support all possible data types: :class:`torch.Tensor`,
-:class:`np.ndarray`, or :class:`Sequence`, but we prioritize
+:class:`numpy.ndarray`, or :class:`Sequence`, but we prioritize
 :class:`torch.Tensor`.
 """
 
@@ -179,7 +179,7 @@ class UnlabeledImageDataset(UnlabeledDataset, ABC):
         """Cache images into memory for a faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -464,7 +464,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         """List image files."""
         assert isinstance(self.root, core.Path) and self.root.is_dir()
         
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 pattern.rglob("*"),
@@ -733,7 +733,7 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -889,7 +889,7 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -995,7 +995,7 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
         """List label files."""
         json_file = self.annotation_file()
         assert json_file.is_json_file()
-        json_data = core.load_from_file(json_file)
+        json_data = core.read_from_file(json_file)
         assert isinstance(json_data, dict | munch.Munch)
         
         info	    = json_data.get("info", 	   None)
@@ -1105,7 +1105,7 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
             )
         
         self.labels: list[label.VOCDetectionsLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for f in pbar.track(
                 files,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -1190,7 +1190,7 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
             )
         
         self.labels: list[label.YOLODetectionsLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for f in pbar.track(
                 files,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -1299,7 +1299,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -1307,7 +1307,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
                 self.images[i].load(keep_in_memory=True)
         core.console.log(f"Images have been cached.")
         
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
                 description=f"Caching {self.__class__.__name__} {self.split} labels"
@@ -1442,7 +1442,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -1450,7 +1450,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
                 self.images[i].load(keep_in_memory=True)
         core.console.log(f"Images have been cached.")
         
-        with core.rich.download_bar() as pbar:
+        with core.rich.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
                 description=f"Caching {self.__class__.__name__} {self.split} labels"

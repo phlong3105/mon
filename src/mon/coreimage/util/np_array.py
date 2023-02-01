@@ -142,7 +142,7 @@ def to_3d_array(input: Any) -> np.ndarray:
     if isinstance(input, np.ndarray):
         return _to_3d_array(input)                                              # np.ndarray any dimensions -> 3D np.ndarray
     raise TypeError(
-        f"`input` must be a `np.ndarray`. But got: {type(input)}."
+        f"`input` must be a `numpy.ndarray`. But got: {type(input)}."
     )
 
 
@@ -173,7 +173,7 @@ def to_4d_array(input: Any) -> np.ndarray:
     if isinstance(input, np.ndarray):
         return _to_4d_array(input)                                              # np.ndarray any dimensions -> 4D np.ndarray
     raise TypeError(
-        f"`input` must be a `np.ndarray`. But got: {type(input)}."
+        f"`input` must be a `numpy.ndarray`. But got: {type(input)}."
     )
 
 
@@ -204,7 +204,7 @@ def to_5d_array(input) -> np.ndarray:
     if isinstance(input, np.ndarray):
         return _to_5d_array(input)                                              # np.ndarray any dimensions -> 5D np.ndarray
     raise TypeError(
-        f"`input` must be a `np.ndarray`. But got: {type(input)}."
+        f"`input` must be a `numpy.ndarray`. But got: {type(input)}."
     )
 
 
@@ -238,7 +238,7 @@ def to_list_of_3d_array(input: Any) -> list[np.ndarray]:
     if isinstance(input, list) and all(isinstance(i, np.ndarray)   for i in input):
         return input                                                            # list[np.ndarray any dimensions] -> list[3D np.ndarray]
     raise TypeError(
-        f"`input` must be a `np.ndarray`. But got: {type(input)}."
+        f"`input` must be a `numpy.ndarray`. But got: {type(input)}."
     )
 
 
@@ -272,7 +272,7 @@ def to_list_of_4d_array(input) -> list[np.ndarray]:
     if isinstance(input, list) and all(isinstance(i, np.ndarray)   for i in input):
         return [_to_4d_array(i) for i in input]                                 # list[np.ndarray any dimensions] -> list[4D np.ndarray]
     raise TypeError(
-        f"`input` must be a `np.ndarray`. But got: {type(input)}."
+        f"`input` must be a `numpy.ndarray`. But got: {type(input)}."
     )
 
 
@@ -288,7 +288,7 @@ def upcast(input: np.ndarray) -> np.ndarray:
         Array of higher type.
     """
     if not isinstance(input, np.ndarray):
-        raise TypeError(f"`input` must be a `np.ndarray`. But got: {type(input)}.")
+        raise TypeError(f"`input` must be a `numpy.ndarray`. But got: {type(input)}.")
     if type(input) in (np.float16, np.float32, np.float64):
         return input.astype(float)
     if type(input) in (np.int16, np.int32, np.int64):

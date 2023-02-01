@@ -8,10 +8,10 @@ package.
 from __future__ import annotations
 
 __all__ = [
-    "AppleRGBType", "BBoxFormatType", "BBoxFormatType", "BBoxType",
-    "BasicRGBType", "BorderTypeType", "CFAType", "DistanceMetricType", "Image",
-    "Images", "InterpolationModeType", "MaskType", "PaddingModeType",
-    "PaddingModeType", "PointsType", "RGBType", "VisionBackendType",
+    "AppleRGBType", "BBoxFormatType", "BBoxFormatType", "BasicRGBType",
+    "BorderTypeType", "CFAType", "DistanceMetricType", "InterpolationModeType",
+    "PaddingModeType", "PaddingModeType", "RGBType", "TensorOrArray",
+    "VisionBackendType",
     # Extend :mod:`mon.core.typing`
     "CallableType", "ConfigType", "DictType",  "Float1T", "Float2T", "Float3T",
     "Float4T", "Float5T", "Float6T", "FloatAnyT", "Floats", "ImageFormatType",
@@ -20,7 +20,7 @@ __all__ = [
     "VideoFormatType",
 ]
 
-from typing import Sequence, TypeAlias
+from typing import TypeAlias
 
 import numpy
 import torch
@@ -28,12 +28,7 @@ import torch
 from mon.core.typing import *
 from mon.coreimage import constant
 
-BBoxType             : TypeAlias = torch.Tensor | numpy.ndarray | Sequence[float]
-Image                : TypeAlias = torch.Tensor | numpy.ndarray
-Images               : TypeAlias = Image | Sequence[Image]
-MaskType             : TypeAlias = torch.Tensor | numpy.ndarray | Sequence[float]
-PointsType           : TypeAlias = torch.Tensor | numpy.ndarray | Sequence[float]
-
+TensorOrArray        : TypeAlias = torch.Tensor | numpy.ndarray  # | Sequence[int | float]
 AppleRGBType         : TypeAlias = str | int | constant.AppleRGB
 BBoxFormatType       : TypeAlias = str | int | constant.BasicRGB
 BasicRGBType         : TypeAlias = str | int | constant.BBoxFormat

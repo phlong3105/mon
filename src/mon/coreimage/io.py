@@ -18,6 +18,7 @@ import glob
 import multiprocessing
 import subprocess
 from abc import ABC, abstractmethod
+from typing import Sequence
 
 import cv2
 import ffmpeg
@@ -30,7 +31,7 @@ import torchvision
 from mon import core
 from mon.coreimage import color, constant, util
 from mon.coreimage.typing import (
-    Image, Images, Ints, PathsType, PathType, Strs, VisionBackendType,
+    Ints, PathsType, PathType, Strs, TensorOrArray, VisionBackendType,
 )
 
 
@@ -41,19 +42,19 @@ def read_image_cv(
     to_rgb   : bool = True,
     to_tensor: bool = True,
     normalize: bool = True,
-) -> Image:
+) -> TensorOrArray:
     """Read an image from a filepath using :mod:`cv2`. Optionally, convert it to
     RGB format, and :class:`torch.Tensor` type of shape [1, C, H, W].
 
     Args:
         path: An image filepath.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         
     Return:
-        A :class:`np.ndarray` image of shape [H, W, C] with value in range
+        A :class:`numpy.ndarray` image of shape [H, W, C] with value in range
         [0, 255] or a :class:`torch.Tensor` image of shape [1, C, H, W] with
         value in range [0.0, 1.0].
     """
@@ -69,18 +70,18 @@ def read_image_pil(
     path     : PathType,
     to_tensor: bool = True,
     normalize: bool = True,
-) -> torch.Tensor:
+) -> TensorOrArray:
     """Read an image from a filepath using :mod:`PIL`. Optionally, convert it to
     :class:`torch.Tensor` of shape [1, C, H, W].
     
     Args:
         path: An image filepath.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
     
     Return:
-        A :class:`np.ndarray` image of shape [H, W, C] with value in range
+        A :class:`numpy.ndarray` image of shape [H, W, C] with value in range
         [0, 255] or a :class:`torch.Tensor` image of shape [1, C, H, W] with
         value in range [0, 1].
     """
@@ -96,20 +97,20 @@ def read_image(
     to_tensor: bool              = True,
     normalize: bool              = True,
     backend  : VisionBackendType = constant.VISION_BACKEND
-) -> Image:
+) -> TensorOrArray:
     """Read an image from a filepath. Optionally, convert it to RGB format, and
     :class:`torch.Tensor` type of shape [1, C, H, W].
     
     Args:
         path: An image filepath.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         backend: The image processing backend to use.
     
     Return:
-        A :class:`np.ndarray` image of shape [H, W, C] with value in range
+        A :class:`numpy.ndarray` image of shape [H, W, C] with value in range
         [0, 255] or a :class:`torch.Tensor` image of shape [1, C, H, W] with
         value in range [0, 1].
     """
@@ -140,7 +141,7 @@ def read_video_ffmpeg(
     width    : int,
     to_tensor: bool = True,
     normalize: bool = True,
-) -> Image:
+) -> TensorOrArray:
     """Read raw bytes from a video stream using :mod`ffmpeg`. Optionally,
     convert it to :class:`torch.Tensor` type of shape [1, C, H, W].
     
@@ -148,12 +149,12 @@ def read_video_ffmpeg(
         process: The subprocess that manages :mod:`ffmpeg` instance.
         height: The height of the video frame.
         width: The width of the video.
-        to_tensor: If True convert the image from :class:`np.ndarray` to
+        to_tensor: If True convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
     
     Return:
-        A :class:`np.ndarray` image of shape [H, W, C] with value in range
+        A :class:`numpy.ndarray` image of shape [H, W, C] with value in range
         [0, 255] or a :class:`torch.Tensor` image of shape [1, C, H, W] with
         value in range [0, 1].
     """
@@ -190,7 +191,7 @@ class Loader(ABC):
         batch_size: The number of samples in a single forward pass. Defaults to
             1.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         verbose: Verbosity. Defaults to False.
@@ -272,7 +273,7 @@ class ImageLoader(Loader):
         batch_size: The number of samples in a single forward pass. Defaults to
             1.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         backend: Image processing backend. Default to VISION_BACKEND.
@@ -388,7 +389,7 @@ class VideoLoader(Loader, ABC):
         batch_size: The number of samples in a single forward pass. Defaults to
             1.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         verbose: Verbosity mode of video loader backend. Defaults to False.
@@ -468,7 +469,7 @@ class VideoLoaderCV(VideoLoader):
         batch_size: The number of samples in a single forward pass. Defaults to
             1.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         api_preference: Preferred Capture API backends to use. It can be used to
@@ -660,7 +661,7 @@ class VideoLoaderFFmpeg(VideoLoader):
         batch_size: The number of samples in a single forward pass. Defaults to
             1.
         to_rgb: If True, convert the image from BGR to RGB. Defaults to True.
-        to_tensor: If True, convert the image from :class:`np.ndarray` to
+        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
             :class:`torch.Tensor`. Defaults to True.
         normalize: If True, normalize the image to [0.0, 1.0]. Defaults to True.
         verbose: Verbosity mode of video loader backend. Defaults to False.
@@ -827,7 +828,7 @@ class VideoLoaderFFmpeg(VideoLoader):
 # region Write
 
 def write_image_cv(
-    image      : Image,
+    image      : TensorOrArray,
     dir        : PathType,
     name       : str,
     prefix     : str  = "",
@@ -866,7 +867,7 @@ def write_image_cv(
 
 
 def write_image_pil(
-    image      : Image,
+    image      : TensorOrArray,
     dir        : PathType,
     name       : str,
     prefix     : str  = "",
@@ -892,7 +893,7 @@ def write_image_pil(
             image = util.denormalize_image(image=image)
         if util.is_channel_first(image=image):
             image = util.to_channel_last(image=image)
-    image = Image.fromarray(image.astype(np.uint8))
+    image = PIL.Image.fromarray(image.astype(np.uint8))
     
     # Write image
     dir      = core.Path(dir)
@@ -909,7 +910,7 @@ def write_image_pil(
     
 
 def write_image_torch(
-    image      : Image,
+    image      : TensorOrArray,
     dir        : PathType,
     name       : str,
     prefix     : str  = "",
@@ -955,7 +956,7 @@ def write_image_torch(
 
 
 def write_images_cv(
-    images     : Images,
+    images     : Sequence[TensorOrArray],
     dir        : PathType,
     names      : Strs,
     prefixes   : Strs = "",
@@ -991,7 +992,7 @@ def write_images_cv(
 
 
 def write_images_pil(
-    images     : Images,
+    images     : Sequence[TensorOrArray],
     dir        : PathType,
     names      : Strs,
     prefixes   : Strs = "",
@@ -1027,7 +1028,7 @@ def write_images_pil(
 
 
 def write_images_torch(
-    images     : Images,
+    images     : Sequence[TensorOrArray],
     dir        : PathType,
     names      : Strs,
     prefixes   : Strs = "",
@@ -1062,7 +1063,7 @@ def write_images_torch(
     )
 
 
-def write_video_ffmpeg(process, image: Image, denormalize: bool = True):
+def write_video_ffmpeg(process, image: TensorOrArray, denormalize: bool = True):
     """Write an image to a video file using :mod:`ffmpeg`.
 
     Args:
@@ -1142,7 +1143,7 @@ class Writer(ABC):
     @abstractmethod
     def write(
         self,
-        image      : Image,
+        image      : TensorOrArray,
         file       : PathType | None = None,
         denormalize: bool            = True
     ):
@@ -1159,7 +1160,7 @@ class Writer(ABC):
     @abstractmethod
     def write_batch(
         self,
-        images     : Images,
+        images     : Sequence[TensorOrArray],
         files      : PathsType | None = None,
         denormalize: bool             = True
     ):
@@ -1221,7 +1222,7 @@ class ImageWriter(Writer):
 
     def write(
         self,
-        image      : Image,
+        image      : TensorOrArray,
         file       : PathType | None = None,
         denormalize: bool            = True
     ):
@@ -1268,7 +1269,7 @@ class ImageWriter(Writer):
 
     def write_batch(
         self,
-        images     : Images,
+        images     : Sequence[TensorOrArray],
         files      : PathsType | None = None,
         denormalize: bool             = True,
     ):
@@ -1394,7 +1395,7 @@ class VideoWriterCV(VideoWriter):
 
     def write(
         self,
-        image      : Image,
+        image      : TensorOrArray,
         file       : PathType | None = None,
         denormalize: bool            = True
     ):
@@ -1430,7 +1431,7 @@ class VideoWriterCV(VideoWriter):
 
     def write_batch(
         self,
-        images     : Images,
+        images     : Sequence[TensorOrArray],
         files      : PathsType | None = None,
         denormalize: bool             = True
     ):
@@ -1527,7 +1528,7 @@ class VideoWriterFFmpeg(VideoWriter):
     
     def write(
         self,
-        image      : Image,
+        image      : TensorOrArray,
         file       : PathType | None = None,
         denormalize: bool            = True
     ):
@@ -1559,7 +1560,7 @@ class VideoWriterFFmpeg(VideoWriter):
 
     def write_batch(
         self,
-        images     : Images,
+        images     : Sequence[TensorOrArray],
         files      : PathsType | None = None,
         denormalize: bool             = True,
     ):

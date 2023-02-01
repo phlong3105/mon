@@ -20,7 +20,7 @@ import munch
 import numpy as np
 
 import mon
-from supr import constant as c, motion as mo, rmoi
+from supr import constant, motion as mo, rmoi
 from supr.data import instance
 
 if TYPE_CHECKING:
@@ -79,7 +79,7 @@ class MovingObject(Object, list[instance.Instance]):
         instances   : InstancesType,
         motion      : MotionType,
         uid         : UIDType         = uuid.uuid4().int,
-        moving_state: MovingStateType = c.MovingState.Candidate,
+        moving_state: MovingStateType = constant.MovingState.Candidate,
         moi_uid     : UIDType | None  = None,
         timestamp   : float 	      = timer(),
         frame_index : int             = -1,
@@ -150,24 +150,24 @@ class MovingObject(Object, list[instance.Instance]):
         return [d.roi_uid for d in self]
     
     @property
-    def moving_state(self) -> c.MovingState:
+    def moving_state(self) -> constant.MovingState:
         return self._moving_state
     
     @moving_state.setter
     def moving_state(self, moving_state: MovingStateType):
-        self._moving_state = c.MovingState.from_value(moving_state)
+        self._moving_state = constant.MovingState.from_value(moving_state)
     
     @property
     def is_candidate(self) -> bool:
-        return self.moving_state == c.MovingState.Candidate
+        return self.moving_state == constant.MovingState.Candidate
     
     @property
     def is_confirmed(self) -> bool:
-        return self.moving_state == c.MovingState.Confirmed
+        return self.moving_state == constant.MovingState.Confirmed
     
     @property
     def is_counting(self) -> bool:
-        return self.moving_state == c.MovingState.Counting
+        return self.moving_state == constant.MovingState.Counting
     
     @property
     def is_countable(self) -> bool:
@@ -175,15 +175,15 @@ class MovingObject(Object, list[instance.Instance]):
     
     @property
     def is_to_be_counted(self) -> bool:
-        return self.moving_state == c.MovingState.ToBeCounted
+        return self.moving_state == constant.MovingState.ToBeCounted
     
     @property
     def is_counted(self) -> bool:
-        return self.moving_state == c.MovingState.Counted
+        return self.moving_state == constant.MovingState.Counted
     
     @property
     def is_exiting(self) -> bool:
-        return self.moving_state == c.MovingState.Exiting
+        return self.moving_state == constant.MovingState.Exiting
     
     @property
     def motion(self) -> mo.Motion:
@@ -196,9 +196,9 @@ class MovingObject(Object, list[instance.Instance]):
         elif isinstance(motion, CallableType):
             self._motion = motion(instance=self.current)
         elif isinstance(motion, str | dict | munch.Munch):
-            self._motion = c.MOTION.build(name=motion, instance=self.current)
+            self._motion = constant.MOTION.build(name=motion, instance=self.current)
         elif isinstance(motion, dict | munch.Munch):
-            self._motion = c.MOTION.build(cfg=motion, instance=self.current)
+            self._motion = constant.MOTION.build(cfg=motion, instance=self.current)
         else:
             raise TypeError
         
@@ -274,7 +274,7 @@ class MovingObject(Object, list[instance.Instance]):
         label  : bool        = True,
         color  : Ints | None = None
     ) -> np.ndarray:
-        """Draw the current object and its trajectory on the :param:`drawing`.
+        """Draw the current object and its trajectory on the :param:`image`.
         """
         if self.moi_uid is not None:
             color = mon.AppleRGB.values()[self.moi_uid]
@@ -312,7 +312,7 @@ class MovingObject(Object, list[instance.Instance]):
         label  : bool        = True,
         color  : Ints | None = None
     ) -> np.ndarray:
-        """Draw the current object on the :param:`drawing`."""
+        """Draw the current object on the :param:`image`."""
         color = color or self.majority_label["color"]
         if box:
             b = self.current.box
@@ -353,7 +353,7 @@ class MovingObject(Object, list[instance.Instance]):
         return drawing
     
     def draw_trajectory(self, drawing: np.ndarray) -> np.ndarray:
-        """Draw the current trajectory on the :param:`drawing`."""
+        """Draw the current trajectory on the :param:`image`."""
         if self.moi_uid is not None:
             color = mon.AppleRGB.values()[self.moi_uid]
         else:

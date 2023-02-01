@@ -335,7 +335,7 @@ def invert(image: torch.Tensor) -> torch.Tensor:
     bound = torch.tensor(
         data   = 1 if image.is_floating_point() else 255,
         dtype  = image.dtype,
-        device = image.device
+        device = image.devices
     )
     image = bound - image
     return image

@@ -88,7 +88,7 @@ class SICE(base.ImageEnhancementDataset):
         parts = ["part1", "part2"]
         
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for part in parts:
                 pattern = self.root / part / "low"
                 for path in pbar.track(
@@ -103,7 +103,7 @@ class SICE(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -178,7 +178,7 @@ class SICEPart1(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part1" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -192,7 +192,7 @@ class SICEPart1(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -263,7 +263,7 @@ class SICEPart1_512(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part1-512x512" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -277,7 +277,7 @@ class SICEPart1_512(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -348,7 +348,7 @@ class SICEPart1_512_Low(base.UnlabeledImageDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part1-512x512"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -418,7 +418,7 @@ class SICEPart2(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part2" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -430,7 +430,7 @@ class SICEPart2(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -501,7 +501,7 @@ class SICEPart2_Low(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part2-low" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -515,7 +515,7 @@ class SICEPart2_Low(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -586,7 +586,7 @@ class SICEPart2_512(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part2-512x512" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -600,7 +600,7 @@ class SICEPart2_512(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -673,7 +673,7 @@ class SICEPart2_512_Low(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part2-512x512-low" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -687,7 +687,7 @@ class SICEPart2_512_Low(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -758,7 +758,7 @@ class SICEPart2_900(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part2-900x1200" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -772,7 +772,7 @@ class SICEPart2_900(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"
@@ -845,7 +845,7 @@ class SICEPart2_900_Low(base.ImageEnhancementDataset):
     def list_images(self):
         """List image files."""
         self.images: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             pattern = self.root / "part2-900x1200-low" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*/*")),
@@ -859,7 +859,7 @@ class SICEPart2_900_Low(base.ImageEnhancementDataset):
     def list_labels(self):
         """List label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.rich.progress_bar() as pbar:
+        with core.rich.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} labels"

@@ -19,4 +19,4 @@ from mon.core.file_handler import *
 from mon.core.filesystem import *
 from mon.core.logging import *
 from mon.core.pathlib import *
-from mon.core.rich import console, error_console, progress_bar
+from mon.core.rich import console, error_console, get_progress_bar

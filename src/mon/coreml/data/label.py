@@ -114,7 +114,7 @@ class ClassLabels(list):
         """
         path = pathlib.Path(path)
         assert path.is_json_file()
-        return cls.from_dict(file_handler.load_from_file(path=path))
+        return cls.from_dict(file_handler.read_from_file(path=path))
     
     @classmethod
     def from_value(cls, value: ClassLabelsType) -> ClassLabels | None:
@@ -626,7 +626,7 @@ class ClassLabels(list, Label):
         return c["name"] if c is not None else None
        
     def show_color_legend(self, height: int | None = None):
-        """Shows a pretty color lookup legend using OpenCV drawing functions.
+        """Shows a pretty color lookup legend using OpenCV image functions.
 
         Args:
             height: Height of the color legend image. Defaults to None.

@@ -378,7 +378,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
                 kernel_value = torch.zeros(
                     (self.in_channels, input_dim, self.kernel_size, self.kernel_size),
                     dtype  = branch.weight.dtype,
-                    device = branch.weight.device,
+                    device = branch.weight.devices,
                 )
                 for i in range(self.in_channels):
                     kernel_value[

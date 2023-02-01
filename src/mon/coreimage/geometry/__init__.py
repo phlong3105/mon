@@ -5,5 +5,6 @@
 
 from __future__ import annotations
 
-from mon.coreimage.geometry.box import *
+from mon.coreimage.geometry.bbox import *
 from mon.coreimage.geometry.distance import *
+from mon.coreimage.geometry.rbox import *

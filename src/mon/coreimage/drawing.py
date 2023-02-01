@@ -6,28 +6,91 @@
 from __future__ import annotations
 
 __all__ = [
-    "draw_bbox",
-    "draw_pixel",
     "draw_rectangle",
+    "draw_rect",
 ]
 
-import torch
-from torch import Tensor
+from typing import Sequence
 
-from mon.coreimage import util
+import cv2
+import numpy as np
+import torch
+
 from mon.coreimage.typing import Ints
 
 
+# region Draw Geometry Shapes
+
+def draw_rectangle(
+    image    : torch.Tensor | np.ndarray,
+    rect     : torch.Tensor | np.ndarray | Sequence[int | float],
+    color    : Ints,
+    thickness: int = 1,
+) -> torch.Tensor | np.ndarray:
+    """Draw a rectangle on an image.
+    
+    Args:
+        image: The image on which rectangle is to be drawn.
+        rect: The coordinates of rectangle in [x1, y1, x2, y2] format.
+        color: The color of the borderline of rectangle to be drawn in the BGR
+            format.
+        thickness: The thickness of the rectangle borderline in px. Thickness of
+            -1 px will fill the rectangle shape by the specified color. Defaults
+            to 1.
+            
+    Returns:
+        An image.
+    """
+    assert len(rect)  == 4
+    
+    color = [color] if not isinstance(color, list) else color
+    assert len(color) >= 3
+
+    assert isinstance(image, torch.Tensor | np.ndarray)
+    if isinstance(image, torch.Tensor):
+        raise TypeError("This function hasn't been implemented.")
+    elif isinstance(image, np.ndarray):
+        image = cv2.rectangle(
+            image       = image,
+            start_point = (rect[0], rect[1]),
+            end_point   = (rect[2], rect[3]),
+            color       = color,
+            thickness   = thickness,
+        )
+    else:
+        raise TypeError(
+            f":param:`image` must be a :class:`torch.Tensor` or "
+            f":class:`numpy.ndarray`."
+        )
+    return image
+
+    
+draw_rect = draw_rectangle
+
+# endregion
+
+
+# region Draw Label
+
+def draw_bbox(
+
+):
+    pass
+
+# endregion
+
+
+'''
 def draw_bbox(
     image: Tensor,
-    box  : Tensor,
+    bbox  : Tensor,
     color: Tensor | Ints = (255, 255, 255),
     fill : bool          = False
 ) -> Tensor:
-    """Draws :param:`box` on :param:`image`."""
+    """Draws :param:`bbox` on :param:`image`."""
     return draw_rectangle(
         image     = image,
-        rectangle = box,
+        rectangle = bbox,
         color     = color,
         fill      = fill,
     )
@@ -135,3 +198,4 @@ def draw_rectangle(
                 ] = color[b, n, :, None]
 
     return image
+'''

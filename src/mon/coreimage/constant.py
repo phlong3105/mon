@@ -42,6 +42,7 @@ DISTANCE = core.Factory(name="Distance")
 
 # endregion
 
+
 # region Enum
 
 class AppleRGB(core.Enum):
@@ -84,7 +85,7 @@ class BasicRGB(core.Enum):
     
 
 class BBoxFormat(core.Enum):
-    """Bounding box formats."""
+    """Bounding bbox formats."""
     
     CXCYAR      = "cxcyar"
     CXCYRH      = "cxcyrh"
@@ -394,7 +395,7 @@ class InterpolationMode(core.Enum):
     BILINEAR      = "bilinear"
     NEAREST       = "nearest"
     # For PIL compatibility
-    BOX           = "box"
+    BOX           = "bbox"
     HAMMING       = "hamming"
     LANCZOS       = "lanczos"
     # For OpenCV compatibility
@@ -413,7 +414,7 @@ class InterpolationMode(core.Enum):
             "bicubic"      : cls.BICUBIC,
             "bilinear"     : cls.BILINEAR,
             "nearest"      : cls.NEAREST,
-            "box"          : cls.BOX,
+            "bbox"          : cls.BOX,
             "hamming"      : cls.HAMMING,
             "lanczos"      : cls.LANCZOS,
             "area"         : cls.AREA,
