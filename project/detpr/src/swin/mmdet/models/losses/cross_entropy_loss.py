@@ -138,7 +138,7 @@ def mask_cross_entropy(pred,
         pred_slice, target, weight=class_weight, reduction='mean')[None]
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class CrossEntropyLoss(nn.Module):
 
     def __init__(self,

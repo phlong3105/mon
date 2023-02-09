@@ -9,19 +9,19 @@ from __future__ import annotations
 
 __all__ = [
     "get_grid_size", "imshow", "imshow_classification", "imshow_enhancement",
-    "make_image_grid", "move_figure", "plt"
+    "move_figure", "plt",
 ]
 
-from typing import Collection, Sequence
+from typing import Any
 
 import matplotlib
 import numpy as np
 import torch
-import torchvision
 from matplotlib import pyplot as plt
 
-from mon import core, coreimage as ci, coreml
-from mon.coreml.typing import Strs
+from mon.coreml import data as md
+from mon.foundation import builtins, math
+from mon.vision import image as mi
 
 # mpl.use("wxAgg")
 
@@ -33,7 +33,7 @@ plt.rcParams["savefig.bbox"] = "tight"
 
 # region Window Positioning
 
-def get_grid_size(n: int, nrow: int | None = 4) -> tuple[int, int]:
+def get_grid_size(n: int, nrow: int | None = 4) -> list[int]:
     """Calculate the number of rows and columns needed to display the items
     in a grid.
     
@@ -51,48 +51,24 @@ def get_grid_size(n: int, nrow: int | None = 4) -> tuple[int, int]:
         ncols = nrow
     else:
         ncols = n
-    nrows = core.math.ceil(n / ncols)
-    return nrows, ncols
-
-
-def make_image_grid(
-    images     : torch.Tensor | Sequence[torch.Tensor],
-    nrow       : int | None = 8,
-    denormalize: bool       = False,
-) -> torch.Tensor:
-    """Make a grid of images.
-
-    Args:
-        images:
-        nrow: The maximum number of items to display in a row. The final grid
-            size is (n / nrow, nrow). If None, then the number of items in a row
-            will be the same as the number of items in the list. Defaults to 8.
-        denormalize: If True, denormalize the image to [0, 255]. Defaults to
-            True.
-
-    Returns:
-        An image grid tensor.
-    """
-    nrow = nrow if isinstance(nrow, int) and nrow > 0 else 8
-    images = ci.to_list_of_3d_tensor(input=images)
-    images = ci.denormalize_image(image=images) if denormalize else images
-    return torchvision.utils.make_grid(tensor=images, nrow=nrow)
+    nrows = math.ceil(n / ncols)
+    return [nrows, ncols]
 
 
 def move_figure(x: int, y: int):
     """Move the matplotlib figure around the window. The upper-left corner to
     the location specified by :param:`(x,  y)`.
     """
-    mngr    = plt.get_current_fig_manager()
-    fig     = plt.gcf()
+    mngr = plt.get_current_fig_manager()
+    fig = plt.gcf()
     backend = matplotlib.get_backend()
-    
     if backend == "TkAgg":
         mngr.window.wm_geometry("+%d+%d" % (x, y))
     elif backend == "WXAgg":
         mngr.window.SetPosition((x, y))
     else:  # This works for QT and GTK. You can use window.setGeometry
         mngr.window.move(x, y)
+
 
 # endregion
 
@@ -101,28 +77,27 @@ def move_figure(x: int, y: int):
 
 def imshow(
     winname    : str,
-    image      : torch.Tensor,
-    label      : Strs | None = None,
-    denormalize: bool        = True,
-    scale      : int         = 1,
-    save_cfg   : dict | None = None,
-    max_n      : int  | None = None,
-    nrow       : int  | None = 8,
-    wait_time  : float       = 0.01
+    image      : Any,
+    label      : str | list[str] | None = None,
+    denormalize: bool                   = True,
+    scale      : int                    = 1,
+    save_cfg   : dict | None            = None,
+    max_n      : int  | None            = None,
+    nrow       : int  | None            = 8,
+    wait_time  : float                  = 0.01
 ):
     """Show an image tensor in a window using matplotlib.
     
     Args:
         winname: The name of the window to display the image in.
-        image: The images to be displayed. Can be a 3D tensor [C, H, W] or 4D
-            tensor of shape [B, C, H, W].
+        image: The images to be displayed. Can be a 3-D or 4-D image, or a list
+            of 3-D images.
         label: Sequence of images' labels string. Defaults to None.
-        denormalize: If True, denormalize the image to [0, 255]. Defaults to
-            True.
+        denormalize: If True, convert image to [0, 255]. Defaults to True.
         scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
         save_cfg: Save figure config. Defaults to None.
         max_n: Show max n images if :param:`image` has a batch size of more than
-            :param:`max_n` images. Defaults to None means show all.
+            :param:`max_n` images. Defaults to None mean show all.
         nrow: The maximum number of items to display in a row. The final grid
             size is (n / nrow, nrow). If None, then the number of items in a row
             will be the same as the number of items in the list. Defaults to 8.
@@ -130,23 +105,27 @@ def imshow(
             reset. Defaults to 0.01.
     """
     # Prepare image and label
-    image = ci.to_list_of_3d_tensor(input=image)
+    image = mi.to_list_of_3d(image)
     max_n = max_n if isinstance(max_n, int) else len(image)
     image = image[: max_n]
     
     if label is not None:
-        label = core.to_list(input=label)
+        label = builtins.to_list(x=label)
         label = label[:max_n]
-        assert len(image) == len(label)
+        if not len(image) == len(label):
+            raise ValueError(
+                f"image and label must have the same length, but got "
+                f"{len(image)} and {len(label)}."
+            )
     
     # Draw figure
-    n            = len(image)
-    nrow         = n if n < nrow else nrow
+    n    = len(image)
+    nrow = n if n < nrow else nrow
     nrows, ncols = get_grid_size(n=n, nrow=nrow)
-    fig, axs     = plt.subplots(
+    fig, axs = plt.subplots(
         nrows   = nrows,
         ncols   = ncols,
-        figsize = [ncols * scale, nrows  * scale],
+        figsize = [ncols * scale, nrows * scale],
         num     = abs(hash(winname)) % (10 ** 8),
         squeeze = False,
         clear   = True
@@ -156,7 +135,7 @@ def imshow(
     for idx, img in enumerate(image):
         i   = int(idx / nrow)
         j   = int(idx % nrow)
-        img = ci.to_image(image=img, keepdim=False, denormalize=denormalize)
+        img = mi.to_nparray(image=img, keepdim=False, denormalize=denormalize)
         axs[i, j].imshow(np.asarray(img), aspect="auto")
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         if label is not None:
@@ -169,31 +148,31 @@ def imshow(
     if save_cfg:
         filepath = save_cfg.pop("filepath")
         plt.savefig(filepath, **save_cfg)
-
-    plt.pause(wait_time)
     
+    plt.pause(wait_time)
+
 
 def imshow_classification(
     winname    : str,
-    image 	   : torch.Tensor,
-    pred	   : torch.Tensor       | None = None,
-    target	   : torch.Tensor       | None = None,
-    label	   : Strs               | None = None,
-    classlabels: coreml.ClassLabels | None = None,
-    top_k	   : int                | None = 5,
-    denormalize: bool                      = True,
-    scale      : int                       = 1,
-    save_cfg   : dict               | None = None,
-    max_n      : int                | None = None,
-    nrow       : int                | None = 8,
-    wait_time  : float                     = 0.01,
+    image      : Any,
+    pred       : Any                    = None,
+    target     : Any                    = None,
+    label      : str | list[str] | None = None,
+    classlabels: md.ClassLabels | None  = None,
+    top_k      : int  | None            = 5,
+    denormalize: bool                   = True,
+    scale      : int                    = 1,
+    save_cfg   : dict | None            = None,
+    max_n      : int  | None            = None,
+    nrow       : int  | None            = 8,
+    wait_time  : float                  = 0.01,
 ):
     """Show classification results on images using matplotlib.
     
     Args:
         winname: The name of the window to display the image in.
-        image: The images to be displayed. Can be a 3D tensor [C, H, W] or 4D
-            tensor of shape [B, C, H, W].
+        image: The images to be displayed. Can be a 3-D or 4-D image, or a list
+            of 3-D images.
         pred: Predicted classes probabilities. Can be a tensor of shape [B, N]
             where N is the total number of all classes in the dataset. Defaults
             to None.
@@ -207,7 +186,7 @@ def imshow_classification(
         scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
         save_cfg: Save figure config. Defaults to None.
         max_n: Show max n images if :param:`image` has a batch size of more than
-            :param:`max_n` images. Defaults to None means show all.
+            :param:`max_n` images. Defaults to None mean show all.
         nrow: The maximum number of items to display in a row. The final grid
             size is (n / nrow, nrow). If None, then the number of items in a row
             will be the same as the number of items in the list. Defaults to 8.
@@ -215,42 +194,47 @@ def imshow_classification(
             reset. Defaults to 0.
     """
     # Prepare image and label
-    image = ci.to_list_of_3d_tensor(input=image)
+    image = mi.to_list_of_3d(image)
     max_n = max_n if isinstance(max_n, int) else len(image)
     top_k = top_k if isinstance(top_k, int) else (
-        len(classlabels) if isinstance(classlabels, coreml.ClassLabels) else 5
+        len(classlabels) if isinstance(classlabels, md.ClassLabels) else 5
     )
     image = image[: max_n]
-
-    scores_topk = None
-    pred_topk   = None
-    pred_top1   = None
+    
+    pred_topk = None
+    pred_top1 = None
     if isinstance(pred, torch.Tensor):
         assert isinstance(pred, torch.Tensor) and pred.ndim == 2
-        pred          = pred.clone()
-        probs, idxes  = torch.sort(pred, dim=1)
-        scores_topk   = probs[:max_n, -top_k:][:, ::].tolist()
-        pred_topk     = idxes[:max_n, -top_k:][:, ::].tolist()
-        pred_top1     = idxes[:max_n, -top_k:][:, -1].tolist()
+        pred         = pred.clone()
+        probs, idxes = torch.sort(pred, dim=1)
+        scores_topk  = probs[:max_n, -top_k:][:, ::].tolist()
+        pred_topk    = idxes[:max_n, -top_k:][:, ::].tolist()
+        pred_top1    = idxes[:max_n, -top_k:][:, -1].tolist()
     else:
-        scores_topk   = [[0.0] * top_k for _ in range(len(image))]
-        
-    if isinstance(classlabels, coreml.ClassLabels):
+        scores_topk = [[0.0] * top_k for _ in range(len(image))]
+    
+    if isinstance(classlabels, md.ClassLabels):
         if pred_topk:
-            pred_topk = [[classlabels.get_name(key="id", value=v) for v in p]
-                          for p in pred_topk]
+            pred_topk = [
+                [classlabels.get_name(key="id", value=v) for v in p]
+                for p in pred_topk
+            ]
         if pred_top1 is not None:
             pred_top1 = [classlabels.get_name(key="id", value=v) for v in pred_top1]
         if target is not None:
-            target    = target.clone()
-            target    = target.tolist()
-            target    = [classlabels.get_name(key="id", value=v) for v in target]
-            
+            target = target.clone()
+            target = target.tolist()
+            target = [classlabels.get_name(key="id", value=v) for v in target]
+    
     label = label[:max_n] if label is not None else [f"" for _ in range(len(image))]
-    assert len(image) == len(label)
+    if not len(image) == len(label):
+        raise ValueError(
+            f"image and label must have the same length, but got "
+            f"{len(image)} and {len(label)}."
+        )
     
     if pred_top1 is not None and target is not None:
-        label  = [f"{l} \n pred={p} gt={t}"        for (l, p, t) in zip(label, pred_top1, target)]
+        label  = [f"{l} \n pred={p} gt={t}" for (l, p, t) in zip(label, pred_top1, target)]
         colors = ["darkgreen" if p == t else "red" for (p, t) in zip(pred_top1, target)]
     elif target is not None:
         label  = [f"{l} \n gt={t}" for (l, t) in zip(label, target)]
@@ -259,30 +243,32 @@ def imshow_classification(
         colors = ["black" for _ in range(len(image))]
     
     # Draw figure
-    n            = len(image)
-    nrow         = n if n < nrow else nrow
+    n = len(image)
+    nrow = n if n < nrow else nrow
     nrows, ncols = get_grid_size(n=n, nrow=nrow)
-    y_pos        = np.arange(top_k)
+    y_pos = np.arange(top_k)
     fig = plt.figure(
-        constrained_layout = True,
-        figsize            = [(ncols * 1.0) * scale, (nrows * 1.5) * scale],
-        num                = abs(hash(winname)) % (10 ** 8),
+        constrained_layout=True,
+        figsize=[(ncols * 1.0) * scale, (nrows * 1.5) * scale],
+        num=abs(hash(winname)) % (10 ** 8),
     )
     subfigs      = fig.subfigures(nrows=nrows, ncols=ncols)
     subfigs_flat = subfigs.flat
     # move_figure(x=0, y=0)
     
-    for idx, (img, label, color, scores) in enumerate(zip(image, label, colors, scores_topk)):
+    for idx, (img, label, color, scores) in enumerate(
+        zip(image, label, colors, scores_topk)
+    ):
         subfig = subfigs_flat[idx]
         subfig.suptitle(label, x=0.5, y=1.0, color=color)
-        axs    = subfig.subplots(2, 1)
+        axs = subfig.subplots(2, 1)
         for ax in axs.flat:
             ax.set_xticklabels([])
             ax.set_yticklabels([])
             ax.tick_params(axis="x", direction="in", pad=-10)
             ax.tick_params(axis="y", direction="in", pad=-10)
         # Image
-        img = ci.to_image(image=img, keepdim=False, denormalize=denormalize)
+        img = mi.to_nparray(image=img, keepdim=False, denormalize=denormalize)
         axs[0].imshow(np.asarray(img), aspect="auto")
         # Classlabels
         pps = axs[1].barh(y_pos, scores, align="center", color="deepskyblue")
@@ -306,19 +292,19 @@ def imshow_classification(
     if save_cfg:
         filepath = save_cfg.pop("filepath")
         plt.savefig(filepath, **save_cfg)
-
+    
     plt.pause(wait_time)
 
 
 def imshow_enhancement(
     winname    : str,
-    image 	   : Collection,
-    label	   : Strs | None = None,
+    image      : dict,
+    label      : str | list[str] | None = None,
     denormalize: bool        = True,
     scale      : int         = 1,
     save_cfg   : dict | None = None,
-    max_n      : int  | None = None,
-    nrow       : int  | None = 8,
+    max_n      : int | None  = None,
+    nrow       : int | None  = 8,
     wait_time  : float       = 0.01,
 ):
     """Show image enhancement results using matplotlib.
@@ -330,12 +316,11 @@ def imshow_enhancement(
             target, enhanced image, ...). If given a dictionary, the key will be
             used as the column label.
         label: A sequence of images' labels string. Defaults to None.
-        denormalize: If True, denormalize the image to [0, 255]. Defaults to
-            True.
+        denormalize: If True, convert image to [0, 255]. Defaults to True.
         scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
         save_cfg: Save figure config. Defaults to None.
         max_n: Show max n images if :param:`image` has a batch size of more than
-            :param:`max_n` images. Defaults to None means show all.
+            :param:`max_n` images. Defaults to None mean show all.
         nrow: The maximum number of items to display in a row. The final grid
             size is (n / nrow, nrow). If None, then the number of items in a row
             will be the same as the number of items in the list. Defaults to 8.
@@ -343,29 +328,25 @@ def imshow_enhancement(
             reset. Defaults to 0.
     """
     # Prepare image and label
-    if isinstance(image, dict):
-        header = list(image.keys())
-    else:
-        header = ["" for _ in range(len(image))]
-        
-    image = ci.to_list_of_4d_tensor(input=image)
-    image = [ci.to_list_of_3d_tensor(input=i) for i in image]
-    max_n = max_n if isinstance(max_n, int) else len(image[0])
-    image = [i[: max_n] for i in image]
-
+    header = list(image.keys())
+    image  = list(image.values())
+    image  = [mi.to_list_of_3d(i) for i in image]
+    max_n  = max_n if isinstance(max_n, int) else len(image[0])
+    image  = [i[: max_n] for i in image]
+    
     assert len(image) == len(header)
     if label is not None:
-        label = core.to_list(label)
+        label = builtins.to_list(label)
         label = label[:max_n]
         assert len(image[0]) == len(label)
-
+    
     # Draw figure
-    ncols    = len(image)
-    nrows    = max_n
+    ncols = len(image)
+    nrows = max_n
     fig, axs = plt.subplots(
         nrows   = nrows,
         ncols   = ncols,
-        figsize = [ncols * scale, nrows  * scale],
+        figsize = [ncols * scale, nrows * scale],
         num     = abs(hash(winname)) % (10 ** 8),
         squeeze = False,
         clear   = True
@@ -375,7 +356,7 @@ def imshow_enhancement(
     [ax.set_title(l) for ax, l in zip(axs[0], header)]
     for i, img in enumerate(image):
         for j, im in enumerate(img):
-            im = ci.to_image(image=im, keepdim=False, denormalize=denormalize)
+            im = mi.to_nparray(image=im, keepdim=False, denormalize=denormalize)
             axs[j, i].imshow(np.asarray(im), aspect="auto")
             axs[j, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         # if label is not None:

@@ -15,10 +15,9 @@ from typing import Any
 
 import torch
 
-import mon.coreml
-from mon import core
-from mon.coreml import constant, model
-from mon.coreml.typing import Ints, ModelPhaseType, PathType
+from mon.coreml import device as d, model
+from mon.foundation import console, pathlib
+from mon.globals import ModelPhase
 
 
 class Inferrer(ABC):
@@ -26,30 +25,26 @@ class Inferrer(ABC):
     
     def __init__(
         self,
-        source     : PathType  | None = None,
-        root       : PathType  | None = constant.RUN_DIR / "infer",
+        source     : pathlib.Path | None = None,
+        root       : pathlib.Path     = pathlib.Path() / "infer",
         project    : str              = "",
         name       : str              = "exp",
-        max_samples: int       | None = None,
+        max_samples: int | None       = None,
         batch_size : int              = 1,
-        shape      : Ints      | None = None,
-        device     : int       | str  = "cpu",
-        phase      : ModelPhaseType   = "training",
+        image_size : int | list[int]  = 256,
+        device     : int | str        = "cpu",
+        phase      : ModelPhase | str = "training",
         tensorrt   : bool             = True,
         save       : bool             = True,
         verbose    : bool             = True,
-        *args, **kwargs
     ):
-        self.source      = source
-        self.root        = root
+        self.source      = pathlib.Path(source) if source is not None else source
+        self.root        = pathlib.Path(root)
         self.project     = project
-        self.shape       = shape
+        self.shape       = image_size
         self.max_samples = max_samples
         self.batch_size  = batch_size
-        self.device      = mon.coreml.device.select_device(
-            device     = device,
-            batch_size = batch_size,
-        )
+        self.device      = d.select_device(device=device, batch_size=batch_size)
         self.phase       = phase
         self.tensorrt    = tensorrt
         self.save        = save
@@ -62,30 +57,27 @@ class Inferrer(ABC):
         
         if self.project is not None and self.project != "":
             self.root = self.root / self.project
-        self.name = f"{name}-{core.get_next_file_version(str(self.root), name)}"
+        next_version    = pathlib.get_next_version(path=self.root, prefix=name)
+        self.name       = f"{name}-{next_version}"
         self.output_dir = self.root / self.name
         
-        core.console.log(f"Using: {self.device}.")
+        console.log(f"Using: {self.device}.")
     
     @property
-    def phase(self) -> constant.ModelPhase:
+    def phase(self) -> ModelPhase:
         return self._phase
     
     @phase.setter
-    def phase(self, phase: ModelPhaseType = "training"):
-        self._phase = constant.ModelPhase.from_value(phase)
+    def phase(self, phase: ModelPhase | str = "training"):
+        self._phase = ModelPhase.from_value(value=phase)
     
     @property
-    def root(self) -> core.Path:
+    def root(self) -> pathlib.Path:
         return self._root
     
     @root.setter
-    def root(self, root: PathType | None):
-        if root is None:
-            root = core.RUN_DIR / "infer"
-        else:
-            root = core.Path(root)
-        self._root = root
+    def root(self, root: pathlib.Path):
+        self._root = pathlib.Path(root)
     
     @abstractmethod
     def init_data_loader(self):
@@ -161,7 +153,7 @@ class Inferrer(ABC):
     def on_run_start(self):
         """Call before :meth:`run` starts."""
         if self.save:
-            core.create_dirs(paths=[self.output_dir], recreate=True)
+            pathlib.mkdirs(paths=[self.output_dir], replace=True)
         
         self.init_data_loader()
         self.init_data_writer()
@@ -382,7 +374,8 @@ class VisionInferrer(Inferrer):
         self.logger.close()
         self.on_run_end()
     
-    def preprocess(self, input: torch.Tensor) -> tuple[torch.Tensor, Ints, Ints]:
+    def preprocess(self, input: torch.Tensor) -> tuple[torch.Tensor, Ints,
+    Ints]:
         """
         Preprocessing input.
 
@@ -439,7 +432,8 @@ class VisionInferrer(Inferrer):
             pred = pred[-1]
         
         if size0 != size1:
-            pred = pred if isinstance(pred, torch.Tensor) else torch.from_numpy(pred)
+            pred = pred if isinstance(pred, torch.Tensor) else
+            torch.from_numpy(pred)
             pred = resize(
                 image=pred,
                 size=size0,

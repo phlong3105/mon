@@ -45,7 +45,7 @@ def l1_loss(pred, target):
     return loss
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class SmoothL1Loss(nn.Module):
     """Smooth L1 loss.
 
@@ -97,7 +97,7 @@ class SmoothL1Loss(nn.Module):
         return loss_bbox
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class L1Loss(nn.Module):
     """L1 loss.
 

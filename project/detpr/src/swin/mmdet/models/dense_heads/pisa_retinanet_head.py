@@ -7,7 +7,7 @@ from ..losses import carl_loss, isr_p
 from .retina_head import RetinaHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class PISARetinaHead(RetinaHead):
     """PISA Retinanet Head.
 

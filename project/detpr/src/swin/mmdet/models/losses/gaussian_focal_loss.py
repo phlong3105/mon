@@ -28,7 +28,7 @@ def gaussian_focal_loss(pred, gaussian_target, alpha=2.0, gamma=4.0):
     return pos_loss + neg_loss
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class GaussianFocalLoss(nn.Module):
     """GaussianFocalLoss is a variant of focal loss.
 

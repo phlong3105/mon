@@ -6,7 +6,7 @@ from ..builder import HEADS
 from .guided_anchor_head import FeatureAdaption, GuidedAnchorHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class GARetinaHead(GuidedAnchorHead):
     """Guided-Anchor-based RetinaNet head."""
 

@@ -16,16 +16,19 @@ import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
-from PIL import ExifTags, Image
+from PIL import Image, ExifTags
 from torch.utils.data import Dataset
 from tqdm import tqdm
-from utils.general import (
-    check_requirements, clean_str, resample_segments,
-    segment2box, segments2boxes, xyn2xy, xywh2xyxy, xywhn2xyxy, xyxy2xywh,
-)
-from utils.torch_utils import torch_distributed_zero_first
 
-# from pycocotools import mask as maskUtils
+import pickle
+from copy import deepcopy
+#from pycocotools import mask as maskUtils
+from torchvision.utils import save_image
+from torchvision.ops import roi_pool, roi_align, ps_roi_pool, ps_roi_align
+
+from utils.general import check_requirements, xyxy2xywh, xywh2xyxy, xywhn2xyxy, xyn2xy, segment2box, segments2boxes, \
+    resample_segments, clean_str
+from utils.torch_utils import torch_distributed_zero_first
 
 # Parameters
 help_url = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
@@ -485,20 +488,15 @@ class LoadImagesAndLabels(Dataset):  # for training/testing
                     with open(lb_file, 'r') as f:
                         l = [x.split() for x in f.read().strip().splitlines()]
                         if any([len(x) > 8 for x in l]):  # is segment
-                            classes  = np.array([x[0] for x in l], dtype=np.float32)
+                            classes = np.array([x[0] for x in l], dtype=np.float32)
                             segments = [np.array(x[1:], dtype=np.float32).reshape(-1, 2) for x in l]  # (cls, xy1...)
                             l = np.concatenate((classes.reshape(-1, 1), segments2boxes(segments)), 1)  # (cls, xywh)
-                        
-                        if len(l):
-                            for li in l:
-                                li[0] = 0 if li[0] == "vehicle" else 0
-                            
                         l = np.array(l, dtype=np.float32)
                     if len(l):
                         l = l[:, 0:5]
                         assert l.shape[1] == 5, 'labels require 5 columns each'
-                        # assert (l >= 0).all(), 'negative labels'
-                        # assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
+                        assert (l >= 0).all(), 'negative labels'
+                        assert (l[:, 1:] <= 1).all(), 'non-normalized or out of bounds coordinate labels'
                         assert np.unique(l, axis=0).shape[0] == l.shape[0], 'duplicate labels'
                     else:
                         ne += 1  # label empty
@@ -947,7 +945,7 @@ def sample_segments(img, labels, segments, probability=0.5):
             l, s = labels[j], segments[j]
             box = l[1].astype(int).clip(0,w-1), l[2].astype(int).clip(0,h-1), l[3].astype(int).clip(0,w-1), l[4].astype(int).clip(0,h-1) 
             
-            #print(bbox)
+            #print(box)
             if (box[2] <= box[0]) or (box[3] <= box[1]):
                 continue
             
@@ -961,7 +959,7 @@ def sample_segments(img, labels, segments, probability=0.5):
             result = cv2.bitwise_and(src1=img, src2=mask)
             i = result > 0  # pixels to replace
             mask[i] = result[i]  # cv2.imwrite('debug.jpg', img)  # debug
-            #print(bbox)
+            #print(box)
             sample_images.append(mask[box[1]:box[3],box[0]:box[2],:])
 
     return sample_labels, sample_images, sample_masks
@@ -1106,8 +1104,8 @@ def random_perspective(img, targets=(), segments=(), degrees=10, translate=.1, s
     return img, targets
 
 
-def box_candidates(box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16):  # bbox1(4,n), bbox2(4,n)
-    # Compute candidate boxes: bbox1 before augment, bbox2 after augment, wh_thr (pixels), aspect_ratio_thr, area_ratio
+def box_candidates(box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16):  # box1(4,n), box2(4,n)
+    # Compute candidate boxes: box1 before augment, box2 after augment, wh_thr (pixels), aspect_ratio_thr, area_ratio
     w1, h1 = box1[2] - box1[0], box1[3] - box1[1]
     w2, h2 = box2[2] - box2[0], box2[3] - box2[1]
     ar = np.maximum(w2 / (h2 + eps), h2 / (w2 + eps))  # aspect ratio
@@ -1115,7 +1113,7 @@ def box_candidates(box1, box2, wh_thr=2, ar_thr=20, area_thr=0.1, eps=1e-16):  #
 
 
 def bbox_ioa(box1, box2):
-    # Returns the intersection over bbox2 area given bbox1, bbox2. bbox1 is 4, bbox2 is nx4. boxes are x1y1x2y2
+    # Returns the intersection over box2 area given box1, box2. box1 is 4, box2 is nx4. boxes are x1y1x2y2
     box2 = box2.transpose()
 
     # Get the coordinates of bounding boxes
@@ -1126,10 +1124,10 @@ def bbox_ioa(box1, box2):
     inter_area = (np.minimum(b1_x2, b2_x2) - np.maximum(b1_x1, b2_x1)).clip(0) * \
                  (np.minimum(b1_y2, b2_y2) - np.maximum(b1_y1, b2_y1)).clip(0)
 
-    # bbox2 area
+    # box2 area
     box2_area = (b2_x2 - b2_x1) * (b2_y2 - b2_y1) + 1e-16
 
-    # Intersection over bbox2 area
+    # Intersection over box2 area
     return inter_area / box2_area
     
 
@@ -1143,7 +1141,7 @@ def cutout(image, labels):
         mask_h = random.randint(1, int(h * s))
         mask_w = random.randint(1, int(w * s))
 
-        # bbox
+        # box
         xmin = max(0, random.randint(0, w) - mask_w // 2)
         ymin = max(0, random.randint(0, h) - mask_h // 2)
         xmax = min(w, xmin + mask_w)
@@ -1173,7 +1171,7 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
         mask_h = random.randint(1, int(h * s))
         mask_w = random.randint(1, int(w * s))
 
-        # bbox
+        # box
         xmin = max(0, random.randint(0, w) - mask_w // 2)
         ymin = max(0, random.randint(0, h) - mask_h // 2)
         xmax = min(w, xmin + mask_w)
@@ -1191,7 +1189,7 @@ def pastein(image, labels, sample_labels, sample_images, sample_masks):
             #print(sel_ind)
             #print((xmax-xmin, ymax-ymin))
             #print(image[ymin:ymax, xmin:xmax].shape)
-            #print([[sample_labels[sel_ind], *bbox]])
+            #print([[sample_labels[sel_ind], *box]])
             #print(labels.shape)
             hs, ws, cs = sample_images[sel_ind].shape
             r_scale = min((ymax-ymin)/hs, (xmax-xmin)/ws)
@@ -1279,11 +1277,11 @@ def extract_boxes(path='../coco/'):  # from utils.datasets import *; extract_box
 
                 for j, x in enumerate(lb):
                     c = int(x[0])  # class
-                    f = (path / 'classifier') / f'{c}' / f'{path.stem}_{im_file.stem}_{j}.jpg'  # new file_name
+                    f = (path / 'classifier') / f'{c}' / f'{path.stem}_{im_file.stem}_{j}.jpg'  # new filename
                     if not f.parent.is_dir():
                         f.parent.mkdir(parents=True)
 
-                    b = x[1:] * [w, h, w, h]  # bbox
+                    b = x[1:] * [w, h, w, h]  # box
                     # b[2:] = b[2:].max()  # rectangle to square
                     b[2:] = b[2:] * 1.2 + 3  # pad
                     b = xywh2xyxy(b.reshape(-1, 4)).ravel().astype(np.int)

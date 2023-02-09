@@ -35,7 +35,7 @@ __all__ = [
 
 import torchmetrics
 
-from mon.coreml import constant
+from mon.globals import METRICS
 
 Metric           = torchmetrics.Metric
 MetricCollection = torchmetrics.MetricCollection
@@ -86,26 +86,26 @@ ROC                  = torchmetrics.ROC
 Specificity          = torchmetrics.Specificity
 StatScores           = torchmetrics.StatScores
 
-constant.METRIC.register(name="accuracy",               module=Accuracy)
-constant.METRIC.register(name="average_precision",      module=AveragePrecision)
-constant.METRIC.register(name="auroc",                  module=AUROC)
-constant.METRIC.register(name="calibration_error",      module=CalibrationError)
-constant.METRIC.register(name="cohen_kappa",            module=CohenKappa)
-constant.METRIC.register(name="confusion_matrix",       module=ConfusionMatrix)
-constant.METRIC.register(name="dice",                   module=Dice)
-constant.METRIC.register(name="exact_match",            module=ExactMatch)
-constant.METRIC.register(name="f1_score ",              module=F1Score)
-constant.METRIC.register(name="f_beta_score",           module=FBetaScore)
-constant.METRIC.register(name="hamming_distance",       module=HammingDistance)
-constant.METRIC.register(name="hinge_loss",             module=HingeLoss)
-constant.METRIC.register(name="jaccard_index",          module=JaccardIndex)
-constant.METRIC.register(name="matthews_corr_coef",     module=MatthewsCorrCoef)
-constant.METRIC.register(name="precision",              module=Precision)
-constant.METRIC.register(name="precision_recall_curve", module=PrecisionRecallCurve)
-constant.METRIC.register(name="recall",                 module=Recall)
-constant.METRIC.register(name="roc",                    module=ROC)
-constant.METRIC.register(name="specificity",            module=Specificity)
-constant.METRIC.register(name="stat_scores",            module=StatScores)
+METRICS.register(name="accuracy",               module=Accuracy)
+METRICS.register(name="average_precision",      module=AveragePrecision)
+METRICS.register(name="auroc",                  module=AUROC)
+METRICS.register(name="calibration_error",      module=CalibrationError)
+METRICS.register(name="cohen_kappa",            module=CohenKappa)
+METRICS.register(name="confusion_matrix",       module=ConfusionMatrix)
+METRICS.register(name="dice",                   module=Dice)
+METRICS.register(name="exact_match",            module=ExactMatch)
+METRICS.register(name="f1_score ",              module=F1Score)
+METRICS.register(name="f_beta_score",           module=FBetaScore)
+METRICS.register(name="hamming_distance",       module=HammingDistance)
+METRICS.register(name="hinge_loss",             module=HingeLoss)
+METRICS.register(name="jaccard_index",          module=JaccardIndex)
+METRICS.register(name="matthews_corr_coef",     module=MatthewsCorrCoef)
+METRICS.register(name="precision",              module=Precision)
+METRICS.register(name="precision_recall_curve", module=PrecisionRecallCurve)
+METRICS.register(name="recall",                 module=Recall)
+METRICS.register(name="roc",                    module=ROC)
+METRICS.register(name="specificity",            module=Specificity)
+METRICS.register(name="stat_scores",            module=StatScores)
 
 # endregion
 
@@ -121,17 +121,17 @@ StructuralSimilarityIndexMeasure           = torchmetrics.StructuralSimilarityIn
 TotalVariation                             = torchmetrics.TotalVariation
 UniversalImageQualityIndex                 = torchmetrics.UniversalImageQualityIndex
 
-constant.METRIC.register(name="error_relative_global_dimensionless_synthesis",  module=ErrorRelativeGlobalDimensionlessSynthesis)
-constant.METRIC.register(name="multiscale_structural_similarity_index_measure", module=MultiScaleStructuralSimilarityIndexMeasure)
-constant.METRIC.register(name="multiscale_ssim",                                module=MultiScaleStructuralSimilarityIndexMeasure)
-constant.METRIC.register(name="peak_signal_noise_ratio",                        module=PeakSignalNoiseRatio)
-constant.METRIC.register(name="psnr",                                           module=PeakSignalNoiseRatio)
-constant.METRIC.register(name="spectral_angle_mapper",                          module=SpectralAngleMapper)
-constant.METRIC.register(name="spectral_distortion_index",                      module=SpectralDistortionIndex)
-constant.METRIC.register(name="structural_similarity_index_measure",            module=StructuralSimilarityIndexMeasure)
-constant.METRIC.register(name="ssim",                                           module=StructuralSimilarityIndexMeasure)
-constant.METRIC.register(name="total_variation",                                module=TotalVariation)
-constant.METRIC.register(name="universal_image_quality_index",                  module=UniversalImageQualityIndex)
+METRICS.register(name="error_relative_global_dimensionless_synthesis",  module=ErrorRelativeGlobalDimensionlessSynthesis)
+METRICS.register(name="multiscale_structural_similarity_index_measure", module=MultiScaleStructuralSimilarityIndexMeasure)
+METRICS.register(name="multiscale_ssim",                                module=MultiScaleStructuralSimilarityIndexMeasure)
+METRICS.register(name="peak_signal_noise_ratio",                        module=PeakSignalNoiseRatio)
+METRICS.register(name="psnr",                                           module=PeakSignalNoiseRatio)
+METRICS.register(name="spectral_angle_mapper",                          module=SpectralAngleMapper)
+METRICS.register(name="spectral_distortion_index",                      module=SpectralDistortionIndex)
+METRICS.register(name="structural_similarity_index_measure",            module=StructuralSimilarityIndexMeasure)
+METRICS.register(name="ssim",                                           module=StructuralSimilarityIndexMeasure)
+METRICS.register(name="total_variation",                                module=TotalVariation)
+METRICS.register(name="universal_image_quality_index",                  module=UniversalImageQualityIndex)
 
 # endregion
 
@@ -155,24 +155,24 @@ SymmetricMeanAbsolutePercentageError = torchmetrics.SymmetricMeanAbsolutePercent
 TweedieDevianceScore                 = torchmetrics.TweedieDevianceScore
 WeightedMeanAbsolutePercentageError  = torchmetrics.WeightedMeanAbsolutePercentageError
 
-constant.METRIC.register(name="concordance_corr_coef",                    module=ConcordanceCorrCoef)
-constant.METRIC.register(name="cosine_similarity",                        module=CosineSimilarity)
-constant.METRIC.register(name="explained_variance",                       module=ExplainedVariance)
-constant.METRIC.register(name="kendall_rank_corr_coef",                   module=KendallRankCorrCoef)
-constant.METRIC.register(name="kl_divergence",                            module=KLDivergence)
-constant.METRIC.register(name="log_cosh_error",                           module=LogCoshError)
-constant.METRIC.register(name="mean_absolute_error",                      module=MeanAbsoluteError)
-constant.METRIC.register(name="mae",                                      module=MeanAbsoluteError)
-constant.METRIC.register(name="mean_absolute_percentage_error",           module=MeanAbsolutePercentageError)
-constant.METRIC.register(name="mean_squared_error",                       module=MeanSquaredError)
-constant.METRIC.register(name="mse",                                      module=MeanSquaredError)
-constant.METRIC.register(name="mean_squared_log_error",                   module=MeanSquaredLogError)
-constant.METRIC.register(name="pearson_corr_coef",                        module=PearsonCorrCoef)
-constant.METRIC.register(name="r2_score",                                 module=R2Score)
-constant.METRIC.register(name="spearman_corr_coef",                       module=SpearmanCorrCoef)
-constant.METRIC.register(name="symmetric_mean_absolute_percentage_error", module=SymmetricMeanAbsolutePercentageError)
-constant.METRIC.register(name="tweedie_deviance_score",                   module=TweedieDevianceScore)
-constant.METRIC.register(name="weighted_mean_absolute_percentage_error",  module=WeightedMeanAbsolutePercentageError)
+METRICS.register(name="concordance_corr_coef",                    module=ConcordanceCorrCoef)
+METRICS.register(name="cosine_similarity",                        module=CosineSimilarity)
+METRICS.register(name="explained_variance",                       module=ExplainedVariance)
+METRICS.register(name="kendall_rank_corr_coef",                   module=KendallRankCorrCoef)
+METRICS.register(name="kl_divergence",                            module=KLDivergence)
+METRICS.register(name="log_cosh_error",                           module=LogCoshError)
+METRICS.register(name="mean_absolute_error",                      module=MeanAbsoluteError)
+METRICS.register(name="mae",                                      module=MeanAbsoluteError)
+METRICS.register(name="mean_absolute_percentage_error",           module=MeanAbsolutePercentageError)
+METRICS.register(name="mean_squared_error",                       module=MeanSquaredError)
+METRICS.register(name="mse",                                      module=MeanSquaredError)
+METRICS.register(name="mean_squared_log_error",                   module=MeanSquaredLogError)
+METRICS.register(name="pearson_corr_coef",                        module=PearsonCorrCoef)
+METRICS.register(name="r2_score",                                 module=R2Score)
+METRICS.register(name="spearman_corr_coef",                       module=SpearmanCorrCoef)
+METRICS.register(name="symmetric_mean_absolute_percentage_error", module=SymmetricMeanAbsolutePercentageError)
+METRICS.register(name="tweedie_deviance_score",                   module=TweedieDevianceScore)
+METRICS.register(name="weighted_mean_absolute_percentage_error",  module=WeightedMeanAbsolutePercentageError)
 
 # endregion
 
@@ -190,16 +190,16 @@ RetrievalRecall                 = torchmetrics.RetrievalRecall
 RetrievalRecallAtFixedPrecision = torchmetrics.RetrievalRecallAtFixedPrecision
 RetrievalRPrecision             = torchmetrics.RetrievalRPrecision
 
-constant.METRIC.register(name="retrieval_fall_out",                  module=RetrievalFallOut)
-constant.METRIC.register(name="retrieval_hit_rate",                  module=RetrievalHitRate)
-constant.METRIC.register(name="retrieval_map",                       module=RetrievalMAP)
-constant.METRIC.register(name="retrieval_mrr",                       module=RetrievalMRR)
-constant.METRIC.register(name="retrieval_normalized_dcg",            module=RetrievalNormalizedDCG)
-constant.METRIC.register(name="retrieval_precision",                 module=RetrievalPrecision)
-constant.METRIC.register(name="retrieval_precision_recall_curve",    module=RetrievalPrecisionRecallCurve)
-constant.METRIC.register(name="retrieval_recall",                    module=RetrievalRecall)
-constant.METRIC.register(name="retrieval_recall_at_fixed_precision", module=RetrievalRecallAtFixedPrecision)
-constant.METRIC.register(name="retrieval_r_precision",               module=RetrievalRPrecision)
+METRICS.register(name="retrieval_fall_out",                  module=RetrievalFallOut)
+METRICS.register(name="retrieval_hit_rate",                  module=RetrievalHitRate)
+METRICS.register(name="retrieval_map",                       module=RetrievalMAP)
+METRICS.register(name="retrieval_mrr",                       module=RetrievalMRR)
+METRICS.register(name="retrieval_normalized_dcg",            module=RetrievalNormalizedDCG)
+METRICS.register(name="retrieval_precision",                 module=RetrievalPrecision)
+METRICS.register(name="retrieval_precision_recall_curve",    module=RetrievalPrecisionRecallCurve)
+METRICS.register(name="retrieval_recall",                    module=RetrievalRecall)
+METRICS.register(name="retrieval_recall_at_fixed_precision", module=RetrievalRecallAtFixedPrecision)
+METRICS.register(name="retrieval_r_precision",               module=RetrievalRPrecision)
 
 # endregion
 
@@ -219,17 +219,17 @@ WordErrorRate        = torchmetrics.WordErrorRate
 WordInfoLost         = torchmetrics.WordInfoLost
 WordInfoPreserved    = torchmetrics.WordInfoPreserved
 
-constant.METRIC.register(name="blue_score",              module=BLEUScore)
-constant.METRIC.register(name="char_error_rate",         module=CharErrorRate)
-constant.METRIC.register(name="chrf_score",              module=CHRFScore)
-constant.METRIC.register(name="extended_edit_distance",  module=ExtendedEditDistance)
-constant.METRIC.register(name="match_error_rate",        module=MatchErrorRate)
-constant.METRIC.register(name="perplexity",              module=Perplexity)
-constant.METRIC.register(name="pacre_blue_score",        module=SacreBLEUScore)
-constant.METRIC.register(name="squad",                   module=SQuAD)
-constant.METRIC.register(name="translation_edit_rate",   module=TranslationEditRate)
-constant.METRIC.register(name="word_error_rate",         module=WordErrorRate)
-constant.METRIC.register(name="word_info_lost",          module=WordInfoLost)
-constant.METRIC.register(name="word_info_preserved",     module=WordInfoPreserved)
+METRICS.register(name="blue_score",              module=BLEUScore)
+METRICS.register(name="char_error_rate",         module=CharErrorRate)
+METRICS.register(name="chrf_score",              module=CHRFScore)
+METRICS.register(name="extended_edit_distance",  module=ExtendedEditDistance)
+METRICS.register(name="match_error_rate",        module=MatchErrorRate)
+METRICS.register(name="perplexity",              module=Perplexity)
+METRICS.register(name="pacre_blue_score",        module=SacreBLEUScore)
+METRICS.register(name="squad",                   module=SQuAD)
+METRICS.register(name="translation_edit_rate",   module=TranslationEditRate)
+METRICS.register(name="word_error_rate",         module=WordErrorRate)
+METRICS.register(name="word_info_lost",          module=WordInfoLost)
+METRICS.register(name="word_info_preserved",     module=WordInfoPreserved)
 
 # endregion

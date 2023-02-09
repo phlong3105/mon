@@ -14,35 +14,30 @@ __all__ = [
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InvertedResidual(base.LayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        stride      : int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int, stride: int):
         super().__init__()
-
+        
         if not (1 <= stride <= 3):
             raise ValueError("Illegal stride value.")
         self.stride = stride
-
+        
         branch_features = out_channels // 2
         if (self.stride == 1) and (in_channels != branch_features << 1):
             raise ValueError(
-                f"Invalid combination of `stride` {stride}, "
-                f"`in_channels` {in_channels} and `out_channels` {out_channels} "
-                f"values. If stride == 1 then `in_channels` should be equal "
-                f"to `out_channels` // 2 << 1."
+                f"Invalid combination of 'stride' {stride}, "
+                f"'in_channels' {in_channels} and 'out_channels' "
+                f"{out_channels} "
+                f"values. If stride == 1 then 'in_channels' should be equal "
+                f"to 'out_channels' // 2 << 1."
             )
-
+        
         if self.stride > 1:
             self.branch1 = nn.Sequential(
                 common.Conv2d(
@@ -68,7 +63,7 @@ class InvertedResidual(base.LayerParsingMixin, nn.Module):
             )
         else:
             self.branch1 = nn.Sequential()
-
+        
         self.branch2 = nn.Sequential(
             common.Conv2d(
                 in_channels  = in_channels if (self.stride > 1) else branch_features,
@@ -104,7 +99,7 @@ class InvertedResidual(base.LayerParsingMixin, nn.Module):
     
     @staticmethod
     def channel_shuffle(x: torch.Tensor, groups: int) -> torch.Tensor:
-        b, c, h, w         = x.size()
+        b, c, h, w = x.size()
         channels_per_group = c // groups
         # reshape
         x = x.view(b, groups, channels_per_group, h, w)
@@ -122,13 +117,13 @@ class InvertedResidual(base.LayerParsingMixin, nn.Module):
             y = torch.cat((self.branch1(x), self.branch2(x)), dim=1)
         y = self.channel_shuffle(y, 2)
         return y
-
+    
     @classmethod
     def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         if isinstance(f, list | tuple):
             c1, c2 = ch[f[0]], args[0]
         else:
-            c1, c2 = ch[f],    args[0]
+            c1, c2 = ch[f], args[0]
         args = [c1, *args[0:]]
         ch.append(c2)
         return args, ch

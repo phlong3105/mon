@@ -2,7 +2,7 @@ from mmdet.models.builder import HEADS
 from .convfc_bbox_head import ConvFCBBoxHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class SCNetBBoxHead(ConvFCBBoxHead):
     """BBox head for `SCNet <https://arxiv.org/abs/2012.10150>`_.
 

@@ -1,10 +1,10 @@
 import torch
 
-from ..builder import BBOX_SAMPLERS
 from .base_sampler import BaseSampler
+from ..builder import BBOX_SAMPLERS
 
 
-@BBOX_SAMPLERS.register_module()
+@BBOX_SAMPLERS._register()
 class RandomSampler(BaseSampler):
     """Random sampler.
 
@@ -16,18 +16,22 @@ class RandomSampler(BaseSampler):
         add_gt_as_proposals (bool, optional): Whether to add ground truth
             boxes as proposals. Defaults to True.
     """
-
-    def __init__(self,
-                 num,
-                 pos_fraction,
-                 neg_pos_ub=-1,
-                 add_gt_as_proposals=True,
-                 **kwargs):
-        from mmdet.core.bbox import demodata
-        super(RandomSampler, self).__init__(num, pos_fraction, neg_pos_ub,
-                                            add_gt_as_proposals)
+    
+    def __init__(
+        self,
+        num,
+        pos_fraction,
+        neg_pos_ub=-1,
+        add_gt_as_proposals=True,
+        **kwargs
+    ):
+        from mmdet.core.box import demodata
+        super(RandomSampler, self).__init__(
+            num, pos_fraction, neg_pos_ub,
+            add_gt_as_proposals
+        )
         self.rng = demodata.ensure_rng(kwargs.get('rng', None))
-
+    
     def random_choice(self, gallery, num):
         """Random select some elements from the gallery.
 
@@ -43,7 +47,7 @@ class RandomSampler(BaseSampler):
             Tensor or ndarray: sampled indices.
         """
         assert len(gallery) >= num
-
+        
         is_tensor = isinstance(gallery, torch.Tensor)
         if not is_tensor:
             if torch.cuda.is_available():
@@ -59,7 +63,7 @@ class RandomSampler(BaseSampler):
         if not is_tensor:
             rand_inds = rand_inds.cpu().numpy()
         return rand_inds
-
+    
     def _sample_pos(self, assign_result, num_expected, **kwargs):
         """Randomly sample some positive samples."""
         pos_inds = torch.nonzero(assign_result.gt_inds > 0, as_tuple=False)
@@ -69,7 +73,7 @@ class RandomSampler(BaseSampler):
             return pos_inds
         else:
             return self.random_choice(pos_inds, num_expected)
-
+    
     def _sample_neg(self, assign_result, num_expected, **kwargs):
         """Randomly sample some negative samples."""
         neg_inds = torch.nonzero(assign_result.gt_inds == 0, as_tuple=False)

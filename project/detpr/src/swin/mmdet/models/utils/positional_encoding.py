@@ -7,7 +7,7 @@ from mmcv.cnn import uniform_init
 from .builder import POSITIONAL_ENCODING
 
 
-@POSITIONAL_ENCODING.register_module()
+@POSITIONAL_ENCODING._register()
 class SinePositionalEncoding(nn.Module):
     """Position encoding with sine and cosine functions.
 
@@ -89,7 +89,7 @@ class SinePositionalEncoding(nn.Module):
         return repr_str
 
 
-@POSITIONAL_ENCODING.register_module()
+@POSITIONAL_ENCODING._register()
 class LearnedPositionalEncoding(nn.Module):
     """Position embedding with learnable embedding weights.
 

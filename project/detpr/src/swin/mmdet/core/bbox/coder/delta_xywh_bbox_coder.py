@@ -2,17 +2,17 @@ import mmcv
 import numpy as np
 import torch
 
-from ..builder import BBOX_CODERS
 from .base_bbox_coder import BaseBBoxCoder
+from ..builder import BBOX_CODERS
 
 
-@BBOX_CODERS.register_module()
+@BBOX_CODERS._register()
 class DeltaXYWHBBoxCoder(BaseBBoxCoder):
     """Delta XYWH BBox coder.
 
     Following the practice in `R-CNN <https://arxiv.org/abs/1311.2524>`_,
-    this coder encodes bbox (x1, y1, x2, y2) into delta (dx, dy, dw, dh) and
-    decodes delta (dx, dy, dw, dh) back to original bbox (x1, y1, x2, y2).
+    this coder encodes box (x1, y1, x2, y2) into delta (dx, dy, dw, dh) and
+    decodes delta (dx, dy, dw, dh) back to original box (x1, y1, x2, y2).
 
     Args:
         target_means (Sequence[float]): Denormalizing means of target for
@@ -22,18 +22,20 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         clip_border (bool, optional): Whether clip the objects outside the
             border of the image. Defaults to True.
     """
-
-    def __init__(self,
-                 target_means=(0., 0., 0., 0.),
-                 target_stds=(1., 1., 1., 1.),
-                 clip_border=True):
+    
+    def __init__(
+        self,
+        target_means=(0., 0., 0., 0.),
+        target_stds=(1., 1., 1., 1.),
+        clip_border=True
+    ):
         super(BaseBBoxCoder, self).__init__()
         self.means = target_means
         self.stds = target_stds
         self.clip_border = clip_border
-
+    
     def encode(self, bboxes, gt_bboxes):
-        """Get bbox regression transformation deltas that can be used to
+        """Get box regression transformation deltas that can be used to
         transform the ``bboxes`` into the ``gt_bboxes``.
 
         Args:
@@ -44,17 +46,19 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         Returns:
             torch.Tensor: Box transformation deltas
         """
-
+        
         assert bboxes.size(0) == gt_bboxes.size(0)
         assert bboxes.size(-1) == gt_bboxes.size(-1) == 4
         encoded_bboxes = bbox2delta(bboxes, gt_bboxes, self.means, self.stds)
         return encoded_bboxes
-
-    def decode(self,
-               bboxes,
-               pred_bboxes,
-               max_shape=None,
-               wh_ratio_clip=16 / 1000):
+    
+    def decode(
+        self,
+        bboxes,
+        pred_bboxes,
+        max_shape=None,
+        wh_ratio_clip=16 / 1000
+    ):
         """Apply transformation `pred_bboxes` to `boxes`.
 
         Args:
@@ -74,13 +78,15 @@ class DeltaXYWHBBoxCoder(BaseBBoxCoder):
         Returns:
             torch.Tensor: Decoded boxes.
         """
-
+        
         assert pred_bboxes.size(0) == bboxes.size(0)
         if pred_bboxes.ndim == 3:
             assert pred_bboxes.size(1) == bboxes.size(1)
-        decoded_bboxes = delta2bbox(bboxes, pred_bboxes, self.means, self.stds,
-                                    max_shape, wh_ratio_clip, self.clip_border)
-
+        decoded_bboxes = delta2bbox(
+            bboxes, pred_bboxes, self.means, self.stds,
+            max_shape, wh_ratio_clip, self.clip_border
+        )
+        
         return decoded_bboxes
 
 
@@ -104,40 +110,42 @@ def bbox2delta(proposals, gt, means=(0., 0., 0., 0.), stds=(1., 1., 1., 1.)):
             dw, dh.
     """
     assert proposals.size() == gt.size()
-
+    
     proposals = proposals.float()
     gt = gt.float()
     px = (proposals[..., 0] + proposals[..., 2]) * 0.5
     py = (proposals[..., 1] + proposals[..., 3]) * 0.5
     pw = proposals[..., 2] - proposals[..., 0]
     ph = proposals[..., 3] - proposals[..., 1]
-
+    
     gx = (gt[..., 0] + gt[..., 2]) * 0.5
     gy = (gt[..., 1] + gt[..., 3]) * 0.5
     gw = gt[..., 2] - gt[..., 0]
     gh = gt[..., 3] - gt[..., 1]
-
+    
     dx = (gx - px) / pw
     dy = (gy - py) / ph
     dw = torch.log(gw / pw)
     dh = torch.log(gh / ph)
     deltas = torch.stack([dx, dy, dw, dh], dim=-1)
-
+    
     means = deltas.new_tensor(means).unsqueeze(0)
     stds = deltas.new_tensor(stds).unsqueeze(0)
     deltas = deltas.sub_(means).div_(stds)
-
+    
     return deltas
 
 
 @mmcv.jit(coderize=True)
-def delta2bbox(rois,
-               deltas,
-               means=(0., 0., 0., 0.),
-               stds=(1., 1., 1., 1.),
-               max_shape=None,
-               wh_ratio_clip=16 / 1000,
-               clip_border=True):
+def delta2bbox(
+    rois,
+    deltas,
+    means=(0., 0., 0., 0.),
+    stds=(1., 1., 1., 1.),
+    max_shape=None,
+    wh_ratio_clip=16 / 1000,
+    clip_border=True
+):
     """Apply deltas to shift/scale base boxes.
 
     Typically the rois are anchor or proposed bounding boxes and the deltas are
@@ -185,9 +193,13 @@ def delta2bbox(rois,
                 [0.0000, 0.3161, 4.1945, 0.6839],
                 [5.0000, 5.0000, 5.0000, 5.0000]])
     """
-    means = deltas.new_tensor(means).view(1,
-                                          -1).repeat(1,
-                                                     deltas.size(-1) // 4)
+    means = deltas.new_tensor(means).view(
+        1,
+        -1
+    ).repeat(
+        1,
+        deltas.size(-1) // 4
+        )
     stds = deltas.new_tensor(stds).view(1, -1).repeat(1, deltas.size(-1) // 4)
     denorm_deltas = deltas * stds + means
     dx = denorm_deltas[..., 0::4]
@@ -216,9 +228,9 @@ def delta2bbox(rois,
     y1 = gy - gh * 0.5
     x2 = gx + gw * 0.5
     y2 = gy + gh * 0.5
-
+    
     bboxes = torch.stack([x1, y1, x2, y2], dim=-1).view(deltas.size())
-
+    
     if clip_border and max_shape is not None:
         if not isinstance(max_shape, torch.Tensor):
             max_shape = x1.new_tensor(max_shape)
@@ -226,12 +238,13 @@ def delta2bbox(rois,
         if max_shape.ndim == 2:
             assert bboxes.ndim == 3
             assert max_shape.size(0) == bboxes.size(0)
-
+        
         min_xy = x1.new_tensor(0)
         max_xy = torch.cat(
             [max_shape] * (deltas.size(-1) // 2),
-            dim=-1).flip(-1).unsqueeze(-2)
+            dim=-1
+        ).flip(-1).unsqueeze(-2)
         bboxes = torch.where(bboxes < min_xy, min_xy, bboxes)
         bboxes = torch.where(bboxes > max_xy, max_xy, bboxes)
-
+    
     return bboxes

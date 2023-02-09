@@ -8,13 +8,12 @@ import requests
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.ops import DeformConv2d
 from PIL import Image
 from torch.cuda import amp
+
 from utils.datasets import letterbox
-from utils.general import (
-    increment_path, make_divisible, non_max_suppression,
-    scale_coords, xyxy2xywh,
-)
+from utils.general import non_max_suppression, make_divisible, scale_coords, increment_path, xyxy2xywh
 from utils.plots import color_list, plot_one_box
 from utils.torch_utils import time_synchronized
 
@@ -541,7 +540,7 @@ class RepConv(nn.Module):
                 )
                 for i in range(self.in_channels):
                     kernel_value[i, i % input_dim, 1, 1] = 1
-                self.id_tensor = torch.from_numpy(kernel_value).to(branch.weight.devices)
+                self.id_tensor = torch.from_numpy(kernel_value).to(branch.weight.device)
             kernel = self.id_tensor
             running_mean = branch.running_mean
             running_var = branch.running_var
@@ -604,7 +603,7 @@ class RepConv(nn.Module):
                     padding=0,
                     groups=self.groups, 
                     bias=False)
-            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.to(self.rbr_1x1.weight.data.devices)
+            identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.to(self.rbr_1x1.weight.data.device)
             identity_conv_1x1.weight.data = identity_conv_1x1.weight.data.squeeze().squeeze()
             # print(f" identity_conv_1x1.weight = {identity_conv_1x1.weight.shape}")
             identity_conv_1x1.weight.data.fill_(0.0)
@@ -880,7 +879,7 @@ class autoShape(nn.Module):
     @torch.no_grad()
     def forward(self, imgs, size=640, augment=False, profile=False):
         # Inference from various sources. For height=640, width=1280, RGB images example inputs are:
-        #   file_name:   imgs = 'data/samples/zidane.jpg'
+        #   filename:   imgs = 'data/samples/zidane.jpg'
         #   URI:             = 'https://github.com/ultralytics/yolov5/releases/download/v1.0/zidane.jpg'
         #   OpenCV:          = cv2.imread('image.jpg')[:,:,::-1]  # HWC BGR to RGB x(640,1280,3)
         #   PIL:             = Image.open('image.jpg')  # HWC x(640,1280,3)
@@ -891,18 +890,18 @@ class autoShape(nn.Module):
         t = [time_synchronized()]
         p = next(self.model.parameters())  # for device and type
         if isinstance(imgs, torch.Tensor):  # torch
-            with amp.autocast(enabled=p.devices.type != 'cpu'):
-                return self.model(imgs.to(p.devices).type_as(p), augment, profile)  # inference
+            with amp.autocast(enabled=p.device.type != 'cpu'):
+                return self.model(imgs.to(p.device).type_as(p), augment, profile)  # inference
 
         # Pre-process
         n, imgs = (len(imgs), imgs) if isinstance(imgs, list) else (1, [imgs])  # number of images, list of images
         shape0, shape1, files = [], [], []  # image and inference shapes, filenames
         for i, im in enumerate(imgs):
-            f = f'image{i}'  # file_name
-            if isinstance(im, str):  # file_name or uri
+            f = f'image{i}'  # filename
+            if isinstance(im, str):  # filename or uri
                 im, f = np.asarray(Image.open(requests.get(im, stream=True).raw if im.startswith('http') else im)), im
             elif isinstance(im, Image.Image):  # PIL Image
-                im, f = np.asarray(im), getattr(im, 'file_name', f) or f
+                im, f = np.asarray(im), getattr(im, 'filename', f) or f
             files.append(Path(f).with_suffix('.jpg').name)
             if im.shape[0] < 5:  # image in CHW
                 im = im.transpose((1, 2, 0))  # reverse dataloader .transpose(2, 0, 1)
@@ -916,10 +915,10 @@ class autoShape(nn.Module):
         x = [letterbox(im, new_shape=shape1, auto=False)[0] for im in imgs]  # pad
         x = np.stack(x, 0) if n > 1 else x[0][None]  # stack
         x = np.ascontiguousarray(x.transpose((0, 3, 1, 2)))  # BHWC to BCHW
-        x = torch.from_numpy(x).to(p.devices).type_as(p) / 255.  # uint8 to fp16/32
+        x = torch.from_numpy(x).to(p.device).type_as(p) / 255.  # uint8 to fp16/32
         t.append(time_synchronized())
 
-        with amp.autocast(enabled=p.devices.type != 'cpu'):
+        with amp.autocast(enabled=p.device.type != 'cpu'):
             # Inference
             y = self.model(x, augment, profile)[0]  # forward
             t.append(time_synchronized())
@@ -937,7 +936,7 @@ class Detections:
     # detections class for YOLOv5 inference results
     def __init__(self, imgs, pred, files, times=None, names=None, shape=None):
         super(Detections, self).__init__()
-        d = pred[0].devices  # device
+        d = pred[0].device  # device
         gn = [torch.tensor([*[im.shape[i] for i in [1, 0, 1, 0]], 1., 1.], device=d) for im in imgs]  # normalizations
         self.imgs = imgs  # list of images as numpy arrays
         self.pred = pred  # list of tensors pred[0] = (xyxy, conf, cls)
@@ -1332,7 +1331,7 @@ class RepConv_OREPA(nn.Module):
                 kernel_value = np.zeros((self.in_channels, input_dim, 3, 3), dtype=np.float32)
                 for i in range(self.in_channels):
                     kernel_value[i, i % input_dim, 1, 1] = 1
-                self.id_tensor = torch.from_numpy(kernel_value).to(branch.weight.devices)
+                self.id_tensor = torch.from_numpy(kernel_value).to(branch.weight.device)
             kernel = self.id_tensor
             running_mean = branch.running_mean
             running_var = branch.running_var
@@ -1538,7 +1537,7 @@ class SwinTransformerLayer(nn.Module):
 
         # create mask from init to forward
         if self.shift_size > 0:
-            attn_mask = self.create_mask(H, W).to(x.devices)
+            attn_mask = self.create_mask(H, W).to(x.device)
         else:
             attn_mask = None
 
@@ -1884,7 +1883,7 @@ class SwinTransformerLayer_v2(nn.Module):
 
         # create mask from init to forward
         if self.shift_size > 0:
-            attn_mask = self.create_mask(H, W).to(x.devices)
+            attn_mask = self.create_mask(H, W).to(x.device)
         else:
             attn_mask = None
 

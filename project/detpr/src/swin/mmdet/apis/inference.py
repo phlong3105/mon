@@ -6,7 +6,6 @@ import torch
 from mmcv.ops import RoIPool
 from mmcv.parallel import collate, scatter
 from mmcv.runner import load_checkpoint
-
 from mmdet.core import get_classes
 from mmdet.datasets import replace_ImageToTensor
 from mmdet.datasets.pipelines import Compose
@@ -30,8 +29,10 @@ def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
     if isinstance(config, str):
         config = mmcv.Config.fromfile(config)
     elif not isinstance(config, mmcv.Config):
-        raise TypeError('config must be a filename or Config object, '
-                        f'but got {type(config)}')
+        raise TypeError(
+            'config must be a filename or Config object, '
+            f'but got {type(config)}'
+        )
     if cfg_options is not None:
         config.merge_from_dict(cfg_options)
     config.model.pretrained = None
@@ -44,8 +45,10 @@ def init_detector(config, checkpoint=None, device='cuda:0', cfg_options=None):
             model.CLASSES = checkpoint['meta']['CLASSES']
         else:
             warnings.simplefilter('once')
-            warnings.warn('Class names are not saved in the checkpoint\'s '
-                          'meta data, use COCO classes by default.')
+            warnings.warn(
+                'Class names are not saved in the checkpoint\'s '
+                'meta data, use COCO classes by default.'
+            )
             model.CLASSES = get_classes('coco')
     model.cfg = config  # save the config in the model for convenience
     model.to(device)
@@ -58,7 +61,7 @@ class LoadImage(object):
 
     A simple pipeline to load image.
     """
-
+    
     def __call__(self, results):
         """Call function to load images into results.
 
@@ -69,9 +72,11 @@ class LoadImage(object):
             dict: ``results`` will be returned containing loaded image.
         """
         warnings.simplefilter('once')
-        warnings.warn('`LoadImage` is deprecated and will be removed in '
-                      'future releases. You may use `LoadImageFromWebcam` '
-                      'from `mmdet.datasets.pipelines.` instead.')
+        warnings.warn(
+            '`LoadImage` is deprecated and will be removed in '
+            'future releases. You may use `LoadImageFromWebcam` '
+            'from `mmdet.datasets.pipelines.` instead.'
+        )
         if isinstance(results['img'], str):
             results['filename'] = results['img']
             results['ori_filename'] = results['img']
@@ -98,24 +103,24 @@ def inference_detector(model, imgs):
         If imgs is a list or tuple, the same length list type results
         will be returned, otherwise return the detection results directly.
     """
-
+    
     if isinstance(imgs, (list, tuple)):
         is_batch = True
     else:
         imgs = [imgs]
         is_batch = False
-
+    
     cfg = model.cfg
     device = next(model.parameters()).devices  # model device
-
+    
     if isinstance(imgs[0], np.ndarray):
         cfg = cfg.copy()
         # set loading pipeline type
         cfg.data.test.pipeline[0].type = 'LoadImageFromWebcam'
-
+    
     cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
     test_pipeline = Compose(cfg.data.test.pipeline)
-
+    
     datas = []
     for img in imgs:
         # prepare data
@@ -128,7 +133,7 @@ def inference_detector(model, imgs):
         # build the data pipeline
         data = test_pipeline(data)
         datas.append(data)
-
+    
     data = collate(datas, samples_per_gpu=len(imgs))
     # just get the actual data from DataContainer
     data['img_metas'] = [img_metas.data[0] for img_metas in data['img_metas']]
@@ -141,11 +146,11 @@ def inference_detector(model, imgs):
             assert not isinstance(
                 m, RoIPool
             ), 'CPU inference with RoIPool is not supported currently.'
-
+    
     # forward the model
     with torch.no_grad():
         results = model(return_loss=False, rescale=True, **data)
-
+    
     if not is_batch:
         return results[0]
     else:
@@ -178,7 +183,7 @@ async def async_inference_detector(model, img):
     test_pipeline = Compose(cfg.data.test.pipeline)
     data = test_pipeline(data)
     data = scatter(collate([data], samples_per_gpu=1), [device])[0]
-
+    
     # We don't restore `torch.is_grad_enabled()` value during concurrent
     # inference since execution can overlap
     torch.set_grad_enabled(False)
@@ -186,19 +191,21 @@ async def async_inference_detector(model, img):
     return result
 
 
-def show_result_pyplot(model,
-                       img,
-                       result,
-                       score_thr=0.3,
-                       title='result',
-                       wait_time=0):
+def show_result_pyplot(
+    model,
+    img,
+    result,
+    score_thr=0.3,
+    title='result',
+    wait_time=0
+):
     """Visualize the detection results on the image.
 
     Args:
         model (nn.Module): The loaded detector.
         img (str or np.ndarray): Image filename or loaded image.
         result (tuple[list] or list): The detection result, can be either
-            (bbox, segm) or just bbox.
+            (box, segm) or just box.
         score_thr (float): The threshold to visualize the bboxes and masks.
         title (str): Title of the pyplot figure.
         wait_time (float): Value of waitKey param.
@@ -214,4 +221,5 @@ def show_result_pyplot(model,
         wait_time=wait_time,
         win_name=title,
         bbox_color=(72, 101, 241),
-        text_color=(72, 101, 241))
+        text_color=(72, 101, 241)
+    )

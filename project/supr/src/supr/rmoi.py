@@ -8,9 +8,9 @@ images.
 from __future__ import annotations
 
 __all__ = [
-	"MOI", "MovementOfInterest", "ROI", "RegionOfInterest",
-	"assign_detections_to_rois", "assign_moving_objects_to_mois",
-	"get_best_matched_moi", "get_moi_for_box", "get_roi_for_box",
+    "MOI", "MovementOfInterest", "ROI", "RegionOfInterest",
+    "assign_detections_to_rois", "assign_moving_objects_to_mois",
+    "get_best_matched_moi", "get_moi_for_box", "get_roi_for_box",
 ]
 
 from typing import Sequence
@@ -19,162 +19,169 @@ import cv2
 import numpy as np
 
 import mon
-from supr import constant, data
-from supr.typing import Ints, PathsType, PathType, TensorOrArray, UIDType
+from supr import data
+
+error_console = mon.error_console
 
 
 # region ROI
 
 class RegionOfInterest:
-	"""The Region of Interest.
-	
-	Args:
-		uid: An unique ID. Defaults to None.
-		points: A list of points defining the ROI. Defaults to None.
-		shape_type: The ROI type. Defaults to None.
-	"""
-	
-	def __init__(self, uid: UIDType, points: TensorOrArray, shape_type: str):
-		super().__init__()
-		self.uid        = uid
-		self.points	    = points
-		self.shape_type = shape_type
-	
-	def __len__(self) -> int:
-		return int(self._points.shape[0])
-	
-	@property
-	def points(self) -> np.ndarray:
-		"""The array of points defining the ROI."""
-		return self._points
-	
-	@points.setter
-	def points(self, points: TensorOrArray):
-		if isinstance(points, list | tuple):
-			points = np.array(points, np.int32)
-		assert isinstance(points, np.ndarray) and points.ndim == 2
-		self._points = points
+    """The Region of Interest.
+    
+    Args:
+        id_: An unique ID. Defaults to None.
+        points: A list of points defining the ROI. Defaults to None.
+        shape_type: The ROI type. Defaults to None.
+    """
+    
+    def __init__(self, id_: int | str, points: np.ndarray, shape_type: str):
+        super().__init__()
+        self.id_        = id_
+        self.points     = points
+        self.shape_type = shape_type
+    
+    def __len__(self) -> int:
+        return int(self._points.shape[0])
+    
+    @property
+    def points(self) -> np.ndarray:
+        """The array of points defining the ROI."""
+        return self._points
+    
+    @points.setter
+    def points(self, points: np.ndarray | list):
+        points = np.array(points, np.int32)
+        if not points.ndim == 2:
+            raise ValueError(
+                f"points' number of dimensions must be == 2, but got {points.ndim}."
+            )
+        self._points = points
+    
+    @property
+    def has_valid_points(self) -> bool:
+        """Return True if there are more than 3 points."""
+        if int(self._points.shape[0]) >= 3:
+            return True
+        else:
+            error_console.log(f"Number of points in the ROI must be >= 3.")
+            return False
+    
+    @classmethod
+    def from_file(
+        cls,
+        path     : mon.Path,
+        rmois_dir: mon.Path | None = None,
+        **kwargs
+    ) -> list:
+        """Create a list of :class:`RegionOfInterest` from the content of a
+        ".json" file specified by the :param:`path`.
+        """
+        if path.is_json_file():
+            pass
+        elif isinstance(path, str) \
+            and rmois_dir is not None \
+            and mon.Path(rmois_dir).is_dir():
+            path = mon.Path(rmois_dir) / path
+        
+        if not path.is_json_file():
+            raise ValueError(
+                f"path must be a valid path to a .json file, but got {path}."
+            )
+        
+        data = mon.load_config(path)
+        if "roi" not in data:
+            raise ValueError(f"data must contain the key 'roi'.")
+        rois = [cls(**r, **kwargs) for r in data["roi"]]
+        return rois
 
-	@property
-	def has_valid_points(self) -> bool:
-		"""Return True if there are more than 3 points."""
-		if int(self._points.shape[0]) >= 3:
-			return True
-		else:
-			mon.error_console.log(f"Number of points in the ROI must be >= 3.")
-			return False
-		
-	@classmethod
-	def from_file(
-		cls,
-		path     : PathType,
-		rmois_dir: PathsType = None,
-		**kwargs
-	) -> list:
-		"""Create a list of :class:`RegionOfInterest` from the content of a
-		".json" file specified by the :param:`path`.
-		"""
-		if mon.is_json_file(path=path):
-			pass
-		elif isinstance(path, str) \
-			and rmois_dir is not None \
-			and mon.Path(rmois_dir).is_dir():
-			path = mon.Path(rmois_dir) / path
-		assert mon.is_json_file(path=path)
-		
-		data = mon.load_config(path)
-		assert hasattr(data, "roi")
-		rois = [cls(**r, **kwargs) for r in data.roi]
-		return rois
-	
-	def is_box_in_roi(
-		self,
-		box             : np.ndarray,
-		compute_distance: bool = False
-	) -> int:
-		"""Check a bounding bbox touches the current ROI.
-		
-		Args:
-			box: Bounding boxes in (x1, y1, x2, y2) format.
-			compute_distance: If True, calculate the distance from bbox
-				coordinates to the ROI? Defaults to False.
-		
-		Returns:
-			Positive (inside), negative (outside), or zero (on an edge).
-		"""
-		tl = cv2.pointPolygonTest(self.points, (box[0], box[1]), compute_distance)
-		tr = cv2.pointPolygonTest(self.points, (box[2], box[1]), compute_distance)
-		br = cv2.pointPolygonTest(self.points, (box[2], box[3]), compute_distance)
-		bl = cv2.pointPolygonTest(self.points, (box[0], box[3]), compute_distance)
-		if tl > 0 and tr > 0 and br > 0 and bl > 0:
-			return 1
-		elif tl < 0 and tr < 0 and br < 0 and bl < 0:
-			return min(tl, tr, br, bl)
-		else:
-			return 0
-	
-	def is_box_center_in_roi(
-		self,
-		box             : np.ndarray,
-		compute_distance: bool = False
-	) -> int:
-		"""Check a bounding bbox touches the current ROI.
-		
-		Args:
-			box: Bounding boxes in (x1, y1, x2, y2) format.
-			compute_distance: If True, calculate the distance from bbox
-				coordinates to the ROI? Defaults to False.
-		
-		Returns:
-			Positive (inside), negative (outside), or zero (on an edge).
-		"""
-		c_x = (box[0] + box[2]) / 2
-		c_y = (box[1] + box[3]) / 2
-		return int(cv2.pointPolygonTest(self.points, (c_x, c_y), compute_distance))
-		
-	def draw(self, image: np.ndarray) -> np.ndarray:
-		"""Draw the current ROI on the :param:`image`."""
-		color = mon.BasicRGB.GREEN.value
-		pts   = self.points.reshape((-1, 1, 2))
-		cv2.polylines(img=image, pts=[pts], isClosed=True, color=color, thickness=2)
-		return image
+    def is_box_in_roi(self, bbox: np.ndarray, compute_distance: bool = False) -> int:
+        """Check a bounding bbox touches the current ROI.
+        
+        Args:
+            bbox: Bounding boxes in XYXY format.
+            compute_distance: If True, calculate the distance from bbox
+                coordinates to the ROI? Defaults to False.
+        
+        Returns:
+            Positive (inside), negative (outside), or zero (on an edge).
+        """
+        tl = cv2.pointPolygonTest(self.points, (bbox[0], bbox[1]), compute_distance)
+        tr = cv2.pointPolygonTest(self.points, (bbox[2], bbox[1]), compute_distance)
+        br = cv2.pointPolygonTest(self.points, (bbox[2], bbox[3]), compute_distance)
+        bl = cv2.pointPolygonTest(self.points, (bbox[0], bbox[3]), compute_distance)
+        if tl > 0 and tr > 0 and br > 0 and bl > 0:
+            return 1
+        elif tl < 0 and tr < 0 and br < 0 and bl < 0:
+            return min(tl, tr, br, bl)
+        else:
+            return 0
+
+    def is_box_center_in_roi(self, bbox: np.ndarray, compute_distance: bool = False) -> int:
+        """Check a bounding bbox touches the current ROI.
+        
+        Args:
+            bbox: Bounding boxes in XYXY format.
+            compute_distance: If True, calculate the distance from bbox
+                coordinates to the ROI? Defaults to False.
+        
+        Returns:
+            Positive (inside), negative (outside), or zero (on an edge).
+        """
+        c_x = (bbox[0] + bbox[2]) / 2
+        c_y = (bbox[1] + bbox[3]) / 2
+        return int(cv2.pointPolygonTest(self.points, (c_x, c_y), compute_distance))
+    
+    def draw(self, image: np.ndarray) -> np.ndarray:
+        """Draw the current ROI on the :param:`image`."""
+        color = mon.BasicRGB.GREEN.value
+        pts = self.points.reshape((-1, 1, 2))
+        cv2.polylines(
+            img       = image,
+            pts       = [pts],
+            isClosed  = True,
+            color     = color,
+            thickness = 2
+        )
+        return image
 
 
 ROI = RegionOfInterest
 
 
 def get_roi_for_box(
-	box      : np.ndarray,
-	rois     : Sequence[ROI],
-	threshold: int = -50
-) -> UIDType | None:
-	"""Check if bounding boxes belong to one of the many ROIs in the image.
+    bbox     : np.ndarray,
+    rois     : Sequence[ROI],
+    threshold: int = -50
+) -> int | str | None:
+    """Check if bounding boxes belong to one of the many ROIs in the image.
 
-	Args:
-		box: Bounding boxes in (x1, y1, x2, y2) format.
-		rois: A list of :class:`ROI` objects.
-		threshold: A threshold value determining whether if the bbox is in a ROI.
-			Defaults to -50.
-		
-	Returns:
-		The matching ROI's UID.
-	"""
-	for r in rois:
-		d = r.is_box_center_in_roi(box=box, compute_distance=True)
-		if d >= threshold:
-			return r.uid
-	return None
+    Args:
+        bbox: Bounding boxes in XYXY format.
+        rois: A list of :class:`ROI` objects.
+        threshold: A threshold value determining whether if the bbox is in a
+            ROI. Defaults to -50.
+        
+    Returns:
+        The matching ROI's id.
+    """
+    for r in rois:
+        d = r.is_box_center_in_roi(bbox=bbox, compute_distance=True)
+        if d >= threshold:
+            return r.id_
+    return None
 
 
-def assign_detections_to_rois(dets: list[data.Instance], rois: Sequence[ROI]):
-	"""Assign :class:`data.Detection` objects to ROIs.
+def assign_detections_to_rois(instances: list[data.Instance], rois: list[ROI]):
+    """Assign :class:`data.Detection` objects to ROIs.
 
-	Args:
-		dets: A list :class:`data.Detection` objects.
-		rois: A list of :class:`ROI` objects.
-	"""
-	for d in dets:
-		d.roi_uid = get_roi_for_box(box=d.box, rois=rois)
+    Args:
+        instances: A list :class:`data.Instance` objects.
+        rois: A list of :class:`ROI` objects.
+    """
+    for i in instances:
+        i.roi_id = get_roi_for_box(bbox=i.bbox, rois=rois)
+
 
 # endregion
 
@@ -182,286 +189,290 @@ def assign_detections_to_rois(dets: list[data.Instance], rois: Sequence[ROI]):
 # region MOI
 
 class MovementOfInterest:
-	"""The Movement of Interest
-	
-	Args:
-		uid: An unique ID. Defaults to None.
-		points: A list of points defining the MOI. Defaults to None.
-		shape_type: The MOI type. Defaults to None.
-		offset: Defaults to None.
-		distance_function: A distance function. Defaults to 'hausdorff'.
-		distance_threshold: The maximum distance for counting with track.
-			Defaults to 300.0.
-		angle_threshold: The maximum angle for counting with track. Defaults to
-			45.0.
-		color: The color for image the MOI. Defaults to (255, 255, 255).
-	"""
-	
-	def __init__(
-		self,
-		uid               : UIDType,
-		points            : TensorOrArray,
-		shape_type        : str,
-		offset            : int | None = None,
-		distance_function : str        = "hausdorff",
-		distance_threshold: float      = 300.0,
-		angle_threshold   : float      = 45.0,
-		color             : Ints       = mon.AppleRGB.WHITE.value,
-	):
-		super().__init__()
-		self.uid                = uid
-		self.points             = points
-		self.shape_type         = shape_type
-		self.offset             = offset
-		self.distance_function  = constant.DISTANCE.build(name=distance_function)
-		self.distance_threshold = distance_threshold
-		self.angle_threshold    = angle_threshold
-		
-		self.color = mon.AppleRGB.values()[uid] \
-			if isinstance(uid, int) and uid < len(mon.AppleRGB.values()) \
-			else color
-			
-	@property
-	def points(self) -> np.ndarray:
-		"""The array of points defining the MOI."""
-		return self._points
-	
-	@points.setter
-	def points(self, points: TensorOrArray):
-		if isinstance(points, list | tuple):
-			points = np.array(points, np.int32)
-		assert isinstance(points, np.ndarray) and points.ndim >= 2
-		self._points = points
-
-	@property
-	def has_valid_points(self) -> bool:
-		"""Return True if there are more than 2 points."""
-		if int(self._points.shape[0]) \
-			and not all(len(t) >= 2 for t in self.points):
-			return True
-		else:
-			mon.error_console.log(
-				f"Number of points in each track must be >= 2."
-			)
-			return False
-	
-	@classmethod
-	def from_file(
-		cls,
-		path     : PathType,
-		rmois_dir: PathsType = None,
-		**kwargs
-	) -> list:
-		"""Create a list of :class:`MotionOfInterest` from the content of a
-		".json" file specified by the :param:`path`.
-		"""
-		if mon.is_json_file(path=path):
-			pass
-		elif isinstance(path, str) \
-			and rmois_dir is not None \
-			and mon.Path(rmois_dir).is_dir():
-			path = mon.Path(rmois_dir) / path
-		assert mon.is_json_file(path=path)
-
-		data = mon.load_config(path)
-		assert hasattr(data, "moi")
-		mois = [cls(**m, **kwargs) for m in data.moi]
-		return mois
-	
-	def calculate_distance_with_track(self, object_track: np.ndarray) -> float:
-		"""Calculate the distance between an object's track to the MOI's tracks.
-		
-		Args:
-			object_track: An object's trajectory as an array of points.
-				
-		Returns:
-			Distance value between an object's track with a MOI's track. If
-			distance > :attr:`distance_threshold`, return None.
-		"""
-		d = self.distance_function(self.points, object_track)
-		return None if (d > self.distance_threshold) else d
-	
-	def calculate_angle_with_track(self, object_track: np.ndarray) -> float:
-		"""Calculate the angle between an object's track to the MOI's tracks.
-		
-		Args:
-			object_track: An object's trajectory as an array of points.
-			
-		Returns:
-			Angle value between an object's track with a MOI's track. If
-			angle > :attr:`angle_threshold`, return None.
-		"""
-		a = mon.angle_between_vectors(self.points, object_track)
-		return None if (a > self.angle_threshold) else a
-	
-	def is_box_center_in_moi(
-		self,
-		box             : np.ndarray,
-		compute_distance: bool = False
-	) -> int:
-		"""Check a bounding bbox touches the current MOI.
-		
-		Args:
-			box: Bounding boxes in (x1, y1, x2, y2) format.
-			compute_distance: If True, calculate the distance from bbox
-				coordinates to the ROI? Defaults to False.
-		
-		Returns:
-			Positive (inside), negative (outside), or zero (on an edge).
-		"""
-		c_x = (box[0] + box[2]) / 2
-		c_y = (box[1] + box[3]) / 2
-		return int(cv2.pointPolygonTest(self.points, (c_x, c_y), compute_distance))
-		
-	def draw(self, image: np.ndarray) -> np.ndarray:
-		"""Draw the current MOI on the :param:`image`."""
-		# NOTE: Draw MOI's direction
-		pts = self.points.reshape((-1, 1, 2))
-		if self.shape_type == "polygon":
-			cv2.polylines(
-				img       = image,
-				pts       = [pts],
-				isClosed  = True,
-				color     = self.color,
-				thickness = 1,
-				lineType  = cv2.LINE_AA
-			)
-		elif self.shape_type == "line":
-			cv2.polylines(
-				img       = image,
-				pts       = [pts],
-				isClosed  = False,
-				color     = self.color,
-				thickness = 1,
-				lineType  = cv2.LINE_AA
-			)
-			cv2.arrowedLine(
-				img       = image,
-				pt1       = tuple(self.points[-2]),
-				pt2       = tuple(self.points[-1]),
-				color     = self.color,
-				thickness = 1,
-				line_type = cv2.LINE_AA,
-				tipLength = 0.2
-			)
-			for i in range(len(self.points) - 1):
-				cv2.circle(
-					img       = image,
-					center    = tuple(self.points[i]),
-					radius    = 3,
-					color     = self.color,
-					thickness = -1,
-					lineType  = cv2.LINE_AA
-				)
-				
-		# NOTE: Draw MOI's uid
-		cv2.putText(
-			img       = image,
-			text      = f"{self.uid}",
-			fontFace  = cv2.FONT_HERSHEY_SIMPLEX,
-			fontScale = 0.75,
-			org       = tuple(self.points[-1]),
-			color     = self.color,
-			thickness = 2
-		)
-		return image
+    """The Movement of Interest
+    
+    Args:
+        id_: An unique ID. Defaults to None.
+        points: A list of points defining the MOI. Defaults to None.
+        shape_type: The MOI type. Defaults to None.
+        offset: Defaults to None.
+        distance_function: A distance function. Defaults to 'hausdorff'.
+        distance_threshold: The maximum distance for counting a track. Defaults
+            to 300.0.
+        angle_threshold: The maximum angle for counting a track. Defaults to
+            45.0.
+        color: The color of the MOI. Defaults to [255, 255, 255].
+    """
+    
+    def __init__(
+        self,
+        id_               : int | str,
+        points            : np.ndarray,
+        shape_type        : str,
+        offset            : int | None    = None,
+        distance_function : str           = "hausdorff",
+        distance_threshold: float         = 300.0,
+        angle_threshold   : float         = 45.0,
+        color             : list[int]     = mon.AppleRGB.WHITE.value,
+    ):
+        super().__init__()
+        self.id_                = id_
+        self.points             = points
+        self.shape_type         = shape_type
+        self.offset             = offset
+        self.distance_function  = mon.DISTANCES.build(name = distance_function)
+        self.distance_threshold = distance_threshold
+        self.angle_threshold    = angle_threshold
+        
+        self.color = mon.AppleRGB.values()[id_] \
+            if isinstance(id_, int) and id_ < len(mon.AppleRGB.values()) \
+            else color
+    
+    @property
+    def points(self) -> np.ndarray:
+        """The array of points defining the MOI."""
+        return self._points
+    
+    @points.setter
+    def points(self, points: np.ndarray | list):
+        points = np.array(points, np.int32)
+        if not points.ndim >= 2:
+            raise ValueError(
+                f"points' number of dimensions must be >= 2, but got {points.ndim}."
+            )
+        self._points = points
+    
+    @property
+    def has_valid_points(self) -> bool:
+        """Return True if there are more than 2 points."""
+        if int(self._points.shape[0]) \
+            and not all(len(t) >= 2 for t in self.points):
+            return True
+        else:
+            error_console.log(f"Number of points in each track must be >= 2.")
+            return False
+    
+    @classmethod
+    def from_file(
+        cls,
+        path     : mon.Path,
+        rmois_dir: mon.Path | None = None,
+        **kwargs
+    ) -> list:
+        """Create a list of :class:`MotionOfInterest` from the content of a
+        ".json" file specified by the :param:`path`.
+        """
+        if path.is_json_file():
+            pass
+        elif isinstance(path, str) \
+            and rmois_dir is not None \
+            and mon.Path(rmois_dir).is_dir():
+            path = mon.Path(rmois_dir) / path
+        
+        if not path.is_json_file():
+            raise ValueError(
+                f"path must be a valid path to a .json file, but got {path}."
+            )
+        
+        data = mon.load_config(path)
+        if "moi" not in data:
+            raise ValueError(f"data must contain the key 'moi'.")
+        mois = [cls(**m, **kwargs) for m in data["moi"]]
+        return mois
+    
+    def calculate_distance_with_track(self, object_track: np.ndarray) -> float:
+        """Calculate the distance between an object's track to the MOI's tracks.
+        
+        Args:
+            object_track: An object's trajectory as an array of points.
+            
+        Returns:
+            Distance value between an object's track with a MOI's track. If
+            distance > :attr:`distance_threshold`, return None.
+        """
+        d = self.distance_function(self.points, object_track)
+        return None if (d > self.distance_threshold) else d
+    
+    def calculate_angle_with_track(self, object_track: np.ndarray) -> float:
+        """Calculate the angle between an object's track to the MOI's tracks.
+        
+        Args:
+            object_track: An object's trajectory as an array of points.
+            
+        Returns:
+            Angle value between an object's track with a MOI's track. If
+            angle > :attr:`angle_threshold`, return None.
+        """
+        a = mon.angle(self.points, object_track)
+        return None if (a > self.angle_threshold) else a
+    
+    def is_box_center_in_moi(
+        self,
+        bbox            : np.ndarray,
+        compute_distance: bool = False
+    ) -> int:
+        """Check a bounding bbox touches the current MOI.
+        
+        Args:
+            bbox: Bounding boxes in XYXY format.
+            compute_distance: If True, calculate the distance from bbox
+                coordinates to the ROI? Defaults to False.
+        
+        Returns:
+            Positive (inside), negative (outside), or zero (on an edge).
+        """
+        c_x = (bbox[0] + bbox[2]) / 2
+        c_y = (bbox[1] + bbox[3]) / 2
+        return int(cv2.pointPolygonTest(self.points, (c_x, c_y), compute_distance))
+    
+    def draw(self, image: np.ndarray) -> np.ndarray:
+        """Draw the current MOI on the :param:`image`."""
+        # NOTE: Draw MOI's direction
+        pts = self.points.reshape((-1, 1, 2))
+        if self.shape_type == "polygon":
+            cv2.polylines(
+                img       = image,
+                pts       = [pts],
+                isClosed  = True,
+                color     = self.color,
+                thickness = 1,
+                lineType  = cv2.LINE_AA
+            )
+        elif self.shape_type == "line":
+            cv2.polylines(
+                img       = image,
+                pts       = [pts],
+                isClosed  = False,
+                color     = self.color,
+                thickness = 1,
+                lineType  = cv2.LINE_AA
+            )
+            cv2.arrowedLine(
+                img       = image,
+                pt1       = tuple(self.points[-2]),
+                pt2       = tuple(self.points[-1]),
+                color     = self.color,
+                thickness = 1,
+                line_type = cv2.LINE_AA,
+                tipLength = 0.2
+            )
+            for i in range(len(self.points) - 1):
+                cv2.circle(
+                    img       = image,
+                    center    = tuple(self.points[i]),
+                    radius    = 3,
+                    color     = self.color,
+                    thickness = -1,
+                    lineType  = cv2.LINE_AA
+                )
+        
+        # NOTE: Draw MOI's uid
+        cv2.putText(
+            img       = image,
+            text      = f"{self.id_}",
+            fontFace  = cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale = 0.75,
+            org       = tuple(self.points[-1]),
+            color     = self.color,
+            thickness=2
+        )
+        return image
 
 
 MOI = MovementOfInterest
 
 
 def get_moi_for_box(
-	box      : np.ndarray,
-	mois     : Sequence[MOI],
-	threshold: int = 0
-) -> UIDType | None:
-	"""Check if bounding boxes belong to one of the many MOIs in the image.
-	
-	Args:
-		box: Bounding boxes in (x1, y1, x2, y2) format.
-		mois: A list of :class:`MOI` objects.
-		threshold: A threshold value determining whether if the bbox is in a ROI.
-			Defaults to -50.
-			
-	Returns:
-		The matching MOI's UID.
-	"""
-	for m in mois:
-		d = m.is_box_center_in_moi(box=box)
-		if d >= threshold:
-			return m.uid
-	return None
+    bbox     : np.ndarray,
+    mois     : list[MOI],
+    threshold: int = 0
+) -> int | str | None:
+    """Check if bounding boxes belong to one of the many MOIs in the image.
+    
+    Args:
+        bbox: Bounding boxes in XYXY format.
+        mois: A list of :class:`MOI` objects.
+        threshold: A threshold value determining whether if the bbox is in a
+            ROI. Defaults to -50.
+            
+    Returns:
+        The matching MOI's id.
+    """
+    for m in mois:
+        d = m.is_box_center_in_moi(bbox=bbox)
+        if d >= threshold:
+            return m.id_
+    return None
 
 
 def get_best_matched_moi(
-	object_track: np.ndarray,
-	mois        : Sequence[MOI],
+    object_track: np.ndarray,
+    mois        : list[MOI],
 ) -> tuple[int, float]:
-	"""Find the MOI that best matched with an object's track.
-	
-	Args:
-		object_track: An object's track as an array of points.
-		mois: A list of :class:`MOI` objects.
+    """Find the MOI that best matched with an object's track.
+    
+    Args:
+        object_track: An object's track as an array of points.
+        mois: A list of :class:`MOI` objects.
 
-	Returns:
-		The best matching MOI's uid.
-		The best matching MOI's distance.
-	"""
-	# NOTE: Calculate distances between object track and all MOIs' tracks
-	distances = []
-	angles    = []
-	for moi in mois:
-		distances.append(
-			moi.calculate_distance_with_track(object_track=object_track)
-		)
-		angles.append(
-			moi.calculate_angle_with_track(object_track=object_track)
-		)
-	
-	min_moi_id, min_distance = None, None
-	for i, (d, a) in enumerate(zip(distances, angles)):
-		if (d is None) or (a is None):
-			continue
-		if (min_distance is not None) and (min_distance < d):
-			continue
-		min_distance = d
-		min_moi_id   = mois[i].uid
-
-	return min_moi_id, min_distance
+    Returns:
+        The best matching MOI's uid.
+        The best matching MOI's distance.
+    """
+    # NOTE: Calculate distances between object track and all MOIs' tracks
+    distances = []
+    angles    = []
+    for moi in mois:
+        distances.append(
+            moi.calculate_distance_with_track(object_track=object_track)
+        )
+        angles.append(
+            moi.calculate_angle_with_track(object_track=object_track)
+        )
+    
+    min_moi_id, min_distance = None, None
+    for i, (d, a) in enumerate(zip(distances, angles)):
+        if (d is None) or (a is None):
+            continue
+        if (min_distance is not None) and (min_distance < d):
+            continue
+        min_distance = d
+        min_moi_id = mois[i].id_
+    
+    return min_moi_id, min_distance
 
 
 def assign_moving_objects_to_mois(
-	objs      : list,
-	mois      : list,
-	shape_type: str = "line",
+    objects   : list,
+    mois      : list,
+    shape_type: str  = "line",
 ):
-	"""Assign :class:`Detection` objects to MOIs.
+    """Assign :class:`Detection` objects to MOIs.
 
-	Args:
-		objs: A list of objects.
-		mois: A list of :class:`MOI` objects.
-		shape_type: The shape of MOI to check. One of: ["polygon", "line"].
-			Defaults to 'line'.
-	"""
-	if len(objs) <= 0:
-		return
-	polygon_mois = [m for m in mois if m.shape_type == "polygon"]
-	line_mois    = [m for m in mois if m.shape_type == "line"   ]
-	
-	if shape_type == "polygon":
-		for o in objs:
-			if o.moi_uid is None:
-				o.moi_uid = get_moi_for_box(
-					box  = o.current_box,
-					mois = polygon_mois
-				)
-	elif shape_type == "line":
-		for o in objs:
-			if o.moi_uid is None:
-				o.moi_uid = get_best_matched_moi(
-					object_track = o.trajectory,
-					mois         = line_mois
-				)[0]
-	
-	
+    Args:
+        objects: A list of objects.
+        mois: A list of :class:`MOI` objects.
+        shape_type: The shape of MOI to check. One of: ['polygon', 'line'].
+            Defaults to 'line'.
+    """
+    if len(objects) <= 0:
+        return
+    polygon_mois = [m for m in mois if m.shape_type == "polygon"]
+    line_mois    = [m for m in mois if m.shape_type == "line"]
+    
+    if shape_type == "polygon":
+        for o in objects:
+            if o.moi_uid is None:
+                o.moi_uid = get_moi_for_box(
+                    bbox = o.current_box,
+                    mois = polygon_mois
+                )
+    elif shape_type == "line":
+        for o in objects:
+            if o.moi_uid is None:
+                o.moi_uid = get_best_matched_moi(
+                    object_track = o.trajectory,
+                    mois         = line_mois
+                )[0]
+
 # endregion

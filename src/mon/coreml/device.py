@@ -15,12 +15,14 @@ from typing import Any
 
 import torch
 
-from mon import core
+from mon.foundation import console
 
 
 # region Device Selection
 
-def extract_device_dtype(tensors: list[torch.Tensor] ) -> tuple[torch.device, torch.dtype]:
+def extract_device_dtype(
+    tensors: list[torch.Tensor]
+) -> tuple[torch.device, torch.dtype]:
     """Extract the device and data-type from a list of tensors.
     
     Args:
@@ -43,7 +45,7 @@ def extract_device_dtype(tensors: list[torch.Tensor] ) -> tuple[torch.device, to
             
             if device != _device or dtype != _dtype:
                 raise ValueError(
-                    f"Passed values must be in the same `device` and `dtype`. "
+                    f"Passed values must be in the same 'device' and 'dtype'. "
                     f"But got: ({device}, {dtype}) and ({_device}, {_dtype})."
                 )
                 
@@ -75,7 +77,7 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
     # CPU
     cpu_request = device.lower() in ["cpu", "default"]
     if cpu_request:
-        core.console.log(f"Using CPU\n")
+        console.log(f"Using CPU\n")
         return torch.device("cpu")
     
     # GPU / CUDA
@@ -89,7 +91,7 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
         if num_gpus > 1 and batch_size > 1:
             if batch_size % num_gpus != 0:
                 raise ValueError(
-                    f":param:`batch_size` must be a multiple of GPU counts "
+                    f":param:'batch_size' must be a multiple of GPU counts "
                     f"{num_gpus}. But got: {batch_size} % {num_gpus} != 0."
                 )
                 
@@ -98,17 +100,17 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
         for i in range(0, num_gpus):
             if i == 1:
                 s = " " * len(s)
-            core.console.log(
+            console.log(
                 "%sdevice%g _CudaDeviceProperties(name='%s', total_memory=%dMB)" %
                   (s, i, x[i].name, x[i].total_memory / bytes_to_mb)
             )
         # Here we select the first cuda device by default
         os.environ["CUDA_VISIBLE_DEVICES"] = "cuda:0"
-        core.console.log(f"")
+        console.log(f"")
         return torch.device("cuda:0")
     
     # If nothing works, just use CPU
-    core.console.log(f"Using CPU\n")
+    console.log(f"Using CPU\n")
     return torch.device("cpu")
 
 # endregion
@@ -124,7 +126,7 @@ def time_synchronized(device: Any = None) -> float:
         device: a device for which to synchronize. It uses the current device,
             given by :meth:`current_device()`, if device is None (default).
     """
-    torch.cuda.synchronize() if torch.cuda.is_available() else None
+    torch.cuda.synchronize(device=device) if torch.cuda.is_available() else None
     return time.time()
 
 # endregion

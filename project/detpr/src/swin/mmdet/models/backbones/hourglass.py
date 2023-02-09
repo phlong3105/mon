@@ -77,7 +77,7 @@ class HourglassModule(nn.Module):
         return up1 + up2
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class HourglassNet(nn.Module):
     """HourglassNet backbone.
 

@@ -14,9 +14,9 @@ anchor
 .. automodule:: mmdet.core.anchor
     :members:
 
-bbox
+box
 ^^^^^^^^^^
-.. automodule:: mmdet.core.bbox
+.. automodule:: mmdet.core.box
     :members:
 
 export

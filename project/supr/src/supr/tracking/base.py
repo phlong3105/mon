@@ -10,15 +10,12 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
-import munch
 import numpy as np
 
-from supr import constant, data, motion, motion as mo
-
-if TYPE_CHECKING:
-    from supr.typing import MotionType, ObjectType
+from supr import data, motion, motion as mo
+from supr.globals import MOTIONS, OBJECTS
 
 
 # region Tracker
@@ -41,11 +38,11 @@ class Tracker(ABC):
 
     def __init__(
         self,
-        max_age      : int        = 1,
-        min_hits     : int        = 3,
-        iou_threshold: float      = 0.3,
-        motion_type  : MotionType = "kf_box_motion",
-        object_type  : ObjectType = data.MovingObject,
+        max_age      : int   = 1,
+        min_hits     : int   = 3,
+        iou_threshold: float = 0.3,
+        motion_type  : Any   = "kf_box_motion",
+        object_type  : Any   = data.MovingObject,
     ):
         super().__init__()
         self.max_age       = max_age
@@ -61,12 +58,13 @@ class Tracker(ABC):
         return self._motion_type
     
     @motion_type.setter
-    def motion_type(self, motion_type: MotionType):
+    def motion_type(self, motion_type: Any):
         if isinstance(motion_type, str):
-            motion_type = constant.MOTION.get(motion_type)
-        elif isinstance(motion_type, dict | munch.Munch):
-            assert hasattr(motion_type, "name")
-            motion_type = constant.MOTION.get(motion_type["name"]).__class__
+            motion_type = MOTIONS.get(motion_type)
+        elif isinstance(motion_type, dict):
+            if not hasattr(motion_type, "name"):
+                raise ValueError(f"motion_type must contain a key 'name'.")
+            motion_type = MOTIONS.get(motion_type["name"]).__class__
         elif isinstance(motion_type, mo.Motion):
             motion_type = motion_type.__class__
         self._motion_type = motion_type
@@ -78,10 +76,11 @@ class Tracker(ABC):
     @object_type.setter
     def object_type(self, object_type: Any):
         if isinstance(object_type, str):
-            object_type = constant.OBJECT.get(object_type)
-        elif isinstance(object_type, dict | munch.Munch):
-            assert hasattr(object_type, "name")
-            object_type = constant.OBJECT.get(object_type["name"]).__class__
+            object_type = OBJECTS.get(object_type)
+        elif isinstance(object_type, dict ):
+            if not hasattr(object_type, "name"):
+                raise ValueError(f"object_type must contain a key 'name'.")
+            object_type = OBJECTS.get(object_type["name"]).__class__
         elif isinstance(object_type, data.MovingObject):
             object_type = object_type.__class__
         self._object_type = object_type

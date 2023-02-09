@@ -35,7 +35,7 @@ def knowledge_distillation_kl_div_loss(pred,
     return kd_loss
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class KnowledgeDistillationKLDivLoss(nn.Module):
     """Loss function for knowledge distilling using KL divergence.
 

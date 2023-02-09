@@ -10,144 +10,172 @@ datasets. We try to support all possible data types: :class:`torch.Tensor`,
 from __future__ import annotations
 
 __all__ = [
-    "ClassLabel", "ClassLabels", "COCODetectionsLabel", "COCOKeypointsLabel",
-    "ClassificationLabel", "ClassificationsLabel", "DetectionLabel",
-    "DetectionsLabel", "HeatmapLabel", "ImageLabel", "KITTIDetectionsLabel",
-    "KeypointLabel", "KeypointsLabel", "PolylineLabel", "PolylinesLabel",
-    "RegressionLabel", "SegmentationLabel", "TemporalDetectionLabel",
-    "VOCDetectionsLabel", "YOLODetectionsLabel",
+    "COCODetectionsLabel", "COCOKeypointsLabel", "ClassificationLabel",
+    "ClassificationsLabel", "DetectionLabel", "DetectionsLabel", "HeatmapLabel",
+    "ImageLabel", "KITTIDetectionsLabel", "KeypointLabel", "KeypointsLabel",
+    "PolylineLabel", "PolylinesLabel", "RegressionLabel", "SegmentationLabel",
+    "TemporalDetectionLabel", "VOCDetectionsLabel", "YOLODetectionsLabel",
 ]
 
 import uuid
-from typing import Sequence
 
 import numpy as np
 import torch
 
-from mon import core, coreimage as ci, coreml
-from mon.vision import constant
-from mon.vision.typing import (
-    DictType, Image, IntAnyT, LogitsType, PathType, TensorOrArray,
-    VisionBackendType,
-)
-
-ClassLabel  = coreml.ClassLabel
-ClassLabels = coreml.ClassLabels
+from mon.coreml import data
+from mon.foundation import file_handler, pathlib
+from mon.vision import geometry, image as mi
 
 
 # region Classification
 
-class ClassificationLabel(coreml.Label):
+class ClassificationLabel(data.Label):
     """A classification label for an image.
     
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
-        id: A class ID of the classification label. Defaults to -1 means
+        id_: A class ID of the classification data. Defaults to -1 means
             unknown.
-        label: A label string. Defaults to ““.
-        confidence: A confidence value in [0.0, 1.0] for the classification.
-            Defaults to 1.0.
+        label: A label string. Defaults to ''.
+        confidence: A confidence value for the data. Defaults to 1.0.
         logits: Logits associated with the labels. Defaults to None.
     """
     
     def __init__(
         self,
-        id        : int               = -1,
-        label     : str               = "",
-        confidence: float             = 1.0,
-        logits    : LogitsType | None = None,
+        id_       : int   = -1,
+        label     : str   = "",
+        confidence: float = 1.0,
+        logits    : np.ndarray | None = None,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        assert 0.0 <= confidence <= 1.0
-        assert id >= 0 or label != "", \
-            f"Either :param:`id` or :param:`name` must be defined. " \
-            f"But got: {id} and {label}."
-        self.id         = id
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"conf must be between 0.0 and 1.0, but got {confidence}."
+            )
+        if id_ <= 0 and label == "":
+            raise ValueError(
+                f"Either id or name must be defined, but got {id_} and {label}."
+            )
+        self.id_        = id_
         self.label      = label
-        self.logits     = logits
         self.confidence = confidence
-        
+        self.logits     = np.array(logits) if logits is not None else None
+    
+    @classmethod
+    def from_value(cls, value: ClassificationLabel | dict) -> ClassificationLabel:
+        """Create a :class:`ClassificationLabel` object from an arbitrary
+        :param:`value`.
+        """
+        if isinstance(value, dict):
+            return ClassificationLabel(**value)
+        elif isinstance(value, ClassificationLabel):
+            return value
+        else:
+            raise ValueError(
+                f"value must be a ClassificationLabel class or a dict, but got "
+                f"{type(value)}."
+            )
+    
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.tensor([self.id], dtype=torch.int64)
+    def data(self) -> list | None:
+        """The label's data."""
+        return [self.id_, self.label]
         
 
-class ClassificationsLabel(coreml.Label):
+class ClassificationsLabel(list[ClassificationLabel], data.Label):
     """A list of classification labels for an image. It is used for multi-labels
     or multi-classes classification tasks.
-
-    Args:
-        classifications: A list of :class:`ClassificationLabel` objects.
-        logits: Logits associated with the labels.
-    """
     
-    def __init__(
-        self,
-        classifications: Sequence[ClassificationLabel],
-        logits         : LogitsType,
-        *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        assert isinstance(classifications, list | tuple) \
-               and all(isinstance(c, ClassificationLabel) for c in classifications)
-        self.classifications = classifications
-        self.logits          = logits
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
+    Args:
+        seq: A list of :class:`ClassificationLabel` objects.
+    """
+
+    def __init__(self, seq: list[ClassificationLabel | dict]):
+        super().__init__(ClassificationLabel.from_value(value=i) for i in seq)
+    
+    def __setitem__(self, index: int, item: ClassificationLabel | dict):
+        super().__setitem__(index, ClassificationLabel.from_value(item))
+    
+    def insert(self, index: int, item: ClassificationLabel | dict):
+        super().insert(index, ClassificationLabel.from_value(item))
+    
+    def append(self, item: ClassificationLabel | dict):
+        super().append(ClassificationLabel.from_value(item))
+    
+    def extend(self, other: list[ClassificationLabel | dict]):
+        super().extend([ClassificationLabel.from_value(item) for item in other])
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.stack([c.tensor for c in self.classifications], dim=0)
+    def data(self) -> list | None:
+        """The label's data."""
+        return [i.data for i in self]  
+
+    @property
+    def ids(self) -> list[int]:
+        return [i.id_ for i in self]  
+
+    @property
+    def labels(self) -> list[str]:
+        return [i.label for i in self]  
+
+# endregion
 
 # endregion
 
 
 # region Object Detection
 
-class DetectionLabel(coreml.Label):
-    """An object detection label. Usually, it is represented as a list of
+class DetectionLabel(data.Label):
+    """An object detection data. Usually, it is represented as a list of
     bounding boxes (for an object with multiple parts created by an occlusion),
     and an instance mask.
     
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
+        id_: A class ID of the detection data. Defaults to -1 means unknown.
         index: An index for the object. Defaults to -1.
-        id: A class ID of the detection label. Defaults to -1 means unknown.
-        label: Label string. Defaults to "".
-        bbox: A list of relative bounding boxes' coordinates in the range of
-            [0.0, 1.0] in the normalized xywh format.
+        label: Label string. Defaults to ''.
+        confidence: A confidence value for the data. Defaults to 1.0.
+        bbox: A bounding box's coordinates.
         mask: Instance segmentation masks for the object within its bounding
             bbox, which should be a binary (0/1) 2D sequence or a binary integer
-            tensor. Defaults to None
-        confidence: A confidence value in [0.0, 1.0] for the detection. Defaults
-            to 1.0.
+            tensor. Defaults to None.
     """
     
     def __init__(
         self,
-        index     : int                  = -1,
-        id        : int                  = -1,
-        label     : str                  = "",
-        bbox      : TensorOrArray        = [],
-        mask      : TensorOrArray | None = None,
-        confidence: float                = 1.0,
+        id_       : int   = -1,
+        index     : int   = -1,
+        label     : str   = "",
+        confidence: float = 1.0,
+        bbox      : list  = [],
+        mask      : list | None = None,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        assert 0.0 <= confidence <= 1.0
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"conf must be between 0.0 and 1.0, but got {confidence}."
+            )
+        if id_ <= 0 and label == "":
+            raise ValueError(
+                f"Either id or name must be defined, but got {id_} and {label}."
+            )
+        self.id_        = id_
         self.index      = index
-        self.id         = id
         self.label      = label
-        self.mask       = mask
         self.confidence = confidence
+        self.bbox       = bbox
+        self.mask       = mask if mask is not None else None
         
-        if isinstance(bbox, np.ndarray):
-            bbox = torch.from_numpy(bbox)
-        elif isinstance(bbox, list | tuple):
-            bbox = torch.FloatTensor(bbox)
-        self.bbox = bbox
-
     @classmethod
-    def from_mask(cls, mask: TensorOrArray, label: str, **kwargs) -> DetectionLabel:
+    def from_mask(cls, mask: np.ndarray, label: str, **kwargs) -> DetectionLabel:
         """Create a :class:`DetectionLabel` object with its :param:`mask`
         attribute populated from the given full image mask. The instance mask
         for the object is extracted by computing the bounding rectangle of the
@@ -163,16 +191,28 @@ class DetectionLabel(coreml.Label):
         """
         raise NotImplementedError(f"This function has not been implemented!")
     
+    @classmethod
+    def from_value(cls, value: DetectionLabel | dict) -> DetectionLabel:
+        """Create a :class:`DetectionLabel` object from an arbitrary
+        :param:`value`.
+        """
+        if isinstance(value, dict):
+            return DetectionLabel(**value)
+        elif isinstance(value, DetectionLabel):
+            return value
+        else:
+            raise ValueError(
+                f"value must be a DetectionLabel class or a dict, but got "
+                f"{type(value)}."
+            )
+    
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.FloatTensor(
-            [
-                self.index, self.id, self.bbox[0], self.bbox[1], self.bbox[2],
-                self.bbox[3], self.confidence,
-            ]
-        )
-        pass
+    def data(self) -> list | None:
+        """The label's data."""
+        return [
+            self.bbox[0], self.bbox[1], self.bbox[2], self.bbox[3],
+            self.id_, self.label, self.confidence, self.index,
+        ]
     
     def to_polyline(
         self,
@@ -196,9 +236,9 @@ class DetectionLabel(coreml.Label):
         
     def to_segmentation(
         self,
-        mask      : TensorOrArray | None = None,
-        frame_size: IntAnyT       | None = None,
-        target    : int                  = 255
+        mask      : np.ndarray      | None = None,
+        image_size: int | list[int] | None = None,
+        target    : int                    = 255
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this instance. The
         detection must have an instance mask, i.e., :param:`mask` attribute must
@@ -208,7 +248,7 @@ class DetectionLabel(coreml.Label):
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
                 to which to add this object. Defaults to None.
-            frame_size: The shape of the segmentation mask to render. This
+            image_size: The size of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
                 to None.
             target: The pixel value to use to render the object. If you want
@@ -221,23 +261,46 @@ class DetectionLabel(coreml.Label):
         raise NotImplementedError(f"This function has not been implemented!")
 
 
-class DetectionsLabel(coreml.Label):
+class DetectionsLabel(list[DetectionLabel], data.Label):
     """A list of object detection labels in an image.
     
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
-        detections: A list of :class:`DetectionLabel` objects.
+        seq: A list of :class:`DetectionLabel` objects.
     """
     
-    def __init__(self, detections: Sequence[DetectionLabel], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert isinstance(detections, list | tuple) \
-               and all(isinstance(c, DetectionLabel) for c in detections)
-        self.detections = detections
+    def __init__(self, seq: list[DetectionLabel | dict]):
+        super().__init__(DetectionLabel.from_value(value=i) for i in seq)
+    
+    def __setitem__(self, index: int, item: DetectionLabel | dict):
+        super().__setitem__(index, DetectionLabel.from_value(item))
+    
+    def insert(self, index: int, item: DetectionLabel | dict):
+        super().insert(index, DetectionLabel.from_value(item))
+    
+    def append(self, item: DetectionLabel | dict):
+        super().append(DetectionLabel.from_value(item))
+    
+    def extend(self, other: list[DetectionLabel | dict]):
+        super().extend([DetectionLabel.from_value(item) for item in other])
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.stack([d.tensor for d in self.detections], dim=0)
+    def data(self) -> list | None:
+        """The label's data."""
+        return [i.data for i in self]
+
+    @property
+    def ids(self) -> list[int]:
+        return [i.id_ for i in self]  
+
+    @property
+    def labels(self) -> list[str]:
+        return [i.label for i in self]  
+
+    @property
+    def bboxes(self) -> list:
+        return [i.bbox for i in self]
     
     def to_polylines(
         self,
@@ -258,13 +321,13 @@ class DetectionsLabel(coreml.Label):
         Return:
             A :class:`PolylinesLabel` object.
         """
-        print(f"This function has not been implemented!")
+        raise NotImplementedError(f"This function has not been implemented!")
     
     def to_segmentation(
         self,
-        mask      : TensorOrArray | None = None,
-        frame_size: IntAnyT       | None = None,
-        target    : int                  = 255
+        mask      : np.ndarray      | None = None,
+        image_size: int | list[int] | None = None,
+        target    : int                    = 255
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this instance. Only
         detections with instance masks (i.e., their :param:`mask` attributes
@@ -273,7 +336,7 @@ class DetectionsLabel(coreml.Label):
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
                 to which to add this object. Defaults to None.
-            frame_size: The shape of the segmentation mask to render. This
+            image_size: The shape of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
                 to None.
             target: The pixel value to use to render the object. If you want
@@ -283,16 +346,22 @@ class DetectionsLabel(coreml.Label):
         Return:
             A :class:`SegmentationLabel` object.
         """
-        print(f"This function has not been implemented!")
+        raise NotImplementedError(f"This function has not been implemented!")
 
 
 class COCODetectionsLabel(DetectionsLabel):
-    """A list of object detection labels in COCO format."""
+    """A list of object detection labels in COCO format.
+    
+    See Also: :class:`DetectionsLabel`.
+    """
     pass
 
 
 class KITTIDetectionsLabel(DetectionsLabel):
-    """A list of object detection labels in KITTI format."""
+    """A list of object detection labels in KITTI format.
+    
+    See Also: :class:`DetectionsLabel`.
+    """
     pass
 
 
@@ -300,12 +369,12 @@ class VOCDetectionsLabel(DetectionsLabel):
     """A list of object detection labels in VOC format. One VOCDetections
     corresponds to one image and one annotation `.xml` file.
     
+    See Also: :class:`DetectionsLabel`.
+    
     Args:
-        folder: The folder that contains the images.
-        filename: Name of the physical file that exists in the folder.
         path: Absolute path where the image file is present.
         source: Specifies the original location of the file in a database. Since
-            we don't use a database, it is set to “Unknown” by default.
+            we don't use a database, it is set to 'Unknown' by default.
         size: Specify the width, height, depth of an image. If the image is
             black and white, then the depth will be 1. For color images, depth
             will be 3.
@@ -334,19 +403,15 @@ class VOCDetectionsLabel(DetectionsLabel):
     
     def __init__(
         self,
-        folder     : str                = "",
-        filename   : str                = "",
-        path       : PathType           = "",
-        source     : DictType           = {"database": "Unknown"},
-        size       : DictType           = {"width": 0, "height": 0, "depth": 3},
-        segmented  : int                = 0,
-        classlabels: ClassLabels | None = None,
+        path       : pathlib.Path = "",
+        source     : dict = {"database": "Unknown"},
+        size       : dict = {"width": 0, "height": 0, "depth": 3},
+        segmented  : int  = 0,
+        classlabels: data.ClassLabels | None = None,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.folder      = folder
-        self.filename    = filename
-        self.path        = core.Path(path)
+        self.path        = pathlib.Path(path)
         self.source      = source
         self.size        = size
         self.segmented   = segmented
@@ -355,8 +420,8 @@ class VOCDetectionsLabel(DetectionsLabel):
     @classmethod
     def from_file(
         cls,
-        path       : PathType,
-        classlabels: ClassLabels | None = None
+        path       : pathlib.Path | str,
+        classlabels: data.ClassLabels | None = None
     ) -> VOCDetectionsLabel:
         """Create a :class:`VOCDetections` object from a `.xml` file.
         
@@ -367,59 +432,59 @@ class VOCDetectionsLabel(DetectionsLabel):
         Return:
             A :class:`VOCDetections` object.
         """
-        path = core.Path(path)
-        assert path.is_xml_file()
+        path = pathlib.Path(path)
+        if not path.is_xml_file():
+            raise ValueError(
+                f"path must be a valid path to an .xml file, but got {path}."
+            )
         
-        xml_data = core.read_from_file(path)
-        assert "annotation" in xml_data
+        xml_data = file_handler.read_from_file(path=path)
+        if "annotation" not in xml_data:
+            raise ValueError("xml_data must contain the 'annotation' key.")
        
         annotation = xml_data["annotation"]
-        folder     = annotation.get("folder",   "")
+        folder     = annotation.get("folder", "")
         filename   = annotation.get("file_name", "")
-        image_path = annotation.get("path",     "")
-        source     = annotation.get("source",   {"database": "Unknown"})
-        size       = annotation.get("size",     {"width": 0, "height": 0, "depth": 3})
-        width      = int(size.get("width" , 0))
+        image_path = annotation.get("path", "")
+        source     = annotation.get("source", {"database": "Unknown"})
+        size       = annotation.get("size", {"width": 0, "height": 0, "depth": 3})
+        width      = int(size.get("width", 0))
         height     = int(size.get("height", 0))
-        depth      = int(size.get("depth" , 0))
+        depth      = int(size.get("depth", 0))
         segmented  = annotation.get("segmented", 0)
-        objects    = annotation.get("object"   , [])
+        objects    = annotation.get("object", [])
         objects    = [objects] if not isinstance(objects, list) else objects
         
         detections: list[DetectionLabel] = []
         for i, o in enumerate(objects):
             name       = o.get["name"]
             bndbox     = o.get["bndbox"]
-            bbox       = torch.FloatTensor([bndbox["xmin"], bndbox["ymin"],
-                                            bndbox["xmax"], bndbox["ymax"]])
-            bbox       = ci.bbox_xyxy_to_cxcywhn(
-                bbox=bbox, height=height, width=width)
+            bbox       = torch.FloatTensor([bndbox["xmin"], bndbox["ymin"], bndbox["xmax"], bndbox["ymax"]])
+            bbox       = geometry.bbox_xyxy_to_cxcywhn(bbox=bbox, height=height, width=width)
             confidence = o.get("confidence", 1.0)
-            truncated  = o.get("truncated" , 0)
+            truncated  = o.get("truncated", 0)
             difficult  = o.get("difficult" , 0)
             pose       = o.get("pose", "Unspecified")
 
             if name.isnumeric():
                 id = int(name)
-            elif isinstance(classlabels, ClassLabels):
+            elif isinstance(classlabels, data.ClassLabels):
                 id = classlabels.get_id(key="name", value=name)
             else:
                 id = -1
 
             detections.append(
                 DetectionLabel(
-                    id         = id,
-                    label      = name,
-                    bbox       = bbox,
-                    confidence = confidence,
-                    truncated  = truncated,
-                    difficult  = difficult,
-                    pose       = pose,
+                    id_       = id,
+                    label     = name,
+                    bbox      = bbox,
+                    confidence= confidence,
+                    truncated = truncated,
+                    difficult = difficult,
+                    pose      = pose,
                 )
             )
         return cls(
-            folder      = folder,
-            filename    = filename,
             path        = image_path,
             source      = source,
             size        = size,
@@ -432,10 +497,13 @@ class VOCDetectionsLabel(DetectionsLabel):
 class YOLODetectionsLabel(DetectionsLabel):
     """A list of object detection labels in YOLO format. YOLO label consists of
     several bounding boxes. One YOLO label corresponds to one image and one
-    annotation file. """
+    annotation file.
+    
+    See Also: :class:`DetectionsLabel`.
+    """
     
     @classmethod
-    def from_file(cls, path: PathType) -> YOLODetectionsLabel:
+    def from_file(cls, path: pathlib.Path) -> YOLODetectionsLabel:
         """Create a :class:`YOLODetectionsLabel` object from a `.txt` file.
         
         Args:
@@ -444,8 +512,11 @@ class YOLODetectionsLabel(DetectionsLabel):
         Return:
             A :class:`YOLODetections` object.
         """
-        path = core.Path(path)
-        assert path.is_txt_file()
+        path = pathlib.Path(path)
+        if not path.is_txt_file():
+            raise ValueError(
+                f"path must be a valid path to an .txt file, but got {path}."
+            )
         
         detections: list[DetectionLabel] = []
         lines = open(path, "r").readlines()
@@ -455,23 +526,26 @@ class YOLODetectionsLabel(DetectionsLabel):
             confidence = float(d[5]) if len(d) >= 6 else 1.0
             detections.append(
                 DetectionLabel(
-                    id         = int(d[0]),
-                    bbox       = bbox,
-                    confidence = confidence
+                    id_        = int(d[0]),
+                    bbox       = np.array(bbox),
+                    confidence= confidence
                 )
             )
         return cls(detections=detections)
         
 
-class TemporalDetectionLabel(coreml.Label):
+class TemporalDetectionLabel(data.Label):
     """An object detection label in a video whose support is defined by a start
     and end frame. Usually, it is represented as a list of bounding boxes (for
     an object with multiple parts created by an occlusion), and an instance
     mask.
+    
+    See Also: :class:`mon.coreml.data.label.Label`.
     """
     
     @property
-    def tensor(self) -> torch.Tensor:
+    def data(self) -> list | None:
+        """The label's data."""
         raise NotImplementedError(f"This function has not been implemented!")
 
 # endregion
@@ -479,8 +553,10 @@ class TemporalDetectionLabel(coreml.Label):
 
 # region Heatmap
 
-class HeatmapLabel(coreml.Label):
+class HeatmapLabel(data.Label):
     """A heatmap label in an image.
+    
+    See Also: :class:`mon.coreml.data.label.Label`.
     
     Args:
         map: A 2D numpy array.
@@ -491,7 +567,8 @@ class HeatmapLabel(coreml.Label):
     """
 
     @property
-    def tensor(self) -> torch.Tensor:
+    def data(self) -> list | None:
+        """The label's data."""
         raise NotImplementedError(f"This function has not been implemented!")
 
 # endregion
@@ -499,14 +576,16 @@ class HeatmapLabel(coreml.Label):
 
 # region Image
 
-class ImageLabel(coreml.Label):
+class ImageLabel(data.Label):
     """A ground-truth image label for an image.
+    
+    See Also: :class:`mon.coreml.data.label.Label`.
     
     References:
         https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image
     
     Args:
-        id: An ID of the image. This can be an integer or a string. This
+        id_: An ID of the image. This can be an integer or a string. This
             attribute is useful for batch processing where you want to keep the
             objects in the correct frame sequence.
         name: A name of the image. Defaults to None.
@@ -516,54 +595,52 @@ class ImageLabel(coreml.Label):
             object is created. Defaults to False.
         keep_in_memory: If True, the image will be loaded into memory and kept
             there. Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
     """
     
     to_rgb   : bool = True
-    to_tensor: bool = True
-    normalize: bool = True
+    to_tensor: bool = False
+    normalize: bool = False
     
     def __init__(
         self,
-        id            : int                 = uuid.uuid4().int,
+        id_           : int                 = uuid.uuid4().int,
         name          : str          | None = None,
-        path          : PathType     | None = None,
-        image         : Image        | None = None,
+        path          : pathlib.Path | None = None,
+        image         : np.ndarray   | None = None,
         load_on_create: bool                = False,
         keep_in_memory: bool                = False,
-        backend       : VisionBackendType   = constant.VISION_BACKEND,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.id             = id
+        self.id_            = id_
         self.image          = None
         self.keep_in_memory = keep_in_memory
-        self.backend        = backend
         
         if path is not None:
-            path = core.Path(path)
-            assert path.is_image_file()
-        self.path: core.Path = path
+            path = pathlib.Path(path)
+            if not path.is_image_file():
+                raise ValueError(
+                    f"path must be a valid path to an image file, but got {path}."
+                )
+        self.path = path
         
         if name is None:
-            name = str(core.Path(path).name) \
-                if path.is_image_file() else f"{id}"
+            name = str(pathlib.Path(path).name) if path.is_image_file() else f"{id_}"
         self.name = name
-        
+
         if load_on_create and image is None:
             image = self.load()
-
-        self.shape = ci.get_image_shape(image=image) \
-            if image is not None else None
-
+        
+        self.shape = mi.get_image_shape(image=image) if image is not None else None
+       
         if self.keep_in_memory:
             self.image = image
     
     def load(
         self,
-        path          : PathType | None = None,
-        keep_in_memory: bool            = False,
-    ) -> torch.Tensor:
+        path          : pathlib.Path | None = None,
+        keep_in_memory: bool = False,
+    ) -> np.ndarray:
         """Loads image into memory.
         
         Args:
@@ -572,27 +649,29 @@ class ImageLabel(coreml.Label):
                 kept there. Defaults to False.
             
         Return:
-            An image Tensor of shape [1, C, H, W] to caller.
+            An image of shape HWC.
         """
         self.keep_in_memory = keep_in_memory
         
-        if path is not None and core.is_image_file(path=path):
-            self.path = core.Path(path)
-        assert self.path.is_image_file()
+        if path is not None:
+            path = pathlib.Path(path)
+            if path.is_image_file():
+                self.path = path
+        if not self.path.is_image_file():
+            raise ValueError(
+                f"path must be a valid path to an image file, but got {self.path}."
+            )
         
-        image = ci.read_image(
+        image = mi.read_image(
             path      = self.path,
             to_rgb    = self.to_rgb,
             to_tensor = self.to_tensor,
             normalize = self.normalize,
-            backend   = self.backend
         )
-        self.shape = ci.get_image_shape(image=image) \
-            if (image is not None) else self.shape
+        self.shape = mi.get_image_shape(image=image) if (image is not None) else self.shape
         
         if self.keep_in_memory:
             self.image = image
-        
         return image
         
     @property
@@ -601,85 +680,133 @@ class ImageLabel(coreml.Label):
         includes ID, name, path, and shape of the image.
         """
         return {
-            "id"   : self.id,
+            "id"   : self.id_,
             "name" : self.name,
             "path" : self.path,
             "shape": self.shape,
         }
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        if self.keep_in_memory:
-            return self.image
-        else:
+    def data(self) -> np.ndarray | None:
+        """The label's data."""
+        if self.image is None:
             return self.load()
+        else:
+            return self.image
+       
 
 # endregion
 
 
 # region Keypoint
 
-class KeypointLabel(coreml.Label):
+class KeypointLabel(data.Label):
     """A list keypoints label for a single object in an image.
     
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
+        id_: The class ID of the polyline data. Defaults to -1 means unknown.
         index: An index for the polyline. Defaults to -1.
-        id: The class ID of the polyline label. Defaults to -1 means unknown.
         label: The label string. Defaults to "".
+        confidence: A confidence value for the data. Defaults to 1.0.
         points: A list of lists of (x, y) points in [0, 1] x [0, 1].
-        confidence: A confidence in [0.0, 1.0] for the detection.
-            Defaults to 1.0.
     """
     
     def __init__(
         self,
-        index     : int           = -1,
-        id        : int           = -1,
-        label     : str           = "",
-        points    : TensorOrArray = [],
-        confidence: float         = 1.0,
+        id_       : int   = -1,
+        index     : int   = -1,
+        label     : str   = "",
+        confidence: float = 1.0,
+        points    : list  = [],
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        assert 0.0 <= confidence <= 1.0
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"conf must be between 0.0 and 1.0, but got {confidence}."
+            )
+        if id_ <= 0 and label == "":
+            raise ValueError(
+                f"Either id or name must be defined, but got {id_} and {label}."
+            )
+        self.id_        = id_
         self.index      = index
-        self.id         = id
         self.label      = label
         self.confidence = confidence
-        
-        if isinstance(points, np.ndarray):
-            points = torch.from_numpy(points)
-        elif isinstance(points, list | tuple):
-            points = torch.FloatTensor(points)
-        self.points = points
-       
+        self.points     = points
+
+    @classmethod
+    def from_value(cls, value: KeypointLabel | dict) -> KeypointLabel:
+        """Create a :class:`KeypointLabel` object from an arbitrary
+        :param:`value`.
+        """
+        if isinstance(value, dict):
+            return KeypointLabel(**value)
+        elif isinstance(value, KeypointLabel):
+            return value
+        else:
+            raise ValueError(
+                f"value must be a KeypointLabel class or a dict, but got "
+                f"{type(value)}."
+            )
+    
     @property
-    def tensor(self) -> torch.Tensor:
-        raise NotImplementedError(f"This function has not been implemented!")
+    def data(self) -> list | None:
+        """The label's data."""
+        return [
+            self.points, self.id_, self.label, self.confidence, self.index
+        ]
 
 
-class KeypointsLabel(coreml.Label):
+class KeypointsLabel(list[KeypointLabel], data.Label):
     """A list of keypoint labels for multiple objects in an image.
     
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
-        keypoints: A list of :class:`KeypointLabel` objects.
+        seq: A list of :class:`KeypointLabel` objects.
     """
     
-    def __init__( self, keypoints: Sequence[KeypointLabel], args, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert isinstance(keypoints, list | tuple) \
-               and all(isinstance(c, KeypointLabel) for c in keypoints)
-        self.keypoints = keypoints
+    def __init__(self, seq: list[KeypointLabel | dict]):
+        super().__init__(KeypointLabel.from_value(value=i) for i in seq)
+    
+    def __setitem__(self, index: int, item: KeypointLabel | dict):
+        super().__setitem__(index, KeypointLabel.from_value(item))
+    
+    def insert(self, index: int, item: KeypointLabel | dict):
+        super().insert(index, KeypointLabel.from_value(item))
+    
+    def append(self, item: KeypointLabel | dict):
+        super().append(KeypointLabel.from_value(item))
+    
+    def extend(self, other: list[KeypointLabel | dict]):
+        super().extend([KeypointLabel.from_value(item) for item in other])
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.stack([k.tensor for k in self.keypoints], dim=0)
+    def data(self) -> list | None:
+        """The label's data."""
+        return [i.data for i in self]
+    
+    @property
+    def ids(self) -> list[int]:
+        return [i.id_ for i in self]  
+    
+    @property
+    def labels(self) -> list[str]:
+        return [i.label for i in self]  
 
+    @property
+    def points(self) -> list:
+        return [i.points for i in self]  
+    
 
 class COCOKeypointsLabel(KeypointsLabel):
-    """A list of keypoint labels for multiple objects in COCO format."""
+    """A list of keypoint labels for multiple objects in COCO format.
+    
+    See Also: :class:`KeypointsLabel`.
+    """
     pass
 
 # endregion
@@ -687,54 +814,58 @@ class COCOKeypointsLabel(KeypointsLabel):
 
 # region Polyline
 
-class PolylineLabel(coreml.Label):
+class PolylineLabel(data.Label):
     """A set of semantically related polylines or polygons for a single object
     in an image.
     
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
+        id_: The class ID of the polyline data. Defaults to -1 means unknown.
         index: An index for the polyline. Defaults to -1.
-        id: The class ID of the polyline label. Defaults to -1 means unknown.
         label: The label string. Defaults to "".
+        confidence: A confidence value for the data. Defaults to 1.0.
         points: A list of lists of (x, y) points in `[0, 1] x [0, 1]` describing
             the vertices of each shape in the polyline.
         closed: Whether the shapes are closed, in other words, and edge should
-            be drawn.
-        from the last vertex to the first vertex of each shape. Defaults to
-            False.
+            be drawn. from the last vertex to the first vertex of each shape.
+            Defaults to False.
         filled: Whether the polyline represents polygons, i.e., shapes that
             should be filled when rendering them. Defaults to False.
-        confidence: A confidence in [0.0, 1.0] for the detection. Defaults to
-            1.0.
     """
     
     def __init__(
         self,
-        index     : int           = -1,
-        id        : int           = -1,
-        label     : str           = "",
-        points    : TensorOrArray = [],
-        closed    : bool          = False,
-        filled    : bool          = False,
-        confidence: float         = 1.0,
+        id_       : int   = -1,
+        index     : int   = -1,
+        label     : str   = "",
+        confidence: float = 1.0,
+        points    : list  = [],
+        closed    : bool  = False,
+        filled    : bool  = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        assert 0.0 <= confidence <= 1.0
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"conf must be between 0.0 and 1.0, but got {confidence}."
+            )
+        if id_ <= 0 and label == "":
+            raise ValueError(
+                f"Either id or name must be defined, but got {id_} and {label}."
+            )
+        self.id_        = id_
         self.index      = index
-        self.id         = id
         self.label      = label
         self.closed     = closed
         self.filled     = filled
         self.confidence = confidence
-        
-        if not isinstance(points, torch.Tensor):
-            points = torch.FloatTensor(points)
-        self.points = points
+        self.points     = points
        
     @classmethod
     def from_mask(
         cls,
-        mask     : TensorOrArray,
+        mask     : np.ndarray,
         label    : str = "",
         tolerance: int = 2,
         **kwargs
@@ -758,15 +889,32 @@ class PolylineLabel(coreml.Label):
         """
         pass
     
+    @classmethod
+    def from_value(cls, value: PolylineLabel | dict) -> PolylineLabel:
+        """Create a :class:`PolylineLabel` object from an arbitrary
+        :param:`value`.
+        """
+        if isinstance(value, dict):
+            return PolylineLabel(**value)
+        elif isinstance(value, PolylineLabel):
+            return value
+        else:
+            raise ValueError(
+                f"value must be a PolylineLabel class or a dict, but got "
+                f"{type(value)}."
+            )
+        
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        raise NotImplementedError(f"This function has not been implemented!")
+    def data(self) -> list | None:
+        """The label's data."""
+        return [
+            self.points, self.id_, self.label, self.confidence, self.index
+        ]
     
     def to_detection(
         self,
-        mask_size : IntAnyT | None = None,
-        frame_size: IntAnyT | None = None,
+        mask_size : int | list[int] | None = None,
+        image_size: int | list[int] | None = None,
     ) -> DetectionLabel:
         """Return a :class:`DetectionLabel` object of this instance whose
         bounding bbox tightly encloses the polyline. If a :param:`mask_size` is
@@ -780,7 +928,7 @@ class PolylineLabel(coreml.Label):
         Args:
             mask_size: An optional shape at which to render an instance mask
                 for the polyline.
-            frame_size: Used when no :param:`mask_size` is provided. An optional
+            image_size: Used when no :param:`mask_size` is provided. An optional
                 shape of the frame containing this polyline that's used to
                 compute the required :param:`mask_size`.
         
@@ -791,10 +939,10 @@ class PolylineLabel(coreml.Label):
     
     def to_segmentation(
         self,
-        mask      : TensorOrArray | None = None,
-        frame_size: IntAnyT       | None = None,
-        target    : int                  = 255,
-        thickness : int                  = 1,
+        mask      : np.ndarray      | None = None,
+        image_size: int | list[int] | None = None,
+        target    : int                    = 255,
+        thickness : int                    = 1,
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this class. Only
         object with instance masks (i.e., their :param:`mask` attributes
@@ -803,7 +951,7 @@ class PolylineLabel(coreml.Label):
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
                 to which to add this object. Defaults to None.
-            frame_size: The shape of the segmentation mask to render. This
+            image_size: The shape of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
                 to None.
             target: The pixel value to use to render the object. If you want
@@ -818,28 +966,51 @@ class PolylineLabel(coreml.Label):
         pass
 
 
-class PolylinesLabel(coreml.Label):
+class PolylinesLabel(list[PolylineLabel], data.Label):
     """A list of polylines or polygon labels for multiple objects in an image.
     
-    Args:
-        polylines: A list of :class:`PolylineLabel` objects.
-    """
+    See Also: :class:`mon.coreml.data.label.Label`.
     
-    def __init__(self, polylines: Sequence[PolylineLabel], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert isinstance(polylines, list) \
-               and all(isinstance(p, PolylineLabel) for p in polylines)
-        self.polylines = polylines
+    Args:
+        seq: A list of :class:`PolylineLabel` objects.
+    """
+
+    def __init__(self, seq: list[PolylineLabel | dict]):
+        super().__init__(PolylineLabel.from_value(value=i) for i in seq)
+
+    def __setitem__(self, index: int, item: PolylineLabel | dict):
+        super().__setitem__(index, PolylineLabel.from_value(item))
+
+    def insert(self, index: int, item: PolylineLabel | dict):
+        super().insert(index, PolylineLabel.from_value(item))
+
+    def append(self, item: PolylineLabel | dict):
+        super().append(PolylineLabel.from_value(item))
+
+    def extend(self, other: list[PolylineLabel | dict]):
+        super().extend([PolylineLabel.from_value(item) for item in other])
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.stack([p.tensor for p in self.polylines], dim=0)
+    def data(self) -> list | None:
+        """The label's data."""
+        return [i.data for i in self]
+    
+    @property
+    def ids(self) -> list[int]:
+        return [i.id_ for i in self]
+    
+    @property
+    def labels(self) -> list[str]:
+        return [i.label for i in self]
+
+    @property
+    def points(self) -> list:
+        return [i.points for i in self]
     
     def to_detections(
         self,
-        mask_size : IntAnyT | None = None,
-        frame_size: IntAnyT | None = None,
+        mask_size : int | list[int] | None = None,
+        image_size: int | list[int] | None = None,
     ) -> DetectionsLabel:
         """Return a :class:`DetectionsLabel` object of this instance whose
         bounding boxes tightly enclose the polylines. If a :param:`mask_size`
@@ -853,7 +1024,7 @@ class PolylinesLabel(coreml.Label):
         Args:
             mask_size: An optional shape at which to render an instance mask
                 for the polyline.
-            frame_size: Used when no :param:`mask_size` is provided. An optional
+            image_size: Used when no :param:`mask_size` is provided. An optional
                 shape of the frame containing this polyline that is used to
                 compute the required :param:`mask_size`.
         
@@ -864,10 +1035,10 @@ class PolylinesLabel(coreml.Label):
     
     def to_segmentation(
         self,
-        mask      : TensorOrArray | None = None,
-        frame_size: IntAnyT       | None = None,
-        target    : int                  = 255,
-        thickness : int                  = 1,
+        mask      : np.ndarray      | None = None,
+        image_size: int | list[int] | None = None,
+        target    : int                    = 255,
+        thickness : int                    = 1,
     ) -> SegmentationLabel:
         """Return a :class:`SegmentationLabel` object of this instance. Only
         polylines with instance masks (i.e., their :param:`mask` attributes
@@ -876,7 +1047,7 @@ class PolylinesLabel(coreml.Label):
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
                 to which to add this object. Defaults to None.
-            frame_size: The shape of the segmentation mask to render. This
+            image_size: The shape of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
                 to None.
             target: The pixel value to use to render the object. If you want
@@ -895,13 +1066,14 @@ class PolylinesLabel(coreml.Label):
 
 # region Regression
 
-class RegressionLabel(coreml.Label):
+class RegressionLabel(data.Label):
     """A single regression value.
+    
+    See Also: :class:`mon.coreml.data.label.Label`.
     
     Args:
         value: The regression value.
-        confidence: A confidence in [0.0, 1.0] for the classification. Defaults
-            to 1.0.
+        confidence: A confidence value for the data. Defaults to 1.0.
     """
     
     def __init__(
@@ -911,83 +1083,86 @@ class RegressionLabel(coreml.Label):
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        assert 0.0 <= confidence <= 1.0
+        if not 0.0 <= confidence <= 1.0:
+            raise ValueError(
+                f"conf must be between 0.0 and 1.0, but got {confidence}."
+            )
         self.value      = value
         self.confidence = confidence
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
-        return torch.FloatTensor([self.value])
+    def data(self) -> list | None:
+        """The label's data."""
+        return [self.value]
     
 # endregion
 
 
 # region Segmentation
 
-class SegmentationLabel(coreml.Label):
+class SegmentationLabel(data.Label):
     """A semantic segmentation label in an image.
-
+    
+    See Also: :class:`mon.coreml.data.label.Label`.
+    
     Args:
-        id: The ID of the image. This can be an integer or a string. This
+        id_: The ID of the image. This can be an integer or a string. This
             attribute is useful for batch processing where you want to keep the
             objects in the correct frame sequence.
         name: The name of the image. Defaults to None.
         path: The path to the image file. Defaults to None.
         mask: The image with integer values encoding the semantic labels.
-        Defaults to None.
+            Defaults to None.
         load_on_create: If True, the image will be loaded into memory when the
             object is created. Defaults to False.
         keep_in_memory: If True, the image will be loaded into memory and kept
             there. Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
     """
 
     to_rgb   : bool = True
-    to_tensor: bool = True
-    normalize: bool = True
+    to_tensor: bool = False
+    normalize: bool = False
     
     def __init__(
         self,
-        id            : int                    = uuid.uuid4().int,
-        name          : str           | None   = None,
-        path          : PathType      | None   = None,
-        mask          : TensorOrArray | None   = None,
-        load_on_create: bool                   = False,
-        keep_in_memory: bool                   = False,
-        backend       : VisionBackendType      = constant.VISION_BACKEND,
+        id_           : int                 = uuid.uuid4().int,
+        name          : str          | None = None,
+        path          : pathlib.Path | None = None,
+        mask          : np.ndarray   | None = None,
+        load_on_create: bool                = False,
+        keep_in_memory: bool                = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.id             = id
+        self.id_            = id_
         self.image          = None
         self.keep_in_memory = keep_in_memory
-        self.backend        = backend
         
         if path is not None:
-            path = core.Path(path)
-            assert path.is_image_file()
-        self.path: core.Path = path
+            path = pathlib.Path(path)
+            if not path.is_image_file():
+                raise ValueError(
+                    f"path must be a valid path to an image file, but got {path}."
+                )
+        self.path = path
         
         if name is None:
-            name = str(core.Path(path).name) \
-                if path.is_image_file() else f"{id}"
+            name = str(pathlib.Path(path).name) if path.is_image_file() else f"{id_}"
         self.name = name
-        
+
         if load_on_create and mask is None:
             mask = self.load()
-
-        self.shape = ci.get_image_shape(image=mask) \
-            if mask is not None else None
-
+        
+        self.shape = mi.get_image_shape(image=mask) if mask is not None else None
+       
         if self.keep_in_memory:
             self.mask = mask
     
     def load(
         self,
-        path          : PathType | None = None,
-        keep_in_memory: bool            = False,
-    ) -> torch.Tensor:
+        path          : pathlib.Path | None = None,
+        keep_in_memory: bool                = False,
+    ) -> np.ndarray:
         """Load segmentation mask image into memory.
         
         Args:
@@ -996,44 +1171,47 @@ class SegmentationLabel(coreml.Label):
                 kept there. Defaults to False.
             
         Return:
-            Return image Tensor of shape [1, C, H, W] to caller.
+            Return image of shape HWC.
         """
         self.keep_in_memory = keep_in_memory
         
-        if path.is_image_file():
-            self.path = core.Path(path)
-        assert self.path.is_image_file()
+        if path is not None:
+            path = pathlib.Path(path)
+            if path.is_image_file():
+                self.path = path
+        if not path.is_image_file():
+            raise ValueError(
+                f"path must be a valid path to an image file, but got {path}."
+            )
         
-        mask = ci.read_image(
+        mask = mi.read_image(
             path      = self.path,
             to_rgb    = self.to_rgb,
             to_tensor = self.to_tensor,
             normalize = self.normalize,
-            backend   = self.backend
         )
-        self.shape = ci.get_image_shape(image=mask) \
-            if (mask is not None) else self.shape
+        self.shape = mi.get_image_shape(image=mask) if (mask is not None) else self.shape
         
         if self.keep_in_memory:
             self.mask = mask
-        
         return mask
         
     @property
     def meta(self) -> dict:
         """Return a dictionary of metadata about the object."""
         return {
-            "id"   : self.id,
+            "id"   : self.id_,
             "name" : self.name,
             "path" : self.path,
             "shape": self.shape,
         }
     
     @property
-    def tensor(self) -> torch.Tensor:
-        """The label in :class:`torch.Tensor` format."""
+    def data(self) -> np.ndarray | None:
+        """The label's data."""
         if self.mask is None:
-            self.load()
-        return self.mask
+            return self.load()
+        else:
+            return self.mask
 
 # endregion

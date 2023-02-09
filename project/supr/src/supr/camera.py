@@ -16,7 +16,7 @@ from typing import Union
 import numpy as np
 
 
-# region MARK: - Camera
+# region Camera
 
 class Camera(ABC):
     """Base Camera class.
@@ -31,9 +31,7 @@ class Camera(ABC):
             Camera name. It is also the name of the camera's config files.
             Default: `None`.
     """
-
-    # MARK: Magic Functions
-
+    
     def __init__(
         self,
         dataset: str,
@@ -50,8 +48,6 @@ class Camera(ABC):
         self.id_     = id_
         self.dataset = dataset
         self.name    = name
-
-    # MARK: Run
 
     @abstractmethod
     def run(self):
@@ -77,8 +73,6 @@ class Camera(ABC):
                 Image.
         """
         pass
-
-    # MARK: Visualize
 
     @abstractmethod
     def draw(self, drawing: np.ndarray, elapsed_time: float) -> np.ndarray:

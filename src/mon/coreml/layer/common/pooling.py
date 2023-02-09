@@ -22,20 +22,16 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import padding as pad
-from mon.coreml.typing import Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.foundation import builtins
+from mon.globals import LAYERS
 
 
 # region Adaptive Pool
 
-def adaptive_avg_max_pool2d(
-    input      : torch.Tensor,
-    output_size: int = 1,
-    *args, **kwargs
-) -> torch.Tensor:
+def adaptive_avg_max_pool2d(input: torch.Tensor, output_size: int = 1) -> torch.Tensor:
     x     = input
     x_avg = functional.adaptive_avg_pool2d(x, output_size)
     x_max = functional.adaptive_max_pool2d(x, output_size)
@@ -43,11 +39,7 @@ def adaptive_avg_max_pool2d(
     return y
 
 
-def adaptive_cat_avg_max_pool2d(
-    input      : torch.Tensor,
-    output_size: int = 1,
-    *args, **kwargs
-) -> torch.Tensor:
+def adaptive_cat_avg_max_pool2d(input: torch.Tensor, output_size: int = 1) -> torch.Tensor:
     x     = input
     x_avg = functional.adaptive_avg_pool2d(x, output_size)
     x_max = functional.adaptive_max_pool2d(x, output_size)
@@ -59,7 +51,6 @@ def adaptive_pool2d(
     input      : torch.Tensor,
     pool_type  : str = "avg",
     output_size: int = 1,
-    *args, **kwargs
 ) -> torch.Tensor:
     """Selectable global pooling function with dynamic input kernel size."""
     x = input
@@ -77,92 +68,85 @@ def adaptive_pool2d(
     return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AdaptiveAvgMaxPool2d(base.PassThroughLayerParsingMixin, nn.Module):
-
+    
     def __init__(self, output_size: int = 1):
         super().__init__()
         self.output_size = output_size
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = adaptive_avg_max_pool2d(
-            input       = x,
-            output_size = self.output_size
-        )
+        y = adaptive_avg_max_pool2d(input=x, output_size=self.output_size)
         return y
 
 
-@constant.LAYER.register()
-class AdaptiveAvgPool1d(base.PassThroughLayerParsingMixin, nn.AdaptiveAvgPool1d):
+@LAYERS.register()
+class AdaptiveAvgPool1d( base.PassThroughLayerParsingMixin, nn.AdaptiveAvgPool1d):
     pass
 
 
-@constant.LAYER.register()
-class AdaptiveAvgPool2d(base.PassThroughLayerParsingMixin, nn.AdaptiveAvgPool2d):
+@LAYERS.register()
+class AdaptiveAvgPool2d( base.PassThroughLayerParsingMixin, nn.AdaptiveAvgPool2d):
     pass
 
 
-@constant.LAYER.register()
-class AdaptiveAvgPool3d(base.PassThroughLayerParsingMixin, nn.AdaptiveAvgPool3d):
+@LAYERS.register()
+class AdaptiveAvgPool3d( base.PassThroughLayerParsingMixin, nn.AdaptiveAvgPool3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AdaptiveCatAvgMaxPool2d(base.PassThroughLayerParsingMixin, nn.Module):
-
+    
     def __init__(self, output_size: int = 1):
         super().__init__()
         self.output_size = output_size
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = adaptive_cat_avg_max_pool2d(
-            input       = x,
-            output_size = self.output_size
-        )
+        y = adaptive_cat_avg_max_pool2d(input=x, output_size=self.output_size)
         return y
 
 
-@constant.LAYER.register()
-class AdaptiveMaxPool1d(base.PassThroughLayerParsingMixin, nn.AdaptiveMaxPool1d):
+@LAYERS.register()
+class AdaptiveMaxPool1d( base.PassThroughLayerParsingMixin, nn.AdaptiveMaxPool1d):
     pass
 
 
-@constant.LAYER.register()
-class AdaptiveMaxPool2d(base.PassThroughLayerParsingMixin, nn.AdaptiveMaxPool2d):
+@LAYERS.register()
+class AdaptiveMaxPool2d( base.PassThroughLayerParsingMixin, nn.AdaptiveMaxPool2d):
     pass
 
 
-@constant.LAYER.register()
-class AdaptiveMaxPool3d(base.PassThroughLayerParsingMixin, nn.AdaptiveMaxPool3d):
+@LAYERS.register()
+class AdaptiveMaxPool3d( base.PassThroughLayerParsingMixin, nn.AdaptiveMaxPool3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
     """Selectable global pooling layer with dynamic input kernel size."""
-
+    
     def __init__(
         self,
         output_size: int  = 1,
         pool_type  : str  = "fast",
         flatten    : bool = False,
-        *args, **kwargs
     ):
         from mon.coreml.layer.common import linear, mutating
         
         super().__init__()
         self.pool_type = pool_type or ""
         
-        self.flatten   = mutating.Flatten(1) \
+        self.flatten = mutating.Flatten(1) \
             if flatten else linear.Identity()
         if pool_type == "":
             self.pool = linear.Identity()  # pass through
         elif pool_type == "fast":
             if output_size != 1:
                 raise ValueError()
-            self.pool    = FastAdaptiveAvgPool2d(flatten)
+            self.pool = FastAdaptiveAvgPool2d(flatten)
             self.flatten = linear.Identity()
         elif pool_type == "avg":
             self.pool = AdaptiveAvgPool2d(output_size)
@@ -174,20 +158,20 @@ class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
             self.pool = AdaptiveMaxPool2d(output_size)
         elif True:
             raise ValueError("Invalid pool type: %s" % pool_type)
-
+    
     def __repr__(self):
         return (self.__class__.__name__ + " (pool_type=" + self.pool_type +
                 ", flatten=" + str(self.flatten) + ")")
-
+    
     def is_identity(self) -> bool:
         return not self.pool_type
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pool(x)
         y = self.flatten(y)
         return y
-
+    
     def feat_mult(self):
         if self.pool_type == "cat_avg_max":
             return 2
@@ -195,17 +179,18 @@ class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
             return 1
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FastAdaptiveAvgPool2d(base.PassThroughLayerParsingMixin, nn.Module):
-
+    
     def __init__(self, flatten: bool = False):
         super().__init__()
         self.flatten = flatten
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = x.mean((2, 3), keepdim=not self.flatten)
         return y
+
 
 # endregion
 
@@ -214,12 +199,11 @@ class FastAdaptiveAvgPool2d(base.PassThroughLayerParsingMixin, nn.Module):
 
 def avg_pool2d_same(
     input            : torch.Tensor,
-    kernel_size      : Int2T,
-    stride           : Int2T,
-    padding          : Int2T = 0,
-    ceil_mode        : bool  = False,
-    count_include_pad: bool  = True,
-    *args, **kwargs
+    kernel_size      : _size_2_t,
+    stride           : _size_2_t,
+    padding          : _size_2_t = 0,
+    ceil_mode        : bool      = False,
+    count_include_pad: bool      = True,
 ) -> torch.Tensor:
     x = input
     y = pad.pad_same(
@@ -238,20 +222,20 @@ def avg_pool2d_same(
     return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AvgPool2dSame(base.PassThroughLayerParsingMixin, nn.AvgPool2d):
     """Tensorflow like 'same' wrapper for 2D average pooling."""
-
+    
     def __init__(
         self,
-        kernel_size      : Int2T,
-        stride           : Int2T | None = None,
-        padding          : Int2T        = 0,
-        ceil_mode        : bool         = False,
-        count_include_pad: bool         = True,
+        kernel_size      : _size_2_t,
+        stride           : _size_2_t | None = None,
+        padding          : _size_2_t        = 0,
+        ceil_mode        : bool             = False,
+        count_include_pad: bool             = True,
     ):
-        kernel_size = core.to_2tuple(kernel_size)
-        stride      = core.to_2tuple(stride)
+        kernel_size = builtins.to_2tuple(kernel_size)
+        stride      = builtins.to_2tuple(stride)
         super().__init__(
             kernel_size       = kernel_size,
             stride            = stride,
@@ -259,7 +243,7 @@ class AvgPool2dSame(base.PassThroughLayerParsingMixin, nn.AvgPool2d):
             ceil_mode         = ceil_mode,
             count_include_pad = count_include_pad
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = pad.pad_same(
@@ -278,26 +262,27 @@ class AvgPool2dSame(base.PassThroughLayerParsingMixin, nn.AvgPool2d):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AvgPool1d(base.PassThroughLayerParsingMixin, nn.AvgPool1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AvgPool2d(base.PassThroughLayerParsingMixin, nn.AvgPool2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AvgPool3d(base.PassThroughLayerParsingMixin, nn.AvgPool3d):
     pass
+
 
 # endregion
 
 
 # region Channel Pool
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ChannelPool(base.PassThroughLayerParsingMixin, nn.Module):
     """Global Channel Pool used in CBAM Module proposed by the paper: "CBAM:
     Convolutional Block Attention Module". """
@@ -305,27 +290,26 @@ class ChannelPool(base.PassThroughLayerParsingMixin, nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = torch.cat(
-            tensors = (
-                torch.max(x, 1)[0].unsqueeze(1),
-                torch.mean(x, 1).unsqueeze(1)
-            ),
-            dim = 1,
+            tensors=(torch.max(x, 1)[0].unsqueeze(1), torch.mean(x, 1).unsqueeze(1)),
+            dim=1,
         )
         return y
+
 
 # endregion
 
 
 # region LP Pool
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LPPool1d(base.PassThroughLayerParsingMixin, nn.LPPool1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LPPool2d(base.PassThroughLayerParsingMixin, nn.LPPool2d):
     pass
+
 
 # endregion
 
@@ -344,6 +328,7 @@ def lse_pool2d(input: torch.Tensor) -> torch.Tensor:
     y        = x_max + y.exp().sum(dim=2, keepdim=True).log()
     return y
 
+
 # endregion
 
 
@@ -351,12 +336,11 @@ def lse_pool2d(input: torch.Tensor) -> torch.Tensor:
 
 def max_pool2d_same(
     input      : torch.Tensor,
-    kernel_size: Int2T,
-    stride     : Int2T,
-    padding    : Int2T = 0,
-    dilation   : Int2T = 1,
-    ceil_mode  : bool  = False,
-    *args, **kwargs
+    kernel_size: _size_2_t,
+    stride     : _size_2_t,
+    padding    : _size_2_t = 0,
+    dilation   : _size_2_t = 1,
+    ceil_mode  : bool      = False,
 ) -> torch.Tensor:
     x = input
     y = pad.pad_same(
@@ -376,41 +360,41 @@ def max_pool2d_same(
     return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FractionalMaxPool2d(base.PassThroughLayerParsingMixin, nn.FractionalMaxPool2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FractionalMaxPool3d(base.PassThroughLayerParsingMixin, nn.FractionalMaxPool3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxPool1d(base.PassThroughLayerParsingMixin, nn.MaxPool1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxPool2d(base.PassThroughLayerParsingMixin, nn.MaxPool2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxPool2dSame(base.PassThroughLayerParsingMixin, nn.MaxPool2d):
     """Tensorflow like `same` wrapper for 2D max pooling."""
-
+    
     def __init__(
         self,
-        kernel_size: Int2T,
-        stride     : Int2T | None = None,
-        padding    : Int2T | None = (0, 0),
-        dilation   : Int2T        = (1, 1),
-        ceil_mode  : bool         = False,
+        kernel_size: _size_2_t,
+        stride     : _size_2_t | None = None,
+        padding    : _size_2_t | None = (0, 0),
+        dilation   : _size_2_t        = (1, 1),
+        ceil_mode  : bool             = False,
     ):
-        kernel_size = core.to_2tuple(kernel_size)
-        stride      = core.to_2tuple(stride)
-        dilation    = core.to_2tuple(dilation)
+        kernel_size = builtins.to_2tuple(kernel_size)
+        stride      = builtins.to_2tuple(stride)
+        dilation    = builtins.to_2tuple(dilation)
         super().__init__(
             kernel_size = kernel_size,
             stride      = stride,
@@ -418,7 +402,7 @@ class MaxPool2dSame(base.PassThroughLayerParsingMixin, nn.MaxPool2d):
             dilation    = dilation,
             ceil_mode   = ceil_mode
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = pad.pad_same(
@@ -438,55 +422,56 @@ class MaxPool2dSame(base.PassThroughLayerParsingMixin, nn.MaxPool2d):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxPool3d(base.PassThroughLayerParsingMixin, nn.MaxPool3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxUnpool1d(base.PassThroughLayerParsingMixin, nn.MaxUnpool1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxUnpool2d(base.PassThroughLayerParsingMixin, nn.MaxUnpool2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MaxUnpool3d(base.PassThroughLayerParsingMixin, nn.MaxUnpool3d):
     pass
+
 
 # endregion
 
 
 # region Median Pool
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MedianPool2d(base.PassThroughLayerParsingMixin, nn.Module):
     """Median pool (usable as median filter when stride=1) module.
 
     Args:
          kernel_size : Size of pooling kernel.
          stride: Pool stride, int or 2-tuple
-         padding: Pool padding, int or 4-tuple (ll, r, t, b) as in pytorch F.pad.
+         padding: Pool padding, int or 4-tuple (ll, r, t, b) as in pytorch
+         F.pad.
          same: Override padding and enforce same padding. Defaults to False.
     """
-
+    
     def __init__(
         self,
-        kernel_size: Int2T,
-        stride     : Int2T       = (1, 1),
-        padding    : Int2T | str = 0,
-        same	   : bool	     = False,
-        *args, **kwargs
+        kernel_size: _size_2_t,
+        stride     : _size_2_t       = (1, 1),
+        padding    : _size_2_t | str = 0,
+        same       : bool            = False,
     ):
         super().__init__()
-        self.kernel_size = core.to_2tuple(kernel_size)
-        self.stride 	 = core.to_2tuple(stride)
-        self.padding 	 = core.to_4tuple(padding)  # convert to ll, r, t, b
-        self.same	 	 = same
-
+        self.kernel_size = builtins.to_2tuple(kernel_size)
+        self.stride      = builtins.to_2tuple(stride)
+        self.padding     = builtins.to_4tuple(padding)  # convert to ll, r, t, b
+        self.same        = same
+    
     def _padding(self, input: torch.Tensor):
         if self.same:
             ih, iw = input.size()[2:]
@@ -498,15 +483,15 @@ class MedianPool2d(base.PassThroughLayerParsingMixin, nn.Module):
                 pw = max(self.kernel_size[1] - self.stride[1], 0)
             else:
                 pw = max(self.kernel_size[1] - (iw % self.stride[1]), 0)
-            pl      = pw // 2
-            pr      = pw - pl
-            pt      = ph // 2
-            pb      = ph - pt
+            pl = pw // 2
+            pr = pw - pl
+            pt = ph // 2
+            pb = ph - pt
             padding = (pl, pr, pt, pb)
         else:
             padding = self.padding
         return padding
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = functional.pad(x, self._padding(x), mode="reflect")
@@ -514,5 +499,5 @@ class MedianPool2d(base.PassThroughLayerParsingMixin, nn.Module):
         y = y.unfold(3, self.k[1], self.stride[1])
         y = y.contiguous().view(y.size()[:4] + (-1,)).median(dim=-1)[0]
         return y
-    
+
 # endregion

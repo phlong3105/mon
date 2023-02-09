@@ -1,6 +1,9 @@
 # 2: Train with customized datasets
 
-In this note, you will know how to inference, test, and train predefined models with customized datasets. We use the [balloon dataset](https://github.com/matterport/Mask_RCNN/tree/master/samples/balloon) as an example to describe the whole process.
+In this note, you will know how to inference, test, and train predefined models
+with customized datasets. We use
+the [balloon dataset](https://github.com/matterport/Mask_RCNN/tree/master/samples/balloon)
+as an example to describe the whole process.
 
 The basic steps are as below:
 
@@ -16,16 +19,20 @@ There are three ways to support a new dataset in MMDetection:
 2. reorganize the dataset into a middle format.
 3. implement a new dataset.
 
-Usually we recommend to use the first two methods which are usually easier than the third.
+Usually we recommend to use the first two methods which are usually easier than
+the third.
 
 In this note, we give an example for converting the data into COCO format.
 
-**Note**: MMDetection only supports evaluating mask AP of dataset in COCO format for now.
-So for instance segmentation task users should convert the data into coco format.
+**Note**: MMDetection only supports evaluating mask AP of dataset in COCO format
+for now.
+So for instance segmentation task users should convert the data into coco
+format.
 
 ### COCO annotation format
 
-The necessary keys of COCO format for instance segmentation is as below, for the complete details, please refer [here](https://cocodataset.org/#format-data).
+The necessary keys of COCO format for instance segmentation is as below, for the
+complete details, please refer [here](https://cocodataset.org/#format-data).
 
 ```json
 {
@@ -48,7 +55,7 @@ annotation = {
     "category_id": int,
     "segmentation": RLE or [polygon],
     "area": float,
-    "bbox": [x,y,width,height],
+    "box": [x,y,width,height],
     "iscrowd": 0 or 1,
 }
 
@@ -60,7 +67,9 @@ categories = [{
 ```
 
 Assume we use the balloon dataset.
-After downloading the data, we need to implement a function to convert the annotation format into the COCO format. Then we can use implemented COCODataset to load the data and perform training and evaluation.
+After downloading the data, we need to implement a function to convert the
+annotation format into the COCO format. Then we can use implemented COCODataset
+to load the data and perform training and evaluation.
 
 If you take a look at the dataset, you will find the dataset format is as below:
 
@@ -148,7 +157,8 @@ If you take a look at the dataset, you will find the dataset format is as below:
  'size': 1115004}
 ```
 
-The annotation is a JSON file where each key indicates an image's all annotations.
+The annotation is a JSON file where each key indicates an image's all
+annotations.
 The code to convert the balloon dataset into coco format is as below.
 
 ```python
@@ -190,7 +200,7 @@ def convert_balloon_to_coco(ann_file, out_file, image_prefix):
                 image_id=idx,
                 id=obj_count,
                 category_id=0,
-                bbox=[x_min, y_min, x_max - x_min, y_max - y_min],
+                box=[x_min, y_min, x_max - x_min, y_max - y_min],
                 area=(x_max - x_min) * (y_max - y_min),
                 segmentation=[poly],
                 iscrowd=0)
@@ -205,11 +215,16 @@ def convert_balloon_to_coco(ann_file, out_file, image_prefix):
 
 ```
 
-Using the function above, users can successfully convert the annotation file into json format, then we can use `CocoDataset` to train and evaluate the model.
+Using the function above, users can successfully convert the annotation file
+into json format, then we can use `CocoDataset` to train and evaluate the model.
 
 ## Prepare a config
 
-The second step is to prepare a config thus the dataset could be successfully loaded. Assume that we want to use Mask R-CNN with FPN, the config to train the detector on balloon dataset is as below. Assume the config is under directory `configs/balloon/` and named as `mask_rcnn_r50_caffe_fpn_mstrain-poly_1x_balloon.py`, the config is as below.
+The second step is to prepare a config thus the dataset could be successfully
+loaded. Assume that we want to use Mask R-CNN with FPN, the config to train the
+detector on balloon dataset is as below. Assume the config is under
+directory `configs/balloon/` and named
+as `mask_rcnn_r50_caffe_fpn_mstrain-poly_1x_balloon.py`, the config is as below.
 
 ```python
 # The new config inherits a base config to highlight the necessary modification
@@ -257,7 +272,7 @@ For more detailed usages, please refer to the [Case 1](1_exist_data_model.md).
 To test the trained model, you can simply run
 
 ```shell
-python tools/test.py configs/balloon/mask_rcnn_r50_caffe_fpn_mstrain-poly_1x_balloon.py work_dirs/mask_rcnn_r50_caffe_fpn_mstrain-poly_1x_balloon.py/latest.pth --eval bbox segm
+python tools/test.py configs/balloon/mask_rcnn_r50_caffe_fpn_mstrain-poly_1x_balloon.py work_dirs/mask_rcnn_r50_caffe_fpn_mstrain-poly_1x_balloon.py/latest.pth --eval box segm
 ```
 
 For more detailed usages, please refer to the [Case 1](1_exist_data_model.md).

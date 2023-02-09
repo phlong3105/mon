@@ -11,6 +11,8 @@ __pycache__/
 *.lock
 *.pt
 *.pth
+*.ckpt
+
 /.idea/
 /.sync/
 /data/

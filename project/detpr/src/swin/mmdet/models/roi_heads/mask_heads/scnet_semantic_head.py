@@ -3,7 +3,7 @@ from mmdet.models.utils import ResLayer, SimplifiedBasicBlock
 from .fused_semantic_head import FusedSemanticHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class SCNetSemanticHead(FusedSemanticHead):
     """Mask head for `SCNet <https://arxiv.org/abs/2012.10150>`_.
 

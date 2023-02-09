@@ -12,44 +12,43 @@ __all__ = [
     "InceptionBasicConv2d", "InceptionC", "InceptionD", "InceptionE",
 ]
 
-from typing import Any
+from typing import Any, Callable
 
 import torch
 from torch import nn
 from torch.nn import functional
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import CallableType, Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.foundation import builtins
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InceptionBasicConv2d(base.ConvLayerParsingMixin, nn.Module):
     """Conv2d + BN + ReLU."""
-
+    
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Int2T,
-        stride      : Int2T       = 1,
-        padding     : Int2T | str = 0,
-        dilation    : Int2T       = 1,
-        groups      : int         = 1,
-        bias        : bool        = False,
-        padding_mode: str         = "zeros",
-        device      : Any         = None,
-        dtype       : Any         = None,
-        apply_act   : bool        = True,
-        eps         : float       = 0.001,
-        *args, **kwargs
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = False,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        apply_act   : bool            = True,
+        eps         : float           = 0.001,
     ):
         super().__init__()
-        kernel_size = core.to_2tuple(kernel_size)
-        stride      = core.to_2tuple(stride)
-        dilation    = core.to_2tuple(dilation)
-        self.conv = common.Conv2d(
+        kernel_size = builtins.to_2tuple(kernel_size)
+        stride      = builtins.to_2tuple(stride)
+        dilation    = builtins.to_2tuple(dilation)
+        self.conv   = common.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -71,7 +70,7 @@ class InceptionBasicConv2d(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Inception(base.LayerParsingMixin, nn.Module):
     
     def __init__(
@@ -83,7 +82,7 @@ class Inception(base.LayerParsingMixin, nn.Module):
         ch5x5red   : int,
         ch5x5      : int,
         pool_proj  : int,
-        conv       : CallableType | None = None,
+        conv       : Callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -137,7 +136,7 @@ class Inception(base.LayerParsingMixin, nn.Module):
                 kernel_size  = 1,
             ),
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x  = input
         y1 = self.branch1(x)
@@ -146,7 +145,7 @@ class Inception(base.LayerParsingMixin, nn.Module):
         y4 = self.branch4(x)
         y  = torch.cat([y1, y2, y3, y4], dim=1)
         return y
-
+    
     @classmethod
     def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1        = args[0]
@@ -157,9 +156,9 @@ class Inception(base.LayerParsingMixin, nn.Module):
         c2        = ch1x1 + ch3x3 + ch5x5 + pool_proj
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InceptionA(base.LayerParsingMixin, nn.Module):
     
     base_out_channels: int = 224  # + pool_features
@@ -168,8 +167,7 @@ class InceptionA(base.LayerParsingMixin, nn.Module):
         self,
         in_channels  : int,
         pool_features: int,
-        conv         : CallableType | None = None,
-        *args, **kwargs
+        conv         : Callable = None,
     ):
         super().__init__()
         if conv is None:
@@ -220,9 +218,9 @@ class InceptionA(base.LayerParsingMixin, nn.Module):
             kernel_size  = 1,
             eps          = 0.001,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
+        x        = input
         y_1x1    = self.branch1x1(x)
         y_5x5    = self.branch5x5_1(x)
         y_5x5    = self.branch5x5_2(y_5x5)
@@ -239,19 +237,14 @@ class InceptionA(base.LayerParsingMixin, nn.Module):
         c2 = cls.base_out_channels + args[1]
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InceptionB(base.LayerParsingMixin, nn.Module):
     
-    base_out_channels: int = 480   # + in_channels
-    
-    def __init__(
-        self,
-        in_channels: int,
-        conv       : CallableType | None = None,
-        *args, **kwargs
-    ):
+    base_out_channels: int = 480  # + in_channels
+
+    def __init__(self, in_channels: int, conv: Callable = None):
         super().__init__()
         if conv is None:
             conv = InceptionBasicConv2d
@@ -279,7 +272,7 @@ class InceptionB(base.LayerParsingMixin, nn.Module):
             kernel_size  = 3,
             stride       = 2,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x           = input
         y_3x3       = self.branch3x3(x)
@@ -296,9 +289,9 @@ class InceptionB(base.LayerParsingMixin, nn.Module):
         c2 = cls.base_out_channels + c1
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InceptionC(base.LayerParsingMixin, nn.Module):
     
     base_out_channels: int = 768
@@ -307,8 +300,7 @@ class InceptionC(base.LayerParsingMixin, nn.Module):
         self,
         in_channels : int,
         channels_7x7: int,
-        conv        : CallableType | None = None,
-        *args, **kwargs
+        conv        : Callable = None,
     ):
         super().__init__()
         if conv is None:
@@ -363,15 +355,15 @@ class InceptionC(base.LayerParsingMixin, nn.Module):
         self.branch7x7dbl_5 = conv(
             in_channels  = c7,
             out_channels = 192,
-            kernel_size  = (1 , 7),
-            padding      = (0 , 3),
+            kernel_size  = (1, 7),
+            padding      = (0, 3),
         )
         self.branch_pool = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x        = input
         y_1x1    = self.branch1x1(x)
@@ -387,25 +379,20 @@ class InceptionC(base.LayerParsingMixin, nn.Module):
         y_pool   = self.branch_pool(y_pool)
         y        = torch.cat([y_1x1, y_7x7, y_7x7dbl, y_pool], 1)
         return y
-
+    
     @classmethod
     def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c2 = cls.base_out_channels
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InceptionD(base.LayerParsingMixin, nn.Module):
     
-    base_out_channels: int = 512   # + in_channels
+    base_out_channels: int = 512  # + in_channels
     
-    def __init__(
-        self,
-        in_channels: int,
-        conv       : CallableType | None = None,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, conv: Callable = None):
         super().__init__()
         if conv is None:
             conv = InceptionBasicConv2d
@@ -444,7 +431,7 @@ class InceptionD(base.LayerParsingMixin, nn.Module):
             kernel_size  = 3,
             stride       = 2,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x       = input
         y_3x3   = self.branch3x3_1(x)
@@ -453,29 +440,24 @@ class InceptionD(base.LayerParsingMixin, nn.Module):
         y_7x7x3 = self.branch7x7x3_2(y_7x7x3)
         y_7x7x3 = self.branch7x7x3_3(y_7x7x3)
         y_7x7x3 = self.branch7x7x3_4(y_7x7x3)
-        y_pool = functional.max_pool2d(x, kernel_size=3, stride=2)
-        y      = torch.cat([y_3x3, y_7x7x3, y_pool], 1)
+        y_pool  = functional.max_pool2d(x, kernel_size=3, stride=2)
+        y       = torch.cat([y_3x3, y_7x7x3, y_pool], 1)
         return y
-
+    
     @classmethod
     def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         c1 = args[0]
         c2 = cls.base_out_channels + c1
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InceptionE(base.LayerParsingMixin, nn.Module):
     
     base_out_channels: int = 2048
     
-    def __init__(
-        self,
-        in_channels: int,
-        conv       : CallableType | None = None,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, conv: Callable = None):
         super().__init__()
         if conv is None:
             conv = InceptionBasicConv2d
@@ -525,18 +507,17 @@ class InceptionE(base.LayerParsingMixin, nn.Module):
             kernel_size  = (3, 1),
             padding      = (1, 0),
         )
-
         self.branch_pool = conv(
             in_channels  = in_channels,
             out_channels = 192,
             kernel_size  = 1,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x        = input
-        y_1x1    = self.branch1x1(x)
-        y_3x3    = self.branch3x3_1(x)
-        y_3x3    = [
+        x     = input
+        y_1x1 = self.branch1x1(x)
+        y_3x3 = self.branch3x3_1(x)
+        y_3x3 = [
             self.branch3x3_2a(y_3x3),
             self.branch3x3_2b(y_3x3),
         ]
@@ -558,22 +539,21 @@ class InceptionE(base.LayerParsingMixin, nn.Module):
         c2 = cls.base_out_channels
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InceptionAux1(base.HeadLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        conv        : CallableType | None = None,
-        *args, **kwargs
+        conv        : Callable = None,
     ):
         super().__init__()
         if conv is None:
             conv = InceptionBasicConv2d
-       
+        
         self.conv0 = conv(
             in_channels  = in_channels,
             out_channels = 128,
@@ -587,7 +567,7 @@ class InceptionAux1(base.HeadLayerParsingMixin, nn.Module):
         self.conv1.stddev = 0.01  # type: ignore[assignment]
         self.fc           = common.Linear(768, out_channels)
         self.fc.stddev    = 0.001  # type: ignore[assignment]
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         # N x 768 x 17 x 17
@@ -607,21 +587,20 @@ class InceptionAux1(base.HeadLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InceptionAux2(base.HeadLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        dropout     : float               = 0.7,
-        conv        : CallableType | None = None,
-        *args, **kwargs
+        dropout     : float    = 0.7,
+        conv        : Callable = None,
     ):
         super().__init__()
         if conv is None:
             conv = InceptionBasicConv2d
-       
+        
         self.conv = conv(
             in_channels  = in_channels,
             out_channels = 128,
@@ -630,7 +609,7 @@ class InceptionAux2(base.HeadLayerParsingMixin, nn.Module):
         self.fc1     = common.Linear(in_features=2048, out_features=1024)
         self.fc2     = common.Linear(in_features=1024, out_features=out_channels)
         self.dropout = common.Dropout(p=dropout)
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         # aux1: N x 512 x 14 x 14, aux2: N x 528 x 14 x 14

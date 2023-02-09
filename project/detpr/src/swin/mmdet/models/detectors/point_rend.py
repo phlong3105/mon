@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class PointRend(TwoStageDetector):
     """PointRend: Image Segmentation as Rendering
 

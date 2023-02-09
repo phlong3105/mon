@@ -131,7 +131,7 @@ class SingleBiFPN(nn.Module):
         return outs
 
 
-@NECKS.register_module()
+@NECKS._register()
 class BiFPN(nn.Module):
     def __init__(self,
                  in_channels,

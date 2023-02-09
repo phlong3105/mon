@@ -46,28 +46,28 @@ def test_bitmap_mask_init():
     assert len(bitmap_masks) == 0
     assert bitmap_masks.height == 28
     assert bitmap_masks.width == 28
-
+    
     # init with empty list masks
     raw_masks = []
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
     assert len(bitmap_masks) == 0
     assert bitmap_masks.height == 28
     assert bitmap_masks.width == 28
-
+    
     # init with ndarray masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
     assert len(bitmap_masks) == 3
     assert bitmap_masks.height == 28
     assert bitmap_masks.width == 28
-
+    
     # init with list masks contain 3 instances
     raw_masks = [dummy_raw_bitmap_masks((28, 28)) for _ in range(3)]
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
     assert len(bitmap_masks) == 3
     assert bitmap_masks.height == 28
     assert bitmap_masks.width == 28
-
+    
     # init with raw masks of unsupported type
     with pytest.raises(AssertionError):
         raw_masks = [[dummy_raw_bitmap_masks((28, 28))]]
@@ -82,7 +82,7 @@ def test_bitmap_mask_rescale():
     assert len(rescaled_masks) == 0
     assert rescaled_masks.height == 56
     assert rescaled_masks.width == 56
-
+    
     # rescale with bitmap masks contain 1 instances
     raw_masks = np.array([[[1, 0, 0, 0], [0, 1, 0, 1]]])
     bitmap_masks = BitmapMasks(raw_masks, 2, 4)
@@ -90,8 +90,10 @@ def test_bitmap_mask_rescale():
     assert len(rescaled_masks) == 1
     assert rescaled_masks.height == 4
     assert rescaled_masks.width == 8
-    truth = np.array([[[1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 1, 0, 0, 1, 1], [0, 0, 1, 1, 0, 0, 1, 1]]])
+    truth = np.array(
+        [[[1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 1, 1], [0, 0, 1, 1, 0, 0, 1, 1]]]
+    )
     assert (rescaled_masks.masks == truth).all()
 
 
@@ -103,7 +105,7 @@ def test_bitmap_mask_resize():
     assert len(resized_masks) == 0
     assert resized_masks.height == 56
     assert resized_masks.width == 72
-
+    
     # resize with bitmap masks contain 1 instances
     raw_masks = np.diag(np.ones(4, dtype=np.uint8))[np.newaxis, ...]
     bitmap_masks = BitmapMasks(raw_masks, 4, 4)
@@ -111,12 +113,14 @@ def test_bitmap_mask_resize():
     assert len(resized_masks) == 1
     assert resized_masks.height == 8
     assert resized_masks.width == 8
-    truth = np.array([[[1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0],
-                       [0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0],
-                       [0, 0, 0, 0, 0, 0, 1, 1], [0, 0, 0, 0, 0, 0, 1, 1]]])
+    truth = np.array(
+        [[[1, 1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 1, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 1, 1], [0, 0, 0, 0, 0, 0, 1, 1]]]
+    )
     assert (resized_masks.masks == truth).all()
-
+    
     # resize to non-square
     raw_masks = np.diag(np.ones(4, dtype=np.uint8))[np.newaxis, ...]
     bitmap_masks = BitmapMasks(raw_masks, 4, 4)
@@ -124,8 +128,10 @@ def test_bitmap_mask_resize():
     assert len(resized_masks) == 1
     assert resized_masks.height == 4
     assert resized_masks.width == 8
-    truth = np.array([[[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0],
-                       [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1]]])
+    truth = np.array(
+        [[[1, 1, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 1]]]
+    )
     assert (resized_masks.masks == truth).all()
 
 
@@ -137,7 +143,7 @@ def test_bitmap_mask_flip():
     assert len(flipped_masks) == 0
     assert flipped_masks.height == 28
     assert flipped_masks.width == 28
-
+    
     # horizontally flip with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -146,7 +152,7 @@ def test_bitmap_mask_flip():
     assert flipped_masks.masks.shape == (3, 28, 28)
     assert (bitmap_masks.masks == flipped_flipped_masks.masks).all()
     assert (flipped_masks.masks == raw_masks[:, :, ::-1]).all()
-
+    
     # vertically flip with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -157,7 +163,7 @@ def test_bitmap_mask_flip():
     assert flipped_masks.width == 28
     assert (bitmap_masks.masks == flipped_flipped_masks.masks).all()
     assert (flipped_masks.masks == raw_masks[:, ::-1, :]).all()
-
+    
     # diagonal flip with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -178,7 +184,7 @@ def test_bitmap_mask_pad():
     assert len(padded_masks) == 0
     assert padded_masks.height == 56
     assert padded_masks.width == 56
-
+    
     # pad with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -198,7 +204,7 @@ def test_bitmap_mask_crop():
     assert len(cropped_masks) == 0
     assert cropped_masks.height == 17
     assert cropped_masks.width == 10
-
+    
     # crop with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -208,8 +214,8 @@ def test_bitmap_mask_crop():
     assert cropped_masks.width == 10
     x1, y1, x2, y2 = dummy_bbox
     assert (cropped_masks.masks == raw_masks[:, y1:y2, x1:x2]).all()
-
-    # crop with invalid bbox
+    
+    # crop with invalid box
     with pytest.raises(AssertionError):
         dummy_bbox = dummy_bboxes(2, 28, 28)
         bitmap_masks.crop(dummy_bbox)
@@ -217,22 +223,24 @@ def test_bitmap_mask_crop():
 
 def test_bitmap_mask_crop_and_resize():
     dummy_bbox = dummy_bboxes(5, 28, 28)
-    inds = np.random.randint(0, 3, (5, ))
-
+    inds = np.random.randint(0, 3, (5,))
+    
     # crop and resize with empty bitmap masks
     raw_masks = dummy_raw_bitmap_masks((0, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
     cropped_resized_masks = bitmap_masks.crop_and_resize(
-        dummy_bbox, (56, 56), inds)
+        dummy_bbox, (56, 56), inds
+    )
     assert len(cropped_resized_masks) == 0
     assert cropped_resized_masks.height == 56
     assert cropped_resized_masks.width == 56
-
+    
     # crop and resize with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
     cropped_resized_masks = bitmap_masks.crop_and_resize(
-        dummy_bbox, (56, 56), inds)
+        dummy_bbox, (56, 56), inds
+    )
     assert len(cropped_resized_masks) == 5
     assert cropped_resized_masks.height == 56
     assert cropped_resized_masks.width == 56
@@ -246,7 +254,7 @@ def test_bitmap_mask_expand():
     assert len(expanded_masks) == 0
     assert expanded_masks.height == 56
     assert expanded_masks.width == 56
-
+    
     # expand with bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -263,7 +271,7 @@ def test_bitmap_mask_area():
     raw_masks = dummy_raw_bitmap_masks((0, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
     assert bitmap_masks.areas.sum() == 0
-
+    
     # area of bitmap masks contain 3 instances
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -279,7 +287,7 @@ def test_bitmap_mask_to_ndarray():
     ndarray_masks = bitmap_masks.to_ndarray()
     assert isinstance(ndarray_masks, np.ndarray)
     assert ndarray_masks.shape == (0, 28, 28)
-
+    
     # bitmap masks contain 3 instances to ndarray
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -296,7 +304,7 @@ def test_bitmap_mask_to_tensor():
     tensor_masks = bitmap_masks.to_tensor(dtype=torch.uint8, device='cpu')
     assert isinstance(tensor_masks, torch.Tensor)
     assert tensor_masks.shape == (0, 28, 28)
-
+    
     # bitmap masks contain 3 instances to tensor
     raw_masks = dummy_raw_bitmap_masks((3, 28, 28))
     bitmap_masks = BitmapMasks(raw_masks, 28, 28)
@@ -328,7 +336,7 @@ def test_polygon_mask_init():
     assert len(polygon_masks) == 0
     assert polygon_masks.height == 28
     assert polygon_masks.width == 28
-
+    
     # init with masks contain 3 instances
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
@@ -339,12 +347,12 @@ def test_polygon_mask_init():
     assert polygon_masks.height == 28
     assert polygon_masks.width == 28
     assert polygon_masks.to_ndarray().shape == (3, 28, 28)
-
+    
     # init with raw masks of unsupported type
     with pytest.raises(AssertionError):
         raw_masks = [[[]]]
         PolygonMasks(raw_masks, 28, 28)
-
+        
         raw_masks = [dummy_raw_polygon_masks((3, 28, 28))]
         PolygonMasks(raw_masks, 28, 28)
 
@@ -358,7 +366,7 @@ def test_polygon_mask_rescale():
     assert rescaled_masks.height == 56
     assert rescaled_masks.width == 56
     assert rescaled_masks.to_ndarray().shape == (0, 56, 56)
-
+    
     # rescale with polygon masks contain 3 instances
     raw_masks = [[np.array([1, 1, 3, 1, 4, 3, 2, 4, 1, 3], dtype=np.float)]]
     polygon_masks = PolygonMasks(raw_masks, 5, 5)
@@ -373,7 +381,8 @@ def test_polygon_mask_rescale():
          [0, 0, 1, 1, 1, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
          [0, 0, 0, 1, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-        np.uint8)
+        np.uint8
+    )
     assert (rescaled_masks.to_ndarray() == truth).all()
 
 
@@ -386,7 +395,7 @@ def test_polygon_mask_resize():
     assert resized_masks.height == 56
     assert resized_masks.width == 72
     assert resized_masks.to_ndarray().shape == (0, 56, 72)
-
+    
     # resize with polygon masks contain 1 instance 1 part
     raw_masks1 = [[np.array([1, 1, 3, 1, 4, 3, 2, 4, 1, 3], dtype=np.float)]]
     polygon_masks1 = PolygonMasks(raw_masks1, 5, 5)
@@ -401,9 +410,10 @@ def test_polygon_mask_resize():
          [0, 0, 1, 1, 1, 1, 1, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
          [0, 0, 0, 1, 1, 1, 1, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
-        np.uint8)
+        np.uint8
+    )
     assert (resized_masks1.to_ndarray() == truth1).all()
-
+    
     # resize with polygon masks contain 1 instance 2 part
     raw_masks2 = [[
         np.array([0., 0., 1., 0., 1., 1.]),
@@ -417,9 +427,10 @@ def test_polygon_mask_resize():
     assert resized_masks2.to_ndarray().shape == (1, 6, 6)
     truth2 = np.array(
         [[0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 0, 0],
-         [0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]], np.uint8)
+         [0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]], np.uint8
+    )
     assert (resized_masks2.to_ndarray() == truth2).all()
-
+    
     # resize with polygon masks contain 2 instances
     raw_masks3 = [raw_masks1[0], raw_masks2[0]]
     polygon_masks3 = PolygonMasks(raw_masks3, 5, 5)
@@ -430,7 +441,7 @@ def test_polygon_mask_resize():
     assert resized_masks3.to_ndarray().shape == (2, 10, 10)
     truth3 = np.stack([truth1, np.pad(truth2, ((0, 4), (0, 4)), 'constant')])
     assert (resized_masks3.to_ndarray() == truth3).all()
-
+    
     # resize to non-square
     raw_masks4 = [[np.array([1, 1, 3, 1, 4, 3, 2, 4, 1, 3], dtype=np.float)]]
     polygon_masks4 = PolygonMasks(raw_masks4, 5, 5)
@@ -442,7 +453,8 @@ def test_polygon_mask_resize():
     truth4 = np.array(
         [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
          [0, 0, 1, 1, 1, 1, 1, 1, 0, 0], [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], np.uint8)
+         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], np.uint8
+    )
     assert (resized_masks4.to_ndarray() == truth4).all()
 
 
@@ -455,7 +467,7 @@ def test_polygon_mask_flip():
     assert flipped_masks.height == 28
     assert flipped_masks.width == 28
     assert flipped_masks.to_ndarray().shape == (0, 28, 28)
-
+    
     # TODO: fixed flip correctness checking after v2.0_coord is merged
     # horizontally flip with polygon masks contain 3 instances
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
@@ -468,7 +480,7 @@ def test_polygon_mask_flip():
     assert flipped_masks.to_ndarray().shape == (3, 28, 28)
     assert (polygon_masks.to_ndarray() == flipped_flipped_masks.to_ndarray()
             ).all()
-
+    
     # vertically flip with polygon masks contain 3 instances
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
@@ -480,7 +492,7 @@ def test_polygon_mask_flip():
     assert flipped_masks.to_ndarray().shape == (3, 28, 28)
     assert (polygon_masks.to_ndarray() == flipped_flipped_masks.to_ndarray()
             ).all()
-
+    
     # diagonal flip with polygon masks contain 3 instances
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
@@ -504,20 +516,20 @@ def test_polygon_mask_crop():
     assert cropped_masks.height == 17
     assert cropped_masks.width == 10
     assert cropped_masks.to_ndarray().shape == (0, 17, 10)
-
+    
     # crop with polygon masks contain 1 instances
     raw_masks = [[np.array([1., 3., 5., 1., 5., 6., 1, 6])]]
     polygon_masks = PolygonMasks(raw_masks, 7, 7)
-    bbox = np.array([0, 0, 3, 4])
-    cropped_masks = polygon_masks.crop(bbox)
+    box = np.array([0, 0, 3, 4])
+    cropped_masks = polygon_masks.crop(box)
     assert len(cropped_masks) == 1
     assert cropped_masks.height == 4
     assert cropped_masks.width == 3
     assert cropped_masks.to_ndarray().shape == (1, 4, 3)
     truth = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1], [0, 1, 1]])
     assert (cropped_masks.to_ndarray() == truth).all()
-
-    # crop with invalid bbox
+    
+    # crop with invalid box
     with pytest.raises(AssertionError):
         dummy_bbox = dummy_bboxes(2, 28, 28)
         polygon_masks.crop(dummy_bbox)
@@ -532,7 +544,7 @@ def test_polygon_mask_pad():
     assert padded_masks.height == 56
     assert padded_masks.width == 56
     assert padded_masks.to_ndarray().shape == (0, 56, 56)
-
+    
     # pad with polygon masks contain 3 instances
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
@@ -553,23 +565,25 @@ def test_polygon_mask_expand():
 
 def test_polygon_mask_crop_and_resize():
     dummy_bbox = dummy_bboxes(5, 28, 28)
-    inds = np.random.randint(0, 3, (5, ))
-
+    inds = np.random.randint(0, 3, (5,))
+    
     # crop and resize with empty polygon masks
     raw_masks = dummy_raw_polygon_masks((0, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
     cropped_resized_masks = polygon_masks.crop_and_resize(
-        dummy_bbox, (56, 56), inds)
+        dummy_bbox, (56, 56), inds
+    )
     assert len(cropped_resized_masks) == 0
     assert cropped_resized_masks.height == 56
     assert cropped_resized_masks.width == 56
     assert cropped_resized_masks.to_ndarray().shape == (0, 56, 56)
-
+    
     # crop and resize with polygon masks contain 3 instances
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
     cropped_resized_masks = polygon_masks.crop_and_resize(
-        dummy_bbox, (56, 56), inds)
+        dummy_bbox, (56, 56), inds
+    )
     assert len(cropped_resized_masks) == 5
     assert cropped_resized_masks.height == 56
     assert cropped_resized_masks.width == 56
@@ -581,7 +595,7 @@ def test_polygon_mask_area():
     raw_masks = dummy_raw_polygon_masks((0, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
     assert polygon_masks.areas.sum() == 0
-
+    
     # area of polygon masks contain 1 instance
     # here we hack a case that the gap between the area of bitmap and polygon
     # is minor
@@ -608,7 +622,7 @@ def test_polygon_mask_to_ndarray():
     ndarray_masks = polygon_masks.to_ndarray()
     assert isinstance(ndarray_masks, np.ndarray)
     assert ndarray_masks.shape == (0, 28, 28)
-
+    
     # polygon masks contain 3 instances to ndarray
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)
@@ -624,7 +638,7 @@ def test_polygon_to_tensor():
     tensor_masks = polygon_masks.to_tensor(dtype=torch.uint8, device='cpu')
     assert isinstance(tensor_masks, torch.Tensor)
     assert tensor_masks.shape == (0, 28, 28)
-
+    
     # polygon masks contain 3 instances to tensor
     raw_masks = dummy_raw_polygon_masks((3, 28, 28))
     polygon_masks = PolygonMasks(raw_masks, 28, 28)

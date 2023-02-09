@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .cascade_rcnn import CascadeRCNN
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class HybridTaskCascade(CascadeRCNN):
     """Implementation of `HTC <https://arxiv.org/abs/1901.07518>`_"""
 

@@ -12,9 +12,9 @@ from .builder import DATASETS
 from .coco import CocoDataset
 
 
-@DATASETS.register_module()
+@DATASETS._register()
 class LVISV05Dataset(CocoDataset):
-
+    
     CLASSES = (
         'acorn', 'aerosol_can', 'air_conditioner', 'airplane', 'alarm_clock',
         'alcohol', 'alligator', 'almond', 'ambulance', 'amplifier', 'anklet',
@@ -264,7 +264,7 @@ class LVISV05Dataset(CocoDataset):
         'blinder_(for_horses)', 'wok', 'wolf', 'wooden_spoon', 'wreath',
         'wrench', 'wristband', 'wristlet', 'yacht', 'yak', 'yogurt',
         'yoke_(animal_equipment)', 'zebra', 'zucchini')
-
+    
     def load_annotations(self, ann_file):
         """Load annotation from lvis style annotation file.
 
@@ -274,20 +274,24 @@ class LVISV05Dataset(CocoDataset):
         Returns:
             list[dict]: Annotation info from LVIS api.
         """
-
+        
         try:
             import lvis
             assert lvis.__version__ >= '10.5.3'
             from lvis import LVIS
         except AssertionError:
-            raise AssertionError('Incompatible version of lvis is installed. '
-                                 'Run pip uninstall lvis first. Then run pip '
-                                 'install mmlvis to install open-mmlab forked '
-                                 'lvis. ')
+            raise AssertionError(
+                'Incompatible version of lvis is installed. '
+                'Run pip uninstall lvis first. Then run pip '
+                'install mmlvis to install open-mmlab forked '
+                'lvis. '
+            )
         except ImportError:
-            raise ImportError('Package lvis is not installed. Please run pip '
-                              'install mmlvis to install open-mmlab forked '
-                              'lvis.')
+            raise ImportError(
+                'Package lvis is not installed. Please run pip '
+                'install mmlvis to install open-mmlab forked '
+                'lvis.'
+            )
         self.coco = LVIS(ann_file)
         self.cat_ids = self.coco.get_cat_ids()
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
@@ -305,21 +309,23 @@ class LVISV05Dataset(CocoDataset):
                 info['filename'] = info['file_name']
             data_infos.append(info)
         return data_infos
-
-    def evaluate(self,
-                 results,
-                 metric='bbox',
-                 logger=None,
-                 jsonfile_prefix=None,
-                 classwise=False,
-                 proposal_nums=(100, 300, 1000),
-                 iou_thrs=np.arange(0.5, 0.96, 0.05)):
+    
+    def evaluate(
+        self,
+        results,
+        metric='box',
+        logger=None,
+        jsonfile_prefix=None,
+        classwise=False,
+        proposal_nums=(100, 300, 1000),
+        iou_thrs=np.arange(0.5, 0.96, 0.05)
+    ):
         """Evaluation in LVIS protocol.
 
         Args:
             results (list[list | tuple]): Testing results of the dataset.
             metric (str | list[str]): Metrics to be evaluated. Options are
-                'bbox', 'segm', 'proposal', 'proposal_fast'.
+                'box', 'segm', 'proposal', 'proposal_fast'.
             logger (logging.Logger | str | None): Logger used for printing
                 related information during evaluation. Default: None.
             jsonfile_prefix (str | None):
@@ -334,38 +340,42 @@ class LVISV05Dataset(CocoDataset):
         Returns:
             dict[str, float]: LVIS style metrics.
         """
-
+        
         try:
             import lvis
             assert lvis.__version__ >= '10.5.3'
             from lvis import LVISResults, LVISEval
         except AssertionError:
-            raise AssertionError('Incompatible version of lvis is installed. '
-                                 'Run pip uninstall lvis first. Then run pip '
-                                 'install mmlvis to install open-mmlab forked '
-                                 'lvis. ')
+            raise AssertionError(
+                'Incompatible version of lvis is installed. '
+                'Run pip uninstall lvis first. Then run pip '
+                'install mmlvis to install open-mmlab forked '
+                'lvis. '
+            )
         except ImportError:
-            raise ImportError('Package lvis is not installed. Please run pip '
-                              'install mmlvis to install open-mmlab forked '
-                              'lvis.')
+            raise ImportError(
+                'Package lvis is not installed. Please run pip '
+                'install mmlvis to install open-mmlab forked '
+                'lvis.'
+            )
         assert isinstance(results, list), 'results must be a list'
         assert len(results) == len(self), (
             'The length of results is not equal to the dataset len: {} != {}'.
             format(len(results), len(self)))
-
+        
         metrics = metric if isinstance(metric, list) else [metric]
-        allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
+        allowed_metrics = ['box', 'segm', 'proposal', 'proposal_fast']
         for metric in metrics:
             if metric not in allowed_metrics:
                 raise KeyError('metric {} is not supported'.format(metric))
-
+        
         if jsonfile_prefix is None:
             tmp_dir = tempfile.TemporaryDirectory()
             jsonfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             tmp_dir = None
         result_files = self.results2json(results, jsonfile_prefix)
-
+        
         eval_results = OrderedDict()
         # get original api
         lvis_gt = self.coco
@@ -374,10 +384,11 @@ class LVISV05Dataset(CocoDataset):
             if logger is None:
                 msg = '\n' + msg
             print_log(msg, logger=logger)
-
+            
             if metric == 'proposal_fast':
                 ar = self.fast_eval_recall(
-                    results, proposal_nums, iou_thrs, logger='silent')
+                    results, proposal_nums, iou_thrs, logger='silent'
+                )
                 log_msg = []
                 for i, num in enumerate(proposal_nums):
                     eval_results['AR@{}'.format(num)] = ar[i]
@@ -385,7 +396,7 @@ class LVISV05Dataset(CocoDataset):
                 log_msg = ''.join(log_msg)
                 print_log(log_msg, logger=logger)
                 continue
-
+            
             if metric not in result_files:
                 raise KeyError('{} is not in results'.format(metric))
             try:
@@ -394,10 +405,11 @@ class LVISV05Dataset(CocoDataset):
                 print_log(
                     'The testing results of the whole dataset is empty.',
                     logger=logger,
-                    level=logging.ERROR)
+                    level=logging.ERROR
+                )
                 break
-
-            iou_type = 'bbox' if metric == 'proposal' else metric
+            
+            iou_type = 'box' if metric == 'proposal' else metric
             lvis_eval = LVISEval(lvis_gt, lvis_dt, iou_type)
             lvis_eval.params.imgIds = self.img_ids
             if metric == 'proposal':
@@ -421,7 +433,7 @@ class LVISV05Dataset(CocoDataset):
                     precisions = lvis_eval.eval['precision']
                     # precision: (iou, recall, cls, area range, max dets)
                     assert len(self.cat_ids) == precisions.shape[2]
-
+                    
                     results_per_category = []
                     for idx, catId in enumerate(self.cat_ids):
                         # area range index 0: all area ranges
@@ -434,30 +446,36 @@ class LVISV05Dataset(CocoDataset):
                         else:
                             ap = float('nan')
                         results_per_category.append(
-                            (f'{nm["name"]}', f'{float(ap):0.3f}'))
-
+                            (f'{nm["name"]}', f'{float(ap):0.3f}')
+                        )
+                    
                     num_columns = min(6, len(results_per_category) * 2)
                     results_flatten = list(
-                        itertools.chain(*results_per_category))
+                        itertools.chain(*results_per_category)
+                    )
                     headers = ['category', 'AP'] * (num_columns // 2)
-                    results_2d = itertools.zip_longest(*[
-                        results_flatten[i::num_columns]
-                        for i in range(num_columns)
-                    ])
+                    results_2d = itertools.zip_longest(
+                        *[
+                            results_flatten[i::num_columns]
+                            for i in range(num_columns)
+                        ]
+                    )
                     table_data = [headers]
                     table_data += [result for result in results_2d]
                     table = AsciiTable(table_data)
                     print_log('\n' + table.table, logger=logger)
-
+                
                 for k, v in lvis_results.items():
                     if k.startswith('AP'):
                         key = '{}_{}'.format(metric, k)
                         val = float('{:.3f}'.format(float(v)))
                         eval_results[key] = val
-                ap_summary = ' '.join([
-                    '{}:{:.3f}'.format(k, float(v))
-                    for k, v in lvis_results.items() if k.startswith('AP')
-                ])
+                ap_summary = ' '.join(
+                    [
+                        '{}:{:.3f}'.format(k, float(v))
+                        for k, v in lvis_results.items() if k.startswith('AP')
+                    ]
+                )
                 eval_results['{}_mAP_copypaste'.format(metric)] = ap_summary
             lvis_eval.print_results()
         if tmp_dir is not None:
@@ -466,12 +484,12 @@ class LVISV05Dataset(CocoDataset):
 
 
 LVISDataset = LVISV05Dataset
-DATASETS.register_module(name='LVISDataset', module=LVISDataset)
+DATASETS._register(name='LVISDataset', module=LVISDataset)
 
 
-@DATASETS.register_module()
+@DATASETS._register()
 class LVISV1Dataset(LVISDataset):
-
+    
     CLASSES = (
         'aerosol_can', 'air_conditioner', 'airplane', 'alarm_clock', 'alcohol',
         'alligator', 'almond', 'ambulance', 'amplifier', 'anklet', 'antenna',
@@ -498,7 +516,7 @@ class LVISV1Dataset(LVISDataset):
         'bolo_tie', 'deadbolt', 'bolt', 'bonnet', 'book', 'bookcase',
         'booklet', 'bookmark', 'boom_microphone', 'boot', 'bottle',
         'bottle_opener', 'bouquet', 'bow_(weapon)', 'bow_(decorative_ribbons)',
-        'bow-tie', 'bowl', 'pipe_bowl', 'bowler_hat', 'bowling_ball', 'bbox',
+        'bow-tie', 'bowl', 'pipe_bowl', 'bowler_hat', 'bowling_ball', 'box',
         'boxing_glove', 'suspenders', 'bracelet', 'brass_plaque', 'brassiere',
         'bread-bin', 'bread', 'breechcloth', 'bridal_gown', 'briefcase',
         'broccoli', 'broach', 'broom', 'brownie', 'brussels_sprouts',
@@ -711,21 +729,25 @@ class LVISV1Dataset(LVISDataset):
         'wineglass', 'blinder_(for_horses)', 'wok', 'wolf', 'wooden_spoon',
         'wreath', 'wrench', 'wristband', 'wristlet', 'yacht', 'yogurt',
         'yoke_(animal_equipment)', 'zebra', 'zucchini')
-
+    
     def load_annotations(self, ann_file):
         try:
             import lvis
             assert lvis.__version__ >= '10.5.3'
             from lvis import LVIS
         except AssertionError:
-            raise AssertionError('Incompatible version of lvis is installed. '
-                                 'Run pip uninstall lvis first. Then run pip '
-                                 'install mmlvis to install open-mmlab forked '
-                                 'lvis. ')
+            raise AssertionError(
+                'Incompatible version of lvis is installed. '
+                'Run pip uninstall lvis first. Then run pip '
+                'install mmlvis to install open-mmlab forked '
+                'lvis. '
+            )
         except ImportError:
-            raise ImportError('Package lvis is not installed. Please run pip '
-                              'install mmlvis to install open-mmlab forked '
-                              'lvis.')
+            raise ImportError(
+                'Package lvis is not installed. Please run pip '
+                'install mmlvis to install open-mmlab forked '
+                'lvis.'
+            )
         self.coco = LVIS(ann_file)
         self.cat_ids = self.coco.get_cat_ids()
         self.cat2label = {cat_id: i for i, cat_id in enumerate(self.cat_ids)}
@@ -737,6 +759,7 @@ class LVISV1Dataset(LVISDataset):
             # e.g. http://images.cocodataset.org/train2017/000000391895.jpg
             # train/val split in specified in url
             info['filename'] = info['coco_url'].replace(
-                'http://images.cocodataset.org/', '')
+                'http://images.cocodataset.org/', ''
+            )
             data_infos.append(info)
         return data_infos

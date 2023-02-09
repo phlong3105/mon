@@ -4,7 +4,6 @@ import xml.etree.ElementTree as ET
 
 import mmcv
 import numpy as np
-
 from mmdet.core import voc_classes
 
 label_ids = {name: i for i, name in enumerate(voc_classes())}
@@ -26,37 +25,37 @@ def parse_xml(args):
         label = label_ids[name]
         difficult = int(obj.find('difficult').text)
         bnd_box = obj.find('bndbox')
-        bbox = [
+        box = [
             int(bnd_box.find('xmin').text),
             int(bnd_box.find('ymin').text),
             int(bnd_box.find('xmax').text),
             int(bnd_box.find('ymax').text)
         ]
         if difficult:
-            bboxes_ignore.append(bbox)
+            bboxes_ignore.append(box)
             labels_ignore.append(label)
         else:
-            bboxes.append(bbox)
+            bboxes.append(box)
             labels.append(label)
     if not bboxes:
         bboxes = np.zeros((0, 4))
-        labels = np.zeros((0, ))
+        labels = np.zeros((0,))
     else:
         bboxes = np.array(bboxes, ndmin=2) - 1
         labels = np.array(labels)
     if not bboxes_ignore:
         bboxes_ignore = np.zeros((0, 4))
-        labels_ignore = np.zeros((0, ))
+        labels_ignore = np.zeros((0,))
     else:
         bboxes_ignore = np.array(bboxes_ignore, ndmin=2) - 1
         labels_ignore = np.array(labels_ignore)
     annotation = {
         'filename': img_path,
-        'width': w,
-        'height': h,
-        'ann': {
-            'bboxes': bboxes.astype(np.float32),
-            'labels': labels.astype(np.int64),
+        'width'   : w,
+        'height'  : h,
+        'ann'     : {
+            'bboxes'       : bboxes.astype(np.float32),
+            'labels'       : labels.astype(np.int64),
             'bboxes_ignore': bboxes_ignore.astype(np.float32),
             'labels_ignore': labels_ignore.astype(np.int64)
         }
@@ -69,11 +68,15 @@ def cvt_annotations(devkit_path, years, split, out_file):
         years = [years]
     annotations = []
     for year in years:
-        filelist = osp.join(devkit_path,
-                            f'VOC{year}/ImageSets/Main/{split}.txt')
+        filelist = osp.join(
+            devkit_path,
+            f'VOC{year}/ImageSets/Main/{split}.txt'
+        )
         if not osp.isfile(filelist):
-            print(f'filelist does not exist: {filelist}, '
-                  f'skip voc{year} {split}')
+            print(
+                f'filelist does not exist: {filelist}, '
+                f'skip voc{year} {split}'
+            )
             return
         img_names = mmcv.list_from_file(filelist)
         xml_paths = [
@@ -83,8 +86,10 @@ def cvt_annotations(devkit_path, years, split, out_file):
         img_paths = [
             f'VOC{year}/JPEGImages/{img_name}.jpg' for img_name in img_names
         ]
-        part_annotations = mmcv.track_progress(parse_xml,
-                                               list(zip(xml_paths, img_paths)))
+        part_annotations = mmcv.track_progress(
+            parse_xml,
+            list(zip(xml_paths, img_paths))
+        )
         annotations.extend(part_annotations)
     if out_file.endswith('json'):
         annotations = cvt_to_coco_json(annotations)
@@ -101,30 +106,31 @@ def cvt_to_coco_json(annotations):
     coco['categories'] = []
     coco['annotations'] = []
     image_set = set()
-
-    def addAnnItem(annotation_id, image_id, category_id, bbox, difficult_flag):
+    
+    def addAnnItem(annotation_id, image_id, category_id, box, difficult_flag):
         annotation_item = dict()
         annotation_item['segmentation'] = []
-
+        
         seg = []
-        # bbox[] is x1,y1,x2,y2
+        # box[] is x1,y1,x2,y2
         # left_top
-        seg.append(int(bbox[0]))
-        seg.append(int(bbox[1]))
+        seg.append(int(box[0]))
+        seg.append(int(box[1]))
         # left_bottom
-        seg.append(int(bbox[0]))
-        seg.append(int(bbox[3]))
+        seg.append(int(box[0]))
+        seg.append(int(box[3]))
         # right_bottom
-        seg.append(int(bbox[2]))
-        seg.append(int(bbox[3]))
+        seg.append(int(box[2]))
+        seg.append(int(box[3]))
         # right_top
-        seg.append(int(bbox[2]))
-        seg.append(int(bbox[1]))
-
+        seg.append(int(box[2]))
+        seg.append(int(box[1]))
+        
         annotation_item['segmentation'].append(seg)
-
+        
         xywh = np.array(
-            [bbox[0], bbox[1], bbox[2] - bbox[0], bbox[3] - bbox[1]])
+            [box[0], box[1], box[2] - box[0], box[3] - box[1]]
+        )
         annotation_item['area'] = int(xywh[2] * xywh[3])
         if difficult_flag == 1:
             annotation_item['ignore'] = 0
@@ -133,19 +139,19 @@ def cvt_to_coco_json(annotations):
             annotation_item['ignore'] = 0
             annotation_item['iscrowd'] = 0
         annotation_item['image_id'] = int(image_id)
-        annotation_item['bbox'] = xywh.astype(int).tolist()
+        annotation_item['box'] = xywh.astype(int).tolist()
         annotation_item['category_id'] = int(category_id)
         annotation_item['id'] = int(annotation_id)
         coco['annotations'].append(annotation_item)
         return annotation_id + 1
-
+    
     for category_id, name in enumerate(voc_classes()):
         category_item = dict()
         category_item['supercategory'] = str('none')
         category_item['id'] = int(category_id)
         category_item['name'] = str(name)
         coco['categories'].append(category_item)
-
+    
     for ann_dict in annotations:
         file_name = ann_dict['filename']
         ann = ann_dict['ann']
@@ -157,38 +163,42 @@ def cvt_to_coco_json(annotations):
         image_item['width'] = int(ann_dict['width'])
         coco['images'].append(image_item)
         image_set.add(file_name)
-
+        
         bboxes = ann['bboxes'][:, :4]
         labels = ann['labels']
         for bbox_id in range(len(bboxes)):
-            bbox = bboxes[bbox_id]
+            box = bboxes[bbox_id]
             label = labels[bbox_id]
             annotation_id = addAnnItem(
-                annotation_id, image_id, label, bbox, difficult_flag=0)
-
+                annotation_id, image_id, label, box, difficult_flag=0
+            )
+        
         bboxes_ignore = ann['bboxes_ignore'][:, :4]
         labels_ignore = ann['labels_ignore']
         for bbox_id in range(len(bboxes_ignore)):
-            bbox = bboxes_ignore[bbox_id]
+            box = bboxes_ignore[bbox_id]
             label = labels_ignore[bbox_id]
             annotation_id = addAnnItem(
-                annotation_id, image_id, label, bbox, difficult_flag=1)
-
+                annotation_id, image_id, label, box, difficult_flag=1
+            )
+        
         image_id += 1
-
+    
     return coco
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Convert PASCAL VOC annotations to mmdetection format')
+        description='Convert PASCAL VOC annotations to mmdetection format'
+    )
     parser.add_argument('devkit_path', help='pascal voc devkit path')
     parser.add_argument('-o', '--out-dir', help='output path')
     parser.add_argument(
         '--out-format',
         default='pkl',
         choices=('pkl', 'coco'),
-        help='output format, "coco" indicates coco annotation format')
+        help='output format, "coco" indicates coco annotation format'
+    )
     args = parser.parse_args()
     return args
 
@@ -198,7 +208,7 @@ def main():
     devkit_path = args.devkit_path
     out_dir = args.out_dir if args.out_dir else devkit_path
     mmcv.mkdir_or_exist(out_dir)
-
+    
     years = []
     if osp.isdir(osp.join(devkit_path, 'VOC2007')):
         years.append('2007')
@@ -207,8 +217,10 @@ def main():
     if '2007' in years and '2012' in years:
         years.append(['2007', '2012'])
     if not years:
-        raise IOError(f'The devkit path {devkit_path} contains neither '
-                      '"VOC2007" nor "VOC2012" subfolder')
+        raise IOError(
+            f'The devkit path {devkit_path} contains neither '
+            '"VOC2007" nor "VOC2012" subfolder'
+        )
     out_fmt = f'.{args.out_format}'
     if args.out_format == 'coco':
         out_fmt = '.json'
@@ -222,13 +234,17 @@ def main():
         for split in ['train', 'val', 'trainval']:
             dataset_name = prefix + '_' + split
             print(f'processing {dataset_name} ...')
-            cvt_annotations(devkit_path, year, split,
-                            osp.join(out_dir, dataset_name + out_fmt))
+            cvt_annotations(
+                devkit_path, year, split,
+                osp.join(out_dir, dataset_name + out_fmt)
+            )
         if not isinstance(year, list):
             dataset_name = prefix + '_test'
             print(f'processing {dataset_name} ...')
-            cvt_annotations(devkit_path, year, 'test',
-                            osp.join(out_dir, dataset_name + out_fmt))
+            cvt_annotations(
+                devkit_path, year, 'test',
+                osp.join(out_dir, dataset_name + out_fmt)
+            )
     print('Done!')
 
 

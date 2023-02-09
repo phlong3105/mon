@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class CascadeRCNN(TwoStageDetector):
     r"""Implementation of `Cascade R-CNN: Delving into High Quality Object
     Detection <https://arxiv.org/abs/1906.09756>`_"""

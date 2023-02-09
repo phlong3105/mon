@@ -15,28 +15,27 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Int2T       = 3,
-        stride      : Int2T       = 1,
-        padding     : Int2T | str = 1,
-        dilation    : Int2T       = 1,
-        groups      : int         = 1,
-        bias        : bool        = False,
-        padding_mode: str         = "zeros",
-        device      : Any         = None,
-        dtype       : Any         = None,
-        *args, **kwargs
+        kernel_size : _size_2_t       = 3,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 1,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = False,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
     ):
         super().__init__()
         self.conv1 = common.Conv2d(
@@ -69,7 +68,7 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
         )
         self.norm2 = common.BatchNorm2d(num_features=out_channels)
         self.relu2 = common.ReLU(inplace=True)
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.conv1(x)

@@ -9,8 +9,6 @@ __all__ = [
 	"Hands", "HandsEstimator",
 ]
 
-from typing import Optional
-
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -151,7 +149,7 @@ class HandsEstimator:
         """
 		return [self.process(idx, img) for idx, img in zip(indexes, images)]
 	
-	def process(self, index: int, image: np.ndarray) -> Optional[Hands]:
+	def process(self, index: int, image: np.ndarray) -> Hands | None:
 		"""Process an RGB image and returns the hand landmarks and handedness
 		of each detected hand.
 		

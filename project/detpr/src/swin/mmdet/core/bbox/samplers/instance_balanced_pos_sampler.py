@@ -5,7 +5,7 @@ from ..builder import BBOX_SAMPLERS
 from .random_sampler import RandomSampler
 
 
-@BBOX_SAMPLERS.register_module()
+@BBOX_SAMPLERS._register()
 class InstanceBalancedPosSampler(RandomSampler):
     """Instance balanced sampler that samples equal number of positive samples
     for each instance."""

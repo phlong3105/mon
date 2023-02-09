@@ -16,24 +16,23 @@ __all__ = [
     "SyncBatchNorm",
 ]
 
-from typing import Any
+import random
+from typing import Any, Callable
 
 import torch
-import torchvision
 from torch import nn
 from torch.nn import functional
+from torchvision.ops import misc
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import activation, linear
-from mon.coreml.typing import CallableType
-from mon.coreml.util import random
+from mon.foundation import math
+from mon.globals import LAYERS
 
 
 # region Batch Normalization
 
-@constant.LAYER.register()
+@LAYERS.register()
 class BatchNorm2dAct(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
     """BatchNorm2d + Activation.
     
@@ -45,14 +44,14 @@ class BatchNorm2dAct(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
     def __init__(
         self,
         num_features       : int,
-        eps                : float               = 1e-5,
-        momentum           : float               = 0.1,
-        affine             : bool                = True,
-        track_running_stats: bool                = True,
-        device             : Any                 = None,
-        dtype              : Any                 = None,
-        act                : CallableType | None = activation.ReLU(),
-        inplace            : bool                = True,
+        eps                : float    = 1e-5,
+        momentum           : float    = 0.1,
+        affine             : bool     = True,
+        track_running_stats: bool     = True,
+        device             : Any      = None,
+        dtype              : Any      = None,
+        act                : Callable = activation.ReLU(),
+        inplace            : bool     = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -65,16 +64,16 @@ class BatchNorm2dAct(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
             dtype               = dtype
         )
         self.act = activation.to_act_layer(act, inplace)
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = super().forward(x)
         if self.act is not None:
             y = self.act(y)
         return y
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class BatchNorm2dReLU(BatchNorm2dAct):
     """BatchNorm2d + ReLU.
 
@@ -86,14 +85,14 @@ class BatchNorm2dReLU(BatchNorm2dAct):
     def __init__(
         self,
         num_features       : int,
-        eps                : float               = 1e-5,
-        momentum           : float               = 0.1,
-        affine             : bool                = True,
-        track_running_stats: bool                = True,
-        device             : Any                 = None,
-        dtype              : Any                 = None,
-        inplace            : bool                = True,
-        drop_block         : CallableType | None = None,
+        eps                : float    = 1e-5,
+        momentum           : float    = 0.1,
+        affine             : bool     = True,
+        track_running_stats: bool     = True,
+        device             : Any      = None,
+        dtype              : Any      = None,
+        inplace            : bool     = True,
+        drop_block         : Callable = None,
         *args, **kwargs
     ):
         super().__init__(
@@ -110,50 +109,48 @@ class BatchNorm2dReLU(BatchNorm2dAct):
         )
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class BatchNorm1d(base.SameChannelsLayerParsingMixin, nn.BatchNorm1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class BatchNorm2d(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class BatchNorm3d(base.SameChannelsLayerParsingMixin, nn.BatchNorm3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyBatchNorm1d(base.SameChannelsLayerParsingMixin, nn.LazyBatchNorm1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyBatchNorm2d(base.SameChannelsLayerParsingMixin, nn.LazyBatchNorm2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyBatchNorm3d(base.SameChannelsLayerParsingMixin, nn.LazyBatchNorm3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SyncBatchNorm(base.SameChannelsLayerParsingMixin, nn.SyncBatchNorm):
     pass
+
 
 # endregion
 
 
 # region Instance Normalization
 
-@constant.LAYER.register()
-class FractionalInstanceNorm2dOld(
-    base.SameChannelsLayerParsingMixin,
-    nn.InstanceNorm2d
-):
+@LAYERS.register()
+class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
     """Fractional Instance Normalization is a generalization of Half Instance
     Normalization.
     
@@ -179,13 +176,12 @@ class FractionalInstanceNorm2dOld(
         track_running_stats: bool  = False,
         device             : Any   = None,
         dtype              : Any   = None,
-        *args, **kwargs
     ):
         self.in_channels = num_features
         self.ratio       = ratio
         self.selection   = selection
         super().__init__(
-            num_features        = core.math.ceil(num_features * self.ratio),
+            num_features        = math.ceil(num_features * self.ratio),
             eps                 = eps,
             momentum            = momentum,
             affine              = affine,
@@ -196,7 +192,7 @@ class FractionalInstanceNorm2dOld(
         
         if self.selection not in ["linear", "random", "interleave"]:
             raise ValueError(f"{self.selection}")
-     
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         self._check_input_dim(x)
@@ -225,7 +221,7 @@ class FractionalInstanceNorm2dOld(
                 y1       = torch.index_select(x, 1, y1_idxes)
                 y2       = torch.index_select(x, 1, y2_idxes)
             elif self.selection == "interleave":
-                skip     = int(core.math.floor(self.in_channels / self.num_features))
+                skip     = int(math.floor(self.in_channels / self.num_features))
                 y1_idxes = []
                 for i in range(0, self.in_channels, skip):
                     if len(y1_idxes) < self.num_features:
@@ -252,11 +248,8 @@ class FractionalInstanceNorm2dOld(
             return torch.cat([y1, y2], dim=1)
 
 
-@constant.LAYER.register()
-class FractionalInstanceNorm2d(
-    base.SameChannelsLayerParsingMixin,
-    nn.InstanceNorm2d
-):
+@LAYERS.register()
+class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
     """Applies Instance Normalization on a fraction of the input tensor.
     
     Args:
@@ -290,17 +283,16 @@ class FractionalInstanceNorm2d(
     def __init__(
         self,
         num_features       : int,
-        p                  : float              = 0.5,
-        scheme             : str                = "half",
-        pool               : CallableType | str = "avg",
-        bias               : bool               = True,
-        eps                : float              = 1e-5,
-        momentum           : float              = 0.1,
-        affine             : bool               = True,
-        track_running_stats: bool               = False,
-        device             : Any                = None,
-        dtype              : Any                = None,
-        *args, **kwargs
+        p                  : float          = 0.5,
+        scheme             : str            = "half",
+        pool               : str | Callable = "avg",
+        bias               : bool           = True,
+        eps                : float          = 1e-5,
+        momentum           : float          = 0.1,
+        affine             : bool           = True,
+        track_running_stats: bool           = False,
+        device             : Any            = None,
+        dtype              : Any            = None,
     ):
         super().__init__(
             num_features        = num_features,
@@ -313,22 +305,22 @@ class FractionalInstanceNorm2d(
         )
         if scheme not in self.schemes:
             raise ValueError(
-                f"`scheme` must be one of: {self.schemes}. But got: {scheme}."
+                f"'scheme' must be one of: {self.schemes}. But got: {scheme}."
             )
         if scheme is "half":
-            self.alpha  = torch.zeros(num_features)
-            self.alpha[0:core.math.ceil(num_features * 0.5)] = 1
+            self.alpha = torch.zeros(num_features)
+            self.alpha[0:math.ceil(num_features * 0.5)] = 1
         elif scheme is "bipartite":
-            self.alpha  = torch.zeros(num_features)
-            self.alpha[0:core.math.ceil(num_features * p)]   = 1
+            self.alpha = torch.zeros(num_features)
+            self.alpha[0:math.ceil(num_features * p)] = 1
         elif scheme is "checkerboard":
-            in_channels = core.math.ceil(num_features * p)
-            step_size   = int(core.math.floor(in_channels / num_features))
-            self.alpha  = torch.zeros(num_features)
+            in_channels = math.ceil(num_features * p)
+            step_size  = int(math.floor(in_channels / num_features))
+            self.alpha = torch.zeros(num_features)
             for i in range(0, in_channels, step_size):
                 self.alpha[i] = 1
         elif scheme is "random":
-            in_channels = core.math.ceil(num_features * p)
+            in_channels = math.ceil(num_features * p)
             rand        = random.sample(range(in_channels), num_features)
             self.alpha  = torch.zeros(num_features)
             for i in rand:
@@ -338,17 +330,17 @@ class FractionalInstanceNorm2d(
         elif scheme is "attentive":
             if pool not in ["avg", "max"]:
                 raise ValueError(
-                    f"`pool` must be one of: [`avg`, `max`]. But got: {pool}."
+                    f"pool must be one of: ['avg', 'max'], but got {pool}."
                 )
             self.channel_attention = torch.nn.Sequential(
                 self.Flatten(),
                 linear.Linear(
                     in_features  = num_features,
-                    out_features = core.math.ceil(num_features * p),
+                    out_features = math.ceil(num_features * p),
                 ),
                 activation.ReLU(),
                 linear.Linear(
-                    in_features  = core.math.ceil(num_features * p),
+                    in_features  = math.ceil(num_features * p),
                     out_features = num_features,
                 )
             )
@@ -362,12 +354,12 @@ class FractionalInstanceNorm2d(
         self.p      = p
         self.scheme = scheme
         self.pool   = pool
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         self._check_input_dim(input)
         x          = input
         b, c, h, w = x.shape
-        x_norm     = functional.instance_norm(
+        x_norm = functional.instance_norm(
             input           = x,
             running_mean    = self.running_mean,
             running_var     = self.running_var,
@@ -377,7 +369,7 @@ class FractionalInstanceNorm2d(
             momentum        = self.momentum,
             eps             = self.eps
         )
-
+        
         if self.scheme in ["half", "bipartite", "checkerboard", "random"]:
             alpha = self.alpha.reshape(-1, c, 1, 1).to(x.device)
             y     = (x_norm * alpha) + (x * (1 - alpha))
@@ -388,7 +380,7 @@ class FractionalInstanceNorm2d(
                 beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
                 y     = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
             else:
-                y     = (x_norm * alpha) + (x * (1 - alpha))
+                y = (x_norm * alpha) + (x * (1 - alpha))
         elif self.scheme in ["attentive"]:
             if self.pool is "avg":
                 pool = functional.avg_pool2d(
@@ -407,19 +399,16 @@ class FractionalInstanceNorm2d(
             if self.beta1 is not None and self.beta2 is not None:
                 beta1 = self.beta1.reshape(-1, c, 1, 1).to(x.device)
                 beta2 = self.beta2.reshape(-1, c, 1, 1).to(x.device)
-                y     = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
+                y = (x_norm * alpha + beta1) + (x * (1 - alpha) + beta2)
             else:
-                y     = (x_norm * alpha) + (x * (1 - alpha))
+                y = (x_norm * alpha) + (x * (1 - alpha))
         else:
             y = x_norm
         return y
 
 
-@constant.LAYER.register()
-class HalfInstanceNorm2d(
-    base.SameChannelsLayerParsingMixin,
-    nn.InstanceNorm2d
-):
+@LAYERS.register()
+class HalfInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
     
     def __init__(
         self,
@@ -430,10 +419,9 @@ class HalfInstanceNorm2d(
         track_running_stats: bool  = False,
         device             : Any   = None,
         dtype              : Any   = None,
-        *args, **kwargs
     ):
         super().__init__(
-            num_features        = core.math.ceil(num_features / 2),
+            num_features        = math.ceil(num_features / 2),
             eps                 = eps,
             momentum            = momentum,
             affine              = affine,
@@ -441,9 +429,9 @@ class HalfInstanceNorm2d(
             device              = device,
             dtype               = dtype,
         )
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x      = input
+        x = input
         self._check_input_dim(x)
         y1, y2 = torch.chunk(x, 2, dim=1)
         y1     = functional.instance_norm(
@@ -459,55 +447,47 @@ class HalfInstanceNorm2d(
         return torch.cat([y1, y2], dim=1)
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InstanceNorm1d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InstanceNorm3d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm3d):
     pass
 
 
-@constant.LAYER.register()
-class LazyInstanceNorm1d(
-    base.SameChannelsLayerParsingMixin,
-    nn.LazyInstanceNorm1d
-):
+@LAYERS.register()
+class LazyInstanceNorm1d(base.SameChannelsLayerParsingMixin, nn.LazyInstanceNorm1d):
     pass
 
 
-@constant.LAYER.register()
-class LazyInstanceNorm2d(
-    base.SameChannelsLayerParsingMixin,
-    nn.LazyInstanceNorm2d
-):
+@LAYERS.register()
+class LazyInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.LazyInstanceNorm2d):
     pass
 
 
-@constant.LAYER.register()
-class LazyInstanceNorm3d(
-    base.SameChannelsLayerParsingMixin,
-    nn.LazyInstanceNorm3d
-):
+@LAYERS.register()
+class LazyInstanceNorm3d(base.SameChannelsLayerParsingMixin, nn.LazyInstanceNorm3d):
     pass
+
 
 # endregion
 
 
 # region Group Normalization
 
-@constant.LAYER.register()
+@LAYERS.register()
 class GroupNorm(base.SameChannelsLayerParsingMixin, nn.GroupNorm):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class GroupNormAct(GroupNorm):
     """GroupNorm + Activation.
 
@@ -515,18 +495,17 @@ class GroupNormAct(GroupNorm):
     backwards compatible with weights trained with separate gn, act. This is why
     we inherit from GN instead of composing it as a .gn member.
     """
-
+    
     def __init__(
         self,
         num_groups  : int,
         num_channels: int,
-        eps         : float               = 1e-5,
-        affine      : bool                = True,
-        device      : Any                 = None,
-        dtype       : Any                 = None,
-        act         : CallableType | None = activation.ReLU,
-        inplace     : bool                = True,
-        *args, **kwargs
+        eps         : float    = 1e-5,
+        affine      : bool     = True,
+        device      : Any      = None,
+        dtype       : Any      = None,
+        act         : Callable = activation.ReLU,
+        inplace     : bool     = True,
     ):
         super().__init__(
             num_groups   = num_groups,
@@ -549,21 +528,22 @@ class GroupNormAct(GroupNorm):
         )
         y = self.act(y)
         return y
-       
+
+
 # endregion
 
 
 # region Layer Normalization
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LayerNorm(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
     pass
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
     """LayerNorm for channels of 2D spatial [B, C, H, W] tensors."""
-
+    
     def __init__(
         self,
         normalized_shape  : Any,
@@ -571,7 +551,6 @@ class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
         elementwise_affine: bool  = True,
         device            : Any   = None,
         dtype             : Any   = None,
-        *args, **kwargs
     ):
         super().__init__(
             normalized_shape   = normalized_shape,
@@ -580,7 +559,7 @@ class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
             device             = device,
             dtype              = dtype
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = functional.layer_norm(
@@ -592,25 +571,20 @@ class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
         ).permute(0, 3, 1, 2)
         return y
 
+
 # endregion
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class CrossMapLRN2d(base.SameChannelsLayerParsingMixin, nn.CrossMapLRN2d):
     pass
 
 
-@constant.LAYER.register()
-class FrozenBatchNorm2d(
-    base.SameChannelsLayerParsingMixin,
-    torchvision.ops.misc.FrozenBatchNorm2d
-):
+@LAYERS.register()
+class FrozenBatchNorm2d(base.SameChannelsLayerParsingMixin, misc.FrozenBatchNorm2d):
     pass
 
 
-@constant.LAYER.register()
-class LocalResponseNorm(
-    base.SameChannelsLayerParsingMixin,
-    nn.LocalResponseNorm
-):
+@LAYERS.register()
+class LocalResponseNorm(base.SameChannelsLayerParsingMixin, nn.LocalResponseNorm):
     pass

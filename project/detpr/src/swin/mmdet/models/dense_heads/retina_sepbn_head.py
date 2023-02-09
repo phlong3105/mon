@@ -1,11 +1,11 @@
 import torch.nn as nn
-from mmcv.cnn import ConvModule, bias_init_with_prob, normal_init
+from mmcv.cnn import bias_init_with_prob, ConvModule, normal_init
 
-from ..builder import HEADS
 from .anchor_head import AnchorHead
+from ..builder import HEADS
 
 
-@HEADS.register_module()
+@HEADS._register()
 class RetinaSepBNHead(AnchorHead):
     """"RetinaHead with separate BN.
 
@@ -13,22 +13,26 @@ class RetinaSepBNHead(AnchorHead):
     while in RetinaSepBNHead, conv layers are shared across different FPN
     levels, but BN layers are separated.
     """
-
-    def __init__(self,
-                 num_classes,
-                 num_ins,
-                 in_channels,
-                 stacked_convs=4,
-                 conv_cfg=None,
-                 norm_cfg=None,
-                 **kwargs):
+    
+    def __init__(
+        self,
+        num_classes,
+        num_ins,
+        in_channels,
+        stacked_convs=4,
+        conv_cfg=None,
+        norm_cfg=None,
+        **kwargs
+    ):
         self.stacked_convs = stacked_convs
         self.conv_cfg = conv_cfg
         self.norm_cfg = norm_cfg
         self.num_ins = num_ins
-        super(RetinaSepBNHead, self).__init__(num_classes, in_channels,
-                                              **kwargs)
-
+        super(RetinaSepBNHead, self).__init__(
+            num_classes, in_channels,
+            **kwargs
+        )
+    
     def _init_layers(self):
         """Initialize layers of the head."""
         self.relu = nn.ReLU(inplace=True)
@@ -47,7 +51,9 @@ class RetinaSepBNHead(AnchorHead):
                         stride=1,
                         padding=1,
                         conv_cfg=self.conv_cfg,
-                        norm_cfg=self.norm_cfg))
+                        norm_cfg=self.norm_cfg
+                    )
+                )
                 reg_convs.append(
                     ConvModule(
                         chn,
@@ -56,7 +62,9 @@ class RetinaSepBNHead(AnchorHead):
                         stride=1,
                         padding=1,
                         conv_cfg=self.conv_cfg,
-                        norm_cfg=self.norm_cfg))
+                        norm_cfg=self.norm_cfg
+                    )
+                )
             self.cls_convs.append(cls_convs)
             self.reg_convs.append(reg_convs)
         for i in range(self.stacked_convs):
@@ -67,10 +75,12 @@ class RetinaSepBNHead(AnchorHead):
             self.feat_channels,
             self.num_anchors * self.cls_out_channels,
             3,
-            padding=1)
+            padding=1
+        )
         self.retina_reg = nn.Conv2d(
-            self.feat_channels, self.num_anchors * 4, 3, padding=1)
-
+            self.feat_channels, self.num_anchors * 4, 3, padding=1
+        )
+    
     def init_weights(self):
         """Initialize weights of the head."""
         for m in self.cls_convs[0]:
@@ -80,7 +90,7 @@ class RetinaSepBNHead(AnchorHead):
         bias_cls = bias_init_with_prob(0.01)
         normal_init(self.retina_cls, std=0.01, bias=bias_cls)
         normal_init(self.retina_reg, std=0.01)
-
+    
     def forward(self, feats):
         """Forward features from the upstream network.
 
@@ -89,7 +99,7 @@ class RetinaSepBNHead(AnchorHead):
                 a 4D-tensor.
 
         Returns:
-            tuple: Usually a tuple of classification scores and bbox prediction
+            tuple: Usually a tuple of classification scores and box prediction
                 cls_scores (list[Tensor]): Classification scores for all scale
                     levels, each is a 4D-tensor, the channels number is
                     num_anchors * num_classes.

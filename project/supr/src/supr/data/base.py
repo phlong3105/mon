@@ -13,20 +13,15 @@ import uuid
 from abc import ABC, abstractmethod
 from collections import Counter
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING, Union
+from typing import Any, Callable, Union
 
 import cv2
-import munch
 import numpy as np
 
 import mon
-from supr import constant, motion as mo, rmoi
+from supr import motion as mo, rmoi
 from supr.data import instance
-
-if TYPE_CHECKING:
-    from supr.typing import (
-        CallableType, InstancesType, Ints, MotionType, MovingStateType, UIDType,
-    )
+from supr.globals import MOTIONS, MovingState
 
 
 # region Object
@@ -51,7 +46,7 @@ class StaticObject(Object):
 
 # region Moving Object
 
-class MovingObject(Object, list[instance.Instance]):
+class MovingObject(list[instance.Instance], Object):
     """The base class for all moving objects. It is a list that contains all
     instances of the object in consecutive frames. The list is sorted in a
     timely manner.
@@ -60,11 +55,11 @@ class MovingObject(Object, list[instance.Instance]):
     
     Args:
         instances: The first instance of this object, or a list of instances.
-        uid: The object unique ID.
+        id_: The object unique ID.
         motion: A motion model.
         moving_state: The current state of the moving object with respect to the
             ROIs. Defaults to 'Candidate'.
-        moi_uid: The unique ID of the MOI. Defaults to None.
+        moi_id: The unique ID of the MOI. Defaults to None.
         timestamp: The time when the object is created.
         frame_index: The frame index when the object is created.
     """
@@ -76,43 +71,38 @@ class MovingObject(Object, list[instance.Instance]):
 
     def __init__(
         self,
-        instances   : InstancesType,
-        motion      : MotionType,
-        uid         : UIDType         = uuid.uuid4().int,
-        moving_state: MovingStateType = constant.MovingState.Candidate,
-        moi_uid     : UIDType | None  = None,
-        timestamp   : float 	      = timer(),
-        frame_index : int             = -1,
+        instances   : Any,
+        motion      : mo.Motion,
+        id_         : int | str         = uuid.uuid4().int,
+        moving_state: MovingState | str = MovingState.CANDIDATE,
+        moi_id      : int | str | None  = None,
+        timestamp   : float             = timer(),
+        frame_index : int               = -1,
     ):
-        instances = [instances] if not isinstance(instances, list | tuple) else instances
-        assert all(i for i in instances if isinstance(i, instance.Instance))
-        super().__init__(i for i in instances)
+        super().__init__(instance.Instance.from_value(i) for i in instances)
         
-        self.uid          = uid
+        self.uid          = id_
         self.motion       = motion
         self.moving_state = moving_state
-        self.moi_uid      = moi_uid
+        self.moi_uid      = moi_id
         self.timestamp    = timestamp
         self.frame_index  = frame_index
         self.trajectory   = [self.current.box_center]
     
     def __setitem__(self, index: int, item: instance.Instance):
-        assert isinstance(item, instance.Instance)
-        super().__setitem__(index, item)
+        super().__setitem__(index, instance.Instance.from_value(item))
     
     def insert(self, index: int, item: instance.Instance):
-        assert isinstance(item, instance.Instance)
-        super().insert(index, item)
+        super().insert(index, instance.Instance.from_value(item))
     
     def append(self, item: instance.Instance):
-        assert isinstance(item, instance.Instance)
-        super().append(item)
+        super().append(instance.Instance.from_value(item))
     
-    def extend(self, other: InstancesType):
+    def extend(self, other: Any):
         if isinstance(other, type(self)):
             super().extend(other)
         else:
-            super().extend(item for item in other)
+            super().extend(instance.Instance.from_value(item) for item in other)
     
     @property
     def classlabels(self) -> list:
@@ -140,34 +130,34 @@ class MovingObject(Object, list[instance.Instance]):
         return self.majority_label["id"]
     
     @property
-    def majority_roi_uid(self) -> Union[int, str]:
+    def majority_roi_id(self) -> Union[int, str]:
         """The major ROI's uid of the object."""
-        roi_id = Counter(self.roi_uids).most_common(1)
+        roi_id = Counter(self.roi_ids).most_common(1)
         return roi_id[0][0]
     
     @property
-    def roi_uids(self) -> list[UIDType]:
-        return [d.roi_uid for d in self]
+    def roi_ids(self) -> list[int | str]:
+        return [d.roi_id for d in self]
     
     @property
-    def moving_state(self) -> constant.MovingState:
+    def moving_state(self) -> MovingState:
         return self._moving_state
     
     @moving_state.setter
-    def moving_state(self, moving_state: MovingStateType):
-        self._moving_state = constant.MovingState.from_value(moving_state)
+    def moving_state(self, moving_state: MovingState | str):
+        self._moving_state = MovingState.from_value(value=moving_state)
     
     @property
     def is_candidate(self) -> bool:
-        return self.moving_state == constant.MovingState.Candidate
+        return self.moving_state == MovingState.CANDIDATE
     
     @property
     def is_confirmed(self) -> bool:
-        return self.moving_state == constant.MovingState.Confirmed
+        return self.moving_state == MovingState.CONFIRMED
     
     @property
     def is_counting(self) -> bool:
-        return self.moving_state == constant.MovingState.Counting
+        return self.moving_state == MovingState.COUNTING
     
     @property
     def is_countable(self) -> bool:
@@ -175,30 +165,30 @@ class MovingObject(Object, list[instance.Instance]):
     
     @property
     def is_to_be_counted(self) -> bool:
-        return self.moving_state == constant.MovingState.ToBeCounted
+        return self.moving_state == MovingState.TO_BE_COUNTED
     
     @property
     def is_counted(self) -> bool:
-        return self.moving_state == constant.MovingState.Counted
+        return self.moving_state == MovingState.COUNTED
     
     @property
     def is_exiting(self) -> bool:
-        return self.moving_state == constant.MovingState.Exiting
+        return self.moving_state == MovingState.EXITING
     
     @property
     def motion(self) -> mo.Motion:
         return self._motion
 
     @motion.setter
-    def motion(self, motion: MotionType):
-        if isinstance(motion, MotionType):
+    def motion(self, motion: mo.Motion):
+        if isinstance(motion, mo.Motion):
             self._motion = motion
-        elif isinstance(motion, CallableType):
+        elif isinstance(motion, Callable):
             self._motion = motion(instance=self.current)
-        elif isinstance(motion, str | dict | munch.Munch):
-            self._motion = constant.MOTION.build(name=motion, instance=self.current)
-        elif isinstance(motion, dict | munch.Munch):
-            self._motion = constant.MOTION.build(cfg=motion, instance=self.current)
+        elif isinstance(motion, str):
+            self._motion = MOTIONS.build(name=motion, instance=self.current)
+        elif isinstance(motion, dict):
+            self._motion = MOTIONS.build(cfg=motion, instance=self.current)
         else:
             raise TypeError
         
@@ -256,7 +246,6 @@ class MovingObject(Object, list[instance.Instance]):
     def update_moving_state(self, rois: list[rmoi.ROI], **kwargs):
         """Update the current state of the road_objects. One recommendation of
         the state diagram is as follows:
-
         _____________      _____________      ____________      ___________      ________
         | Candidate | ---> | Confirmed | ---> | Counting | ---> | Counted | ---> | Exit |
         -------------      -------------      ------------      -----------      --------
@@ -269,13 +258,12 @@ class MovingObject(Object, list[instance.Instance]):
     def draw(
         self,
         drawing: np.ndarray,
-        box    : bool        = True,
-        polygon: bool        = False,
-        label  : bool        = True,
-        color  : Ints | None = None
+        bbox   : bool = True,
+        polygon: bool = False,
+        label  : bool = True,
+        color  : list[int] | None = None
     ) -> np.ndarray:
-        """Draw the current object and its trajectory on the :param:`image`.
-        """
+        """Draw the current object and its trajectory on the :param:`image`."""
         if self.moi_uid is not None:
             color = mon.AppleRGB.values()[self.moi_uid]
         else:
@@ -287,7 +275,7 @@ class MovingObject(Object, list[instance.Instance]):
         elif self.is_counted:
             self.draw_instance(
                 drawing = drawing,
-                box     = box,
+                bbox= bbox,
                 polygon = polygon,
                 label   = label,
                 color   = color
@@ -296,7 +284,7 @@ class MovingObject(Object, list[instance.Instance]):
         elif self.is_exiting:
             self.draw_instance(
                 drawing = drawing,
-                box     = box,
+                bbox= bbox,
                 polygon = polygon,
                 label   = label,
                 color   = color
@@ -307,15 +295,15 @@ class MovingObject(Object, list[instance.Instance]):
     def draw_instance(
         self,
         drawing: np.ndarray,
-        box    : bool        = True,
-        polygon: bool        = False,
-        label  : bool        = True,
-        color  : Ints | None = None
+        bbox   : bool = True,
+        polygon: bool = False,
+        label  : bool = True,
+        color  : list[int] | None = None
     ) -> np.ndarray:
         """Draw the current object on the :param:`image`."""
         color = color or self.majority_label["color"]
-        if box:
-            b = self.current.box
+        if bbox:
+            b = self.current.bbox
             cv2.rectangle(
                 img       = drawing,
                 pt1       = (b[0], b[1]),
@@ -333,11 +321,9 @@ class MovingObject(Object, list[instance.Instance]):
             )
         if polygon:
             pts = self.current.polygon.reshape((-1, 1, 2))
-            cv2.polylines(
-                img=drawing, pts=pts, isClosed=True, color=color, thickness=2
-            )
+            cv2.polylines(img=drawing, pts=pts, isClosed=True, color=color, thickness=2)
         if label is not None:
-            box_tl     = box[0:2]
+            box_tl     = bbox[0:2]
             curr_label = self.majority_label
             font       = cv2.FONT_HERSHEY_SIMPLEX
             org        = (box_tl[0] + 5, box_tl[1])

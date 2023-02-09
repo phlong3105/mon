@@ -7,9 +7,6 @@ machine=$HOSTNAME
 read -e -i "$task" -p "Task [install, train, test, predict]: " task
 # read -e -i "$machine" -p "Machine [pc, server]: " machine
 
-# Initialization
-cd "src/yolov7" || exit
-
 # Install
 if [ "$task" == "install" ]; then
   echo -e "\nInstalling YOLOv7"
@@ -33,6 +30,9 @@ if [ "$task" == "install" ]; then
   fi
 fi
 
+# Initialization
+cd "src/yolov7" || exit
+
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
@@ -52,13 +52,13 @@ if [ "$task" == "train" ]; then
       --project "../../run/train" \
       --name "yolov7-e6e-visdrone-a2i2-of-1280" \
       # --resume
-  elif [ "$machine" == "VSW-WS02" ]; then
+  elif [ "$machine" == "d32ef290e9ba" ]; then
     python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
       --weights "weight/yolov7-e6e-training.pt" \
       --cfg "cfg/training/yolov7-e6e.yaml" \
-      --data "data/visdrone-a2i2-of.yaml" \
+      --data "data/visdrone-a2i2.yaml" \
       --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 100 \
+      --epochs 200 \
       --batch-size 4 \
       --img-size 2160 \
       --workers 4 \
@@ -66,7 +66,7 @@ if [ "$task" == "train" ]; then
       --sync-bn \
       --exist-ok \
       --project "../../run/train" \
-      --name "yolov7-e6e-visdrone-a2i2-of-2160" \
+      --name "yolov7-e6e-visdrone-a2i2-2160" \
       # --resume
   elif [ "$machine" == "VSW-WS03" ]; then
     python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \

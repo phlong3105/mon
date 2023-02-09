@@ -13,7 +13,7 @@ import functools
 import os
 import socket
 import time
-from typing import Any, TYPE_CHECKING
+from typing import Any, Callable
 
 from lightning.fabric.loggers.logger import rank_zero_experiment
 from lightning.pytorch import loggers
@@ -23,10 +23,7 @@ from tensorboard.compat.proto.event_pb2 import Event, SessionLog
 from tensorboard.summary.writer import event_file_writer, record_writer
 from torch.utils import tensorboard
 
-from mon.coreml import constant
-
-if TYPE_CHECKING:
-    from mon.coreml.typing import CallableType
+from mon.globals import LOGGERS
 
 
 # region Tensorboard
@@ -43,7 +40,7 @@ class EventFileWriter(event_file_writer.EventFileWriter):
         self._logdir = logdir
         tf.io.gfile.makedirs(logdir)
         self._file_name = (
-            os.path.join(logdir, "events.out.tfevents.%s" % (socket.gethostname()))
+            os.path.join(logdir, f"events.out.tfevents.{socket.gethostname()}")
             + filename_suffix
         )  # noqa E128
         self._general_file_writer = tf.io.gfile.GFile(self._file_name, "wb")
@@ -54,10 +51,7 @@ class EventFileWriter(event_file_writer.EventFileWriter):
         )
     
         # Initialize an event measurement.
-        _event = event_pb2.Event(
-            wall_time    = time.time(),
-            file_version = "brain.Event:2"
-        )
+        _event = event_pb2.Event(wall_time=time.time(), file_version="brain.Event:2")
         self.add_event(_event)
         self.flush()
 
@@ -127,7 +121,7 @@ class SummaryWriter(tensorboard.SummaryWriter):
         return self.file_writer
 
 
-def rank_zero_only(fn: CallableType) -> CallableType:
+def rank_zero_only(fn: Callable) -> Callable:
     @functools.wraps(fn)
     def wrapped_fn(*args: Any, **kwargs: Any) -> Any | None:
         if rank_zero_only.rank == 0:
@@ -156,8 +150,8 @@ rank_zero_only.rank = getattr(rank_zero_only, "rank", _get_rank())
 
 # region Tensorboard Logger
 
-@constant.LOGGER.register(name="tensorboard")
-@constant.LOGGER.register(name="tensorboard_logger")
+@LOGGERS.register(name="tensorboard")
+@LOGGERS.register(name="tensorboard_logger")
 class TensorBoardLogger(loggers.TensorBoardLogger):
     
     @property
@@ -172,9 +166,10 @@ class TensorBoardLogger(loggers.TensorBoardLogger):
         """
         if self._experiment is not None:
             return self._experiment
-
-        assert rank_zero_only.rank == 0, \
-            f"Tried to init log dirs in non `global_rank=0`."
+        if not rank_zero_only.rank == 0:
+            raise ValueError(
+                f"Tried to initialize log dirs in non 'global_rank=0'."
+            )
         if self.root_dir:
             self._fs.makedirs(self.root_dir, exist_ok=True)
         self._experiment = SummaryWriter(log_dir=self.log_dir, **self._kwargs)

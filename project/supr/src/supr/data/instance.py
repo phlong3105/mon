@@ -12,17 +12,14 @@ __all__ = [
 ]
 
 from timeit import default_timer as timer
-from typing import TYPE_CHECKING
+from typing import Any
 
 import cv2
 import numpy as np
 
 import mon
 
-if TYPE_CHECKING:
-    from supr.typing import Ints, UIDType
-    
-    
+
 # region Instance
 
 class Instance:
@@ -34,9 +31,9 @@ class Instance:
         detection.
     
     Attributes:
-        uid: An unique ID. Defaults to None.
-        roi_uid: The unique ID of the ROI containing the
-        box: A bounding bbox in (x1, y1, x2, y2) format.
+        id_: An unique ID. Defaults to None.
+        roi_id: The unique ID of the ROI containing the
+        bbox: A bounding bbox in XYXY format.
         polygon: A list of points representing an instance mask. Defaults to
             None.
         confidence: A confidence score. Defaults to None.
@@ -47,64 +44,69 @@ class Instance:
     
     def __init__(
         self,
-        uid        : UIDType,
-        roi_uid    : UIDType,
-        box        : np.ndarray,
+        id_        : int | str,
+        roi_uid    : int | str,
+        bbox       : np.ndarray,
         polygon    : np.ndarray | None = None,
-        confidence : float      | None = None,
-        classlabel : dict       | None = None,
-        frame_index: int        | None = None,
+        confidence : float | None      = None,
+        classlabel : dict | None       = None,
+        frame_index: int | None        = None,
         timestamp  : float             = timer(),
     ):
-        super().__init__()
-        self.uid         = uid
-        self.roi_uid     = roi_uid
-        self.box         = box
+        self.id_         = id_
+        self.roi_id      = roi_uid
+        self.bbox        = bbox
         self.polygon     = polygon
         self.confidence  = confidence
         self.classlabel  = classlabel
         self.frame_index = frame_index
         self.timestamp   = timestamp
-        
-    @property
-    def box_cxcyrh(self):
-        return mon.bbox_xyxy_to_cxcyrh(bbox=self.box)
-
+    
+    @classmethod
+    def from_value(cls, value: Any) -> Instance:
+        if isinstance(value, Instance):
+            return value
+        elif isinstance(value, dict):
+            return cls(**value)
+        else:
+            raise TypeError(
+                f"value must be an Instance object or a dict, but got "
+                f"{type(value)}."
+            )
+    
     @property
     def box_center(self):
-        return mon.get_bbox_center(bbox=self.box)
+        return mon.get_bbox_center(bbox=self.bbox)
     
     @property
     def box_tl(self):
         """The bbox's top left corner."""
-        return self.box[0:2]
-
+        return self.bbox[0:2]
+    
     @property
     def box_corners_points(self) -> np.ndarray:
-        return mon.get_bbox_corners_points(bbox=self.box)
+        return mon.get_bbox_corners_points(bbox=self.bbox)
     
     def draw(
         self,
         drawing: np.ndarray,
-        box    : bool        = False,
-        polygon: bool        = False,
-        label  : bool        = True,
-        color  : Ints | None = None
+        bbox   : bool             = False,
+        polygon: bool             = False,
+        label  : bool             = True,
+        color  : list[int] | None = None
     ) -> np.ndarray:
         """Draw the current object on the :param:`image`."""
-        color = color \
-            or (self.classlabel["color"] if self.classlabel is not None
-                else (255, 255, 255))
+        color = color or (self.classlabel["color"]
+                          if self.classlabel is not None else (255, 255, 255))
         
-        if box:
+        if bbox:
             cv2.rectangle(
                 img       = drawing,
-                pt1       = (self.box[0], self.box[1]),
-                pt2       = (self.box[2], self.box[3]),
+                pt1       = (self.bbox[0], self.bbox[1]),
+                pt2       = (self.bbox[2], self.bbox[3]),
                 color     = color,
                 thickness = 2
             )
-        
         if polygon:
             pts = self.polygon.reshape((-1, 1, 2))
             cv2.polylines(
@@ -114,10 +116,9 @@ class Instance:
                 color     = color,
                 thickness = 2,
             )
-        
         if label:
             font = cv2.FONT_HERSHEY_SIMPLEX
-            org  = (self.box_tl[0] + 5, self.box_tl[1])
+            org = (self.box_tl[0] + 5, self.box_tl[1])
             cv2.putText(
                 img       = drawing,
                 text      = self.classlabel["name"],

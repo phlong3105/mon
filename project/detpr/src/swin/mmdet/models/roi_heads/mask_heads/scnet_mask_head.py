@@ -3,7 +3,7 @@ from mmdet.models.utils import ResLayer, SimplifiedBasicBlock
 from .fcn_mask_head import FCNMaskHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class SCNetMaskHead(FCNMaskHead):
     """Mask head for `SCNet <https://arxiv.org/abs/2012.10150>`_.
 

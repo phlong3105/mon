@@ -14,14 +14,16 @@ def collect_files(img_dir, gt_dir):
     for img_file in glob.glob(osp.join(img_dir, '**/*.png')):
         assert img_file.endswith(suffix), img_file
         inst_file = gt_dir + img_file[
-            len(img_dir):-len(suffix)] + 'gtFine_instanceIds.png'
+                             len(img_dir):-len(
+                                 suffix
+                             )] + 'gtFine_instanceIds.png'
         # Note that labelIds are not converted to trainId for seg map
         segm_file = gt_dir + img_file[
-            len(img_dir):-len(suffix)] + 'gtFine_labelIds.png'
+                             len(img_dir):-len(suffix)] + 'gtFine_labelIds.png'
         files.append((img_file, inst_file, segm_file))
     assert len(files), f'No images found in {img_dir}'
     print(f'Loaded {len(files)} images from {img_dir}')
-
+    
     return files
 
 
@@ -29,10 +31,11 @@ def collect_annotations(files, nproc=1):
     print('Loading annotation images')
     if nproc > 1:
         images = mmcv.track_parallel_progress(
-            load_img_info, files, nproc=nproc)
+            load_img_info, files, nproc=nproc
+        )
     else:
         images = mmcv.track_progress(load_img_info, files)
-
+    
     return images
 
 
@@ -49,25 +52,26 @@ def load_img_info(files):
         label = CSLabels.id2label[label_id]
         if not label.hasInstances or label.ignoreInEval:
             continue
-
+        
         category_id = label.id
         iscrowd = int(inst_id < 1000)
         mask = np.asarray(inst_img == inst_id, dtype=np.uint8, order='F')
         mask_rle = maskUtils.encode(mask[:, :, None])[0]
-
+        
         area = maskUtils.area(mask_rle)
         # convert to COCO style XYWH format
-        bbox = maskUtils.toBbox(mask_rle)
-
+        box = maskUtils.toBbox(mask_rle)
+        
         # for json encoding
         mask_rle['counts'] = mask_rle['counts'].decode()
-
+        
         anno = dict(
             iscrowd=iscrowd,
             category_id=category_id,
-            bbox=bbox.tolist(),
+            box=box.tolist(),
             area=area.tolist(),
-            segmentation=mask_rle)
+            segmentation=mask_rle
+        )
         anno_info.append(anno)
     video_name = osp.basename(osp.dirname(img_file))
     img_info = dict(
@@ -76,8 +80,9 @@ def load_img_info(files):
         height=inst_img.shape[0],
         width=inst_img.shape[1],
         anno_info=anno_info,
-        segm_file=osp.join(video_name, osp.basename(segm_file)))
-
+        segm_file=osp.join(video_name, osp.basename(segm_file))
+    )
+    
     return img_info
 
 
@@ -102,23 +107,25 @@ def cvt_annotations(image_infos, out_json_name):
         if label.hasInstances and not label.ignoreInEval:
             cat = dict(id=label.id, name=label.name)
             out_json['categories'].append(cat)
-
+    
     if len(out_json['annotations']) == 0:
         out_json.pop('annotations')
-
+    
     mmcv.dump(out_json, out_json_name)
     return out_json
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='Convert Cityscapes annotations to COCO format')
+        description='Convert Cityscapes annotations to COCO format'
+    )
     parser.add_argument('cityscapes_path', help='cityscapes data path')
     parser.add_argument('--img-dir', default='leftImg8bit', type=str)
     parser.add_argument('--gt-dir', default='gtFine', type=str)
     parser.add_argument('-o', '--out-dir', help='output path')
     parser.add_argument(
-        '--nproc', default=1, type=int, help='number of process')
+        '--nproc', default=1, type=int, help='number of process'
+    )
     args = parser.parse_args()
     return args
 
@@ -128,21 +135,24 @@ def main():
     cityscapes_path = args.cityscapes_path
     out_dir = args.out_dir if args.out_dir else cityscapes_path
     mmcv.mkdir_or_exist(out_dir)
-
+    
     img_dir = osp.join(cityscapes_path, args.img_dir)
     gt_dir = osp.join(cityscapes_path, args.gt_dir)
-
+    
     set_name = dict(
         train='instancesonly_filtered_gtFine_train.json',
         val='instancesonly_filtered_gtFine_val.json',
-        test='instancesonly_filtered_gtFine_test.json')
-
+        test='instancesonly_filtered_gtFine_test.json'
+    )
+    
     for split, json_name in set_name.items():
         print(f'Converting {split} into {json_name}')
         with mmcv.Timer(
-                print_tmpl='It took {}s to convert Cityscapes annotation'):
+            print_tmpl='It took {}s to convert Cityscapes annotation'
+        ):
             files = collect_files(
-                osp.join(img_dir, split), osp.join(gt_dir, split))
+                osp.join(img_dir, split), osp.join(gt_dir, split)
+            )
             image_infos = collect_annotations(files, nproc=args.nproc)
             cvt_annotations(image_infos, osp.join(out_dir, json_name))
 

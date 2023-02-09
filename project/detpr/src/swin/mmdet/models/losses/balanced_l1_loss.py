@@ -49,7 +49,7 @@ def balanced_l1_loss(pred,
     return loss
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class BalancedL1Loss(nn.Module):
     """Balanced L1 Loss.
 

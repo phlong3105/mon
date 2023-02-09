@@ -33,7 +33,7 @@ def to_tensor(data):
         raise TypeError(f'type {type(data)} cannot be converted to tensor.')
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class ToTensor(object):
     """Convert some results to :obj:`torch.Tensor` by given keys.
 
@@ -62,7 +62,7 @@ class ToTensor(object):
         return self.__class__.__name__ + f'(keys={self.keys})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class ImageToTensor(object):
     """Convert image to :obj:`torch.Tensor` by given keys.
 
@@ -99,7 +99,7 @@ class ImageToTensor(object):
         return self.__class__.__name__ + f'(keys={self.keys})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class Transpose(object):
     """Transpose some results by given keys.
 
@@ -131,7 +131,7 @@ class Transpose(object):
             f'(keys={self.keys}, order={self.order})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class ToDataContainer(object):
     """Convert results to :obj:`mmcv.DataContainer` by given fields.
 
@@ -170,7 +170,7 @@ class ToDataContainer(object):
         return self.__class__.__name__ + f'(fields={self.fields})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class DefaultFormatBundle(object):
     """Default formatting bundle.
 
@@ -247,7 +247,7 @@ class DefaultFormatBundle(object):
         return self.__class__.__name__
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class RPDV2FormatBundle(object):
     """Default formatting bundle.
 
@@ -334,7 +334,7 @@ class RPDV2FormatBundle(object):
         return self.__class__.__name__
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class Collect(object):
     """Collect data from the loader relevant to the specific task.
 
@@ -410,7 +410,7 @@ class Collect(object):
             f'(keys={self.keys}, meta_keys={self.meta_keys})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class WrapFieldsToLists(object):
     """Wrap fields of the data dictionary into lists for evaluation.
 

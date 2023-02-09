@@ -1,36 +1,44 @@
 import glob
 
-import torch
-import torchvision
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+import torchvision
 from PIL import Image
+
 # import skvideo.io
 
 matplotlib.use('agg')
+
 
 def prepare_hazy_image(file_name):
     img_pil = crop_image(get_image(file_name, -1)[0], d=32)
     return pil_to_np(img_pil)
 
+
 def prepare_gt_img(file_name, SOTS=True):
     if SOTS:
-        img_pil = crop_image(crop_a_image(get_image(file_name, -1)[0], d=10), d=32)
+        img_pil = crop_image(
+            crop_a_image(get_image(file_name, -1)[0], d=10),
+            d=32
+        )
     else:
         img_pil = crop_image(get_image(file_name, -1)[0], d=32)
-
+    
     return pil_to_np(img_pil)
 
+
 def crop_a_image(img, d=10):
-    bbox = [
+    box = [
         int((d)),
         int((d)),
         int((img.size[0] - d)),
         int((img.size[1] - d)),
     ]
-    img_cropped = img.crop(bbox)
+    img_cropped = img.crop(box)
     return img_cropped
+
 
 def crop_image(img, d=32):
     """
@@ -40,18 +48,18 @@ def crop_image(img, d=32):
     :param d:
     :return:
     """
-
+    
     new_size = (img.size[0] - img.size[0] % d,
                 img.size[1] - img.size[1] % d)
-
-    bbox = [
+    
+    box = [
         int((img.size[0] - new_size[0]) / 2),
         int((img.size[1] - new_size[1]) / 2),
         int((img.size[0] + new_size[0]) / 2),
         int((img.size[1] + new_size[1]) / 2),
     ]
-
-    img_cropped = img.crop(bbox)
+    
+    img_cropped = img.crop(box)
     return img_cropped
 
 
@@ -69,12 +77,15 @@ def crop_torch_image(img, d=32):
     """
     new_size = (img.shape[-2] - img.shape[-2] % d,
                 img.shape[-1] - img.shape[-1] % d)
-    pad = ((img.shape[-2] - new_size[-2]) // 2, (img.shape[-1] - new_size[-1]) // 2)
-
+    pad = (
+    (img.shape[-2] - new_size[-2]) // 2, (img.shape[-1] - new_size[-1]) // 2)
+    
     if len(img.shape) == 4:
-        return img[:, :, pad[-2]: pad[-2] + new_size[-2], pad[-1]: pad[-1] + new_size[-1]]
+        return img[:, :, pad[-2]: pad[-2] + new_size[-2],
+               pad[-1]: pad[-1] + new_size[-1]]
     assert len(img.shape) == 3
-    return img[:, pad[-2]: pad[-2] + new_size[-2], pad[-1]: pad[-1] + new_size[-1]]
+    return img[:, pad[-2]: pad[-2] + new_size[-2],
+           pad[-1]: pad[-1] + new_size[-1]]
 
 
 def get_params(opt_over, net, net_input, downsampler=None):
@@ -86,12 +97,12 @@ def get_params(opt_over, net, net_input, downsampler=None):
     :param downsampler:
     :return:
     """
-
+    
     opt_over_list = opt_over.split(',')
     params = []
-
+    
     for opt in opt_over_list:
-
+        
         if opt == 'net':
             params += [x for x in net.parameters()]
         elif opt == 'down':
@@ -102,7 +113,7 @@ def get_params(opt_over, net, net_input, downsampler=None):
             params += [net_input]
         else:
             assert False, 'what is it?'
-
+    
     return params
 
 
@@ -113,13 +124,19 @@ def get_image_grid(images_np, nrow=8):
     :param nrow:
     :return:
     """
-    images_torch = [torch.from_numpy(x).type(torch.FloatTensor) for x in images_np]
+    images_torch = [torch.from_numpy(x).type(torch.FloatTensor) for x in
+                    images_np]
     torch_grid = torchvision.utils.make_grid(images_torch, nrow)
-
+    
     return torch_grid.numpy()
 
 
-def plot_image_grid(name, images_np, interpolation='lanczos', output_path="output/"):
+def plot_image_grid(
+    name,
+    images_np,
+    interpolation='lanczos',
+    output_path="output/"
+):
     """
     Draws images in a grid
 
@@ -128,25 +145,30 @@ def plot_image_grid(name, images_np, interpolation='lanczos', output_path="outpu
         nrow: how many images will be in one row
         interpolation: interpolation used in plt.imshow
     """
-    assert len(images_np) == 2 
+    assert len(images_np) == 2
     n_channels = max(x.shape[0] for x in images_np)
-    assert (n_channels == 3) or (n_channels == 1), "images should have 1 or 3 channels"
-
-    images_np = [x if (x.shape[0] == n_channels) else np.concatenate([x, x, x], axis=0) for x in images_np]
-
+    assert (n_channels == 3) or (
+            n_channels == 1), "images should have 1 or 3 channels"
+    
+    images_np = [
+        x if (x.shape[0] == n_channels) else np.concatenate([x, x, x], axis=0)
+        for x in images_np]
+    
     grid = get_image_grid(images_np, 2)
-
+    
     if images_np[0].shape[0] == 1:
         plt.imshow(grid[0], cmap='gray', interpolation=interpolation)
     else:
         plt.imshow(grid.transpose(1, 2, 0), interpolation=interpolation)
-
+    
     plt.savefig(output_path + "{}.png".format(name))
 
 
 def save_image(name, image_np, output_path="output/new_nyu/normal/"):
     p = np_to_pil(image_np)
     p.save(output_path + "{}.jpg".format(name))
+
+
 #    p.save(output_path + "{}.jpg".format(name))
 
 
@@ -155,21 +177,25 @@ def video_to_images(file_name, name):
     for i, f in enumerate(video):
         save_image(name + "_{0:03d}".format(i), f)
 
-def images_to_video(images_dir ,name, gray=True):
-    num = len(glob.glob(images_dir +"/*.jpg"))
+
+def images_to_video(images_dir, name, gray=True):
+    num = len(glob.glob(images_dir + "/*.jpg"))
     c = []
     for i in range(num):
         if gray:
-            img = prepare_gray_image(images_dir + "/"+  name +"_{}.jpg".format(i))
+            img = prepare_gray_image(
+                images_dir + "/" + name + "_{}.jpg".format(i)
+                )
         else:
-            img = prepare_image(images_dir + "/"+name+"_{}.jpg".format(i))
+            img = prepare_image(images_dir + "/" + name + "_{}.jpg".format(i))
         print(img.shape)
         c.append(img)
     save_video(name, np.array(c))
 
+
 def save_heatmap(name, image_np):
     cmap = plt.get_cmap('jet')
-
+    
     rgba_img = cmap(image_np)
     rgb_img = np.delete(rgba_img, 3, 2)
     save_image(name, rgb_img.transpose(2, 0, 1))
@@ -188,9 +214,12 @@ def create_augmentations(np_image):
     :return:
     """
     aug = [np_image.copy(), np.rot90(np_image, 1, (1, 2)).copy(),
-           np.rot90(np_image, 2, (1, 2)).copy(), np.rot90(np_image, 3, (1, 2)).copy()]
-    flipped = np_image[:,::-1, :].copy()
-    aug += [flipped.copy(), np.rot90(flipped, 1, (1, 2)).copy(), np.rot90(flipped, 2, (1, 2)).copy(), np.rot90(flipped, 3, (1, 2)).copy()]
+           np.rot90(np_image, 2, (1, 2)).copy(),
+           np.rot90(np_image, 3, (1, 2)).copy()]
+    flipped = np_image[:, ::-1, :].copy()
+    aug += [flipped.copy(), np.rot90(flipped, 1, (1, 2)).copy(),
+            np.rot90(flipped, 2, (1, 2)).copy(),
+            np.rot90(flipped, 3, (1, 2)).copy()]
     return aug
 
 
@@ -201,9 +230,11 @@ def create_video_augmentations(np_video):
         :return:
         """
     aug = [np_video.copy(), np.rot90(np_video, 1, (2, 3)).copy(),
-           np.rot90(np_video, 2, (2, 3)).copy(), np.rot90(np_video, 3, (2, 3)).copy()]
+           np.rot90(np_video, 2, (2, 3)).copy(),
+           np.rot90(np_video, 3, (2, 3)).copy()]
     flipped = np_video[:, :, ::-1, :].copy()
-    aug += [flipped.copy(), np.rot90(flipped, 1, (2, 3)).copy(), np.rot90(flipped, 2, (2, 3)).copy(),
+    aug += [flipped.copy(), np.rot90(flipped, 1, (2, 3)).copy(),
+            np.rot90(flipped, 2, (2, 3)).copy(),
             np.rot90(flipped, 3, (2, 3)).copy()]
     return aug
 
@@ -244,18 +275,19 @@ def get_image(path, imsize=-1):
     img = load(path)
     if isinstance(imsize, int):
         imsize = (imsize, imsize)
-        
+    
     if imsize[0] != -1 and img.size != imsize:
         if imsize[0] > img.size[0]:
             img = img.resize(imsize, Image.BICUBIC)
         else:
             img = img.resize(imsize, Image.ANTIALIAS)
-
+    
     img_np = pil_to_np(img)
-#    3*460*620
-#    print(np.shape(img_np))
-
+    #    3*460*620
+    #    print(np.shape(img_np))
+    
     return img, img_np
+
 
 def prepare_gt(file_name):
     """
@@ -264,14 +296,14 @@ def prepare_gt(file_name):
     :return: the numpy representation of the image
     """
     img = get_image(file_name, -1)
-#    print(img[0].size)
+    #    print(img[0].size)
     
-    img_pil = img[0].crop([10, 10, img[0].size[0]-10, img[0].size[1]-10])
-
+    img_pil = img[0].crop([10, 10, img[0].size[0] - 10, img[0].size[1] - 10])
+    
     img_pil = crop_image(img_pil, d=32)
     
-#    img_pil = get_image(file_name, -1)[0]
-#    print(img_pil.size)
+    #    img_pil = get_image(file_name, -1)[0]
+    #    print(img_pil.size)
     return pil_to_np(img_pil)
 
 
@@ -282,23 +314,25 @@ def prepare_image(file_name):
     :return: the numpy representation of the image
     """
     img = get_image(file_name, -1)
-#    print(img[0].size)
-#    img_pil = img[0]
+    #    print(img[0].size)
+    #    img_pil = img[0]
     img_pil = crop_image(img[0], d=32)
-#    img_pil = get_image(file_name, -1)[0]
-#    print(img_pil.size)
+    #    img_pil = get_image(file_name, -1)[0]
+    #    print(img_pil.size)
     return pil_to_np(img_pil)
 
 
 # def prepare_video(file_name, folder="output/"):
 #     data = skvideo.io.vread(folder + file_name)
-#     return crop_torch_image(data.transpose(0, 3, 1, 2).astype(np.float32) / 255.)[:35]
+#     return crop_torch_image(data.transpose(0, 3, 1, 2).astype(np.float32) /
+#     255.)[:35]
 #
 #
 # def save_video(name, video_np, output_path="output/"):
 #     outputdata = video_np * 255
 #     outputdata = outputdata.astype(np.uint8)
-#     skvideo.io.vwrite(output_path + "{}.mp4".format(name), outputdata.transpose(0, 2, 3, 1))
+#     skvideo.io.vwrite(output_path + "{}.mp4".format(name),
+#     outputdata.transpose(0, 2, 3, 1))
 
 
 def prepare_gray_image(file_name):
@@ -321,7 +355,7 @@ def pil_to_np(img_PIL, with_transpose=True):
             ar = ar.transpose(2, 0, 1)
         else:
             ar = ar[None, ...]
-
+    
     return ar.astype(np.float32) / 255.
 
 
@@ -338,7 +372,8 @@ def median(img_np_list):
     for c in range(shape[0]):
         for w in range(shape[1]):
             for h in range(shape[2]):
-                result[c, w, h] = sorted(i[c, w, h] for i in img_np_list)[l//2]
+                result[c, w, h] = sorted(i[c, w, h] for i in img_np_list)[
+                    l // 2]
     return result
 
 
@@ -366,13 +401,13 @@ def np_to_pil(img_np):
     :return:
     """
     ar = np.clip(img_np * 255, 0, 255).astype(np.uint8)
-
+    
     if img_np.shape[0] == 1:
         ar = ar[0]
     else:
         assert img_np.shape[0] == 3, img_np.shape
         ar = ar.transpose(1, 2, 0)
-
+    
     return Image.fromarray(ar)
 
 

@@ -7,7 +7,7 @@ from torch.utils.checkpoint import checkpoint
 from ..builder import NECKS
 
 
-@NECKS.register_module()
+@NECKS._register()
 class HRFPN(nn.Module):
     """HRFPN (High Resolution Feature Pyramids)
 

@@ -58,8 +58,8 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --mode "train" \
       --model "weight/yolov8x-det-coco.pt" \
-      --data "data/visdrone-a2i2-of.yaml" \
-      --epochs 100 \
+      --data "data/visdrone-a2i2.yaml" \
+      --epochs 200 \
       --batch 4 \
       --imgsz 2160 \
       --device 0,1 \
@@ -68,7 +68,7 @@ if [ "$task" == "train" ]; then
       --exist-ok \
       --pretrained \
       --project "../../run/train" \
-      --name "yolov8x-visdrone-a2i2-of-2160" \
+      --name "yolov8x-visdrone-a2i2-2160" \
       # --resume
   fi
 fi

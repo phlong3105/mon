@@ -8,24 +8,17 @@ helper functions.
 from __future__ import annotations
 
 __all__ = [
-    "ConcatLayerParsingMixin",
-    "MergingLayerParsingMixin",
-    "ConvLayerParsingMixin",
-    "HeadLayerParsingMixin",
-    "Layer",
-    "LayerParsingMixin",
-    "PassThroughLayerParsingMixin",
-    "SameChannelsLayerParsingMixin",
+    "ConcatLayerParsingMixin", "ConvLayerParsingMixin", "HeadLayerParsingMixin",
+    "Layer", "LayerParsingMixin", "MergingLayerParsingMixin",
+    "PassThroughLayerParsingMixin", "SameChannelsLayerParsingMixin",
 ]
 
 from abc import ABC, abstractmethod
 
 from torch import nn
 
-from mon.coreml.typing import DictType, Ints
 
-
-# region Parsing
+# region Parsing Mixin
 
 class LayerParsingMixin:
     """The base class for layers' mixins. It adds additional methods used in the
@@ -35,10 +28,10 @@ class LayerParsingMixin:
     @classmethod
     def parse_layer(
         cls,
-        f      : Ints,
+        f      : int | list[int],
         args   : list,
         ch     : list,
-        hparams: DictType = None,
+        hparams: dict | None = None,
     ) -> tuple[list, list]:
         """Get predefined layer's arguments and calculate the appropriate output
         channels. Also, adjust arguments' values with the given hyperparameter.
@@ -73,7 +66,7 @@ class LayerParsingMixin:
     
     @classmethod
     @abstractmethod
-    def parse_layer_args(cls, f : int, args: list, ch: list, ) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -93,7 +86,7 @@ class LayerParsingMixin:
         pass
         
     @classmethod
-    def parse_hparams(cls, args: list, hparams: DictType | None = None) -> list | None:
+    def parse_hparams(cls, args: list, hparams: dict | None = None) -> list | None:
         """Parse hyperparameters and updated the corresponding values in
         :param:`args`.
         
@@ -118,7 +111,7 @@ class ConvLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args( cls, f : int, args: list, ch: list, ) -> tuple[list, list]:
+    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -138,7 +131,7 @@ class ConvLayerParsingMixin(LayerParsingMixin):
         if isinstance(f, list | tuple):
             c1, c2 = ch[f[0]], args[0]
         else:
-            c1, c2 = ch[f],    args[0]
+            c1, c2 = ch[f], args[0]
         args = [c1, c2, *args[1:]]
         ch.append(c2)
         return args, ch
@@ -151,7 +144,7 @@ class ConcatLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args( cls, f : int, args: list, ch: list, ) -> tuple[list, list]:
+    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -181,7 +174,7 @@ class MergingLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args( cls, f : int, args: list, ch: list, ) -> tuple[list, list]:
+    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -212,11 +205,11 @@ class HeadLayerParsingMixin(LayerParsingMixin):
     @classmethod
     def parse_layer(
         cls,
-        f      : Ints,
+        f      : int | list[int],
         args   : list,
         nc     : int,
         ch     : list,
-        hparams: DictType = None,
+        hparams: dict | None = None,
     ) -> tuple[list, list]:
         """Get predefined layer's arguments and calculate the appropriate output
         channels. Additionally, adjust arguments' values with the given
@@ -254,7 +247,7 @@ class HeadLayerParsingMixin(LayerParsingMixin):
     @classmethod
     def parse_layer_args(
         cls,
-        f   : Ints,
+        f   : int | list[int],
         args: list,
         nc  : int,
         ch  : list,
@@ -290,7 +283,7 @@ class PassThroughLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args( cls, f : int, args: list, ch: list, ) -> tuple[list, list]:
+    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -318,7 +311,7 @@ class SameChannelsLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args( cls, f : int, args: list, ch: list, ) -> tuple[list, list]:
+    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.

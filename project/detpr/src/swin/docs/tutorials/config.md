@@ -1,47 +1,73 @@
 # Tutorial 1: Learn about Configs
 
-We incorporate modular and inheritance design into our config system, which is convenient to conduct various experiments.
-If you wish to inspect the config file, you may run `python tools/misc/print_config.py /PATH/TO/CONFIG` to see the complete config.
+We incorporate modular and inheritance design into our config system, which is
+convenient to conduct various experiments.
+If you wish to inspect the config file, you may
+run `python tools/misc/print_config.py /PATH/TO/CONFIG` to see the complete
+config.
 
 ## Modify config through script arguments
 
-When submitting jobs using "tools/train.py" or "tools/test.py", you may specify `--cfg-options` to in-place modify the config.
+When submitting jobs using "tools/train.py" or "tools/test.py", you may
+specify `--cfg-options` to in-place modify the config.
 
 - Update config keys of dict chains.
 
-  The config options can be specified following the order of the dict keys in the original config.
-  For example, `--cfg-options model.backbone.norm_eval=False` changes the all BN modules in model backbones to `train` mode.
+  The config options can be specified following the order of the dict keys in
+  the original config.
+  For example, `--cfg-options model.backbone.norm_eval=False` changes the all BN
+  modules in model backbones to `train` mode.
 
 - Update keys inside a list of configs.
 
-  Some config dicts are composed as a list in your config. For example, the training pipeline `data.train.pipeline` is normally a list
-  e.g. `[dict(type='LoadImageFromFile'), ...]`. If you want to change `'LoadImageFromFile'` to `'LoadImageFromWebcam'` in the pipeline,
-  you may specify `--cfg-options data.train.pipeline.0.type=LoadImageFromWebcam`.
+  Some config dicts are composed as a list in your config. For example, the
+  training pipeline `data.train.pipeline` is normally a list
+  e.g. `[dict(type='LoadImageFromFile'), ...]`. If you want to
+  change `'LoadImageFromFile'` to `'LoadImageFromWebcam'` in the pipeline,
+  you may
+  specify `--cfg-options data.train.pipeline.0.type=LoadImageFromWebcam`.
 
 - Update values of list/tuples.
 
-  If the value to be updated is a list or a tuple. For example, the config file normally sets `workflow=[('train', 1)]`. If you want to
-  change this key, you may specify `--cfg-options workflow="[(train,1),(val,1)]"`. Note that the quotation mark \" is necessary to
-  support list/tuple data types, and that **NO** white space is allowed inside the quotation marks in the specified value.
+  If the value to be updated is a list or a tuple. For example, the config file
+  normally sets `workflow=[('train', 1)]`. If you want to
+  change this key, you may
+  specify `--cfg-options workflow="[(train,1),(val,1)]"`. Note that the
+  quotation mark \" is necessary to
+  support list/tuple data types, and that **NO** white space is allowed inside
+  the quotation marks in the specified value.
 
 ## Config File Structure
 
-There are 4 basic component types under `config/_base_`, dataset, model, schedule, default_runtime.
-Many methods could be easily constructed with one of each like Faster R-CNN, Mask R-CNN, Cascade R-CNN, RPN, SSD.
-The configs that are composed by components from `_base_` are called _primitive_.
+There are 4 basic component types under `config/_base_`, dataset, model,
+schedule, default_runtime.
+Many methods could be easily constructed with one of each like Faster R-CNN,
+Mask R-CNN, Cascade R-CNN, RPN, SSD.
+The configs that are composed by components from `_base_` are called
+_primitive_.
 
-For all configs under the same folder, it is recommended to have only **one** _primitive_ config. All other configs should inherit from the _primitive_ config. In this way, the maximum of inheritance level is 3.
+For all configs under the same folder, it is recommended to have only **one**
+_primitive_ config. All other configs should inherit from the _primitive_
+config. In this way, the maximum of inheritance level is 3.
 
-For easy understanding, we recommend contributors to inherit from exiting methods.
-For example, if some modification is made base on Faster R-CNN, user may first inherit the basic Faster R-CNN structure by specifying `_base_ = ../faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py`, then modify the necessary fields in the config files.
+For easy understanding, we recommend contributors to inherit from exiting
+methods.
+For example, if some modification is made base on Faster R-CNN, user may first
+inherit the basic Faster R-CNN structure by
+specifying `_base_ = ../faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py`, then modify
+the necessary fields in the config files.
 
-If you are building an entirely new method that does not share the structure with any of the existing methods, you may create a folder `xxx_rcnn` under `configs`,
+If you are building an entirely new method that does not share the structure
+with any of the existing methods, you may create a folder `xxx_rcnn`
+under `configs`,
 
-Please refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#config) for detailed documentation.
+Please refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#config)
+for detailed documentation.
 
 ## Config Name Style
 
-We follow the below style to name config files. Contributors are advised to follow the same style.
+We follow the below style to name config files. Contributors are advised to
+follow the same style.
 
 ```
 {model}_[model setting]_{backbone}_{neck}_[norm setting]_[misc]_[gpu x batch_per_gpu]_{schedule}_{dataset}
@@ -50,23 +76,31 @@ We follow the below style to name config files. Contributors are advised to foll
 `{xxx}` is required field and `[yyy]` is optional.
 
 - `{model}`: model type like `faster_rcnn`, `mask_rcnn`, etc.
-- `[model setting]`: specific setting for some model, like `without_semantic` for `htc`, `moment` for `reppoints`, etc.
+- `[model setting]`: specific setting for some model, like `without_semantic`
+  for `htc`, `moment` for `reppoints`, etc.
 - `{backbone}`: backbone type like `r50` (ResNet-50), `x101` (ResNeXt-101).
 - `{neck}`: neck type like `fpn`, `pafpn`, `nasfpn`, `c4`.
-- `[norm_setting]`: `bn` (Batch Normalization) is used unless specified, other norm layer type could be `gn` (Group Normalization), `syncbn` (Synchronized Batch Normalization).
-    `gn-head`/`gn-neck` indicates GN is applied in head/neck only, while `gn-all` means GN is applied in the entire model, e.g. backbone, neck, head.
-- `[misc]`: miscellaneous setting/plugins of model, e.g. `dconv`, `gcb`, `attention`, `albu`, `mstrain`.
+- `[norm_setting]`: `bn` (Batch Normalization) is used unless specified, other
+  norm layer type could be `gn` (Group Normalization), `syncbn` (Synchronized
+  Batch Normalization).
+  `gn-head`/`gn-neck` indicates GN is applied in head/neck only, while `gn-all`
+  means GN is applied in the entire model, e.g. backbone, neck, head.
+- `[misc]`: miscellaneous setting/plugins of model,
+  e.g. `dconv`, `gcb`, `attention`, `albu`, `mstrain`.
 - `[gpu x batch_per_gpu]`: GPUs and samples per GPU, `8x2` is used by default.
 - `{schedule}`: training schedule, options are `1x`, `2x`, `20e`, etc.
-    `1x` and `2x` means 12 epochs and 24 epochs respectively.
-    `20e` is adopted in cascade models, which denotes 20 epochs.
-    For `1x`/`2x`, initial learning rate decays by a factor of 10 at the 8/16th and 11/22th epochs.
-    For `20e`, initial learning rate decays by a factor of 10 at the 16th and 19th epochs.
+  `1x` and `2x` means 12 epochs and 24 epochs respectively.
+  `20e` is adopted in cascade models, which denotes 20 epochs.
+  For `1x`/`2x`, initial learning rate decays by a factor of 10 at the 8/16th
+  and 11/22th epochs.
+  For `20e`, initial learning rate decays by a factor of 10 at the 16th and 19th
+  epochs.
 - `{dataset}`: dataset like `coco`, `cityscapes`, `voc_0712`, `wider_face`.
 
 ## Deprecated train_cfg/test_cfg
 
-The `train_cfg` and `test_cfg` are deprecated in config file, please specify them in the model config. The original config structure is as below.
+The `train_cfg` and `test_cfg` are deprecated in config file, please specify
+them in the model config. The original config structure is as below.
 
 ```python
 # deprecated
@@ -92,9 +126,12 @@ model = dict(
 
 ## An Example of Mask R-CNN
 
-To help the users have a basic idea of a complete config and the modules in a modern detection system,
-we make brief comments on the config of Mask R-CNN using ResNet50 and FPN as the following.
-For more detailed usage and the corresponding alternative for each modules, please refer to the API documentation.
+To help the users have a basic idea of a complete config and the modules in a
+modern detection system,
+we make brief comments on the config of Mask R-CNN using ResNet50 and FPN as the
+following.
+For more detailed usage and the corresponding alternative for each modules,
+please refer to the API documentation.
 
 ```python
 model = dict(
@@ -126,8 +163,8 @@ model = dict(
             scales=[8],  # Basic scale of the anchor, the area of the anchor in one position of a feature map will be scale * base_sizes
             ratios=[0.5, 1.0, 2.0],  # The ratio between height and width.
             strides=[4, 8, 16, 32, 64]),  # The strides of the anchor generator. This is consistent with the FPN feature strides. The strides will be taken as base_sizes if base_sizes is not set.
-        bbox_coder=dict(  # Config of bbox coder to encode and decode the boxes during training and testing
-            type='DeltaXYWHBBoxCoder',  # Type of bbox coder. 'DeltaXYWHBBoxCoder' is applied for most of methods. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/bbox/coder/delta_xywh_bbox_coder.py#L9 for more details.
+        bbox_coder=dict(  # Config of box coder to encode and decode the boxes during training and testing
+            type='DeltaXYWHBBoxCoder',  # Type of box coder. 'DeltaXYWHBBoxCoder' is applied for most of methods. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/box/coder/delta_xywh_bbox_coder.py#L9 for more details.
             target_means=[0.0, 0.0, 0.0, 0.0],  # The target means used to encode and decode boxes
             target_stds=[1.0, 1.0, 1.0, 1.0]),  # The standard variance used to encode and decode boxes
         loss_cls=dict(  # Config of loss function for the classification branch
@@ -139,7 +176,7 @@ model = dict(
             loss_weight=1.0)),  # Loss weight of the regression branch.
     roi_head=dict(  # RoIHead encapsulates the second stage of two-stage/cascade detectors.
         type='StandardRoIHead',  # Type of the RoI head. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/roi_heads/standard_roi_head.py#L10 for implementation.
-        bbox_roi_extractor=dict(  # RoI feature extractor for bbox regression.
+        bbox_roi_extractor=dict(  # RoI feature extractor for box regression.
             type='SingleRoIExtractor',  # Type of the RoI feature extractor, most of methods uses SingleRoIExtractor. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/roi_heads/roi_extractors/single_level.py#L10 for details.
             roi_layer=dict(  # Config of RoI Layer
                 type='RoIAlign',  # Type of RoI Layer, DeformRoIPoolingPack and ModulatedDeformRoIPoolingPack are also supported. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/ops/roi_align/roi_align.py#L79 for details.
@@ -147,15 +184,15 @@ model = dict(
                 sampling_ratio=0),  # Sampling ratio when extracting the RoI features. 0 means adaptive ratio.
             out_channels=256,  # output channels of the extracted feature.
             featmap_strides=[4, 8, 16, 32]),  # Strides of multi-scale feature maps. It should be consistent to the architecture of the backbone.
-        bbox_head=dict(  # Config of bbox head in the RoIHead.
-            type='Shared2FCBBoxHead',  # Type of the bbox head, Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/roi_heads/bbox_heads/convfc_bbox_head.py#L177 for implementation details.
-            in_channels=256,  # Input channels for bbox head. This is consistent with the out_channels in roi_extractor
+        bbox_head=dict(  # Config of box head in the RoIHead.
+            type='Shared2FCBBoxHead',  # Type of the box head, Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/models/roi_heads/bbox_heads/convfc_bbox_head.py#L177 for implementation details.
+            in_channels=256,  # Input channels for box head. This is consistent with the out_channels in roi_extractor
             fc_out_channels=1024,  # Output feature channels of FC layers.
             roi_feat_size=7,  # Size of RoI features
             num_classes=80,  # Number of classes for classification
             bbox_coder=dict(  # Box coder used in the second stage.
-                type='DeltaXYWHBBoxCoder',  # Type of bbox coder. 'DeltaXYWHBBoxCoder' is applied for most of methods.
-                target_means=[0.0, 0.0, 0.0, 0.0],  # Means used to encode and decode bbox
+                type='DeltaXYWHBBoxCoder',  # Type of box coder. 'DeltaXYWHBBoxCoder' is applied for most of methods.
+                target_means=[0.0, 0.0, 0.0, 0.0],  # Means used to encode and decode box
                 target_stds=[0.1, 0.1, 0.2, 0.2]),  # Standard variance for encoding and decoding. It is smaller since the boxes are more accurate. [0.1, 0.1, 0.2, 0.2] is a conventional setting.
             reg_class_agnostic=False,  # Whether the regression is class agnostic.
             loss_cls=dict(  # Config of loss function for the classification branch
@@ -165,7 +202,7 @@ model = dict(
             loss_bbox=dict(  # Config of loss function for the regression branch.
                 type='L1Loss',  # Type of loss, we also support many IoU Losses and smooth L1-loss, etc.
                 loss_weight=1.0)),  # Loss weight of the regression branch.
-        mask_roi_extractor=dict(  # RoI feature extractor for bbox regression.
+        mask_roi_extractor=dict(  # RoI feature extractor for box regression.
             type='SingleRoIExtractor',  # Type of the RoI feature extractor, most of methods uses SingleRoIExtractor.
             roi_layer=dict(  # Config of RoI Layer that extracts features for instance segmentation
                 type='RoIAlign',  # Type of RoI Layer, DeformRoIPoolingPack and ModulatedDeformRoIPoolingPack are also supported
@@ -186,14 +223,14 @@ model = dict(
     train_cfg = dict(  # Config of training hyperparameters for rpn and rcnn
         rpn=dict(  # Training config of rpn
             assigner=dict(  # Config of assigner
-                type='MaxIoUAssigner',  # Type of assigner, MaxIoUAssigner is used for many common detectors. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/bbox/assigners/max_iou_assigner.py#L10 for more details.
+                type='MaxIoUAssigner',  # Type of assigner, MaxIoUAssigner is used for many common detectors. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/box/assigners/max_iou_assigner.py#L10 for more details.
                 pos_iou_thr=0.7,  # IoU >= threshold 0.7 will be taken as positive samples
                 neg_iou_thr=0.3,  # IoU < threshold 0.3 will be taken as negative samples
                 min_pos_iou=0.3,  # The minimal IoU threshold to take boxes as positive samples
                 match_low_quality=True,  # Whether to match the boxes under low quality (see API doc for more details).
                 ignore_iof_thr=-1),  # IoF threshold for ignoring bboxes
             sampler=dict(  # Config of positive/negative sampler
-                type='RandomSampler',  # Type of sampler, PseudoSampler and other samplers are also supported. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/bbox/samplers/random_sampler.py#L8 for implementation details.
+                type='RandomSampler',  # Type of sampler, PseudoSampler and other samplers are also supported. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/box/samplers/random_sampler.py#L8 for implementation details.
                 num=256,  # Number of samples
                 pos_fraction=0.5,  # The ratio of positive samples in the total samples.
                 neg_pos_ub=-1,  # The upper bound of negative samples based on the number of positive samples.
@@ -210,17 +247,17 @@ model = dict(
                 type='nms',  #Type of nms
                 iou_threshold=0.7 # NMS threshold
                 ),
-            min_bbox_size=0),  # The allowed minimal bbox size
+            min_bbox_size=0),  # The allowed minimal box size
         rcnn=dict(  # The config for the roi heads.
             assigner=dict(  # Config of assigner for second stage, this is different for that in rpn
-                type='MaxIoUAssigner',  # Type of assigner, MaxIoUAssigner is used for all roi_heads for now. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/bbox/assigners/max_iou_assigner.py#L10 for more details.
+                type='MaxIoUAssigner',  # Type of assigner, MaxIoUAssigner is used for all roi_heads for now. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/box/assigners/max_iou_assigner.py#L10 for more details.
                 pos_iou_thr=0.5,  # IoU >= threshold 0.5 will be taken as positive samples
                 neg_iou_thr=0.5,  # IoU >= threshold 0.5 will be taken as positive samples
                 min_pos_iou=0.5,  # The minimal IoU threshold to take boxes as positive samples
                 match_low_quality=False,  # Whether to match the boxes under low quality (see API doc for more details).
                 ignore_iof_thr=-1),  # IoF threshold for ignoring bboxes
             sampler=dict(
-                type='RandomSampler',  # Type of sampler, PseudoSampler and other samplers are also supported. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/bbox/samplers/random_sampler.py#L8 for implementation details.
+                type='RandomSampler',  # Type of sampler, PseudoSampler and other samplers are also supported. Refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/box/samplers/random_sampler.py#L8 for implementation details.
                 num=512,  # Number of samples
                 pos_fraction=0.25,  # The ratio of positive samples in the total samples.
                 neg_pos_ub=-1,  # The upper bound of negative samples based on the number of positive samples.
@@ -239,7 +276,7 @@ model = dict(
                 type='nms',  #Type of nms
                 iou_threshold=0.7 # NMS threshold
                 ),
-            min_bbox_size=0),  # The allowed minimal bbox size
+            min_bbox_size=0),  # The allowed minimal box size
         rcnn=dict(  # The config for the roi heads.
             score_thr=0.05,  # Threshold to filter out boxes
             nms=dict(  # Config of nms in the second stage
@@ -258,7 +295,7 @@ train_pipeline = [  # Training pipeline
     dict(type='LoadImageFromFile'),  # First pipeline to load images from file path
     dict(
         type='LoadAnnotations',  # Second pipeline to load annotations for current image
-        with_bbox=True,  # Whether to use bounding bbox, True for detection
+        with_bbox=True,  # Whether to use bounding box, True for detection
         with_mask=True,  # Whether to use instance mask, True for instance segmentation
         poly2mask=False),  # Whether to convert the polygon mask to instance mask, set False for acceleration and to save memory
     dict(
@@ -385,7 +422,7 @@ data = dict(
         ))
 evaluation = dict(  # The config to build the evaluation hook, refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/evaluation/eval_hooks.py#L7 for more details.
     interval=1,  # Evaluation interval
-    metric=['bbox', 'segm'])  # Metrics used during evaluation
+    metric=['box', 'segm'])  # Metrics used during evaluation
 optimizer = dict(  # Config used to build optimizer, support all the optimizers in PyTorch whose arguments are also the same as those in PyTorch
     type='SGD',  # Type of optimizers, refer to https://github.com/open-mmlab/mmdetection/blob/master/mmdet/core/optimizer/default_constructor.py#L13 for more details
     lr=0.02,  # Learning rate of optimizers, see detail usages of the parameters in the documentaion of PyTorch
@@ -422,9 +459,12 @@ work_dir = 'work_dir'  # Directory to save the model checkpoints and logs for th
 ### Ignore some fields in the base configs
 
 Sometimes, you may set `_delete_=True` to ignore some of fields in base configs.
-You may refer to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#inherit-from-base-config-with-ignored-fields) for simple inllustration.
+You may refer
+to [mmcv](https://mmcv.readthedocs.io/en/latest/utils.html#inherit-from-base-config-with-ignored-fields)
+for simple inllustration.
 
-In MMDetection, for example, to change the backbone of Mask R-CNN with the following config.
+In MMDetection, for example, to change the backbone of Mask R-CNN with the
+following config.
 
 ```python
 model = dict(
@@ -481,13 +521,19 @@ model = dict(
     neck=dict(...))
 ```
 
-The `_delete_=True` would replace all old keys in `backbone` field with new keys.
+The `_delete_=True` would replace all old keys in `backbone` field with new
+keys.
 
 ### Use intermediate variables in configs
 
-Some intermediate variables are used in the configs files, like `train_pipeline`/`test_pipeline` in datasets.
-It's worth noting that when modifying intermediate variables in the children configs, user need to pass the intermediate variables into corresponding fields again.
-For example, we would like to use multi scale strategy to train a Mask R-CNN. `train_pipeline`/`test_pipeline` are intermediate variable we would like modify.
+Some intermediate variables are used in the configs files,
+like `train_pipeline`/`test_pipeline` in datasets.
+It's worth noting that when modifying intermediate variables in the children
+configs, user need to pass the intermediate variables into corresponding fields
+again.
+For example, we would like to use multi scale strategy to train a Mask
+R-CNN. `train_pipeline`/`test_pipeline` are intermediate variable we would like
+modify.
 
 ```python
 _base_ = './mask_rcnn_r50_fpn_1x_coco.py'
@@ -529,4 +575,5 @@ data = dict(
     test=dict(pipeline=test_pipeline))
 ```
 
-We first define the new `train_pipeline`/`test_pipeline` and pass them into `data`.
+We first define the new `train_pipeline`/`test_pipeline` and pass them
+into `data`.

@@ -10,7 +10,7 @@ from .builder import DATASETS
 from .coco import CocoDataset
 
 
-@DATASETS.register_module()
+@DATASETS._register()
 class ConcatDataset(_ConcatDataset):
     """A wrapper of concatenated dataset.
 
@@ -124,7 +124,7 @@ class ConcatDataset(_ConcatDataset):
             return eval_results
 
 
-@DATASETS.register_module()
+@DATASETS._register()
 class RepeatDataset(object):
     """A wrapper of repeated dataset.
 
@@ -168,7 +168,7 @@ class RepeatDataset(object):
 
 
 # Modified from https://github.com/facebookresearch/detectron2/blob/41d475b75a230221e21d9cac5d69655e3415e3a4/detectron2/data/samplers/distributed_sampler.py#L57 # noqa
-@DATASETS.register_module()
+@DATASETS._register()
 class ClassBalancedDataset(object):
     """A wrapper of repeated dataset with repeat factor.
 

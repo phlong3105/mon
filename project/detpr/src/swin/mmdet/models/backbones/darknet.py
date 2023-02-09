@@ -52,7 +52,7 @@ class ResBlock(nn.Module):
         return out
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class Darknet(nn.Module):
     """Darknet backbone.
 

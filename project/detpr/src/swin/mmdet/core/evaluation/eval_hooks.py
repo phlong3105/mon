@@ -5,10 +5,9 @@ from math import inf
 import mmcv
 import torch.distributed as dist
 from mmcv.runner import Hook
+from mmdet.utils import get_root_logger
 from torch.nn.modules.batchnorm import _BatchNorm
 from torch.utils.data import DataLoader
-
-from mmdet.utils import get_root_logger
 
 
 class EvalHook(Hook):
@@ -29,7 +28,7 @@ class EvalHook(Hook):
             the best checkpoint during evaluation. The information about best
             checkpoint would be save in best.json.
             Options are the evaluation metrics to the test dataset. e.g.,
-            ``bbox_mAP``, ``segm_mAP`` for bbox detection and instance
+            ``bbox_mAP``, ``segm_mAP`` for box detection and instance
             segmentation. ``AR@100`` for proposal recall. If ``save_best`` is
             ``auto``, the first key will be used. The interval of
             ``CheckpointHook`` should device EvalHook. Default: None.
@@ -40,29 +39,34 @@ class EvalHook(Hook):
         **eval_kwargs: Evaluation arguments fed into the evaluate function of
             the dataset.
     """
-
+    
     rule_map = {'greater': lambda x, y: x > y, 'less': lambda x, y: x < y}
     init_value_map = {'greater': -inf, 'less': inf}
     greater_keys = ['mAP', 'AR']
     less_keys = ['loss']
-
-    def __init__(self,
-                 dataloader,
-                 start=None,
-                 interval=1,
-                 by_epoch=True,
-                 save_best=None,
-                 rule=None,
-                 **eval_kwargs):
+    
+    def __init__(
+        self,
+        dataloader,
+        start=None,
+        interval=1,
+        by_epoch=True,
+        save_best=None,
+        rule=None,
+        **eval_kwargs
+    ):
         if not isinstance(dataloader, DataLoader):
-            raise TypeError('dataloader must be a pytorch DataLoader, but got'
-                            f' {type(dataloader)}')
+            raise TypeError(
+                'dataloader must be a pytorch DataLoader, but got'
+                f' {type(dataloader)}'
+            )
         if not interval > 0:
             raise ValueError(f'interval must be positive, but got {interval}')
         if start is not None and start < 0:
             warnings.warn(
                 f'The evaluation start epoch {start} is smaller than 0, '
-                f'use 0 instead', UserWarning)
+                f'use 0 instead', UserWarning
+            )
             start = 0
         self.dataloader = dataloader
         self.interval = interval
@@ -72,12 +76,12 @@ class EvalHook(Hook):
         self.save_best = save_best
         self.eval_kwargs = eval_kwargs
         self.initial_epoch_flag = True
-
+        
         self.logger = get_root_logger()
-
+        
         if self.save_best is not None:
             self._init_rule(rule, self.save_best)
-
+    
     def _init_rule(self, rule, key_indicator):
         """Initialize rule, key_indicator, comparison_func, and best score.
 
@@ -87,9 +91,11 @@ class EvalHook(Hook):
                 comparison rule.
         """
         if rule not in self.rule_map and rule is not None:
-            raise KeyError(f'rule must be greater, less or None, '
-                           f'but got {rule}.')
-
+            raise KeyError(
+                f'rule must be greater, less or None, '
+                f'but got {rule}.'
+            )
+        
         if rule is None:
             if key_indicator != 'auto':
                 if any(key in key_indicator for key in self.greater_keys):
@@ -97,21 +103,23 @@ class EvalHook(Hook):
                 elif any(key in key_indicator for key in self.less_keys):
                     rule = 'less'
                 else:
-                    raise ValueError(f'Cannot infer the rule for key '
-                                     f'{key_indicator}, thus a specific rule '
-                                     f'must be specified.')
+                    raise ValueError(
+                        f'Cannot infer the rule for key '
+                        f'{key_indicator}, thus a specific rule '
+                        f'must be specified.'
+                    )
         self.rule = rule
         self.key_indicator = key_indicator
         if self.rule is not None:
             self.compare_func = self.rule_map[self.rule]
-
+    
     def before_run(self, runner):
         if self.save_best is not None:
             if runner.meta is None:
                 warnings.warn('runner.meta is None. Creating a empty one.')
                 runner.meta = dict()
             runner.meta.setdefault('hook_msgs', dict())
-
+    
     def before_train_epoch(self, runner):
         """Evaluate the model only at the start of training."""
         if not self.initial_epoch_flag:
@@ -119,7 +127,7 @@ class EvalHook(Hook):
         if self.start is not None and runner.epoch >= self.start:
             self.after_train_epoch(runner)
         self.initial_epoch_flag = False
-
+    
     def evaluation_flag(self, runner):
         """Judge whether to perform_evaluation after this epoch.
 
@@ -138,7 +146,7 @@ class EvalHook(Hook):
             if (runner.epoch + 1 - self.start) % self.interval:
                 return False
         return True
-
+    
     def after_train_epoch(self, runner):
         if not self.by_epoch or not self.evaluation_flag(runner):
             return
@@ -147,7 +155,7 @@ class EvalHook(Hook):
         key_score = self.evaluate(runner, results)
         if self.save_best:
             self.save_best_checkpoint(runner, key_score)
-
+    
     def after_train_iter(self, runner):
         if self.by_epoch or not self.every_n_iters(runner, self.interval):
             return
@@ -156,10 +164,11 @@ class EvalHook(Hook):
         key_score = self.evaluate(runner, results)
         if self.save_best:
             self.save_best_checkpoint(runner, key_score)
-
+    
     def save_best_checkpoint(self, runner, key_score):
         best_score = runner.meta['hook_msgs'].get(
-            'best_score', self.init_value_map[self.rule])
+            'best_score', self.init_value_map[self.rule]
+        )
         if self.compare_func(key_score, best_score):
             best_score = key_score
             runner.meta['hook_msgs']['best_score'] = best_score
@@ -167,14 +176,18 @@ class EvalHook(Hook):
             runner.meta['hook_msgs']['best_ckpt'] = last_ckpt
             mmcv.symlink(
                 last_ckpt,
-                osp.join(runner.work_dir, f'best_{self.key_indicator}.pth'))
+                osp.join(runner.work_dir, f'best_{self.key_indicator}.pth')
+            )
             time_stamp = runner.epoch + 1 if self.by_epoch else runner.iter + 1
-            self.logger.info(f'Now best checkpoint is epoch_{time_stamp}.pth.'
-                             f'Best {self.key_indicator} is {best_score:0.4f}')
-
+            self.logger.info(
+                f'Now best checkpoint is epoch_{time_stamp}.pth.'
+                f'Best {self.key_indicator} is {best_score:0.4f}'
+            )
+    
     def evaluate(self, runner, results):
         eval_res = self.dataloader.dataset.evaluate(
-            results, logger=runner.logger, **self.eval_kwargs)
+            results, logger=runner.logger, **self.eval_kwargs
+        )
         for name, val in eval_res.items():
             runner.log_buffer.output[name] = val
         runner.log_buffer.ready = True
@@ -208,7 +221,7 @@ class DistEvalHook(EvalHook):
             the best checkpoint during evaluation. The information about best
             checkpoint would be save in best.json.
             Options are the evaluation metrics to the test dataset. e.g.,
-            ``bbox_mAP``, ``segm_mAP`` for bbox detection and instance
+            ``bbox_mAP``, ``segm_mAP`` for box detection and instance
             segmentation. ``AR@100`` for proposal recall. If ``save_best`` is
             ``auto``, the first key will be used. The interval of
             ``CheckpointHook`` should device EvalHook. Default: None.
@@ -220,18 +233,20 @@ class DistEvalHook(EvalHook):
         **eval_kwargs: Evaluation arguments fed into the evaluate function of
             the dataset.
     """
-
-    def __init__(self,
-                 dataloader,
-                 start=None,
-                 interval=1,
-                 by_epoch=True,
-                 tmpdir=None,
-                 gpu_collect=False,
-                 save_best=None,
-                 rule=None,
-                 broadcast_bn_buffer=True,
-                 **eval_kwargs):
+    
+    def __init__(
+        self,
+        dataloader,
+        start=None,
+        interval=1,
+        by_epoch=True,
+        tmpdir=None,
+        gpu_collect=False,
+        save_best=None,
+        rule=None,
+        broadcast_bn_buffer=True,
+        **eval_kwargs
+    ):
         super().__init__(
             dataloader,
             start=start,
@@ -239,11 +254,12 @@ class DistEvalHook(EvalHook):
             by_epoch=by_epoch,
             save_best=save_best,
             rule=rule,
-            **eval_kwargs)
+            **eval_kwargs
+        )
         self.broadcast_bn_buffer = broadcast_bn_buffer
         self.tmpdir = tmpdir
         self.gpu_collect = gpu_collect
-
+    
     def _broadcast_bn_buffer(self, runner):
         # Synchronization of BatchNorm's buffer (running_mean
         # and running_var) is not supported in the DDP of pytorch,
@@ -253,18 +269,20 @@ class DistEvalHook(EvalHook):
         if self.broadcast_bn_buffer:
             model = runner.model
             for name, module in model.named_modules():
-                if isinstance(module,
-                              _BatchNorm) and module.track_running_stats:
+                if isinstance(
+                    module,
+                    _BatchNorm
+                ) and module.track_running_stats:
                     dist.broadcast(module.running_var, 0)
                     dist.broadcast(module.running_mean, 0)
-
+    
     def after_train_epoch(self, runner):
         if not self.by_epoch or not self.evaluation_flag(runner):
             return
-
+        
         if self.broadcast_bn_buffer:
             self._broadcast_bn_buffer(runner)
-
+        
         from mmdet.apis import multi_gpu_test
         tmpdir = self.tmpdir
         if tmpdir is None:
@@ -273,20 +291,21 @@ class DistEvalHook(EvalHook):
             runner.model,
             self.dataloader,
             tmpdir=tmpdir,
-            gpu_collect=self.gpu_collect)
+            gpu_collect=self.gpu_collect
+        )
         if runner.rank == 0:
             print('\n')
             key_score = self.evaluate(runner, results)
             if self.save_best:
                 self.save_best_checkpoint(runner, key_score)
-
+    
     def after_train_iter(self, runner):
         if self.by_epoch or not self.every_n_iters(runner, self.interval):
             return
-
+        
         if self.broadcast_bn_buffer:
             self._broadcast_bn_buffer(runner)
-
+        
         from mmdet.apis import multi_gpu_test
         tmpdir = self.tmpdir
         if tmpdir is None:
@@ -295,7 +314,8 @@ class DistEvalHook(EvalHook):
             runner.model,
             self.dataloader,
             tmpdir=tmpdir,
-            gpu_collect=self.gpu_collect)
+            gpu_collect=self.gpu_collect
+        )
         if runner.rank == 0:
             print('\n')
             key_score = self.evaluate(runner, results)

@@ -13,14 +13,15 @@ import cv2
 import numpy as np
 
 import mon
-from supr import constant as c, rmoi
+from supr import rmoi
 from supr.data import base, hand
+from supr.globals import MovingState, OBJECTS
 
 
 # region Product
 
 # noinspection PyMethodOverriding
-@c.OBJECT.register(name="product")
+@OBJECTS.register(name="product")
 class Product(base.MovingObject):
     """The retail product class.
     
@@ -42,7 +43,6 @@ class Product(base.MovingObject):
     ):
         """Update the current state of the road_objects. One recommendation of
         the state diagram is as follows:
-
         _____________      _____________      ____________      ___________      ________
         | Candidate | ---> | Confirmed | ---> | Counting | ---> | Counted | ---> | Exit |
         -------------      -------------      ------------      -----------      --------
@@ -50,14 +50,14 @@ class Product(base.MovingObject):
               |_________________|___________________________________________________|
                     (mark by a tracker when road_objects's max age > threshold)
         """
-        roi = next((roi for roi in rois if roi.uid == self.current.roi_uid), None)
+        roi = next((roi for roi in rois if roi.id_ == self.current.roi_id), None)
         if roi is None:
             return
         
         # From Candidate --> Confirmed
         if self.is_candidate:
             entering_distance = roi.is_box_in_roi(
-                box              = self.current.box,
+                bbox             = self.current.bbox,
                 compute_distance = True,
             )
             if (
@@ -65,7 +65,7 @@ class Product(base.MovingObject):
                 and entering_distance >= self.min_entering_distance
                 and self.traveled_distance >= self.min_traveled_distance
             ):
-                self.moving_state = c.MovingState.Confirmed
+                self.moving_state = MovingState.CONFIRMED
             
         # From Confirmed --> Counting
         elif self.is_confirmed:
@@ -88,23 +88,23 @@ class Product(base.MovingObject):
                 else:
                     self.untouches = 0
 
-            if roi.is_box_in_roi(box=self.current.box) <= 0:
+            if roi.is_box_in_roi(bbox=self.current.bbox) <= 0:
                 if self.untouches > self.max_untouches_age:
-                    self.moving_state = c.MovingState.Counted
+                    self.moving_state = MovingState.COUNTED
                 # elif (roi.is_box_in_or_touch_roi(box_xyxy=self.first_box) > 0 or
                 #      self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance):
                 #    pass
                     # self.moving_state = MovingState.Counted
                 else:
-                    self.moving_state = c.MovingState.Counting
+                    self.moving_state = MovingState.COUNTING
             
         # From Counting --> ToBeCounted
         elif self.is_counting:
             if (
-                roi.is_box_center_in_roi(box=self.current.box) < 0
+                roi.is_box_center_in_roi(bbox=self.current.bbox) < 0
                 or self.time_since_update >= self.max_age
             ):
-                self.moving_state = c.MovingState.ToBeCounted
+                self.moving_state = MovingState.TO_BE_COUNTED
 
         # From ToBeCounted --> Counted
         # Perform when counting the vehicle
@@ -112,13 +112,10 @@ class Product(base.MovingObject):
         # From Counted --> Exiting
         elif self.is_counted:
             if (
-                roi.is_box_center_in_roi(
-                    box              = self.current.box,
-                    compute_distance = True
-                ) <= 0
+                roi.is_box_center_in_roi(bbox=self.current.bbox, compute_distance=True) <= 0
                 or self.time_since_update >= Product.max_age
             ):
-                self.moving_state = c.MovingState.Exiting
+                self.moving_state = MovingState.EXITING
         
         # print(self.untouches, self.moving_state)
         

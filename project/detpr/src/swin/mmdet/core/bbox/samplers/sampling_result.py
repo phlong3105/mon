@@ -13,7 +13,8 @@ class SamplingResult(util_mixins.NiceRepr):
         >>> print(f'self = {self}')
         self = <SamplingResult({
             'neg_bboxes': torch.Size([12, 4]),
-            'neg_inds': tensor([ 0,  1,  2,  4,  5,  6,  7,  8,  9, 10, 11, 12]),
+            'neg_inds': tensor([ 0,  1,  2,  4,  5,  6,  7,  8,  9, 10, 11,
+            12]),
             'num_gts': 4,
             'pos_assigned_gt_inds': tensor([], dtype=torch.int64),
             'pos_bboxes': torch.Size([0, 4]),
@@ -21,19 +22,21 @@ class SamplingResult(util_mixins.NiceRepr):
             'pos_is_gt': tensor([], dtype=torch.uint8)
         })>
     """
-
-    def __init__(self, pos_inds, neg_inds, bboxes, gt_bboxes, assign_result,
-                 gt_flags):
+    
+    def __init__(
+        self, pos_inds, neg_inds, bboxes, gt_bboxes, assign_result,
+        gt_flags
+    ):
         self.pos_inds = pos_inds
         self.neg_inds = neg_inds
         self.pos_bboxes = bboxes[pos_inds]
         self.neg_bboxes = bboxes[neg_inds]
         self.pos_is_gt = gt_flags[pos_inds]
-
+        
         self.num_gts = gt_bboxes.shape[0]
         self.pos_assigned_gt_inds = assign_result.gt_inds[pos_inds] - 1
         self.assign_result = assign_result
-
+        
         if gt_bboxes.numel() == 0:
             # hack for index error case
             assert self.pos_assigned_gt_inds.numel() == 0
@@ -41,19 +44,19 @@ class SamplingResult(util_mixins.NiceRepr):
         else:
             if len(gt_bboxes.shape) < 2:
                 gt_bboxes = gt_bboxes.view(-1, 4)
-
+            
             self.pos_gt_bboxes = gt_bboxes[self.pos_assigned_gt_inds, :]
-
+        
         if assign_result.labels is not None:
             self.pos_gt_labels = assign_result.labels[pos_inds]
         else:
             self.pos_gt_labels = None
-
+    
     @property
     def bboxes(self):
         """torch.Tensor: concatenated positive and negative boxes"""
         return torch.cat([self.pos_bboxes, self.neg_bboxes])
-
+    
     def to(self, device):
         """Change the device of the data inplace.
 
@@ -68,7 +71,7 @@ class SamplingResult(util_mixins.NiceRepr):
             if isinstance(value, torch.Tensor):
                 _dict[key] = value.to(device)
         return self
-
+    
     def __nice__(self):
         data = self.info.copy()
         data['pos_bboxes'] = data.pop('pos_bboxes').shape
@@ -76,20 +79,20 @@ class SamplingResult(util_mixins.NiceRepr):
         parts = [f"'{k}': {v!r}" for k, v in sorted(data.items())]
         body = '    ' + ',\n    '.join(parts)
         return '{\n' + body + '\n}'
-
+    
     @property
     def info(self):
         """Returns a dictionary of info about the object."""
         return {
-            'pos_inds': self.pos_inds,
-            'neg_inds': self.neg_inds,
-            'pos_bboxes': self.pos_bboxes,
-            'neg_bboxes': self.neg_bboxes,
-            'pos_is_gt': self.pos_is_gt,
-            'num_gts': self.num_gts,
+            'pos_inds'            : self.pos_inds,
+            'neg_inds'            : self.neg_inds,
+            'pos_bboxes'          : self.pos_bboxes,
+            'neg_bboxes'          : self.neg_bboxes,
+            'pos_is_gt'           : self.pos_is_gt,
+            'num_gts'             : self.num_gts,
             'pos_assigned_gt_inds': self.pos_assigned_gt_inds,
         }
-
+    
     @classmethod
     def random(cls, rng=None, **kwargs):
         """
@@ -98,9 +101,9 @@ class SamplingResult(util_mixins.NiceRepr):
             kwargs (keyword arguments):
                 - num_preds: number of predicted boxes
                 - num_gts: number of true boxes
-                - p_ignore (float): probability of a predicted bbox assinged to \
+                - p_ignore (float): probability of a predicted box assinged to \
                     an ignored truth.
-                - p_assigned (float): probability of a predicted bbox not being \
+                - p_assigned (float): probability of a predicted box not being \
                     assigned.
                 - p_use_label (float | bool): with labels or not.
 
@@ -112,42 +115,43 @@ class SamplingResult(util_mixins.NiceRepr):
             >>> self = SamplingResult.random()
             >>> print(self.__dict__)
         """
-        from mmdet.core.bbox.samplers.random_sampler import RandomSampler
-        from mmdet.core.bbox.assigners.assign_result import AssignResult
-        from mmdet.core.bbox import demodata
+        from mmdet.core.box.samplers.random_sampler import RandomSampler
+        from mmdet.core.box.assigners.assign_result import AssignResult
+        from mmdet.core.box import demodata
         rng = demodata.ensure_rng(rng)
-
+        
         # make probabalistic?
         num = 32
         pos_fraction = 0.5
         neg_pos_ub = -1
-
+        
         assign_result = AssignResult.random(rng=rng, **kwargs)
-
+        
         # Note we could just compute an assignment
         bboxes = demodata.random_boxes(assign_result.num_preds, rng=rng)
         gt_bboxes = demodata.random_boxes(assign_result.num_gts, rng=rng)
-
+        
         if rng.rand() > 0.2:
             # sometimes algorithms squeeze their data, be robust to that
             gt_bboxes = gt_bboxes.squeeze()
             bboxes = bboxes.squeeze()
-
+        
         if assign_result.labels is None:
             gt_labels = None
         else:
             gt_labels = None  # todo
-
+        
         if gt_labels is None:
             add_gt_as_proposals = False
         else:
             add_gt_as_proposals = True  # make probabalistic?
-
+        
         sampler = RandomSampler(
             num,
             pos_fraction,
             neg_pos_ub=neg_pos_ub,
             add_gt_as_proposals=add_gt_as_proposals,
-            rng=rng)
+            rng=rng
+        )
         self = sampler.sample(assign_result, bboxes, gt_bboxes, gt_labels)
         return self

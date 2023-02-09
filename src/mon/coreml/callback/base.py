@@ -12,12 +12,15 @@ __all__ = [
     "BatchSizeFinder", "Callback", "Checkpoint", "DeviceStatsMonitor",
     "EarlyStopping", "GradientAccumulationScheduler", "LambdaCallback",
     "LearningRateFinder", "LearningRateMonitor", "ModelPruning", "ModelSummary",
-    "QuantizationAwareTraining", "StochasticWeightAveraging", "Timer",
+    "ProgressBarBase", "QuantizationAwareTraining", "StochasticWeightAveraging",
+    "TQDMProgressBar", "Timer", "TuneReportCallback",
+    "TuneReportCheckpointCallback",
 ]
 
+import ray.tune.integration.pytorch_lightning as ray
 from lightning.pytorch import callbacks
 
-from mon.coreml import constant
+from mon.globals import CALLBACKS
 
 # region Callback
 
@@ -35,22 +38,28 @@ LearningRateFinder            = callbacks.LearningRateFinder
 LearningRateMonitor           = callbacks.LearningRateMonitor
 ModelPruning                  = callbacks.ModelPruning
 ModelSummary                  = callbacks.ModelSummary
+ProgressBarBase               = callbacks.ProgressBarBase
 QuantizationAwareTraining     = callbacks.QuantizationAwareTraining
 StochasticWeightAveraging     = callbacks.StochasticWeightAveraging
 Timer                         = callbacks.Timer
+TQDMProgressBar               = callbacks.TQDMProgressBar
+TuneReportCallback            = ray.TuneReportCallback
+TuneReportCheckpointCallback  = ray.TuneReportCheckpointCallback
 
-constant.CALLBACK.register(name="backbone_finetuning",             module=BackboneFinetuning)
-constant.CALLBACK.register(name="batch_size_finder",               module=BatchSizeFinder)
-constant.CALLBACK.register(name="device_stats_monitor",            module=DeviceStatsMonitor)
-constant.CALLBACK.register(name="early_stopping",                  module=EarlyStopping)
-constant.CALLBACK.register(name="gradient_accumulation_scheduler", module=GradientAccumulationScheduler)
-constant.CALLBACK.register(name="learning_rate_finder",            module=LearningRateFinder)
-constant.CALLBACK.register(name="learning_rate_monitor",           module=LearningRateMonitor)
-constant.CALLBACK.register(name="model_pruning",                   module=ModelPruning)
-constant.CALLBACK.register(name="model_summary",                   module=ModelSummary)
-constant.CALLBACK.register(name="quantization_aware_training",     module=QuantizationAwareTraining)
-constant.CALLBACK.register(name="stochastic_weight_averaging",     module=StochasticWeightAveraging)
-constant.CALLBACK.register(name="timer",                           module=Timer)
-# CALLBACKS.register(name="tune_report_callback",            module=TuneReportCallback)
+CALLBACKS.register(name="backbone_finetuning"            , module=BackboneFinetuning)
+CALLBACKS.register(name="batch_size_finder"              , module=BatchSizeFinder)
+CALLBACKS.register(name="device_stats_monitor"           , module=DeviceStatsMonitor)
+CALLBACKS.register(name="early_stopping"                 , module=EarlyStopping)
+CALLBACKS.register(name="gradient_accumulation_scheduler", module=GradientAccumulationScheduler)
+CALLBACKS.register(name="learning_rate_finder"           , module=LearningRateFinder)
+CALLBACKS.register(name="learning_rate_monitor"          , module=LearningRateMonitor)
+CALLBACKS.register(name="model_pruning"                  , module=ModelPruning)
+CALLBACKS.register(name="model_summary"                  , module=ModelSummary)
+CALLBACKS.register(name="quantization_aware_training"    , module=QuantizationAwareTraining)
+CALLBACKS.register(name="stochastic_weight_averaging"    , module=StochasticWeightAveraging)
+CALLBACKS.register(name="timer"                          , module=Timer)
+CALLBACKS.register(name="tqdm_progress_bar"              , module=TQDMProgressBar)
+CALLBACKS.register(name="tune_report_callback"           , module=TuneReportCallback)
+CALLBACKS.register(name="tune_report_checkpoint_callback", module=TuneReportCheckpointCallback)
 
 # endregion

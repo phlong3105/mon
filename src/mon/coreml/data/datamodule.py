@@ -10,18 +10,14 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import Any, Callable
 
 import lightning
 from torch.utils import data
 
-from mon import core
-from mon.coreml.data import label
-
-if TYPE_CHECKING:
-    from mon.coreml.typing import (
-        ModelPhaseType, TransformsType, CallableType, Ints, PathType, Strs,
-    )
+from mon.coreml.data import dataset, label
+from mon.foundation import builtins, console, rich
+from mon.globals import ModelPhase
 
 
 # region DataModule
@@ -29,14 +25,13 @@ if TYPE_CHECKING:
 class DataModule(lightning.LightningDataModule, ABC):
     """The base class for all datamodules.
     
+    See Also: :mod:`lightning.LightningDataModule`.
+    
+    Attributes:
+        dataset_kwargs: A dictionary containing datasets' default arguments.
+            Example usage: train = Dataset(split='train', **self.dataset_kwargs)
+        
     Args:
-        name: A datamodule's name.
-        root: A root directory where the data is stored.
-        shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
-        transform: Transformations performing on the input.
-        target_transform: Transformations performing on the target.
-        transforms: Transformations performing on both the input and target.
         batch_size: The number of samples in one forward pass. Defaults to 1.
         devices: A list of devices to use. Defaults to 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
@@ -48,47 +43,52 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     def __init__(
         self,
-        name            : str,
-        root            : PathType,
-        shape           : Ints                  = (3, 256, 256),
-        transform       : TransformsType | None = None,
-        target_transform: TransformsType | None = None,
-        transforms      : TransformsType | None = None,
-        batch_size      : int                   = 1,
-        devices         : Ints | Strs           = 0,
-        shuffle         : bool                  = True,
-        collate_fn      : CallableType   | None = None,
-        verbose         : bool                  = True,
+        datasets  : Any = None,
+        batch_size: int = 1,
+        devices   : int | str | list[int | str] = 0,
+        shuffle   : bool     = True,
+        collate_fn: Callable = None,
+        verbose   : bool     = True,
         *args, **kwargs
     ):
         super().__init__()
-        self.name             = name
-        self.root             = core.Path(root)
-        self.shape            = shape
-        self.transform        = transform
-        self.target_transform = target_transform
-        self.transforms       = transforms
-        self.batch_size       = batch_size
-        self.devices          = devices
-        self.shuffle          = shuffle
-        self.collate_fn       = collate_fn
-        self.verbose          = verbose
-        self.dataset_kwargs   = kwargs
-        self.train            = None
-        self.val              = None
-        self.test             = None
-        self.predict          = None
-        self.classlabels      = None
+        self.batch_size     = batch_size
+        self.devices        = devices
+        self.shuffle        = shuffle
+        self.collate_fn     = collate_fn
+        self.verbose        = verbose
+        self.dataset_kwargs = kwargs | {
+            "verbose": self.verbose,
+        }
+
+        train, val, test, predict = None, None, None, None
+        if isinstance(datasets, dict):
+            train   = datasets.pop("train")   if "train"   in datasets else None
+            val     = datasets.pop("val")     if "val"     in datasets else None
+            test    = datasets.pop("test")    if "test"    in datasets else None
+            predict = datasets.pop("predict") if "predict" in datasets else None
+            self.dataset_kwargs = kwargs | datasets
+        elif isinstance(datasets, dataset.Dataset):
+            train   = datasets
+            val     = datasets
+            test    = datasets
+            predict = datasets
         
+        self.train       = train
+        self.val         = val
+        self.test        = test
+        self.predict     = predict
+        self.classlabels = None
+    
     @property
     def devices(self) -> list:
         """The list of devices."""
         return self._devices
-
+    
     @devices.setter
-    def devices(self, devices: Ints | Strs):
-        self._devices = core.to_list(devices)
-
+    def devices(self, devices: int | str | list[int | str]):
+        self._devices = builtins.to_list(devices)
+    
     @property
     def num_classes(self) -> int:
         """The number of classes in the dataset."""
@@ -103,7 +103,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         """
         return 4 * len(self.devices)
         # return 4  # os.cpu_count()
-
+    
     @property
     def train_dataloader(self) -> data.DataLoader | None:
         """Returns a :class:`torch.utils.data.DataLoader` object if
@@ -118,11 +118,11 @@ class DataModule(lightning.LightningDataModule, ABC):
                 pin_memory         = True,
                 drop_last          = False,
                 collate_fn         = self.collate_fn,
-                # prefetch_factor    = 4,
+                # prefetch_factor  = 4,
                 persistent_workers = True,
             )
         return None
-
+    
     @property
     def val_dataloader(self) -> data.DataLoader | None:
         """Returns a :class:`torch.utils.data.DataLoader` object if
@@ -137,11 +137,11 @@ class DataModule(lightning.LightningDataModule, ABC):
                 pin_memory         = True,
                 drop_last          = False,
                 collate_fn         = self.collate_fn,
-                # prefetch_factor    = 4,
+                # prefetch_factor  = 4,
                 persistent_workers = True,
             )
         return None
-
+    
     @property
     def test_dataloader(self) -> data.DataLoader | None:
         """Returns a :class:`torch.utils.data.DataLoader` object if
@@ -156,11 +156,11 @@ class DataModule(lightning.LightningDataModule, ABC):
                 pin_memory         = True,
                 drop_last          = False,
                 collate_fn         = self.collate_fn,
-                # prefetch_factor    = 4,
+                # prefetch_factor  = 4,
                 persistent_workers = True,
             )
         return None
-
+    
     @property
     def predict_dataloader(self):
         """Returns a :class:`torch.utils.data.DataLoader` object if
@@ -175,7 +175,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 pin_memory         = True,
                 drop_last          = True,
                 collate_fn         = self.collate_fn,
-                # prefetch_factor    = 4,
+                # prefetch_factor  = 4,
                 persistent_workers = True,
             )
         return None
@@ -190,7 +190,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         pass
     
     @abstractmethod
-    def setup(self, phase: ModelPhaseType | None = None):
+    def setup(self, phase: ModelPhase | str | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
@@ -207,25 +207,24 @@ class DataModule(lightning.LightningDataModule, ABC):
                 Defaults to None.
         """
         pass
-
+    
     @abstractmethod
-    def load_classlabels(self):
+    def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass
-        
+    
     def summarize(self):
         """Print a summary."""
-        table = core.rich.table.Table(header_style="bold magenta")
+        table = rich.table.Table(header_style="bold magenta")
         table.add_column(" ", style="dim")
         table.add_column("Name", justify="left", no_wrap=True)
         table.add_column("Desc")
-        table.add_row("1", "train",       f"{len(self.train)              if self.train       is not None else None}")
-        table.add_row("2", "val",         f"{len(self.val)                if self.val         is not None else None}")
-        table.add_row("3", "test",        f"{len(self.test)               if self.test        is not None else None}")
+        table.add_row("1", "train",       f"{len(self.train) if self.train is not None else None}")
+        table.add_row("2", "val",         f"{len(self.val) if self.val is not None else None}")
+        table.add_row("3", "test",        f"{len(self.test) if self.test is not None else None}")
         table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
         table.add_row("5", "batch_size",  f"{self.batch_size}")
-        table.add_row("6", "shape",       f"{self.shape}")
-        table.add_row("7", "num_workers", f"{self.num_workers}")
-        core.console.log(table)
+        table.add_row("6", "num_workers", f"{self.num_workers}")
+        console.log(table)
 
 # endregion

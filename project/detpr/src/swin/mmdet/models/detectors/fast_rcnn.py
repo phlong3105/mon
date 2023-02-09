@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class FastRCNN(TwoStageDetector):
     """Implementation of `Fast R-CNN <https://arxiv.org/abs/1504.08083>`_"""
 

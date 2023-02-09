@@ -97,7 +97,7 @@ class LastConv(Transition):
         return self.conv_out(inputs[-1])
 
 
-@NECKS.register_module()
+@NECKS._register()
 class FPG(nn.Module):
     """FPG.
 

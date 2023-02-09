@@ -7,7 +7,7 @@ from .resnet import ResNet
 from .resnext import Bottleneck
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class RegNet(ResNet):
     """RegNet backbone.
 

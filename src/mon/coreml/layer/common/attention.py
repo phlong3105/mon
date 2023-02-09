@@ -19,24 +19,26 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops import misc as torchvision_misc
 
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, conv, linear, normalization, pooling,
 )
-from mon.coreml.typing import Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.globals import LAYERS
 
 
 # region Channel Attention
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
     """Squeeze and Excite layer from the paper "Squeeze and Excitation
     Networks" (https://arxiv.org/pdf/1709.01507.pdf).
     
     References:
-        https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
-        https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
+        https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and
+        -excitation-block-in-pytorch
+        https://github.com/moskomule/senet.pytorch/blob/master/senet
+        /se_module.py
     """
     
     def __init__(
@@ -46,14 +48,13 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
         bias           : bool = False,
         device         : Any  = None,
         dtype          : Any  = None,
-        *args, **kwargs,
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)  # squeeze
         self.excitation = torch.nn.Sequential(
             conv.Conv2d(
                 in_channels  = channels,
-                out_channels = channels // reduction_ratio,
+                out_channels = channels  // reduction_ratio,
                 kernel_size  = 1,
                 stride       = 1,
                 bias         = bias,
@@ -62,7 +63,7 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
             ),
             activation.ReLU(inplace=True),
             conv.Conv2d(
-                in_channels  = channels // reduction_ratio,
+                in_channels  = channels  // reduction_ratio,
                 out_channels = channels,
                 kernel_size  = 1,
                 stride       = 1,
@@ -84,14 +85,16 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
     """Squeeze and Excite layer from the paper "Squeeze and Excitation
     Networks" (https://arxiv.org/pdf/1709.01507.pdf).
     
     References:
-        https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
-        https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
+        https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and
+        -excitation-block-in-pytorch
+        https://github.com/moskomule/senet.pytorch/blob/master/senet
+        /se_module.py
     """
     
     def __init__(
@@ -101,21 +104,20 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
         bias           : bool = False,
         device         : Any  = None,
         dtype          : Any  = None,
-        *args, **kwargs,
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)  # squeeze
         self.excitation = torch.nn.Sequential(
             linear.Linear(
                 in_features  = channels,
-                out_features = channels // reduction_ratio,
+                out_features = channels  // reduction_ratio,
                 bias         = bias,
                 device       = device,
                 dtype        = dtype,
             ),
             activation.ReLU(inplace=True),
             linear.Linear(
-                in_features  = channels // reduction_ratio,
+                in_features  = channels  // reduction_ratio,
                 out_features = channels,
                 bias         = bias,
                 device       = device,
@@ -131,21 +133,19 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
         y = self.excitation(y).view(b, c, 1, 1)
         y = x * y.expand_as(x)
         return y
-    
 
-@constant.LAYER.register()
-class SqueezeExcitation(
-    base.PassThroughLayerParsingMixin,
-    torchvision_misc.SqueezeExcitation
-):
+
+@LAYERS.register()
+class SqueezeExcitation(base.PassThroughLayerParsingMixin, torchvision_misc.SqueezeExcitation):
     pass
+
 
 # endregion
 
 
 # region Channel-Spatial Attention
 
-@constant.LAYER.register()
+@LAYERS.register()
 class BAM(base.PassThroughLayerParsingMixin, nn.Module):
     """Bottleneck Attention Module from the paper: "BAM: Bottleneck Attention
     Module".
@@ -159,39 +159,40 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
             x = input
             y = x.view(x.size(0), -1)
             return y
-        
+    
     class ChannelAttention(nn.Module):
         def __init__(
             self,
             channels       : int,
             reduction_ratio: int = 16,
             num_layers     : int = 1,
-            *args, **kwargs
         ):
             super().__init__()
             gate_channels  = [channels]
             gate_channels += [channels // reduction_ratio] * num_layers
             gate_channels += [channels]
-        
+            
             self.c_gate = torch.nn.Sequential()
             self.c_gate.add_module("flatten", self.Flatten())
-            for i in range( len(gate_channels) - 2 ):
+            for i in range(len(gate_channels) - 2):
                 self.c_gate.add_module(
                     name   = "gate_c_fc_%d" % i,
                     module = linear.Linear(
                         in_features  = gate_channels[i],
-                        out_features = gate_channels[i+1],
+                        out_features = gate_channels[i + 1],
                     )
                 )
                 self.c_gate.add_module(
-                    name   = "gate_c_bn_%d" % (i+1),
-                    module = normalization.BatchNorm1d(num_features=gate_channels[i+1])
+                    name   = "gate_c_bn_%d" % (i + 1),
+                    module = normalization.BatchNorm1d(
+                        num_features=gate_channels[i + 1]
+                    )
                 )
                 self.c_gate.add_module(
-                    name   = "gate_c_relu_%d" % (i+1),
+                    name   = "gate_c_relu_%d" % (i + 1),
                     module = activation.ReLU(),
                 )
-                
+            
             self.c_gate.add_module(
                 name   = "gate_c_fc_final",
                 module = linear.Linear(
@@ -199,14 +200,14 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
                     out_features = gate_channels[-1],
                 )
             )
-            
+        
         def forward(self, input: torch.Tensor) -> torch.Tensor:
             x = input
             y = functional.avg_pool2d(x, x.size(2), stride=x.size(2))
             y = self.c_gate(y)
             y = y.unsqueeze(2).unsqueeze(3).expand_as(x)
             return y
-            
+    
     class SpatialAttention(nn.Module):
         def __init__(
             self,
@@ -229,7 +230,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
             self.s_gate.add_module(
                 name   = "gate_s_bn_reduce0",
                 module = normalization.BatchNorm2d(
-                    num_features = channels // reduction_ratio
+                    num_features=channels // reduction_ratio
                 )
             )
             self.s_gate.add_module(
@@ -240,8 +241,8 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
                 self.s_gate.add_module(
                     "gate_s_conv_di_%d" % i,
                     conv.Conv2d(
-                        in_channels  = channels // reduction_ratio,
-                        out_channels = channels // reduction_ratio,
+                        in_channels  = channels      // reduction_ratio,
+                        out_channels = channels      // reduction_ratio,
                         kernel_size  = 3,
                         padding      = dilation_val,
                         dilation     = dilation_val,
@@ -265,7 +266,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
                     kernel_size  = 1,
                 )
             )
-            
+        
         def forward(self, input: torch.Tensor) -> torch.Tensor:
             x = input
             y = self.s_gate(x).expand_as(x)
@@ -276,7 +277,6 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
         channels       : int,
         reduction_ratio: int = 16,
         num_layers     : int = 1,
-        *args, **kwargs
     ):
         super().__init__()
         self.channel = self.ChannelAttention(
@@ -297,7 +297,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
         return x
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
     """Convolutional Block Attention Module from the paper: "CBAM: Convolutional
     Block Attention Module".
@@ -317,7 +317,7 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
             x = input
             y = x.view(x.size(0), -1)
             return y
-
+    
     # noinspection PyDefaultArgument
     class ChannelAttention(nn.Module):
         def __init__(
@@ -325,7 +325,6 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
             channels       : int,
             reduction_ratio: int  = 16,
             pool_types     : list = ["avg", "max"],
-            *args, **kwargs
         ):
             super().__init__()
             self.channels = channels
@@ -333,18 +332,18 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
                 self.Flatten(),
                 linear.Linear(
                     in_features  = channels,
-                    out_features = channels // reduction_ratio,
+                    out_features = channels  // reduction_ratio,
                 ),
                 activation.ReLU(),
                 linear.Linear(
-                    in_features  = channels // reduction_ratio,
+                    in_features  = channels  // reduction_ratio,
                     out_features = channels,
                 )
             )
             self.pool_types = pool_types
-       
+        
         def forward(self, input: torch.Tensor) -> torch.Tensor:
-            x               = input
+            x = input
             channel_att_sum = None
             channel_att_raw = None
             
@@ -358,9 +357,9 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
                     channel_att_raw = self.mlp(avg_pool)
                 elif pool_type == "max":
                     max_pool = functional.max_pool2d(
-                         input       = x,
-                         kernel_size = (x.size(2), x.size(3)),
-                         stride      = (x.size(2), x.size(3))
+                        input       = x,
+                        kernel_size = (x.size(2), x.size(3)),
+                        stride      = (x.size(2), x.size(3))
                     )
                     channel_att_raw = self.mlp(max_pool)
                 elif pool_type == "lp":
@@ -375,20 +374,22 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
                     # LSE pool only
                     lse_pool        = pooling.lse_pool2d(x)
                     channel_att_raw = self.mlp(lse_pool)
-    
+                
                 if channel_att_sum is None:
                     channel_att_sum = channel_att_raw
                 else:
                     channel_att_sum = channel_att_sum + channel_att_raw
-    
-            y = torch.sigmoid(channel_att_sum).unsqueeze(2).unsqueeze(3).expand_as(x)  # scale
+            
+            y = torch.sigmoid(channel_att_sum).unsqueeze(2).unsqueeze(
+                3
+            ).expand_as(x)  # scale
             y = x * y
             return y
     
     class SpatialAttention(nn.Module):
         def __init__(self, *args, **kwargs):
             super().__init__()
-            kernel_size   = 7
+            kernel_size = 7
             self.compress = pooling.ChannelPool()
             self.spatial  = conv.Conv2dNormActivation(
                 in_channels      = 2,
@@ -399,13 +400,13 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
                 norm_layer       = normalization.BatchNorm2d,
                 activation_layer = None,
             )
-            self.sigmoid  = activation.Sigmoid()
+            self.sigmoid = activation.Sigmoid()
         
         def forward(self, input: torch.Tensor) -> torch.Tensor:
             x = input
             y = self.compress(x)  # compress
-            y = self.spatial(y)   # spatial
-            y = self.sigmoid(y)   # scale (broadcasting)
+            y = self.spatial(y)  # spatial
+            y = self.sigmoid(y)  # scale (broadcasting)
             y = x * y
             return y
     
@@ -415,7 +416,6 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
         reduction_ratio: int         = 16,
         pool_types     : list        = ["avg", "max"],
         spatial        : bool | None = True,
-        *args, **kwargs
     ):
         super().__init__()
         self.channel = self.ChannelAttention(
@@ -433,7 +433,7 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ChannelAttentionModule(base.PassThroughLayerParsingMixin, nn.Module):
     """Channel Attention Module."""
     
@@ -441,15 +441,14 @@ class ChannelAttentionModule(base.PassThroughLayerParsingMixin, nn.Module):
         self,
         channels       : int,
         reduction_ratio: int,
-        stride         : Int2T       = 1,
-        padding        : Int2T | str = 0,
-        dilation       : Int2T       = 1,
-        groups         : int         = 1,
-        bias           : bool        = True,
-        padding_mode   : str         = "zeros",
-        device         : Any         = None,
-        dtype          : Any         = None,
-        *args, **kwargs
+        stride         : _size_2_t       = 1,
+        padding        : _size_2_t | str = 0,
+        dilation       : _size_2_t       = 1,
+        groups         : int             = 1,
+        bias           : bool            = True,
+        padding_mode   : str             = "zeros",
+        device         : Any             = None,
+        dtype          : Any             = None,
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)
@@ -469,7 +468,7 @@ class ChannelAttentionModule(base.PassThroughLayerParsingMixin, nn.Module):
             ),
             activation.ReLU(inplace=True),
             conv.Conv2d(
-                in_channels  = channels  // reduction_ratio,
+                in_channels  = channels // reduction_ratio,
                 out_channels = channels,
                 kernel_size  = 1,
                 padding      = 0,
@@ -478,11 +477,11 @@ class ChannelAttentionModule(base.PassThroughLayerParsingMixin, nn.Module):
                 bias         = True,
                 padding_mode = padding_mode,
                 device       = device,
-                dtype        = dtype,
+                dtype=dtype,
             ),
             activation.Sigmoid(),
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.avg_pool(x)
@@ -491,7 +490,7 @@ class ChannelAttentionModule(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SimAM(base.PassThroughLayerParsingMixin, nn.Module):
     """SimAM adopted from paper: "SimAM: A Simple, Parameter-Free Attention
     Module for Convolutional Neural Networks".
@@ -500,20 +499,16 @@ class SimAM(base.PassThroughLayerParsingMixin, nn.Module):
         https://github.com/ZjjConan/SimAM
     """
     
-    def __init__(
-        self,
-        e_lambda: float = 1e-4,
-        *args, **kwargs
-    ):
+    def __init__(self, e_lambda: float = 1e-4, *args, **kwargs):
         super().__init__()
         self.e_lambda = e_lambda
         self.act      = activation.Sigmoid()
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         # Spatial size
         b, c, h, w = x.size()
-        n          = w * h - 1
+        n = w * h - 1
         # Square of (t - u)
         d = (x - x.mean(dim=[2, 3], keepdim=True)).pow(2)
         # d.sum() / n is channel variance
@@ -524,12 +519,13 @@ class SimAM(base.PassThroughLayerParsingMixin, nn.Module):
         y = x * self.act(e_inv)
         return y
 
+
 # endregion
 
 
 # region Pixel Attention
 
-@constant.LAYER.register()
+@LAYERS.register()
 class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
     """Pixel Attention Module."""
     
@@ -537,16 +533,15 @@ class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         self,
         channels       : int,
         reduction_ratio: int,
-        kernel_size    : Int2T,
-        stride         : Int2T       = 1,
-        padding        : Int2T | str = 0,
-        dilation       : Int2T       = 1,
-        groups         : int         = 1,
-        bias           : bool        = True,
-        padding_mode   : str         = "zeros",
-        device         : Any         = None,
-        dtype          : Any         = None,
-        *args, **kwargs
+        kernel_size    : _size_2_t,
+        stride         : _size_2_t       = 1,
+        padding        : _size_2_t | str = 0,
+        dilation       : _size_2_t       = 1,
+        groups         : int             = 1,
+        bias           : bool            = True,
+        padding_mode   : str             = "zeros",
+        device         : Any             = None,
+        dtype          : Any             = None,
     ):
         super().__init__()
         self.fc = torch.nn.Sequential(
@@ -579,7 +574,7 @@ class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
             ),
         )
         self.act = activation.Sigmoid()
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.fc(x)
@@ -587,36 +582,33 @@ class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         y = torch.mul(x, y)
         return y
 
+
 # endregion
 
 
 # region Supervised Attention
 
-@constant.LAYER.register()
-class GhostSupervisedAttentionModule(
-    base.SameChannelsLayerParsingMixin,
-    nn.Module
-):
+@LAYERS.register()
+class GhostSupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
     """Ghost Supervised Attention Module."""
     
     def __init__(
         self,
         channels    : int,
-        kernel_size : Int2T,
-        stride      : Int2T = 1,
-        dilation    : Int2T = 1,
-        groups      : int   = 1,
-        bias        : bool  = True,
-        padding_mode: str   = "zeros",
-        device      : Any   = None,
-        dtype       : Any   = None,
-        **_
+        kernel_size : _size_2_t,
+        stride      : _size_2_t = 1,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
     ):
         super().__init__()
         padding = kernel_size[0] // 2 \
             if isinstance(kernel_size, Sequence) \
             else kernel_size // 2
-
+        
         self.conv1 = conv.GhostConv2d(
             in_channels  = channels,
             out_channels = channels,
@@ -630,7 +622,7 @@ class GhostSupervisedAttentionModule(
             device       = device,
             dtype        = dtype,
         )
-        self.conv2  = conv.GhostConv2d(
+        self.conv2 = conv.GhostConv2d(
             in_channels  = channels,
             out_channels = 3,
             kernel_size  = kernel_size,
@@ -643,7 +635,7 @@ class GhostSupervisedAttentionModule(
             device       = device,
             dtype        = dtype,
         )
-        self.conv3  = conv.GhostConv2d(
+        self.conv3 = conv.GhostConv2d(
             in_channels  = 3,
             out_channels = channels,
             kernel_size  = kernel_size,
@@ -657,54 +649,53 @@ class GhostSupervisedAttentionModule(
             dtype        = dtype,
         )
         self.act = activation.Sigmoid()
-        
-    def forward(
-        self,
-        input: Sequence[torch.Tensor]
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    
+    def forward(self, input: list[torch.Tensor]) -> list[torch.Tensor]:
         """Run forward pass.
 
         Args:
             input: A list of 2 tensors. The first tensor is the output from
-                previous layer. The second tensor is the current step input.
+                the previous layer. The second tensor is the current step input.
             
         Returns:
             Supervised attention features.
             Output feature for the next layer.
         """
-        assert isinstance(input, Sequence) and len(input) == 2
+        if not (isinstance(input, list | tuple) and len(input) == 2):
+            raise ValueError(
+                f"input must be a list of 2 torch.Tensor, but got {type(input)}."
+            )
         fy  = input[0]
         x   = input[1]
         y1  = self.conv1(fy)
         img = self.conv2(fy) + x
         y2  = self.act(self.conv3(img))
         y   = y1 * y2
-        y   = y  + fy
-        return y, img
+        y   = y + fy
+        return [y, img]
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
     """Supervised Attention Module."""
     
     def __init__(
         self,
         channels    : int,
-        kernel_size : Int2T,
-        stride      : Int2T = 1,
-        dilation    : Int2T = 1,
-        groups      : int   = 1,
-        bias        : bool  = True,
-        padding_mode: str   = "zeros",
-        device      : Any   = None,
-        dtype       : Any   = None,
-        **_
+        kernel_size : _size_2_t,
+        stride      : _size_2_t = 1,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
     ):
         super().__init__()
         padding = kernel_size[0] // 2 \
             if isinstance(kernel_size, Sequence) \
             else kernel_size // 2
-
+        
         self.conv1 = conv.Conv2d(
             in_channels  = channels,
             out_channels = channels,
@@ -718,7 +709,7 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv2  = conv.Conv2d(
+        self.conv2 = conv.Conv2d(
             in_channels  = channels,
             out_channels = 3,
             kernel_size  = kernel_size,
@@ -731,7 +722,7 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv3  = conv.Conv2d(
+        self.conv3 = conv.Conv2d(
             in_channels  = 3,
             out_channels = channels,
             kernel_size  = kernel_size,
@@ -745,11 +736,8 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
             dtype        = dtype,
         )
         self.act = activation.Sigmoid()
-        
-    def forward(
-        self,
-        input: Sequence[torch.Tensor]
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    
+    def forward(self, input: list[torch.Tensor]) -> list[torch.Tensor]:
         """Run forward pass.
 
         Args:
@@ -760,17 +748,21 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
             Supervised attention features.
             Output feature for the next layer.
         """
-        assert isinstance(input, Sequence) and len(input) == 2
+        if not (isinstance(input, list | tuple) and len(input) == 2):
+            raise ValueError(
+                f"input must be a list of 2 torch.Tensor, but got "
+                f"{type(input)}."
+            )
         fy  = input[0]
         x   = input[1]
         y1  = self.conv1(fy)
         img = self.conv2(fy) + x
         y2  = self.act(self.conv3(img))
         y   = y1 * y2
-        y   = y  + fy
-        return y, img
-    
-    
+        y   = y + fy
+        return [y, img]
+
+
 GhostSAM = GhostSupervisedAttentionModule
 SAM      = SupervisedAttentionModule
 

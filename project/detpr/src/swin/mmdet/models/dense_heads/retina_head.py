@@ -5,7 +5,7 @@ from ..builder import HEADS
 from .anchor_head import AnchorHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class RetinaHead(AnchorHead):
     r"""An anchor-based head used in `RetinaNet
     <https://arxiv.org/pdf/1708.02002.pdf>`_.

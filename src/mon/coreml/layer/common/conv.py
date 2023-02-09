@@ -16,20 +16,20 @@ __all__ = [
     "UnconstrainedBlueprintSeparableConv2d",
 ]
 
-from typing import Any
+from typing import Any, Callable
 
 import torch
 from torch import nn
 from torch.nn import functional
-from torchvision.ops import misc as torchvision_misc
+from torchvision.ops import misc
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, normalization, padding as pad,
 )
-from mon.coreml.typing import CallableType, Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.foundation import math
+from mon.globals import LAYERS
 
 
 # region Convolution
@@ -38,17 +38,16 @@ def conv2d_same(
     input   : torch.Tensor,
     weight  : torch.Tensor,
     bias    : torch.Tensor | None = None,
-    stride  : Int2T               = 1,
-    padding : Int2T | str         = 0,
-    dilation: Int2T               = 1,
+    stride  : _size_2_t           = 1,
+    padding : _size_2_t | str     = 0,
+    dilation: _size_2_t           = 1,
     groups  : int                 = 1,
-    *args, **kwargs
 ):
     """Functional interface for Same Padding Convolution 2D."""
     x = input
     y = pad.pad_same(
         input       = x,
-        kernel_size = weight.shape[-2:],
+        kernel_size = weight.shape[-2: ],
         stride      = stride,
         dilation    = dilation
     )
@@ -64,39 +63,37 @@ def conv2d_same(
     return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Conv1d(base.ConvLayerParsingMixin, nn.Conv1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Conv2d(base.ConvLayerParsingMixin, nn.Conv2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Conv2dBn(base.ConvLayerParsingMixin, nn.Module):
     """Conv2d + BatchNorm."""
-
+    
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Int2T,
-        stride      : Int2T       = 1,
-        padding     : Int2T | str = 0,
-        dilation    : Int2T       = 1,
-        groups      : int         = 1,
-        bias        : bool        = False,
-        padding_mode: str         = "zeros",
-        device      : Any         = None,
-        dtype       : Any         = None,
-        bn          : bool | None = True,
-        inplace     : bool        = True,
-        eps         : float       = 1e-5,
-        momentum    : float       = 0.01,
-        affine      : bool        = True,
-        *args, **kwargs
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = False,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        bn          : bool | None     = True,
+        eps         : float           = 1e-5,
+        momentum    : float           = 0.01,
+        affine      : bool            = True,
     ):
         super().__init__()
         self.conv = Conv2d(
@@ -112,7 +109,7 @@ class Conv2dBn(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.bn   = normalization.BatchNorm2d(
+        self.bn = normalization.BatchNorm2d(
             num_features = out_channels,
             eps          = eps,
             momentum     = momentum,
@@ -127,24 +124,23 @@ class Conv2dBn(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Conv2dSame(base.ConvLayerParsingMixin, nn.Conv2d):
     """Tensorflow like `SAME` convolution wrapper for 2D convolutions."""
-
+    
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Int2T,
-        stride      : Int2T       = 1,
-        padding     : Int2T | str = 0,
-        dilation    : Int2T       = 1,
-        groups      : int         = 1,
-        bias        : bool        = True,
-        padding_mode: str         = "zeros",
-        device      : Any         = None,
-        dtype       : Any         = None,
-        *args, **kwargs
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -159,7 +155,7 @@ class Conv2dSame(base.ConvLayerParsingMixin, nn.Conv2d):
             device       = device,
             dtype        = dtype,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = conv2d_same(
@@ -174,29 +170,28 @@ class Conv2dSame(base.ConvLayerParsingMixin, nn.Conv2d):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Conv2dTF(base.ConvLayerParsingMixin, nn.Conv2d):
-    """Implementation of 2D convolution in TensorFlow with `padding` as "same",
-    which applies padding to input (if needed) so that input image gets fully
-    covered by filter and stride you specified. For stride of 1, this will
-    ensure that output image size is same as input. For stride of 2, output
-    dimensions will be half, for example.
+    """Implementation of 2D convolution in TensorFlow with :param:`padding` as
+    'same', which applies padding to input (if needed) so that input image gets
+    fully covered by filter and stride you specified. For stride of 1, this will
+    ensure that the output image size is the same as input. For stride of 2,
+    output dimensions will be half, for example.
     """
     
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size : Int2T,
-        stride      : Int2T       = 1,
-        padding     : Int2T | str = 0,
-        dilation    : Int2T       = 1,
-        groups      : int         = 1,
-        bias        : bool        = True,
-        padding_mode: str         = "zeros",
-        device      : Any         = None,
-        dtype       : Any         = None,
-        *args, **kwargs
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
     ):
         super().__init__(
             in_channels  = in_channels,
@@ -211,16 +206,16 @@ class Conv2dTF(base.ConvLayerParsingMixin, nn.Conv2d):
             device       = device,
             dtype        = dtype,
         )
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x                  = input
-        img_h, img_w       = x.size()[-2:]
+        x = input
+        img_h, img_w = x.size()[-2:]
         kernel_h, kernel_w = self.weight.size()[-2:]
         stride_h, stride_w = self.stride
-        output_h = core.math.ceil(img_h / stride_h)
-        output_w = core.math.ceil(img_w / stride_w)
-        pad_h    = max((output_h - 1) * self.stride[0] + (kernel_h - 1) * self.dilation[0] + 1 - img_h, 0)
-        pad_w    = max((output_w - 1) * self.stride[1] + (kernel_w - 1) * self.dilation[1] + 1 - img_w, 0)
+        output_h = math.ceil(img_h / stride_h)
+        output_w = math.ceil(img_w / stride_w)
+        pad_h = max((output_h - 1) * self.stride[0] + (kernel_h - 1) * self.dilation[0] + 1 - img_h, 0)
+        pad_w = max((output_w - 1) * self.stride[1] + (kernel_w - 1) * self.dilation[1] + 1 - img_w, 0)
         if pad_h > 0 or pad_w > 0:
             x = functional.pad(
                 input = x,
@@ -239,55 +234,47 @@ class Conv2dTF(base.ConvLayerParsingMixin, nn.Conv2d):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Conv3d(base.ConvLayerParsingMixin, nn.Conv3d):
     pass
 
 
-@constant.LAYER.register()
-class ConvNormActivation(
-    base.ConvLayerParsingMixin,
-    torchvision_misc.ConvNormActivation,
-):
+@LAYERS.register()
+class ConvNormActivation(base.ConvLayerParsingMixin, misc.ConvNormActivation):
     pass
 
 
-@constant.LAYER.register()
-class Conv2dNormActivation(
-    base.ConvLayerParsingMixin,
-    torchvision_misc.Conv2dNormActivation,
-):
+@LAYERS.register()
+class Conv2dNormActivation(base.ConvLayerParsingMixin, misc.Conv2dNormActivation):
     pass
 
 
-@constant.LAYER.register()
-class Conv3dNormActivation(
-    base.ConvLayerParsingMixin,
-    torchvision_misc.Conv3dNormActivation
-):
+@LAYERS.register()
+class Conv3dNormActivation(base.ConvLayerParsingMixin, misc.Conv3dNormActivation):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyConv1d(base.ConvLayerParsingMixin, nn.LazyConv1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyConv2d(base.ConvLayerParsingMixin, nn.LazyConv2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyConv3d(base.ConvLayerParsingMixin, nn.LazyConv3d):
     pass
+
 
 # endregion
 
 
 # region Blueprint Separable Convolution
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     """Subspace Blueprint Separable Conv2d adopted from the paper: "Rethinking
     Depthwise Separable Convolutions: How Intra-Kernel Correlations Lead to
@@ -296,27 +283,27 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     References:
         https://github.com/zeiss-microscopy/BSConv
     """
-
+    
     def __init__(
         self,
         in_channels     : int,
         out_channels    : int,
-        kernel_size     : Int2T,
-        stride          : Int2T               = 1,
-        padding         : Int2T | str         = 0,
-        dilation        : Int2T               = 1,
-        groups          : int                 = 1,
-        bias            : bool                = True,
-        padding_mode    : str                 = "zeros",
-        device          : Any                 = None,
-        dtype           : Any                 = None,
-        p               : float               = 0.25,
-        min_mid_channels: int                 = 4,
-        act             : CallableType | None = None,
+        kernel_size     : _size_2_t,
+        stride          : _size_2_t       = 1,
+        padding         : _size_2_t | str = 0,
+        dilation        : _size_2_t       = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable        = None,
         *args, **kwargs
     ):
         super().__init__()
-        mid_channels  = min(in_channels, max(min_mid_channels, core.math.ceil(p * in_channels)))
+        mid_channels = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
         self.pw_conv1 = Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
@@ -330,7 +317,10 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act1     = activation.to_act_layer(act=act, num_features=mid_channels)  # if act else None
+        self.act1 = activation.to_act_layer(
+            act          = act,
+            num_features = mid_channels
+        )  # if act else None
         self.pw_conv2 = Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -344,7 +334,10 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act2    = activation.to_act_layer(act=act, num_features=out_channels)  # if act else None
+        self.act2 = activation.to_act_layer(
+            act          = act,
+            num_features = out_channels
+        )  # if act else None
         self.dw_conv = Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -358,7 +351,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
@@ -377,11 +370,8 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
         return torch.norm(wwt - i, p="fro")
 
 
-@constant.LAYER.register()
-class UnconstrainedBlueprintSeparableConv2d(
-    base.ConvLayerParsingMixin,
-    nn.Module,
-):
+@LAYERS.register()
+class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     """Unconstrained Blueprint Separable Conv2d adopted from the paper:
     "Rethinking Depthwise Separable Convolutions: How Intra-Kernel Correlations
     Lead to Improved MobileNets," CVPR 2020.
@@ -389,21 +379,21 @@ class UnconstrainedBlueprintSeparableConv2d(
     References:
         https://github.com/zeiss-microscopy/BSConv
     """
-
+    
     def __init__(
         self,
-        in_channels   : int,
-        out_channels  : int,
-        kernel_size   : Int2T,
-        stride        : Int2T               = 1,
-        padding       : Int2T | str         = 0,
-        dilation      : Int2T               = 1,
-        groups        : int                 = 1,
-        bias          : bool                = True,
-        padding_mode  : str                 = "zeros",
-        device        : Any                 = None,
-        dtype         : Any                 = None,
-        act           : CallableType | None = None,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        act         : Callable        = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -434,7 +424,7 @@ class UnconstrainedBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv(x)
@@ -446,34 +436,35 @@ class UnconstrainedBlueprintSeparableConv2d(
 
 BSConv2dS = SubspaceBlueprintSeparableConv2d
 BSConv2dU = UnconstrainedBlueprintSeparableConv2d
-constant.LAYER.register(module=BSConv2dS)
-constant.LAYER.register(module=BSConv2dU)
+LAYERS.register(module=BSConv2dS)
+LAYERS.register(module=BSConv2dU)
+
 
 # endregion
 
 
 # region Depthwise Separable Convolution
 
-@constant.LAYER.register()
+@LAYERS.register()
 class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     """Depthwise Separable Conv2d."""
-
+    
     def __init__(
         self,
         in_channels   : int,
         out_channels  : int,
-        dw_kernel_size: Int2T,
-        pw_kernel_size: Int2T,
-        dw_stride     : Int2T       = 1,
-        dw_padding    : Int2T | str = 0,
-        pw_stride     : Int2T       = 1,
-        pw_padding    : Int2T | str = 0,
-        dilation      : Int2T       = 1,
-        groups        : int         = 1,
-        bias          : bool        = True,
-        padding_mode  : str         = "zeros",
-        device        : Any         = None,
-        dtype         : Any         = None,
+        dw_kernel_size: _size_2_t,
+        pw_kernel_size: _size_2_t,
+        dw_stride     : _size_2_t       = 1,
+        dw_padding    : _size_2_t | str = 0,
+        pw_stride     : _size_2_t       = 1,
+        pw_padding    : _size_2_t | str = 0,
+        dilation      : _size_2_t       = 1,
+        groups        : int             = 1,
+        bias          : bool            = True,
+        padding_mode  : str             = "zeros",
+        device        : Any             = None,
+        dtype         : Any             = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -503,7 +494,7 @@ class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.dw_conv(x)
@@ -511,27 +502,26 @@ class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class DepthwiseSeparableConv2dReLU(base.ConvLayerParsingMixin, nn.Module):
     """Depthwise Separable Conv2d ReLU."""
-
+    
     def __init__(
         self,
         in_channels   : int,
         out_channels  : int,
-        dw_kernel_size: Int2T,
-        pw_kernel_size: Int2T,
-        dw_stride     : Int2T       = 1,
-        pw_stride     : Int2T       = 1,
-        dw_padding    : Int2T | str = 0,
-        pw_padding    : Int2T | str = 0,
-        dilation      : Int2T       = 1,
-        groups        : int         = 1,
-        bias          : bool        = True,
-        padding_mode  : str         = "zeros",
-        device        : Any         = None,
-        dtype         : Any         = None,
-        *args, **kwargs
+        dw_kernel_size: _size_2_t,
+        pw_kernel_size: _size_2_t,
+        dw_stride     : _size_2_t       = 1,
+        pw_stride     : _size_2_t       = 1,
+        dw_padding    : _size_2_t | str = 0,
+        pw_padding    : _size_2_t | str = 0,
+        dilation      : _size_2_t       = 1,
+        groups        : int             = 1,
+        bias          : bool            = True,
+        padding_mode  : str             = "zeros",
+        device        : Any             = None,
+        dtype         : Any             = None,
     ):
         super().__init__()
         self.dw_conv = Conv2d(
@@ -561,13 +551,14 @@ class DepthwiseSeparableConv2dReLU(base.ConvLayerParsingMixin, nn.Module):
             dtype        = dtype,
         )
         self.act = activation.ReLU(inplace=True)
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.dw_conv(x)
         y = self.pw_conv(y)
         y = self.act(y)
         return y
+
 
 # endregion
 
@@ -586,23 +577,22 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
         self,
         in_channels   : int,
         out_channels  : int,
-        ratio         : int                        = 2,
-        kernel_size   : Int2T                      = 1,
-        dw_kernel_size: Int2T                      = 3,
-        stride        : Int2T                      = 1,
-        padding       : Int2T | str | None         = None,
-        dilation      : Int2T                      = 1,
-        groups        : int                        = 1,
-        bias          : bool                       = True,
-        padding_mode  : str                        = "zeros",
-        device        : Any                        = None,
-        dtype         : Any                        = None,
-        act           : CallableType | bool | None = activation.ReLU,
-        *args, **kwargs
+        ratio         : int                    = 2,
+        kernel_size   : _size_2_t              = 1,
+        dw_kernel_size: _size_2_t              = 3,
+        stride        : _size_2_t              = 1,
+        padding       : _size_2_t | str | None = None,
+        dilation      : _size_2_t              = 1,
+        groups        : int                    = 1,
+        bias          : bool                   = True,
+        padding_mode  : str                    = "zeros",
+        device        : Any                    = None,
+        dtype         : Any                    = None,
+        act           : bool | Callable        = activation.ReLU,
     ):
         super().__init__()
         self.out_channels = out_channels
-        init_channels     = core.math.ceil(out_channels / ratio)
+        init_channels     = math.ceil(out_channels / ratio)
         new_channels      = init_channels * (ratio - 1)
         
         self.primary_conv = nn.Sequential(
@@ -638,7 +628,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
             normalization.BatchNorm2d(new_channels),
             activation.to_act_layer(act=act, inplace=True),
         )
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x  = input
         y1 = self.primary_conv(x)
@@ -646,6 +636,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
         y  = torch.cat([y1, y2], dim=1)
         y  = y[:, :self.out_channels, :, :]
         return y
+
 
 # endregion
 

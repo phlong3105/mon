@@ -9,20 +9,20 @@ __all__ = [
 
 ]
 
+from mon.vision.typing import (
+    ClassLabelsType, ConfigType, DictType, LossesType,
+    MetricsType, ModelPhaseType, OptimizersType, PathType, WeightsType,
+)
 from torch import nn
 
 from mon import core
 from mon.vision import constant
 from mon.vision.model.enhancement import base
-from mon.vision.typing import (
-    ClassLabelsType, ConfigType, DictType, LossesType,
-    MetricsType, ModelPhaseType, OptimizersType, PathType, WeightsType,
-)
 
 
 # region Model
 
-@constant.MODEL.register(name="template-model")
+@constant.MODELS.register(name="template-model")
 class TemplateModel(base.ImageEnhancementModel):
     """Template Model.
     
@@ -30,7 +30,7 @@ class TemplateModel(base.ImageEnhancementModel):
     """
     
     cfgs = {
-
+    
     }
     pretrained_weights = {
     
@@ -38,52 +38,52 @@ class TemplateModel(base.ImageEnhancementModel):
     
     def __init__(
         self,
-        cfg        : ConfigType      | None = "template.yaml",
-        hparams    : DictType        | None = None,
-        channels   : int                    = 3,
-        num_classes: int             | None = None,
+        cfg: ConfigType | None = "template.yaml",
+        hparams: DictType | None = None,
+        channels: int = 3,
+        num_classes: int | None = None,
         classlabels: ClassLabelsType | None = None,
-        weights    : WeightsType   	    = False,
+        weights: WeightsType = False,
         # For management
-        name       : str             | None = "template",
-        variant    : str             | None = None,
-        fullname   : str             | None = "template",
-        root       : PathType               = constant.RUN_DIR,
-        project    : str             | None = None,
+        name: str | None = "template",
+        variant: str | None = None,
+        fullname: str | None = "template",
+        root: PathType = constant.RUN_DIR,
+        project: str | None = None,
         # For training
-        phase      : ModelPhaseType         = "training",
-        loss   	   : LossesType      | None = None,
-        metrics	   : MetricsType     | None = None,
-        optimizers : OptimizersType  | None = None,
-        debug      : DictType        | None = None,
-        verbose    : bool                   = True,
+        phase: ModelPhaseType = "training",
+        loss: LossesType | None = None,
+        metrics: MetricsType | None = None,
+        optimizers: OptimizersType | None = None,
+        debug: DictType | None = None,
+        verbose: bool = True,
         *args, **kwargs
     ):
         super().__init__(
-            cfg         = cfg,
-            hparams     = hparams,
-            channels    = channels,
-            num_classes = num_classes,
-            classlabels = classlabels,
-            weights     = weights,
-            name        = name,
-            variant     = variant,
-            fullname    = fullname,
-            root        = root,
-            project     = project,
-            phase       = phase,
-            loss        = loss,
-            metrics     = metrics,
-            optimizers  = optimizers,
-            debug       = debug,
-            verbose     = verbose,
+            cfg=cfg,
+            hparams=hparams,
+            channels=channels,
+            num_classes=num_classes,
+            classlabels=classlabels,
+            weights=weights,
+            name=name,
+            variant=variant,
+            fullname=fullname,
+            root=root,
+            project=project,
+            phase=phase,
+            loss=loss,
+            metrics=metrics,
+            optimizers=optimizers,
+            debug=debug,
+            verbose=verbose,
             *args, **kwargs
         )
     
     @property
     def cfg_dir(self) -> PathType:
         return core.Path(__file__).resolve().parent / "cfg"
-       
+    
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         pass

@@ -15,18 +15,18 @@ import torch
 from torch import nn
 from torchvision import ops
 
-from mon.coreml import constant
 from mon.coreml.layer import base
+from mon.globals import LAYERS
 
 
 # region Drop Block
 
-@constant.LAYER.register()
+@LAYERS.register()
 class DropBlock2d(base.PassThroughLayerParsingMixin, ops.DropBlock2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class DropBlock3d(base.PassThroughLayerParsingMixin, ops.DropBlock3d):
     pass
 
@@ -34,42 +34,41 @@ class DropBlock3d(base.PassThroughLayerParsingMixin, ops.DropBlock3d):
 drop_block2d = ops.drop_block2d
 drop_block3d = ops.drop_block3d
 
+
 # endregion
 
 
 # region Drop Out
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AlphaDropout(base.PassThroughLayerParsingMixin, nn.AlphaDropout):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Dropout(base.PassThroughLayerParsingMixin, nn.Dropout):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Dropout1d(base.PassThroughLayerParsingMixin, nn.Dropout1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Dropout2d(base.PassThroughLayerParsingMixin, nn.Dropout2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Dropout3d(base.PassThroughLayerParsingMixin, nn.Dropout3d):
     pass
 
 
-@constant.LAYER.register()
-class FeatureAlphaDropout(
-    base.PassThroughLayerParsingMixin,
-    nn.FeatureAlphaDropout
-):
+@LAYERS.register()
+class FeatureAlphaDropout(base.PassThroughLayerParsingMixin, nn.FeatureAlphaDropout):
     pass
+
 
 # endregion
 
@@ -77,10 +76,9 @@ class FeatureAlphaDropout(
 # region Drop Path
 
 def drop_path(
-    input    : torch.Tensor,
-    p        : float = 0.0,
-    training : bool  = False,
-    *args, **kwargs
+    input   : torch.Tensor,
+    p       : float = 0.0,
+    training: bool  = False,
 ) -> torch.Tensor:
     """Drop paths (Stochastic Depth) per sample (when applied in main path of
     residual blocks). We follow the implementation:
@@ -96,13 +94,13 @@ def drop_path(
     if p == 0.0 or not training:
         return x
     keep_prob     = 1 - p
-    shape	      = (x.shape[0],) + (1,) * (x.ndim - 1)
+    shape         = (x.shape[0],) + (1,) * (x.ndim - 1)
     random_tensor = (keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device))
-    y 		      = x.div(keep_prob) * random_tensor.floor()
+    y             = x.div(keep_prob) * random_tensor.floor()
     return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class DropPath(base.PassThroughLayerParsingMixin, nn.Module):
     """Drop paths (Stochastic Depth) per sample.
 
@@ -110,7 +108,7 @@ class DropPath(base.PassThroughLayerParsingMixin, nn.Module):
         p: Probability of the path to be zeroed. Defaults to 0.1.
     """
     
-    def __init__(self, p: float = 0.1, *args, **kwargs):
+    def __init__(self, p: float = 0.1):
         super().__init__()
         self.drop_prob = p
     

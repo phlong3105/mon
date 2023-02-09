@@ -7,7 +7,6 @@ import mmcv
 import numpy as np
 import pytest
 import torch
-
 from mmdet.core import visualization as vis
 
 
@@ -29,98 +28,110 @@ def test_color():
 
 
 def test_imshow_det_bboxes():
-    tmp_filename = osp.join(tempfile.gettempdir(), 'det_bboxes_image',
-                            'image.jpg')
+    tmp_filename = osp.join(
+        tempfile.gettempdir(), 'det_bboxes_image',
+        'image.jpg'
+    )
     image = np.ones((10, 10, 3), np.uint8)
-    bbox = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
+    box = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
     label = np.array([0, 1])
     out_image = vis.imshow_det_bboxes(
-        image, bbox, label, out_file=tmp_filename, show=False)
+        image, box, label, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     assert image.shape == out_image.shape
     assert not np.allclose(image, out_image)
     os.remove(tmp_filename)
-
+    
     # test grayscale images
     image = np.ones((10, 10), np.uint8)
-    bbox = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
+    box = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
     label = np.array([0, 1])
     out_image = vis.imshow_det_bboxes(
-        image, bbox, label, out_file=tmp_filename, show=False)
+        image, box, label, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     assert image.shape == out_image.shape[:2]
     os.remove(tmp_filename)
-
+    
     # test shaped (0,)
     image = np.ones((10, 10, 3), np.uint8)
-    bbox = np.ones((0, 4))
-    label = np.ones((0, ))
+    box = np.ones((0, 4))
+    label = np.ones((0,))
     vis.imshow_det_bboxes(
-        image, bbox, label, out_file=tmp_filename, show=False)
+        image, box, label, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     os.remove(tmp_filename)
-
+    
     # test mask
     image = np.ones((10, 10, 3), np.uint8)
-    bbox = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
+    box = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
     label = np.array([0, 1])
     segms = np.random.random((2, 10, 10)) > 0.5
     segms = np.array(segms, np.int32)
     vis.imshow_det_bboxes(
-        image, bbox, label, segms, out_file=tmp_filename, show=False)
+        image, box, label, segms, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     os.remove(tmp_filename)
-
+    
     # test tensor mask type error
     with pytest.raises(AttributeError):
         segms = torch.tensor(segms)
-        vis.imshow_det_bboxes(image, bbox, label, segms, show=False)
+        vis.imshow_det_bboxes(image, box, label, segms, show=False)
 
 
 def test_imshow_gt_det_bboxes():
-    tmp_filename = osp.join(tempfile.gettempdir(), 'det_bboxes_image',
-                            'image.jpg')
+    tmp_filename = osp.join(
+        tempfile.gettempdir(), 'det_bboxes_image',
+        'image.jpg'
+    )
     image = np.ones((10, 10, 3), np.uint8)
-    bbox = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
+    box = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
     label = np.array([0, 1])
-    annotation = dict(gt_bboxes=bbox, gt_labels=label)
+    annotation = dict(gt_bboxes=box, gt_labels=label)
     det_result = np.array([[2, 1, 3, 3, 0], [3, 4, 6, 6, 1]])
     result = [det_result]
     out_image = vis.imshow_gt_det_bboxes(
-        image, annotation, result, out_file=tmp_filename, show=False)
+        image, annotation, result, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     assert image.shape == out_image.shape
     assert not np.allclose(image, out_image)
     os.remove(tmp_filename)
-
+    
     # test grayscale images
     image = np.ones((10, 10), np.uint8)
-    bbox = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
+    box = np.array([[2, 1, 3, 3], [3, 4, 6, 6]])
     label = np.array([0, 1])
-    annotation = dict(gt_bboxes=bbox, gt_labels=label)
+    annotation = dict(gt_bboxes=box, gt_labels=label)
     det_result = np.array([[2, 1, 3, 3, 0], [3, 4, 6, 6, 1]])
     result = [det_result]
     vis.imshow_gt_det_bboxes(
-        image, annotation, result, out_file=tmp_filename, show=False)
+        image, annotation, result, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     os.remove(tmp_filename)
-
+    
     # test numpy mask
     gt_mask = np.ones((2, 10, 10))
     annotation['gt_masks'] = gt_mask
     vis.imshow_gt_det_bboxes(
-        image, annotation, result, out_file=tmp_filename, show=False)
+        image, annotation, result, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     os.remove(tmp_filename)
-
+    
     # test tensor mask
     gt_mask = torch.ones((2, 10, 10))
     annotation['gt_masks'] = gt_mask
     vis.imshow_gt_det_bboxes(
-        image, annotation, result, out_file=tmp_filename, show=False)
+        image, annotation, result, out_file=tmp_filename, show=False
+    )
     assert osp.isfile(tmp_filename)
     os.remove(tmp_filename)
-
+    
     # test unsupported type
     annotation['gt_masks'] = []
     with pytest.raises(TypeError):

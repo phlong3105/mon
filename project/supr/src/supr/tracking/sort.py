@@ -9,26 +9,17 @@ __all__ = [
     "SORT",
 ]
 
-from typing import TYPE_CHECKING
-
 import numpy as np
-import torch
 
-from supr import constant, data
+from supr.globals import TRACKERS
 from supr.tracking import base
-
-if TYPE_CHECKING:
-    from supr.typing import MotionType, ObjectType
 
 np.random.seed(0)
 
 
 # region Helper Function
 
-def compute_box_iou(
-    box1: torch.Tensor | np.ndarray,
-    box2: torch.Tensor | np.ndarray,
-) -> torch.Tensor | np.ndarray:
+def compute_box_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """From SORT: Compute IOU between two sets of boxes.
     
     Return intersection-over-union (Jaccard index) between two sets of boxes.
@@ -36,40 +27,31 @@ def compute_box_iou(
     `0 <= x1 < x2` and `0 <= y1 < y2`.
 
     Args:
-        box1: The first set of boxes of shape [N, 4].
-        box2: The second set of boxes of shape [M, 4].
+        bbox1: The first set of boxes of shape [N, 4].
+        bbox2: The second set of boxes of shape [M, 4].
     
     Returns:
         The NxM matrix containing the pairwise IoU values for every element in
         boxes1 and boxes2.
     """
-    assert box1.ndim == 2
-    assert box2.ndim == 2
-    if isinstance(box1, torch.Tensor) and type(box1) == type(box2):
-        box1 = torch.unsqueeze(box1, 1)
-        box2 = torch.unsqueeze(box2, 0)
-        xx1  = torch.maximum(box1[..., 0], box2[..., 0])
-        yy1  = torch.maximum(box1[..., 1], box2[..., 1])
-        xx2  = torch.minimum(box1[..., 2], box2[..., 2])
-        yy2  = torch.minimum(box1[..., 3], box2[..., 3])
-        w    = torch.maximum(torch.Tensor(0.0), xx2 - xx1)
-        h    = torch.maximum(torch.Tensor(0.0), yy2 - yy1)
-    elif isinstance(box1, np.ndarray) and type(box1) == type(box2):
-        box1 = np.expand_dims(box1, 1)
-        box2 = np.expand_dims(box2, 0)
-        xx1  = np.maximum(box1[..., 0], box2[..., 0])
-        yy1  = np.maximum(box1[..., 1], box2[..., 1])
-        xx2  = np.minimum(box1[..., 2], box2[..., 2])
-        yy2  = np.minimum(box1[..., 3], box2[..., 3])
-        w    = np.maximum(0.0, xx2 - xx1)
-        h    = np.maximum(0.0, yy2 - yy1)
+    assert bbox1.ndim == 2
+    assert bbox2.ndim == 2
+    if isinstance(bbox1, np.ndarray) and type(bbox1) == type(bbox2):
+        bbox1 = np.expand_dims(bbox1, 1)
+        bbox2 = np.expand_dims(bbox2, 0)
+        xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
+        yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
+        xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
+        yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
+        w     = np.maximum(0.0, xx2 - xx1)
+        h     = np.maximum(0.0, yy2 - yy1)
     else:
         raise TypeError
     wh  = w * h
-    iou = wh / ((box1[..., 2] - box1[..., 0]) *
-                (box1[..., 3] - box1[..., 1]) +
-                (box2[..., 2] - box2[..., 0]) *
-                (box2[..., 3] - box2[..., 1]) - wh)
+    iou = wh / ((bbox1[..., 2] - bbox1[..., 0]) *
+                (bbox1[..., 3] - bbox1[..., 1]) +
+                (bbox2[..., 2] - bbox2[..., 0]) *
+                (bbox2[..., 3] - bbox2[..., 1]) - wh)
     return iou
 
 
@@ -88,40 +70,12 @@ def linear_assignment(cost_matrix):
 
 # region SORT
 
-@constant.TRACKING.register(name="sort")
+@TRACKERS.register(name="sort")
 class SORT(base.Tracker):
     """SORT (Simple Online Realtime Tracker).
     
-    See more: :class:`base.Tracker`.
-    
-    Args:
-        max_age: The time to store the track before deleting, that mean a track
-            could live upto :param:`max_age` frames with no match bounding bbox,
-            consecutive frame that track disappears. Defaults to 1.
-        min_hits: A number of frames, which has matching bounding bbox of the
-            detected object before the object is considered becoming the track.
-            Defaults to 3.
-        iou_threshold: An Intersection-over-Union threshold between two tracks.
-            Defaults to 0.3.
-        motion_type: A motion model. Defaults to 'KFBoxMotion'.
-        object_type: An object type. Defaults to None.
+    See more: :class:`supr.tracking.base.Tracker`.
     """
-    
-    def __init__(
-        self,
-        max_age      : int        = 1,
-        min_hits     : int        = 3,
-        iou_threshold: float      = 0.3,
-        motion_type  : MotionType = "kf_box_motion",
-        object_type  : ObjectType = data.MovingObject,
-    ):
-        super().__init__(
-            max_age       = max_age,
-            min_hits      = min_hits,
-            iou_threshold = iou_threshold,
-            motion_type   = motion_type,
-            object_type   = object_type,
-        )
     
     def update(self, instances: list | np.ndarray = ()):
         """Update :attr:`tracks` with new detections. This method will call the
@@ -140,7 +94,7 @@ class SORT(base.Tracker):
         if len(instances) > 0:
             # dets - a numpy array of detections in the format
             # [[x1,y1,x2,y2,score], [x1,y1,x2,y2,score],...]
-            insts = np.array([np.append(np.float64(i.box), np.float64(i.confidence)) for i in instances])
+            insts = np.array([np.append(np.float64(i.bbox), np.float64(i.confidence)) for i in instances])
         else:
             insts = np.empty((0, 5))
         
@@ -202,7 +156,7 @@ class SORT(base.Tracker):
                 np.arange(len(instances)),\
                 np.empty((0, 5), dtype=int)
 
-        iou_matrix = compute_box_iou(box1=instances, box2=tracks)
+        iou_matrix = compute_box_iou(bbox1=instances, bbox2=tracks)
         
         if min(iou_matrix.shape) > 0:
             a = (iou_matrix > self.iou_threshold).astype(np.int32)

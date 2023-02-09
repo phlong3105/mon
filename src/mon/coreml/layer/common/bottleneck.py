@@ -9,44 +9,44 @@ __all__ = [
     "Bottleneck", "GhostBottleneck", "GhostSEBottleneck",
 ]
 
-from typing import Any
+from typing import Any, Callable
 
 import torch
 import torchvision
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, conv, normalization, pooling,
 )
-from mon.coreml.typing import CallableType, Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.globals import LAYERS
 
 
 # region Bottleneck
 
-@constant.LAYER.register()
-class Bottleneck(torchvision.models.resnet.Bottleneck, base.PassThroughLayerParsingMixin):
+@LAYERS.register()
+class Bottleneck(base.PassThroughLayerParsingMixin, torchvision.models.resnet.Bottleneck):
     pass
-    
+
+
 # endregion
 
 
 # region Ghost Bottleneck
 
-@constant.LAYER.register()
+@LAYERS.register()
 class GhostSEBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
     """Squeeze-and-Excite Bottleneck layer used in GhostBottleneck module."""
     
     def __init__(
         self,
         in_channels     : int,
-        se_ratio        : float               = 0.25,
-        reduced_base_chs: int          | None = None,
-        act             : CallableType | None = activation.ReLU,
-        gate_fn         : CallableType | None = activation.hard_sigmoid,
-        divisor         : int                 = 4,
-        *args, **kwargs
+        se_ratio        : float      = 0.25,
+        reduced_base_chs: int | None = None,
+        act             : Callable   = activation.ReLU,
+        gate_fn         : Callable   = activation.hard_sigmoid,
+        divisor         : int        = 4,
     ):
         super().__init__()
         self.gate_fn     = gate_fn
@@ -72,8 +72,7 @@ class GhostSEBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
     def make_divisible(self, v, divisor, min_value=None):
         """This function is taken from the original tf repo. It ensures that
         all layers have a channel number that is divisible by 8 It can be seen
-        here:
-        https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+        here: https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
         """
         if min_value is None:
             min_value = divisor
@@ -93,36 +92,35 @@ class GhostSEBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
     """Ghost Bottleneck with optional SE.
     
     References:
         https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
     """
-
+    
     def __init__(
         self,
         in_channels : int,
         mid_channels: int,
         out_channels: int,
-        kernel_size : Int2T               = 3,
-        stride      : Int2T               = 1,
-        padding     : Int2T | str         = 0,
-        dilation    : Int2T               = 1,
-        groups      : int                 = 1,
-        bias        : bool                = True,
-        padding_mode: str                 = "zeros",
-        device      : Any                 = None,
-        dtype       : Any                 = None,
-        se_ratio    : float               = 0.0,
-        act         : CallableType | None = activation.ReLU,
-        *args, **kwargs
+        kernel_size : _size_2_t       = 3,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+        se_ratio    : float           = 0.0,
+        act         : Callable        = activation.ReLU,
     ):
         super().__init__()
         has_se      = se_ratio is not None and se_ratio > 0.0
         self.stride = stride
-
+        
         # Point-wise expansion
         self.ghost1 = conv.GhostConv2d(
             in_channels    = in_channels,
@@ -139,7 +137,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
             dtype          = dtype,
             act            = activation.ReLU,
         )
-
+        
         # Depth-wise convolution
         if self.stride > 1:
             self.conv_dw = conv.Conv2d(
@@ -156,13 +154,16 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
                 dtype        = dtype,
             )
             self.bn_dw = normalization.BatchNorm2d(mid_channels)
-
+        
         # Squeeze-and-excitation
         if has_se:
-            self.se = GhostSEBottleneck(in_channels=mid_channels, se_ratio=se_ratio)
+            self.se = GhostSEBottleneck(
+                in_channels = mid_channels,
+                se_ratio    = se_ratio
+            )
         else:
             self.se = None
-
+        
         # Point-wise linear projection
         self.ghost2 = conv.GhostConv2d(
             in_channels    = mid_channels,
@@ -214,7 +215,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
                 ),
                 normalization.BatchNorm2d(out_channels),
             )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         # 1st ghost bottleneck

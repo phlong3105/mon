@@ -10,18 +10,12 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
 import numpy as np
 from torch import Tensor
 
 import mon
 from supr.data import instance as ins
-
-if TYPE_CHECKING:
-    from supr.typing import (
-        ClassLabelsType, ConfigType, DictType, Int3T, Ints, Strs, WeightsType
-    )
 
 
 # region Detector
@@ -33,8 +27,7 @@ class Detector(ABC):
         cfg: A detector model's config.
         classlabels: A list of all labels' dicts.
         weights: A path to the pretrained weights. Defaults to None.
-        shape: The desired model's input shape preferably in a channel-last
-            format. Defaults to (3, 256, 256).
+        image_size: The desired model's input size in HW format. Defaults to 256.
         conf_thres: An object confidence threshold. Defaults to 0.5.
         iou_thres: An IOU threshold for NMS. Defaults to 0.4.
         devices: A list of devices to use. Defaults to 'cpu'.
@@ -42,13 +35,13 @@ class Detector(ABC):
     
     def __init__(
         self,
-        cfg        : ConfigType,
-        classlabels: ClassLabelsType,
-        weights    : WeightsType | None = None,
-        shape      : Int3T              = (3, 256, 256),
-        conf_thres : float              = 0.5,
-        iou_thres  : float              = 0.4,
-        devices    : Ints | Strs        = "cpu",
+        cfg        : dict | mon.Path,
+        classlabels: mon.ClassLabels | dict,
+        weights    : mon.Path | dict             = None,
+        image_size : int | list[int]             = 256,
+        conf_thres : float                       = 0.5,
+        iou_thres  : float                       = 0.4,
+        devices    : int | str | list[int | str] = "cpu",
     ):
         super().__init__()
         self.model           = None
@@ -56,7 +49,7 @@ class Detector(ABC):
         self.classlabels     = mon.ClassLabels.from_value(value=classlabels)
         self.allowed_ids     = self.classlabels.ids(key="train_id")
         self.weights         = weights
-        self.shape           = shape
+        self.image_size      = image_size
         self.conf_thres      = conf_thres
         self.iou_thres       = iou_thres
         self.devices         = mon.select_device(device=devices)
@@ -99,7 +92,7 @@ class Detector(ABC):
         """Forward pass.
 
         Args:
-            input: Input tensor of shape [B, C, H, W].
+            input: Input tensor of shape NCHW.
 
         Returns:
             Predictions.
@@ -114,7 +107,7 @@ class Detector(ABC):
             images: Images.
 
         Returns:
-            Input tensor of shape [B, H, W, C].
+            Input tensor of shape NCHW.
         """
         pass
 
@@ -154,7 +147,7 @@ class Detector(ABC):
         """
         valid_instances = []
         for ins in instances:
-            valid_ins = [d for d in ins if self.is_correct_label(d.class_label)]
+            valid_ins = [d for d in ins if self.is_correct_label(d.classlabel)]
             valid_instances.append(valid_ins)
         return valid_instances
     
@@ -198,7 +191,7 @@ class Detector(ABC):
         valid_instances = []
         for ins in instances:
             # NOTE: Extract measurement bounding boxes and scores
-            boxes  = np.array([d.box        for d in ins])
+            boxes  = np.array([d.bbox       for d in ins])
             scores = np.array([d.confidence for d in ins])
 
             # NOTE: Extract road_objects indices that survive
@@ -245,7 +238,7 @@ class Detector(ABC):
 
         return valid_instances
 
-    def is_correct_label(self, label: DictType) -> bool:
+    def is_correct_label(self, label: dict) -> bool:
         """Check if the label is allowed."""
         if label["id"] in self.allowed_ids:
             return True

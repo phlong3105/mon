@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class GridRCNN(TwoStageDetector):
     """Grid R-CNN.
 

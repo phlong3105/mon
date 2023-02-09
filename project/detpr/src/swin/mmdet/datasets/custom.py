@@ -12,7 +12,7 @@ from .builder import DATASETS
 from .pipelines import Compose
 
 
-@DATASETS.register_module()
+@DATASETS._register()
 class CustomDataset(Dataset):
     """Custom dataset for detection.
 

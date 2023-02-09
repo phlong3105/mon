@@ -5,7 +5,7 @@ from mmdet.models.builder import ROI_EXTRACTORS
 from .base_roi_extractor import BaseRoIExtractor
 
 
-@ROI_EXTRACTORS.register_module()
+@ROI_EXTRACTORS._register()
 class GenericRoIExtractor(BaseRoIExtractor):
     """Extract RoI features from all level feature maps levels.
 

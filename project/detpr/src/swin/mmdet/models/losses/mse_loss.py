@@ -11,7 +11,7 @@ def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class MSELoss(nn.Module):
     """MSELoss.
 

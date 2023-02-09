@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-import supr.constant
+import supr.globals
 import supr.typing
 from supr.camera import *
 from supr.data import *

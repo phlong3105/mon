@@ -1,13 +1,13 @@
 import torch.nn as nn
 from mmcv.cnn import ConvModule, normal_init
 from mmcv.ops import DeformConv2d
-
 from mmdet.core import multi_apply
-from ..builder import HEADS, build_loss
+
 from .corner_head import CornerHead
+from ..builder import build_loss, HEADS
 
 
-@HEADS.register_module()
+@HEADS._register()
 class CentripetalHead(CornerHead):
     """Head of CentripetalNet: Pursuing High-quality Keypoint Pairs for Object
     Detection.
@@ -40,17 +40,21 @@ class CentripetalHead(CornerHead):
         loss_centripetal_shift (dict): Config of centripetal shift loss.
             Default: SmoothL1Loss.
     """
-
-    def __init__(self,
-                 *args,
-                 centripetal_shift_channels=2,
-                 guiding_shift_channels=2,
-                 feat_adaption_conv_kernel=3,
-                 loss_guiding_shift=dict(
-                     type='SmoothL1Loss', beta=1.0, loss_weight=0.05),
-                 loss_centripetal_shift=dict(
-                     type='SmoothL1Loss', beta=1.0, loss_weight=1),
-                 **kwargs):
+    
+    def __init__(
+        self,
+        *args,
+        centripetal_shift_channels=2,
+        guiding_shift_channels=2,
+        feat_adaption_conv_kernel=3,
+        loss_guiding_shift=dict(
+            type='SmoothL1Loss', beta=1.0, loss_weight=0.05
+        ),
+        loss_centripetal_shift=dict(
+            type='SmoothL1Loss', beta=1.0, loss_weight=1
+        ),
+        **kwargs
+    ):
         assert centripetal_shift_channels == 2, (
             'CentripetalHead only support centripetal_shift_channels == 2')
         self.centripetal_shift_channels = centripetal_shift_channels
@@ -61,7 +65,7 @@ class CentripetalHead(CornerHead):
         super(CentripetalHead, self).__init__(*args, **kwargs)
         self.loss_guiding_shift = build_loss(loss_guiding_shift)
         self.loss_centripetal_shift = build_loss(loss_centripetal_shift)
-
+    
     def _init_centripetal_layers(self):
         """Initialize centripetal layers.
 
@@ -78,50 +82,68 @@ class CentripetalHead(CornerHead):
         self.br_guiding_shift = nn.ModuleList()
         self.tl_centripetal_shift = nn.ModuleList()
         self.br_centripetal_shift = nn.ModuleList()
-
+        
         for _ in range(self.num_feat_levels):
             self.tl_feat_adaption.append(
-                DeformConv2d(self.in_channels, self.in_channels,
-                             self.feat_adaption_conv_kernel, 1, 1))
+                DeformConv2d(
+                    self.in_channels, self.in_channels,
+                    self.feat_adaption_conv_kernel, 1, 1
+                )
+            )
             self.br_feat_adaption.append(
-                DeformConv2d(self.in_channels, self.in_channels,
-                             self.feat_adaption_conv_kernel, 1, 1))
-
+                DeformConv2d(
+                    self.in_channels, self.in_channels,
+                    self.feat_adaption_conv_kernel, 1, 1
+                )
+            )
+            
             self.tl_guiding_shift.append(
                 self._make_layers(
                     out_channels=self.guiding_shift_channels,
-                    in_channels=self.in_channels))
+                    in_channels=self.in_channels
+                )
+            )
             self.br_guiding_shift.append(
                 self._make_layers(
                     out_channels=self.guiding_shift_channels,
-                    in_channels=self.in_channels))
-
+                    in_channels=self.in_channels
+                )
+            )
+            
             self.tl_dcn_offset.append(
                 ConvModule(
                     self.guiding_shift_channels,
-                    self.feat_adaption_conv_kernel**2 *
+                    self.feat_adaption_conv_kernel ** 2 *
                     self.guiding_shift_channels,
                     1,
                     bias=False,
-                    act_cfg=None))
+                    act_cfg=None
+                )
+            )
             self.br_dcn_offset.append(
                 ConvModule(
                     self.guiding_shift_channels,
-                    self.feat_adaption_conv_kernel**2 *
+                    self.feat_adaption_conv_kernel ** 2 *
                     self.guiding_shift_channels,
                     1,
                     bias=False,
-                    act_cfg=None))
-
+                    act_cfg=None
+                )
+            )
+            
             self.tl_centripetal_shift.append(
                 self._make_layers(
                     out_channels=self.centripetal_shift_channels,
-                    in_channels=self.in_channels))
+                    in_channels=self.in_channels
+                )
+            )
             self.br_centripetal_shift.append(
                 self._make_layers(
                     out_channels=self.centripetal_shift_channels,
-                    in_channels=self.in_channels))
-
+                    in_channels=self.in_channels
+                )
+            )
+    
     def _init_layers(self):
         """Initialize layers for CentripetalHead.
 
@@ -129,7 +151,7 @@ class CentripetalHead(CornerHead):
         """
         super()._init_layers()  # using _init_layers in CornerHead
         self._init_centripetal_layers()
-
+    
     def init_weights(self):
         """Initialize weights of the head."""
         super().init_weights()
@@ -146,7 +168,7 @@ class CentripetalHead(CornerHead):
             _ = [
                 x.conv.reset_parameters() for x in self.br_centripetal_shift[i]
             ]
-
+    
     def forward_single(self, x, lvl_ind):
         """Forward feature of a single level.
 
@@ -173,43 +195,52 @@ class CentripetalHead(CornerHead):
         """
         tl_heat, br_heat, _, _, tl_off, br_off, tl_pool, br_pool = super(
         ).forward_single(
-            x, lvl_ind, return_pool=True)
-
+            x, lvl_ind, return_pool=True
+        )
+        
         tl_guiding_shift = self.tl_guiding_shift[lvl_ind](tl_pool)
         br_guiding_shift = self.br_guiding_shift[lvl_ind](br_pool)
-
+        
         tl_dcn_offset = self.tl_dcn_offset[lvl_ind](tl_guiding_shift.detach())
         br_dcn_offset = self.br_dcn_offset[lvl_ind](br_guiding_shift.detach())
-
-        tl_feat_adaption = self.tl_feat_adaption[lvl_ind](tl_pool,
-                                                          tl_dcn_offset)
-        br_feat_adaption = self.br_feat_adaption[lvl_ind](br_pool,
-                                                          br_dcn_offset)
-
+        
+        tl_feat_adaption = self.tl_feat_adaption[lvl_ind](
+            tl_pool,
+            tl_dcn_offset
+        )
+        br_feat_adaption = self.br_feat_adaption[lvl_ind](
+            br_pool,
+            br_dcn_offset
+        )
+        
         tl_centripetal_shift = self.tl_centripetal_shift[lvl_ind](
-            tl_feat_adaption)
+            tl_feat_adaption
+        )
         br_centripetal_shift = self.br_centripetal_shift[lvl_ind](
-            br_feat_adaption)
-
+            br_feat_adaption
+        )
+        
         result_list = [
             tl_heat, br_heat, tl_off, br_off, tl_guiding_shift,
             br_guiding_shift, tl_centripetal_shift, br_centripetal_shift
         ]
         return result_list
-
-    def loss(self,
-             tl_heats,
-             br_heats,
-             tl_offs,
-             br_offs,
-             tl_guiding_shifts,
-             br_guiding_shifts,
-             tl_centripetal_shifts,
-             br_centripetal_shifts,
-             gt_bboxes,
-             gt_labels,
-             img_metas,
-             gt_bboxes_ignore=None):
+    
+    def loss(
+        self,
+        tl_heats,
+        br_heats,
+        tl_offs,
+        br_offs,
+        tl_guiding_shifts,
+        br_guiding_shifts,
+        tl_centripetal_shifts,
+        br_centripetal_shifts,
+        gt_bboxes,
+        gt_labels,
+        img_metas,
+        gt_bboxes_ignore=None
+    ):
         """Compute losses of the head.
 
         Args:
@@ -233,7 +264,7 @@ class CentripetalHead(CornerHead):
                 centripetal_shift_channels, H, W).
             gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
                 shape (num_gts, 4) in [left, top, right, bottom] format.
-            gt_labels (list[Tensor]): Class indices corresponding to each bbox.
+            gt_labels (list[Tensor]): Class indices corresponding to each box.
             img_metas (list[dict]): Meta information of each image, e.g.,
                 image size, scaling factor, etc.
             gt_bboxes_ignore (list[Tensor] | None): Specify which bounding
@@ -259,23 +290,29 @@ class CentripetalHead(CornerHead):
             img_metas[0]['pad_shape'],
             with_corner_emb=self.with_corner_emb,
             with_guiding_shift=True,
-            with_centripetal_shift=True)
+            with_centripetal_shift=True
+        )
         mlvl_targets = [targets for _ in range(self.num_feat_levels)]
         [det_losses, off_losses, guiding_losses, centripetal_losses
-         ] = multi_apply(self.loss_single, tl_heats, br_heats, tl_offs,
-                         br_offs, tl_guiding_shifts, br_guiding_shifts,
-                         tl_centripetal_shifts, br_centripetal_shifts,
-                         mlvl_targets)
+         ] = multi_apply(
+            self.loss_single, tl_heats, br_heats, tl_offs,
+            br_offs, tl_guiding_shifts, br_guiding_shifts,
+            tl_centripetal_shifts, br_centripetal_shifts,
+            mlvl_targets
+        )
         loss_dict = dict(
             det_loss=det_losses,
             off_loss=off_losses,
             guiding_loss=guiding_losses,
-            centripetal_loss=centripetal_losses)
+            centripetal_loss=centripetal_losses
+        )
         return loss_dict
-
-    def loss_single(self, tl_hmp, br_hmp, tl_off, br_off, tl_guiding_shift,
-                    br_guiding_shift, tl_centripetal_shift,
-                    br_centripetal_shift, targets):
+    
+    def loss_single(
+        self, tl_hmp, br_hmp, tl_off, br_off, tl_guiding_shift,
+        br_guiding_shift, tl_centripetal_shift,
+        br_centripetal_shift, targets
+    ):
         """Compute losses for single level.
 
         Args:
@@ -307,16 +344,18 @@ class CentripetalHead(CornerHead):
                 - centripetal_loss (Tensor): Centripetal shift loss.
         """
         targets['corner_embedding'] = None
-
-        det_loss, _, _, off_loss = super().loss_single(tl_hmp, br_hmp, None,
-                                                       None, tl_off, br_off,
-                                                       targets)
-
+        
+        det_loss, _, _, off_loss = super().loss_single(
+            tl_hmp, br_hmp, None,
+            None, tl_off, br_off,
+            targets
+        )
+        
         gt_tl_guiding_shift = targets['topleft_guiding_shift']
         gt_br_guiding_shift = targets['bottomright_guiding_shift']
         gt_tl_centripetal_shift = targets['topleft_centripetal_shift']
         gt_br_centripetal_shift = targets['bottomright_centripetal_shift']
-
+        
         gt_tl_heatmap = targets['topleft_heatmap']
         gt_br_heatmap = targets['bottomright_heatmap']
         # We only compute the offset loss at the real corner position.
@@ -324,50 +363,58 @@ class CentripetalHead(CornerHead):
         # The mask is computed in class agnostic mode and its shape is
         # batch * 1 * width * height.
         tl_mask = gt_tl_heatmap.eq(1).sum(1).gt(0).unsqueeze(1).type_as(
-            gt_tl_heatmap)
+            gt_tl_heatmap
+        )
         br_mask = gt_br_heatmap.eq(1).sum(1).gt(0).unsqueeze(1).type_as(
-            gt_br_heatmap)
-
+            gt_br_heatmap
+        )
+        
         # Guiding shift loss
         tl_guiding_loss = self.loss_guiding_shift(
             tl_guiding_shift,
             gt_tl_guiding_shift,
             tl_mask,
-            avg_factor=tl_mask.sum())
+            avg_factor=tl_mask.sum()
+        )
         br_guiding_loss = self.loss_guiding_shift(
             br_guiding_shift,
             gt_br_guiding_shift,
             br_mask,
-            avg_factor=br_mask.sum())
+            avg_factor=br_mask.sum()
+        )
         guiding_loss = (tl_guiding_loss + br_guiding_loss) / 2.0
         # Centripetal shift loss
         tl_centripetal_loss = self.loss_centripetal_shift(
             tl_centripetal_shift,
             gt_tl_centripetal_shift,
             tl_mask,
-            avg_factor=tl_mask.sum())
+            avg_factor=tl_mask.sum()
+        )
         br_centripetal_loss = self.loss_centripetal_shift(
             br_centripetal_shift,
             gt_br_centripetal_shift,
             br_mask,
-            avg_factor=br_mask.sum())
+            avg_factor=br_mask.sum()
+        )
         centripetal_loss = (tl_centripetal_loss + br_centripetal_loss) / 2.0
-
+        
         return det_loss, off_loss, guiding_loss, centripetal_loss
-
-    def get_bboxes(self,
-                   tl_heats,
-                   br_heats,
-                   tl_offs,
-                   br_offs,
-                   tl_guiding_shifts,
-                   br_guiding_shifts,
-                   tl_centripetal_shifts,
-                   br_centripetal_shifts,
-                   img_metas,
-                   rescale=False,
-                   with_nms=True):
-        """Transform network output for a batch into bbox predictions.
+    
+    def get_bboxes(
+        self,
+        tl_heats,
+        br_heats,
+        tl_offs,
+        br_offs,
+        tl_guiding_shifts,
+        br_guiding_shifts,
+        tl_centripetal_shifts,
+        br_centripetal_shifts,
+        img_metas,
+        rescale=False,
+        with_nms=True
+    ):
+        """Transform network output for a batch into box predictions.
 
         Args:
             tl_heats (list[Tensor]): Top-left corner heatmaps for each level
@@ -412,10 +459,12 @@ class CentripetalHead(CornerHead):
                     tl_emb=None,
                     br_emb=None,
                     tl_centripetal_shift=tl_centripetal_shifts[-1][
-                        img_id:img_id + 1, :],
+                                         img_id:img_id + 1, :],
                     br_centripetal_shift=br_centripetal_shifts[-1][
-                        img_id:img_id + 1, :],
+                                         img_id:img_id + 1, :],
                     rescale=rescale,
-                    with_nms=with_nms))
-
+                    with_nms=with_nms
+                )
+            )
+        
         return result_list

@@ -10,31 +10,30 @@ __all__ = [
     "ResNetBasicBlock", "ResNetBlock", "ResNetBottleneck",
 ]
 
-from typing import Type
+from typing import Callable, Type
 
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import CallableType
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ResNetBasicBlock(base.ConvLayerParsingMixin, nn.Module):
     
     expansion: int = 1
-
+    
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        stride      : int                 = 1,
-        groups      : int                 = 1,
-        dilation    : int                 = 1,
-        base_width  : int                 = 64,
-        downsample  : nn.Module    | None = None,
-        norm        : CallableType | None = None,
+        stride      : int              = 1,
+        groups      : int              = 1,
+        dilation    : int              = 1,
+        base_width  : int              = 64,
+        downsample  : nn.Module | None = None,
+        norm        : Callable         = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -42,15 +41,15 @@ class ResNetBasicBlock(base.ConvLayerParsingMixin, nn.Module):
             norm = common.BatchNorm2d
         if groups != 1 or base_width != 64:
             raise ValueError(
-                "`BasicBlock` only supports `groups=1` and `base_width=64`"
+                "'BasicBlock' only supports 'groups=1' and 'base_width=64'"
             )
         if dilation > 1:
             raise NotImplementedError(
-                "dilation > 1 not supported in `BasicBlock`"
+                "dilation > 1 not supported in 'BasicBlock'"
             )
         # Both self.conv1 and self.downsample layers downsample the input when
         # stride != 1
-        self.conv1      = common.Conv2d(
+        self.conv1 = common.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -60,9 +59,9 @@ class ResNetBasicBlock(base.ConvLayerParsingMixin, nn.Module):
             bias         = False,
             dilation     = dilation,
         )
-        self.bn1        = norm(out_channels)
-        self.relu       = common.ReLU(inplace=True)
-        self.conv2      = common.Conv2d(
+        self.bn1   = norm(out_channels)
+        self.relu  = common.ReLU(inplace=True)
+        self.conv2 = common.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -75,14 +74,14 @@ class ResNetBasicBlock(base.ConvLayerParsingMixin, nn.Module):
         self.bn2        = norm(out_channels)
         self.downsample = downsample
         self.stride     = stride
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x  = input
-        y  = self.conv1(x)
-        y  = self.bn1(y)
-        y  = self.relu(y)
-        y  = self.conv2(y)
-        y  = self.bn2(y)
+        x = input
+        y = self.conv1(x)
+        y = self.bn1(y)
+        y = self.relu(y)
+        y = self.conv2(y)
+        y = self.bn2(y)
         if self.downsample is not None:
             x = self.downsample(x)
         y += x
@@ -90,29 +89,29 @@ class ResNetBasicBlock(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ResNetBottleneck(base.ConvLayerParsingMixin, nn.Module):
     """Bottleneck in torchvision places the stride for down-sampling at 3x3
     convolution(self.conv2) while original implementation places the stride at
     the first 1x1 convolution(self.conv1) according to "Deep residual learning
     for image recognition" https://arxiv.org/abs/1512.03385. This variant is
     also known as ResNet V1.5 and improves accuracy according to
-    https://ngc.nvidia.com/catalog/model-scripts/nvidia:resnet_50_v1_5_for_pytorch.
+    https://ngc.nvidia.com/catalog/model-scripts/nvidia
+    :resnet_50_v1_5_for_pytorch.
     """
     
     expansion: int = 4
-
+    
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
-        stride      : int                 = 1,
-        groups      : int                 = 1,
-        dilation    : int                 = 1,
-        base_width  : int                 = 64,
-        downsample  : nn.Module    | None = None,
-        norm        : CallableType | None = None,
-        *args, **kwargs
+        stride      : int              = 1,
+        groups      : int              = 1,
+        dilation    : int              = 1,
+        base_width  : int              = 64,
+        downsample  : nn.Module | None = None,
+        norm        : Callable         = None,
     ):
         super().__init__()
         if norm is None:
@@ -120,7 +119,7 @@ class ResNetBottleneck(base.ConvLayerParsingMixin, nn.Module):
         width = int(out_channels * (base_width / 64.0)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when
         # stride != 1
-        self.conv1      = common.Conv2d(
+        self.conv1 = common.Conv2d(
             in_channels  = in_channels,
             out_channels = width,
             kernel_size  = 1,
@@ -130,8 +129,8 @@ class ResNetBottleneck(base.ConvLayerParsingMixin, nn.Module):
             groups       = 1,
             bias         = False
         )
-        self.bn1        = norm(width)
-        self.conv2      = common.Conv2d(
+        self.bn1 = norm(width)
+        self.conv2 = common.Conv2d(
             in_channels  = width,
             out_channels = width,
             kernel_size  = 3,
@@ -141,8 +140,8 @@ class ResNetBottleneck(base.ConvLayerParsingMixin, nn.Module):
             bias         = False,
             dilation     = dilation,
         )
-        self.bn2        = norm(width)
-        self.conv3      = common.Conv2d(
+        self.bn2   = norm(width)
+        self.conv3 = common.Conv2d(
             in_channels  = width,
             out_channels = out_channels * self.expansion,
             kernel_size  = 1,
@@ -156,17 +155,17 @@ class ResNetBottleneck(base.ConvLayerParsingMixin, nn.Module):
         self.relu       = common.ReLU(inplace=True)
         self.downsample = downsample
         self.stride     = stride
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x  = input
-        y  = self.conv1(x)
-        y  = self.bn1(y)
-        y  = self.relu(y)
-        y  = self.conv2(y)
-        y  = self.bn2(y)
-        y  = self.relu(y)
-        y  = self.conv3(y)
-        y  = self.bn3(y)
+        x = input
+        y = self.conv1(x)
+        y = self.bn1(y)
+        y = self.relu(y)
+        y = self.conv2(y)
+        y = self.bn2(y)
+        y = self.relu(y)
+        y = self.conv3(y)
+        y = self.bn3(y)
         if self.downsample is not None:
             x = self.downsample(x)
         y += x
@@ -174,22 +173,21 @@ class ResNetBottleneck(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ResNetBlock(base.LayerParsingMixin, nn.Module):
     
     def __init__(
         self,
-        block        : Type[ResNetBasicBlock | ResNetBottleneck],
-        num_blocks   : int,
-        in_channels  : int,
-        out_channels : int,
-        stride       : int                 = 1,
-        groups       : int                 = 1,
-        dilation     : int                 = 1,
-        base_width   : int                 = 64,
-        dilate       : bool                = False,
-        norm         : CallableType | None = common.BatchNorm2d,
-        *args, **kwargs
+        block       : Type[ResNetBasicBlock | ResNetBottleneck],
+        num_blocks  : int,
+        in_channels : int,
+        out_channels: int,
+        stride      : int      = 1,
+        groups      : int      = 1,
+        dilation    : int      = 1,
+        base_width  : int      = 64,
+        dilate      : bool     = False,
+        norm        : Callable = common.BatchNorm2d,
     ):
         super().__init__()
         downsample    = None
@@ -209,7 +207,7 @@ class ResNetBlock(base.LayerParsingMixin, nn.Module):
                 ),
                 norm(out_channels * block.expansion),
             )
-      
+        
         layers = []
         layers.append(
             block(
@@ -220,7 +218,7 @@ class ResNetBlock(base.LayerParsingMixin, nn.Module):
                 dilation     = prev_dilation,
                 base_width   = base_width,
                 downsample   = downsample,
-                norm= norm,
+                norm         = norm,
             )
         )
         for _ in range(1, num_blocks):
@@ -233,7 +231,7 @@ class ResNetBlock(base.LayerParsingMixin, nn.Module):
                     dilation     = dilation,
                     base_width   = base_width,
                     downsample   = None,
-                    norm= norm,
+                    norm         = norm,
                 )
             )
         self.convs = torch.nn.Sequential(*layers)

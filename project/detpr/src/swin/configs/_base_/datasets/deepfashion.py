@@ -2,7 +2,8 @@
 dataset_type = 'DeepFashionDataset'
 data_root = 'data/DeepFashion/In-shop/'
 img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True
+)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
@@ -26,7 +27,8 @@ test_pipeline = [
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img']),
-        ])
+        ]
+    )
 ]
 data = dict(
     imgs_per_gpu=2,
@@ -36,18 +38,22 @@ data = dict(
         ann_file=data_root + 'annotations/DeepFashion_segmentation_query.json',
         img_prefix=data_root + 'Img/',
         pipeline=train_pipeline,
-        data_root=data_root),
+        data_root=data_root
+    ),
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/DeepFashion_segmentation_query.json',
         img_prefix=data_root + 'Img/',
         pipeline=test_pipeline,
-        data_root=data_root),
+        data_root=data_root
+    ),
     test=dict(
         type=dataset_type,
         ann_file=data_root +
-        'annotations/DeepFashion_segmentation_gallery.json',
+                 'annotations/DeepFashion_segmentation_gallery.json',
         img_prefix=data_root + 'Img/',
         pipeline=test_pipeline,
-        data_root=data_root))
-evaluation = dict(interval=5, metric=['bbox', 'segm'])
+        data_root=data_root
+    )
+)
+evaluation = dict(interval=5, metric=['box', 'segm'])

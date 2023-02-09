@@ -19,32 +19,30 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops.misc import Permute
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
+from mon.foundation import builtins
+from mon.globals import LAYERS
 
 
 # region Extraction
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ExtractFeature(base.LayerParsingMixin, nn.Module):
-    """Extract a feature at `index` in a tensor.
+    """Extract a feature at :param:`index` in a tensor.
     
     Args:
         index: The index of the feature to extract.
     """
 
-    def __init__(
-        self,
-        index: int,
-        dim  : int = 1,
-        *args, **kwargs
-    ):
+    def __init__(self, index: int):
         super().__init__()
         self.index = index
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        assert input.ndim == 4
+        if not input.ndim == 4:
+            raise ValueError(
+                f"input's number of dimensions must be == 4, but got {input.ndim}."
+            )
         x = input
         y = x[:, self.index, :, :]
         return y
@@ -56,27 +54,26 @@ class ExtractFeature(base.LayerParsingMixin, nn.Module):
         return args, ch
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ExtractFeatures(base.LayerParsingMixin, nn.Module):
-    """Extract features between `start` index and `end` index in a tensor.
+    """Extract features between :param:`start` index and :param:`end` index in a
+    tensor.
     
     Args:
         start: The start index of the features to extract.
         end: The end index of the features to extract.
     """
     
-    def __init__(
-        self,
-        start: int,
-        end  : int,
-        *args, **kwargs
-    ):
+    def __init__(self, start: int, end: int):
         super().__init__()
         self.start = start
         self.end   = end
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        assert input.ndim == 4
+        if not input.ndim == 4:
+            raise ValueError(
+                f"input's number of dimensions must be == 4, but got {input.ndim}."
+            )
         x = input
         y = x[:, self.start:self.end, :, :]
         return y
@@ -86,21 +83,17 @@ class ExtractFeatures(base.LayerParsingMixin, nn.Module):
         c2 = args[1] - args[0]
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class ExtractItem(base.PassThroughLayerParsingMixin, nn.Module):
-    """Extract an item (feature) at `index` in a sequence of tensors.
+    """Extract an item (feature) at :param:`index` in a sequence of tensors.
     
     Args:
-        index (int): The index of the item to extract.
+        index: The index of the item to extract.
     """
-    
-    def __init__(
-        self,
-        index: int,
-        *args, **kwargs
-    ):
+
+    def __init__(self, index: int):
         super().__init__()
         self.index = index
     
@@ -108,16 +101,15 @@ class ExtractItem(base.PassThroughLayerParsingMixin, nn.Module):
         x = input
         if isinstance(x, torch.Tensor):
             return x
-        elif isinstance(x, (list, tuple)):
+        elif isinstance(x, list | tuple):
             return x[self.index]
         else:
             raise TypeError(
-                f":param:`input` must be a list or tuple of tensors. "
-                f"But got: {type(input)}."
+                f"input must be a list or tuple of tensors, but got: {type(input)}."
             )
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ExtractItems(base.PassThroughLayerParsingMixin, nn.Module):
     """Extract a list of items (features) at `indexes` in a sequence of
     tensors.
@@ -126,40 +118,27 @@ class ExtractItems(base.PassThroughLayerParsingMixin, nn.Module):
         indexes: The indexes of the items to extract.
     """
     
-    def __init__(
-        self,
-        indexes: Sequence[int],
-        *args, **kwargs
-    ):
+    def __init__(self, indexes: Sequence[int]):
         super().__init__()
         self.indexes = indexes
     
-    def forward(
-        self,
-        input: Sequence[torch.Tensor]
-    ) -> list[torch.Tensor]:
+    def forward(self, input: Sequence[torch.Tensor]) -> list[torch.Tensor]:
         x = input
         if isinstance(x, torch.Tensor):
             y = [x]
             return y
-        elif isinstance(x, (list, tuple)):
+        elif isinstance(x, list | tuple):
             y = [x[i] for i in self.indexes]
             return y
         raise TypeError(
-            f"`input` must be a list or tuple of tensors. "
-            f"But got: {type(input)}."
+            f"input must be a list or tuple of tensors, but got: {type(input)}."
         )
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Max(base.PassThroughLayerParsingMixin, nn.Module):
-
-    def __init__(
-        self,
-        dim    : int,
-        keepdim: bool = False,
-        *args, **kwargs
-    ):
+    
+    def __init__(self, dim: int, keepdim: bool = False):
         super().__init__()
         self.dim     = dim
         self.keepdim = keepdim
@@ -169,20 +148,21 @@ class Max(base.PassThroughLayerParsingMixin, nn.Module):
         y = torch.max(input=x, dim=self.dim, keepdim=self.keepdim)
         return y
 
+
 # endregion
 
 
 # region Flattening
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FlattenSingle(base.PassThroughLayerParsingMixin, nn.Module):
     """Flatten a tensor along a single dimension.
 
     Args:
-        dim (int): Dimension to flatten. Defaults to 1.
+        dim: Dimension to flatten. Defaults to 1.
     """
     
-    def __init__(self, dim: int = 1, *args, **kwargs):
+    def __init__(self, dim: int = 1):
         super().__init__()
         self.dim = dim
     
@@ -192,35 +172,37 @@ class FlattenSingle(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Flatten(base.PassThroughLayerParsingMixin, nn.Flatten):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Unflatten(base.PassThroughLayerParsingMixin, nn.Unflatten):
     pass
+
 
 # endregion
 
 
 # region Folding
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Fold(base.PassThroughLayerParsingMixin, nn.Fold):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Unfold(base.PassThroughLayerParsingMixin, nn.Unfold):
     pass
+
 
 # endregion
 
 
 # region Merging
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Concat(base.ConcatLayerParsingMixin, nn.Module):
     """Concatenate a list of tensors along dimension.
     
@@ -228,26 +210,17 @@ class Concat(base.ConcatLayerParsingMixin, nn.Module):
         dim: Dimension to concat to. Defaults to 1.
     """
     
-    def __init__(
-        self,
-        dim: str | ellipsis | None = 1,
-        *args, **kwargs
-    ):
+    def __init__(self, dim: str | ellipsis | None = 1, ):
         super().__init__()
         self.dim = dim
-    
-    """
-    def forward(self, input: Sequence[Tensor]) -> Tensor:
-        return torch.cat(to_list(input), dim=self.dim)
-    """
-    
+        
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = torch.cat(list(x), dim=self.dim)
         return y
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class Chuncat(base.ConcatLayerParsingMixin, nn.Module):
     """
     
@@ -255,14 +228,10 @@ class Chuncat(base.ConcatLayerParsingMixin, nn.Module):
         dim: Dimension to concat to. Defaults to 1.
     """
     
-    def __init__(
-        self,
-        dim: str | ellipsis | None = 1,
-        *args, **kwargs
-    ):
+    def __init__(self, dim: str | ellipsis | None = 1):
         super().__init__()
         self.dim = dim
-
+    
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
         x  = input
         y1 = []
@@ -275,7 +244,7 @@ class Chuncat(base.ConcatLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Foldcut(base.PassThroughLayerParsingMixin, nn.Module):
     """
     
@@ -283,14 +252,10 @@ class Foldcut(base.PassThroughLayerParsingMixin, nn.Module):
         dim: Dimension to concat to. Defaults to 0.
     """
     
-    def __init__(
-        self,
-        dim: str | ellipsis | None = 0,
-        *args, **kwargs
-    ):
+    def __init__(self, dim: str | ellipsis | None = 0):
         super().__init__()
         self.dim = dim
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x      = input
         x1, x2 = x.chunk(2, dim=self.dim)
@@ -302,52 +267,48 @@ class Foldcut(base.PassThroughLayerParsingMixin, nn.Module):
         c2 = ch[f] // 2
         ch.append(c2)
         return args, ch
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class InterpolateConcat(base.ConcatLayerParsingMixin, nn.Module):
     """Concatenate a list of tensors along dimension.
     
     Args:
         dim: Dimension to concat to. Defaults to 1.
     """
-    
-    def __init__(
-        self,
-        dim: str | ellipsis | None = 1,
-        *args, **kwargs
-    ):
+
+    def __init__(self, dim: str | ellipsis | None = 1):
         super().__init__()
         self.dim = dim
-        
+    
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
         x     = input
         sizes = [list(x_i.size()) for x_i in x]
         hs    = [s[2] for s in sizes]
         ws    = [s[3] for s in sizes]
         h, w  = max(hs), max(ws)
-        y     = []
+        y = []
         for x_i in x:
             s = x_i.size()
             if s[2] != h or s[3] != w:
                 y.append(functional.interpolate(input=x_i, size=(h, w)))
             else:
                 y.append(x_i)
-        y = torch.cat(core.to_list(y), dim=self.dim)
+        y = torch.cat(builtins.to_list(y), dim=self.dim)
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Join(base.MergingLayerParsingMixin, nn.Module):
     """Join multiple features and return a list tensors."""
     
     def forward(self, input: Sequence[torch.Tensor]) -> list[torch.Tensor]:
         x = input
-        y = core.to_list(x)
+        y = builtins.to_list(x)
         return y
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class Shortcut(base.MergingLayerParsingMixin, nn.Module):
     """
     
@@ -355,21 +316,17 @@ class Shortcut(base.MergingLayerParsingMixin, nn.Module):
         dim: Dimension to concat to. Defaults to 0.
     """
     
-    def __init__(
-        self,
-        dim: str | ellipsis | None = 0,
-        *args, **kwargs
-    ):
+    def __init__(self, dim: str | ellipsis | None = 0):
         super().__init__()
         self.dim = dim
-
+    
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
         x = input
         y = x[0] + x[1]
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SoftmaxFusion(base.MergingLayerParsingMixin, nn.Module):
     """Weighted sum of multiple layers https://arxiv.org/abs/1911.09070. Apply
     softmax to each weight, such that all weights are normalized to be a
@@ -379,16 +336,11 @@ class SoftmaxFusion(base.MergingLayerParsingMixin, nn.Module):
     Args:
         n: Number of inputs.
     """
-
-    def __init__(
-        self,
-        n     : int,
-        weight: bool = False,
-        *args, **kwargs
-    ):
+    
+    def __init__(self, n: int, weight: bool = False):
         super().__init__()
-        self.weight = weight        # Apply weights boolean
-        self.iter 	= range(n - 1)  # iter object
+        self.weight = weight  # Apply weights boolean
+        self.iter   = range(n - 1)  # iter object
         if weight:
             # Layer weights
             self.w = nn.Parameter(-torch.arange(1.0, n) / 2, requires_grad=True)
@@ -406,7 +358,7 @@ class SoftmaxFusion(base.MergingLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Sum(base.MergingLayerParsingMixin, nn.Module):
     
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
@@ -416,22 +368,23 @@ class Sum(base.MergingLayerParsingMixin, nn.Module):
             y += x[i]
         return y
 
+
 # endregion
 
 
 # region Shuffling
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ChannelShuffle(base.PassThroughLayerParsingMixin, nn.ChannelShuffle):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class PixelShuffle(base.PassThroughLayerParsingMixin, nn.PixelShuffle):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class PixelUnshuffle(base.PassThroughLayerParsingMixin, nn.PixelUnshuffle):
     pass
 

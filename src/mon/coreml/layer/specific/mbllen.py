@@ -13,32 +13,23 @@ __all__ = [
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class EnhancementModule(base.PassThroughLayerParsingMixin, nn.Module):
     """Enhancement regression (EM) has a symmetric structure to first apply
     convolutions and then deconvolutions.
-    
-    Args:
-        in_channels: Number of input channels. Defaults to 32.
-        mid_channels: Number of input and output channels for middle Conv2d
-            layers used in each EM block. Defaults to 8.
-        out_channels: Number of output channels. Defaults to 3.
-        kernel_size: Kernel size for Conv2d layers used in each EM block.
-            Defaults to 5.
     """
     
     def __init__(
         self,
-        in_channels : int   = 32,
-        mid_channels: int   = 8,
-        out_channels: int   = 3,
-        kernel_size : Int2T = 5,
-        *args, **kwargs
+        in_channels : int       = 32,
+        mid_channels: int       = 8,
+        out_channels: int       = 3,
+        kernel_size : _size_2_t = 5,
     ):
         super().__init__()
         self.convs = torch.nn.Sequential(
@@ -97,4 +88,4 @@ class EnhancementModule(base.PassThroughLayerParsingMixin, nn.Module):
 
 
 EM = EnhancementModule
-constant.LAYER.register(module=EM)
+LAYERS.register(module=EM)

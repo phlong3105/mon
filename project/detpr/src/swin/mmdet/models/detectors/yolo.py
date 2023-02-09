@@ -4,7 +4,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class YOLOV3(SingleStageDetector):
 
     def __init__(self,

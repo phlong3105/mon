@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class MaskRCNN(TwoStageDetector):
     """Implementation of `Mask R-CNN <https://arxiv.org/abs/1703.06870>`_"""
 

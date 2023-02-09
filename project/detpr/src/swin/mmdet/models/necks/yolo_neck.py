@@ -57,7 +57,7 @@ class DetectionBlock(nn.Module):
         return out
 
 
-@NECKS.register_module()
+@NECKS._register()
 class YOLOV3Neck(nn.Module):
     """The neck of YOLOV3.
 

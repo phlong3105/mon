@@ -14,15 +14,14 @@ from torch.nn import Sequential
 from mon.coreml.layer import base
 from mon.coreml.layer.common import *
 from mon.coreml.layer.specific import *
-from mon.coreml.typing import DictType
 
 
 # region Model Parsing
 
 def parse_model(
-    d      : DictType  | None = None,
+    d      : dict      | None = None,
     ch     : list[int] | None = None,
-    hparams: DictType  | None = None,
+    hparams: dict      | None = None,
 ) -> tuple[Sequential, list[int], list[dict]]:
     """Build the model. We inherit the same idea of model parsing in YOLOv5.
     

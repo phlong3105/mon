@@ -1,6 +1,11 @@
 # 3: Train with customized models and standard datasets
 
-In this note, you will know how to train, test and inference your own customized models under standard datasets. We use the cityscapes dataset to train a customized Cascade Mask R-CNN R50 model as an example to demonstrate the whole process, which using [`AugFPN`](https://github.com/Gus-Guo/AugFPN) to replace the defalut `FPN` as neck, and add `Rotate` or `Translate` as training-time auto augmentation.
+In this note, you will know how to train, test and inference your own customized
+models under standard datasets. We use the cityscapes dataset to train a
+customized Cascade Mask R-CNN R50 model as an example to demonstrate the whole
+process, which using [`AugFPN`](https://github.com/Gus-Guo/AugFPN) to replace
+the defalut `FPN` as neck, and add `Rotate` or `Translate` as training-time auto
+augmentation.
 
 The basic steps are as below:
 
@@ -14,7 +19,8 @@ The basic steps are as below:
 In this note, as we use the standard cityscapes dataset as an example.
 
 It is recommended to symlink the dataset root to `$MMDETECTION/data`.
-If your folder structure is different, you may need to change the corresponding paths in config files.
+If your folder structure is different, you may need to change the corresponding
+paths in config files.
 
 ```none
 mmdetection
@@ -41,19 +47,25 @@ mmdetection
 
 ```
 
-The cityscapes annotations have to be converted into the coco format using `tools/dataset_converters/cityscapes.py`:
+The cityscapes annotations have to be converted into the coco format
+using `tools/dataset_converters/cityscapes.py`:
 
 ```shell
 pip install cityscapesscripts
 python tools/dataset_converters/cityscapes.py ./data/cityscapes --nproc 8 --out-dir ./data/cityscapes/annotations
 ```
 
-Currently the config files in `cityscapes` use COCO pre-trained weights to initialize.
-You could download the pre-trained models in advance if network is unavailable or slow, otherwise it would cause errors at the beginning of training.
+Currently the config files in `cityscapes` use COCO pre-trained weights to
+initialize.
+You could download the pre-trained models in advance if network is unavailable
+or slow, otherwise it would cause errors at the beginning of training.
 
 ## Prepare your own customized model
 
-The second step is to use your own module or training setting. Assume that we want to implement a new neck called `AugFPN` to replace with the default `FPN` under the existing detector Cascade Mask R-CNN R50. The following implements`AugFPN` under MMDetection.
+The second step is to use your own module or training setting. Assume that we
+want to implement a new neck called `AugFPN` to replace with the default `FPN`
+under the existing detector Cascade Mask R-CNN R50. The following
+implements`AugFPN` under MMDetection.
 
 ### 1. Define a new neck (e.g. AugFPN)
 
@@ -62,18 +74,21 @@ Firstly create a new file `mmdet/models/necks/augfpn.py`.
 ```python
 from ..builder import NECKS
 
-@NECKS.register_module()
+
+@NECKS._register()
 class AugFPN(nn.Module):
-
-    def __init__(self,
-                in_channels,
-                out_channels,
-                num_outs,
-                start_level=0,
-                end_level=-1,
-                add_extra_convs=False):
+    
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        num_outs,
+        start_level=0,
+        end_level=-1,
+        add_extra_convs=False
+    ):
         pass
-
+    
     def forward(self, inputs):
         # implementation is ignored
         pass
@@ -107,11 +122,20 @@ neck=dict(
     num_outs=5)
 ```
 
-For more detailed usages about customize your own models (e.g. implement a new backbone, head, loss, etc) and runtime training settings (e.g. define a new optimizer, use gradient clip, customize training schedules and hooks, etc), please refer to the guideline [Customize Models](tutorials/customize_models.md) and [Customize Runtime Settings](tutorials/customize_runtime.md) respectively.
+For more detailed usages about customize your own models (e.g. implement a new
+backbone, head, loss, etc) and runtime training settings (e.g. define a new
+optimizer, use gradient clip, customize training schedules and hooks, etc),
+please refer to the guideline [Customize Models](tutorials/customize_models.md)
+and [Customize Runtime Settings](tutorials/customize_runtime.md) respectively.
 
 ## Prepare a config
 
-The third step is to prepare a config for your own training setting. Assume that we want to add `AugFPN` and `Rotate` or `Translate` augmentation to existing Cascade Mask R-CNN R50 to train the cityscapes dataset, and assume the config is under directory `configs/cityscapes/` and named as `cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py`, the config is as below.
+The third step is to prepare a config for your own training setting. Assume that
+we want to add `AugFPN` and `Rotate` or `Translate` augmentation to existing
+Cascade Mask R-CNN R50 to train the cityscapes dataset, and assume the config is
+under directory `configs/cityscapes/` and named
+as `cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py`, the config is as
+below.
 
 ```python
 # The new config inherits the base configs to highlight the necessary modification
@@ -269,7 +293,7 @@ For more detailed usages, please refer to the [Case 1](1_exist_data_model.md).
 To test the trained model, you can simply run
 
 ```shell
-python tools/test.py configs/cityscapes/cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py work_dirs/cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py/latest.pth --eval bbox segm
+python tools/test.py configs/cityscapes/cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py work_dirs/cascade_mask_rcnn_r50_augfpn_autoaug_10e_cityscapes.py/latest.pth --eval box segm
 ```
 
 For more detailed usages, please refer to the [Case 1](1_exist_data_model.md).

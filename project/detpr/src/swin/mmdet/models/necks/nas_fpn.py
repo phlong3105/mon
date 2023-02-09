@@ -5,7 +5,7 @@ from mmcv.ops.merge_cells import GlobalPoolingCell, SumCell
 from ..builder import NECKS
 
 
-@NECKS.register_module()
+@NECKS._register()
 class NASFPN(nn.Module):
     """NAS-FPN.
 

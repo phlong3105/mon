@@ -241,7 +241,7 @@ class Res2Layer(nn.Sequential):
         super(Res2Layer, self).__init__(*layers)
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class Res2Net(ResNet):
     """Res2Net backbone.
 

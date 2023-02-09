@@ -94,7 +94,7 @@ class Bottleneck(_Bottleneck):
         self.add_module(self.norm3_name, norm3)
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class DetectoRS_ResNeXt(DetectoRS_ResNet):
     """ResNeXt backbone for DetectoRS.
 

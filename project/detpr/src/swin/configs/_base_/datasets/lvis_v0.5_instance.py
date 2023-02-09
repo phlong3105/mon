@@ -11,13 +11,18 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             ann_file=data_root + 'annotations/lvis_v0.5_train.json',
-            img_prefix=data_root + 'train2017/')),
+            img_prefix=data_root + 'train2017/'
+        )
+    ),
     val=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/lvis_v0.5_val.json',
-        img_prefix=data_root + 'val2017/'),
+        img_prefix=data_root + 'val2017/'
+    ),
     test=dict(
         type=dataset_type,
         ann_file=data_root + 'annotations/lvis_v0.5_val.json',
-        img_prefix=data_root + 'val2017/'))
-evaluation = dict(metric=['bbox', 'segm'])
+        img_prefix=data_root + 'val2017/'
+    )
+)
+evaluation = dict(metric=['box', 'segm'])

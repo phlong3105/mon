@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class PAA(SingleStageDetector):
     """Implementation of `PAA <https://arxiv.org/pdf/2007.08103.pdf>`_."""
 

@@ -55,7 +55,7 @@ class ASPP(nn.Module):
         return out
 
 
-@NECKS.register_module()
+@NECKS._register()
 class RFP(FPN):
     """RFP (Recursive Feature Pyramid)
 

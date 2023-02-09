@@ -15,7 +15,7 @@ import torch.nn.functional as F
 
 INF = 100000000
 
-@HEADS.register_module()
+@HEADS._register()
 class CondConvMaskHead(nn.Module):
     def __init__(self, branch_cfg, head_cfg):
         super().__init__()

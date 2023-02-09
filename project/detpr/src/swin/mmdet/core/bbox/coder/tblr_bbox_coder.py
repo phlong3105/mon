@@ -1,11 +1,11 @@
 import mmcv
 import torch
 
-from ..builder import BBOX_CODERS
 from .base_bbox_coder import BaseBBoxCoder
+from ..builder import BBOX_CODERS
 
 
-@BBOX_CODERS.register_module()
+@BBOX_CODERS._register()
 class TBLRBBoxCoder(BaseBBoxCoder):
     """TBLR BBox coder.
 
@@ -21,14 +21,14 @@ class TBLRBBoxCoder(BaseBBoxCoder):
         clip_border (bool, optional): Whether clip the objects outside the
             border of the image. Defaults to True.
     """
-
+    
     def __init__(self, normalizer=4.0, clip_border=True):
         super(BaseBBoxCoder, self).__init__()
         self.normalizer = normalizer
         self.clip_border = clip_border
-
+    
     def encode(self, bboxes, gt_bboxes):
-        """Get bbox regression transformation deltas that can be used to
+        """Get box regression transformation deltas that can be used to
         transform the ``bboxes`` into the ``gt_bboxes`` in the (top, left,
         bottom, right) order.
 
@@ -43,9 +43,10 @@ class TBLRBBoxCoder(BaseBBoxCoder):
         assert bboxes.size(0) == gt_bboxes.size(0)
         assert bboxes.size(-1) == gt_bboxes.size(-1) == 4
         encoded_bboxes = bboxes2tblr(
-            bboxes, gt_bboxes, normalizer=self.normalizer)
+            bboxes, gt_bboxes, normalizer=self.normalizer
+        )
         return encoded_bboxes
-
+    
     def decode(self, bboxes, pred_bboxes, max_shape=None):
         """Apply transformation `pred_bboxes` to `boxes`.
 
@@ -67,8 +68,9 @@ class TBLRBBoxCoder(BaseBBoxCoder):
             pred_bboxes,
             normalizer=self.normalizer,
             max_shape=max_shape,
-            clip_border=self.clip_border)
-
+            clip_border=self.clip_border
+        )
+        
         return decoded_bboxes
 
 
@@ -77,7 +79,7 @@ def bboxes2tblr(priors, gts, normalizer=4.0, normalize_by_wh=True):
     """Encode ground truth boxes to tblr coordinate.
 
     It first convert the gt coordinate to tblr format,
-     (top, bottom, left, right), relative to prior bbox centers.
+     (top, bottom, left, right), relative to prior box centers.
      The tblr coordinate may be normalized by the side length of prior bboxes
      if `normalize_by_wh` is specified as True, and it is then normalized by
      the `normalizer` factor.
@@ -96,7 +98,7 @@ def bboxes2tblr(priors, gts, normalizer=4.0, normalize_by_wh=True):
     Return:
         encoded boxes (Tensor), Shape: (num_proposals, 4)
     """
-
+    
     # dist b/t match center and prior's center
     if not isinstance(normalizer, float):
         normalizer = torch.tensor(normalizer, device=priors.devices)
@@ -120,17 +122,19 @@ def bboxes2tblr(priors, gts, normalizer=4.0, normalize_by_wh=True):
 
 
 @mmcv.jit(coderize=True)
-def tblr2bboxes(priors,
-                tblr,
-                normalizer=4.0,
-                normalize_by_wh=True,
-                max_shape=None,
-                clip_border=True):
+def tblr2bboxes(
+    priors,
+    tblr,
+    normalizer=4.0,
+    normalize_by_wh=True,
+    max_shape=None,
+    clip_border=True
+):
     """Decode tblr outputs to prediction boxes.
 
     The process includes 3 steps: 1) De-normalize tblr coordinates by
     multiplying it with `normalizer`; 2) De-normalize tblr coordinates by the
-    prior bbox width and height if `normalize_by_wh` is `True`; 3) Convert
+    prior box width and height if `normalize_by_wh` is `True`; 3) Convert
     tblr (top, bottom, left, right) pair relative to the center of priors back
     to (xmin, ymin, xmax, ymax) coordinate.
 
@@ -162,7 +166,7 @@ def tblr2bboxes(priors,
     assert priors.size(0) == tblr.size(0)
     if priors.ndim == 3:
         assert priors.size(1) == tblr.size(1)
-
+    
     loc_decode = tblr * normalizer
     prior_centers = (priors[..., 0:2] + priors[..., 2:4]) / 2
     if normalize_by_wh:
@@ -178,9 +182,9 @@ def tblr2bboxes(priors,
     xmax = prior_centers[..., 0].unsqueeze(-1) + right
     ymin = prior_centers[..., 1].unsqueeze(-1) - top
     ymax = prior_centers[..., 1].unsqueeze(-1) + bottom
-
+    
     bboxes = torch.cat((xmin, ymin, xmax, ymax), dim=-1)
-
+    
     if clip_border and max_shape is not None:
         if not isinstance(max_shape, torch.Tensor):
             max_shape = priors.new_tensor(max_shape)
@@ -188,11 +192,13 @@ def tblr2bboxes(priors,
         if max_shape.ndim == 2:
             assert bboxes.ndim == 3
             assert max_shape.size(0) == bboxes.size(0)
-
+        
         min_xy = priors.new_tensor(0)
-        max_xy = torch.cat([max_shape, max_shape],
-                           dim=-1).flip(-1).unsqueeze(-2)
+        max_xy = torch.cat(
+            [max_shape, max_shape],
+            dim=-1
+        ).flip(-1).unsqueeze(-2)
         bboxes = torch.where(bboxes < min_xy, min_xy, bboxes)
         bboxes = torch.where(bboxes > max_xy, max_xy, bboxes)
-
+    
     return bboxes

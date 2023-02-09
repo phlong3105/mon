@@ -194,7 +194,7 @@ class HRModule(nn.Module):
         return x_fuse
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class HRNet(nn.Module):
     """HRNet backbone.
 

@@ -18,23 +18,26 @@ import mmcv
 import torch
 from mmcv import Config, get_logger
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
-                         wrap_fp16_model)
-
+from mmcv.runner import (
+    get_dist_info, init_dist, load_checkpoint,
+    wrap_fp16_model,
+)
 from mmdet.apis import multi_gpu_test, single_gpu_test
-from mmdet.datasets import (build_dataloader, build_dataset,
-                            replace_ImageToTensor)
+from mmdet.datasets import (
+    build_dataloader, build_dataset,
+    replace_ImageToTensor,
+)
 from mmdet.models import build_detector
 
 modelzoo_dict = {
     'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py': {
-        'bbox': 0.374
+        'box': 0.374
     },
-    'configs/mask_rcnn/mask_rcnn_r50_fpn_1x_coco.py': {
-        'bbox': 0.382,
+    'configs/mask_rcnn/mask_rcnn_r50_fpn_1x_coco.py'    : {
+        'box' : 0.382,
         'segm': 0.347
     },
-    'configs/rpn/rpn_r50_fpn_1x_coco.py': {
+    'configs/rpn/rpn_r50_fpn_1x_coco.py'                : {
         'AR@1000': 0.582
     }
 }
@@ -43,15 +46,18 @@ modelzoo_dict = {
 def parse_args():
     parser = argparse.ArgumentParser(
         description='The script used for checking the correctness \
-            of batch inference')
+            of batch inference'
+    )
     parser.add_argument('model_dir', help='directory of models')
     parser.add_argument(
-        'json_out', help='the output json records test information like mAP')
+        'json_out', help='the output json records test information like mAP'
+    )
     parser.add_argument(
         '--launcher',
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
-        help='job launcher')
+        help='job launcher'
+    )
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
@@ -95,20 +101,22 @@ def main():
         distributed = True
         init_dist(args.launcher, backend='nccl')
     rank, world_size = get_dist_info()
-
+    
     logger = get_logger('root')
-
+    
     # read info of checkpoints and config
     result_dict = dict()
     for model_family_dir in os.listdir(args.model_dir):
         for model in os.listdir(
-                os.path.join(args.model_dir, model_family_dir)):
+            os.path.join(args.model_dir, model_family_dir)
+        ):
             # cpt: rpn_r50_fpn_1x_coco_20200218-5525fa2e.pth
             # cfg: rpn_r50_fpn_1x_coco.py
             cfg = model.split('.')[0][:-18] + '.py'
             cfg_path = os.path.join('configs', model_family_dir, cfg)
             assert os.path.isfile(
-                cfg_path), f'{cfg_path} is not valid config path'
+                cfg_path
+            ), f'{cfg_path} is not valid config path'
             cpt_path = os.path.join(args.model_dir, model_family_dir, model)
             result_dict[cfg_path] = cpt_path
             assert cfg_path in modelzoo_dict, f'please fill the ' \
@@ -134,35 +142,37 @@ def main():
             elif cfg.model.neck.get('rfp_backbone'):
                 if cfg.model.neck.rfp_backbone.get('pretrained'):
                     cfg.model.neck.rfp_backbone.pretrained = None
-
+        
         # in case the test dataset is concatenated
         if isinstance(cfg.data.test, dict):
             cfg.data.test.test_mode = True
         elif isinstance(cfg.data.test, list):
             for ds_cfg in cfg.data.test:
                 ds_cfg.test_mode = True
-
+        
         # build the dataloader
         samples_per_gpu = 2  # hack test with 2 image per gpu
         if samples_per_gpu > 1:
             # Replace 'ImageToTensor' to 'DefaultFormatBundle'
             cfg.data.test.pipeline = replace_ImageToTensor(
-                cfg.data.test.pipeline)
+                cfg.data.test.pipeline
+            )
         dataset = build_dataset(cfg.data.test)
         data_loader = build_dataloader(
             dataset,
             samples_per_gpu=samples_per_gpu,
             workers_per_gpu=cfg.data.workers_per_gpu,
             dist=distributed,
-            shuffle=False)
-
+            shuffle=False
+        )
+        
         # build the model and load checkpoint
         cfg.model.train_cfg = None
         model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg'))
         fp16_cfg = cfg.get('fp16', None)
         if fp16_cfg is not None:
             wrap_fp16_model(model)
-
+        
         checkpoint = load_checkpoint(model, cpt, map_location='cpu')
         # old versions did not save class info in checkpoints,
         # this walkaround is for backward compatibility
@@ -170,7 +180,7 @@ def main():
             model.CLASSES = checkpoint['meta']['CLASSES']
         else:
             model.CLASSES = dataset.CLASSES
-
+        
         if not distributed:
             model = MMDataParallel(model, device_ids=[0])
             outputs = single_gpu_test(model, data_loader)
@@ -178,7 +188,8 @@ def main():
             model = MMDistributedDataParallel(
                 model.cuda(),
                 device_ids=[torch.cuda.current_device()],
-                broadcast_buffers=False)
+                broadcast_buffers=False
+            )
             outputs = multi_gpu_test(model, data_loader, 'tmp')
         if rank == 0:
             ref_mAP_dict = modelzoo_dict[cfg_name]

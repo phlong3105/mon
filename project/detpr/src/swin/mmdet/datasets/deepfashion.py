@@ -2,7 +2,7 @@ from .builder import DATASETS
 from .coco import CocoDataset
 
 
-@DATASETS.register_module()
+@DATASETS._register()
 class DeepFashionDataset(CocoDataset):
 
     CLASSES = ('top', 'skirt', 'leggings', 'dress', 'outer', 'pants', 'bag',

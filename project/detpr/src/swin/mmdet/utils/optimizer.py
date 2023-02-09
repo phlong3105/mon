@@ -5,7 +5,7 @@ except:
     print('apex is not installed')
 
 
-@HOOKS.register_module()
+@HOOKS._register()
 class DistOptimizerHook(OptimizerHook):
     """Optimizer hook for distributed training."""
 

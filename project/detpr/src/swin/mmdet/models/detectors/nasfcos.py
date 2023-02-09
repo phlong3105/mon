@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class NASFCOS(SingleStageDetector):
     """NAS-FCOS: Fast Neural Architecture Search for Object Detection.
 

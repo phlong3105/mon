@@ -4,7 +4,7 @@ from mmdet.models.builder import HEADS
 from .fcn_mask_head import FCNMaskHead
 
 
-@HEADS.register_module()
+@HEADS._register()
 class HTCMaskHead(FCNMaskHead):
 
     def __init__(self, with_conv_res=True, *args, **kwargs):

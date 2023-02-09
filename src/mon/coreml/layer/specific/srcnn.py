@@ -15,12 +15,12 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SRCNN(base.ConvLayerParsingMixin, nn.Module):
     """SRCNN (Super-Resolution Convolutional Neural Network).
     
@@ -36,22 +36,21 @@ class SRCNN(base.ConvLayerParsingMixin, nn.Module):
         self,
         in_channels : int,
         out_channels: int,
-        kernel_size1: Int2T,
-        stride1     : Int2T,
-        padding1    : Int2T | str,
-        kernel_size2: Int2T,
-        stride2     : Int2T,
-        padding2    : Int2T | str,
-        kernel_size3: Int2T,
-        stride3     : Int2T,
-        padding3    : Int2T | str,
-        dilation    : Int2T = 1,
-        groups      : int   = 1,
-        bias        : bool  = True,
-        padding_mode: str   = "zeros",
-        device      : Any   = None,
-        dtype       : Any   = None,
-        *args, **kwargs
+        kernel_size1: _size_2_t,
+        stride1     : _size_2_t,
+        padding1    : _size_2_t | str,
+        kernel_size2: _size_2_t,
+        stride2     : _size_2_t,
+        padding2    : _size_2_t | str,
+        kernel_size3: _size_2_t,
+        stride3     : _size_2_t,
+        padding3    : _size_2_t | str,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype: Any = None,
     ):
         super().__init__()
         self.conv1 = common.Conv2d(

@@ -8,16 +8,18 @@ from ..builder import LOSSES
 def _expand_onehot_labels(labels, label_weights, label_channels):
     bin_labels = labels.new_full((labels.size(0), label_channels), 0)
     inds = torch.nonzero(
-        (labels >= 0) & (labels < label_channels), as_tuple=False).squeeze()
+        (labels >= 0) & (labels < label_channels), as_tuple=False
+    ).squeeze()
     if inds.numel() > 0:
         bin_labels[inds, labels[inds]] = 1
     bin_label_weights = label_weights.view(-1, 1).expand(
-        label_weights.size(0), label_channels)
+        label_weights.size(0), label_channels
+    )
     return bin_labels, bin_label_weights
 
 
 # TODO: code refactoring to make it consistent with other losses
-@LOSSES.register_module()
+@LOSSES._register()
 class GHMC(nn.Module):
     """GHM Classification Loss.
 
@@ -31,7 +33,7 @@ class GHMC(nn.Module):
         use_sigmoid (bool): Can only be true for BCE based loss now.
         loss_weight (float): The weight of the total GHM-C loss.
     """
-
+    
     def __init__(self, bins=10, momentum=0, use_sigmoid=True, loss_weight=1.0):
         super(GHMC, self).__init__()
         self.bins = bins
@@ -46,7 +48,7 @@ class GHMC(nn.Module):
         if not self.use_sigmoid:
             raise NotImplementedError
         self.loss_weight = loss_weight
-
+    
     def forward(self, pred, target, label_weight, *args, **kwargs):
         """Calculate the GHM-C loss.
 
@@ -63,15 +65,16 @@ class GHMC(nn.Module):
         # the target should be binary class label
         if pred.dim() != target.dim():
             target, label_weight = _expand_onehot_labels(
-                target, label_weight, pred.size(-1))
+                target, label_weight, pred.size(-1)
+            )
         target, label_weight = target.float(), label_weight.float()
         edges = self.edges
         mmt = self.momentum
         weights = torch.zeros_like(pred)
-
+        
         # gradient length
         g = torch.abs(pred.sigmoid().detach() - target)
-
+        
         valid = label_weight > 0
         tot = max(valid.float().sum().item(), 1.0)
         n = 0  # n valid bins
@@ -81,21 +84,22 @@ class GHMC(nn.Module):
             if num_in_bin > 0:
                 if mmt > 0:
                     self.acc_sum[i] = mmt * self.acc_sum[i] \
-                        + (1 - mmt) * num_in_bin
+                                      + (1 - mmt) * num_in_bin
                     weights[inds] = tot / self.acc_sum[i]
                 else:
                     weights[inds] = tot / num_in_bin
                 n += 1
         if n > 0:
             weights = weights / n
-
+        
         loss = F.binary_cross_entropy_with_logits(
-            pred, target, weights, reduction='sum') / tot
+            pred, target, weights, reduction='sum'
+        ) / tot
         return loss * self.loss_weight
 
 
 # TODO: code refactoring to make it consistent with other losses
-@LOSSES.register_module()
+@LOSSES._register()
 class GHMR(nn.Module):
     """GHM Regression Loss.
 
@@ -109,7 +113,7 @@ class GHMR(nn.Module):
         momentum (float): The parameter for moving average.
         loss_weight (float): The weight of the total GHM-R loss.
     """
-
+    
     def __init__(self, mu=0.02, bins=10, momentum=0, loss_weight=1.0):
         super(GHMR, self).__init__()
         self.mu = mu
@@ -122,14 +126,14 @@ class GHMR(nn.Module):
             acc_sum = torch.zeros(bins)
             self.register_buffer('acc_sum', acc_sum)
         self.loss_weight = loss_weight
-
+    
     # TODO: support reduction parameter
     def forward(self, pred, target, label_weight, avg_factor=None):
         """Calculate the GHM-R loss.
 
         Args:
             pred (float tensor of size [batch_num, 4 (* class_num)]):
-                The prediction of bbox regression layer. Channel number can be 4
+                The prediction of box regression layer. Channel number can be 4
                 or 4 * class_num depending on whether it is class-agnostic.
             target (float tensor of size [batch_num, 4 (* class_num)]):
                 The target regression values with the same size of pred.
@@ -141,15 +145,15 @@ class GHMR(nn.Module):
         mu = self.mu
         edges = self.edges
         mmt = self.momentum
-
+        
         # ASL1 loss
         diff = pred - target
         loss = torch.sqrt(diff * diff + mu * mu) - mu
-
+        
         # gradient length
         g = torch.abs(diff / torch.sqrt(mu * mu + diff * diff)).detach()
         weights = torch.zeros_like(g)
-
+        
         valid = label_weight > 0
         tot = max(label_weight.float().sum().item(), 1.0)
         n = 0  # n: valid bins
@@ -160,13 +164,13 @@ class GHMR(nn.Module):
                 n += 1
                 if mmt > 0:
                     self.acc_sum[i] = mmt * self.acc_sum[i] \
-                        + (1 - mmt) * num_in_bin
+                                      + (1 - mmt) * num_in_bin
                     weights[inds] = tot / self.acc_sum[i]
                 else:
                     weights[inds] = tot / num_in_bin
         if n > 0:
             weights /= n
-
+        
         loss = loss * weights
         loss = loss.sum() / tot
         return loss * self.loss_weight

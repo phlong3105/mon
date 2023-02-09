@@ -201,7 +201,7 @@ class ResLayer(nn.Sequential):
         super(ResLayer, self).__init__(*layers)
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class DetectoRS_ResNet(ResNet):
     """ResNet backbone for DetectoRS.
 

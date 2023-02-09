@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class RepPointsDetector(SingleStageDetector):
     """RepPoints: Point Set Representation for Object Detection.
 

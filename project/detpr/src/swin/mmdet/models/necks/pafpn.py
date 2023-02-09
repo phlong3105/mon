@@ -7,7 +7,7 @@ from ..builder import NECKS
 from .fpn import FPN
 
 
-@NECKS.register_module()
+@NECKS._register()
 class PAFPN(FPN):
     """Path Aggregation Network for Instance Segmentation.
 

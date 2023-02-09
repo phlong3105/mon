@@ -14,7 +14,7 @@ __all__ = [
 
 from lightning.pytorch import loggers
 
-from mon.coreml import constant
+from mon.globals import LOGGERS
 
 # region Logger
 
@@ -25,15 +25,15 @@ MLFlowLogger  = loggers.MLFlowLogger
 NeptuneLogger = loggers.NeptuneLogger
 WandbLogger   = loggers.WandbLogger
 
-constant.LOGGER.register(name="csv_logger",     module=CSVLogger)
-constant.LOGGER.register(name="comet_logger",   module=CometLogger)
-constant.LOGGER.register(name="mlflow_logger",  module=MLFlowLogger)
-constant.LOGGER.register(name="neptune_logger", module=NeptuneLogger)
-constant.LOGGER.register(name="wandb_logger",   module=WandbLogger)
-constant.LOGGER.register(name="csv",            module=CSVLogger)
-constant.LOGGER.register(name="comet",          module=CometLogger)
-constant.LOGGER.register(name="mlflow",         module=MLFlowLogger)
-constant.LOGGER.register(name="neptune",        module=NeptuneLogger)
-constant.LOGGER.register(name="wandb",          module=WandbLogger)
+LOGGERS.register(name="csv_logger"    , module=CSVLogger)
+LOGGERS.register(name="comet_logger"  , module=CometLogger)
+LOGGERS.register(name="mlflow_logger" , module=MLFlowLogger)
+LOGGERS.register(name="neptune_logger", module=NeptuneLogger)
+LOGGERS.register(name="wandb_logger"  , module=WandbLogger)
+LOGGERS.register(name="csv"           , module=CSVLogger)
+LOGGERS.register(name="comet"         , module=CometLogger)
+LOGGERS.register(name="mlflow"        , module=MLFlowLogger)
+LOGGERS.register(name="neptune"       , module=NeptuneLogger)
+LOGGERS.register(name="wandb"         , module=WandbLogger)
 
 # endregion

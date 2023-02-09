@@ -5,28 +5,30 @@ import torch.nn as nn
 
 class BaseDenseHead(nn.Module, metaclass=ABCMeta):
     """Base class for DenseHeads."""
-
+    
     def __init__(self):
         super(BaseDenseHead, self).__init__()
-
+    
     @abstractmethod
     def loss(self, **kwargs):
         """Compute losses of the head."""
         pass
-
+    
     @abstractmethod
     def get_bboxes(self, **kwargs):
-        """Transform network output for a batch into bbox predictions."""
+        """Transform network output for a batch into box predictions."""
         pass
-
-    def forward_train(self,
-                      x,
-                      img_metas,
-                      gt_bboxes,
-                      gt_labels=None,
-                      gt_bboxes_ignore=None,
-                      proposal_cfg=None,
-                      **kwargs):
+    
+    def forward_train(
+        self,
+        x,
+        img_metas,
+        gt_bboxes,
+        gt_labels=None,
+        gt_bboxes_ignore=None,
+        proposal_cfg=None,
+        **kwargs
+    ):
         """
         Args:
             x (list[Tensor]): Features from FPN.
@@ -34,7 +36,7 @@ class BaseDenseHead(nn.Module, metaclass=ABCMeta):
                 image size, scaling factor, etc.
             gt_bboxes (Tensor): Ground truth bboxes of the image,
                 shape (num_gts, 4).
-            gt_labels (Tensor): Ground truth labels of each bbox,
+            gt_labels (Tensor): Ground truth labels of each box,
                 shape (num_gts,).
             gt_bboxes_ignore (Tensor): Ground truth bboxes to be
                 ignored, shape (num_ignored_gts, 4).

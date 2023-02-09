@@ -2,12 +2,12 @@
 
 # Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
 train: [
-  ../data/a2i2-haze/train/detection/haze/images,
-  ../data/a2i2-haze/train/detection/hazefree/images,
-  ../data/a2i2-haze/dry-run/2022/images/
+  ../../data/a2i2-haze/train/detection/haze/images,
+  ../../data/a2i2-haze/train/detection/hazefree/images,
+  ../../data/a2i2-haze/dry-run/2022/images/
 ]
-val  : ../data/a2i2-haze/dry-run/2023/images/  # 60
-test : ../data/a2i2-haze/test/images/          # 50
+val  : ../../data/a2i2-haze/dry-run/2023/images/  # 60
+test : ../../data/a2i2-haze/test/images/          # 50
 
 # number of classes
 nc: 1

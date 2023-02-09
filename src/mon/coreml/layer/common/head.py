@@ -12,37 +12,39 @@ __all__ = [
     "VGGClassifier",
 ]
 
+from typing import Callable
+
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, conv, dropout as dropout_layer, linear, mutating, pooling,
 )
-from mon.coreml.typing import CallableType
+from mon.globals import LAYERS
 
 
 # region Classification Head
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AlexNetClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.drop1        = dropout_layer.Dropout()
-        self.linear1      = linear.Linear(in_features=in_channels * 6 * 6, out_features=4096)
-        self.act1         = activation.ReLU(inplace=True)
-        self.drop2        = dropout_layer.Dropout()
-        self.linear2      = linear.Linear(in_features=4096, out_features=4096)
-        self.act2         = activation.ReLU(inplace=True)
-        self.linear3      = linear.Linear(in_features=4096, out_features=out_channels)
+        self.drop1   = dropout_layer.Dropout()
+        self.linear1 = linear.Linear(
+            in_features=in_channels * 6 * 6,
+            out_features=4096
+        )
+        self.act1    = activation.ReLU(inplace=True)
+        self.drop2   = dropout_layer.Dropout()
+        self.linear2 = linear.Linear(in_features=4096, out_features=4096)
+        self.act2    = activation.ReLU(inplace=True)
+        self.linear3 = linear.Linear(
+            in_features  = 4096,
+            out_features = out_channels
+        )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -58,21 +60,15 @@ class AlexNetClassifier(base.HeadLayerParsingMixin, nn.Module):
             return x
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ConvNeXtClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        norm        : CallableType | None = None,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int, norm: Callable = None):
         super().__init__()
         self.out_channels = out_channels
-        self.norm         = norm(in_channels)
-        self.flatten      = mutating.Flatten(start_dim=1)
-        self.linear       = linear.Linear(
+        self.norm    = norm(in_channels)
+        self.flatten = mutating.Flatten(start_dim = 1)
+        self.linear  = linear.Linear(
             in_features  = in_channels,
             out_features = out_channels,
         )
@@ -86,24 +82,18 @@ class ConvNeXtClassifier(base.HeadLayerParsingMixin, nn.Module):
             return y
         else:
             return x
-        
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class GoogleNetClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        dropout     : float,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float):
         super().__init__()
         self.out_channels = out_channels
-        self.dropout      = dropout
-        self.avgpool      = pooling.AdaptiveAvgPool2d((1, 1))
-        self.dropout      = dropout_layer.Dropout(p=dropout)
-        self.fc           = linear.Linear(
+        self.dropout = dropout
+        self.avgpool = pooling.AdaptiveAvgPool2d((1, 1))
+        self.dropout = dropout_layer.Dropout(p=dropout)
+        self.fc      = linear.Linear(
             in_features  = in_channels,
             out_features = out_channels,
         )
@@ -123,24 +113,19 @@ class GoogleNetClassifier(base.HeadLayerParsingMixin, nn.Module):
             return x
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class InceptionClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.avgpool      = pooling.AdaptiveAvgPool2d((1, 1))
-        self.dropout      = dropout_layer.Dropout(p=0.5)
-        self.fc           = linear.Linear(
+        self.avgpool = pooling.AdaptiveAvgPool2d((1, 1))
+        self.dropout = dropout_layer.Dropout(p=0.5)
+        self.fc      = linear.Linear(
             in_features  = in_channels,
             out_features = out_channels,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         if self.out_channels > 0:
@@ -157,25 +142,20 @@ class InceptionClassifier(base.HeadLayerParsingMixin, nn.Module):
             return y
         else:
             return x
-    
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class LeNetClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.linear1      = linear.Linear(
+        self.linear1 = linear.Linear(
             in_features  = in_channels,
             out_features = 84,
         )
-        self.act1         = activation.Tanh()
-        self.linear2      = linear.Linear(
+        self.act1    = activation.Tanh()
+        self.linear2 = linear.Linear(
             in_features  = 84,
             out_features = out_channels,
         )
@@ -191,18 +171,13 @@ class LeNetClassifier(base.HeadLayerParsingMixin, nn.Module):
             return x
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LinearClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.linear       = linear.Linear(
+        self.linear = linear.Linear(
             in_features  = in_channels,
             out_features = out_channels,
         )
@@ -217,23 +192,18 @@ class LinearClassifier(base.HeadLayerParsingMixin, nn.Module):
             return x
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MobileOneClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.avgpool      = pooling.AdaptiveAvgPool2d(1)
-        self.fc           = linear.Linear(
+        self.avgpool = pooling.AdaptiveAvgPool2d(1)
+        self.fc      = linear.Linear(
             in_features  = in_channels,
-            out_features =out_channels,
+            out_features = out_channels,
         )
-
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         if self.out_channels > 0:
@@ -244,20 +214,15 @@ class MobileOneClassifier(base.HeadLayerParsingMixin, nn.Module):
             return y
         else:
             return x
-        
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class ShuffleNetV2Classifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.linear       = linear.Linear(
+        self.linear = linear.Linear(
             in_features  = in_channels,
             out_features = out_channels,
         )
@@ -270,22 +235,16 @@ class ShuffleNetV2Classifier(base.HeadLayerParsingMixin, nn.Module):
             return y
         else:
             return x
-        
 
-@constant.LAYER.register()
+
+@LAYERS.register()
 class SqueezeNetClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        dropout     : float = 0.5,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int, dropout: float = 0.5):
         super().__init__()
         self.out_channels = out_channels
-        self.dropout      = dropout_layer.Dropout(p=dropout)
-        self.conv         = conv.Conv2d(
+        self.dropout = dropout_layer.Dropout(p=dropout)
+        self.conv    = conv.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -306,27 +265,22 @@ class SqueezeNetClassifier(base.HeadLayerParsingMixin, nn.Module):
             return x
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class VGGClassifier(base.HeadLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        *args, **kwargs
-    ):
+    def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
         self.out_channels = out_channels
-        self.linear1      = linear.Linear(
+        self.linear1 = linear.Linear(
             in_features  = in_channels * 7 * 7,
             out_features = 4096,
         )
-        self.act1         = activation.ReLU(inplace=True)
-        self.drop1        = dropout_layer.Dropout()
-        self.linear2      = linear.Linear(in_features=4096, out_features=4096)
-        self.act2         = activation.ReLU(inplace=True)
-        self.drop2        = dropout_layer.Dropout()
-        self.linear3      = linear.Linear(
+        self.act1    = activation.ReLU(inplace=True)
+        self.drop1   = dropout_layer.Dropout()
+        self.linear2 = linear.Linear(in_features=4096 , out_features=4096)
+        self.act2    = activation.ReLU(inplace=True)
+        self.drop2   = dropout_layer.Dropout()
+        self.linear3 = linear.Linear(
             in_features  = 4096,
             out_features = out_channels,
         )

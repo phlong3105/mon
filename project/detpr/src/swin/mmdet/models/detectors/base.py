@@ -8,47 +8,46 @@ import torch.distributed as dist
 import torch.nn as nn
 from mmcv.runner import auto_fp16
 from mmcv.utils import print_log
-
 from mmdet.core.visualization import imshow_det_bboxes
 from mmdet.utils import get_root_logger
 
 
 class BaseDetector(nn.Module, metaclass=ABCMeta):
     """Base class for detectors."""
-
+    
     def __init__(self):
         super(BaseDetector, self).__init__()
         self.fp16_enabled = False
-
+    
     @property
     def with_neck(self):
         """bool: whether the detector has a neck"""
         return hasattr(self, 'neck') and self.neck is not None
-
+    
     # TODO: these properties need to be carefully handled
     # for both single stage & two stage detectors
     @property
     def with_shared_head(self):
         """bool: whether the detector has a shared head in the RoI Head"""
         return hasattr(self, 'roi_head') and self.roi_head.with_shared_head
-
+    
     @property
     def with_bbox(self):
-        """bool: whether the detector has a bbox head"""
+        """bool: whether the detector has a box head"""
         return ((hasattr(self, 'roi_head') and self.roi_head.with_bbox)
                 or (hasattr(self, 'bbox_head') and self.bbox_head is not None))
-
+    
     @property
     def with_mask(self):
         """bool: whether the detector has a mask head"""
         return ((hasattr(self, 'roi_head') and self.roi_head.with_mask)
                 or (hasattr(self, 'mask_head') and self.mask_head is not None))
-
+    
     @abstractmethod
     def extract_feat(self, imgs):
         """Extract features from images."""
         pass
-
+    
     def extract_feats(self, imgs):
         """Extract features from multiple images.
 
@@ -61,7 +60,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         """
         assert isinstance(imgs, list)
         return [self.extract_feat(img) for img in imgs]
-
+    
     def forward_train(self, imgs, img_metas, **kwargs):
         """
         Args:
@@ -80,19 +79,19 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         batch_input_shape = tuple(imgs[0].size()[-2:])
         for img_meta in img_metas:
             img_meta['batch_input_shape'] = batch_input_shape
-
+    
     async def async_simple_test(self, img, img_metas, **kwargs):
         raise NotImplementedError
-
+    
     @abstractmethod
     def simple_test(self, img, img_metas, **kwargs):
         pass
-
+    
     @abstractmethod
     def aug_test(self, imgs, img_metas, **kwargs):
         """Test function with test time augmentation."""
         pass
-
+    
     def init_weights(self, pretrained=None):
         """Initialize the weights in detector.
 
@@ -103,25 +102,27 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         if pretrained is not None:
             logger = get_root_logger()
             print_log(f'load model from: {pretrained}', logger=logger)
-
+    
     async def aforward_test(self, *, img, img_metas, **kwargs):
         for var, name in [(img, 'img'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
-
+        
         num_augs = len(img)
         if num_augs != len(img_metas):
-            raise ValueError(f'num of augmentations ({len(img)}) '
-                             f'!= num of image metas ({len(img_metas)})')
+            raise ValueError(
+                f'num of augmentations ({len(img)}) '
+                f'!= num of image metas ({len(img_metas)})'
+            )
         # TODO: remove the restriction of samples_per_gpu == 1 when prepared
         samples_per_gpu = img[0].size(0)
         assert samples_per_gpu == 1
-
+        
         if num_augs == 1:
             return await self.async_simple_test(img[0], img_metas[0], **kwargs)
         else:
             raise NotImplementedError
-
+    
     def forward_test(self, imgs, img_metas, **kwargs):
         """
         Args:
@@ -135,12 +136,14 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         for var, name in [(imgs, 'imgs'), (img_metas, 'img_metas')]:
             if not isinstance(var, list):
                 raise TypeError(f'{name} must be a list, but got {type(var)}')
-
+        
         num_augs = len(imgs)
         if num_augs != len(img_metas):
-            raise ValueError(f'num of augmentations ({len(imgs)}) '
-                             f'!= num of image meta ({len(img_metas)})')
-
+            raise ValueError(
+                f'num of augmentations ({len(imgs)}) '
+                f'!= num of image meta ({len(img_metas)})'
+            )
+        
         # NOTE the batched image size information may be useful, e.g.
         # in DETR, this is needed for the construction of masks, which is
         # then used for the transformer_head.
@@ -148,7 +151,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             batch_size = len(img_meta)
             for img_id in range(batch_size):
                 img_meta[img_id]['batch_input_shape'] = tuple(img.size()[-2:])
-
+        
         if num_augs == 1:
             # proposals (List[List[Tensor]]): the outer list indicates
             # test-time augs (multiscale, flip, etc.) and the inner list
@@ -165,8 +168,8 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             # TODO: support test augmentation for predefined proposals
             assert 'proposals' not in kwargs
             return self.aug_test(imgs, img_metas, **kwargs)
-
-    @auto_fp16(apply_to=('img', ))
+    
+    @auto_fp16(apply_to=('img',))
     def forward(self, img, img_metas, return_loss=True, **kwargs):
         """Calls either :func:`forward_train` or :func:`forward_test` depending
         on whether ``return_loss`` is ``True``.
@@ -181,7 +184,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             return self.forward_train(img, img_metas, **kwargs)
         else:
             return self.forward_test(img, img_metas, **kwargs)
-
+    
     def _parse_losses(self, losses):
         """Parse the raw outputs (losses) of the network.
 
@@ -202,11 +205,14 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 log_vars[loss_name] = sum(_loss.mean() for _loss in loss_value)
             else:
                 raise TypeError(
-                    f'{loss_name} is not a tensor or list of tensors')
-
-        loss = sum(_value for _key, _value in log_vars.items()
-                   if 'loss' in _key)
-
+                    f'{loss_name} is not a tensor or list of tensors'
+                )
+        
+        loss = sum(
+            _value for _key, _value in log_vars.items()
+            if 'loss' in _key
+        )
+        
         log_vars['loss'] = loss
         for loss_name, loss_value in log_vars.items():
             # reduce loss when distributed training
@@ -214,9 +220,9 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 loss_value = loss_value.data.clone()
                 dist.all_reduce(loss_value.div_(dist.get_world_size()))
             log_vars[loss_name] = loss_value.item()
-
+        
         return loss, log_vars
-
+    
     def train_step(self, data, optimizer):
         """The iteration step during training.
 
@@ -246,12 +252,13 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         """
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
-
+        
         outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
-
+            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas'])
+        )
+        
         return outputs
-
+    
     def val_step(self, data, optimizer):
         """The iteration step during validation.
 
@@ -261,25 +268,28 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
         """
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
-
+        
         outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas']))
-
+            loss=loss, log_vars=log_vars, num_samples=len(data['img_metas'])
+        )
+        
         return outputs
-
-    def show_result(self,
-                    img,
-                    result,
-                    score_thr=0.3,
-                    bbox_color=(72, 101, 241),
-                    text_color=(72, 101, 241),
-                    mask_color=None,
-                    thickness=2,
-                    font_size=13,
-                    win_name='',
-                    show=False,
-                    wait_time=0,
-                    out_file=None):
+    
+    def show_result(
+        self,
+        img,
+        result,
+        score_thr=0.3,
+        bbox_color=(72, 101, 241),
+        text_color=(72, 101, 241),
+        mask_color=None,
+        thickness=2,
+        font_size=13,
+        win_name='',
+        show=False,
+        wait_time=0,
+        out_file=None
+    ):
         """Draw `result` over `img`.
 
         Args:
@@ -288,7 +298,7 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
                 bbox_result or (bbox_result, segm_result).
             score_thr (float, optional): Minimum score of bboxes to be shown.
                 Default: 0.3.
-            bbox_color (str or tuple(int) or :obj:`Color`):Color of bbox lines.
+            bbox_color (str or tuple(int) or :obj:`Color`):Color of box lines.
                The tuple of color should be in BGR order. Default: 'green'
             text_color (str or tuple(int) or :obj:`Color`):Color of texts.
                The tuple of color should be in BGR order. Default: 'green'
@@ -318,8 +328,8 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             bbox_result, segm_result = result, None
         bboxes = np.vstack(bbox_result)
         labels = [
-            np.full(bbox.shape[0], i, dtype=np.int32)
-            for i, bbox in enumerate(bbox_result)
+            np.full(box.shape[0], i, dtype=np.int32)
+            for i, box in enumerate(bbox_result)
         ]
         labels = np.concatenate(labels)
         # draw segmentation masks
@@ -349,7 +359,8 @@ class BaseDetector(nn.Module, metaclass=ABCMeta):
             win_name=win_name,
             show=show,
             wait_time=wait_time,
-            out_file=out_file)
-
+            out_file=out_file
+        )
+        
         if not (show or out_file):
             return img

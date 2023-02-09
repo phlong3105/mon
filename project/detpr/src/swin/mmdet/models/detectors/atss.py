@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class ATSS(SingleStageDetector):
     """Implementation of `ATSS <https://arxiv.org/abs/1912.02424>`_."""
 

@@ -6,7 +6,7 @@ from mmcv.cnn.bricks import NonLocal2d
 from ..builder import NECKS
 
 
-@NECKS.register_module()
+@NECKS._register()
 class BFP(nn.Module):
     """BFP (Balanced Feature Pyramids)
 

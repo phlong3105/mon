@@ -8,7 +8,7 @@ from mmcv.runner import auto_fp16
 from ..builder import NECKS
 
 
-@NECKS.register_module()
+@NECKS._register()
 class FPN(nn.Module):
     r"""Feature Pyramid Network.
 

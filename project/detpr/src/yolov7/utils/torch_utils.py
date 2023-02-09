@@ -186,7 +186,7 @@ def fuse_conv_and_bn(conv, bn):
                           stride=conv.stride,
                           padding=conv.padding,
                           groups=conv.groups,
-                          bias=True).requires_grad_(False).to(conv.weight.devices)
+                          bias=True).requires_grad_(False).to(conv.weight.device)
 
     # prepare filters
     w_conv = conv.weight.clone().view(conv.out_channels, -1)
@@ -194,7 +194,7 @@ def fuse_conv_and_bn(conv, bn):
     fusedconv.weight.copy_(torch.mm(w_bn, w_conv).view(fusedconv.weight.shape))
 
     # prepare spatial bias
-    b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.devices) if conv.bias is None else conv.bias
+    b_conv = torch.zeros(conv.weight.size(0), device=conv.weight.device) if conv.bias is None else conv.bias
     b_bn = bn.bias - bn.weight.mul(bn.running_mean).div(torch.sqrt(bn.running_var + bn.eps))
     fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
 
@@ -215,7 +215,7 @@ def model_info(model, verbose=False, img_size=640):
     try:  # FLOPS
         from thop import profile
         stride = max(int(model.stride.max()), 32) if hasattr(model, 'stride') else 32
-        img = torch.zeros((1, model.yaml.get('ch', 3), stride, stride), device=next(model.parameters()).devices)  # input
+        img = torch.zeros((1, model.yaml.get('ch', 3), stride, stride), device=next(model.parameters()).device)  # input
         flops = profile(deepcopy(model), inputs=(img,), verbose=False)[0] / 1E9 * 2  # stride GFLOPS
         img_size = img_size if isinstance(img_size, list) else [img_size, img_size]  # expand if int/float
         fs = ', %.1f GFLOPS' % (flops * img_size[0] / stride * img_size[1] / stride)  # 640x640 GFLOPS
@@ -226,7 +226,7 @@ def model_info(model, verbose=False, img_size=640):
 
 
 def load_classifier(name='resnet101', n=2):
-    # Loads a weights model reshaped to n-class output
+    # Loads a pretrained model reshaped to n-class output
     model = torchvision.models.__dict__[name](pretrained=True)
 
     # ResNet model properties

@@ -4,8 +4,8 @@ import cv2
 import mmcv
 import numpy as np
 
-from ..builder import PIPELINES
 from .compose import Compose
+from ..builder import PIPELINES
 
 _MAX_LEVEL = 10
 
@@ -29,11 +29,11 @@ def bbox2fields():
     """The key correspondence from bboxes to labels, masks and
     segmentations."""
     bbox2label = {
-        'gt_bboxes': 'gt_labels',
+        'gt_bboxes'       : 'gt_labels',
         'gt_bboxes_ignore': 'gt_labels_ignore'
     }
     bbox2mask = {
-        'gt_bboxes': 'gt_masks',
+        'gt_bboxes'       : 'gt_masks',
         'gt_bboxes_ignore': 'gt_masks_ignore'
     }
     bbox2seg = {
@@ -42,7 +42,7 @@ def bbox2fields():
     return bbox2label, bbox2mask, bbox2seg
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class AutoAugment(object):
     """Auto augmentation.
 
@@ -85,7 +85,7 @@ class AutoAugment(object):
         >>> results = dict(img=img, gt_bboxes=gt_bboxes)
         >>> results = augmentation(results)
     """
-
+    
     def __init__(self, policies):
         assert isinstance(policies, list) and len(policies) > 0, \
             'Policies must be a non-empty list.'
@@ -96,21 +96,21 @@ class AutoAugment(object):
                 assert isinstance(augment, dict) and 'type' in augment, \
                     'Each specific augmentation must be a dict with key' \
                     ' "type".'
-
+        
         self.policies = copy.deepcopy(policies)
         self.transforms = [Compose(policy) for policy in self.policies]
-
+    
     def __call__(self, results):
         transform = np.random.choice(self.transforms)
         return transform(results)
-
+    
     def __repr__(self):
         return f'{self.__class__.__name__}(policies={self.policies})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class Shear(object):
-    """Apply Shear Transformation to image (and its corresponding bbox, mask,
+    """Apply Shear Transformation to image (and its corresponding box, mask,
     segmentation).
 
     Args:
@@ -131,41 +131,54 @@ class Shear(object):
                 offset negative. Should be in range [0,1]
         interpolation (str): Same as in :func:`mmcv.imshear`.
     """
-
-    def __init__(self,
-                 level,
-                 img_fill_val=128,
-                 seg_ignore_label=255,
-                 prob=0.5,
-                 direction='horizontal',
-                 max_shear_magnitude=0.3,
-                 random_negative_prob=0.5,
-                 interpolation='bilinear'):
+    
+    def __init__(
+        self,
+        level,
+        img_fill_val=128,
+        seg_ignore_label=255,
+        prob=0.5,
+        direction='horizontal',
+        max_shear_magnitude=0.3,
+        random_negative_prob=0.5,
+        interpolation='bilinear'
+    ):
         assert isinstance(level, (int, float)), 'The level must be type ' \
-            f'int or float, got {type(level)}.'
+                                                f'int or float, got ' \
+                                                f'{type(level)}.'
         assert 0 <= level <= _MAX_LEVEL, 'The level should be in range ' \
-            f'[0,{_MAX_LEVEL}], got {level}.'
+                                         f'[0,{_MAX_LEVEL}], got {level}.'
         if isinstance(img_fill_val, (float, int)):
             img_fill_val = tuple([float(img_fill_val)] * 3)
         elif isinstance(img_fill_val, tuple):
             assert len(img_fill_val) == 3, 'img_fill_val as tuple must ' \
-                f'have 3 elements. got {len(img_fill_val)}.'
+                                           f'have 3 elements. got ' \
+                                           f'{len(img_fill_val)}.'
             img_fill_val = tuple([float(val) for val in img_fill_val])
         else:
             raise ValueError(
-                'img_fill_val must be float or tuple with 3 elements.')
+                'img_fill_val must be float or tuple with 3 elements.'
+            )
         assert np.all([0 <= val <= 255 for val in img_fill_val]), 'all ' \
-            'elements of img_fill_val should between range [0,255].' \
-            f'got {img_fill_val}.'
+                                                                  'elements ' \
+                                                                  'of img_fill_val should between range [0,255].' \
+                                                                  f'got {
+        img_fill_val}.'
         assert 0 <= prob <= 1.0, 'The probability of shear should be in ' \
-            f'range [0,1]. got {prob}.'
+                                 f'range [0,1]. got {prob}.'
         assert direction in ('horizontal', 'vertical'), 'direction must ' \
-            f'in be either "horizontal" or "vertical". got {direction}.'
+                                                        f'in be either ' \
+                                                        f'"horizontal" or ' \
+                                                        f'"vertical". got ' \
+                                                        f'{direction}.'
         assert isinstance(max_shear_magnitude, float), 'max_shear_magnitude ' \
-            f'should be type float. got {type(max_shear_magnitude)}.'
+                                                       f'should be type ' \
+                                                       f'float. got ' \
+                                                       f'{type(max_shear_magnitude)}.'
         assert 0. <= max_shear_magnitude <= 1., 'Defaultly ' \
-            'max_shear_magnitude should be in range [0,1]. ' \
-            f'got {max_shear_magnitude}.'
+                                                'max_shear_magnitude should ' \
+                                                'be in range [0,1]. ' \
+                                                f'got {max_shear_magnitude}.'
         self.level = level
         self.magnitude = level_to_value(level, max_shear_magnitude)
         self.img_fill_val = img_fill_val
@@ -175,12 +188,14 @@ class Shear(object):
         self.max_shear_magnitude = max_shear_magnitude
         self.random_negative_prob = random_negative_prob
         self.interpolation = interpolation
-
-    def _shear_img(self,
-                   results,
-                   magnitude,
-                   direction='horizontal',
-                   interpolation='bilinear'):
+    
+    def _shear_img(
+        self,
+        results,
+        magnitude,
+        direction='horizontal',
+        interpolation='bilinear'
+    ):
         """Shear the image.
 
         Args:
@@ -197,28 +212,39 @@ class Shear(object):
                 magnitude,
                 direction,
                 border_value=self.img_fill_val,
-                interpolation=interpolation)
+                interpolation=interpolation
+            )
             results[key] = img_sheared.astype(img.dtype)
-
+    
     def _shear_bboxes(self, results, magnitude):
         """Shear the bboxes."""
         h, w, c = results['img_shape']
         if self.direction == 'horizontal':
-            shear_matrix = np.stack([[1, magnitude],
-                                     [0, 1]]).astype(np.float32)  # [2, 2]
+            shear_matrix = np.stack(
+                [[1, magnitude],
+                 [0, 1]]
+            ).astype(np.float32)  # [2, 2]
         else:
-            shear_matrix = np.stack([[1, 0], [magnitude,
-                                              1]]).astype(np.float32)
+            shear_matrix = np.stack(
+                [[1, 0], [magnitude,
+                          1]]
+            ).astype(np.float32)
         for key in results.get('bbox_fields', []):
             min_x, min_y, max_x, max_y = np.split(
-                results[key], results[key].shape[-1], axis=-1)
-            coordinates = np.stack([[min_x, min_y], [max_x, min_y],
-                                    [min_x, max_y],
-                                    [max_x, max_y]])  # [4, 2, nb_box, 1]
+                results[key], results[key].shape[-1], axis=-1
+            )
+            coordinates = np.stack(
+                [[min_x, min_y], [max_x, min_y],
+                 [min_x, max_y],
+                 [max_x, max_y]]
+            )  # [4, 2, nb_box, 1]
             coordinates = coordinates[..., 0].transpose(
-                (2, 1, 0)).astype(np.float32)  # [nb_box, 2, 4]
-            new_coords = np.matmul(shear_matrix[None, :, :],
-                                   coordinates)  # [nb_box, 2, 4]
+                (2, 1, 0)
+            ).astype(np.float32)  # [nb_box, 2, 4]
+            new_coords = np.matmul(
+                shear_matrix[None, :, :],
+                coordinates
+            )  # [nb_box, 2, 4]
             min_x = np.min(new_coords[:, 0, :], axis=-1)
             min_y = np.min(new_coords[:, 1, :], axis=-1)
             max_x = np.max(new_coords[:, 0, :], axis=-1)
@@ -227,31 +253,39 @@ class Shear(object):
             min_y = np.clip(min_y, a_min=0, a_max=h)
             max_x = np.clip(max_x, a_min=min_x, a_max=w)
             max_y = np.clip(max_y, a_min=min_y, a_max=h)
-            results[key] = np.stack([min_x, min_y, max_x, max_y],
-                                    axis=-1).astype(results[key].dtype)
-
-    def _shear_masks(self,
-                     results,
-                     magnitude,
-                     direction='horizontal',
-                     fill_val=0,
-                     interpolation='bilinear'):
+            results[key] = np.stack(
+                [min_x, min_y, max_x, max_y],
+                axis=-1
+            ).astype(results[key].dtype)
+    
+    def _shear_masks(
+        self,
+        results,
+        magnitude,
+        direction='horizontal',
+        fill_val=0,
+        interpolation='bilinear'
+    ):
         """Shear the masks."""
         h, w, c = results['img_shape']
         for key in results.get('mask_fields', []):
             masks = results[key]
-            results[key] = masks.shear((h, w),
-                                       magnitude,
-                                       direction,
-                                       border_value=fill_val,
-                                       interpolation=interpolation)
-
-    def _shear_seg(self,
-                   results,
-                   magnitude,
-                   direction='horizontal',
-                   fill_val=255,
-                   interpolation='bilinear'):
+            results[key] = masks.shear(
+                (h, w),
+                magnitude,
+                direction,
+                border_value=fill_val,
+                interpolation=interpolation
+            )
+    
+    def _shear_seg(
+        self,
+        results,
+        magnitude,
+        direction='horizontal',
+        fill_val=255,
+        interpolation='bilinear'
+    ):
         """Shear the segmentation maps."""
         for key in results.get('seg_fields', []):
             seg = results[key]
@@ -260,8 +294,9 @@ class Shear(object):
                 magnitude,
                 direction,
                 border_value=fill_val,
-                interpolation=interpolation).astype(seg.dtype)
-
+                interpolation=interpolation
+            ).astype(seg.dtype)
+    
     def _filter_invalid(self, results, min_bbox_size=0):
         """Filter bboxes and corresponding masks too small after shear
         augmentation."""
@@ -280,7 +315,7 @@ class Shear(object):
             mask_key = bbox2mask.get(key)
             if mask_key in results:
                 results[mask_key] = results[mask_key][valid_inds]
-
+    
     def __call__(self, results):
         """Call function to shear images, bounding boxes, masks and semantic
         segmentation maps.
@@ -302,16 +337,18 @@ class Shear(object):
             magnitude,
             self.direction,
             fill_val=0,
-            interpolation=self.interpolation)
+            interpolation=self.interpolation
+        )
         self._shear_seg(
             results,
             magnitude,
             self.direction,
             fill_val=self.seg_ignore_label,
-            interpolation=self.interpolation)
+            interpolation=self.interpolation
+        )
         self._filter_invalid(results)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(level={self.level}, '
@@ -325,9 +362,9 @@ class Shear(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class Rotate(object):
-    """Apply Rotate Transformation to image (and its corresponding bbox, mask,
+    """Apply Rotate Transformation to image (and its corresponding box, mask,
     segmentation).
 
     Args:
@@ -351,16 +388,18 @@ class Rotate(object):
         random_negative_prob (float): The probability that turns the
              offset negative.
     """
-
-    def __init__(self,
-                 level,
-                 scale=1,
-                 center=None,
-                 img_fill_val=128,
-                 seg_ignore_label=255,
-                 prob=0.5,
-                 max_rotate_angle=30,
-                 random_negative_prob=0.5):
+    
+    def __init__(
+        self,
+        level,
+        scale=1,
+        center=None,
+        img_fill_val=128,
+        seg_ignore_label=255,
+        prob=0.5,
+        max_rotate_angle=30,
+        random_negative_prob=0.5
+    ):
         assert isinstance(level, (int, float)), \
             f'The level must be type int or float. got {type(level)}.'
         assert 0 <= level <= _MAX_LEVEL, \
@@ -370,27 +409,32 @@ class Rotate(object):
         if isinstance(center, (int, float)):
             center = (center, center)
         elif isinstance(center, tuple):
-            assert len(center) == 2, 'center with type tuple must have '\
-                f'2 elements. got {len(center)} elements.'
+            assert len(center) == 2, 'center with type tuple must have ' \
+                                     f'2 elements. got {len(center)} elements.'
         else:
-            assert center is None, 'center must be None or type int, '\
-                f'float or tuple, got type {type(center)}.'
+            assert center is None, 'center must be None or type int, ' \
+                                   f'float or tuple, got type {type(center)}.'
         if isinstance(img_fill_val, (float, int)):
             img_fill_val = tuple([float(img_fill_val)] * 3)
         elif isinstance(img_fill_val, tuple):
-            assert len(img_fill_val) == 3, 'img_fill_val as tuple must '\
-                f'have 3 elements. got {len(img_fill_val)}.'
+            assert len(img_fill_val) == 3, 'img_fill_val as tuple must ' \
+                                           f'have 3 elements. got ' \
+                                           f'{len(img_fill_val)}.'
             img_fill_val = tuple([float(val) for val in img_fill_val])
         else:
             raise ValueError(
-                'img_fill_val must be float or tuple with 3 elements.')
+                'img_fill_val must be float or tuple with 3 elements.'
+            )
         assert np.all([0 <= val <= 255 for val in img_fill_val]), \
-            'all elements of img_fill_val should between range [0,255]. '\
+            'all elements of img_fill_val should between range [0,255]. ' \
             f'got {img_fill_val}.'
-        assert 0 <= prob <= 1.0, 'The probability should be in range [0,1]. '\
-            'got {prob}.'
-        assert isinstance(max_rotate_angle, (int, float)), 'max_rotate_angle '\
-            f'should be type int or float. got type {type(max_rotate_angle)}.'
+        assert 0 <= prob <= 1.0, 'The probability should be in range [0,1]. ' \
+                                 'got {prob}.'
+        assert isinstance(max_rotate_angle, (int, float)), 'max_rotate_angle ' \
+                                                           f'should be type ' \
+                                                           f'int or float. ' \
+                                                           f'got type ' \
+                                                           f'{type(max_rotate_angle)}.'
         self.level = level
         self.scale = scale
         # Rotation angle in degrees. Positive values mean
@@ -402,7 +446,7 @@ class Rotate(object):
         self.prob = prob
         self.max_rotate_angle = max_rotate_angle
         self.random_negative_prob = random_negative_prob
-
+    
     def _rotate_img(self, results, angle, center=None, scale=1.0):
         """Rotate the image.
 
@@ -418,69 +462,92 @@ class Rotate(object):
         for key in results.get('img_fields', ['img']):
             img = results[key].copy()
             img_rotated = mmcv.imrotate(
-                img, angle, center, scale, border_value=self.img_fill_val)
+                img, angle, center, scale, border_value=self.img_fill_val
+            )
             results[key] = img_rotated.astype(img.dtype)
-
+    
     def _rotate_bboxes(self, results, rotate_matrix):
         """Rotate the bboxes."""
         h, w, c = results['img_shape']
         for key in results.get('bbox_fields', []):
             min_x, min_y, max_x, max_y = np.split(
-                results[key], results[key].shape[-1], axis=-1)
-            coordinates = np.stack([[min_x, min_y], [max_x, min_y],
-                                    [min_x, max_y],
-                                    [max_x, max_y]])  # [4, 2, nb_bbox, 1]
+                results[key], results[key].shape[-1], axis=-1
+            )
+            coordinates = np.stack(
+                [[min_x, min_y], [max_x, min_y],
+                 [min_x, max_y],
+                 [max_x, max_y]]
+            )  # [4, 2, nb_bbox, 1]
             # pad 1 to convert from format [x, y] to homogeneous
             # coordinates format [x, y, 1]
             coordinates = np.concatenate(
                 (coordinates,
                  np.ones((4, 1, coordinates.shape[2], 1), coordinates.dtype)),
-                axis=1)  # [4, 3, nb_bbox, 1]
+                axis=1
+            )  # [4, 3, nb_bbox, 1]
             coordinates = coordinates.transpose(
-                (2, 0, 1, 3))  # [nb_bbox, 4, 3, 1]
-            rotated_coords = np.matmul(rotate_matrix,
-                                       coordinates)  # [nb_bbox, 4, 2, 1]
+                (2, 0, 1, 3)
+            )  # [nb_bbox, 4, 3, 1]
+            rotated_coords = np.matmul(
+                rotate_matrix,
+                coordinates
+            )  # [nb_bbox, 4, 2, 1]
             rotated_coords = rotated_coords[..., 0]  # [nb_bbox, 4, 2]
             min_x, min_y = np.min(
-                rotated_coords[:, :, 0], axis=1), np.min(
-                    rotated_coords[:, :, 1], axis=1)
+                rotated_coords[:, :, 0], axis=1
+            ), np.min(
+                rotated_coords[:, :, 1], axis=1
+            )
             max_x, max_y = np.max(
-                rotated_coords[:, :, 0], axis=1), np.max(
-                    rotated_coords[:, :, 1], axis=1)
+                rotated_coords[:, :, 0], axis=1
+            ), np.max(
+                rotated_coords[:, :, 1], axis=1
+            )
             min_x, min_y = np.clip(
-                min_x, a_min=0, a_max=w), np.clip(
-                    min_y, a_min=0, a_max=h)
+                min_x, a_min=0, a_max=w
+            ), np.clip(
+                min_y, a_min=0, a_max=h
+            )
             max_x, max_y = np.clip(
-                max_x, a_min=min_x, a_max=w), np.clip(
-                    max_y, a_min=min_y, a_max=h)
-            results[key] = np.stack([min_x, min_y, max_x, max_y],
-                                    axis=-1).astype(results[key].dtype)
-
-    def _rotate_masks(self,
-                      results,
-                      angle,
-                      center=None,
-                      scale=1.0,
-                      fill_val=0):
+                max_x, a_min=min_x, a_max=w
+            ), np.clip(
+                max_y, a_min=min_y, a_max=h
+            )
+            results[key] = np.stack(
+                [min_x, min_y, max_x, max_y],
+                axis=-1
+            ).astype(results[key].dtype)
+    
+    def _rotate_masks(
+        self,
+        results,
+        angle,
+        center=None,
+        scale=1.0,
+        fill_val=0
+    ):
         """Rotate the masks."""
         h, w, c = results['img_shape']
         for key in results.get('mask_fields', []):
             masks = results[key]
             results[key] = masks.rotate((h, w), angle, center, scale, fill_val)
-
-    def _rotate_seg(self,
-                    results,
-                    angle,
-                    center=None,
-                    scale=1.0,
-                    fill_val=255):
+    
+    def _rotate_seg(
+        self,
+        results,
+        angle,
+        center=None,
+        scale=1.0,
+        fill_val=255
+    ):
         """Rotate the segmentation map."""
         for key in results.get('seg_fields', []):
             seg = results[key].copy()
             results[key] = mmcv.imrotate(
                 seg, angle, center, scale,
-                border_value=fill_val).astype(seg.dtype)
-
+                border_value=fill_val
+            ).astype(seg.dtype)
+    
     def _filter_invalid(self, results, min_bbox_size=0):
         """Filter bboxes and corresponding masks too small after rotate
         augmentation."""
@@ -499,7 +566,7 @@ class Rotate(object):
             mask_key = bbox2mask.get(key)
             if mask_key in results:
                 results[mask_key] = results[mask_key][valid_inds]
-
+    
     def __call__(self, results):
         """Call function to rotate images, bounding boxes, masks and semantic
         segmentation maps.
@@ -522,10 +589,11 @@ class Rotate(object):
         self._rotate_bboxes(results, rotate_matrix)
         self._rotate_masks(results, angle, center, self.scale, fill_val=0)
         self._rotate_seg(
-            results, angle, center, self.scale, fill_val=self.seg_ignore_label)
+            results, angle, center, self.scale, fill_val=self.seg_ignore_label
+        )
         self._filter_invalid(results)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(level={self.level}, '
@@ -539,7 +607,7 @@ class Rotate(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class Translate(object):
     """Translate the images, bboxes, masks and segmentation maps horizontally
     or vertically.
@@ -565,16 +633,18 @@ class Translate(object):
         min_size (int | float): The minimum pixel for filtering
             invalid bboxes after the translation.
     """
-
-    def __init__(self,
-                 level,
-                 prob=0.5,
-                 img_fill_val=128,
-                 seg_ignore_label=255,
-                 direction='horizontal',
-                 max_translate_offset=250.,
-                 random_negative_prob=0.5,
-                 min_size=0):
+    
+    def __init__(
+        self,
+        level,
+        prob=0.5,
+        img_fill_val=128,
+        seg_ignore_label=255,
+        direction='horizontal',
+        max_translate_offset=250.,
+        random_negative_prob=0.5,
+        min_size=0
+    ):
         assert isinstance(level, (int, float)), \
             'The level must be type int or float.'
         assert 0 <= level <= _MAX_LEVEL, \
@@ -606,7 +676,7 @@ class Translate(object):
         self.max_translate_offset = max_translate_offset
         self.random_negative_prob = random_negative_prob
         self.min_size = min_size
-
+    
     def _translate_img(self, results, offset, direction='horizontal'):
         """Translate the image.
 
@@ -619,48 +689,58 @@ class Translate(object):
         for key in results.get('img_fields', ['img']):
             img = results[key].copy()
             results[key] = mmcv.imtranslate(
-                img, offset, direction, self.img_fill_val).astype(img.dtype)
-
+                img, offset, direction, self.img_fill_val
+            ).astype(img.dtype)
+    
     def _translate_bboxes(self, results, offset):
         """Shift bboxes horizontally or vertically, according to offset."""
         h, w, c = results['img_shape']
         for key in results.get('bbox_fields', []):
             min_x, min_y, max_x, max_y = np.split(
-                results[key], results[key].shape[-1], axis=-1)
+                results[key], results[key].shape[-1], axis=-1
+            )
             if self.direction == 'horizontal':
                 min_x = np.maximum(0, min_x + offset)
                 max_x = np.minimum(w, max_x + offset)
             elif self.direction == 'vertical':
                 min_y = np.maximum(0, min_y + offset)
                 max_y = np.minimum(h, max_y + offset)
-
+            
             # the boxes translated outside of image will be filtered along with
             # the corresponding masks, by invoking ``_filter_invalid``.
-            results[key] = np.concatenate([min_x, min_y, max_x, max_y],
-                                          axis=-1)
-
-    def _translate_masks(self,
-                         results,
-                         offset,
-                         direction='horizontal',
-                         fill_val=0):
+            results[key] = np.concatenate(
+                [min_x, min_y, max_x, max_y],
+                axis=-1
+            )
+    
+    def _translate_masks(
+        self,
+        results,
+        offset,
+        direction='horizontal',
+        fill_val=0
+    ):
         """Translate masks horizontally or vertically."""
         h, w, c = results['img_shape']
         for key in results.get('mask_fields', []):
             masks = results[key]
             results[key] = masks.translate((h, w), offset, direction, fill_val)
-
-    def _translate_seg(self,
-                       results,
-                       offset,
-                       direction='horizontal',
-                       fill_val=255):
+    
+    def _translate_seg(
+        self,
+        results,
+        offset,
+        direction='horizontal',
+        fill_val=255
+    ):
         """Translate segmentation maps horizontally or vertically."""
         for key in results.get('seg_fields', []):
             seg = results[key].copy()
-            results[key] = mmcv.imtranslate(seg, offset, direction,
-                                            fill_val).astype(seg.dtype)
-
+            results[key] = mmcv.imtranslate(
+                seg, offset, direction,
+                fill_val
+            ).astype(seg.dtype)
+    
     def _filter_invalid(self, results, min_size=0):
         """Filter bboxes and masks too small or translated out of image."""
         bbox2label, bbox2mask, _ = bbox2fields()
@@ -679,7 +759,7 @@ class Translate(object):
             if mask_key in results:
                 results[mask_key] = results[mask_key][valid_inds]
         return results
-
+    
     def __call__(self, results):
         """Call function to translate images, bounding boxes, masks and
         semantic segmentation maps.
@@ -700,12 +780,13 @@ class Translate(object):
         # fill_val set to ``seg_ignore_label`` for the ignored value
         # of segmentation map.
         self._translate_seg(
-            results, offset, self.direction, fill_val=self.seg_ignore_label)
+            results, offset, self.direction, fill_val=self.seg_ignore_label
+        )
         self._filter_invalid(results, min_size=self.min_size)
         return results
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class ColorTransform(object):
     """Apply Color transformation to image. The bboxes, masks, and
     segmentations are not modified.
@@ -714,7 +795,7 @@ class ColorTransform(object):
         level (int | float): Should be in range [0,_MAX_LEVEL].
         prob (float): The probability for performing Color transformation.
     """
-
+    
     def __init__(self, level, prob=0.5):
         assert isinstance(level, (int, float)), \
             'The level must be type int or float.'
@@ -725,14 +806,14 @@ class ColorTransform(object):
         self.level = level
         self.prob = prob
         self.factor = enhance_level_to_value(level)
-
+    
     def _adjust_color_img(self, results, factor=1.0):
         """Apply Color transformation to image."""
         for key in results.get('img_fields', ['img']):
             # NOTE defaultly the image should be BGR format
             img = results[key]
             results[key] = mmcv.adjust_color(img, factor).astype(img.dtype)
-
+    
     def __call__(self, results):
         """Call function for Color transformation.
 
@@ -746,7 +827,7 @@ class ColorTransform(object):
             return results
         self._adjust_color_img(results, self.factor)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(level={self.level}, '
@@ -754,7 +835,7 @@ class ColorTransform(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class EqualizeTransform(object):
     """Apply Equalize transformation to image. The bboxes, masks and
     segmentations are not modified.
@@ -762,18 +843,18 @@ class EqualizeTransform(object):
     Args:
         prob (float): The probability for performing Equalize transformation.
     """
-
+    
     def __init__(self, prob=0.5):
         assert 0 <= prob <= 1.0, \
             'The probability should be in range [0,1].'
         self.prob = prob
-
+    
     def _imequalize(self, results):
         """Equalizes the histogram of one image."""
         for key in results.get('img_fields', ['img']):
             img = results[key]
             results[key] = mmcv.imequalize(img).astype(img.dtype)
-
+    
     def __call__(self, results):
         """Call function for Equalize transformation.
 
@@ -787,13 +868,13 @@ class EqualizeTransform(object):
             return results
         self._imequalize(results)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(prob={self.prob})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class BrightnessTransform(object):
     """Apply Brightness transformation to image. The bboxes, masks and
     segmentations are not modified.
@@ -802,7 +883,7 @@ class BrightnessTransform(object):
         level (int | float): Should be in range [0,_MAX_LEVEL].
         prob (float): The probability for performing Brightness transformation.
     """
-
+    
     def __init__(self, level, prob=0.5):
         assert isinstance(level, (int, float)), \
             'The level must be type int or float.'
@@ -813,14 +894,16 @@ class BrightnessTransform(object):
         self.level = level
         self.prob = prob
         self.factor = enhance_level_to_value(level)
-
+    
     def _adjust_brightness_img(self, results, factor=1.0):
         """Adjust the brightness of image."""
         for key in results.get('img_fields', ['img']):
             img = results[key]
-            results[key] = mmcv.adjust_brightness(img,
-                                                  factor).astype(img.dtype)
-
+            results[key] = mmcv.adjust_brightness(
+                img,
+                factor
+            ).astype(img.dtype)
+    
     def __call__(self, results):
         """Call function for Brightness transformation.
 
@@ -834,7 +917,7 @@ class BrightnessTransform(object):
             return results
         self._adjust_brightness_img(results, self.factor)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(level={self.level}, '
@@ -842,7 +925,7 @@ class BrightnessTransform(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class ContrastTransform(object):
     """Apply Contrast transformation to image. The bboxes, masks and
     segmentations are not modified.
@@ -851,7 +934,7 @@ class ContrastTransform(object):
         level (int | float): Should be in range [0,_MAX_LEVEL].
         prob (float): The probability for performing Contrast transformation.
     """
-
+    
     def __init__(self, level, prob=0.5):
         assert isinstance(level, (int, float)), \
             'The level must be type int or float.'
@@ -862,13 +945,13 @@ class ContrastTransform(object):
         self.level = level
         self.prob = prob
         self.factor = enhance_level_to_value(level)
-
+    
     def _adjust_contrast_img(self, results, factor=1.0):
         """Adjust the image contrast."""
         for key in results.get('img_fields', ['img']):
             img = results[key]
             results[key] = mmcv.adjust_contrast(img, factor).astype(img.dtype)
-
+    
     def __call__(self, results):
         """Call function for Contrast transformation.
 
@@ -882,7 +965,7 @@ class ContrastTransform(object):
             return results
         self._adjust_contrast_img(results, self.factor)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(level={self.level}, '

@@ -8,7 +8,7 @@ from mmdet.models.utils import ResLayer as _ResLayer
 from mmdet.utils import get_root_logger
 
 
-@SHARED_HEADS.register_module()
+@SHARED_HEADS._register()
 class ResLayer(nn.Module):
 
     def __init__(self,

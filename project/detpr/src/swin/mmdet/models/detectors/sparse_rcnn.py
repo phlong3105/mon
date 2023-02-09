@@ -1,25 +1,27 @@
-from ..builder import DETECTORS
 from .two_stage import TwoStageDetector
+from ..builder import DETECTORS
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class SparseRCNN(TwoStageDetector):
     r"""Implementation of `Sparse R-CNN: End-to-End Object Detection with
     Learnable Proposals <https://arxiv.org/abs/2011.12450>`_"""
-
+    
     def __init__(self, *args, **kwargs):
         super(SparseRCNN, self).__init__(*args, **kwargs)
         assert self.with_rpn, 'Sparse R-CNN do not support external proposals'
-
-    def forward_train(self,
-                      img,
-                      img_metas,
-                      gt_bboxes,
-                      gt_labels,
-                      gt_bboxes_ignore=None,
-                      gt_masks=None,
-                      proposals=None,
-                      **kwargs):
+    
+    def forward_train(
+        self,
+        img,
+        img_metas,
+        gt_bboxes,
+        gt_labels,
+        gt_bboxes_ignore=None,
+        gt_masks=None,
+        proposals=None,
+        **kwargs
+    ):
         """Forward function of SparseR-CNN in train stage.
 
         Args:
@@ -32,22 +34,22 @@ class SparseRCNN(TwoStageDetector):
                 :class:`mmdet.datasets.pipelines.Collect`.
             gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
                 shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
-            gt_labels (list[Tensor]): class indices corresponding to each bbox
+            gt_labels (list[Tensor]): class indices corresponding to each box
             gt_bboxes_ignore (None | list[Tensor): specify which bounding
                 boxes can be ignored when computing the loss.
             gt_masks (List[Tensor], optional) : Segmentation masks for
-                each bbox. But we don't support it in this architecture.
+                each box. But we don't support it in this architecture.
             proposals (List[Tensor], optional): override rpn proposals with
                 custom proposals. Use when `with_rpn` is False.
 
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
-
+        
         assert proposals is None, 'Sparse R-CNN does not support' \
                                   ' external proposals'
         assert gt_masks is None, 'Sparse R-CNN does not instance segmentation'
-
+        
         x = self.extract_feat(img)
         proposal_boxes, proposal_features, imgs_whwh = \
             self.rpn_head.forward_train(x, img_metas)
@@ -60,9 +62,10 @@ class SparseRCNN(TwoStageDetector):
             gt_labels,
             gt_bboxes_ignore=gt_bboxes_ignore,
             gt_masks=gt_masks,
-            imgs_whwh=imgs_whwh)
+            imgs_whwh=imgs_whwh
+        )
         return roi_losses
-
+    
     def simple_test(self, img, img_metas, rescale=False):
         """Test function without test time augmentation.
 
@@ -86,9 +89,10 @@ class SparseRCNN(TwoStageDetector):
             proposal_features,
             img_metas,
             imgs_whwh=imgs_whwh,
-            rescale=rescale)
+            rescale=rescale
+        )
         return bbox_results
-
+    
     def forward_dummy(self, img):
         """Used for computing network flops.
 
@@ -104,7 +108,9 @@ class SparseRCNN(TwoStageDetector):
         proposal_boxes, proposal_features, imgs_whwh = \
             self.rpn_head.simple_test_rpn(x, dummy_img_metas)
         # roi_head
-        roi_outs = self.roi_head.forward_dummy(x, proposal_boxes,
-                                               proposal_features,
-                                               dummy_img_metas)
+        roi_outs = self.roi_head.forward_dummy(
+            x, proposal_boxes,
+            proposal_features,
+            dummy_img_metas
+        )
         return roi_outs

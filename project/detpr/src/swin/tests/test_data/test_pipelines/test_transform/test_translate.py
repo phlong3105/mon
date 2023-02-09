@@ -4,16 +4,25 @@ import numpy as np
 import pycocotools.mask as maskUtils
 import pytest
 from mmcv.utils import build_from_cfg
-
 from mmdet.core.mask import BitmapMasks, PolygonMasks
 from mmdet.datasets.builder import PIPELINES
 
 
 def _check_keys(results, results_translated):
-    assert len(set(results.keys()).difference(set(
-        results_translated.keys()))) == 0
-    assert len(set(results_translated.keys()).difference(set(
-        results.keys()))) == 0
+    assert len(
+        set(results.keys()).difference(
+            set(
+                results_translated.keys()
+            )
+        )
+    ) == 0
+    assert len(
+        set(results_translated.keys()).difference(
+            set(
+                results.keys()
+            )
+        )
+    ) == 0
 
 
 def _pad(h, w, c, pad_val, axis=-1, dtype=np.float32):
@@ -21,8 +30,10 @@ def _pad(h, w, c, pad_val, axis=-1, dtype=np.float32):
     if isinstance(pad_val, (int, float)):
         pad_val = tuple([pad_val] * c)
     assert len(pad_val) == c
-    pad_data = np.stack([np.ones((h, w)) * pad_val[i] for i in range(c)],
-                        axis=axis).astype(dtype)
+    pad_data = np.stack(
+        [np.ones((h, w)) * pad_val[i] for i in range(c)],
+        axis=axis
+    ).astype(dtype)
     return pad_data
 
 
@@ -40,7 +51,8 @@ def _construct_ann_info(h=427, w=640, c=3):
     bboxes = np.array(
         [[222.62, 217.82, 241.81, 238.93], [50.5, 329.7, 130.23, 384.96],
          [175.47, 331.97, 254.8, 389.26]],
-        dtype=np.float32)
+        dtype=np.float32
+    )
     labels = np.array([9, 2, 2], dtype=np.int64)
     bboxes_ignore = np.array([[59., 253., 311., 337.]], dtype=np.float32)
     masks = [
@@ -69,7 +81,8 @@ def _construct_ann_info(h=427, w=640, c=3):
         ]]
     ]
     return dict(
-        bboxes=bboxes, labels=labels, bboxes_ignore=bboxes_ignore, masks=masks)
+        bboxes=bboxes, labels=labels, bboxes_ignore=bboxes_ignore, masks=masks
+    )
 
 
 def _load_bboxes(results):
@@ -115,11 +128,14 @@ def _load_masks(results, poly2mask=True):
     h, w = results['img_info']['height'], results['img_info']['width']
     gt_masks = results['ann_info']['masks']
     if poly2mask:
-        gt_masks = BitmapMasks([_poly2mask(mask, h, w) for mask in gt_masks],
-                               h, w)
+        gt_masks = BitmapMasks(
+            [_poly2mask(mask, h, w) for mask in gt_masks],
+            h, w
+        )
     else:
         gt_masks = PolygonMasks(
-            [_process_polygons(polygons) for polygons in gt_masks], h, w)
+            [_process_polygons(polygons) for polygons in gt_masks], h, w
+        )
     results['gt_masks'] = gt_masks
     results['mask_fields'] = ['gt_masks']
 
@@ -150,68 +166,75 @@ def test_translate():
     with pytest.raises(AssertionError):
         transform = dict(type='Translate', level=-1)
         build_from_cfg(transform, PIPELINES)
-
+    
     # test assertion for invalid type of level
     with pytest.raises(AssertionError):
         transform = dict(type='Translate', level=[1])
         build_from_cfg(transform, PIPELINES)
-
+    
     # test assertion for invalid prob
     with pytest.raises(AssertionError):
         transform = dict(type='Translate', level=1, prob=-0.5)
         build_from_cfg(transform, PIPELINES)
-
+    
     # test assertion for the num of elements in tuple img_fill_val
     with pytest.raises(AssertionError):
         transform = dict(
-            type='Translate', level=1, img_fill_val=(128, 128, 128, 128))
+            type='Translate', level=1, img_fill_val=(128, 128, 128, 128)
+        )
         build_from_cfg(transform, PIPELINES)
-
+    
     # test ValueError for invalid type of img_fill_val
     with pytest.raises(ValueError):
         transform = dict(
-            type='Translate', level=1, img_fill_val=[128, 128, 128])
+            type='Translate', level=1, img_fill_val=[128, 128, 128]
+        )
         build_from_cfg(transform, PIPELINES)
-
+    
     # test assertion for invalid value of img_fill_val
     with pytest.raises(AssertionError):
         transform = dict(
-            type='Translate', level=1, img_fill_val=(128, -1, 256))
+            type='Translate', level=1, img_fill_val=(128, -1, 256)
+        )
         build_from_cfg(transform, PIPELINES)
-
+    
     # test assertion for invalid value of direction
     with pytest.raises(AssertionError):
         transform = dict(
-            type='Translate', level=1, img_fill_val=128, direction='diagonal')
+            type='Translate', level=1, img_fill_val=128, direction='diagonal'
+        )
         build_from_cfg(transform, PIPELINES)
-
+    
     # test assertion for invalid type of max_translate_offset
     with pytest.raises(AssertionError):
         transform = dict(
             type='Translate',
             level=1,
             img_fill_val=128,
-            max_translate_offset=(250., ))
+            max_translate_offset=(250.,)
+        )
         build_from_cfg(transform, PIPELINES)
-
+    
     # construct toy data example for unit test
     results = construct_toy_data()
-
-    def _check_bbox_mask(results,
-                         results_translated,
-                         offset,
-                         direction,
-                         min_size=0.):
+    
+    def _check_bbox_mask(
+        results,
+        results_translated,
+        offset,
+        direction,
+        min_size=0.
+    ):
         # The key correspondence from bboxes to labels and masks.
         bbox2label = {
-            'gt_bboxes': 'gt_labels',
+            'gt_bboxes'       : 'gt_labels',
             'gt_bboxes_ignore': 'gt_labels_ignore'
         }
         bbox2mask = {
-            'gt_bboxes': 'gt_masks',
+            'gt_bboxes'       : 'gt_masks',
             'gt_bboxes_ignore': 'gt_masks_ignore'
         }
-
+        
         def _translate_bbox(bboxes, offset, direction, max_h, max_w):
             if direction == 'horizontal':
                 bboxes[:, 0::2] = bboxes[:, 0::2] + offset
@@ -222,26 +245,29 @@ def test_translate():
             bboxes[:, 0::2] = np.clip(bboxes[:, 0::2], 0, max_w)
             bboxes[:, 1::2] = np.clip(bboxes[:, 1::2], 0, max_h)
             return bboxes
-
+        
         h, w, c = results_translated['img'].shape
         for key in results_translated.get('bbox_fields', []):
             label_key, mask_key = bbox2label[key], bbox2mask[key]
             # check length of key
             if label_key in results:
                 assert len(results_translated[key]) == len(
-                    results_translated[label_key])
+                    results_translated[label_key]
+                )
             if mask_key in results:
                 assert len(results_translated[key]) == len(
-                    results_translated[mask_key])
+                    results_translated[mask_key]
+                )
             # construct gt_bboxes
             gt_bboxes = _translate_bbox(
-                copy.deepcopy(results[key]), offset, direction, h, w)
+                copy.deepcopy(results[key]), offset, direction, h, w
+            )
             valid_inds = (gt_bboxes[:, 2] - gt_bboxes[:, 0] > min_size) & (
                 gt_bboxes[:, 3] - gt_bboxes[:, 1] > min_size)
             gt_bboxes = gt_bboxes[valid_inds]
-            # check bbox
+            # check box
             assert np.equal(gt_bboxes, results_translated[key]).all()
-
+            
             # construct gt_masks
             if mask_key not in results:
                 # e.g. 'gt_masks_ignore'
@@ -256,15 +282,18 @@ def test_translate():
                     masks.shape[0],
                     0,
                     axis=0,
-                    dtype=masks.dtype)
+                    dtype=masks.dtype
+                )
                 if offset <= 0:
                     # left shift
                     gt_masks = np.concatenate(
-                        (masks[:, :, -offset:], masks_pad), axis=-1)
+                        (masks[:, :, -offset:], masks_pad), axis=-1
+                    )
                 else:
                     # right shift
                     gt_masks = np.concatenate(
-                        (masks_pad, masks[:, :, :-offset]), axis=-1)
+                        (masks_pad, masks[:, :, :-offset]), axis=-1
+                    )
             else:
                 masks_pad = _pad(
                     abs(offset),
@@ -272,21 +301,26 @@ def test_translate():
                     masks.shape[0],
                     0,
                     axis=0,
-                    dtype=masks.dtype)
+                    dtype=masks.dtype
+                )
                 if offset <= 0:
                     # top shift
                     gt_masks = np.concatenate(
-                        (masks[:, -offset:, :], masks_pad), axis=1)
+                        (masks[:, -offset:, :], masks_pad), axis=1
+                    )
                 else:
                     # bottom shift
                     gt_masks = np.concatenate(
-                        (masks_pad, masks[:, :-offset, :]), axis=1)
+                        (masks_pad, masks[:, :-offset, :]), axis=1
+                    )
             gt_masks = gt_masks[valid_inds]
             # check masks
             assert np.equal(gt_masks, masks_translated).all()
-
-    def _check_img_seg(results, results_translated, keys, offset, fill_val,
-                       direction):
+    
+    def _check_img_seg(
+        results, results_translated, keys, offset, fill_val,
+        direction
+    ):
         for key in keys:
             assert isinstance(results_translated[key], type(results[key]))
             # assert type(results[key]) == type(results_translated[key])
@@ -297,61 +331,80 @@ def test_translate():
             assert data.dtype == data_translated.dtype
             if 'img' in key:
                 data, data_translated = data.transpose(
-                    (2, 0, 1)), data_translated.transpose((2, 0, 1))
+                    (2, 0, 1)
+                ), data_translated.transpose((2, 0, 1))
             elif 'seg' in key:
                 data, data_translated = data[None, :, :], data_translated[
-                    None, :, :]
+                                                          None, :, :]
             c, h, w = data.shape
             if direction == 'horizontal':
                 data_pad = _pad(
-                    h, abs(offset), c, fill_val, axis=0, dtype=data.dtype)
+                    h, abs(offset), c, fill_val, axis=0, dtype=data.dtype
+                )
                 if offset <= 0:
                     # left shift
-                    data_gt = np.concatenate((data[:, :, -offset:], data_pad),
-                                             axis=-1)
+                    data_gt = np.concatenate(
+                        (data[:, :, -offset:], data_pad),
+                        axis=-1
+                    )
                 else:
                     # right shift
-                    data_gt = np.concatenate((data_pad, data[:, :, :-offset]),
-                                             axis=-1)
+                    data_gt = np.concatenate(
+                        (data_pad, data[:, :, :-offset]),
+                        axis=-1
+                    )
             else:
                 data_pad = _pad(
-                    abs(offset), w, c, fill_val, axis=0, dtype=data.dtype)
+                    abs(offset), w, c, fill_val, axis=0, dtype=data.dtype
+                )
                 if offset <= 0:
                     # top shift
-                    data_gt = np.concatenate((data[:, -offset:, :], data_pad),
-                                             axis=1)
+                    data_gt = np.concatenate(
+                        (data[:, -offset:, :], data_pad),
+                        axis=1
+                    )
                 else:
                     # bottom shift
-                    data_gt = np.concatenate((data_pad, data[:, :-offset, :]),
-                                             axis=1)
+                    data_gt = np.concatenate(
+                        (data_pad, data[:, :-offset, :]),
+                        axis=1
+                    )
             if 'mask' in key:
                 # TODO assertion here. ``data_translated`` must be a subset
                 # (or equal) of ``data_gt``
                 pass
             else:
                 assert np.equal(data_gt, data_translated).all()
-
-    def check_translate(results,
-                        results_translated,
-                        offset,
-                        img_fill_val,
-                        seg_ignore_label,
-                        direction,
-                        min_size=0):
+    
+    def check_translate(
+        results,
+        results_translated,
+        offset,
+        img_fill_val,
+        seg_ignore_label,
+        direction,
+        min_size=0
+    ):
         # check keys
         _check_keys(results, results_translated)
         # check image
-        _check_img_seg(results, results_translated,
-                       results.get('img_fields', ['img']), offset,
-                       img_fill_val, direction)
+        _check_img_seg(
+            results, results_translated,
+            results.get('img_fields', ['img']), offset,
+            img_fill_val, direction
+        )
         # check segmentation map
-        _check_img_seg(results, results_translated,
-                       results.get('seg_fields', []), offset, seg_ignore_label,
-                       direction)
+        _check_img_seg(
+            results, results_translated,
+            results.get('seg_fields', []), offset, seg_ignore_label,
+            direction
+        )
         # check masks and bboxes
-        _check_bbox_mask(results, results_translated, offset, direction,
-                         min_size)
-
+        _check_bbox_mask(
+            results, results_translated, offset, direction,
+            min_size
+        )
+    
     # test case when level=0 (without translate aug)
     img_fill_val = (104, 116, 124)
     seg_ignore_label = 255
@@ -360,7 +413,8 @@ def test_translate():
         level=0,
         prob=1.0,
         img_fill_val=img_fill_val,
-        seg_ignore_label=seg_ignore_label)
+        seg_ignore_label=seg_ignore_label
+    )
     translate_module = build_from_cfg(transform, PIPELINES)
     results_wo_translate = translate_module(copy.deepcopy(results))
     check_translate(
@@ -371,7 +425,7 @@ def test_translate():
         seg_ignore_label,
         'horizontal',
     )
-
+    
     # test case when level>0 and translate horizontally (left shift).
     transform = dict(
         type='Translate',
@@ -379,7 +433,8 @@ def test_translate():
         prob=1.0,
         img_fill_val=img_fill_val,
         random_negative_prob=1.0,
-        seg_ignore_label=seg_ignore_label)
+        seg_ignore_label=seg_ignore_label
+    )
     translate_module = build_from_cfg(transform, PIPELINES)
     offset = translate_module.offset
     results_translated = translate_module(copy.deepcopy(results))
@@ -391,7 +446,7 @@ def test_translate():
         seg_ignore_label,
         'horizontal',
     )
-
+    
     # test case when level>0 and translate horizontally (right shift).
     translate_module.random_negative_prob = 0.0
     results_translated = translate_module(copy.deepcopy(results))
@@ -403,7 +458,7 @@ def test_translate():
         seg_ignore_label,
         'horizontal',
     )
-
+    
     # test case when level>0 and translate vertically (top shift).
     transform = dict(
         type='Translate',
@@ -412,21 +467,24 @@ def test_translate():
         img_fill_val=img_fill_val,
         seg_ignore_label=seg_ignore_label,
         random_negative_prob=1.0,
-        direction='vertical')
+        direction='vertical'
+    )
     translate_module = build_from_cfg(transform, PIPELINES)
     offset = translate_module.offset
     results_translated = translate_module(copy.deepcopy(results))
     check_translate(
         copy.deepcopy(results), results_translated, -offset, img_fill_val,
-        seg_ignore_label, 'vertical')
-
+        seg_ignore_label, 'vertical'
+    )
+    
     # test case when level>0 and translate vertically (bottom shift).
     translate_module.random_negative_prob = 0.0
     results_translated = translate_module(copy.deepcopy(results))
     check_translate(
         copy.deepcopy(results), results_translated, offset, img_fill_val,
-        seg_ignore_label, 'vertical')
-
+        seg_ignore_label, 'vertical'
+    )
+    
     # test case when no translation is called (prob<=0)
     transform = dict(
         type='Translate',
@@ -434,10 +492,11 @@ def test_translate():
         prob=0.0,
         img_fill_val=img_fill_val,
         random_negative_prob=0.0,
-        seg_ignore_label=seg_ignore_label)
+        seg_ignore_label=seg_ignore_label
+    )
     translate_module = build_from_cfg(transform, PIPELINES)
     results_translated = translate_module(copy.deepcopy(results))
-
+    
     # test translate vertically with PolygonMasks (top shift)
     results = construct_toy_data(False)
     transform = dict(
@@ -446,12 +505,13 @@ def test_translate():
         prob=1.0,
         img_fill_val=img_fill_val,
         seg_ignore_label=seg_ignore_label,
-        direction='vertical')
+        direction='vertical'
+    )
     translate_module = build_from_cfg(transform, PIPELINES)
     offset = translate_module.offset
     translate_module.random_negative_prob = 1.0
     results_translated = translate_module(copy.deepcopy(results))
-
+    
     def _translated_gt(masks, direction, offset, out_shape):
         translated_masks = []
         for poly_per_obj in masks:
@@ -469,14 +529,16 @@ def test_translate():
                 translated_masks.append(translated_poly_per_obj)
         translated_masks = PolygonMasks(translated_masks, *out_shape)
         return translated_masks
-
+    
     h, w = results['img_shape'][:2]
     for key in results.get('mask_fields', []):
         masks = results[key]
         translated_gt = _translated_gt(masks, 'vertical', -offset, (h, w))
-        assert np.equal(results_translated[key].to_ndarray(),
-                        translated_gt.to_ndarray()).all()
-
+        assert np.equal(
+            results_translated[key].to_ndarray(),
+            translated_gt.to_ndarray()
+        ).all()
+    
     # test translate horizontally with PolygonMasks (right shift)
     results = construct_toy_data(False)
     transform = dict(
@@ -485,7 +547,8 @@ def test_translate():
         prob=1.0,
         img_fill_val=img_fill_val,
         random_negative_prob=0.0,
-        seg_ignore_label=seg_ignore_label)
+        seg_ignore_label=seg_ignore_label
+    )
     translate_module = build_from_cfg(transform, PIPELINES)
     offset = translate_module.offset
     results_translated = translate_module(copy.deepcopy(results))
@@ -493,22 +556,25 @@ def test_translate():
     for key in results.get('mask_fields', []):
         masks = results[key]
         translated_gt = _translated_gt(masks, 'horizontal', offset, (h, w))
-        assert np.equal(results_translated[key].to_ndarray(),
-                        translated_gt.to_ndarray()).all()
-
+        assert np.equal(
+            results_translated[key].to_ndarray(),
+            translated_gt.to_ndarray()
+        ).all()
+    
     # test AutoAugment equipped with Translate
     policies = [[dict(type='Translate', level=10, prob=1.)]]
     autoaug = dict(type='AutoAugment', policies=policies)
     autoaug_module = build_from_cfg(autoaug, PIPELINES)
     autoaug_module(copy.deepcopy(results))
-
+    
     policies = [[
         dict(type='Translate', level=10, prob=1.),
         dict(
             type='Translate',
             level=8,
             img_fill_val=img_fill_val,
-            direction='vertical')
+            direction='vertical'
+        )
     ]]
     autoaug = dict(type='AutoAugment', policies=policies)
     autoaug_module = build_from_cfg(autoaug, PIPELINES)

@@ -3,12 +3,12 @@ import os.path as osp
 import mmcv
 import numpy as np
 import pycocotools.mask as maskUtils
-
 from mmdet.core import BitmapMasks, PolygonMasks
+
 from ..builder import PIPELINES
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class LoadImageFromFile(object):
     """Load an image from file.
 
@@ -27,16 +27,18 @@ class LoadImageFromFile(object):
             See :class:`mmcv.fileio.FileClient` for details.
             Defaults to ``dict(backend='disk')``.
     """
-
-    def __init__(self,
-                 to_float32=False,
-                 color_type='color',
-                 file_client_args=dict(backend='disk')):
+    
+    def __init__(
+        self,
+        to_float32=False,
+        color_type='color',
+        file_client_args=dict(backend='disk')
+    ):
         self.to_float32 = to_float32
         self.color_type = color_type
         self.file_client_args = file_client_args.copy()
         self.file_client = None
-
+    
     def __call__(self, results):
         """Call functions to load image and get image meta information.
 
@@ -46,21 +48,23 @@ class LoadImageFromFile(object):
         Returns:
             dict: The dict contains loaded image and meta information.
         """
-
+        
         if self.file_client is None:
             self.file_client = mmcv.FileClient(**self.file_client_args)
-
+        
         if results['img_prefix'] is not None:
-            filename = osp.join(results['img_prefix'],
-                                results['img_info']['filename'])
+            filename = osp.join(
+                results['img_prefix'],
+                results['img_info']['filename']
+            )
         else:
             filename = results['img_info']['filename']
-
+        
         img_bytes = self.file_client.get(filename)
         img = mmcv.imfrombytes(img_bytes, flag=self.color_type)
         if self.to_float32:
             img = img.astype(np.float32)
-
+        
         results['filename'] = filename
         results['ori_filename'] = results['img_info']['filename']
         results['img'] = img
@@ -68,7 +72,7 @@ class LoadImageFromFile(object):
         results['ori_shape'] = img.shape
         results['img_fields'] = ['img']
         return results
-
+    
     def __repr__(self):
         repr_str = (f'{self.__class__.__name__}('
                     f'to_float32={self.to_float32}, '
@@ -77,14 +81,14 @@ class LoadImageFromFile(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class LoadImageFromWebcam(LoadImageFromFile):
     """Load an image from webcam.
 
     Similar with :obj:`LoadImageFromFile`, but the image read from webcam is in
     ``results['img']``.
     """
-
+    
     def __call__(self, results):
         """Call functions to add image meta information.
 
@@ -95,11 +99,11 @@ class LoadImageFromWebcam(LoadImageFromFile):
         Returns:
             dict: The dict contains loaded image and meta information.
         """
-
+        
         img = results['img']
         if self.to_float32:
             img = img.astype(np.float32)
-
+        
         results['filename'] = None
         results['ori_filename'] = None
         results['img'] = img
@@ -109,7 +113,7 @@ class LoadImageFromWebcam(LoadImageFromFile):
         return results
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class LoadMultiChannelImageFromFiles(object):
     """Load multi-channel images from a list of separate channel files.
 
@@ -129,16 +133,18 @@ class LoadMultiChannelImageFromFiles(object):
             See :class:`mmcv.fileio.FileClient` for details.
             Defaults to ``dict(backend='disk')``.
     """
-
-    def __init__(self,
-                 to_float32=False,
-                 color_type='unchanged',
-                 file_client_args=dict(backend='disk')):
+    
+    def __init__(
+        self,
+        to_float32=False,
+        color_type='unchanged',
+        file_client_args=dict(backend='disk')
+    ):
         self.to_float32 = to_float32
         self.color_type = color_type
         self.file_client_args = file_client_args.copy()
         self.file_client = None
-
+    
     def __call__(self, results):
         """Call functions to load multiple images and get images meta
         information.
@@ -149,10 +155,10 @@ class LoadMultiChannelImageFromFiles(object):
         Returns:
             dict: The dict contains loaded images and meta information.
         """
-
+        
         if self.file_client is None:
             self.file_client = mmcv.FileClient(**self.file_client_args)
-
+        
         if results['img_prefix'] is not None:
             filename = [
                 osp.join(results['img_prefix'], fname)
@@ -160,7 +166,7 @@ class LoadMultiChannelImageFromFiles(object):
             ]
         else:
             filename = results['img_info']['filename']
-
+        
         img = []
         for name in filename:
             img_bytes = self.file_client.get(name)
@@ -168,7 +174,7 @@ class LoadMultiChannelImageFromFiles(object):
         img = np.stack(img, axis=-1)
         if self.to_float32:
             img = img.astype(np.float32)
-
+        
         results['filename'] = filename
         results['ori_filename'] = results['img_info']['filename']
         results['img'] = img
@@ -181,9 +187,10 @@ class LoadMultiChannelImageFromFiles(object):
         results['img_norm_cfg'] = dict(
             mean=np.zeros(num_channels, dtype=np.float32),
             std=np.ones(num_channels, dtype=np.float32),
-            to_rgb=False)
+            to_rgb=False
+        )
         return results
-
+    
     def __repr__(self):
         repr_str = (f'{self.__class__.__name__}('
                     f'to_float32={self.to_float32}, '
@@ -192,12 +199,12 @@ class LoadMultiChannelImageFromFiles(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class LoadAnnotations(object):
     """Load mutiple types of annotations.
 
     Args:
-        with_bbox (bool): Whether to parse and load the bbox annotation.
+        with_bbox (bool): Whether to parse and load the box annotation.
              Default: True.
         with_label (bool): Whether to parse and load the label annotation.
             Default: True.
@@ -211,14 +218,16 @@ class LoadAnnotations(object):
             See :class:`mmcv.fileio.FileClient` for details.
             Defaults to ``dict(backend='disk')``.
     """
-
-    def __init__(self,
-                 with_bbox=True,
-                 with_label=True,
-                 with_mask=False,
-                 with_seg=False,
-                 poly2mask=True,
-                 file_client_args=dict(backend='disk')):
+    
+    def __init__(
+        self,
+        with_bbox=True,
+        with_label=True,
+        with_mask=False,
+        with_seg=False,
+        poly2mask=True,
+        file_client_args=dict(backend='disk')
+    ):
         self.with_bbox = with_bbox
         self.with_label = with_label
         self.with_mask = with_mask
@@ -226,27 +235,27 @@ class LoadAnnotations(object):
         self.poly2mask = poly2mask
         self.file_client_args = file_client_args.copy()
         self.file_client = None
-
+    
     def _load_bboxes(self, results):
-        """Private function to load bounding bbox annotations.
+        """Private function to load bounding box annotations.
 
         Args:
             results (dict): Result dict from :obj:`mmdet.CustomDataset`.
 
         Returns:
-            dict: The dict contains loaded bounding bbox annotations.
+            dict: The dict contains loaded bounding box annotations.
         """
-
+        
         ann_info = results['ann_info']
         results['gt_bboxes'] = ann_info['bboxes'].copy()
-
+        
         gt_bboxes_ignore = ann_info.get('bboxes_ignore', None)
         if gt_bboxes_ignore is not None:
             results['gt_bboxes_ignore'] = gt_bboxes_ignore.copy()
             results['bbox_fields'].append('gt_bboxes_ignore')
         results['bbox_fields'].append('gt_bboxes')
         return results
-
+    
     def _load_labels(self, results):
         """Private function to load label annotations.
 
@@ -256,10 +265,10 @@ class LoadAnnotations(object):
         Returns:
             dict: The dict contains loaded label annotations.
         """
-
+        
         results['gt_labels'] = results['ann_info']['labels'].copy()
         return results
-
+    
     def _poly2mask(self, mask_ann, img_h, img_w):
         """Private function to convert masks represented with polygon to
         bitmaps.
@@ -272,7 +281,7 @@ class LoadAnnotations(object):
         Returns:
             numpy.ndarray: The decode bitmap mask of shape (img_h, img_w).
         """
-
+        
         if isinstance(mask_ann, list):
             # polygon -- a single object might consist of multiple parts
             # we merge all parts into one mask rle code
@@ -286,7 +295,7 @@ class LoadAnnotations(object):
             rle = mask_ann
         mask = maskUtils.decode(rle)
         return mask
-
+    
     def process_polygons(self, polygons):
         """Convert polygons to list of ndarray and filter invalid polygons.
 
@@ -296,14 +305,14 @@ class LoadAnnotations(object):
         Returns:
             list[numpy.ndarray]: Processed polygons.
         """
-
+        
         polygons = [np.array(p) for p in polygons]
         valid_polygons = []
         for polygon in polygons:
             if len(polygon) % 2 == 0 and len(polygon) >= 6:
                 valid_polygons.append(polygon)
         return valid_polygons
-
+    
     def _load_masks(self, results):
         """Private function to load mask annotations.
 
@@ -315,20 +324,22 @@ class LoadAnnotations(object):
                 If ``self.poly2mask`` is set ``True``, `gt_mask` will contain
                 :obj:`PolygonMasks`. Otherwise, :obj:`BitmapMasks` is used.
         """
-
+        
         h, w = results['img_info']['height'], results['img_info']['width']
         gt_masks = results['ann_info']['masks']
         if self.poly2mask:
             gt_masks = BitmapMasks(
-                [self._poly2mask(mask, h, w) for mask in gt_masks], h, w)
+                [self._poly2mask(mask, h, w) for mask in gt_masks], h, w
+            )
         else:
             gt_masks = PolygonMasks(
                 [self.process_polygons(polygons) for polygons in gt_masks], h,
-                w)
+                w
+            )
         results['gt_masks'] = gt_masks
         results['mask_fields'].append('gt_masks')
         return results
-
+    
     def _load_semantic_seg(self, results):
         """Private function to load semantic segmentation annotations.
 
@@ -338,18 +349,21 @@ class LoadAnnotations(object):
         Returns:
             dict: The dict contains loaded semantic segmentation annotations.
         """
-
+        
         if self.file_client is None:
             self.file_client = mmcv.FileClient(**self.file_client_args)
-
-        filename = osp.join(results['seg_prefix'],
-                            results['ann_info']['seg_map'])
+        
+        filename = osp.join(
+            results['seg_prefix'],
+            results['ann_info']['seg_map']
+        )
         img_bytes = self.file_client.get(filename)
         results['gt_semantic_seg'] = mmcv.imfrombytes(
-            img_bytes, flag='unchanged').squeeze()
+            img_bytes, flag='unchanged'
+        ).squeeze()
         results['seg_fields'].append('gt_semantic_seg')
         return results
-
+    
     def __call__(self, results):
         """Call function to load multiple types annotations.
 
@@ -357,10 +371,10 @@ class LoadAnnotations(object):
             results (dict): Result dict from :obj:`mmdet.CustomDataset`.
 
         Returns:
-            dict: The dict contains loaded bounding bbox, label, mask and
+            dict: The dict contains loaded bounding box, label, mask and
                 semantic segmentation annotations.
         """
-
+        
         if self.with_bbox:
             results = self._load_bboxes(results)
             if results is None:
@@ -372,7 +386,7 @@ class LoadAnnotations(object):
         if self.with_seg:
             results = self._load_semantic_seg(results)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(with_bbox={self.with_bbox}, '
@@ -384,7 +398,7 @@ class LoadAnnotations(object):
         return repr_str
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class LoadProposals(object):
     """Load proposal pipeline.
 
@@ -394,10 +408,10 @@ class LoadProposals(object):
         num_max_proposals (int, optional): Maximum number of proposals to load.
             If not specified, all proposals will be loaded.
     """
-
+    
     def __init__(self, num_max_proposals=None):
         self.num_max_proposals = num_max_proposals
-
+    
     def __call__(self, results):
         """Call function to load proposals from file.
 
@@ -407,29 +421,30 @@ class LoadProposals(object):
         Returns:
             dict: The dict contains loaded proposal annotations.
         """
-
+        
         proposals = results['proposals']
         if proposals.shape[1] not in (4, 5):
             raise AssertionError(
                 'proposals should have shapes (n, 4) or (n, 5), '
-                f'but found {proposals.shape}')
+                f'but found {proposals.shape}'
+            )
         proposals = proposals[:, :4]
-
+        
         if self.num_max_proposals is not None:
             proposals = proposals[:self.num_max_proposals]
-
+        
         if len(proposals) == 0:
             proposals = np.array([[0, 0, 0, 0]], dtype=np.float32)
         results['proposals'] = proposals
         results['bbox_fields'].append('proposals')
         return results
-
+    
     def __repr__(self):
         return self.__class__.__name__ + \
             f'(num_max_proposals={self.num_max_proposals})'
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class FilterAnnotations(object):
     """Filter invalid annotations.
 
@@ -437,11 +452,11 @@ class FilterAnnotations(object):
         min_gt_bbox_wh (tuple[int]): Minimum width and height of ground truth
             boxes.
     """
-
+    
     def __init__(self, min_gt_bbox_wh):
         # TODO: add more filter options
         self.min_gt_bbox_wh = min_gt_bbox_wh
-
+    
     def __call__(self, results):
         assert 'gt_bboxes' in results
         gt_bboxes = results['gt_bboxes']
@@ -458,12 +473,12 @@ class FilterAnnotations(object):
             return results
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class LoadRPDV2Annotations(object):
     """Load mutiple types of annotations.
 
     Args:
-        with_bbox (bool): Whether to parse and load the bbox annotation.
+        with_bbox (bool): Whether to parse and load the box annotation.
              Default: True.
         with_label (bool): Whether to parse and load the label annotation.
             Default: True.
@@ -477,30 +492,42 @@ class LoadRPDV2Annotations(object):
             See :class:`mmcv.fileio.FileClient` for details.
             Defaults to ``dict(backend='disk')``.
     """
+    
     def __init__(self):
         super(LoadRPDV2Annotations, self).__init__()
-
+    
     def _load_semantic_map_from_box(self, results):
         gt_bboxes = results['gt_bboxes']
         gt_labels = results['gt_labels']
         pad_shape = results['pad_shape']
-        gt_areas = (gt_bboxes[:, 2] - gt_bboxes[:, 0]) * (gt_bboxes[:, 3] - gt_bboxes[:, 1])
-        gt_sem_map = np.zeros((80, int(pad_shape[0] / 8), int(pad_shape[1] / 8)), dtype=np.float32)
-        gt_sem_weights = np.zeros((80, int(pad_shape[0] / 8), int(pad_shape[1] / 8)), dtype=np.float32)
-
+        gt_areas = (gt_bboxes[:, 2] - gt_bboxes[:, 0]) * (
+                gt_bboxes[:, 3] - gt_bboxes[:, 1])
+        gt_sem_map = np.zeros(
+            (80, int(pad_shape[0] / 8), int(pad_shape[1] / 8)),
+            dtype=np.float32
+        )
+        gt_sem_weights = np.zeros(
+            (80, int(pad_shape[0] / 8), int(pad_shape[1] / 8)),
+            dtype=np.float32
+        )
+        
         indexs = np.argsort(gt_areas)
         for ind in indexs[::-1]:
             box = gt_bboxes[ind]
-            box_mask = np.zeros((int(pad_shape[0] / 8), int(pad_shape[1] / 8)), dtype=np.int64)
-            box_mask[int(box[1] / 8):int(box[3] / 8) + 1, int(box[0] / 8):int(box[2] / 8) + 1] = 1
+            box_mask = np.zeros(
+                (int(pad_shape[0] / 8), int(pad_shape[1] / 8)),
+                dtype=np.int64
+            )
+            box_mask[int(box[1] / 8):int(box[3] / 8) + 1,
+            int(box[0] / 8):int(box[2] / 8) + 1] = 1
             gt_sem_map[gt_labels[ind]][box_mask > 0] = 1
             gt_sem_weights[gt_labels[ind]][box_mask > 0] = 1 / gt_areas[ind]
-
+        
         results['gt_sem_map'] = gt_sem_map
         results['gt_sem_weights'] = gt_sem_weights
-
+        
         return results
-
+    
     def __call__(self, results):
         """Call function to load multiple types annotations
 
@@ -508,13 +535,13 @@ class LoadRPDV2Annotations(object):
             results (dict): Result dict from :obj:`mmdet.CustomDataset`.
 
         Returns:
-            dict: The dict contains loaded bounding bbox, label, mask and
+            dict: The dict contains loaded bounding box, label, mask and
                 semantic segmentation annotations.
         """
-
+        
         results = self._load_semantic_map_from_box(results)
         return results
-
+    
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(with_bbox_semantic_map={True}, '

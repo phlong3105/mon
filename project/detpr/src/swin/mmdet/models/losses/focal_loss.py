@@ -131,7 +131,7 @@ def sigmoid_focal_loss(pred,
     return loss
 
 
-@LOSSES.register_module()
+@LOSSES._register()
 class FocalLoss(nn.Module):
 
     def __init__(self,
@@ -209,7 +209,7 @@ class FocalLoss(nn.Module):
             raise NotImplementedError
         return loss_cls
 
-@LOSSES.register_module()
+@LOSSES._register()
 class SEPFocalLoss(nn.Module):
 
     def __init__(self,

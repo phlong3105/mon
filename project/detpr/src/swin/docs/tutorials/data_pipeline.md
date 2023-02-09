@@ -2,22 +2,31 @@
 
 ## Design of Data pipelines
 
-Following typical conventions, we use `Dataset` and `DataLoader` for data loading
+Following typical conventions, we use `Dataset` and `DataLoader` for data
+loading
 with multiple workers. `Dataset` returns a dict of data items corresponding
 the arguments of models' forward method.
-Since the data in object detection may not be the same size (image size, gt bbox size, etc.),
+Since the data in object detection may not be the same size (image size, gt box
+size, etc.),
 we introduce a new `DataContainer` type in MMCV to help collect and distribute
 data of different size.
-See [here](https://github.com/open-mmlab/mmcv/blob/master/mmcv/parallel/data_container.py) for more details.
+See [here](https://github.com/open-mmlab/mmcv/blob/master/mmcv/parallel/data_container.py)
+for more details.
 
 The data preparation pipeline and the dataset is decomposed. Usually a dataset
-defines how to process the annotations and a data pipeline defines all the steps to prepare a data dict.
-A pipeline consists of a sequence of operations. Each operation takes a dict as input and also output a dict for the next transform.
+defines how to process the annotations and a data pipeline defines all the steps
+to prepare a data dict.
+A pipeline consists of a sequence of operations. Each operation takes a dict as
+input and also output a dict for the next transform.
 
-We present a classical pipeline in the following figure. The blue blocks are pipeline operations. With the pipeline going on, each operator can add new keys (marked as green) to the result dict or update the existing keys (marked as orange).
+We present a classical pipeline in the following figure. The blue blocks are
+pipeline operations. With the pipeline going on, each operator can add new
+keys (marked as green) to the result dict or update the existing keys (marked as
+orange).
 ![pipeline figure](../../resources/data_pipeline.png)
 
-The operations are categorized into data loading, pre-processing, formatting and test-time augmentation.
+The operations are categorized into data loading, pre-processing, formatting and
+test-time augmentation.
 
 Here is a pipeline example for Faster R-CNN.
 
@@ -51,7 +60,8 @@ test_pipeline = [
 ]
 ```
 
-For each operation, we list the related dict fields that are added/updated/removed.
+For each operation, we list the related dict fields that are
+added/updated/removed.
 
 ### Data loading
 
@@ -61,7 +71,8 @@ For each operation, we list the related dict fields that are added/updated/remov
 
 `LoadAnnotations`
 
-- add: gt_bboxes, gt_bboxes_ignore, gt_labels, gt_masks, gt_semantic_seg, bbox_fields, mask_fields
+- add: gt_bboxes, gt_bboxes_ignore, gt_labels, gt_masks, gt_semantic_seg,
+  bbox_fields, mask_fields
 
 `LoadProposals`
 
@@ -133,7 +144,8 @@ For each operation, we list the related dict fields that are added/updated/remov
 
 `DefaultFormatBundle`
 
-- update: img, proposals, gt_bboxes, gt_bboxes_ignore, gt_labels, gt_masks, gt_semantic_seg
+- update: img, proposals, gt_bboxes, gt_bboxes_ignore, gt_labels, gt_masks,
+  gt_semantic_seg
 
 `Collect`
 
@@ -146,12 +158,13 @@ For each operation, we list the related dict fields that are added/updated/remov
 
 ## Extend and use custom pipelines
 
-1. Write a new pipeline in any file, e.g., `my_pipeline.py`. It takes a dict as input and return a dict.
+1. Write a new pipeline in any file, e.g., `my_pipeline.py`. It takes a dict as
+   input and return a dict.
 
     ```python
     from mmdet.datasets import PIPELINES
 
-    @PIPELINES.register_module()
+    @PIPELINES._register()
     class MyTransform:
 
         def __call__(self, results):

@@ -3,7 +3,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class DETR(SingleStageDetector):
     r"""Implementation of `DETR: End-to-End Object Detection with
     Transformers <https://arxiv.org/pdf/2005.12872>`_"""

@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .faster_rcnn import FasterRCNN
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class TridentFasterRCNN(FasterRCNN):
     """Implementation of `TridentNet <https://arxiv.org/abs/1901.01892>`_"""
 

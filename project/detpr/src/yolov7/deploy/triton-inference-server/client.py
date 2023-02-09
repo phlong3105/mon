@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
 import argparse
-import numpy as np
 import sys
-import cv2
 
+import cv2
+import numpy as np
 import tritonclient.grpc as grpcclient
 from tritonclient.utils import InferenceServerException
 
-from processing import preprocess, postprocess
-from render import render_box, render_filled_box, get_text_size, render_text, RAND_COLORS
 from labels import COCOLabels
+from processing import postprocess, preprocess
+from render import (
+    get_text_size, RAND_COLORS, render_box, render_filled_box,
+    render_text,
+)
 
 INPUT_NAMES = ["images"]
 OUTPUT_NAMES = ["num_dets", "det_boxes", "det_scores", "det_classes"]
@@ -239,7 +242,7 @@ if __name__ == '__main__':
 
         for box in detected_objects:
             print(f"{COCOLabels(box.classID).name}: {box.confidence}")
-            input_image = render_box(input_image, box.box(), color=tuple(RAND_COLORS[box.classID % 64].tolist()))
+            input_image = render_box(input_image, box.bbox(), color=tuple(RAND_COLORS[box.classID % 64].tolist()))
             size = get_text_size(input_image, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", normalised_scaling=0.6)
             input_image = render_filled_box(input_image, (box.x1 - 3, box.y1 - 3, box.x1 + size[0], box.y1 + size[1]), color=(220, 220, 220))
             input_image = render_text(input_image, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", (box.x1, box.y1), color=(30, 30, 30), normalised_scaling=0.5)
@@ -307,7 +310,7 @@ if __name__ == '__main__':
 
             for box in detected_objects:
                 print(f"{COCOLabels(box.classID).name}: {box.confidence}")
-                frame = render_box(frame, box.box(), color=tuple(RAND_COLORS[box.classID % 64].tolist()))
+                frame = render_box(frame, box.bbox(), color=tuple(RAND_COLORS[box.classID % 64].tolist()))
                 size = get_text_size(frame, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", normalised_scaling=0.6)
                 frame = render_filled_box(frame, (box.x1 - 3, box.y1 - 3, box.x1 + size[0], box.y1 + size[1]), color=(220, 220, 220))
                 frame = render_text(frame, f"{COCOLabels(box.classID).name}: {box.confidence:.2f}", (box.x1, box.y1), color=(30, 30, 30), normalised_scaling=0.5)

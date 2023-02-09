@@ -5,7 +5,7 @@ from mmcv.utils import build_from_cfg
 from ..builder import PIPELINES
 
 
-@PIPELINES.register_module()
+@PIPELINES._register()
 class Compose(object):
     """Compose multiple transforms sequentially.
 

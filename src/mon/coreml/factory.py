@@ -14,17 +14,21 @@ import copy
 import humps
 from torch import nn, optim
 
-from mon import core
+import mon
+from mon.foundation import factory
 
 
-class OptimizerFactory(core.Factory):
+# region Factory
+
+class OptimizerFactory(factory.Factory):
     """The factory for registering and building optimizers."""
     
     def build(
         self,
-        net : nn.Module,
-        name: str  | None = None,
-        cfg : dict | None = None,
+        net    : nn.Module,
+        name   : str  | None = None,
+        cfg    : dict | None = None,
+        to_dict: bool        = False,
         **kwargs
     ):
         """Build an instance of the registered optimizer corresponding to the
@@ -34,6 +38,8 @@ class OptimizerFactory(core.Factory):
             net: A neural network.
             name: An optimizer's name.
             cfg: The optimizer's arguments.
+            to_dict: If True, return a dictionary of
+                {:param:`name`: attr:`instance`}. Defaults to False.
             **kwargs: Additional arguments that may be needed for the optimizer.
         
         Returns:
@@ -47,21 +53,26 @@ class OptimizerFactory(core.Factory):
             name_   = cfg_.pop("name")
             name    = name or name_
             kwargs |= cfg_
+        assert name is not None and name in self.registry
         
-        assert name is not None
-        assert name in self.registry
-        if name not in self.registry:
-            return None
-
-        name = humps.camelize(name) if humps.is_snakecase(name) else name
         if hasattr(net, "parameters"):
             instance = self.registry[name](params=net.parameters(), **kwargs)
-            if not hasattr(instance, "name"):
-                instance.name = name
-            return instance
+            if getattr(instance, "name", None) is None:
+                instance.name = humps.depascalize(humps.pascalize(name))
+            if to_dict:
+                return {f"{name}": instance}
+            else:
+                return instance
+        
         return None
-
-    def build_instances(self, net: nn.Module, cfgs: list | None, *kwargs):
+    
+    def build_instances(
+        self,
+        net    : nn.Module,
+        cfgs   : list | None,
+        to_dict: bool = False,
+        *kwargs
+    ):
         """Build multiple instances of different optimizers with the given
         arguments.
         
@@ -70,29 +81,35 @@ class OptimizerFactory(core.Factory):
             cfgs: A list of optimizers' arguments. Each item can be:
                 - A name (string)
                 - A dictionary of arguments containing the “name” key.
-        
+            to_dict: If True, return a dictionary of
+                {:param:`name`: attr:`instance`}. Defaults to False.
+                
         Returns:
-            A list of optimizers
+            A list, or dictionary of optimizers.
         """
         if cfgs is None:
             return None
         assert isinstance(cfgs, list)
-
-        cfgs_      = copy.deepcopy(cfgs)
-        optimizers = []
+        
+        cfgs_ = copy.deepcopy(cfgs)
+        optimizers = {} if to_dict else []
         for cfg in cfgs_:
             if isinstance(cfg, str):
                 name    = cfg
-                optimizers.append(self.build(net=net, name=name, **kwargs))
             else:
                 name    = cfg.pop("name")
                 kwargs |= cfg
-                optimizers.append(self.build(net=net, name=name, **kwargs))
-
+            opt = self.build(net=net, name=name, to_dict=to_dict, **kwargs)
+            if opt is not None:
+                if to_dict:
+                    optimizers |= opt
+                else:
+                    optimizers.append(opt)
+        
         return optimizers if len(optimizers) > 0 else None
 
 
-class LRSchedulerFactory(core.Factory):
+class LRSchedulerFactory(factory.Factory):
     """The factory for registering and building learning rate schedulers."""
     
     def build(
@@ -121,14 +138,13 @@ class LRSchedulerFactory(core.Factory):
             name_   = cfg_.pop("name")
             name    = name or name_
             kwargs |= cfg_
-
-        assert name is not None
-        assert name in self.registry
-        if name not in self.registry:
-            return None
-
-        name = humps.camelize(name) if humps.is_snakecase(name) else name
-        if name in ["GradualWarmupScheduler"]:
+        assert name is not None and name in self.registry
+        
+        if name in [
+            "GradualWarmupScheduler",
+            "gradual_warmup_scheduler",
+            "gradual-warmup-scheduler"
+        ]:
             after_scheduler = kwargs.pop("after_scheduler")
             if isinstance(after_scheduler, dict):
                 name_ = after_scheduler.pop("name")
@@ -140,8 +156,8 @@ class LRSchedulerFactory(core.Factory):
                 else:
                     after_scheduler = None
             return self.registry[name](
-                optimizer       = optimizer,
-                after_scheduler = after_scheduler,
+                optimizer=optimizer,
+                after_scheduler=after_scheduler,
                 **kwargs
             )
         
@@ -169,15 +185,23 @@ class LRSchedulerFactory(core.Factory):
             return None
         assert isinstance(cfgs, list)
         
-        cfgs_      = copy.deepcopy(cfgs)
+        cfgs_ = copy.deepcopy(cfgs)
         schedulers = []
         for cfg in cfgs_:
             if isinstance(cfg, str):
-                name    = cfg
-                schedulers.append(self.build(optimizer=optimizer, name=name, **kwargs))
+                name = cfg
             else:
-                name    = cfg.pop("name")
+                name = cfg.pop("name")
                 kwargs |= cfg
-                schedulers.append(self.build(optimizer=optimizer, name=name, **kwargs))
+            schedulers.append(
+                self.build(optimizer=optimizer, name=name, **kwargs)
+            )
         
         return schedulers if len(schedulers) > 0 else None
+
+
+# endregion
+
+
+mon.globals.OPTIMIZERS    = OptimizerFactory("Optimizer")
+mon.globals.LR_SCHEDULERS = LRSchedulerFactory("LRScheduler")

@@ -4,7 +4,7 @@
 # - Update pip: pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
 #
 
-name    : mon
+name: mon
 channels:
   - pytorch
   - nvidia
@@ -14,12 +14,8 @@ dependencies:
   - python=3.10
   - mamba
   - pip                   # PyPA recommended tool for installing Python packages.
-  - poetry
+  - poetry                # Python packaging and dependency management made easy.
   - setuptools
-  # CUDA
-  # - cudatoolkit=11.7      # CUDA Toolkit - Including CUDA runtime.
-  # - cudatoolkit-dev=11.7  # Develop, Optimize and Deploy GPU-accelerated Apps.
-  # - cudnn                 # NVIDIA's cuDNN deep neural network acceleration library.
   # Database
   - psycopg2              # Python-PostgreSQL Database Adapter.
   # Data Structure
@@ -44,8 +40,8 @@ dependencies:
       - sphinx            # Sphinx is a tool that makes it easy to create intelligent and beautiful documentation.
       - sphinx-paramlinks # A Sphinx extension which allows :param: directives within Python documentation to be linkable.
       # Image
+      - albumentations
       - ffmpeg-python     # Python bindings for FFmpeg - with complex filtering support.
-      - pillow            # Pillow is the friendly PIL fork by Alex Clark and Contributors.
       # Network
       - requests          # Requests is an elegant and simple HTTP library for Python, built with ♥
       # Plot

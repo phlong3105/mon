@@ -15,18 +15,18 @@ from typing import Any
 from torch import nn
 from torchvision.ops.misc import *
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
 from mon.coreml.layer.common import (
     activation, attention, conv, linear, normalization,
 )
-from mon.coreml.typing import CallableType, Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.foundation import math
+from mon.globals import LAYERS
 
 
 # region Attention Blueprint Separable Convolution
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AttentionSubspaceBlueprintSeparableConv2d(
     base.ConvLayerParsingMixin,
     nn.Module
@@ -39,29 +39,30 @@ class AttentionSubspaceBlueprintSeparableConv2d(
     References:
         https://github.com/zeiss-microscopy/BSConv
     """
-
+    
     def __init__(
         self,
         in_channels     : int,
         out_channels    : int,
-        kernel_size     : Int2T,
-        stride          : Int2T               = 1,
-        padding         : Int2T | str         = 0,
-        dilation        : Int2T               = 1,
-        groups          : int                 = 1,
-        bias            : bool                = True,
-        padding_mode    : str                 = "zeros",
-        device          : Any                 = None,
-        dtype           : Any                 = None,
-        p               : float               = 0.25,
-        min_mid_channels: int                 = 4,
-        act1            : CallableType | None = None,
-        act2            : CallableType | None = None,
-        *args, **kwargs
+        kernel_size     : _size_2_t,
+        stride          : _size_2_t       = 1,
+        padding         : _size_2_t | str = 0,
+        dilation        : _size_2_t       = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act1            : Callable        = None,
+        act2            : Callable        = None,
     ):
         super().__init__()
         assert 0.0 <= p <= 1.0
-        mid_channels  = min(in_channels, max(min_mid_channels, core.math.ceil(p * in_channels)))
+        mid_channels = min(
+            in_channels, max(min_mid_channels, math.ceil(p * in_channels))
+        )
         self.pw_conv1 = conv.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
@@ -75,7 +76,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act1     = act1(num_features=mid_channels) if act1 is not None else None
+        self.act1 = act1(num_features=mid_channels) if act1 is not None else None
         self.pw_conv2 = conv.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -89,7 +90,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act2    = act2(num_features=out_channels) if act2 is not None else None
+        self.act2 = act2(num_features=out_channels) if act2 is not None else None
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -104,7 +105,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             dtype        = dtype,
         )
         self.simam = attention.SimAM()
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
@@ -124,7 +125,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         return torch.norm(wwt - i, p="fro")
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class AttentionUnconstrainedBlueprintSeparableConv2d(
     base.ConvLayerParsingMixin,
     nn.Module
@@ -137,24 +138,23 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
     References:
         https://github.com/zeiss-microscopy/BSConv
     """
-
+    
     def __init__(
         self,
         in_channels     : int,
         out_channels    : int,
-        kernel_size     : Int2T,
-        stride          : Int2T               = 1,
-        padding         : Int2T | str         = 0,
-        dilation        : Int2T               = 1,
-        groups          : int                 = 1,
-        bias            : bool                = True,
-        padding_mode    : str                 = "zeros",
-        device          : Any                 = None,
-        dtype           : Any                 = None,
-        p               : float               = 0.25,
-        min_mid_channels: int                 = 4,
-        act             : CallableType | None = None,
-        *args, **kwargs
+        kernel_size     : _size_2_t,
+        stride          : _size_2_t       = 1,
+        padding         : _size_2_t | str = 0,
+        dilation        : _size_2_t       = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        act             : Callable        = None,
     ):
         super().__init__()
         self.pw_conv = conv.Conv2d(
@@ -170,7 +170,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act     = act(num_features=out_channels) if act is not None else None
+        self.act = act(num_features=out_channels) if act is not None else None
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -185,7 +185,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
             dtype        = dtype,
         )
         self.simam = attention.SimAM()
-        
+    
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv(x)
@@ -194,19 +194,20 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
             y = self.act(y)
         y = self.dw_conv(y)
         return y
-    
+
 
 ABSConv2dS = AttentionSubspaceBlueprintSeparableConv2d
 ABSConv2dU = AttentionUnconstrainedBlueprintSeparableConv2d
-constant.LAYER.register(module=ABSConv2dS)
-constant.LAYER.register(module=ABSConv2dU)
+LAYERS.register(module=ABSConv2dS)
+LAYERS.register(module=ABSConv2dU)
+
 
 # endregion
 
 
 # region MobileOne Convolution
 
-@constant.LAYER.register()
+@LAYERS.register()
 class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
     """MobileOneConv2d from the paper: "An Improved One millisecond Mobile
     Backbone". This block has a multi-branched architecture at train-time and
@@ -220,19 +221,18 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         self,
         in_channels      : int,
         out_channels     : int,
-        kernel_size      : Int2T,
-        stride           : Int2T = 1,
-        padding          : Int2T = 0,
-        dilation         : Int2T = 1,
-        groups           : int   = 1,
-        bias             : bool  = True,
-        padding_mode     : str   = "zeros",
-        device           : Any   = None,
-        dtype            : Any   = None,
-        inference_mode   : bool  = False,
-        se               : bool  = False,
-        num_conv_branches: int   = 1,
-        *args, **kwargs
+        kernel_size      : _size_2_t,
+        stride           : _size_2_t = 1,
+        padding          : _size_2_t = 0,
+        dilation         : _size_2_t = 1,
+        groups           : int       = 1,
+        bias             : bool      = True,
+        padding_mode     : str       = "zeros",
+        device           : Any       = None,
+        dtype            : Any       = None,
+        inference_mode   : bool      = False,
+        se               : bool      = False,
+        num_conv_branches: int       = 1,
     ):
         super().__init__()
         self.in_channels       = in_channels
@@ -259,7 +259,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         else:
             self.se = linear.Identity()
         self.act = activation.ReLU()
-
+        
         self.reparam_conv = None
         self.rbr_skip     = None
         self.rbr_conv     = None
@@ -280,9 +280,10 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             )
         else:
             # Re-parameterizable skip connection
-            self.rbr_skip = normalization.BatchNorm2d(num_features=in_channels) \
+            self.rbr_skip = normalization.BatchNorm2d(
+                num_features=in_channels) \
                 if out_channels == in_channels and stride == 1 else None
-
+            
             # Re-parameterizable conv branches
             rbr_conv = list()
             for _ in range(self.num_conv_branches):
@@ -302,7 +303,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
                     )
                 )
             self.rbr_conv = torch.nn.ModuleList(rbr_conv)
-
+            
             # Re-parameterizable scale branch
             if kernel_size > 1:
                 self.rbr_scale = conv.Conv2dBn(
@@ -335,26 +336,29 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             kernel_scale, bias_scale = self._fuse_bn_tensor(self.rbr_scale)
             # Pad scale branch kernel to match conv branch kernel size.
             pad          = self.kernel_size // 2
-            kernel_scale = torch.nn.functional.pad(kernel_scale, [pad, pad, pad, pad])
-
+            kernel_scale = torch.nn.functional.pad(
+                kernel_scale,
+                [pad, pad, pad, pad]
+            )
+        
         # get weights and bias of skip branch
         kernel_identity = 0
         bias_identity   = 0
         if self.rbr_skip is not None:
             kernel_identity, bias_identity = self._fuse_bn_tensor(self.rbr_skip)
-
+        
         # get weights and bias of conv branches
         kernel_conv = 0
         bias_conv   = 0
         for ix in range(self.num_conv_branches):
-            _kernel, _bias  = self._fuse_bn_tensor(self.rbr_conv[ix])
-            kernel_conv    += _kernel
-            bias_conv      += _bias
-
+            _kernel, _bias = self._fuse_bn_tensor(self.rbr_conv[ix])
+            kernel_conv   += _kernel
+            bias_conv     += _bias
+        
         kernel_final = kernel_conv + kernel_scale + kernel_identity
-        bias_final   = bias_conv   + bias_scale   + bias_identity
+        bias_final   = bias_conv + bias_scale + bias_identity
         return kernel_final, bias_final
-
+    
     def _fuse_bn_tensor(self, branch) -> tuple[torch.Tensor, torch.Tensor]:
         """Method to fuse batchnorm layer with preceeding conv layer.
         
@@ -374,7 +378,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         else:
             assert isinstance(branch, normalization.BatchNorm2d)
             if not hasattr(self, "id_tensor"):
-                input_dim    = self.in_channels // self.groups
+                input_dim = self.in_channels // self.groups
                 kernel_value = torch.zeros(
                     (self.in_channels, input_dim, self.kernel_size, self.kernel_size),
                     dtype  = branch.weight.dtype,
@@ -383,8 +387,8 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
                 for i in range(self.in_channels):
                     kernel_value[
                         i, i % input_dim,
-                        self.kernel_size // 2,
-                        self.kernel_size // 2
+                           self.kernel_size // 2,
+                           self.kernel_size // 2
                     ] = 1
                 self.id_tensor = kernel_value
             kernel       = self.id_tensor
@@ -418,7 +422,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         )
         self.reparam_conv.weight.data = kernel
         self.reparam_conv.bias.data   = bias
-
+        
         # Delete un-used branches
         for param in self.parameters():
             param.detach_()
@@ -426,7 +430,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         self.__delattr__("rbr_scale")
         if hasattr(self, "rbr_skip"):
             self.__delattr__("rbr_skip")
-
+        
         self.inference_mode = True
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:

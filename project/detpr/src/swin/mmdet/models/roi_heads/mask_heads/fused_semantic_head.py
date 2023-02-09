@@ -6,7 +6,7 @@ from mmcv.runner import auto_fp16, force_fp32
 from mmdet.models.builder import HEADS
 
 
-@HEADS.register_module()
+@HEADS._register()
 class FusedSemanticHead(nn.Module):
     r"""Multi-level fused semantic segmentation head.
 

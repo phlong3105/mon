@@ -12,21 +12,21 @@ __all__ = [
 import numpy as np
 from filterpy import kalman
 
-from supr import constant
 from supr.data import instance as ins
+from supr.globals import MOTIONS
 from supr.motion import base
 
 
 # region Helper Function
 
 def box_xyxy_to_z(box: np.ndarray) -> np.ndarray:
-    """Convert a bounding bbox from [x1, y1, x2, y2] to the format used by Kalman
-    Filter [cx, cy, s, r], where:
-        x1, y1 is the top left.
-        x2, y2 is the bottom right.
-        cx, cy is the centre of the bbox.
-        s is the scale/area.
-        r is the aspect ratio.
+    """Convert a bounding bbox from XYXY to the format used by Kalman Filter
+    CXCYSR, where:
+        X1, Y1 is the top left.
+        X2, Y2 is the bottom right.
+        CX, CY is the centre of the bbox.
+        S is the scale/area.
+        R is the aspect ratio.
     """
     w = box[2] - box[0]
     h = box[3] - box[1]
@@ -37,14 +37,14 @@ def box_xyxy_to_z(box: np.ndarray) -> np.ndarray:
     return np.array([x, y, s, r]).reshape((4, 1))
 
 
-def box_x_to_xyxy(x: np.ndarray, score: float = None) -> np.ndarray:
-    """Covert a bounding bbox from the format used in Kalman Filter
-    [cx, cy, s, r] to [x1, y1, x2, y2], where:
-        x1, y1 is the top left.
-        x2, y2 is the bottom right.
-        cx, cy is the centre of the bbox.
-        s is the scale/area.
-        r is the aspect ratio.
+def box_x_to_xyxy(x: np.ndarray, score: float | None = None) -> np.ndarray:
+    """Covert a bounding bbox from the format used in Kalman Filter CXCYSR to
+    XYXY, where:
+        X1, Y1 is the top left.
+        X2, Y2 is the bottom right.
+        CX, CY is the centre of the bbox.
+        S is the scale/area.
+        R is the aspect ratio.
     """
     w = np.sqrt(x[2] * x[3])
     h = x[2] / w
@@ -65,7 +65,7 @@ def box_x_to_xyxy(x: np.ndarray, score: float = None) -> np.ndarray:
 
 # region Kalman Filter
 
-@constant.MOTION.register(name="kf_box_motion")
+@MOTIONS.register(name="kf_box_motion")
 class KFBoxMotion(base.Motion):
     """Model a moving object motion by using Kalman Filter on its bounding bbox
     features. See more: :class:`Motion`.
@@ -125,7 +125,7 @@ class KFBoxMotion(base.Motion):
         
         # Here we assume that the `MovingObject` has already been init()
         if instance is not None:
-            self.kf.x[0:4] = box_xyxy_to_z(instance.box)
+            self.kf.x[0:4] = box_xyxy_to_z(instance.bbox)
         
     def update(self, instance: ins.Instance, **kwargs):
         """Updates the state of the motion model with observed bbox.
@@ -135,12 +135,14 @@ class KFBoxMotion(base.Motion):
 			    features used to update the motion model from new measurement of
 			    the object.
 		"""
-        assert hasattr(instance, "bbox")
+        if not hasattr(instance, "bbox"):
+            raise ValueError("instance must contain 'bbox' attribute.")
+        
         self.time_since_update = 0
         self.history           = []
         self.hits              += 1
         self.hit_streak        += 1
-        self.kf.update(box_xyxy_to_z(instance.box))
+        self.kf.update(box_xyxy_to_z(instance.bbox))
 
     def predict(self) -> np.ndarray:
         """Advance the state of the motion model and return the estimation."""

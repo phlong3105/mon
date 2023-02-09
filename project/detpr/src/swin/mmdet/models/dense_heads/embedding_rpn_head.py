@@ -5,7 +5,7 @@ from mmdet.models.builder import HEADS
 from ...core import bbox_cxcywh_to_xyxy
 
 
-@HEADS.register_module()
+@HEADS._register()
 class EmbeddingRPNHead(nn.Module):
     """RPNHead in the `Sparse R-CNN <https://arxiv.org/abs/2011.12450>`_ .
 

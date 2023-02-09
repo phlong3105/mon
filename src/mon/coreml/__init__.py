@@ -11,10 +11,17 @@ libraries.
 
 from __future__ import annotations
 
-import mon.coreml.constant
-import mon.coreml.typing
+import mon.coreml.callback
+import mon.coreml.data
+import mon.coreml.device
+import mon.coreml.layer
+import mon.coreml.logger
+import mon.coreml.loop
+import mon.coreml.metric
+import mon.coreml.model
+import mon.coreml.optimizer
+import mon.coreml.strategy
 from mon.coreml.callback import *
-from mon.coreml.constant import *
 from mon.coreml.data import *
 from mon.coreml.device import *
 from mon.coreml.layer import *
@@ -24,4 +31,3 @@ from mon.coreml.metric import *
 from mon.coreml.model import *
 from mon.coreml.optimizer import *
 from mon.coreml.strategy import *
-from mon.coreml.util import *

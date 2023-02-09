@@ -16,7 +16,7 @@ except:
     print('apex is not installed')
 
 
-@RUNNERS.register_module()
+@RUNNERS._register()
 class EpochBasedRunnerAmp(EpochBasedRunner):
     """Epoch-based Runner with AMP support.
 

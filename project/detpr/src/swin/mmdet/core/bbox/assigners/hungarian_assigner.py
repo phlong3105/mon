@@ -12,7 +12,7 @@ except ImportError:
     linear_sum_assignment = None
 
 
-@BBOX_ASSIGNERS.register_module()
+@BBOX_ASSIGNERS._register()
 class HungarianAssigner(BaseAssigner):
     """Computes one-to-one matching between predictions and ground truth.
 

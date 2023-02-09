@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class RetinaNet(SingleStageDetector):
     """Implementation of `RetinaNet <https://arxiv.org/abs/1708.02002>`_"""
 

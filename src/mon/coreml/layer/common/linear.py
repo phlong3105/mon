@@ -11,28 +11,28 @@ __all__ = [
 
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base
+from mon.globals import LAYERS
 
 
 # region Linearity
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Bilinear(base.PassThroughLayerParsingMixin, nn.Bilinear):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Identity(base.PassThroughLayerParsingMixin, nn.Identity):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LazyLinear(base.PassThroughLayerParsingMixin, nn.LazyLinear):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class Linear(base.PassThroughLayerParsingMixin, nn.Linear):
     pass
 

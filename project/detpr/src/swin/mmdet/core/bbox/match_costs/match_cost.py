@@ -1,11 +1,11 @@
 import torch
+from mmdet.core.box.iou_calculators import bbox_overlaps
+from mmdet.core.box.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 
-from mmdet.core.bbox.iou_calculators import bbox_overlaps
-from mmdet.core.bbox.transforms import bbox_cxcywh_to_xyxy, bbox_xyxy_to_cxcywh
 from .builder import MATCH_COST
 
 
-@MATCH_COST.register_module()
+@MATCH_COST._register()
 class BBoxL1Cost(object):
     """BBoxL1Cost.
 
@@ -23,12 +23,12 @@ class BBoxL1Cost(object):
          >>> self(bbox_pred, gt_bboxes, factor)
          tensor([[1.6172, 1.6422]])
     """
-
+    
     def __init__(self, weight=1., box_format='xyxy'):
         self.weight = weight
         assert box_format in ['xyxy', 'xywh']
         self.box_format = box_format
-
+    
     def __call__(self, bbox_pred, gt_bboxes):
         """
         Args:
@@ -49,7 +49,7 @@ class BBoxL1Cost(object):
         return bbox_cost * self.weight
 
 
-@MATCH_COST.register_module()
+@MATCH_COST._register()
 class FocalLossCost(object):
     """FocalLossCost.
 
@@ -72,13 +72,13 @@ class FocalLossCost(object):
                 [-0.4099, -0.3795, -0.2929],
                 [-0.1950, -0.1207, -0.2626]])
     """
-
+    
     def __init__(self, weight=1., alpha=0.25, gamma=2, eps=1e-12):
         self.weight = weight
         self.alpha = alpha
         self.gamma = gamma
         self.eps = eps
-
+    
     def __call__(self, cls_pred, gt_labels):
         """
         Args:
@@ -98,7 +98,7 @@ class FocalLossCost(object):
         return cls_cost * self.weight
 
 
-@MATCH_COST.register_module()
+@MATCH_COST._register()
 class ClassificationCost(object):
     """ClsSoftmaxCost.
 
@@ -119,10 +119,10 @@ class ClassificationCost(object):
                 [-0.3664, -0.3455, -0.2881],
                 [-0.3343, -0.2701, -0.3956]])
     """
-
+    
     def __init__(self, weight=1.):
         self.weight = weight
-
+    
     def __call__(self, cls_pred, gt_labels):
         """
         Args:
@@ -142,7 +142,7 @@ class ClassificationCost(object):
         return cls_cost * self.weight
 
 
-@MATCH_COST.register_module()
+@MATCH_COST._register()
 class IoUCost(object):
     """IoUCost.
 
@@ -160,11 +160,11 @@ class IoUCost(object):
          tensor([[-0.1250,  0.1667],
                 [ 0.1667, -0.5000]])
     """
-
+    
     def __init__(self, iou_mode='giou', weight=1.):
         self.weight = weight
         self.iou_mode = iou_mode
-
+    
     def __call__(self, bboxes, gt_bboxes):
         """
         Args:
@@ -178,7 +178,8 @@ class IoUCost(object):
         """
         # overlaps: [num_bboxes, num_gt]
         overlaps = bbox_overlaps(
-            bboxes, gt_bboxes, mode=self.iou_mode, is_aligned=False)
+            bboxes, gt_bboxes, mode=self.iou_mode, is_aligned=False
+        )
         # The 1 is a constant that doesn't change the matching, so omitted.
         iou_cost = -overlaps
         return iou_cost * self.weight

@@ -10,17 +10,16 @@ __all__ = [
     "FINetConvBlock", "FINetGhostConv", "FINetGhostUpBlock", "FINetUpBlock",
 ]
 
-from typing import Sequence
+from typing import Callable, Sequence
 
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import CallableType
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -29,13 +28,12 @@ class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
         out_channels: int,
         downsample  : bool,
         relu_slope  : float,
-        use_csff    : bool               = False,
-        use_norm    : bool               = False,
-        p           : float              = 0.5,
-        scheme      : str                = "half",
-        pool        : CallableType | str = "avg",
-        bias        : bool               = True,
-        *args, **kwargs
+        use_csff    : bool           = False,
+        use_norm    : bool           = False,
+        p           : float          = 0.5,
+        scheme      : str            = "half",
+        pool        : str | Callable = "avg",
+        bias        : bool           = True,
     ):
         super().__init__()
         self.downsample = downsample
@@ -93,7 +91,7 @@ class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
                 pool         = pool,
                 bias         = bias,
             )
-
+        
         if downsample:
             self.downsample = common.Conv2d(
                 in_channels  = out_channels,
@@ -111,8 +109,8 @@ class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
         """
         
         Args:
-            input: A single tensor for the first UNet or a list of 3 tensors for
-            the second UNet.
+            input: A single tensor for the first UNet, or a list of 3 tensors
+                for the second UNet.
 
         Returns:
             Output tensors.
@@ -129,7 +127,7 @@ class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
         else:
             raise TypeError()
         
-        y  = self.conv1(x)
+        y = self.conv1(x)
         if self.use_norm:
             y = self.norm(y)
         y  = self.relu1(y)
@@ -140,7 +138,7 @@ class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             if not self.use_csff:
                 raise ValueError()
             y = y + self.csff_enc(enc) + self.csff_dec(dec)
-       
+        
         if self.downsample:
             y_down = self.downsample(y)
             return y_down, y
@@ -148,7 +146,7 @@ class FINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             return None, y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FINetUpBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -156,11 +154,11 @@ class FINetUpBlock(base.ConvLayerParsingMixin, nn.Module):
         in_channels : int,
         out_channels: int,
         relu_slope  : float,
-        use_norm    : bool               = False,
-        p           : float              = 0.5,
-        scheme      : str                = "half",
-        pool        : CallableType | str = "avg",
-        bias        : bool               = True,
+        use_norm    : bool           = False,
+        p           : float          = 0.5,
+        scheme      : str            = "half",
+        pool        : str | Callable = "avg",
+        bias        : bool           = True,
         *args, **kwargs
     ):
         super().__init__()
@@ -195,7 +193,7 @@ class FINetUpBlock(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -204,13 +202,12 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
         out_channels: int,
         downsample  : bool,
         relu_slope  : float,
-        use_csff    : bool               = False,
-        use_norm    : bool               = False,
-        p           : float              = 0.5,
-        scheme      : str                = "half",
-        pool        : CallableType | str = "avg",
-        bias        : bool               = True,
-        *args, **kwargs
+        use_csff    : bool           = False,
+        use_norm    : bool           = False,
+        p           : float          = 0.5,
+        scheme      : str            = "half",
+        pool        : str | Callable = "avg",
+        bias        : bool           = True,
     ):
         super().__init__()
         self.downsample = downsample
@@ -241,7 +238,6 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
             stride         = 1,
             padding        = 0,
         )
-        
         if downsample and use_csff:
             self.csff_enc = common.GhostConv2d(
                 in_channels    = out_channels,
@@ -257,7 +253,6 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
                 stride         = 1,
                 padding        = 1,
             )
-        
         if self.use_norm:
             self.norm = common.FractionalInstanceNorm2d(
                 num_features = out_channels,
@@ -266,7 +261,6 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
                 pool         = pool,
                 bias         = bias,
             )
-
         if downsample:
             self.downsample = common.Conv2d(
                 in_channels  = out_channels,
@@ -284,8 +278,8 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
         """
         
         Args:
-            input (Tensors): A single tensor for the first UNet or a list of 3
-                tensors for the second UNet.
+            input: A single tensor for the first UNet, or a list of 3 tensors
+                for the second UNet.
 
         Returns:
             Output tensors.
@@ -302,7 +296,7 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
         else:
             raise TypeError()
         
-        y  = self.conv1(x)
+        y = self.conv1(x)
         if self.use_norm:
             y = self.norm(y)
         y  = self.relu1(y)
@@ -313,7 +307,7 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
             if not self.use_csff:
                 raise ValueError()
             y = y + self.csff_enc(enc) + self.csff_dec(dec)
-       
+        
         if self.downsample:
             y_down = self.downsample(y)
             return y_down, y
@@ -321,7 +315,7 @@ class FINetGhostConv(base.ConvLayerParsingMixin, nn.Module):
             return None, y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FINetGhostUpBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -329,11 +323,11 @@ class FINetGhostUpBlock(base.ConvLayerParsingMixin, nn.Module):
         in_channels : int,
         out_channels: int,
         relu_slope  : float,
-        use_norm    : bool               = False,
-        p           : float              = 0.5,
-        scheme      : str                = "half",
-        pool        : CallableType | str = "avg",
-        bias        : bool               = True,
+        use_norm    : bool           = False,
+        p           : float          = 0.5,
+        scheme      : str            = "half",
+        pool        : str | Callable = "avg",
+        bias        : bool           = True,
         *args, **kwargs
     ):
         super().__init__()

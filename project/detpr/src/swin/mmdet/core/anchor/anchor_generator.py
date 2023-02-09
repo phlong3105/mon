@@ -6,7 +6,7 @@ from torch.nn.modules.utils import _pair
 from .builder import ANCHOR_GENERATORS
 
 
-@ANCHOR_GENERATORS.register_module()
+@ANCHOR_GENERATORS._register()
 class AnchorGenerator(object):
     """Standard anchor generator for 2D anchor-based detectors.
 
@@ -346,7 +346,7 @@ class AnchorGenerator(object):
         return repr_str
 
 
-@ANCHOR_GENERATORS.register_module()
+@ANCHOR_GENERATORS._register()
 class SSDAnchorGenerator(AnchorGenerator):
     """Anchor generator for SSD.
 
@@ -470,7 +470,7 @@ class SSDAnchorGenerator(AnchorGenerator):
         return repr_str
 
 
-@ANCHOR_GENERATORS.register_module()
+@ANCHOR_GENERATORS._register()
 class LegacyAnchorGenerator(AnchorGenerator):
     """Legacy anchor generator used in MMDetection V1.x.
 
@@ -569,7 +569,7 @@ class LegacyAnchorGenerator(AnchorGenerator):
         return base_anchors
 
 
-@ANCHOR_GENERATORS.register_module()
+@ANCHOR_GENERATORS._register()
 class LegacySSDAnchorGenerator(SSDAnchorGenerator, LegacyAnchorGenerator):
     """Legacy anchor generator used in MMDetection V1.x.
 
@@ -591,7 +591,7 @@ class LegacySSDAnchorGenerator(SSDAnchorGenerator, LegacyAnchorGenerator):
         self.base_anchors = self.gen_base_anchors()
 
 
-@ANCHOR_GENERATORS.register_module()
+@ANCHOR_GENERATORS._register()
 class YOLOAnchorGenerator(AnchorGenerator):
     """Anchor generator for YOLO.
 

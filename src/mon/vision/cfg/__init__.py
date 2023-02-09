@@ -5,4 +5,5 @@
 
 from __future__ import annotations
 
+import mon.vision.cfg.default
 from mon.vision.cfg.default import *

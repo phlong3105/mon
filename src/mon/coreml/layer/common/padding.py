@@ -16,10 +16,10 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
-from mon.coreml.typing import Int2T, IntAnyT
+from mon.coreml.layer.typing import _size_2_t
+from mon.foundation import math
+from mon.globals import LAYERS
 
 
 # region Helper Function
@@ -33,24 +33,24 @@ def get_same_padding(
     """Calculate asymmetric TensorFlow-like 'same' padding value for 1
     dimension of the convolution.
     """
-    return max((core.math.ceil(x / stride) - 1) * stride +
-               (kernel_size - 1) * dilation + 1 - x, 0)
+    return max(
+        (math.ceil(x / stride) - 1) * stride
+        + (kernel_size - 1) * dilation + 1 - x, 0
+    )
 
 
 def get_symmetric_padding(
     kernel_size: int,
     stride     : int = 1,
     dilation   : int = 1,
-    *args, **kwargs
 ) -> int:
     """Calculate symmetric padding for a convolution."""
     return ((stride - 1) + dilation * (kernel_size - 1)) // 2
 
 
 def to_same_padding(
-    kernel_size: IntAnyT,
-    padding    : IntAnyT | None = None,
-    *args, **kwargs
+    kernel_size: _size_2_t,
+    padding    : _size_2_t | None = None,
 ) -> int | list | None:
     """It takes a kernel size and a padding, and if the padding is None, it
     returns None, otherwise it returns the kernel size divided by 2.
@@ -65,22 +65,19 @@ def to_same_padding(
     if padding is None:
         if isinstance(kernel_size, int):
             return kernel_size // 2
-        if isinstance(kernel_size, (tuple, list)):
+        if isinstance(kernel_size, tuple | list):
             return [k // 2 for k in kernel_size]
     return padding
 
 
 def pad_same(
     input      : torch.Tensor,
-    kernel_size: Int2T,
-    stride     : Int2T,
-    dilation   : Int2T = (1, 1),
-    value      : float = 0,
-    *args, **kwargs
+    kernel_size: _size_2_t,
+    stride     : _size_2_t,
+    dilation   : _size_2_t = (1, 1),
+    value      : float     = 0,
 ):
-    """Dynamically pad input tensor with 'same' padding for conv with specified
-    args.
-    """
+    """Pad input tensor with 'same' padding for conv with specified args."""
     x      = input
     ih, iw = x.size()[-2:]
     pad_h  = get_same_padding(ih, kernel_size[0], stride[0], dilation[0])
@@ -94,65 +91,68 @@ def pad_same(
         )
     return x
 
+
 # endregion
 
 
 # region Constant Padding
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ConstantPad1d(base.PassThroughLayerParsingMixin, nn.ConstantPad1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ConstantPad2d(base.PassThroughLayerParsingMixin, nn.ConstantPad2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ConstantPad3d(base.PassThroughLayerParsingMixin, nn.ConstantPad3d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ZeroPad2d(base.PassThroughLayerParsingMixin, nn.ZeroPad2d):
     pass
+
 
 # endregion
 
 
 # region Reflection Padding
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReflectionPad1d(base.PassThroughLayerParsingMixin, nn.ReflectionPad1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReflectionPad2d(base.PassThroughLayerParsingMixin, nn.ReflectionPad2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReflectionPad3d(base.PassThroughLayerParsingMixin, nn.ReflectionPad3d):
     pass
+
 
 # endregion
 
 
 # region Replication Padding
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReplicationPad1d(base.PassThroughLayerParsingMixin, nn.ReplicationPad1d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReplicationPad2d(base.PassThroughLayerParsingMixin, nn.ReplicationPad2d):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReplicationPad3d(base.PassThroughLayerParsingMixin, nn.ReplicationPad3d):
     pass
 

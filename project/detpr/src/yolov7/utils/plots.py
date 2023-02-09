@@ -17,6 +17,7 @@ import torch
 import yaml
 from PIL import Image, ImageDraw, ImageFont
 from scipy.signal import butter, filtfilt
+
 from utils.general import xywh2xyxy, xyxy2xywh
 from utils.metrics import fitness
 
@@ -54,7 +55,7 @@ def butter_lowpass_filtfilt(data, cutoff=1500, fs=50000, order=5):
 
 
 def plot_one_box(x, img, color=None, label=None, line_thickness=3):
-    # Plots one bounding bbox on image img
+    # Plots one bounding box on image img
     tl = line_thickness or round(0.002 * (img.shape[0] + img.shape[1]) / 2) + 1  # line/font thickness
     color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
@@ -171,7 +172,7 @@ def plot_images(images, targets, paths=None, fname='images.jpg', names=None, max
                     label = '%s' % cls if labels else '%s %.1f' % (cls, conf[j])
                     plot_one_box(box, mosaic, label=label, color=color, line_thickness=tl)
 
-        # Draw image file_name labels
+        # Draw image filename labels
         if paths:
             label = Path(paths[i]).name[:40]  # trim to 40 char
             t_size = cv2.getTextSize(label, 0, fontScale=tl / 3, thickness=tf)[0]
@@ -392,7 +393,7 @@ def plot_results_overlay(start=0, stop=0):  # from utils.plots import *; plot_re
 
             ax[i].set_title(t[i])
             ax[i].legend()
-            ax[i].set_ylabel(f) if i == 0 else None  # add file_name
+            ax[i].set_ylabel(f) if i == 0 else None  # add filename
         fig.savefig(f.replace('.txt', '.png'), dpi=200)
 
 

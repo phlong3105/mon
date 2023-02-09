@@ -269,7 +269,7 @@ class Bottleneck(_Bottleneck):
         return out
 
 
-@BACKBONES.register_module()
+@BACKBONES._register()
 class ResNeSt(ResNetV1d):
     """ResNeSt backbone.
 

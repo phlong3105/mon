@@ -2,7 +2,7 @@ from ..builder import DETECTORS
 from .single_stage import SingleStageDetector
 
 
-@DETECTORS.register_module()
+@DETECTORS._register()
 class VFNet(SingleStageDetector):
     """Implementation of `VarifocalNet
     (VFNet).<https://arxiv.org/abs/2008.13367>`_"""

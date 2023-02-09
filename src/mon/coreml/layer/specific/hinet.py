@@ -15,11 +15,11 @@ from typing import Sequence
 import torch
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -28,9 +28,8 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
         out_channels: int,
         downsample  : bool,
         relu_slope  : float,
-        use_csff    : bool = False,
-        use_hin     : bool = False,
-        *args, **kwargs
+        use_csff    : bool  = False,
+        use_hin     : bool  = False,
     ):
         super().__init__()
         self.downsample = downsample
@@ -52,7 +51,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             padding      = 1,
             bias         = True
         )
-        self.relu2    = common.LeakyReLU(relu_slope, inplace=False)
+        self.relu2    = common.LeakyReLU(relu_slope, inplace = False)
         self.identity = common.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
@@ -79,7 +78,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
         
         if self.use_hin:
             self.norm = common.InstanceNorm2d(out_channels // 2, affine=True)
-
+        
         if downsample:
             self.downsample = common.Conv2d(
                 in_channels  = out_channels,
@@ -115,7 +114,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
         else:
             raise TypeError()
         
-        y  = self.conv1(x)
+        y = self.conv1(x)
         if self.use_hin:
             y1, y2 = torch.chunk(y, 2, dim=1)
             y      = torch.cat([self.norm(y1), y2], dim=1)
@@ -127,7 +126,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             if not self.use_csff:
                 raise ValueError()
             y = y + self.csff_enc(enc) + self.csff_dec(dec)
-       
+        
         if self.downsample:
             y_down = self.downsample(y)
             return y_down, y
@@ -135,7 +134,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             return None, y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class HINetUpBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -143,7 +142,6 @@ class HINetUpBlock(base.ConvLayerParsingMixin, nn.Module):
         in_channels : int,
         out_channels: int,
         relu_slope  : float,
-        *args, **kwargs
     ):
         super().__init__()
         self.up = common.ConvTranspose2d(
@@ -174,7 +172,7 @@ class HINetUpBlock(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class HINetSkipBlock(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -183,7 +181,6 @@ class HINetSkipBlock(base.ConvLayerParsingMixin, nn.Module):
         out_channels: int,
         mid_channels: int = 128,
         repeat_num  : int = 1,
-        *args, **kwargs
     ):
         super().__init__()
         self.repeat_num = repeat_num

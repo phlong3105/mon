@@ -22,34 +22,28 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base
-from mon.coreml.typing import CallableType, Int2T
+from mon.foundation import builtins
+from mon.globals import LAYERS
 
 
 # region Linear Unit
 
-@constant.LAYER.register()
+@LAYERS.register()
 class CELU(base.PassThroughLayerParsingMixin, nn.CELU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ELU(base.PassThroughLayerParsingMixin, nn.ELU):
     pass
 
 
 class FReLU(base.PassThroughLayerParsingMixin, nn.Module):
     
-    def __init__(
-        self,
-        c1: int,
-        k : Int2T = 3,
-        *args, **kwargs
-    ):
+    def __init__(self, c1: int, k: int | list[int] = 3, *args, **kwargs):
         super().__init__()
-        k         = core.to_2tuple(k)
+        k         = builtins.to_2tuple(k)
         self.conv = nn.Conv2d(c1, c1, k, 1, 1, groups=c1)
         self.act  = nn.BatchNorm2d(c1)
     
@@ -59,49 +53,50 @@ class FReLU(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class GELU(base.PassThroughLayerParsingMixin, nn.GELU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class GLU(base.PassThroughLayerParsingMixin, nn.GLU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class LeakyReLU(base.PassThroughLayerParsingMixin, nn.LeakyReLU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class PReLU(base.PassThroughLayerParsingMixin, nn.PReLU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReLU(base.PassThroughLayerParsingMixin, nn.ReLU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ReLU6(base.PassThroughLayerParsingMixin, nn.ReLU6):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class RReLU(base.PassThroughLayerParsingMixin, nn.RReLU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SELU(base.PassThroughLayerParsingMixin, nn.SELU):
     pass
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class SiLU(base.PassThroughLayerParsingMixin, nn.SiLU):
     pass
+
 
 # endregion
 
@@ -118,6 +113,7 @@ class Softshrink(base.PassThroughLayerParsingMixin, nn.Softshrink):
 
 class Tanhshrink(base.PassThroughLayerParsingMixin, nn.Tanhshrink):
     pass
+
 
 # endregion
 
@@ -142,6 +138,7 @@ class LogSigmoid(base.PassThroughLayerParsingMixin, nn.LogSigmoid):
 class Sigmoid(base.PassThroughLayerParsingMixin, nn.Sigmoid):
     pass
 
+
 # endregion
 
 
@@ -158,6 +155,7 @@ class Softmax(base.PassThroughLayerParsingMixin, nn.Softmax):
 class Softmax2d(base.PassThroughLayerParsingMixin, nn.Softmax2d):
     pass
 
+
 # endregion
 
 
@@ -170,13 +168,15 @@ class Hardtanh(base.PassThroughLayerParsingMixin, nn.Hardtanh):
 class Tanh(base.PassThroughLayerParsingMixin, nn.Tanh):
     pass
 
+
 # endregion
 
 
 # region Misc
 
 class ArgMax(base.PassThroughLayerParsingMixin, nn.Module):
-    """Finds indices of maximum values of a tensor along a given dimension :param`dim`.
+    """Finds indices of maximum values of a tensor along a given dimension
+    :param`dim`.
     
     Args:
         dim: A dimension to find indices of maximum values. Defaults to None.
@@ -203,7 +203,7 @@ class Clamp(base.PassThroughLayerParsingMixin, nn.Module):
     def __init__(
         self,
         min: float = -1.0,
-        max: float =  1.0,
+        max: float = 1.0,
         *args, **kwargs
     ):
         super().__init__()
@@ -227,10 +227,7 @@ class Mish(base.PassThroughLayerParsingMixin, nn.Mish):
     pass
 
 
-class MultiheadAttention(
-    base.PassThroughLayerParsingMixin,
-    nn.MultiheadAttention
-):
+class MultiheadAttention(base.PassThroughLayerParsingMixin, nn.MultiheadAttention):
     pass
 
 
@@ -249,14 +246,11 @@ class Softsign(base.PassThroughLayerParsingMixin, nn.Softsign):
 class Threshold(base.PassThroughLayerParsingMixin, nn.Threshold):
     pass
 
+
 # endregion
 
 
-def to_act_layer(
-    act    : CallableType | None = ReLU(),
-    inplace: bool                = True,
-    *args, **kwargs
-) -> nn.Module:
+def to_act_layer(act: Callable = ReLU(), *args, **kwargs) -> nn.Module:
     """Create activation layer."""
     # if isinstance(act, str):
     #     act = LAYER.build(name=act)

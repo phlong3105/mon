@@ -597,7 +597,7 @@ class TransformerDecoder(nn.Module):
         return repr_str
 
 
-@TRANSFORMER.register_module()
+@TRANSFORMER._register()
 class Transformer(nn.Module):
     """Implements the DETR transformer.
 
@@ -748,7 +748,7 @@ class Transformer(nn.Module):
         return repr_str
 
 
-@TRANSFORMER.register_module()
+@TRANSFORMER._register()
 class DynamicConv(nn.Module):
     """Implements Dynamic Convolution.
 

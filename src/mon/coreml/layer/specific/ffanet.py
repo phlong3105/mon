@@ -15,13 +15,13 @@ from typing import Sequence
 import torch
 from torch import nn
 
-from mon import core
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import Int2T
+from mon.coreml.layer.typing import _size_2_t
+from mon.foundation import builtins
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FFA(base.SameChannelsLayerParsingMixin, nn.Module):
     """This is the main feature in FFA-Net, the Feature Fusion Attention.
     
@@ -32,45 +32,42 @@ class FFA(base.SameChannelsLayerParsingMixin, nn.Module):
     Args:
         num_groups: Number of groups used in FFA-Net.
     """
-    
-    def __init__(
-        self,
-        channels  : int,
-        num_groups: int,
-        *args, **kwargs
-    ):
+
+    def __init__( self, channels: int, num_groups: int):
         super().__init__()
         self.channels   = channels
         self.num_groups = num_groups
-        self.ca         = torch.nn.Sequential(*[
-            common.AdaptiveAvgPool2d(1),
-            common.Conv2d(
-                in_channels  = self.channels * self.num_groups,
-                out_channels = self.channels // 16,
-                kernel_size  = 1,
-                padding      = 0,
-                bias         = True,
-            ),
-            common.ReLU(inplace=True),
-            common.Conv2d(
-                in_channels  = self.channels // 16,
-                out_channels = self.channels * self.num_groups,
-                kernel_size  = 1,
-                padding      = 0,
-                bias         = True
-            ),
-            common.Sigmoid()
-        ])
+        self.ca = torch.nn.Sequential(
+            *[
+                common.AdaptiveAvgPool2d(1),
+                common.Conv2d(
+                    in_channels  = self.channels * self.num_groups,
+                    out_channels = self.channels // 16,
+                    kernel_size  = 1,
+                    padding      = 0,
+                    bias         = True,
+                ),
+                common.ReLU(inplace=True),
+                common.Conv2d(
+                    in_channels  = self.channels // 16,
+                    out_channels = self.channels * self.num_groups,
+                    kernel_size  = 1,
+                    padding      = 0,
+                    bias         = True
+                ),
+                common.Sigmoid()
+            ]
+        )
         self.pa = common.PixelAttentionModule(
             channels        = self.channels,
             reduction_ratio = 8,
             kernel_size     = 1,
         )
-        
+    
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
         x = input
-        assert isinstance(x, Sequence) and len(x) == self.num_groups
-        w = self.ca(torch.cat(core.to_list(x), dim=1))
+        assert isinstance(x, list | tuple) and len(x) == self.num_groups
+        w = self.ca(torch.cat(builtins.to_list(x), dim=1))
         w = w.view(-1, self.num_groups, self.channels)[:, :, :, None, None]
         y = w[:, 0, ::] * x[0]
         for i in range(1, len(x)):
@@ -78,20 +75,11 @@ class FFA(base.SameChannelsLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FFABlock(base.SameChannelsLayerParsingMixin, nn.Module):
-    """A basic block structure in FFA-Net that consists of:
-        input --> Conv2d --> ReLU --> Conv2d --> Channel Attention --> Pixel Attention --> output
-          |                       ^                                                          ^
-          |_______________________|__________________________________________________________|
-    """
-    
-    def __init__(
-        self,
-        channels   : int,
-        kernel_size: Int2T,
-        *args, **kwargs
-    ):
+    """A basic block structure in FFA-Net."""
+
+    def __init__(self, channels: int, kernel_size: _size_2_t):
         super().__init__()
         self.conv1 = common.Conv2d(
             in_channels  = channels,
@@ -127,17 +115,17 @@ class FFABlock(base.SameChannelsLayerParsingMixin, nn.Module):
         )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x  = input
-        y  = self.act1(self.conv1(x))
-        y  = y + x
-        y  = self.conv2(y)
-        y  = self.ca(y)
-        y  = self.pa(y)
+        x = input
+        y = self.act1(self.conv1(x))
+        y = y + x
+        y = self.conv2(y)
+        y = self.ca(y)
+        y = self.pa(y)
         y += x
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FFAGroup(base.SameChannelsLayerParsingMixin, nn.Module):
     """Our Group Architecture combines B Basic Block structures with skip
     connections module. Continuous B blocks increase the depth and
@@ -150,9 +138,8 @@ class FFAGroup(base.SameChannelsLayerParsingMixin, nn.Module):
     def __init__(
         self,
         channels   : int,
-        kernel_size: Int2T,
+        kernel_size: _size_2_t,
         num_blocks : int,
-        *args, **kwargs
     ):
         super().__init__()
         m: list[nn.Module] = [
@@ -177,16 +164,15 @@ class FFAGroup(base.SameChannelsLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FFAPostProcess(base.ConvLayerParsingMixin, nn.Module):
     """Post-process module in FFA-Net."""
     
     def __init__(
         self,
-        in_channels : int    = 64,
-        out_channels: int    = 3,
-        kernel_size : Int2T = 3,
-        *args, **kwargs
+        in_channels : int       = 64,
+        out_channels: int       = 3,
+        kernel_size : _size_2_t = 3,
     ):
         super().__init__()
         self.conv1 = common.Conv2d(
@@ -206,20 +192,19 @@ class FFAPostProcess(base.ConvLayerParsingMixin, nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = self.conv2(self.conv1(input))
+        y = self.conv2(self.conv1(x))
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class FFAPreProcess(base.ConvLayerParsingMixin, nn.Module):
     """Pre-process module in FFA-Net."""
-
+    
     def __init__(
         self,
-        in_channels : int    = 3,
-        out_channels: int    = 64,
-        kernel_size : Int2T = 3,
-        *args, **kwargs
+        in_channels : int       = 3,
+        out_channels: int       = 64,
+        kernel_size : _size_2_t = 3,
     ):
         super().__init__()
         self.conv = common.Conv2d(
@@ -238,5 +223,5 @@ class FFAPreProcess(base.ConvLayerParsingMixin, nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = self.conv(input)
+        y = self.conv(x)
         return y

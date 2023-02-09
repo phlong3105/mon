@@ -2,7 +2,7 @@ from ..builder import BBOX_SAMPLERS, build_sampler
 from .base_sampler import BaseSampler
 
 
-@BBOX_SAMPLERS.register_module()
+@BBOX_SAMPLERS._register()
 class CombinedSampler(BaseSampler):
     """A sampler that combines positive sampler and negative sampler."""
 

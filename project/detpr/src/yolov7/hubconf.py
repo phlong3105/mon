@@ -24,7 +24,7 @@ def create(name, pretrained, channels, classes, autoshape):
 
     Arguments:
         name (str): name of model, i.e. 'yolov7'
-        pretrained (bool): load weights weights into the model
+        pretrained (bool): load pretrained weights into the model
         channels (int): number of input channels
         classes (int): number of model classes
 
@@ -35,7 +35,7 @@ def create(name, pretrained, channels, classes, autoshape):
         cfg = list((Path(__file__).parent / 'cfg').rglob(f'{name}.yaml'))[0]  # model.yaml path
         model = Model(cfg, channels, classes)
         if pretrained:
-            fname = f'{name}.pt'  # checkpoint file_name
+            fname = f'{name}.pt'  # checkpoint filename
             attempt_download(fname)  # download if not found locally
             ckpt = torch.load(fname, map_location=torch.device('cpu'))  # load
             msd = model.state_dict()  # model state_dict
@@ -69,7 +69,7 @@ def custom(path_or_model='path/to/model.pt', autoshape=True):
     if isinstance(model, dict):
         model = model['ema' if model.get('ema') else 'model']  # load model
 
-    hub_model = Model(model.yaml).to(next(model.parameters()).devices)  # create
+    hub_model = Model(model.yaml).to(next(model.parameters()).device)  # create
     hub_model.load_state_dict(model.float().state_dict())  # load state_dict
     hub_model.names = model.names  # class names
     if autoshape:
@@ -84,11 +84,12 @@ def yolov7(pretrained=True, channels=3, classes=80, autoshape=True):
 
 if __name__ == '__main__':
     model = custom(path_or_model='yolov7.pt')  # custom example
-    # model = create(name='yolov7', weights=True, channels=3, classes=80, autoshape=True)  # weights example
+    # model = create(name='yolov7', pretrained=True, channels=3, classes=80, autoshape=True)  # pretrained example
 
     # Verify inference
     import numpy as np
-    
+    from PIL import Image
+
     imgs = [np.zeros((640, 480, 3))]
 
     results = model(imgs)  # batched inference

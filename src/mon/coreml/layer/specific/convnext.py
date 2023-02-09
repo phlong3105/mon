@@ -12,17 +12,17 @@ __all__ = [
 ]
 
 import functools
+from typing import Callable
 
 import torch
 import torchvision.ops
 from torch import nn
 
-from mon.coreml import constant
 from mon.coreml.layer import base, common
-from mon.coreml.typing import CallableType
+from mon.globals import LAYERS
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ConvNeXtLayer(base.PassThroughLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -30,10 +30,9 @@ class ConvNeXtLayer(base.PassThroughLayerParsingMixin, nn.Module):
         dim                  : int,
         layer_scale          : float,
         stochastic_depth_prob: float,
-        stage_block_id       : int          | None = None,
-        total_stage_blocks   : int          | None = None,
-        norm                 : CallableType | None = None,
-        *args, **kwargs
+        stage_block_id       : int | None = None,
+        total_stage_blocks   : int | None = None,
+        norm                 : Callable   = None,
     ):
         super().__init__()
         sd_prob = stochastic_depth_prob
@@ -76,7 +75,7 @@ class ConvNeXtLayer(base.PassThroughLayerParsingMixin, nn.Module):
         return y
 
 
-@constant.LAYER.register()
+@LAYERS.register()
 class ConvNeXtBlock(base.PassThroughLayerParsingMixin, nn.Module):
     
     def __init__(
@@ -86,9 +85,8 @@ class ConvNeXtBlock(base.PassThroughLayerParsingMixin, nn.Module):
         stochastic_depth_prob: float,
         num_layers           : int,
         stage_block_id       : int,
-        total_stage_blocks   : int          | None = None,
-        norm                 : CallableType | None = None,
-        *args, **kwargs
+        total_stage_blocks   : int | None = None,
+        norm                 : Callable   = None,
     ):
         super().__init__()
         layers = []

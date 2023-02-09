@@ -10,20 +10,13 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import Any
 
 import cv2
-import munch
 import numpy as np
 import torch
 
-from mon import core
-from mon.core import (
-    console, file_handler, pathlib, rich,
-)
-
-if TYPE_CHECKING:
-    from mon.coreml.typing import ClassLabelsType, PathType
+from mon.foundation import console, file_handler, pathlib, rich
 
 
 # region Label
@@ -33,34 +26,68 @@ class Label(ABC):
     logical collection of data associated with a particular task.
     """
     
+    """
     def __init__(self, *args, **kwargs):
         super().__init__()
         for k, v in kwargs.items():
             self.__setattr__(k, v)
+    """
     
     @property
     @abstractmethod
+    def data(self) -> list | None:
+        """The label's data."""
+        pass
+
+    @property
+    def nparray(self) -> np.ndarray | None:
+        """The label's data as a :class:`numpy.ndarray`."""
+        data = self.data
+        if isinstance(data, list):
+            data = np.array([i for i in data if isinstance(i, int | float)])
+        return data
+    
+    @property
     def tensor(self) -> torch.Tensor | None:
         """The label's data as a :class:`torch.Tensor`."""
-        pass
+        data = self.data
+        if isinstance(data, list):
+            data = torch.Tensor([i for i in data if isinstance(i, int | float)])
+        return data
+
 
 # endregion
 
 
 # region Class-Label
 
-class ClassLabel(munch.Munch, Label):
+class ClassLabel(dict, Label):
     """A class-label represents a class pre-defined in a dataset. It consists of
-    basic attributes such as id, name, and color.
+    basic attributes such as ID, name, and color.
     """
-
+    
+    @classmethod
+    def from_value(cls, value: ClassLabel | dict) -> ClassLabel:
+        """Create a :class:`ClassLabels` object from an arbitrary
+        :param:`value`.
+        """
+        if isinstance(value, dict):
+            return ClassLabel(value)
+        elif isinstance(value, ClassLabel):
+            return value
+        else:
+            raise ValueError(
+                f"value must be a ClassLabel class or a dict, but got "
+                f"{type(value)}."
+            )
+    
     @property
-    def tensor(self) -> torch.Tensor | None:
-        """The class-label's data as a :class:`torch.Tensor`."""
+    def data(self) -> list | None:
+        """The label's data."""
         return None
 
 
-class ClassLabels(list):
+class ClassLabels(list[ClassLabel]):
     """A list of all the class-labels defined in a dataset.
     
     Notes:
@@ -68,75 +95,62 @@ class ClassLabels(list):
         built-in functions.
     """
     
-    def __init__(self, iterable: Sequence[ClassLabel]):
-        """Create a :class:`ClassLabels` object from a sequence. Each item in
-        the list is a dictionary describing a :class:`ClassLabel` object.
-        """
-        assert isinstance(iterable, list | tuple) \
-               and all(isinstance(i, ClassLabel) for i in iterable)
-        super().__init__(i for i in iterable)
-
-    def __setitem__(self, index: int, item: ClassLabel):
-        assert isinstance(item, ClassLabel)
-        super().__setitem__(index, item)
+    def __init__(self, seq: list[ClassLabel | dict]):
+        super().__init__(ClassLabel.from_value(value=i) for i in seq)
     
-    def insert(self, index: int, item: ClassLabel):
-        assert isinstance(item, ClassLabel)
-        super().insert(index, item)
-
-    def append(self, item: ClassLabel):
-        assert isinstance(item, ClassLabel)
-        super().append(item)
-
-    def extend(self, other):
-        if isinstance(other, type(self)):
-            super().extend(other)
-        else:
-            super().extend(item for item in other)
+    def __setitem__(self, index: int, item: ClassLabel | dict):
+        super().__setitem__(index, ClassLabel.from_value(item))
+    
+    def insert(self, index: int, item: ClassLabel | dict):
+        super().insert(index, ClassLabel.from_value(item))
+    
+    def append(self, item: ClassLabel | dict):
+        super().append(ClassLabel.from_value(item))
+    
+    def extend(self, other: list[ClassLabel | dict]):
+        super().extend([ClassLabel.from_value(item) for item in other])
     
     @classmethod
-    def from_dict(cls, d: dict) -> ClassLabels:
+    def from_dict(cls, value: dict) -> ClassLabels:
         """Create a :class:`ClassLabels` object from a dictionary :param:`d`.
-        The dictionary must contain the key "classlabels" and it's corresponding
-        value is a list of dictionary. Each item in the list
+        The dictionary must contain the key 'classlabels', and it's
+        corresponding value is a list of dictionary. Each item in the list
         :param:`d["classlabels"]` is a dictionary describing a
         :class:`ClassLabel` object.
         """
-        assert isinstance(d, dict) and hasattr(d, "classlabels")
-        l = d["classlabels"]
-        assert isinstance(l, list | tuple)
-        return cls(iterable=l)
-        
+        if "classlabels" not in value:
+            raise ValueError("value must contains a 'classlabels' key.")
+        classlabels = value["classlabels"]
+        if not isinstance(classlabels, list | tuple):
+            raise TypeError(
+                f"classlabels must be a list or tuple, but got "
+                f"{type(classlabels)}."
+            )
+        return cls(seq=classlabels)
+    
     @classmethod
-    def from_file(cls, path: PathType) -> ClassLabels:
-        """Create a :class:`ClassLabels` object from the content of a ".json"
+    def from_file(cls, path: pathlib.Path) -> ClassLabels:
+        """Create a :class:`ClassLabels` object from the content of a '.json'
         file specified by the :param:`path`.
         """
         path = pathlib.Path(path)
-        assert path.is_json_file()
+        if not path.is_json_file():
+            raise ValueError(f"path must be a .json file, but got {path}.")
         return cls.from_dict(file_handler.read_from_file(path=path))
     
     @classmethod
-    def from_value(cls, value: ClassLabelsType) -> ClassLabels | None:
+    def from_value(cls, value: Any) -> ClassLabels | None:
         """Create a :class:`ClassLabels` object from an arbitrary
         :param:`value`.
         """
         if isinstance(value, ClassLabels):
             return value
-        if isinstance(value, dict | munch.Munch):
+        if isinstance(value, dict):
             return cls.from_dict(value)
         if isinstance(value, list | tuple):
             return cls(value)
-        if isinstance(value, str | core.Path):
+        if isinstance(value, str | pathlib.Path):
             return cls.from_file(value)
-        """
-        error_console.log(
-            f":param:`value` must be a :class:`ClassLabels`, :class:`dict`, "
-            f":class:`munch.Munch`, :class:`str`, or "
-            f":class:`mon.foundation.Path`. "
-            f"But got: {type(value)}."
-        )
-        """
         return None
     
     @property
@@ -155,13 +169,18 @@ class ClassLabels(list):
             An RGB color legend figure.
         """
         num_classes = len(self)
-        row_height  = 25 if (height is None) else int(height / num_classes)
-        legend      = np.zeros(((num_classes * row_height) + 25, 300, 3), dtype=np.uint8)
-
+        row_height = 25 if (height is None) else int(height / num_classes)
+        legend = np.zeros(
+            ((num_classes * row_height) + 25, 300, 3),
+            dtype=np.uint8
+        )
+        
         # Loop over the class names + colors
         for i, label in enumerate(self):
             color = label.color  # Draw the class name + color on the legend
-            color = color[::-1]  # Convert to BGR format since OpenCV operates on BGR format.
+            color = color[
+                    ::-1]  # Convert to BGR format since OpenCV operates on
+            # BGR format.
             cv2.putText(
                 img       = legend,
                 text      = label.name,
@@ -179,16 +198,16 @@ class ClassLabels(list):
                 thickness = -1
             )
         return legend
-        
+    
     def colors(
         self,
-        key                 : str  = "id",
+        key: str = "id",
         exclude_negative_key: bool = True,
     ) -> list:
         """Return a list of colors corresponding to the items in :attr:`self`.
         
         Args:
-            key: The key to search for. Defaults to "id".
+            key: The key to search for. Defaults to 'id'.
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
@@ -198,25 +217,25 @@ class ClassLabels(list):
         labels_colors = []
         for label in self:
             if hasattr(label, key) and hasattr(label, "color"):
-                if exclude_negative_key and label[key] <  0:
+                if exclude_negative_key and label[key] < 0:
                     continue
                 labels_colors.append(label.color)
         return labels_colors
-
+    
     @property
     def id2label(self) -> dict[int, dict]:
         """A dictionary mapping items' IDs (keys) to items (values)."""
         return {label["id"]: label for label in self}
-
+    
     def ids(
         self,
-        key                 : str  = "id",
+        key: str = "id",
         exclude_negative_key: bool = True,
     ) -> list:
         """Return a list of IDs corresponding to the items in :attr:`self`.
         
         Args:
-            key: The key to search for. Defaults to "id".
+            key: The key to search for. Defaults to 'id'.
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
@@ -226,7 +245,7 @@ class ClassLabels(list):
         ids = []
         for c in self:
             if hasattr(c, key):
-                if exclude_negative_key and c[key] <  0:
+                if exclude_negative_key and c[key] < 0:
                     continue
                 ids.append(c[key])
         return ids
@@ -235,7 +254,7 @@ class ClassLabels(list):
     def name2label(self) -> dict[str, dict]:
         """A dictionary mapping items' names (keys) to items (values)."""
         return {c["name"]: c for c in self.classes}
-
+    
     def names(self, exclude_negative_key: bool = True) -> list:
         """Return a list of names corresponding to the items in :attr:`self`.
         
@@ -249,7 +268,7 @@ class ClassLabels(list):
         names = []
         for c in self:
             if hasattr(c, "id"):
-                if exclude_negative_key and c["id"] <  0:
+                if exclude_negative_key and c["id"] < 0:
                     continue
                 names.append(c["name"])
             else:
@@ -258,13 +277,13 @@ class ClassLabels(list):
     
     def num_classes(
         self,
-        key                 : str  = "id",
+        key: str = "id",
         exclude_negative_key: bool = True,
     ) -> int:
         """Counts the number of items.
         
         Args:
-            key: The key to search for. Defaults to "id".
+            key: The key to search for. Defaults to 'id'.
             exclude_negative_key: If True, excludes the key with negative value.
                 Defaults to True.
             
@@ -274,11 +293,11 @@ class ClassLabels(list):
         count = 0
         for c in self:
             if hasattr(c, key):
-                if exclude_negative_key and c[key] <  0:
+                if exclude_negative_key and c[key] < 0:
                     continue
                 count += 1
         return count
-
+    
     def get_class(self, key: str = "id", value: Any = None) -> dict | None:
         """Return the item (class-label) matching the given :param:`key` and
         :param:`value`.
@@ -289,11 +308,11 @@ class ClassLabels(list):
         return None
     
     def get_class_by_name(self, name: str) -> dict | None:
-        """Return the item (class-label) with the :param:`key` is "name" and
+        """Return the item (class-label) with the :param:`key` is 'name' and
         value matching the given :param:`name`.
         """
         return self.get_class(key="name", value=name)
-
+    
     def get_id(self, key: str = "id", value: Any = None) -> int | None:
         """Return the ID of the item (class-label) matching the given
         :param:`key` and :param:`value`.
@@ -303,14 +322,14 @@ class ClassLabels(list):
     
     def get_id_by_name(self, name: str) -> int | None:
         """Return the name of the item (class-label) with the :param:`key` is
-        "name" and value matching the given :param:`name`.
+        'name' and value matching the given :param:`name`.
         """
         classlabel = self.get_class_by_name(name=name)
         return classlabel["id"] if classlabel is not None else None
     
     def get_name(self, key: str = "id", value: Any = None) -> str | None:
         """Return the name of the item (class-label) with the :param:`key` is
-        "name" and value matching the given :param:`name`.
+        'name' and value matching the given :param:`name`.
         """
         c = self.get_class(key=key, value=value)
         return c["name"] if c is not None else None
@@ -320,7 +339,7 @@ class ClassLabels(list):
         return None
     
     def print(self):
-        """Print all items (class-labels) using in rich format."""
+        """Print all items (class-labels) in rich format."""
         if len(self) <= 0:
             console.log("[yellow]No class is available.")
             return
@@ -328,333 +347,8 @@ class ClassLabels(list):
         rich.print_table(self.classes)
 
 
-# TODO: - Delete later
-'''
-class ClassLabels(list, Label):
-    """A list of all the class-labels defined in a dataset.
-    
-    Attributes:
-        classlabels: A list of all class-labels (classes) in the dataset.
-    """
-
-    def __init__(self, classlabels: list[ClassLabel], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert isinstance(classlabels, list) \
-               and all(isinstance(c, ClassLabel) for c in classlabels)
-        self.classlabels = classlabels
-
-    @classmethod
-    def from_list(cls, l: list[dict | munch.Munch]) -> ClassLabels:
-        """Create a :class:`ClassLabels` object from a list. Each item in the
-        list is a dictionary describing a :class:`ClassLabel` object.
-        """
-        assert isinstance(l, list)
-        if all(isinstance(i, dict) for i in l):
-            l = [ClassLabel(**c) for c in l]
-        return cls(classlabels=l)
-    
-    @classmethod
-    def from_dict(cls, d: dict) -> ClassLabels:
-        """Create a :class:`ClassLabels` object from a dictionary :param:`d`.
-        The dictionary must contain the key "classlabels" and it's corresponding
-        value is a list of dictionary. Each item in the list
-        :param:`d["classlabels"]` is a dictionary describing a
-        :class:`ClassLabel` object.
-        """
-        assert isinstance(d, dict) and hasattr(d, "classlabels")
-        return cls.from_list(d["classlabels"])
-        
-    @classmethod
-    def from_file(cls, path: PathType) -> ClassLabels:
-        """Create a :class:`ClassLabels` object from the content of a ".json"
-        file specified by the :param:`path`.
-        """
-        path = pathlib.Path(path)
-        assert path.is_json_file()
-        return cls.from_dict(file_handler.load_from_file(path))
-    
-    @classmethod
-    def from_value(cls, value: ClassLabelsType) -> ClassLabels | None:
-        """Create a :class:`ClassLabels` object from an arbitrary
-        :param:`value`.
-        """
-        if isinstance(value, ClassLabels):
-            return value
-        if isinstance(value, dict | munch.Munch):
-            return cls.from_dict(value)
-        if isinstance(value, list):
-            return cls.from_list(value)
-        if isinstance(value, PathType):
-            return cls.from_file(value)
-        error_console.log(
-            f"`value` must be `ClassLabels`, `dict`, `str`, or "
-            f"`Path`. But got: {type(value)}."
-        )
-        return None
-        
-    @property
-    def classes(self) -> list[ClassLabel]:
-        """An alias of :attr:`classlabels`."""
-        return self.classlabels
-    
-    @property
-    def list(self) -> list:
-        """An alias of :meth:`classes`."""
-        return self.classlabels
-
-    def color_legend(self, height: int | None = None) -> np.array:
-        """Create a legend figure of all the classlabels.
-        
-        Args:
-            height: The height of the legend. If None, it will be
-                25px * len(:attr:`classlabels`).
-        
-        Return:
-            An RGB color legend figure.
-        """
-        num_classes = len(self.classes)
-        row_height  = 25 if (height is None) else int(height / num_classes)
-        legend      = np.zeros(((num_classes * row_height) + 25, 300, 3), dtype=np.uint8)
-
-        # Loop over the class names + colors
-        for i, label in enumerate(self.classes):
-            color = label.color  # Draw the class name + color on the legend
-            color = color[::-1]  # Convert to BGR format since OpenCV operates on BGR format.
-            cv2.putText(
-                img       = legend,
-                text      = label.name,
-                org       = (5, (i * row_height) + 17),
-                fontFace  = cv2.FONT_HERSHEY_SIMPLEX,
-                fontScale = 0.5,
-                color     = (0, 0, 255),
-                thickness = 2
-            )
-            cv2.rectangle(
-                img       = legend,
-                pt1       = (150, (i * 25)),
-                pt2       = (300, (i * row_height) + 25),
-                color     = color,
-                thickness = -1
-            )
-        return legend
-        
-    def colors(
-        self,
-        key                 : str  = "id",
-        exclude_negative_key: bool = True,
-    ) -> list:
-        """Return a list of colors corresponding to the items in
-        :attr:`classlabels`.
-        
-        Args:
-            key: The key to search for. Defaults to "id".
-            exclude_negative_key: If True, excludes the key with negative value.
-                Defaults to True.
-            
-        Return:
-            A list of colors.
-        """
-        labels_colors = []
-        for label in self.classes:
-            if hasattr(label, key) and hasattr(label, "color"):
-                if exclude_negative_key and label[key] <  0:
-                    continue
-                labels_colors.append(label.color)
-        return labels_colors
-
-    @property
-    def id2label(self) -> dict[int, dict]:
-        """A dictionary mapping classlabels' IDs as keys and classlabels as
-        values.
-        """
-        return {label["id"]: label for label in self.classes}
-
-    def ids(
-        self,
-        key                 : str  = "id",
-        exclude_negative_key: bool = True,
-    ) -> list:
-        """Return a list of IDs corresponding to the items in
-        :attr:`classlabels`.
-        
-        Args:
-            key: The key to search for. Defaults to "id".
-            exclude_negative_key: If True, excludes the key with negative value.
-                Defaults to True.
-            
-        Return:
-            A list of IDs.
-        """
-        ids = []
-        for c in self.classes:
-            if hasattr(c, key):
-                if exclude_negative_key and c[key] <  0:
-                    continue
-                ids.append(c[key])
-        return ids
-    
-    @property
-    def name2label(self) -> dict[str, dict]:
-        """A dictionary mapping classlabels' names as keys and classlabels as
-        values.
-        """
-        return {c["name"]: c for c in self.classes}
-
-    def names(self, exclude_negative_key: bool = True) -> list:
-        """Return a list of names corresponding to the items in
-        :attr:`classlabels`.
-        
-        Args:
-            exclude_negative_key: If True, excludes the key with negative value.
-                Defaults to True.
-            
-        Return:
-            A list of IDs.
-        """
-        names = []
-        for c in self.classes:
-            if hasattr(c, "id"):
-                if exclude_negative_key and c["id"] <  0:
-                    continue
-                names.append(c["name"])
-            else:
-                names.append("")
-        return names
-    
-    def num_classes(
-        self,
-        key                 : str  = "id",
-        exclude_negative_key: bool = True,
-    ) -> int:
-        """Counts the number of classlabels in the dataset
-        
-        Args:
-            key: The key to search for. Defaults to "id".
-            exclude_negative_key: If True, excludes the key with negative value.
-                Defaults to True.
-            
-        Return:
-            The number of classes in the dataset.
-        """
-        count = 0
-        for c in self.classes:
-            if hasattr(c, key):
-                if exclude_negative_key and c[key] <  0:
-                    continue
-                count += 1
-        return count
-
-    def get_class(
-        self,
-        key  : str              = "id",
-        value: int | str | None = None
-    ) -> dict | None:
-        """Return the classlabel matching the given :param:`key` and
-        :param:`value`.
-        
-        Args:
-            key: The key to search for. Defaults to "id".
-            value: The value of the :param:`key` to search for. Defaults to None.
-        
-        Return:
-            A dictionary of the classlabel that matches the :param:`key` and
-            :param:`value`. Return None if such classlabel cannot be found.
-        """
-        for c in self.classes:
-            if hasattr(c, key) and (value == c[key]):
-                return c
-        return None
-    
-    def get_class_by_name(self, name: str) -> dict | None:
-        """Return the classlabel matching the given :param:`name`.
-        
-        Args:
-            name: The name of the classlabel you want to get.
-        
-        Return:
-            A dictionary of the classlabel matching the given :param:`name`.
-            Return None if such classlabel cannot be found.
-        """
-        
-        return self.get_class(key="name", value=name)
-    
-    def get_id(
-        self,
-        key  : str              = "id",
-        value: int | str | None = None
-    ) -> int | None:
-        """Return the id of the class label that matches the given key and
-        value.
-        
-        Args:
-           key: The key to search for. Defaults to "id".
-           value: The value of the key to search for. Defaults to None.
-        
-        Return:
-            The id of the class.
-        """
-        classlabel: dict = self.get_class(key=key, value=value)
-        return classlabel["id"] if classlabel is not None else None
-    
-    def get_id_by_name(self, name: str) -> int | None:
-        """Given a class name, return the class id.
-        
-        Args:
-            name: The name of the class you want to get the ID of.
-        
-        Return:
-            The id of the class.
-        """
-        classlabel = self.get_class_by_name(name=name)
-        return classlabel["id"] if classlabel is not None else None
-    
-    def get_name(
-        self,
-        key  : str              = "id",
-        value: int | str | None = None
-    ) -> str | None:
-        """Gets the name of a class given a key and value.
-        
-        Args:
-            key: The key to search for. Defaults to "id".
-            value: The value of the key to search for. Defaults to None.
-        
-        Return:
-            The name of the class.
-        """
-        c = self.get_class(key=key, value=value)
-        return c["name"] if c is not None else None
-       
-    def show_color_legend(self, height: int | None = None):
-        """Shows a pretty color lookup legend using OpenCV image functions.
-
-        Args:
-            height: Height of the color legend image. Defaults to None.
-        """
-        color_legend = self.color_legend(height=height)
-        # plt.imshow(color_legend.permute(1, 2, 0))
-        matplotlib.plt.imshow(color_legend)
-        matplotlib.plt.title("Color Legend")
-        matplotlib.plt.show()
-
-    @property
-    def tensor(self) -> torch.Tensor | None:
-        """Return the label in tensor format."""
-        return None
-    
-    def print(self):
-        """Print all classes using `rich` format."""
-        if not (self.classes and len(self.classes) > 0):
-            console.log("[yellow]No class is available.")
-            return
-        
-        console.log("Classlabels:")
-        rich.print_table(self.classes)
-'''
-
-
 def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
-    """Counts the number of appearance of each class-label, and returns the
+    """Counts the number of appearances of each class-label, and returns the
     label with the highest count.
     
     Args:
@@ -663,9 +357,9 @@ def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
     Return:
         The :class:`ClassLabel` object that has the most votes.
     """
-    # Count number of appearance of each label.
-    unique_labels = munch.Munch()
-    label_voting  = munch.Munch()
+    # Count number of appearances of each label.
+    unique_labels = {}
+    label_voting  = {}
     for label in labels:
         k = label.get("id")
         v = label_voting.get(k)

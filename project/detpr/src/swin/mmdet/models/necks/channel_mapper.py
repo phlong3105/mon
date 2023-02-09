@@ -4,7 +4,7 @@ from mmcv.cnn import ConvModule, xavier_init
 from ..builder import NECKS
 
 
-@NECKS.register_module()
+@NECKS._register()
 class ChannelMapper(nn.Module):
     r"""Channel Mapper to reduce/increase channels of backbone features.
 
