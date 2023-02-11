@@ -1,10 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="convert_bbox" type="PythonConfigurationType" factoryName="Python" folderName="snippet" nameIsGenerated="true">
+  <configuration default="false" name="convert_bbox" type="PythonConfigurationType" factoryName="Python" folderName="script" nameIsGenerated="true">
     <module name="mon" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="PYTHONUNBUFFERED" value="1" />
+    </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/snippet" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/script" />
     <option name="IS_MODULE_SDK" value="true" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -19,7 +22,7 @@
         <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
       </ENTRIES>
     </EXTENSION>
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/snippet/convert_bbox.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/script/convert_bbox.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="true" />

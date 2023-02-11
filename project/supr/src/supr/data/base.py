@@ -269,9 +269,9 @@ class MovingObject(list[instance.Instance], Object):
         else:
             color = color or self.majority_label["color"]
         if self.is_confirmed:
-            self.draw_trajectory(drawing=drawing)
+            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
         elif self.is_counting:
-            self.draw_trajectory(drawing=drawing)
+            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
         elif self.is_counted:
             self.draw_instance(
                 drawing = drawing,
@@ -280,7 +280,7 @@ class MovingObject(list[instance.Instance], Object):
                 label   = label,
                 color   = color
             )
-            self.draw_trajectory(drawing=drawing)
+            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
         elif self.is_exiting:
             self.draw_instance(
                 drawing = drawing,
@@ -289,7 +289,7 @@ class MovingObject(list[instance.Instance], Object):
                 label   = label,
                 color   = color
             )
-            self.draw_trajectory(drawing=drawing)
+            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
         return drawing
     
     def draw_instance(
@@ -338,30 +338,5 @@ class MovingObject(list[instance.Instance], Object):
             )
         return drawing
     
-    def draw_trajectory(self, drawing: np.ndarray) -> np.ndarray:
-        """Draw the current trajectory on the :param:`image`."""
-        if self.moi_uid is not None:
-            color = mon.AppleRGB.values()[self.moi_uid]
-        else:
-            color = self.majority_label["color"]
-    
-        if self.trajectory is not None:
-            pts = np.array(self.trajectory).reshape((-1, 1, 2)).astype(int)
-            cv2.polylines(
-                img       = drawing,
-                pts       = [pts],
-                isClosed  = False,
-                color     = color,
-                thickness = 2
-            )
-            for point in self.trajectory:
-                cv2.circle(
-                    img       = drawing,
-                    center    = tuple(point.astype(int)),
-                    radius    = 3,
-                    thickness = 2,
-                    color     = color
-                )
-        return drawing
     
 # endregion

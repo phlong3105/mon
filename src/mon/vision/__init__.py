@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import mon.vision.cfg
 import mon.vision.dataset
+import mon.vision.drawing
 import mon.vision.geometry
 import mon.vision.image
 from mon.vision.cfg import *
 from mon.vision.dataset import *
+from mon.vision.drawing import *
 from mon.vision.geometry import *
 from mon.vision.image import *

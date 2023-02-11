@@ -100,22 +100,22 @@ if [ "$task" == "test" ]; then
     --device 0 \
     --augment \
     --project "../run/test" \
-    --name yolov7-e6e-visdrone-1280 \
+    --name yolov7-e6e-visdrone-1280
 fi
 
 # Predict
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python detect.py \
-    --weights "run/train/yolov7-e6e-visdrone-1280/weights/best.pt" \
-    --source "../data/ai2i-haze/dry-run/2023/images/" \
+    --weights "../../run/train/yolov7-e6e-visdrone-1280/weights/best.pt" \
+    --source "../../data/a2i2-haze/dry-run/2023/images/" \
     --img-size 1280 \
     --conf-thres 0.00001 \
     --iou-thres 0.5 \
     --agnostic-nms \
     --augment \
-    --project "../run/predict" \
-    --name yolov7-e6e-visdrone-1280 \
+    --project "../../run/predict" \
+    --name yolov7-e6e-visdrone-1280
 fi
 
 cd ..

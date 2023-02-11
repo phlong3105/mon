@@ -15,15 +15,18 @@ import mon
 
 # region Functions
 
-def convert_bboxes(args: argparse.Namespace):
+def convert_bboxes(args: dict):
     """Convert bounding boxes"""
-    assert args.image is not None and mon.Path(args.image).is_dir()
-    assert args.label is not None and mon.Path(args.label).is_dir()
+    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
+    assert args["label"] is not None and mon.Path(args["label"]).is_dir()
     
-    image_dir  = mon.Path(args.image)
-    label_dir  = mon.Path(args.label)
-    output_dir = args.output or image_dir.parent / "labels-yolo"
-    output_dir = mon.Path(output_dir)
+    from_format = args["from_format"]
+    to_format   = args["to_format"]
+    
+    image_dir   = mon.Path(args["image"])
+    label_dir   = mon.Path(args["label"])
+    output_dir  = args["output"] or image_dir.parent / "labels-yolo"
+    output_dir  = mon.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
     image_files = list(image_dir.rglob("*"))
@@ -45,17 +48,17 @@ def convert_bboxes(args: argparse.Namespace):
                 l = [x for x in l if len(x) >= 5]
                 b = np.array([list(map(float, x[1:])) for x in l])
                 
-                if args.from_format in ["voc"] and args.to_format in ["coco"]:
+                if from_format in ["voc"] and to_format in ["coco"]:
                     b = mon.bbox_xyxy_to_xywh(bbox=b)
-                elif args.from_format in ["voc"] and args.to_format in ["yolo"]:
+                elif from_format in ["voc"] and to_format in ["yolo"]:
                     b = mon.bbox_xyxy_to_cxcywhn(bbox=b, height=h, width=w)
-                elif args.from_format in ["coco"] and args.to_format in ["voc"]:
+                elif from_format in ["coco"] and to_format in ["voc"]:
                     b = mon.bbox_xywh_to_xyxy(bbox=b)
-                elif args.from_format in ["coco"] and args.to_format in ["yolo"]:
+                elif from_format in ["coco"] and to_format in ["yolo"]:
                     b = mon.bbox_xywh_to_cxcywhn(bbox=b, height=h, width=w)
-                elif args.from_format in ["yolo"] and args.to_format in ["voc"]:
+                elif from_format in ["yolo"] and to_format in ["voc"]:
                     b = mon.bbox_cxcywhn_to_xyxy(bbox=b, height=h, width=w)
-                elif args.from_format in ["yolo"] and args.to_format in ["coco"]:
+                elif from_format in ["yolo"] and to_format in ["coco"]:
                     b = mon.bbox_cxcywhn_to_xywh(bbox=b, height=h, width=w)
                    
             with open(label_file_yolo, "w") as out_file:
@@ -70,49 +73,24 @@ def convert_bboxes(args: argparse.Namespace):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--image",
-        type    = str,
-        default = mon.DATA_DIR / "a2i2-haze/dry-run/2023/images",
-        help    = "Image directory."
-    )
-    parser.add_argument(
-        "--label",
-        type    = str,
-        default = mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc",
-        help    = "Bounding bbox directory."
-    )
-    parser.add_argument(
-        "--from-format",
-        type    = str,
-        default = "voc",
-        help    = "Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn)."
-    )
-    parser.add_argument(
-        "--to-format",
-        type    = str,
-        default = "yolo",
-        help    = "Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn)."
-    )
-    parser.add_argument(
-        "--output",
-        type    = str,
-        default = None,
-        help    = "Output directory."
-    )
-    parser.add_argument("--verbose", action = "store_true")
+    parser.add_argument("--image",       type=str, default=mon.DATA_DIR/"a2i2-haze/dry-run/2023/images", help="Image directory.")
+    parser.add_argument("--label",       type=str, default=mon.DATA_DIR/"a2i2-haze/dry-run/2023/labels-voc", help="Bounding bbox directory.")
+    parser.add_argument("--from-format", type=str, default="voc", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
+    parser.add_argument("--to-format",   type=str, default="yolo", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
+    parser.add_argument("--output",      type=str, default=None, help="Output directory.")
+    parser.add_argument("--verbose",     action="store_true")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    if args.from_format not in ["voc", "coco", "yolo"]:
+    args = vars(parse_args())
+    if args["from_format"] not in ["voc", "coco", "yolo"]:
         raise ValueError
-    if args.to_format not in ["voc", "coco", "yolo"]:
+    if args["to_format"] not in ["voc", "coco", "yolo"]:
         raise ValueError
     
-    if args.from_format == args.to_format:
+    if args["from_format"] == args["to_format"]:
         pass
     else:
         convert_bboxes(args=args)

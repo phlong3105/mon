@@ -7,13 +7,16 @@ from __future__ import annotations
 
 __all__ = [
     "concat_lists", "copy_attr", "intersect_dicts", "intersect_ordered_dicts",
-    "iter_to_iter", "iter_to_list", "iter_to_tuple", "split_list", "to_1tuple",
-    "to_2tuple", "to_3tuple", "to_4tuple", "to_5tuple", "to_6tuple", "to_float",
-    "to_int", "to_list", "to_ntuple", "to_tuple", "unique",
+    "iter_to_iter", "iter_to_list", "iter_to_tuple", "shuffle_dict",
+    "split_list", "to_1list", "to_1tuple", "to_2list", "to_2tuple", "to_3list",
+    "to_3tuple", "to_4list", "to_4tuple", "to_5list", "to_5tuple", "to_6list",
+    "to_6tuple", "to_float", "to_int", "to_list", "to_nlist", "to_ntuple",
+    "to_tuple", "unique",
 ]
 
 import copy
 import itertools
+import random
 from collections import OrderedDict
 from typing import Any, Callable, Iterable
 
@@ -108,6 +111,15 @@ def intersect_ordered_dicts(
     )
 
 
+def shuffle_dict(x: dict) -> dict:
+    """Shuffle a dictionary randomly."""
+    keys = list(x.keys())
+    random.shuffle(keys)
+    shuffled = {}
+    for key in keys:
+        shuffled[key] = x[key]
+    return shuffled
+    
 # endregion
 
 
@@ -203,6 +215,37 @@ def to_list(x: Any) -> list:
     return x
 
 
+def to_nlist(n: int) -> Callable[[Any], list]:
+    """Take an integer :param:`n` and return a function that takes an iterable
+    object and returns a list of length :param:`n`.
+    
+    Args:
+        n: The number of elements in the tuple.
+    
+    Returns:
+        A function that takes an integer and returns a list of that integer
+        repeated n times.
+    """
+    def parse(x) -> list:
+        if isinstance(x, Iterable):
+            x = list(x)
+            if len(x) == 1:
+                x = list(itertools.repeat(x[0], n))
+        else:
+            x = list(itertools.repeat(x, n))
+        return x
+    
+    return parse
+
+
+to_1list = to_nlist(1)
+to_2list = to_nlist(2)
+to_3list = to_nlist(3)
+to_4list = to_nlist(4)
+to_5list = to_nlist(5)
+to_6list = to_nlist(6)
+
+
 def to_tuple(x: Any) -> tuple:
     """Convert an arbitrary value into a tuple."""
     if isinstance(x, list):
@@ -227,11 +270,14 @@ def to_ntuple(n: int) -> Callable[[Any], tuple]:
         A function that takes an integer and returns a tuple of that integer
         repeated n times.
     """
-    
     def parse(x) -> tuple:
         if isinstance(x, Iterable):
-            return tuple(x)
-        return tuple(itertools.repeat(x, n))
+            x = tuple(x)
+            if len(x) == 1:
+                x = tuple(itertools.repeat(x[0], n))
+        else:
+            x = tuple(itertools.repeat(x, n))
+        return x
     
     return parse
 

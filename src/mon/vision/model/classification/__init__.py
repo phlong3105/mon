@@ -5,4 +5,5 @@
 
 from __future__ import annotations
 
+import mon.vision.model.classification.base
 from mon.vision.model.classification.base import *

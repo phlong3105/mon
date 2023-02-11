@@ -8,6 +8,7 @@ computer vision.
 from __future__ import annotations
 
 import mon.vision.dataset.a2i2_haze
+import mon.vision.dataset.augment
 import mon.vision.dataset.base
 import mon.vision.dataset.cifar
 import mon.vision.dataset.gt_rain
@@ -20,6 +21,7 @@ import mon.vision.dataset.satehaze1k
 import mon.vision.dataset.sice
 import mon.vision.dataset.snow100k
 from mon.vision.dataset.a2i2_haze import *
+from mon.vision.dataset.augment import *
 from mon.vision.dataset.base import *
 from mon.vision.dataset.cifar import *
 from mon.vision.dataset.gt_rain import *

@@ -10,13 +10,9 @@ __all__ = [
 ]
 
 import munch
-from mon.vision.typing import (
-    ClassLabelsType, ConfigType, DictType, LossesType,
-    MetricsType, ModelPhaseType, OptimizersType, PathType, WeightsType,
-)
 from torch import nn
 
-from mon import core, coreml
+from mon import coreml
 from mon.vision import constant
 from mon.vision.model.enhancement import base
 
@@ -378,10 +374,6 @@ class HINet(base.ImageEnhancementModel):
             verbose=verbose,
             *args, **kwargs
         )
-    
-    @property
-    def cfg_dir(self) -> PathType:
-        return core.Path(__file__).resolve().parent / "cfg"
     
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""

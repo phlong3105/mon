@@ -51,6 +51,7 @@ dependencies:
       - einops            # A new flavour of deep learning operations.
       - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
       - lightning         #
+      - pytorch-lightning #
       - piqa              # PyTorch Image Quality Assessment package.
       - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
       - torch             # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
