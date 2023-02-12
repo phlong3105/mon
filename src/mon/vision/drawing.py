@@ -17,10 +17,10 @@ import numpy as np
 
 def draw_bbox(
     image     : np.ndarray,
-    bbox      : np.ndarray,
+    bbox      : np.ndarray | list,
     label     : int | str | None = None,
     color     : list[int] | None = None,
-    thickness : int              = 2,
+    thickness : int              = 1,
     line_type : int              = cv2.LINE_8,
     shift     : int              = 0,
     font_face : int              = cv2.FONT_HERSHEY_DUPLEX,
@@ -36,16 +36,20 @@ def draw_bbox(
         color: A color of the bounding box.
         thickness: The thickness of the rectangle border line in px. Thickness
             of -1 px will fill the rectangle shape by the specified color.
+            Defaults to 1.
         line_type: The type of the line. One of:
             - cv2.LINE_4 - 4-connected line.
             - cv2.LINE_8 - 8-connected line (default).
             - cv2.LINE_AA - antialiased line.
+            Defaults to cv2.LINE_8.
+        font_face: The font of the label's text. Defaults to
+            cv2.FONT_HERSHEY_DUPLEX.
+        font_scale: The scale of the label's text. Defaults to 0.8.
+        shift: The number of fractional bits in the point coordinates. Defaults
+            to 0.
         fill: Fill the region inside the bounding box with transparent color. A
             float value [0.0-1.0] indicates the transparency ratio. A True value
             means 0.5. Defaults to False.
-        font_face: The font of the label's text.
-        font_scale: The scale of the label's text.
-        shift: The number of fractional bits in the point coordinates.
     """
     color = color or [255, 255, 255]
     pt1   = (int(bbox[0]), int(bbox[1]))
@@ -110,33 +114,36 @@ def draw_trajectory(
     image     : np.ndarray,
     trajectory: np.ndarray | list,
     color     : list[int] | None = None,
-    thickness : int              = 2,
+    thickness : int              = 1,
     line_type : int              = cv2.LINE_8,
     point     : bool             = False,
     radius    : int              = 3,
-):
+) -> np.ndarray:
     """Draw a trajectory path on an image.
     
     Args:
         image: An image.
         trajectory: A 2-D array or list of points in [(x1, y1), ...] format.
         color: A color of the bounding box.
-        thickness: The thickness of the path in px.
+        thickness: The thickness of the path in px. Defaults to 1.
         line_type: The type of the line. One of:
             - cv2.LINE_4 - 4-connected line.
             - cv2.LINE_8 - 8-connected line (default).
             - cv2.LINE_AA - antialiased line.
+            Defaults to cv2.LINE_8.
         point: If True, draw each point along the trajectory path. Defaults to
             False.
         radius: The radius value of the point. Defaults to 3.
     """
     if isinstance(trajectory, list):
-        if not all(t.ndim == 1 and len(t) == 2 for t in trajectory):
+        if not all(len(t) == 2 for t in trajectory):
             raise TypeError(
                 f"trajectory must be a list of points in (x1, y1) format."
             )
         trajectory = np.array(trajectory)
-    trajectory = np.array(trajectory).reshape((1, 2)).astype(int)
+    
+    trajectory = np.array(trajectory).reshape((-1, 1, 2)).astype(int)
+    color      = color or [255, 255, 255]
     cv2.polylines(
         img       = image,
         pts       = [trajectory],
@@ -149,7 +156,7 @@ def draw_trajectory(
         for p in trajectory:
             cv2.circle(
                 img       = image,
-                center    = tuple(p.astype(int)),
+                center    = p[0],
                 radius    = radius,
                 thickness = -1,
                 color     = color

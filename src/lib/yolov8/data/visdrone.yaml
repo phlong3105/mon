@@ -1,0 +1,17 @@
+# VisDrone dataset
+
+# Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+path : data/a2i2-haze/
+train: [
+  extra/visdrone/train/images/,
+  extra/visdrone/val/images/,
+  extra/visdrone/testdev/images/
+]  # 8629
+val  : dry-run/2023/images/  # 60
+test : test/images/          # 50
+
+# number of classes
+nc: 1
+
+# class names
+names: ["vehicle"]

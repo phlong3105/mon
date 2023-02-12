@@ -94,11 +94,11 @@ if [ "$task" == "predict" ]; then
     --show \
     --save-txt \
     --save-conf
-  cd ../../script || exit
-  python prepare_a2i2_submission.py \
-    --image "../data/a2i2-haze/dry-run/2023/images/" \
-    --label "../run/predict/yolov8x-visdrone-a2i2-of-640/labels/" \
-    --output "../run/predict/yolov8x-visdrone-a2i2-of-640/labels-voc/" \
+  cd ../ug2 || exit
+  python prepare_ug2_submission.py \
+    --image "../../data/a2i2-haze/dry-run/2023/images/" \
+    --label "../../run/predict/yolov8x-visdrone-a2i2-of-640/labels/" \
+    --output "../../run/predict/yolov8x-visdrone-a2i2-of-640/labels-voc/" \
     --conf 0.8
 fi
 
