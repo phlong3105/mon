@@ -5,27 +5,39 @@
 
 from __future__ import annotations
 
-import argparse
-
+import click
 import cv2
 import numpy as np
 
 import mon
 
+_current_dir = mon.Path(__file__).absolute().parent
+
 
 # region Functions
 
-def main(args: dict):
+@click.command()
+@click.option("--image-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--from-format", default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
+@click.option("--to-format",   default="yolo", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
+@click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
+@click.option("--verbose",     is_flag=True)
+def convert_bbox(
+    image_dir  : mon.Path,
+    label_dir  : mon.Path,
+    output_dir : mon.Path,
+    from_format: str,
+    to_format  : str,
+    verbose    : bool
+):
     """Convert bounding boxes"""
-    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
-    assert args["label"] is not None and mon.Path(args["label"]).is_dir()
+    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert label_dir is not None and mon.Path(label_dir).is_dir()
     
-    from_format = args["from_format"]
-    to_format   = args["to_format"]
-    
-    image_dir   = mon.Path(args["image"])
-    label_dir   = mon.Path(args["label"])
-    output_dir  = args["output"] or image_dir.parent / "labels-yolo"
+    image_dir   = mon.Path(image_dir)
+    label_dir   = mon.Path(label_dir)
+    output_dir  = output_dir or image_dir.parent / "labels-yolo"
     output_dir  = mon.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -71,28 +83,7 @@ def main(args: dict):
 
 # region Main
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image",       type=str, default=mon.DATA_DIR/"a2i2-haze/dry-run/2023/images", help="Image directory.")
-    parser.add_argument("--label",       type=str, default=mon.DATA_DIR/"a2i2-haze/dry-run/2023/labels-voc", help="Bounding bbox directory.")
-    parser.add_argument("--from-format", type=str, default="voc", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
-    parser.add_argument("--to-format",   type=str, default="yolo", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
-    parser.add_argument("--output",      type=str, default=None, help="Output directory.")
-    parser.add_argument("--verbose",     action="store_true")
-    args = parser.parse_args()
-    return args
-
-
 if __name__ == "__main__":
-    args = vars(parse_args())
-    if args["from_format"] not in ["voc", "coco", "yolo"]:
-        raise ValueError
-    if args["to_format"] not in ["voc", "coco", "yolo"]:
-        raise ValueError
-    
-    if args["from_format"] == args["to_format"]:
-        pass
-    else:
-        main(args=args)
+    convert_bbox()
     
 # endregion

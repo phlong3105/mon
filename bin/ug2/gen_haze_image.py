@@ -7,9 +7,8 @@ detection models.
 
 from __future__ import annotations
 
-import argparse
-
 import albumentations as A
+import click
 import cv2
 
 import mon
@@ -19,13 +18,19 @@ _current_dir = mon.Path(__file__).absolute().parent
 
 # region Function
 
-def main(args: dict):
-    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
+@click.command()
+@click.option("--image-dir",  default=mon.DATA_DIR / "a2i2-haze/train/detection/hazefree/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--output-dir", default=mon.DATA_DIR / "a2i2-haze/train/detection/hazefree/images-haze", type=click.Path(exists=False), help="Output directory.")
+@click.option("--verbose",    is_flag=True)
+def gen_haze_image(
+    image_dir : mon.Path,
+    output_dir: mon.Path,
+    verbose   : bool
+):
+    assert image_dir is not None and mon.Path(image_dir).is_dir()
     
-    verbose    = args["verbose"]
-    
-    image_dir  = mon.Path(args["image"])
-    output_dir = args["output"] or image_dir.parent / f"{image_dir.stem}-haze"
+    image_dir  = mon.Path(image_dir)
+    output_dir = output_dir or image_dir.parent / f"{image_dir.stem}-haze"
     output_dir = mon.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -61,17 +66,7 @@ def main(args: dict):
 
 # region Main
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image",   default=mon.DATA_DIR / "a2i2-haze/train/detection/hazefree/images", help="Directory for images or video.")
-    parser.add_argument("--output",  default=mon.DATA_DIR / "a2i2-haze/train/detection/hazefree/images-haze", help="Output directory.")
-    parser.add_argument("--verbose", action="store_true")
-    args = parser.parse_args()
-    return args
-
-
 if __name__ == "__main__":
-    args = vars(parse_args())
-    main(args=args)
+    gen_haze_image()
 
 # endregion

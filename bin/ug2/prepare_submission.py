@@ -7,8 +7,7 @@ format.
 
 from __future__ import annotations
 
-import argparse
-
+import click
 import cv2
 import numpy as np
 
@@ -17,27 +16,25 @@ import mon
 _current_dir = mon.Path(__file__).absolute().parent
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image",  default="", help="Directory for images or video.")
-    parser.add_argument("--label",  default="", help="Directory for detection results.")
-    parser.add_argument("--output", default="", help="Output directory.")
-    parser.add_argument("--conf",   type=float, default=0.25, help="Object confidence threshold for detection.")
-    args = parser.parse_args()
-    return args
-
-
 # region Function
 
-def prepare_submission(args: dict):
-    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
-    assert args["label"] is not None and mon.Path(args["label"]).is_dir()
-    
-    conf        = args["conf"]
-    
-    image_dir   = mon.Path(args["image"])
-    label_dir   = mon.Path(args["label"])
-    output_dir  = args["output"] or image_dir.parent / "labels-voc"
+@click.command()
+@click.option("--image-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
+@click.option("--conf",        default=0.25, type=float, help="Object confidence threshold for detection.")
+def prepare_submission(
+    image_dir  : mon.Path,
+    label_dir  : mon.Path,
+    output_dir : mon.Path,
+    conf       : float
+):
+    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert label_dir is not None and mon.Path(label_dir).is_dir()
+        
+    image_dir   = mon.Path(image_dir)
+    label_dir   = mon.Path(label_dir)
+    output_dir  = output_dir or image_dir.parent / "labels-voc"
     output_dir  = mon.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -80,12 +77,7 @@ def prepare_submission(args: dict):
 
 # region Main
 
-def main():
-    args = vars(parse_args())
-    prepare_submission(args=args)
-
-
 if __name__ == "__main__":
-    main()
+    prepare_submission()
 
 # endregion
