@@ -78,7 +78,7 @@ See Also: :class:`ray.tune.integration.pytorch_lightning.TuneReportCallback`
 dataset = {
     "name"        : "a2i2-haze",       # Dataset/datamodule name.
     "split"       : None,              # 'train', 'test', 'predict' (None = load all).
-    "root"        : DATA_DIR / "...",  # The root directory of the dataset.
+    "root"        : DATA_DIR,          # The root directory of the dataset.
     "image_size"  : 256,               # Image size in HW format (for resizing).
     "classlabels" : None,              # A file containing all class definitions.
     "transform"   : A.Compose(         # Transformations performing on both the input and target. 
@@ -97,7 +97,7 @@ See Also: :class:`mon.coreml.data.dataset.Dataset`
 
 datamodule = {
     "name"        : "a2i2-haze",       # Dataset/datamodule name.
-    "root"        : DATA_DIR / "...",  # The root directory of the dataset.
+    "root"        : DATA_DIR,          # The root directory of the dataset.
     "image_size"  : 256,               # Image size in HW format (for resizing).
     "transform"   : A.Compose(         # Transformations performing on both the input and target.
         [

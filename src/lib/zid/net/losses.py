@@ -1,9 +1,8 @@
-import torch
-from torch import nn
-import numpy as np
-from .layers import bn, VarianceLayer, CovarianceLayer, GrayscaleLayer
-from .downsampler import * 
 from torch.nn import functional
+
+from zid.net.downsampler import *
+from zid.net.layers import CovarianceLayer, GrayscaleLayer, VarianceLayer
+from .layers import CovarianceLayer, GrayscaleLayer, VarianceLayer
 
 
 class StdLoss(nn.Module):
@@ -164,4 +163,3 @@ class YIQGNGCLoss(nn.Module):
         c = torch.mean(self.covar(x_g, y_g) ** 2)
         vv = torch.mean(self.var(x_g) * self.var(y_g))
         return c / vv
-

@@ -88,8 +88,8 @@ def visualize_bboxes(args: dict):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image",       type=str, default="../project/detpr/data/a2i2-haze/dry-run/2023/images", help="Image directory.")
-    parser.add_argument("--label",       type=str, default="../project/detpr/run/predict/yolov8x-visdrone-a2i2-of-640/labels-voc", help="Bounding bbox directory.")
+    parser.add_argument("--image",       type=str, default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", help="Image directory.")
+    parser.add_argument("--label",       type=str, default=mon.ROOT_DIR / "run/predict/yolov8x-visdrone-a2i2-of-640/labels-voc", help="Bounding bbox directory.")
     parser.add_argument("--bbox-format", type=str, default="voc", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
     parser.add_argument("--output",      type=str, default=None, help="Output directory.")
     parser.add_argument("--save-image",  default=True, action="store_true", help="Save image.")

@@ -4,8 +4,8 @@
 # To view a copy of this license, check out LICENSE.md
 import argparse
 import os
-import sys
 import random
+import sys
 
 import torch.autograd.profiler as profiler
 import wandb
@@ -14,21 +14,24 @@ import imaginaire.config
 from imaginaire.config import Config
 from imaginaire.utils.cudnn import init_cudnn
 from imaginaire.utils.dataset import get_train_and_val_dataloader
-from imaginaire.utils.distributed import init_dist, is_master, get_world_size
-from imaginaire.utils.distributed import master_only_print as print
+from imaginaire.utils.distributed import (
+    get_world_size, init_dist, is_master,
+    master_only_print as print,
+)
 from imaginaire.utils.gpu_affinity import set_affinity
-from imaginaire.utils.misc import slice_tensor
 from imaginaire.utils.logging import init_logging, make_logging_dir
-from imaginaire.utils.trainer import (get_model_optimizer_and_scheduler,
-                                      get_trainer, set_random_seed)
+from imaginaire.utils.misc import slice_tensor
+from imaginaire.utils.trainer import (
+    get_model_optimizer_and_scheduler,
+    get_trainer, set_random_seed,
+)
 
 sys.path.append(os.environ.get('SUBMIT_SCRIPTS', '.'))
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Training')
-    parser.add_argument('--config',
-                        help='Path to the training config file.', required=True)
+    parser.add_argument('--config', help='Path to the training config file.', required=True)
     parser.add_argument('--logdir', help='Dir for saving logs and models.')
     parser.add_argument('--checkpoint', default='', help='Checkpoint path.')
     parser.add_argument('--seed', type=int, default=2, help='Random seed.')

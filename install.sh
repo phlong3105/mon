@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Install:
+# Usage:
 # chmod +x install.sh
 # conda init bash
 # ./install.sh
@@ -8,7 +8,6 @@
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 root_dir=$current_dir
-# root_dir=$(dirname "$current_dir")
 
 # Add channels
 echo -e "\nAdding channels"
@@ -17,13 +16,9 @@ conda config --append channels nvidia
 conda config --append channels pytorch
 echo -e "... Done"
 
-# Install `mamba`
-echo -e "\nInstalling 'mamba':"
-conda install -c conda-forge mamba --y
-echo -e "... Done"
-
 # Update 'base' env
 echo -e "\nUpdating 'base' environment:"
+conda init bash
 conda update --a --y
 pip install --upgrade pip
 echo -e "... Done"
@@ -33,7 +28,7 @@ case "$OSTYPE" in
   linux*)
     echo -e "\nLinux / WSL"
     # Create `mon` env
-    env_yml_path="${current_dir}/linux.yml"
+    env_yml_path="${current_dir}/linux.yaml"
     if { conda env list | grep 'mon'; } >/dev/null 2>&1; then
       echo -e "\nUpdating 'mon' environment:"
       conda env update --name mon -f "${env_yml_path}"
@@ -55,7 +50,7 @@ case "$OSTYPE" in
     export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
     export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
     # Create `mon` env
-    env_yml_path="${current_dir}/mac.yml"
+    env_yml_path="${current_dir}/mac.yaml"
     if { conda env list | grep 'mon'; } >/dev/null 2>&1; then
       echo -e "\nUpdating 'mon' environment:"
       conda env update --name mon -f "${env_yml_path}"
@@ -74,7 +69,7 @@ case "$OSTYPE" in
   win*)
     echo -e "\nWindows"
     # Create `mon` env
-    env_yml_path="${current_dir}/linux.yml"
+    env_yml_path="${current_dir}/linux.yaml"
     if { conda env list | grep 'mon'; } >/dev/null 2>&1; then
       echo -e "\nUpdating 'mon' environment:"
       conda env update --name mon -f "${env_yml_path}"
@@ -108,7 +103,8 @@ case "$OSTYPE" in
 esac
 
 # Install 'mon' package
-conda activate mon
+conda init bash
+activate mon
 poetry install
 
 # Set environment variables
@@ -143,4 +139,3 @@ echo -e "... Done"
 
 # Cleanup everything
 conda clean --a --y
-conda activate mon

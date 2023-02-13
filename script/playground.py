@@ -14,6 +14,7 @@ import mon
 
 t = timeit.Timer("import mon")
 print(t.timeit(number=1000000))
+print(mon.ZOO_DIR)
 
 image = cv2.imread("lenna.png")
 bbox  = np.array([20, 20, 100, 100])

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from utils.image_io import np_to_torch
+from zid.utils.image_io import np_to_torch
 
 
 def get_noise(input_depth, method, spatial_size, noise_type='u', var=1. / 100):

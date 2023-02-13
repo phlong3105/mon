@@ -2,39 +2,15 @@
 
 echo "$HOSTNAME"
 
-task=$1
-machine=$HOSTNAME
-read -e -i "$task" -p "Task [install, train, test, predict]: " task
-# read -e -i "$machine" -p "Machine [pc, server]: " machine
-
 # Initialization
-cd "src/zid" || exit
+script_path=$(readlink -f "$0")
+current_dir=$(dirname "$script_path")
+root_dir=$(dirname "$current_dir")
+zid_dir="${root_dir}/src/lib/zid"
 
-# Install
-if [ "$task" == "install" ]; then
-  echo -e "\nInstalling"
-fi
+cd "${zid_dir}" || exit
 
-# Initialization
-conda activate mon
-cd "zid" || exit
+python rw_dehazing.py \
+  --image "${root_dir}/data/a2i2-haze/train/detection/haze/images" 
 
-# Train
-if [ "$task" == "train" ]; then
-  echo -e "\nTraining"
-  fi
-fi
-
-# Test
-if [ "$task" == "test" ]; then
-  echo -e "\nTesting"
-fi
-
-# Predict
-if [ "$task" == "predict" ]; then
-  echo -e "\nPredicting"
-  python rw_dehazing.py \
-    --image "../../../data/a2i2-haze/train/detection/haze/images" \
-fi
-
-cd ..
+cd "${root_dir}" || exit

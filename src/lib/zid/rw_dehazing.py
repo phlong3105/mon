@@ -1,7 +1,9 @@
+import sys
+sys.path.append("..")
+
 import argparse
 from collections import namedtuple
 
-import munch
 import torch.nn as nn
 from cv2.ximgproc import guidedFilter
 
@@ -13,6 +15,7 @@ from utils.dcp import get_atmosphere
 from utils.image_io import *
 from utils.imresize import np_imresize
 
+console      = mon.console
 DehazeResult = namedtuple("DehazeResult", ['learned', 't', 'a'])
 
 
@@ -156,14 +159,17 @@ class Dehaze(object):
 
          :return:
          """
-        print('Iteration %05d    Loss %f  %f\n' % (step, self.total_loss.item(), self.blur_out.item()), '\r', end='')
+        console.log('Iteration %05d    Loss %f  %f' % (step, self.total_loss.item(), self.blur_out.item()), '\r', end='')
 
     def finalize(self):
         self.final_t_map = np_imresize(self.current_result.t, output_shape=self.original_image.shape[1:])
         self.final_a = np_imresize(self.current_result.a, output_shape=self.original_image.shape[1:])
         mask_out_np = self.t_matting(self.final_t_map)
         post = np.clip((self.original_image - ((1 - mask_out_np) * self.final_a)) / mask_out_np, 0, 1)
-        save_image(self.image_name + "_run_final", post, self.output_path)
+        save_image(self.image_name + "-final", post, self.output_path)
+        save_image(self.image_name + "-t", self.final_t_map, self.output_path)
+        save_image(self.image_name + "-a", self.final_a, self.output_path)
+        save_image(self.image_name + "-mask", mask_out_np, self.output_path)
 
     def t_matting(self, mask_out_np):
         refine_t = guidedFilter(self.original_image.transpose(1, 2, 0).astype(np.float32),
@@ -174,14 +180,15 @@ class Dehaze(object):
             return np.array([np.clip(refine_t, 0, 1)])
 
 
-def dehaze(args: munch.Munch, num_iter: int = 500):
-    assert args.image is not None and mon.Path(args.image).is_dir()
-    image_dir = mon.Path(args.image)
-    if args.output is None:
-        output_dir = image_dir.parent / "dehaze/zid"
+def dehaze(args: dict, num_iter: int = 500):
+    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
+  
+    image_dir = mon.Path(args["image"])
+    if args["output"] is None:
+        output_dir = image_dir.parent / f"{image_dir.stem}-hazefree"
     else:
-        output_dir = mon.Path(args.dst)
-    mon.create_dirs(paths=[output_dir])
+        output_dir = mon.Path(args["output"])
+    output_dir.mkdir(parents=True, exist_ok=True)
     
     image_files = list(image_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
@@ -192,41 +199,26 @@ def dehaze(args: munch.Munch, num_iter: int = 500):
             total       = len(image_files),
             description = f"[bright_yellow] Dehazing"
         ):
-            name  = str(f.name)
-            image = prepare_hazy_image(name)
-            dh    = Dehaze(name, image, num_iter, clip=True, output_path=str(output_dir) + "/")
+            image = prepare_hazy_image(str(f))
+            dh    = Dehaze(str(f.stem), image, num_iter, clip=True, output_path=str(output_dir) + "/")
             dh.optimize()
             dh.finalize()
-            save_image(name + "_original", np.clip(image, 0, 1), dh.output_path)
+            # save_image(name + "_original", np.clip(image, 0, 1), dh.output_path)
 
 
 # region Main
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--image",
-        type    = str,
-        default = mon.DATA_DIR / "a2i2-haze/train/detection/haze/images",
-        help    = "Image directory."
-    )
-    parser.add_argument(
-        "--output",
-        type    = str,
-        default = None,
-        help    = "Output directory."
-    )
-    parser.add_argument(
-        "--verbose",
-        action = "store_true",
-        help   = "Display results."
-    )
+    parser.add_argument("--image",   type=str, default=mon.DATA_DIR / "a2i2-haze/train/detection/haze/images", help="Image directory.")
+    parser.add_argument("--output",  type=str, default=None, help="Output directory.")
+    parser.add_argument("--verbose", action="store_true", help="Display results.")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
-    args = munch.Munch.fromDict(vars(parse_args()))
+    args = vars(parse_args())
     dehaze(args=args, num_iter=500)
 
 

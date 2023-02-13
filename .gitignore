@@ -17,7 +17,4 @@ __pycache__/
 /.sync/
 /archive/
 /data/
-/project/*/data
-/project/*/run
 /run/
-/src/app/aic/

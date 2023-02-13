@@ -6,17 +6,7 @@ Created on Thu Jul 25 10:36:51 2019
 @author: lester
 """
 
-import os
-import sys
 import torch
-import argparse
-import numpy as np
-from torchvision.datasets import MNIST
-from torch.utils.data import DataLoader, TensorDataset
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import matplotlib
-
 
 
 class VAE(torch.nn.Module):
@@ -158,5 +148,3 @@ class Decoder(torch.nn.Module):
         data = self.de(data)
 
         return data
-
-

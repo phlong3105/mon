@@ -1,7 +1,4 @@
-import torch
-import torch.nn as nn
-from .layers import *
-import torch.nn.functional as F
+from zid.net.layers import *
 
 
 def skip(

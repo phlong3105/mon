@@ -37,30 +37,82 @@ classifiers   = [
     "Programming Language :: Python :: 3 :: Only",
 ]
 packages = [
-    { include="mon", from="src" },
+    { include="mon",  from="src"     },
+    { include="supr", from="src/app" },
+    { include="ug2",  from="src/app" },
 ]
-include  = []
+include  = [
+    "CHANGELOG.md",
+    "GUIDELINE.md",
+    "README.md",
+    "install.sh",
+    "linux.yaml",
+    "mac.yaml",
+]
 exclude  = []
 
 [tool.poetry.dependencies]
-python   = ">=3.10"
+python                = ">=3.10, <3.12"
+# # CUDA
+# pynvml                = "*"
+# # Documentation
+# markdown              = "*"
+# mkdocs                = "*"
+# mkdocstrings          = "*"
+# mkdocs-material       = "*"
+# sphinx                = "*"
+# sphinx-paramlinks     = "*"
+# # Image
+# albumentations        = "*"
+# ffmpeg-python         = "*"
+# opencv-python         = "*"
+# opencv-contrib-python = "*"
+# # Network
+# requests              = "*"
+# # Plot
+# matplotlib            = "*"
+# tensorboard           = "*"
+# # # PyTorch
+# einops                = "*"
+# flopco-pytorch        = "*"
+# lightning             = ">=1.9.1"
+# pytorch-lightning     = ">=1.9.1"
+# piqa                  = "*"
+# pyiqa                 = "*"
+# torch                 = "*"
+# torchaudio            = "*"
+# torchmetrics          = "*"
+# torchvision           = "*"
+# # Ray
+# ray                   = "*"
+# # Scientific
+# filterpy              = "*"
+# numpy                 = "*"
+# scipy                 = "*"
+# scikit-learn          = "*"
+# # Syntax
+# multipledispatch      = "*"
+# mypy                  = "*"
+# protobuf              = "*"
+# pyhumps               = "*"
+# PyYAML                = "*"
+# sortedcontainers      = "*"
+# typing-extensions     = "*"
+# validators            = "*"
+# xmltodict             = "*"
+# # UI
+# PyQt6                 = "*"
+# rich                  = "*"
+# tqdm                  = "*"
 
-[tool.poetry.group.lib.dependencies]
-"yolov8" = { path="src/lib/yolov8", develop=true }
-"zid"    = { path="src/lib/zid",    develop=true }
+[tool.poetry.group.dev]
+optional  = true
 
-[tool.poetry.group.supr]
-optional = true
-
-[tool.poetry.group.supr.dependencies]
-"supr"   = { path="src/supr", develop=true }
-
-[tool.poetry.group.ug2]
-optional = true
-
-[tool.poetry.group.ug2.dependencies]
-"ug2"    = { path="src/ug2", develop=true }
+[tool.poetry.group.dev.dependencies]
+mediapipe = "*"
+torchfile = "*"
 
 [build-system]
-requires      = ["poetry-core"]
+requires      = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
+# build-backend = "setuptools.build_meta"

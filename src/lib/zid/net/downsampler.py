@@ -1,7 +1,7 @@
 import torch.nn as nn
 
-from ..utils.image_io import *
-from ..utils.imresize import imresize
+from zid.utils.image_io import *
+from zid.utils.imresize import imresize
 
 
 class Downsampler(nn.Module):

@@ -16,8 +16,9 @@ fi
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 root_dir=$(dirname "$current_dir")
+yolov8_dir="${root_dir}/src/lib/yolov8"
 
-cd "${root_dir}/src/lib/yolov8" || exit
+cd "${yolov8_dir}" || exit
 
 # Train
 if [ "$task" == "train" ]; then
@@ -25,7 +26,7 @@ if [ "$task" == "train" ]; then
   if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
     python train.py \
       --task "detect" \
-      --model "weight/yolov8x-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
       --data "data/visdrone-a2i2.yaml" \
       --epochs 100 \
       --batch 8 \
@@ -41,7 +42,7 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "VSW-WS02" ]; then
     python train.py \
       --task "detect" \
-      --model "weight/yolov8x-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
       --data "data/visdrone-a2i2-of.yaml" \
       --epochs 100 \
       --batch 4 \
@@ -57,7 +58,7 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "vsw-ws03" ]; then
     python train.py \
       --task "detect" \
-      --model "weight/yolov8x-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
       --data "data/visdrone-a2i2.yaml" \
       --epochs 200 \
       --batch 4 \

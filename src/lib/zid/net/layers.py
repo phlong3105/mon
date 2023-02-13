@@ -1,9 +1,8 @@
-import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from .downsampler import Downsampler
-from ..utils.image_io import torch_to_np
+
+from zid.net.downsampler import Downsampler
 
 
 def weights_init(m):
