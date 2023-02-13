@@ -14,8 +14,8 @@
 git clone https://phlong3105@github.com/phlong3105/mon
 cd mon
 chmod +x install.sh
-conda init bash
-bash -i install.sh
+bash -i install.sh 
+(or just simply ./install.sh)
 ```
 
 ### Directory
@@ -23,11 +23,14 @@ bash -i install.sh
 mon                 # Root directory.
  |_ data            # Contains data.
  |_ docs            # Documentation.
- |_ pretrained      # Pretrained models weights.
- |_ snippet         # Useful snippets.
- |_ src				# Main source code.
- |_ tests           # Testing scripts.
- |_ third_party     # Third-party libraries.
+ |_ script          # Running scripts/mains.
+ |_ src				# Source root.
+ |	 |_ app
+ |	 |_ lib			# External libraries.
+ |   |_ mon			
+ |_ test            # Testing scripts.
+ |_ zoo 		    # Pretrained models weights.
+
 ```
 
 ## Cite

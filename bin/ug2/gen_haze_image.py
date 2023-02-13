@@ -14,10 +14,12 @@ import cv2
 
 import mon
 
+_current_dir = mon.Path(__file__).absolute().parent
+
 
 # region Function
 
-def gen_haze_image(args: dict):
+def main(args: dict):
     assert args["image"] is not None and mon.Path(args["image"]).is_dir()
     
     verbose    = args["verbose"]
@@ -70,6 +72,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = vars(parse_args())
-    gen_haze_image(args=args)
+    main(args=args)
 
 # endregion

@@ -15,7 +15,7 @@ import mon
 
 # region Functions
 
-def convert_bboxes(args: dict):
+def main(args: dict):
     """Convert bounding boxes"""
     assert args["image"] is not None and mon.Path(args["image"]).is_dir()
     assert args["label"] is not None and mon.Path(args["label"]).is_dir()
@@ -93,6 +93,6 @@ if __name__ == "__main__":
     if args["from_format"] == args["to_format"]:
         pass
     else:
-        convert_bboxes(args=args)
+        main(args=args)
     
 # endregion

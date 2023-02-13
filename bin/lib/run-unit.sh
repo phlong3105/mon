@@ -10,7 +10,8 @@ read -e -i "$task" -p "Task [install, train, test, predict]: " task
 # Initialization
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
-root_dir=$(dirname "$current_dir")
+parent_dir=$(dirname "$current_dir")
+root_dir=$(dirname "$parent_dir")
 unit_dir="${root_dir}/src/lib/unit"
 
 cd "${unit_dir}" || exit

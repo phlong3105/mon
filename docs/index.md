@@ -6,10 +6,10 @@
 
 ```shell
 git clone https://phlong3105@github.com/phlong3105/mon
-cd mon/install
+cd mon
 chmod +x install.sh
-conda init bash
 bash -i install.sh
+(or just simply ./install.sh)
 ```
 
 Or read the [advanced install guide](get-started/installation.md)

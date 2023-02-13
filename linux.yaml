@@ -63,6 +63,7 @@ dependencies:
       - scipy             # Scientific Library for Python.
       # Syntax
       - PyYAML            # YAML parser and emitter for Python.
+      - click             # Click is a Python package for creating beautiful command line interfaces.
       - multipledispatch  # Multiple dispatch.
       - mypy              # Optional static typing for Python.
       - protobuf          # Protocol Buffers - Google's data interchange format.

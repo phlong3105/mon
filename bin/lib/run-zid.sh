@@ -5,7 +5,8 @@ echo "$HOSTNAME"
 # Initialization
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
-root_dir=$(dirname "$current_dir")
+parent_dir=$(dirname "$current_dir")
+root_dir=$(dirname "$parent_dir")
 zid_dir="${root_dir}/src/lib/zid"
 
 cd "${zid_dir}" || exit

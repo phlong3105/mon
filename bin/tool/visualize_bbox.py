@@ -5,8 +5,7 @@
 
 from __future__ import annotations
 
-import argparse
-
+import click
 import cv2
 import numpy as np
 
@@ -15,18 +14,28 @@ import mon
 
 # region Function
 
-def visualize_bboxes(args: dict):
+@click.command()
+@click.option("--image-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--bbox-format", default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
+@click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
+@click.option("--save-image",  is_flag=True)
+@click.option("--verbose",     is_flag=True)
+def visualize_bbox(
+    image_dir  : mon.Path,
+    label_dir  : mon.Path,
+    output_dir : mon.Path,
+    bbox_format: str,
+    save_image : bool,
+    verbose    : bool
+):
     """Visualize bounding boxes on images."""
-    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
-    assert args["label"] is not None and mon.Path(args["label"]).is_dir()
+    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert label_dir is not None and mon.Path(label_dir).is_dir()
     
-    from_format = args["bbox_format"]
-    save_image  = args["save_image"]
-    verbose     = args["verbose"]
-    
-    image_dir   = mon.Path(args["image"])
-    label_dir   = mon.Path(args["label"])
-    output_dir  = args["output"] or label_dir.parent / "visualize"
+    image_dir   = mon.Path(image_dir)
+    label_dir   = mon.Path(label_dir)
+    output_dir  = output_dir or label_dir.parent / "visualize"
     output_dir  = mon.Path(output_dir)
     if save_image:
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -49,9 +58,9 @@ def visualize_bboxes(args: dict):
                 l = [x for x in l if len(x) >= 5]
                 b = np.array([list(map(float, x[1:])) for x in l])
                 
-                if from_format in ["coco"]:
+                if bbox_format in ["coco"]:
                     b = mon.bbox_xywh_to_xyxy(bbox=b)
-                elif from_format in ["yolo"]:
+                elif bbox_format in ["yolo"]:
                     b = mon.bbox_cxcywhn_to_xyxy(bbox=b, height=h, width=w)
                 
                 colors = mon.RGB.values()
@@ -86,23 +95,7 @@ def visualize_bboxes(args: dict):
 
 # region Main
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image",       type=str, default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", help="Image directory.")
-    parser.add_argument("--label",       type=str, default=mon.ROOT_DIR / "run/predict/yolov8x-visdrone-a2i2-of-640/labels-voc", help="Bounding bbox directory.")
-    parser.add_argument("--bbox-format", type=str, default="voc", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
-    parser.add_argument("--output",      type=str, default=None, help="Output directory.")
-    parser.add_argument("--save-image",  default=True, action="store_true", help="Save image.")
-    parser.add_argument("--verbose",     action="store_true")
-    args = parser.parse_args()
-    return args
-
-
 if __name__ == "__main__":
-    args = vars(parse_args())
-    if args["bbox_format"] not in ["voc", "coco", "yolo"]:
-        raise ValueError
-    
-    visualize_bboxes(args=args)
-    
+    visualize_bbox()
+
 # endregion

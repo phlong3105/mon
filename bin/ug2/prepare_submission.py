@@ -17,6 +17,16 @@ import mon
 _current_dir = mon.Path(__file__).absolute().parent
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image",  default="", help="Directory for images or video.")
+    parser.add_argument("--label",  default="", help="Directory for detection results.")
+    parser.add_argument("--output", default="", help="Output directory.")
+    parser.add_argument("--conf",   type=float, default=0.25, help="Object confidence threshold for detection.")
+    args = parser.parse_args()
+    return args
+
+
 # region Function
 
 def prepare_submission(args: dict):
@@ -70,18 +80,12 @@ def prepare_submission(args: dict):
 
 # region Main
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image",  default="", help="Directory for images or video.")
-    parser.add_argument("--label",  default="", help="Directory for detection results.")
-    parser.add_argument("--output", default="", help="Output directory.")
-    parser.add_argument("--conf",   type=float, default=0.25, help="Object confidence threshold for detection.")
-    args = parser.parse_args()
-    return args
+def main():
+    args = vars(parse_args())
+    prepare_submission(args=args)
 
 
 if __name__ == "__main__":
-    args = vars(parse_args())
-    prepare_submission(args=args)
+    main()
 
 # endregion

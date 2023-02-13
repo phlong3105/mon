@@ -15,7 +15,8 @@ fi
 # Initialization
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
-root_dir=$(dirname "$current_dir")
+parent_dir=$(dirname "$current_dir")
+root_dir=$(dirname "$parent_dir")
 yolov8_dir="${root_dir}/src/lib/yolov8"
 
 cd "${yolov8_dir}" || exit
