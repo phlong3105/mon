@@ -124,8 +124,8 @@ class SegLoss(Loss):
         # else:
         #     loss[1] += proto.sum() * 0
 
-        loss[0] *= self.hyp.bbox  # box gain
-        loss[1] *= self.hyp.bbox / batch_size  # seg gain
+        loss[0] *= self.hyp.box  # box gain
+        loss[1] *= self.hyp.box / batch_size  # seg gain
         loss[2] *= self.hyp.cls  # cls gain
         loss[3] *= self.hyp.dfl  # dfl gain
 

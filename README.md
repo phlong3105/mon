@@ -21,6 +21,7 @@ bash -i install.sh
 ### Directory
 ```text
 mon                 # Root directory.
+ |_ bin				# main() / Executable / CLI / Bash scripts
  |_ data            # Contains data.
  |_ docs            # Documentation.
  |_ script          # Running scripts/mains.
@@ -30,7 +31,6 @@ mon                 # Root directory.
  |   |_ mon			
  |_ test            # Testing scripts.
  |_ zoo 		    # Pretrained models weights.
-
 ```
 
 ## Cite

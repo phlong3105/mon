@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This script visualizes bounding boxes on images."""
+"""This script visualizes segmentation masks on images."""
 
 from __future__ import annotations
 
@@ -15,19 +15,19 @@ import mon
 # region Function
 
 @click.command()
-@click.option("--image-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
-@click.option("--label-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
-@click.option("--bbox-format", default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
-@click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
-@click.option("--save-image",  is_flag=True)
-@click.option("--verbose",     is_flag=True)
-def visualize_bbox(
-    image_dir  : mon.Path,
-    label_dir  : mon.Path,
-    output_dir : mon.Path,
-    bbox_format: str,
-    save_image : bool,
-    verbose    : bool
+@click.option("--image-dir",      default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",      default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--segment-format", default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Segmentation mask format.")
+@click.option("--output-dir",     default=None, type=click.Path(exists=False), help="Output directory.")
+@click.option("--save-image",     is_flag=True)
+@click.option("--verbose",        is_flag=True)
+def visualize_segment(
+    image_dir     : mon.Path,
+    label_dir     : mon.Path,
+    output_dir    : mon.Path,
+    segment_format: str,
+    save_image    : bool,
+    verbose       : bool
 ):
     """Visualize bounding boxes on images."""
     assert image_dir is not None and mon.Path(image_dir).is_dir()
@@ -58,9 +58,9 @@ def visualize_bbox(
                 l = [x for x in l if len(x) >= 5]
                 b = np.array([list(map(float, x[1:])) for x in l])
                 
-                if bbox_format in ["coco"]:
+                if segment_format in ["coco"]:
                     b = mon.bbox_xywh_to_xyxy(bbox=b)
-                elif bbox_format in ["yolo"]:
+                elif segment_format in ["yolo"]:
                     b = mon.bbox_cxcywhn_to_xyxy(bbox=b, height=h, width=w)
                 
                 colors = mon.RGB.values()
@@ -96,6 +96,6 @@ def visualize_bbox(
 # region Main
 
 if __name__ == "__main__":
-    visualize_bbox()
+    visualize_segment()
 
 # endregion

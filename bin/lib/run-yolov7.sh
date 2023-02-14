@@ -33,7 +33,8 @@ fi
 # Initialization
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
-root_dir=$(dirname "$current_dir")
+bin_dir=$(dirname "$current_dir")
+root_dir=$(dirname "$bin_dir")
 
 cd "${root_dir}/src/lib/yolov7" || exit
 

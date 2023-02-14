@@ -37,7 +37,6 @@ class Camera(ABC):
         dataset: str,
         name   : str,
         id_    : Union[int, str] = uuid.uuid4().int,
-        *args, **kwargs
     ):
         super().__init__()
         if dataset is None:

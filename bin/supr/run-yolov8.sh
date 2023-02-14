@@ -81,21 +81,23 @@ fi
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python predict.py \
-    --task "detect" \
-    --model "${root_dir}/run/train/yolov8x-visdrone-a2i2-of-640/weights/best.pt" \
-    --project "${root_dir}/run/predict" \
-    --name "yolov8x-visdrone-a2i2-of-640" \
-    --source "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
+    --task "segment" \
+    --model "${root_dir}/zoo/yolov8/yolov8x-seg-coco.pt" \
+    --data "data/coco.yaml" \
+    --project "${root_dir}/data/aic23-checkout/run/" \
+    --name "testA_1" \
+    --source "${root_dir}/data/aic23-checkout/run/testA_1/images/" \
     --imgsz 640 \
-    --conf 0.0001 \
+    --conf 0.55 \
     --iou 0.5 \
     --max-det 500 \
-    --augment \
-    --device "cpu" \
+    --device 0 \
     --exist-ok \
-    --show \
+    --save \
     --save-txt \
-    --save-conf
+    --save-conf \
+    --overlap-mask \
+    --classes 0
 fi
 
 cd "${root_dir}" || exist

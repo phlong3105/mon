@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This script converts bounding boxes to YOLO's format."""
+"""This script converts bounding boxes' format."""
 
 from __future__ import annotations
 

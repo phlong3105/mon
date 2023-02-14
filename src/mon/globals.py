@@ -12,13 +12,14 @@ Notes:
 from __future__ import annotations
 
 __all__ = [
-    "ACCELERATORS", "AppleRGB", "BBoxFormat", "BasicRGB", "BorderType",
-    "CALLBACKS", "ROOT_DIR", "DATAMODULES", "DATASETS", "DATA_DIR",
-    "DISTANCES", "FILE_HANDLERS", "IMG_MEAN", "IMG_STD", "ImageFormat",
-    "InterpolationMode", "LAYERS", "LOGGERS", "LOSSES", "LR_SCHEDULERS",
-    "METRICS", "MODELS", "MemoryUnit", "ModelPhase", "OPTIMIZERS",
-    "PaddingMode", "RGB", "Reduction", "SOURCE_DIR", "STRATEGIES",
-    "TRANSFORMS", "VideoFormat", "ZOO_DIR",
+    "ACCELERATORS", "AppleRGB", "BBoxFormat", "BIN_DIR", "BasicRGB",
+    "BorderType", "CALLBACKS", "DATAMODULES", "DATASETS", "DATA_DIR",
+    "DISTANCES", "DOCS_DIR", "FILE_HANDLERS", "IMG_MEAN", "IMG_STD",
+    "ImageFormat", "InterpolationMode", "LAYERS", "LOGGERS", "LOSSES",
+    "LR_SCHEDULERS", "METRICS", "MODELS", "MemoryUnit", "ModelPhase",
+    "OPTIMIZERS", "PaddingMode", "RGB", "ROOT_DIR", "RUN_DIR", "Reduction",
+    "SOURCE_DIR", "STRATEGIES", "TEST_DIR", "TRANSFORMS", "VideoFormat",
+    "ZOO_DIR",
 ]
 
 import os
@@ -34,6 +35,10 @@ _current_file = pathlib.Path(__file__).absolute()
 PACKAGE_DIR   = _current_file.parents[0]
 SOURCE_DIR    = _current_file.parents[1]
 ROOT_DIR      = _current_file.parents[2]
+BIN_DIR       = ROOT_DIR / "bin"
+DOCS_DIR      = ROOT_DIR / "docs"
+RUN_DIR       = ROOT_DIR / "run"
+TEST_DIR      = ROOT_DIR / "test"
 
 ZOO_DIR = PACKAGE_DIR / "zoo"
 if not ZOO_DIR.is_dir():

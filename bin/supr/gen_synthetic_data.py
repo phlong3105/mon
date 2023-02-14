@@ -5,11 +5,11 @@
 
 from __future__ import annotations
 
-import argparse
 import os
 import random
 from typing import Any
 
+import click
 import cv2
 import numpy as np
 from joblib import delayed, Parallel
@@ -160,40 +160,33 @@ def random_patch_image_box(
     canvas = mon.adjust_gamma(image=canvas, gamma=random.uniform(gamma[0], gamma[1]))
     return canvas, box
 
-# endregion
 
-
-# region Main
-
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--image",             type=str, default=mon.DATA_DIR, help="Image directory.")
-    parser.add_argument("--background",        type=str, default=mon.DATA_DIR, help="Background image directory.")
-    parser.add_argument("--patches-per-image", type=int, default=7, help="Number of patches to place on an image.")
-    parser.add_argument("--output",            type=str, default=mon.DATA_DIR, help="Output directory.")
-    parser.add_argument("--bbox-format",       type=str, default="yolo", help="Bounding bbox format: coco (xywh), voc (xyxy), yolo (cxcywhn).")
-    parser.add_argument("--verbose",           action="store_true")
-    args = parser.parse_args()
-    return args
-
-# endregion
-
-
-# region Main
-
-if __name__ == "__main__":
-    args = parse_args()
-
-    assert args.image is not None and mon.Path(args.image).is_dir()
-    assert args.background is not None and mon.Path(args.background).is_dir()
-    assert args.label is not None and mon.Path(args.label).is_dir()
+@click.command()
+@click.option("--image-dir",         default=mon.DATA_DIR, type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",         default=mon.DATA_DIR, type=click.Path(exists=True), help="Binary mask directory.")
+@click.option("--background-dir",    default=mon.DATA_DIR, type=click.Path(exists=True), help="Background image directory.")
+@click.option("--patches-per-image", default=7, type=int, help="Number of patches to place on an image.")
+@click.option("--output-dir",        default=mon.DATA_DIR, type=click.Path(exists=False), help="Output directory.")
+@click.option("--bbox-format",       default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
+@click.option("--verbose",           is_flag=True)
+def gen_synthetic_image(
+    image_dir        : mon.Path,
+    label_dir        : mon.Path,
+    background_dir   : mon.Path,
+    patches_per_image: int,
+    output_dir       : mon.Path,
+    bbox_format      : str,
+    verbose          : bool
+):
+    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert background_dir is not None and mon.Path(background_dir).is_dir()
+    assert label_dir is not None and mon.Path(label_dir).is_dir()
     
-    bbox_format        = args.bbox_format
-    image_dir          = mon.Path(args.image)
-    background_dir     = mon.Path(args.background)
-    synthetic_dir      = args.output or image_dir.parent / "synthetic"
+    image_dir          = mon.Path(image_dir)
+    background_dir     = mon.Path(background_dir)
+    synthetic_dir      = output_dir or image_dir.parent / "synthetic"
     synthetic_dir      = mon.Path(synthetic_dir)
-    synthetic_bbox_dir = args.output or image_dir.parent / f"synthetic-bboxes-{bbox_format}"
+    synthetic_bbox_dir = output_dir or image_dir.parent / f"synthetic-bboxes-{bbox_format}"
     synthetic_bbox_dir = mon.Path(synthetic_bbox_dir)
     synthetic_dir.mkdir(parents=True, exist_ok=True)
     
@@ -221,7 +214,7 @@ if __name__ == "__main__":
     
     # Generate train images and labels for training YOLO models
     with mon.get_progress_bar() as pbar:
-        patches_per_image = int(args.patches_per_image)
+        patches_per_image = int(patches_per_image)
         item_idx = 0
         total    = math.floor(len(image_files) / patches_per_image)
         task     = pbar.add_task(f"[bright_yellow]Generating data", total=total)
@@ -272,3 +265,13 @@ if __name__ == "__main__":
         Parallel(n_jobs=os.cpu_count(), require="sharedmem")(
             delayed(patch_image)(i) for i in range(total)
         )
+    
+# endregion
+
+
+# region Main
+
+if __name__ == "__main__":
+    gen_synthetic_image()
+
+# endregion

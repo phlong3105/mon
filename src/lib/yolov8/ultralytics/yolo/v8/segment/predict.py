@@ -1,11 +1,8 @@
 # Ultralytics YOLO 🚀, GPL-3.0 license
 
-import sys
-
 import torch
-
 from ultralytics.yolo.engine.results import Results
-from ultralytics.yolo.utils import DEFAULT_CFG, ROOT, ops
+from ultralytics.yolo.utils import DEFAULT_CFG, ops, ROOT
 from ultralytics.yolo.utils.plotting import colors, save_one_box
 from ultralytics.yolo.v8.detect.predict import DetectionPredictor
 

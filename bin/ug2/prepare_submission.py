@@ -19,10 +19,10 @@ _current_dir = mon.Path(__file__).absolute().parent
 # region Function
 
 @click.command()
-@click.option("--image-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
-@click.option("--label-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
-@click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
-@click.option("--conf",        default=0.25, type=float, help="Object confidence threshold for detection.")
+@click.option("--image-dir",  default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",  default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--output-dir", default=None, type=click.Path(exists=False), help="Output directory.")
+@click.option("--conf",       default=0.25, type=float, help="Object confidence threshold for detection.")
 def prepare_submission(
     image_dir  : mon.Path,
     label_dir  : mon.Path,

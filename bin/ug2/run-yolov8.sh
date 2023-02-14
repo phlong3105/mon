@@ -96,6 +96,12 @@ if [ "$task" == "predict" ]; then
     --show \
     --save-txt \
     --save-conf
+  cd "${root_dir}/src/ug2" || exit
+  python prepare_ug2_submission.py \
+    --image "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
+    --label "${root_dir}/run/predict/yolov8x-visdrone-a2i2-of-640/labels/" \
+    --output "${root_dir}/run/predict/yolov8x-visdrone-a2i2-of-640/labels-voc/" \
+    --conf 0.8
 fi
 
 cd "${root_dir}" || exist
