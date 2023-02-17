@@ -11,13 +11,15 @@ import os
 import sys
 import traceback
 
-from saicinpainting.evaluation.utils import move_to_device
 from saicinpainting.evaluation.refinement import refine_predict
+from saicinpainting.evaluation.utils import move_to_device
+
 os.environ['OMP_NUM_THREADS'] = '1'
 os.environ['OPENBLAS_NUM_THREADS'] = '1'
 os.environ['MKL_NUM_THREADS'] = '1'
 os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
 os.environ['NUMEXPR_NUM_THREADS'] = '1'
+os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 import cv2
 import hydra
@@ -41,7 +43,7 @@ def main(predict_config: OmegaConf):
         register_debug_signal_handlers()  # kill -10 <pid> will result in traceback dumped into log
 
         device = torch.device(predict_config.device)
-
+        
         train_config_path = os.path.join(predict_config.model.path, 'config.yaml')
         with open(train_config_path, 'r') as f:
             train_config = OmegaConf.create(yaml.safe_load(f))
@@ -49,11 +51,9 @@ def main(predict_config: OmegaConf):
         train_config.training_model.predict_only = True
         train_config.visualizer.kind = 'noop'
 
-        out_ext = predict_config.get('out_ext', '.png')
-
-        checkpoint_path = os.path.join(predict_config.model.path, 
-                                       'models', 
-                                       predict_config.model.checkpoint)
+        out_ext = predict_config.get('out_ext', '.jpg')
+        
+        checkpoint_path = os.path.join(predict_config.model.path, 'models', predict_config.model.checkpoint)
         model = load_checkpoint(train_config, checkpoint_path, strict=False, map_location='cpu')
         model.freeze()
         if not predict_config.get('refine', False):
@@ -91,6 +91,8 @@ def main(predict_config: OmegaConf):
             cur_res = np.clip(cur_res * 255, 0, 255).astype('uint8')
             cur_res = cv2.cvtColor(cur_res, cv2.COLOR_RGB2BGR)
             cv2.imwrite(cur_out_fname, cur_res)
+            if predict_config.get('verbose', False):
+                cv2.imshow("Inpainting", cur_res)
 
     except KeyboardInterrupt:
         LOGGER.warning('Interrupted by user')

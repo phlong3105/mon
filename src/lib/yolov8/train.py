@@ -26,7 +26,7 @@ _current_dir = mon.Path(__file__).absolute().parent
 @click.option("--name",            default="exp", type=str, help="Experiment name.")
 @click.option("--epochs",          default=100, type=int, help="Number of epochs to train for.")
 @click.option("--batch",           default=-1, type=int, help="Number of images per batch (-1 for AutoBatch).")
-@click.option("--imgsz",           default=1280, type=int, nargs='2', help="Size of input images as integer or w,h.")
+@click.option("--imgsz",           default=1280, type=int, help="Size of input images as integer or w,h.")
 @click.option("--patience",        default=50, type=int, help="Epochs to wait for no observable improvement for early stopping of training.")
 @click.option("--workers",         default=8, type=int, help="Number of worker threads for data loading (per RANK if DDP).")
 @click.option("--device",          default="cpu", help="Device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu.")

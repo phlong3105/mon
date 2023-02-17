@@ -12,9 +12,9 @@ Notes:
 from __future__ import annotations
 
 __all__ = [
-    "ACCELERATORS", "AppleRGB", "BBoxFormat", "BIN_DIR", "BasicRGB",
-    "BorderType", "CALLBACKS", "DATAMODULES", "DATASETS", "DATA_DIR",
-    "DISTANCES", "DOCS_DIR", "FILE_HANDLERS", "IMG_MEAN", "IMG_STD",
+    "ACCELERATORS", "AppleRGB", "ShapeCode", "BBoxFormat", "BIN_DIR",
+    "BasicRGB", "BorderType", "CALLBACKS", "DATAMODULES", "DATASETS",
+    "DATA_DIR", "DISTANCES", "DOCS_DIR", "FILE_HANDLERS", "IMG_MEAN", "IMG_STD",
     "ImageFormat", "InterpolationMode", "LAYERS", "LOGGERS", "LOSSES",
     "LR_SCHEDULERS", "METRICS", "MODELS", "MemoryUnit", "ModelPhase",
     "OPTIMIZERS", "PaddingMode", "RGB", "ROOT_DIR", "RUN_DIR", "Reduction",
@@ -389,7 +389,7 @@ class Reduction(enum.Enum):
         return None
 
 
-# Bounding Box
+# Geometry
 
 class BBoxFormat(enum.Enum):
     """Bounding box formats.
@@ -401,29 +401,38 @@ class BBoxFormat(enum.Enum):
         height_norm = absolute_height / image_height
     """
     
-    CXCYWHN = "yolo"
-    XYWH    = "coco"
     XYXY    = "pascal_voc"
+    XYWH    = "coco"
+    CXCYWHN = "yolo"
     XYXYN   = "albumentations"
+    VOC     = "pascal_voc"
+    COCO    = "coco"
+    YOLO    = "yolo"
     
     @classmethod
     def str_mapping(cls) -> dict[str, BBoxFormat]:
         """Returns a dictionary mapping strings to enum."""
         return {
-            "yolo"          : cls.CXCYWHN,
-            "coco"          : cls.XYWH,
-            "pascal_voc"    : cls.XYXY,
+            "xyxy"          : cls.XYXY,
+            "xywh"          : cls.XYWH,
+            "cxcyn"         : cls.CXCYWHN,
             "albumentations": cls.XYXYN,
+            "pascal_voc"    : cls.VOC,
+            "coco"          : cls.COCO,
+            "yolo"          : cls.YOLO,
         }
     
     @classmethod
     def int_mapping(cls) -> dict[int, BBoxFormat]:
         """Returns a dictionary mapping integers to enum."""
         return {
-            0: cls.CXCYWHN,
+            0: cls.XYXY,
             1: cls.XYWH,
-            2: cls.XYXY,
+            2: cls.CXCYWHN,
             3: cls.XYXYN,
+            4: cls.VOC,
+            5: cls.COCO,
+            6: cls.YOLO,
         }
     
     @classmethod
@@ -455,6 +464,96 @@ class BBoxFormat(enum.Enum):
             return cls.from_int(value=value)
         return None
 
+
+class ShapeCode(enum.Enum):
+    """Shape conversion code."""
+    
+    # Bounding box
+    SAME       = 0
+    XYXY2XYWH  = 1
+    XYXY2CXCYN = 2
+    XYWH2XYXY  = 3
+    XYWH2CXCYN = 4
+    CXCYN2XYXY = 5
+    CXCYN2XYWH = 6
+    VOC2COCO   = 7
+    VOC2YOLO   = 8
+    COCO2VOC   = 9
+    COCO2YOLO  = 10
+    YOLO2VOC   = 11
+    YOLO2COCO  = 12
+    
+    @classmethod
+    def str_mapping(cls) -> dict[str, ShapeCode]:
+        """Returns a dictionary mapping strings to enum."""
+        return {
+            "same"         : cls.SAME,
+            "xyxy_to_xywh" : cls.XYXY2XYWH,
+            "xyxy_to_cxcyn": cls.XYXY2CXCYN,
+            "xywh_to_xyxy" : cls.XYWH2XYXY,
+            "xywh_to_cxcyn": cls.XYWH2CXCYN,
+            "cxcyn_to_xyxy": cls.CXCYN2XYXY,
+            "cxcyn_to_xywh": cls.CXCYN2XYWH,
+            "voc_to_coco"  : cls.VOC2COCO,
+            "voc_to_yolo"  : cls.VOC2YOLO,
+            "coco_to_voc"  : cls.COCO2VOC,
+            "coco_to_yolo" : cls.COCO2YOLO,
+            "yolo_to_voc"  : cls.YOLO2VOC,
+            "yolo_to_coco" : cls.YOLO2COCO,
+        }
+    
+    @classmethod
+    def int_mapping(cls) -> dict[int, ShapeCode]:
+        """Returns a dictionary mapping integers to enum."""
+        return {
+            0 : cls.SAME,
+            1 : cls.XYXY2XYWH,
+            2 : cls.XYXY2CXCYN,
+            3 : cls.XYWH2XYXY,
+            4 : cls.XYWH2CXCYN,
+            5 : cls.CXCYN2XYXY,
+            6 : cls.CXCYN2XYWH,
+            7 : cls.VOC2COCO,
+            8 : cls.VOC2YOLO,
+            9 : cls.COCO2VOC,
+            10: cls.COCO2YOLO,
+            11: cls.YOLO2VOC,
+            12: cls.YOLO2COCO,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> ShapeCode:
+        """Converts a string to an enum."""
+        if value.lower() not in cls.str_mapping():
+            parts = value.split("_to_")
+            if parts[0] == parts[1]:
+                return cls.SAME
+            else:
+                raise ValueError(
+                    f"value must be a valid enum key, but got {value.lower()}."
+                )
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> ShapeCode:
+        """Convert an integer to an enum."""
+        if value not in cls.int_mapping():
+            raise ValueError(
+                f"value must be a valid enum key, but got {value}."
+            )
+        return cls.int_mapping()[value]
+    
+    @classmethod
+    def from_value(cls, value: Any) -> ShapeCode | None:
+        """Convert an arbitrary value to an enum."""
+        if isinstance(value, ShapeCode):
+            return value
+        elif isinstance(value, str):
+            return cls.from_str(value=value)
+        elif isinstance(value, int):
+            return cls.from_int(value=value)
+        return None
+    
 
 # Image
 

@@ -2,11 +2,12 @@ import glob
 import os
 
 import cv2
-import PIL.Image as Image
 import numpy as np
-
-from torch.utils.data import Dataset
+import PIL.Image as Image
 import torch.nn.functional as F
+from torch.utils.data import Dataset
+
+import mon
 
 
 def load_image(fname, mode='RGB', return_orig=False):
@@ -58,7 +59,7 @@ def scale_image(img, factor, interpolation=cv2.INTER_AREA):
 class InpaintingDataset(Dataset):
     def __init__(self, datadir, img_suffix='.jpg', pad_out_to_modulo=None, scale_factor=None):
         self.datadir = datadir
-        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.datadir, '**', '*mask*.png'), recursive=True)))
+        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.datadir, '**', '*mask*.jpg'), recursive=True)))
         self.img_filenames = [fname.rsplit('_mask', 1)[0] + img_suffix for fname in self.mask_filenames]
         self.pad_out_to_modulo = pad_out_to_modulo
         self.scale_factor = scale_factor
@@ -82,11 +83,69 @@ class InpaintingDataset(Dataset):
 
         return result
 
+
+class InpaintingVideoDataset(Dataset):
+    def __init__(
+        self,
+        video_file,
+        label_file,
+        pad_out_to_modulo = None,
+        scale_factor      = None,
+        dilate            = 7,
+        *args,
+        **kwargs
+    ):
+        assert mon.Path(video_file).is_video_file()
+        assert mon.Path(label_file).is_video_file()
+        self.video_file = mon.Path(video_file)
+        self.label_file = mon.Path(label_file)
+        
+        self.video_cap = cv2.VideoCapture(str(self.video_file))
+        self.label_cap = cv2.VideoCapture(str(self.label_file))
+        self.video_length = int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.label_length = int(self.label_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        assert self.video_length == self.label_length, f"{self.video_length} != {self.label_length}"
+        
+        self.pad_out_to_modulo = pad_out_to_modulo
+        self.scale_factor      = scale_factor
+        self.kernel = np.ones((dilate, dilate), np.uint8) if dilate >= 2 else None
+
+    def __len__(self):
+        return self.video_length
+
+    def __getitem__(self, i):
+        success, image = self.video_cap.read()
+        success, mask  = self.label_cap.read()
+        
+        if self.kernel is not None:
+            mask = cv2.dilate(mask, self.kernel, iterations=1)
+
+        image  = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        mask   = cv2.cvtColor(mask,  cv2.COLOR_BGR2GRAY)
+        
+        if image.ndim == 3:
+            image = np.transpose(image, (2, 0, 1))
+            image = image.astype('float32') / 255
+            
+        result = dict(image=image, mask=mask[None, ...])
+
+        if self.scale_factor is not None:
+            result['image'] = scale_image(result['image'], self.scale_factor)
+            result['mask'] = scale_image(result['mask'], self.scale_factor, interpolation=cv2.INTER_NEAREST)
+
+        if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
+            result['unpad_to_size'] = result['image'].shape[1:]
+            result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
+            result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+        
+        return result
+    
+
 class OurInpaintingDataset(Dataset):
     def __init__(self, datadir, img_suffix='.jpg', pad_out_to_modulo=None, scale_factor=None):
         self.datadir = datadir
-        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.datadir, 'mask', '**', '*mask*.png'), recursive=True)))
-        self.img_filenames = [os.path.join(self.datadir, 'img', os.path.basename(fname.rsplit('-', 1)[0].rsplit('_', 1)[0]) + '.png') for fname in self.mask_filenames]
+        self.mask_filenames = sorted(list(glob.glob(os.path.join(self.datadir, 'mask', '**', '*mask*.jpg'), recursive=True)))
+        self.img_filenames = [os.path.join(self.datadir, 'img', os.path.basename(fname.rsplit('-', 1)[0].rsplit('_', 1)[0]) + '.jpg') for fname in self.mask_filenames]
         self.pad_out_to_modulo = pad_out_to_modulo
         self.scale_factor = scale_factor
 
@@ -106,6 +165,7 @@ class OurInpaintingDataset(Dataset):
             result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
 
         return result
+
 
 class PrecomputedInpaintingResultsDataset(InpaintingDataset):
     def __init__(self, datadir, predictdir, inpainted_suffix='_inpainted.jpg', **kwargs):

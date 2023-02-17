@@ -43,10 +43,10 @@ dependencies:
       # PyTorch
       - einops            # A new flavour of deep learning operations.
       - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
-      - lightning=>1.9.1  #
+      - lightning=>1.9.2  #
       - piqa              # PyTorch Image Quality Assessment package.
       - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
-      - pytorch-lightning>=1.9.1 #
+      - pytorch-lightning>=1.9.2 #
       - torch             # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio        # Simple audio I/O for pytorch.
       - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
@@ -56,13 +56,13 @@ dependencies:
       # Scientific
       - filterpy          # Kalman filters and other optimal and non-optimal estimation filters in Python.
       - numpy             # The fundamental package for scientific computing with Python.
+      - scikit-image      # Image processing in Python.
       - scikit-learn      # A set of python modules for machine learning and data mining.
       - scipy             # Scientific Library for Python.
       # Syntax
       - PyYAML            # YAML parser and emitter for Python.
       - click             # Click is a Python package for creating beautiful command line interfaces.
       - multipledispatch  # Multiple dispatch.
-      - mypy              # Optional static typing for Python.
       - protobuf          # Protocol Buffers - Google's data interchange format.
       - pyhumps           # Convert strings (and dictionary keys) between snake case, camel case and pascal case in Python.
       - sortedcontainers  # Python Sorted Container Types: SortedList, SortedDict, and SortedSet.

@@ -6,11 +6,13 @@
 from __future__ import annotations
 
 __all__ = [
-    "bbox_cxcywhn_to_xywh", "bbox_cxcywhn_to_xyxy", "bbox_cxcywhn_to_xyxyn",
-    "bbox_xywh_to_cxcywhn", "bbox_xywh_to_xyxy", "bbox_xywh_to_xyxyn",
-    "bbox_xyxy_to_cxcywhn", "bbox_xyxy_to_xywh", "bbox_xyxy_to_xywh",
-    "bbox_xyxy_to_xyxyn", "bbox_xyxyn_to_cxcywhn", "bbox_xyxyn_to_xywh",
-    "bbox_xyxyn_to_xyxy", "get_bbox_area", "get_bbox_center",
+    "bbox_coco_to_voc", "bbox_coco_to_yolo", "bbox_cxcywhn_to_xywh",
+    "bbox_cxcywhn_to_xyxy", "bbox_cxcywhn_to_xyxyn", "bbox_voc_to_coco",
+    "bbox_voc_to_yolo", "bbox_xywh_to_cxcywhn", "bbox_xywh_to_xyxy",
+    "bbox_xywh_to_xyxyn", "bbox_xyxy_to_cxcywhn", "bbox_xyxy_to_xywh",
+    "bbox_xyxy_to_xywh", "bbox_xyxy_to_xyxyn", "bbox_xyxyn_to_cxcywhn",
+    "bbox_xyxyn_to_xywh", "bbox_xyxyn_to_xyxy", "bbox_yolo_to_coco",
+    "bbox_yolo_to_voc", "convert_bbox", "get_bbox_area", "get_bbox_center",
     "get_bbox_corners", "get_bbox_corners_points",
     "get_bbox_intersection_union", "get_bbox_iou", "get_enclosing_bbox",
     "get_single_bbox_iou",
@@ -19,6 +21,7 @@ __all__ = [
 import numpy as np
 import torch
 
+from mon.globals import ShapeCode
 from mon.vision import image
 
 
@@ -332,6 +335,38 @@ def bbox_xyxyn_to_xyxy(bbox: np.ndarray, height: int, width: int) -> np.ndarray:
     bbox = np.stack((x1, y1, x2, y2), axis=-1)
     return bbox
 
+
+bbox_coco_to_voc  = bbox_xywh_to_xyxy
+bbox_coco_to_yolo = bbox_xywh_to_cxcywhn
+bbox_voc_to_coco  = bbox_xyxy_to_xywh
+bbox_voc_to_yolo  = bbox_xyxy_to_cxcywhn
+bbox_yolo_to_coco = bbox_cxcywhn_to_xywh
+bbox_yolo_to_voc  = bbox_cxcywhn_to_xyxy
+
+
+def convert_bbox(
+    bbox  : np.ndarray,
+    code  : ShapeCode | int,
+    height: int | None = None,
+    width : int | None = None
+) -> np.ndarray:
+    """Convert bounding box."""
+    code = ShapeCode.from_value(code)
+    match code:
+        case ShapeCode.VOC2COCO | ShapeCode.XYXY2XYWH:
+            return bbox_voc_to_coco(bbox=bbox)
+        case ShapeCode.VOC2YOLO | ShapeCode.XYXY2CXCYN:
+            return bbox_voc_to_yolo(bbox=bbox, height=height, width=width)
+        case ShapeCode.COCO2VOC | ShapeCode.XYWH2XYXY:
+            return bbox_coco_to_voc(bbox=bbox)
+        case ShapeCode.COCO2YOLO | ShapeCode.XYWH2CXCYN:
+            return bbox_coco_to_yolo(bbox=bbox, height=height, width=width)
+        case ShapeCode.YOLO2VOC | ShapeCode.CXCYN2XYXY:
+            return bbox_yolo_to_voc(bbox=bbox, height=height, width=width)
+        case ShapeCode.YOLO2COCO | ShapeCode.CXCYN2XYXY:
+            return bbox_yolo_to_coco(bbox=bbox, height=height, width=width)
+        case _:
+            raise bbox
 
 # endregion
 

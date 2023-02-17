@@ -14,57 +14,68 @@ import mon
 # region Function
 
 @click.command()
-@click.option("--source",     default=mon.DATA_DIR/"aic23-checkout/run/", type=click.Path(exists=True), help="Video path or directory.")
-@click.option("--output-dir", default=None, type=click.Path(exists=False), help="Output directory.")
-@click.option("--size",       default=None, type=int, nargs="+", help="Output images' sizes.")
-@click.option("--extension",  default="jpg", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
-@click.option("--verbose",    is_flag=True)
+@click.option("--source",      default=mon.DATA_DIR/"aic23-checkout/run/", type=click.Path(exists=True), help="Video filepath or directory.")
+@click.option("--destination", default=None, type=click.Path(exists=False), help="Output directory.")
+@click.option("--from-index",  default=None, type=int, help="From/to frame index.")
+@click.option("--to-index",    default=None, type=int, help="From/to frame index.")
+@click.option("--size",        default=None, type=int, nargs="+", help="Output images' sizes.")
+@click.option("--extension",   default="jpg", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
+@click.option("--verbose",     is_flag=True)
 def extract_video_image(
-    source    : mon.Path,
-    output_dir: mon.Path,
-    size      : int | list[int],
-    extension : str,
-    verbose   : bool
+    source     : mon.Path,
+    destination: mon.Path,
+    from_index : int,
+    to_index   : int,
+    size       : int | list[int],
+    extension  : str,
+    verbose    : bool
 ):
-    """Visualize bounding boxes on images."""
     assert source is not None and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
 
     source = mon.Path(source)
-    source = [source] if mon.Path(source).is_video_file() else list(source.rglob("*"))
+    source = [source] if mon.Path(source).is_video_file() else list(source.glob("*"))
     source = [s for s in source if s.is_video_file()]
     
-    if output_dir is not None:
-        output_dir = mon.Path(output_dir)
-        output_dir = [output_dir / f"{s.stem}/images" for s in source]
+    if destination is not None:
+        destination = mon.Path(destination)
+        destination = [destination / f"{s.stem}/images" for s in source]
     else:
-        output_dir = [s.parent / f"{s.stem}/images" for s in source]
+        destination = [s.parent / f"{s.stem}/images" for s in source]
     
     if size is not None:
         size = mon.get_hw(size=size)
     
-    for src, dst in zip(source, output_dir):
+    for src, dst in zip(source, destination):
         dst.mkdir(parents=True, exist_ok=True)
         
-        cap    = cv2.VideoCapture(str(src))
-        length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        cap         = cv2.VideoCapture(str(src))
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        from_index  = from_index or 0
+        to_index    = to_index or frame_count
+        if not to_index >= from_index:
+            raise ValueError(
+                f"to_index must >= to from_index, but got {from_index} and "
+                f"{to_index}."
+            )
+        
         with mon.get_progress_bar() as pbar:
             for i in pbar.track(
-                sequence    = range(length),
-                total       = length,
+                sequence    = range(frame_count),
+                total       = frame_count,
                 description = f"[bright_yellow] Extracting {src.name}"
             ):
                 ret, image = cap.read()
                 if not ret:
-                    break
+                    continue
+                if i < from_index or i > to_index:
+                    continue
                 if size is not None:
                     image = cv2.resize(image, size)
-                
                 output_file = dst / f"{i:06}.{extension}"
                 cv2.imwrite(str(output_file), image)
                 if verbose:
                     cv2.imshow("Image", image)
-                    if cv2.waitKey(1) == ord("q"):
-                        break
+                    cv2.waitKey(0)
             
 # endregion
 

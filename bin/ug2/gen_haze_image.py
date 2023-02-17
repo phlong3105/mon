@@ -19,8 +19,8 @@ _current_dir = mon.Path(__file__).absolute().parent
 # region Function
 
 @click.command()
-@click.option("--image-dir",  default=mon.DATA_DIR / "a2i2-haze/train/detection/hazefree/images", type=click.Path(exists=True), help="Image directory.")
-@click.option("--output-dir", default=mon.DATA_DIR / "a2i2-haze/train/detection/hazefree/images-haze", type=click.Path(exists=False), help="Output directory.")
+@click.option("--image-dir",  default=mon.DATA_DIR/"a2i2-haze/train/detection/hazesynthetic01/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--output-dir", default=mon.DATA_DIR/"a2i2-haze/train/detection/hazesynthetic01/images-haze", type=click.Path(exists=False), help="Output directory.")
 @click.option("--verbose",    is_flag=True)
 def gen_haze_image(
     image_dir : mon.Path,
@@ -35,7 +35,7 @@ def gen_haze_image(
     output_dir.mkdir(parents=True, exist_ok=True)
     
     transform = A.Compose([
-        A.RandomFog(fog_coef_lower=0.05, fog_coef_upper=0.3, alpha_coef=0.7, p=1),
+        A.RandomFog(fog_coef_lower=0.05, fog_coef_upper=0.2, alpha_coef=0.7, p=1),
         # A.RandomBrightnessContrast()
     ])
     

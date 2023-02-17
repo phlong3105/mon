@@ -13,11 +13,10 @@ import cv2
 import numpy as np
 import requests
 import torch
-from PIL import Image, ImageOps
-
+from PIL import Image
 from ultralytics.yolo.data.augment import LetterBox
 from ultralytics.yolo.data.utils import IMG_FORMATS, VID_FORMATS
-from ultralytics.yolo.utils import LOGGER, ROOT, is_colab, is_kaggle, ops
+from ultralytics.yolo.utils import is_colab, is_kaggle, LOGGER, ops, ROOT
 from ultralytics.yolo.utils.checks import check_requirements
 
 
@@ -29,15 +28,15 @@ class SourceTypes:
 
 
 class LoadStreams:
-    # YOLOv8 streamloader, i.e. `python detect.py --source 'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP streams`
+    # YOLOv8 streamloader, i.e. `yolo predict source='rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP streams`
     def __init__(self, sources='file.streams', imgsz=640, stride=32, auto=True, transforms=None, vid_stride=1):
         torch.backends.cudnn.benchmark = True  # faster for fixed-size inference
-        self.mode = 'stream'
-        self.imgsz = imgsz
-        self.stride = stride
+        self.mode       = 'stream'
+        self.imgsz      = imgsz
+        self.stride     = stride
         self.vid_stride = vid_stride  # video frame-rate stride
         sources = Path(sources).read_text().rsplit() if os.path.isfile(sources) else [sources]
-        n = len(sources)
+        n       = len(sources)
         self.sources = [ops.clean_str(x) for x in sources]  # clean source names for later
         self.imgs, self.fps, self.frames, self.threads = [None] * n, [0] * n, [0] * n, [None] * n
         for i, s in enumerate(sources):  # index, source
@@ -49,24 +48,26 @@ class LoadStreams:
                 import pafy  # noqa
                 s = pafy.new(s).getbest(preftype="mp4").url  # YouTube URL
             s = eval(s) if s.isnumeric() else s  # i.e. s = '0' local webcam
-            if s == 0:
-                assert not is_colab(), '--source 0 webcam unsupported on Colab. Rerun command in a local environment.'
-                assert not is_kaggle(), '--source 0 webcam unsupported on Kaggle. Rerun command in a local environment.'
+            if s == 0 and (is_colab() or is_kaggle()):
+                raise NotImplementedError("'source=0' webcam not supported in Colab and Kaggle notebooks. "
+                                          "Try running 'source=0' in a local environment.")
             cap = cv2.VideoCapture(s)
             if not cap.isOpened():
                 raise ConnectionError(f'{st}Failed to open {s}')
-            w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            w   = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            h   = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = cap.get(cv2.CAP_PROP_FPS)  # warning: may return 0 or nan
             self.frames[i] = max(int(cap.get(cv2.CAP_PROP_FRAME_COUNT)), 0) or float('inf')  # infinite stream fallback
-            self.fps[i] = max((fps if math.isfinite(fps) else 0) % 100, 0) or 30  # 30 FPS fallback
-
-            _, self.imgs[i] = cap.read()  # guarantee first frame
+            self.fps[i]    = max((fps if math.isfinite(fps) else 0) % 100, 0) or 30  # 30 FPS fallback
+            
+            success, self.imgs[i] = cap.read()  # guarantee first frame
+            if not success or self.imgs[i] is None:
+                raise ConnectionError(f'{st}Failed to read images from {s}')
             self.threads[i] = Thread(target=self.update, args=([i, cap, s]), daemon=True)
-            LOGGER.info(f"{st} Success ({self.frames[i]} frames {w}x{h} at {self.fps[i]:.2f} FPS)")
+            LOGGER.info(f"{st}Success ✅ ({self.frames[i]} frames of shape {w}x{h} at {self.fps[i]:.2f} FPS)")
             self.threads[i].start()
         LOGGER.info('')  # newline
-
+        
         # check for common shapes
         s = np.stack([LetterBox(imgsz, auto, stride=stride)(image=x).shape for x in self.imgs])
         self.rect = np.unique(s, axis=0).shape[0] == 1  # rect inference if all shapes equal
@@ -118,7 +119,7 @@ class LoadStreams:
 
 
 class LoadScreenshots:
-    # YOLOv8 screenshot dataloader, i.e. `python detect.py --source "screen 0 100 100 512 256"`
+    # YOLOv8 screenshot dataloader, i.e. `yolo predict source=screen`
     def __init__(self, source, imgsz=640, stride=32, auto=True, transforms=None):
         # source = [screen_number left top width height] (pixels)
         check_requirements('mss')
@@ -168,7 +169,7 @@ class LoadScreenshots:
 
 
 class LoadImages:
-    # YOLOv8 image/video dataloader, i.e. `python detect.py --source image.jpg/vid.mp4`
+    # YOLOv8 image/video dataloader, i.e. `yolo predict source=image.jpg/vid.mp4`
     def __init__(self, path, imgsz=640, stride=32, auto=True, transforms=None, vid_stride=1):
         if isinstance(path, str) and Path(path).suffix == ".txt":  # *.txt file with img/vid/dir on each line
             path = Path(path).read_text().rsplit()
@@ -221,15 +222,15 @@ class LoadImages:
             self.mode = 'video'
             for _ in range(self.vid_stride):
                 self.cap.grab()
-            ret_val, im0 = self.cap.retrieve()
-            while not ret_val:
+            success, im0 = self.cap.retrieve()
+            while not success:
                 self.count += 1
                 self.cap.release()
                 if self.count == self.nf:  # last video
                     raise StopIteration
                 path = self.files[self.count]
                 self._new_video(path)
-                ret_val, im0 = self.cap.read()
+                success, im0 = self.cap.read()
 
             self.frame += 1
             # im0 = self._cv2_rotate(im0)  # for use if cv2 autorotation is False
@@ -238,7 +239,7 @@ class LoadImages:
         else:
             # Read image
             self.count += 1
-            im0 = cv2.imread(path)  # BGR
+            im0         = cv2.imread(path)  # BGR
             if im0 is None:
                 raise FileNotFoundError(f'Image Not Found {path}')
             s = f'image {self.count}/{self.nf} {path}: '
@@ -254,9 +255,9 @@ class LoadImages:
 
     def _new_video(self, path):
         # Create a new video capture object
-        self.frame = 0
-        self.cap = cv2.VideoCapture(path)
-        self.frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.vid_stride)
+        self.frame  = 0
+        self.cap    = cv2.VideoCapture(path)
+        self.frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))  # / self.vid_stride)
         if hasattr(cv2, 'CAP_PROP_ORIENTATION_META'):  # cv2<4.6.0 compatibility
             self.orientation = int(self.cap.get(cv2.CAP_PROP_ORIENTATION_META))  # rotation degrees
             # Disable auto-orientation due to known issues in https://github.com/ultralytics/yolov5/issues/8493
@@ -289,7 +290,7 @@ class LoadPilAndNumpy:
         self.mode = 'image'
         # generate fake paths
         self.paths = [f"image{i}.jpg" for i in range(len(self.im0))]
-        self.bs = 1
+        self.bs = len(self.im0)
 
     @staticmethod
     def _single_check(im):
@@ -330,14 +331,14 @@ def autocast_list(source):
     Merges a list of source of different types into a list of numpy arrays or PIL images
     """
     files = []
-    for _, im in enumerate(source):
+    for im in source:
         if isinstance(im, (str, Path)):  # filename or uri
-            files.append(Image.open(requests.get(im, stream=True).raw if str(im).startswith('http') else im))
+            files.append(Image.open(requests.get(im, stream=False).raw if str(im).startswith('http') else im))
         elif isinstance(im, (Image.Image, np.ndarray)):  # PIL or np Image
             files.append(im)
         else:
-            raise Exception(
-                "Unsupported type encountered! See docs for supported types https://docs.ultralytics.com/predict")
+            raise TypeError(f"type {type(im).__name__} is not a supported Ultralytics prediction source type. \n"
+                            f"See https://docs.ultralytics.com/predict for supported source types.")
 
     return files
 

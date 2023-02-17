@@ -11,7 +11,6 @@ __all__ = [
 
 import lightning
 from lightning.pytorch.trainer import *
-from lightning.pytorch.utilities import _HPU_AVAILABLE, _IPU_AVAILABLE
 
 from mon.coreml import strategy
 from mon.foundation import console
@@ -51,12 +50,6 @@ class Trainer(lightning.Trainer):
         num_tpu_cores = self.num_devices if isinstance(self.accelerator, strategy.TPUAccelerator) else 0
         console.log(f"TPU available: {strategy.TPUAccelerator.is_available()}, using: {num_tpu_cores} TPU cores.")
 
-        num_ipus = self.num_devices if isinstance(self.accelerator, strategy.IPUAccelerator) else 0
-        console.log(f"IPU available: {_IPU_AVAILABLE}, using: {num_ipus} IPUs.")
-        
-        num_hpus = self.num_devices if isinstance(self.accelerator, strategy.HPUAccelerator) else 0
-        console.log(f"HPU available: {_HPU_AVAILABLE}, using: {num_hpus} HPUs.")
-        
         # Integrate MPS Accelerator here, once gpu maps to both
         if strategy.CUDAAccelerator.is_available() and not isinstance(self.accelerator, strategy.CUDAAccelerator):
             console.log(
@@ -70,20 +63,6 @@ class Trainer(lightning.Trainer):
                 f"TPU available but not used. Set `accelerator` and `devices` "
                 f"using `Trainer(accelerator='tpu', devices="
                 f"{strategy.TPUAccelerator.auto_device_count()})`."
-            )
-        
-        if _IPU_AVAILABLE and not isinstance(self.accelerator, strategy.IPUAccelerator):
-            console.log(
-                f"IPU available but not used. Set 'accelerator' and 'devices' "
-                f"using 'Trainer(accelerator='ipu', devices="
-                f"{strategy.IPUAccelerator.auto_device_count()})'."
-            )
-        
-        if _HPU_AVAILABLE and not isinstance(self.accelerator, strategy.HPUAccelerator):
-            console.log(
-                f"HPU available but not used. Set 'accelerator' and 'devices' "
-                f"using 'Trainer(accelerator='hpu', devices="
-                f"{strategy.HPUAccelerator.auto_device_count()})'."
             )
         
         if strategy.MPSAccelerator.is_available() and not isinstance(self.accelerator, strategy.MPSAccelerator):

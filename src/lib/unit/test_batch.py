@@ -21,6 +21,8 @@ import torch
 import os
 
 
+# region Function
+
 @click.command()
 @click.option("--config",        default="configs/edges2handbags_folder", type=click.Path(exists=True), help="Path to the config file.")
 @click.option("--input-folder",  default=".", type=click.Path(exists=True), help="input image folder.")
@@ -42,17 +44,18 @@ def test_batch(
     torch.cuda.manual_seed(seed)
     
     # Load experiment setting
-    config    = get_config(config)
-    input_dim = config["input_dim_a"] if a2b else config["input_dim_b"]
+    config        = get_config(config)
+    input_dim     = config["input_dim_a"] if a2b else config["input_dim_b"]
+    trainer_value = trainer
     
     # Setup model and data loader
     image_names = ImageFolder(input_folder, transform=None, return_paths=True)
-    data_loader = get_data_loader_folder(input_folder, 1, False, new_size=config["new_size_a"], crop=False)
+    data_loader = get_data_loader_folder(input_folder, 1, False, new_size=config["new_size"], crop=False)
     
     config["vgg_model_path"] = output_path
     if trainer == "MUNIT":
         style_dim = config["gen"]["style_dim"]
-        trainer = MUNIT_Trainer(config)
+        trainer   = MUNIT_Trainer(config)
     elif trainer == "UNIT":
         trainer = UNIT_Trainer(config)
     else:
@@ -72,44 +75,53 @@ def test_batch(
     encode = trainer.gen_a.encode if a2b else trainer.gen_b.encode  # encode function
     decode = trainer.gen_b.decode if a2b else trainer.gen_a.decode  # decode function
     
-    if trainer == "MUNIT":
+    if trainer_value == "MUNIT":
         # Start testing
         style_fixed = Variable(torch.randn(num_style, style_dim, 1, 1).cuda(), volatile=True)
         for i, (images, names) in enumerate(zip(data_loader, image_names)):
             print(names[1])
-            images = Variable(images.cuda(), volatile=True)
+            images     = Variable(images.cuda(), volatile=True)
             content, _ = encode(images)
-            style = style_fixed if synchronized else Variable(torch.randn(num_style, style_dim, 1, 1).cuda(), volatile=True)
+            style      = style_fixed if synchronized else Variable(torch.randn(num_style, style_dim, 1, 1).cuda(), volatile=True)
             for j in range(num_style):
-                s = style[j].unsqueeze(0)
-                outputs = decode(content, s)
-                outputs = (outputs + 1) / 2.
+                s        = style[j].unsqueeze(0)
+                outputs  = decode(content, s)
+                outputs  = (outputs + 1) / 2.0
                 # path = os.path.join(output_folder, "input{:03d}_output{:03d}.jpg".format(i, j))
                 basename = os.path.basename(names[1])
-                path     = os.path.join(output_folder+"_%02d"%j,basename)
+                path     = os.path.join(output_folder+"_%02d" % j, basename)
                 if not os.path.exists(os.path.dirname(path)):
                     os.makedirs(os.path.dirname(path))
                 vutils.save_image(outputs.data, path, padding=0, normalize=True)
             if not output_only:
-                # also save input images
+                # Also save input images
                 vutils.save_image(images.data, os.path.join(output_folder, "input{:03d}.jpg".format(i)), padding=0, normalize=True)
-    elif trainer == "UNIT":
+    elif trainer_value == "UNIT":
         # Start testing
         for i, (images, names) in enumerate(zip(data_loader, image_names)):
             print(names[1])
             images     = Variable(images.cuda(), volatile=True)
             content, _ = encode(images)
-    
-            outputs  = decode(content)
-            outputs  = (outputs + 1) / 2.0
+            outputs    = decode(content)
+            outputs    = (outputs + 1) / 2.0
             # path = os.path.join(output_folder, "input{:03d}_output{:03d}.jpg".format(i, j))
-            basename = os.path.basename(names[1])
-            path = os.path.join(output_folder,basename)
+            basename   = os.path.basename(names[1])
+            path       = os.path.join(output_folder, basename)
             if not os.path.exists(os.path.dirname(path)):
                 os.makedirs(os.path.dirname(path))
             vutils.save_image(outputs.data, path, padding=0, normalize=True)
             if not output_only:
-                # also save input images
+                # Also save input images
                 vutils.save_image(images.data, os.path.join(output_folder, "input{:03d}.jpg".format(i)), padding=0, normalize=True)
     else:
         pass
+
+# endregion
+
+
+# region Main
+
+if __name__ == "__main__":
+    test_batch()
+
+# endregion

@@ -9,13 +9,17 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import webdataset
-from omegaconf import open_dict, OmegaConf
-from skimage.feature import canny
-from skimage.transform import rescale, resize
-from torch.utils.data import Dataset, IterableDataset, DataLoader, DistributedSampler, ConcatDataset
+from omegaconf import OmegaConf, open_dict
+from torch.utils.data import (
+    ConcatDataset, DataLoader, Dataset,
+    DistributedSampler, IterableDataset,
+)
 
-from saicinpainting.evaluation.data import InpaintingDataset as InpaintingEvaluationDataset, \
-    OurInpaintingDataset as OurInpaintingEvaluationDataset, ceil_modulo, InpaintingEvalOnlineDataset
+from saicinpainting.evaluation.data import (
+    ceil_modulo, InpaintingDataset as InpaintingEvaluationDataset,
+    InpaintingEvalOnlineDataset,
+    OurInpaintingDataset as OurInpaintingEvaluationDataset,
+)
 from saicinpainting.training.data.aug import IAAAffine2, IAAPerspective2
 from saicinpainting.training.data.masks import get_mask_generator
 
@@ -246,7 +250,13 @@ def make_default_train_dataloader(indir, kind='default', out_size=512, mask_gen_
     return dataloader
 
 
-def make_default_val_dataset(indir, kind='default', out_size=512, transform_variant='default', **kwargs):
+def make_default_val_dataset(
+    indir,
+    kind='default',
+    out_size=512,
+    transform_variant='default',
+    **kwargs
+):
     if OmegaConf.is_list(indir) or isinstance(indir, (tuple, list)):
         return ConcatDataset([
             make_default_val_dataset(idir, kind=kind, out_size=out_size, transform_variant=transform_variant, **kwargs) for idir in indir 

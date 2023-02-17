@@ -9,9 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-from PIL import Image, ImageDraw, ImageFont
-from PIL import __version__ as pil_version
-
+from PIL import __version__ as pil_version, Image, ImageDraw, ImageFont
 from ultralytics.yolo.utils import threaded
 
 from .checks import check_font, check_version, is_ascii
@@ -109,23 +107,25 @@ class Annotator:
             self.im = np.asarray(self.im).copy()
         if len(masks) == 0:
             self.im[:] = im_gpu.permute(1, 2, 0).contiguous().cpu().numpy() * 255
-        colors = torch.tensor(colors, device=im_gpu.device, dtype=torch.float32) / 255.0
-        colors = colors[:, None, None]  # shape(n,1,1,3)
-        masks = masks.unsqueeze(3)  # shape(n,h,w,1)
-        masks_color = masks * (colors * alpha)  # shape(n,h,w,3)
-
-        inv_alph_masks = (1 - masks * alpha).cumprod(0)  # shape(n,h,w,1)
-        mcs = (masks_color * inv_alph_masks).sum(0) * 2  # mask color summand shape(n,h,w,3)
-
-        im_gpu = im_gpu.flip(dims=[0])  # flip channel
-        im_gpu = im_gpu.permute(1, 2, 0).contiguous()  # shape(h,w,3)
-        im_gpu = im_gpu * inv_alph_masks[-1] + mcs
-        im_mask = (im_gpu * 255)
-        im_mask_np = im_mask.byte().cpu().numpy()
-        self.im[:] = im_mask_np if retina_masks else scale_image(im_gpu.shape, im_mask_np, self.im.shape)
-        if self.pil:
-            # convert im back to PIL and update draw
-            self.fromarray(self.im)
+        else:
+            colors = torch.tensor(colors, device=im_gpu.device, dtype=torch.float32) / 255.0
+            colors = colors[:, None, None]  # shape(n,1,1,3)
+            masks = masks.unsqueeze(3)  # shape(n,h,w,1)
+            # masks_color = masks * (colors * alpha)  # shape(n,h,w,3)
+            masks_color = masks * (colors)  # shape(n,h,w,3)
+    
+            inv_alph_masks = (1 - masks * alpha).cumprod(0)  # shape(n,h,w,1)
+            mcs = (masks_color * inv_alph_masks).sum(0) * 2  # mask color summand shape(n,h,w,3)
+            
+            im_gpu = im_gpu.flip(dims=[0])  # flip channel
+            im_gpu = im_gpu.permute(1, 2, 0).contiguous()  # shape(h,w,3)
+            im_gpu = im_gpu * inv_alph_masks[-1] + mcs
+            im_mask = (im_gpu * 255)
+            im_mask_np = im_mask.byte().cpu().numpy()
+            self.im[:] = im_mask_np if retina_masks else scale_image(im_gpu.shape, im_mask_np, self.im.shape)
+            if self.pil:
+                # convert im back to PIL and update draw
+                self.fromarray(self.im)
 
     def rectangle(self, xy, fill=None, outline=None, width=1):
         # Add rectangle to image (PIL-only)

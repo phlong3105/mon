@@ -28,7 +28,7 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
-      --data "data/visdrone-a2i2.yaml" \
+      --data "data/visdrone-a2i2-synthetic.yaml" \
       --project "${root_dir}/run/train" \
       --name "yolov8x-visdrone-a2i2-640" \
       --epochs 100 \
@@ -43,9 +43,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
-      --data "data/visdrone-a2i2.yaml" \
+      --data "data/visdrone-a2i2-synthetic.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x6-visdrone-a2i2-2160" \
+      --name "yolov8x6-visdrone-a2i2-synthetic-2160" \
       --epochs 100 \
       --batch 4 \
       --imgsz 2160 \
@@ -58,9 +58,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
-      --data "data/visdrone-a2i2.yaml" \
+      --data "data/visdrone-a2i2-synthetic.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x-visdrone-a2i2-2160" \
+      --name "yolov8x-visdrone-a2i2-synthetic-2160" \
       --epochs 200 \
       --batch 4 \
       --imgsz 2160 \

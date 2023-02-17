@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import mon.vision.geometry.bbox
+import mon.vision.geometry.contour
 import mon.vision.geometry.distance
 from mon.vision.geometry.bbox import *
+from mon.vision.geometry.contour import *
 from mon.vision.geometry.distance import *

@@ -37,9 +37,9 @@ classifiers   = [
     "Programming Language :: Python :: 3 :: Only",
 ]
 packages = [
-    { include="mon",  from="src"     },
-    { include="supr", from="src/app" },
-    { include="ug2",  from="src/app" },
+    { include="mon",            from="src"     },
+    { include="supr",           from="src/app" },
+    { include="saicinpainting", from="src/lib/lama" },
 ]
 include  = [
     "CHANGELOG.md",
@@ -72,7 +72,7 @@ python                = ">=3.10, <3.12"
 # # Plot
 # matplotlib            = "*"
 # tensorboard           = "*"
-# # # PyTorch
+# # PyTorch
 # einops                = "*"
 # flopco-pytorch        = "*"
 # lightning             = ">=1.9.1"
@@ -106,11 +106,23 @@ python                = ">=3.10, <3.12"
 # tqdm                  = "*"
 
 [tool.poetry.group.dev]
-optional  = true
+optional   = true
 
 [tool.poetry.group.dev.dependencies]
-mediapipe = "*"
-torchfile = "*"
+easydict    = "*"
+hydra-core  = "*"
+kornia      = "=0.5.0"
+mediapipe   = "*"
+mmcv-full   = "=1.7.1"
+openmim     = "*"
+packaging   = "*"
+pandas      = "*"
+tabulate    = "*"
+tensorflow  = "*"
+thop        = "*"
+torchfile   = "*"
+ultralytics = {path="src/lib/yolov8"}
+webdataset  = "*"
 
 [build-system]
 requires      = ["poetry-core>=1.2.0"]

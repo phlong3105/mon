@@ -25,20 +25,26 @@ Usage - formats:
                                     yolov8n_edgetpu.tflite     # TensorFlow Edge TPU
                                     yolov8n_paddle_model       # PaddlePaddle
     """
+
 import platform
 from collections import defaultdict
 from pathlib import Path
 
 import cv2
 import torch
-
 from ultralytics.nn.autobackend import AutoBackend
 from ultralytics.yolo.cfg import get_cfg
 from ultralytics.yolo.data import load_inference_source
-from ultralytics.yolo.utils import DEFAULT_CFG, LOGGER, SETTINGS, callbacks, colorstr, ops
+from ultralytics.yolo.utils import (
+    callbacks, colorstr, DEFAULT_CFG, LOGGER,
+    ops, SETTINGS,
+)
 from ultralytics.yolo.utils.checks import check_imgsz, check_imshow
 from ultralytics.yolo.utils.files import increment_path
-from ultralytics.yolo.utils.torch_utils import select_device, smart_inference_mode
+from ultralytics.yolo.utils.torch_utils import (
+    select_device,
+    smart_inference_mode,
+)
 
 
 class BasePredictor:
@@ -70,9 +76,9 @@ class BasePredictor:
             overrides (dict, optional): Configuration overrides. Defaults to None.
         """
         self.args = get_cfg(cfg, overrides)
-        project = self.args.project or Path(SETTINGS['runs_dir']) / self.args.task
+        self.project = self.args.project or Path(SETTINGS['runs_dir']) / self.args.task
         name = self.args.name or f"{self.args.mode}"
-        self.save_dir = increment_path(Path(project) / name, exist_ok=self.args.exist_ok)
+        self.save_dir = increment_path(Path(self.project) / name, exist_ok=self.args.exist_ok)
         if self.args.conf is None:
             self.args.conf = 0.25  # default conf=0.25
         self.done_warmup = False
@@ -121,12 +127,14 @@ class BasePredictor:
 
     def setup_source(self, source):
         self.imgsz = check_imgsz(self.args.imgsz, stride=self.model.stride, min_dim=2)  # check image size
-        self.dataset = load_inference_source(source=source,
-                                             transforms=getattr(self.model.model, 'transforms', None),
-                                             imgsz=self.imgsz,
-                                             vid_stride=self.args.vid_stride,
-                                             stride=self.model.stride,
-                                             auto=self.model.pt)
+        self.dataset = load_inference_source(
+            source     = source,
+            transforms = getattr(self.model.model, 'transforms', None),
+            imgsz      = self.imgsz,
+            vid_stride = self.args.vid_stride,
+            stride     = self.model.stride,
+            auto       = self.model.pt
+        )
         self.source_type = self.dataset.source_type
         self.vid_path, self.vid_writer = [None] * self.dataset.bs, [None] * self.dataset.bs
 
@@ -163,7 +171,7 @@ class BasePredictor:
             # Inference
             with self.dt[1]:
                 preds = self.model(im, augment=self.args.augment, visualize=visualize)
-
+            
             # postprocess
             with self.dt[2]:
                 self.results = self.postprocess(preds, im, im0s, self.classes)
@@ -171,7 +179,7 @@ class BasePredictor:
                 p, im0 = (path[i], im0s[i]) if self.source_type.webcam or self.source_type.from_img else (path, im0s)
                 p = Path(p)
 
-                if self.args.verbose or self.args.save or self.args.save_txt or self.args.show:
+                if self.args.verbose or self.args.save or self.args.save_txt or self.args.save_mask or self.args.show:
                     s += self.write_results(i, self.results, (p, im, im0))
 
                 if self.args.show:
@@ -181,12 +189,12 @@ class BasePredictor:
                     self.save_preds(vid_cap, i, str(self.save_dir / p.name))
 
             self.run_callbacks("on_predict_batch_end")
-            yield from self.results
-
+            # yield from self.results  # TODO: This line make OOM error
+            
             # Print time (inference-only)
             if self.args.verbose:
                 LOGGER.info(f"{s}{'' if len(preds) else '(no detections), '}{self.dt[1].dt * 1E3:.1f}ms")
-
+            
         # Release assets
         if isinstance(self.vid_writer[-1], cv2.VideoWriter):
             self.vid_writer[-1].release()  # release final video writer
@@ -231,11 +239,12 @@ class BasePredictor:
                 if isinstance(self.vid_writer[idx], cv2.VideoWriter):
                     self.vid_writer[idx].release()  # release previous video writer
                 if vid_cap:  # video
-                    fps = int(vid_cap.get(cv2.CAP_PROP_FPS))  # integer required, floats produce error in MP4 codec
-                    w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                    h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                    fps = vid_cap.get(cv2.CAP_PROP_FPS)  # integer required, floats produce error in MP4 codec
+                    w   = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                    h   = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                 else:  # stream
                     fps, w, h = 30, im0.shape[1], im0.shape[0]
+                print(f"fps={fps}, w={w}, h={h}")
                 save_path = str(Path(save_path).with_suffix('.mp4'))  # force *.mp4 suffix on results videos
                 self.vid_writer[idx] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
             self.vid_writer[idx].write(im0)

@@ -4,6 +4,10 @@
 # chmod +x install.sh
 # conda init bash
 # ./install.sh
+# 
+# or
+# bash -l install.sh
+# zsh -i install.sh
 
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
@@ -103,8 +107,8 @@ case "$OSTYPE" in
 esac
 
 # Install 'mon' package
-conda init bash
-activate mon
+eval "$(conda shell.bash hook)"
+conda activate mon
 poetry install
 
 # Set environment variables

@@ -104,7 +104,8 @@ def on_export_end(exporter):
     pass
 
 
-default_callbacks = {
+default_callbacks = {            # save_path = str(self.save_dir / self.args.name)
+
     # Run in trainer
     'on_pretrain_routine_start': [on_pretrain_routine_start],
     'on_pretrain_routine_end': [on_pretrain_routine_end],

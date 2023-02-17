@@ -18,6 +18,8 @@ from trainer import MUNIT_Trainer, UNIT_Trainer
 from utils import get_config, pytorch03_to_pytorch04
 
 
+# region Function
+
 @click.command()
 @click.option("--config",        default=None, type=click.Path(exists=True), help="net configuration.")
 @click.option("--input",         default=".", type=click.Path(exists=True), help="input image path.")
@@ -112,3 +114,13 @@ def test(
         if not output_only:
             # also save input images
             vutils.save_image(image.data, os.path.join(output_folder, "input.jpg"), padding=0, normalize=True)
+
+# endregion
+
+
+# region Main
+
+if __name__ == "__main__":
+    test()
+
+# endregion

@@ -29,16 +29,18 @@ _current_dir = mon.Path(__file__).absolute().parent
 @click.option("--augment",        is_flag=True, help="Apply image augmentation to prediction sources.")
 @click.option("--agnostic-nms",   is_flag=True, help="class-agnostic NMS.")
 @click.option("--device",         default="cpu", help="Device to run on, i.e. cuda device=0/1/2/3 or device=cpu.")
+@click.option("--stream",         is_flag=True)
 @click.option("--exist-ok",       is_flag=True, help="Whether to overwrite existing experiment.")
 @click.option("--show",           is_flag=True, help="Show results if possible.")
 @click.option("--visualize",      is_flag=True, help="Visualize model features.")
 @click.option("--save",           is_flag=True, help="Save train checkpoints and predict results.")
 @click.option("--save-txt",       is_flag=True, help="Save results as .txt file.")
 @click.option("--save-conf",      is_flag=True, help="Save results with confidence scores.")
+@click.option("--save-mask",      is_flag=True, help="Save binary segmentation mask.")
 @click.option("--save-crop",      is_flag=True, help="Save cropped images with results.")
 @click.option("--hide-labels",    is_flag=True, help="Hide labels.")
 @click.option("--hide-conf",      is_flag=True, help="Hide confidence scores.")
-@click.option("--vid-stride",     is_flag=True, help="Video frame-rate stride.")
+@click.option("--vid-stride",     default=1, type=int, help="Video frame-rate stride.")
 @click.option("--overlap-mask",   is_flag=True)
 @click.option("--line-thickness", default=4, type=int, help="Bounding box thickness (pixels).")
 @click.option("--retina-masks",   is_flag=True, help="Use high-resolution segmentation masks.")
@@ -46,9 +48,9 @@ _current_dir = mon.Path(__file__).absolute().parent
 @click.option("--box",            is_flag=True, help="Show boxes in segmentation predictions.")
 def predict(
     task, model, data, project, name, source, imgsz, conf, iou, max_det,
-    augment, agnostic_nms, device, exist_ok, show, visualize, save, save_txt,
-    save_conf, save_crop, hide_labels, hide_conf, vid_stride, overlap_mask,
-    line_thickness, retina_masks, classes, box,
+    augment, agnostic_nms, device, stream, exist_ok, show, visualize, save,
+    save_txt, save_conf, save_mask, save_crop, hide_labels, hide_conf,
+    vid_stride, overlap_mask, line_thickness, retina_masks, classes, box,
 ):
     # Load a model
     model = YOLO(model)  # load a pretrained model (recommended for training)
@@ -68,12 +70,14 @@ def predict(
         "augment"       : augment,
         "agnostic_nms"  : agnostic_nms,
         "device"        : device,
+        # "stream"        : stream,
         "exist_ok"      : exist_ok,
         "show"          : show,
         "visualize"     : visualize,
         "save"          : save,
         "save_txt"      : save_txt,
         "save_conf"     : save_conf,
+        "save_mask"     : save_mask,
         "save_crop"     : save_crop,
         "hide_labels"   : hide_labels,
         "hide_conf"     : hide_conf,
@@ -84,7 +88,7 @@ def predict(
         "classes"       : classes,
         "box"           : box,
     }
-    _    = model(**args)
+    results = model(stream=stream, **args)
 
 # endregion
 

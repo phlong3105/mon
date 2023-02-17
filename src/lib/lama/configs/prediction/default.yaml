@@ -1,5 +1,8 @@
 indir: no  # to be overriden in CLI
 outdir: no  # to be overriden in CLI
+video_file: no
+label_file: no
+output_file: no
 
 model:
   path: no  # to be overriden in CLI
@@ -9,6 +12,7 @@ dataset:
   kind: default
   img_suffix: .png
   pad_out_to_modulo: 8
+  dilate: 7
 
 device: cuda
 out_key: inpainted

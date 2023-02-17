@@ -25,6 +25,8 @@ import shutil
 cudnn.benchmark = True
 
 
+# region Function
+
 @click.command()
 @click.option("--config",      default='configs/edges2handbags_folder.yaml', type=click.Path(exists=True), help='Path to the config file.')
 @click.option("--output-path", default='.', type=click.Path(exists=False), help="outputs path")
@@ -36,6 +38,13 @@ def train(
     resume     : bool,
     trainer    : str
 ):
+    # Setup logger and output folders
+    model_name       = os.path.splitext(os.path.basename(config))[0]
+    train_writer     = tensorboardX.SummaryWriter(os.path.join(output_path + "/logs", model_name))
+    output_directory = os.path.join(output_path + "/outputs", model_name)
+    checkpoint_directory, image_directory = prepare_sub_folder(output_directory)
+    shutil.copy(config, os.path.join(output_directory, "config.yaml"))  # copy config file to output folder
+    
     # Load experiment setting
     config                   = get_config(config)
     max_iter                 = config["max_iter"]
@@ -55,13 +64,6 @@ def train(
     train_display_images_b = torch.stack([train_loader_b.dataset[i] for i in range(display_size)]).cuda()
     test_display_images_a  = torch.stack([test_loader_a.dataset[i]  for i in range(display_size)]).cuda()
     test_display_images_b  = torch.stack([test_loader_b.dataset[i]  for i in range(display_size)]).cuda()
-    
-    # Setup logger and output folders
-    model_name       = os.path.splitext(os.path.basename(config))[0]
-    train_writer     = tensorboardX.SummaryWriter(os.path.join(output_path + "/logs", model_name))
-    output_directory = os.path.join(output_path + "/outputs", model_name)
-    checkpoint_directory, image_directory = prepare_sub_folder(output_directory)
-    shutil.copy(config, os.path.join(output_directory, "config.yaml"))  # copy config file to output folder
     
     # Start training
     iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if resume else 0
@@ -103,3 +105,13 @@ def train(
             iterations += 1
             if iterations >= max_iter:
                 sys.exit("Finish training")
+
+# endregion
+
+
+# region Main
+
+if __name__ == "__main__":
+    train()
+
+# endregion

@@ -31,7 +31,6 @@ def convert_bbox(
     to_format  : str,
     verbose    : bool
 ):
-    """Convert bounding boxes"""
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     assert label_dir is not None and mon.Path(label_dir).is_dir()
     
@@ -50,33 +49,24 @@ def convert_bbox(
             total       = len(image_files),
             description = f"[bright_yellow] Converting"
         ):
-            image           = cv2.imread(str(image_files[i]))
-            h, w, c         = image.shape
+            image   = cv2.imread(str(image_files[i]))
+            h, w, c = image.shape
+            
             label_file      = label_dir  / f"{image_files[i].stem}.txt"
             label_file_yolo = output_dir / f"{image_files[i].stem}.txt"
-            with open(label_file, "r") as in_file:
-                l = in_file.read().splitlines()
-                l = [x.strip().split(" ") for x in l]
-                l = [x for x in l if len(x) >= 5]
-                b = np.array([list(map(float, x[1:])) for x in l])
+            if label_file.is_txt_file():
+                with open(label_file, "r") as in_file:
+                    l = in_file.read().splitlines()
+                l    = [x.strip().split(" ") for x in l]
+                l    = [x for x in l if len(x) >= 5]
+                b    = np.array([list(map(float, x[1:])) for x in l])
+                code = mon.ShapeCode.from_value(value=f"{from_format}_to_{to_format}")
+                b    = mon.convert_bbox(bbox=b, code=code, height=h, width=w)
                 
-                if from_format in ["voc"] and to_format in ["coco"]:
-                    b = mon.bbox_xyxy_to_xywh(bbox=b)
-                elif from_format in ["voc"] and to_format in ["yolo"]:
-                    b = mon.bbox_xyxy_to_cxcywhn(bbox=b, height=h, width=w)
-                elif from_format in ["coco"] and to_format in ["voc"]:
-                    b = mon.bbox_xywh_to_xyxy(bbox=b)
-                elif from_format in ["coco"] and to_format in ["yolo"]:
-                    b = mon.bbox_xywh_to_cxcywhn(bbox=b, height=h, width=w)
-                elif from_format in ["yolo"] and to_format in ["voc"]:
-                    b = mon.bbox_cxcywhn_to_xyxy(bbox=b, height=h, width=w)
-                elif from_format in ["yolo"] and to_format in ["coco"]:
-                    b = mon.bbox_cxcywhn_to_xywh(bbox=b, height=h, width=w)
-                   
-            with open(label_file_yolo, "w") as out_file:
-                for j, x in enumerate(b):
-                    out_file.write(f"{l[j][0]} {x[0]} {x[1]} {x[2]} {x[3]}\n")
-                out_file.close()
+                with open(label_file_yolo, "w") as out_file:
+                    for j, x in enumerate(b):
+                        out_file.write(f"{l[j][0]} {x[0]} {x[1]} {x[2]} {x[3]}\n")
+                    out_file.close()
 
 # endregion
 

@@ -1,5 +1,5 @@
 # Ultralytics YOLO 🚀, GPL-3.0 license
-
+import numpy as np
 import torch
 from ultralytics.yolo.engine.results import Results
 from ultralytics.yolo.utils import DEFAULT_CFG, ops, ROOT
@@ -16,10 +16,10 @@ class SegmentationPredictor(DetectionPredictor):
                                     self.args.iou,
                                     agnostic=self.args.agnostic_nms,
                                     max_det=self.args.max_det,
-                                    nm=32,
+                                    nc=len(self.model.names),
                                     classes=self.args.classes)
         results = []
-        proto = preds[1][-1]
+        proto = preds[1][-1] if len(preds[1]) == 3 else preds[1]  # second output is len 3 if pt, but only 1 if exported
         for i, pred in enumerate(p):
             shape = orig_img[i].shape if isinstance(orig_img, list) else orig_img.shape
             if not len(pred):
@@ -36,6 +36,7 @@ class SegmentationPredictor(DetectionPredictor):
 
     def write_results(self, idx, results, batch):
         p, im, im0 = batch
+        
         log_string = ""
         if len(im.shape) == 3:
             im = im[None]  # expand for batch dim
@@ -54,21 +55,40 @@ class SegmentationPredictor(DetectionPredictor):
 
         result = results[idx]
         if len(result) == 0:
+            if self.args.save_mask:
+                im1 = np.zeros_like(im0)
+                self.annotator.masks(
+                    [],
+                    colors=[[255, 255, 255]],
+                    im_gpu=torch.as_tensor(im1, device=self.device, dtype=torch.float16).permute(2, 0, 1).flip(0).contiguous(),
+                    alpha=0.0
+                )
             return log_string
         det, mask = result.boxes, result.masks  # getting tensors TODO: mask mask,box inherit for tensor
-
+        
         # Print results
         for c in det.cls.unique():
             n = (det.cls == c).sum()  # detections per class
             log_string += f"{n} {self.model.names[int(c)]}{'s' * (n > 1)}, "
 
         # Mask plotting
-        self.annotator.masks(
-            mask.masks,
-            colors=[colors(x, True) for x in det.cls],
-            im_gpu=torch.as_tensor(im0, dtype=torch.float16).to(self.device).permute(2, 0, 1).flip(0).contiguous() /
-            255 if self.args.retina_masks else im[idx])
-
+        if self.args.save_mask:
+            im1 = np.zeros_like(im0)
+            self.annotator.masks(
+                mask.masks,
+                # colors=[colors(x, True) for x in det.cls],
+                colors=[[255, 255, 255] for x in det.cls],
+                im_gpu=torch.as_tensor(im1, device=self.device, dtype=torch.float16).permute(2, 0, 1).flip(0).contiguous(),
+                alpha=0.0
+            )
+        else:
+            self.annotator.masks(
+                mask.masks,
+                colors=[colors(x, True) for x in det.cls],
+                im_gpu=torch.as_tensor(im0, device=self.device, dtype=torch.float16).permute(2, 0, 1).flip(0).contiguous() /
+                255 if self.args.retina_masks else im[idx]
+            )
+        
         # Write results
         for j, d in enumerate(reversed(det)):
             cls, conf = d.cls.squeeze(), d.conf.squeeze()
@@ -83,12 +103,14 @@ class SegmentationPredictor(DetectionPredictor):
                 c = int(cls)  # integer class
                 label = None if self.args.hide_labels else (
                     self.model.names[c] if self.args.hide_conf else f'{self.model.names[c]} {conf:.2f}')
-                self.annotator.box_label(d.xyxy.squeeze(), label, color=colors(c, True)) if self.args.boxes else None
+                # self.annotator.box_label(d.xyxy.squeeze(), label, color=colors(c, True)) if self.args.boxes else None
             if self.args.save_crop:
-                save_one_box(d.xyxy,
-                             imc,
-                             file=self.save_dir / 'crops' / self.model.model.names[c] / f'{self.data_path.stem}.jpg',
-                             BGR=True)
+                save_one_box(
+                    d.xyxy,
+                    imc,
+                    file=self.save_dir / 'crops' / self.model.model.names[c] / f'{self.data_path.stem}.jpg',
+                    BGR=True
+                )
 
         return log_string
 

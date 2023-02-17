@@ -1,7 +1,9 @@
 # Ultralytics YOLO 🚀, GPL-3.0 license
 
+import ast
 import contextlib
 from copy import deepcopy
+from pathlib import Path
 
 import thop
 import torch
@@ -10,7 +12,7 @@ import torch.nn as nn
 from ultralytics.nn.modules import (C1, C2, C3, C3TR, SPP, SPPF, Bottleneck, BottleneckCSP, C2f, C3Ghost, C3x, Classify,
                                     Concat, Conv, ConvTranspose, Detect, DWConv, DWConvTranspose2d, Ensemble, Focus,
                                     GhostBottleneck, GhostConv, Segment)
-from ultralytics.yolo.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, colorstr, yaml_load
+from ultralytics.yolo.utils import DEFAULT_CFG_DICT, DEFAULT_CFG_KEYS, LOGGER, RANK, colorstr, yaml_load
 from ultralytics.yolo.utils.checks import check_requirements, check_yaml
 from ultralytics.yolo.utils.torch_utils import (fuse_conv_and_bn, fuse_deconv_and_bn, initialize_weights,
                                                 intersect_dicts, make_divisible, model_info, scale_img, time_sync)
@@ -172,7 +174,7 @@ class DetectionModel(BaseModel):
         if nc and nc != self.yaml['nc']:
             LOGGER.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
             self.yaml['nc'] = nc  # override yaml value
-        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch], verbose=verbose)  # model, savelist
+        self.model, self.save = parse_model(deepcopy(self.yaml), ch=ch, verbose=verbose)  # model, savelist
         self.names = {i: f'{i}' for i in range(self.yaml['nc'])}  # default names dict
         self.inplace = self.yaml.get('inplace', True)
 
@@ -237,7 +239,7 @@ class DetectionModel(BaseModel):
         csd = weights.float().state_dict()  # checkpoint state_dict as FP32
         csd = intersect_dicts(csd, self.state_dict())  # intersect
         self.load_state_dict(csd, strict=False)  # load
-        if verbose:
+        if verbose and RANK == -1:
             LOGGER.info(f'Transferred {len(csd)}/{len(self.model.state_dict())} items from pretrained weights')
 
 
@@ -282,7 +284,7 @@ class ClassificationModel(BaseModel):
         if nc and nc != self.yaml['nc']:
             LOGGER.info(f"Overriding model.yaml nc={self.yaml['nc']} with nc={nc}")
             self.yaml['nc'] = nc  # override yaml value
-        self.model, self.save = parse_model(deepcopy(self.yaml), ch=[ch], verbose=verbose)  # model, savelist
+        self.model, self.save = parse_model(deepcopy(self.yaml), ch=ch, verbose=verbose)  # model, savelist
         self.names = {i: f'{i}' for i in range(self.yaml['nc'])}  # default names dict
         self.info()
 
@@ -338,9 +340,10 @@ def torch_safe_load(weight):
         if e.name == 'omegaconf':  # e.name is missing module name
             LOGGER.warning(f"WARNING ⚠️ {weight} requires {e.name}, which is not in ultralytics requirements."
                            f"\nAutoInstall will run now for {e.name} but this feature will be removed in the future."
-                           f"\nRecommend fixes are to train a new model using updated ultraltyics package or to "
+                           f"\nRecommend fixes are to train a new model using updated ultralytics package or to "
                            f"download updated models from https://github.com/ultralytics/assets/releases/tag/v0.0.0")
-        check_requirements(e.name)  # install missing module
+        if e.name != 'models':
+            check_requirements(e.name)  # install missing module
         return torch.load(file, map_location='cpu')  # load
 
 
@@ -354,7 +357,7 @@ def attempt_load_weights(weights, device=None, inplace=True, fuse=False):
         model = (ckpt.get('ema') or ckpt['model']).to(device).float()  # FP32 model
 
         # Model compatibility updates
-        model.args = {k: v for k, v in args.items() if k in DEFAULT_CFG_KEYS}  # attach args to model
+        model.args = args  # attach args to model
         model.pt_path = weights  # attach *.pt file path to model
         model.task = guess_model_task(model)
         if not hasattr(model, 'stride'):
@@ -420,11 +423,13 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
         Conv.default_act = eval(act)  # redefine default activation, i.e. Conv.default_act = nn.SiLU()
         if verbose:
             LOGGER.info(f"{colorstr('activation:')} {act}")  # print
-
+    ch = [ch]
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
     for i, (f, n, m, args) in enumerate(d['backbone'] + d['head']):  # from, number, module, args
         m = eval(m) if isinstance(m, str) else m  # eval strings
         for j, a in enumerate(args):
+            # TODO: re-implement with eval() removal if possible
+            # args[j] = (locals()[a] if a in locals() else ast.literal_eval(a)) if isinstance(a, str) else a
             with contextlib.suppress(NameError):
                 args[j] = eval(a) if isinstance(a, str) else a  # eval strings
 
@@ -478,20 +483,9 @@ def guess_model_task(model):
     Raises:
         SyntaxError: If the task of the model could not be determined.
     """
-    cfg = None
-    if isinstance(model, dict):
-        cfg = model
-    elif isinstance(model, nn.Module):  # PyTorch model
-        for x in 'model.args', 'model.model.args', 'model.model.model.args':
-            with contextlib.suppress(Exception):
-                return eval(x)['task']
-        for x in 'model.yaml', 'model.model.yaml', 'model.model.model.yaml':
-            with contextlib.suppress(Exception):
-                cfg = eval(x)
-                break
 
-    # Guess from YAML dictionary
-    if cfg:
+    def cfg2task(cfg):
+        # Guess from YAML dictionary
         m = cfg["head"][-1][-2].lower()  # output module name
         if m in ["classify", "classifier", "cls", "fc"]:
             return "classify"
@@ -500,8 +494,20 @@ def guess_model_task(model):
         if m in ["segment"]:
             return "segment"
 
+    # Guess from model cfg
+    if isinstance(model, dict):
+        with contextlib.suppress(Exception):
+            return cfg2task(model)
+
     # Guess from PyTorch model
-    if isinstance(model, nn.Module):
+    if isinstance(model, nn.Module):  # PyTorch model
+        for x in 'model.args', 'model.model.args', 'model.model.model.args':
+            with contextlib.suppress(Exception):
+                return eval(x)['task']
+        for x in 'model.yaml', 'model.model.yaml', 'model.model.model.yaml':
+            with contextlib.suppress(Exception):
+                return cfg2task(eval(x))
+
         for m in model.modules():
             if isinstance(m, Detect):
                 return "detect"
@@ -509,6 +515,16 @@ def guess_model_task(model):
                 return "segment"
             elif isinstance(m, Classify):
                 return "classify"
+
+    # Guess from model filename
+    if isinstance(model, (str, Path)):
+        model = Path(model).stem
+        if '-seg' in model:
+            return "segment"
+        elif '-cls' in model:
+            return "classify"
+        else:
+            return "detect"
 
     # Unable to determine task from model
     raise SyntaxError("YOLO is unable to automatically guess model task. Explicitly define task for your model, "

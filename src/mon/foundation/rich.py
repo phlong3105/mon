@@ -47,7 +47,7 @@ console = rich.console.Console(
     color_system    = "auto",
     log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
     soft_wrap       = False,
-    width           = 200,
+    width           = 150,
     theme           = rich_console_theme,
 )
 
@@ -55,7 +55,7 @@ error_console = rich.console.Console(
     color_system    = "auto",
     log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
     soft_wrap       = False,
-    width           = 200,
+    width           = 150,
     stderr          = True,
     style           = "bold red",
     theme           = rich_console_theme,
