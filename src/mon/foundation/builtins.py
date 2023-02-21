@@ -6,18 +6,19 @@
 from __future__ import annotations
 
 __all__ = [
-    "concat_lists", "copy_attr", "intersect_dicts", "intersect_ordered_dicts",
-    "iter_to_iter", "iter_to_list", "iter_to_tuple", "shuffle_dict",
-    "split_list", "to_1list", "to_1tuple", "to_2list", "to_2tuple", "to_3list",
-    "to_3tuple", "to_4list", "to_4tuple", "to_5list", "to_5tuple", "to_6list",
-    "to_6tuple", "to_float", "to_int", "to_list", "to_nlist", "to_ntuple",
-    "to_tuple", "unique",
+    "concat_lists", "copy_attr", "get_module_vars", "intersect_dicts",
+    "intersect_ordered_dicts", "iter_to_iter", "iter_to_list", "iter_to_tuple",
+    "shuffle_dict", "split_list", "to_1list", "to_1tuple", "to_2list",
+    "to_2tuple", "to_3list", "to_3tuple", "to_4list", "to_4tuple", "to_5list",
+    "to_5tuple", "to_6list", "to_6tuple", "to_float", "to_int", "to_list",
+    "to_nlist", "to_ntuple", "to_tuple", "unique",
 ]
 
 import copy
 import itertools
 import random
 from collections import OrderedDict
+from types import ModuleType
 from typing import Any, Callable, Iterable
 
 import multipledispatch
@@ -47,6 +48,19 @@ def copy_attr(src: Any, dst: Any, include: list = [], exclude: list = []):
     return dst
 
 
+def get_module_vars(module: ModuleType) -> dict:
+    """Return all public variables of a module in a dictionary."""
+    return {
+        k: v for k, v in vars(module).items()
+        if not (
+            k == "__init__"
+            or callable(k)
+            or isinstance(v, ModuleType)
+            or k.startswith(("_", "__", "annotations"))
+        )
+    }
+    
+    
 # endregion
 
 

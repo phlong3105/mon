@@ -89,7 +89,7 @@ def detect_tray(
         to_index    = to_index   or frame_count
         if not to_index >= from_index:
             raise ValueError(
-                f"to_index must >= to from_index, but got {from_index} and "
+                f"to_index must >= from_index, but got {from_index} and "
                 f"{to_index}."
             )
         if save:
@@ -101,7 +101,7 @@ def detect_tray(
             for i in pbar.track(
                 sequence    = range(frame_count),
                 total       = frame_count,
-                description = f"[bright_yellow] Extracting {src.name}"
+                description = f"[bright_yellow] Detecting tray {src.name}"
             ):
                 ret, image = cap.read()
                 if not ret:

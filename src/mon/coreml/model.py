@@ -8,7 +8,7 @@ models.
 from __future__ import annotations
 
 __all__ = [
-    "Model", "attempt_load", "extract_weights_from_checkpoint", "get_epoch",
+    "Model", "attempt_load", "extract_weight_from_checkpoint", "get_epoch",
     "get_global_step", "get_latest_checkpoint", "intersect_state_dicts",
     "is_parallel", "load_state_dict_from_path", "match_state_dicts",
     "sparsity", "strip_optimizer",
@@ -37,7 +37,7 @@ EpochOutput = lightning.pytorch.utilities.types.EPOCH_OUTPUT
 
 # region Checkpoint
 
-def extract_weights_from_checkpoint(
+def extract_weight_from_checkpoint(
     ckpt       : pathlib.Path,
     weight_file: pathlib.Path | None = None,
 ):
@@ -78,7 +78,6 @@ def get_epoch(ckpt: pathlib.Path | None) -> int:
     
     epoch = 0
     ckpt  = pathlib.Path(ckpt)
-    assert ckpt.is_ckpt_file()
     if ckpt.is_torch_file():
         ckpt  = torch.load(ckpt)
         epoch = ckpt.get("epoch", 0)
@@ -96,7 +95,6 @@ def get_global_step(ckpt: pathlib.Path | None) -> int:
     
     global_step = 0
     ckpt = pathlib.Path(ckpt)
-    assert ckpt.is_ckpt_file()
     if ckpt.is_torch_file():
         ckpt = torch.load(ckpt)
         global_step = ckpt.get("global_step", 0)
@@ -428,7 +426,7 @@ class Model(lightning.LightningModule, ABC):
             parsing.
         classlabels: A :class:`mon.coreml.data.label.ClassLabels` object that
             contains all labels in the dataset. Defaults to None.
-        weights: The model's weights. Any of:
+        weight: The model's weight. Any of:
             - A state dictionary.
             - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
             - A path to a weight or ckpt file.
@@ -462,7 +460,7 @@ class Model(lightning.LightningModule, ABC):
         channels   : int                   = 3,
         num_classes: int  | None           = None,
         classlabels: md.ClassLabels | None = None,
-        weights    : Any                   = None,
+        weight     : Any                   = None,
         # For saving/loading
         name       : str  | None           = None,
         variant    : str  | None           = None,
@@ -489,7 +487,7 @@ class Model(lightning.LightningModule, ABC):
         self.hyperparams   = hparams
         self.channels      = channels
         self.num_classes   = num_classes
-        self.weights       = weights
+        self.weight        = weight
         self.classlabels   = md.ClassLabels.from_value(classlabels) \
                                 if classlabels is not None else None
         
@@ -509,10 +507,10 @@ class Model(lightning.LightningModule, ABC):
         self.model, self.save, self.info = self.parse_model()
         
         # Load weights
-        if self.weights:
-            self.load_weights()
+        if self.weight:
+            self.load_weight()
         else:
-            self.apply(self.init_weights)
+            self.apply(self.init_weight)
         self.print_info()
         
         # Set phase to freeze or unfreeze layers
@@ -631,11 +629,11 @@ class Model(lightning.LightningModule, ABC):
             return 0
     
     @property
-    def weights(self) -> pathlib.Path | dict:
+    def weight(self) -> pathlib.Path | dict:
         return self._weights
     
-    @weights.setter
-    def weights(self, weights: Any = None):
+    @weight.setter
+    def weight(self, weights: Any = None):
         if isinstance(weights, str) and weights in self.zoo:
             weights = pathlib.Path(self.zoo[weights])
         elif isinstance(weights, pathlib.Path):
@@ -835,8 +833,8 @@ class Model(lightning.LightningModule, ABC):
         num_classes = self.num_classes
         if isinstance(self.classlabels, md.ClassLabels):
             num_classes = num_classes or self.classlabels.num_classes()
-        if isinstance(self.weights, dict) and "num_classes" in self.weights:
-            num_classes = num_classes or self.weights["num_classes"]
+        if isinstance(self.weight, dict) and "num_classes" in self.weight:
+            num_classes = num_classes or self.weight["num_classes"]
         self.num_classes = num_classes
         
         if "num_classes" in self.cfg:
@@ -859,27 +857,27 @@ class Model(lightning.LightningModule, ABC):
         return model, save, info
     
     @abstractmethod
-    def init_weights(self, model: nn.Module):
-        """Initialize model's weights."""
+    def init_weight(self, model: nn.Module):
+        """Initialize model's weight."""
         pass
     
-    def load_weights(self):
+    def load_weight(self):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        if isinstance(self.weights, dict | pathlib.Path):
+        if isinstance(self.weight, dict | pathlib.Path):
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
             self.model = attempt_load(
                 model     = self.model,
-                weights   = self.weights,
+                weights   = self.weight,
                 strict    = False,
                 model_dir = self.zoo_dir,
             )
             if self.verbose:
-                console.log(f"Load weights from: {self.weights}!")
+                console.log(f"Load weight from: {self.weight}!")
         else:
             error_console.log(
-                f"[yellow]Cannot load from weights: {self.weights}!"
+                f"[yellow]Cannot load from weights: {self.weight}!"
             )
     
     def configure_optimizers(self):

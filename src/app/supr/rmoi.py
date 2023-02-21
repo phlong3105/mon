@@ -13,7 +13,7 @@ __all__ = [
     "get_best_matched_moi", "get_moi_for_box", "get_roi_for_box",
 ]
 
-from typing import Sequence
+from typing import Any, Sequence
 
 import cv2
 import numpy as np
@@ -68,32 +68,44 @@ class RegionOfInterest:
             return False
     
     @classmethod
-    def from_file(
-        cls,
-        path     : mon.Path,
-        rmois_dir: mon.Path | None = None,
-        **kwargs
-    ) -> list:
+    def from_dict(cls, value: dict) -> list[ROI]:
+        """Create a list of :class:`RegionOfInterest` from a dictionary."""
+        if "roi" not in value:
+            raise ValueError("value must contains a 'roi' key.")
+        value = value["roi"]
+        if not isinstance(value, list | tuple):
+            raise TypeError(
+                f"value must be a list or tuple, but got {type(value)}."
+            )
+        return [cls(**v) for v in value]
+    
+    @classmethod
+    def from_file(cls, value: mon.Path) -> list[ROI]:
         """Create a list of :class:`RegionOfInterest` from the content of a
         ".json" file specified by the :param:`path`.
         """
-        if path.is_json_file():
-            pass
-        elif isinstance(path, str) \
-            and rmois_dir is not None \
-            and mon.Path(rmois_dir).is_dir():
-            path = mon.Path(rmois_dir) / path
-        
-        if not path.is_json_file():
+        value = mon.Path(value)
+        if not value.is_json_file():
             raise ValueError(
-                f"path must be a valid path to a .json file, but got {path}."
+                f"path must be a valid path to a .json file, but got {value}."
             )
-        
-        data = mon.load_config(path)
-        if "roi" not in data:
-            raise ValueError(f"data must contain the key 'roi'.")
-        rois = [cls(**r, **kwargs) for r in data["roi"]]
-        return rois
+        data = mon.load_config(value)
+        return cls.from_dict(value=data)
+
+    @classmethod
+    def from_value(cls, value: Any) -> list[ROI] | None:
+        """Create a :class:`RegionOfInterest` object from an arbitrary
+        :param:`value`."""
+        if isinstance(value, ROI):
+            return [value]
+        if isinstance(value, dict):
+            return cls.from_dict(value=value)
+        if isinstance(value, list | tuple):
+            assert all(isinstance(v, dict | ROI) for v in value)
+            return [cls(**v) if isinstance(v, dict) else v for v in value]
+        if isinstance(value, str | mon.Path):
+            return cls.from_file(value=value)
+        return None
 
     def is_box_in_roi(self, bbox: np.ndarray, compute_distance: bool = False) -> int:
         """Check a bounding bbox touches the current ROI.
@@ -220,7 +232,7 @@ class MovementOfInterest:
         self.points             = points
         self.shape_type         = shape_type
         self.offset             = offset
-        self.distance_function  = mon.DISTANCES.build(name = distance_function)
+        self.distance_function  = distance_function  # mon.DISTANCES.build(name=distance_function)
         self.distance_threshold = distance_threshold
         self.angle_threshold    = angle_threshold
         
@@ -236,10 +248,12 @@ class MovementOfInterest:
     @points.setter
     def points(self, points: np.ndarray | list):
         points = np.array(points, np.int32)
+        """
         if not points.ndim >= 2:
             raise ValueError(
                 f"points' number of dimensions must be >= 2, but got {points.ndim}."
             )
+        """
         self._points = points
     
     @property
@@ -253,32 +267,43 @@ class MovementOfInterest:
             return False
     
     @classmethod
-    def from_file(
-        cls,
-        path     : mon.Path,
-        rmois_dir: mon.Path | None = None,
-        **kwargs
-    ) -> list:
+    def from_dict(cls, value: dict) -> list[MOI]:
+        """Create a list of :class:`MotionOfInterest` from a dictionary."""
+        if "moi" not in value:
+            raise ValueError("value must contains a 'moi' key.")
+        value = value["roi"]
+        if not isinstance(value, list | tuple):
+            raise TypeError(
+                f"value must be a list or tuple, but got {type(value)}."
+            )
+        return [cls(**v) for v in value]
+    
+    @classmethod
+    def from_file(cls, value: mon.Path) -> list[MOI]:
         """Create a list of :class:`MotionOfInterest` from the content of a
         ".json" file specified by the :param:`path`.
         """
-        if path.is_json_file():
-            pass
-        elif isinstance(path, str) \
-            and rmois_dir is not None \
-            and mon.Path(rmois_dir).is_dir():
-            path = mon.Path(rmois_dir) / path
-        
-        if not path.is_json_file():
+        value = mon.Path(value)
+        if not value.is_json_file():
             raise ValueError(
-                f"path must be a valid path to a .json file, but got {path}."
+                f"path must be a valid path to a .json file, but got {value}."
             )
-        
-        data = mon.load_config(path)
-        if "moi" not in data:
-            raise ValueError(f"data must contain the key 'moi'.")
-        mois = [cls(**m, **kwargs) for m in data["moi"]]
-        return mois
+        data = mon.load_config(value)
+        return cls.from_dict(value=data)
+
+    @classmethod
+    def from_value(cls, value: Any) -> list[MOI] | None:
+        """Create a :class:`MotionOfInterest` object from an arbitrary
+        :param:`value`."""
+        if isinstance(value, MOI):
+            return [value]
+        if isinstance(value, dict):
+            return cls.from_dict(value=value)
+        if isinstance(value, list | tuple):
+            return [cls(**v) if isinstance(v, dict) else v for v in value]
+        if isinstance(value, str | mon.Path):
+            return cls.from_file(value=value)
+        return None
     
     def calculate_distance_with_track(self, object_track: np.ndarray) -> float:
         """Calculate the distance between an object's track to the MOI's tracks.
@@ -328,6 +353,9 @@ class MovementOfInterest:
     def draw(self, image: np.ndarray) -> np.ndarray:
         """Draw the current MOI on the :param:`image`."""
         # NOTE: Draw MOI's direction
+        if self.points.ndim < 2:
+            return image
+        
         pts = self.points.reshape((-1, 1, 2))
         if self.shape_type == "polygon":
             cv2.polylines(

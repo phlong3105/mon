@@ -1,0 +1,6 @@
+- video_file=/mnt/workspace/mon/data/aic23-checkout/testA/convert/testA_1.mp4
+- label_file=/mnt/workspace/mon/data/aic23-checkout/testA/person/testA_1.mp4
+- output_file=/mnt/workspace/mon/data/aic23-checkout/testA/inpainting/testA_1.mp4
+- model.path=/mnt/workspace/mon/zoo/lama/big-lama-aic
+- dataset.kind=video
+- dataset.dilate=7

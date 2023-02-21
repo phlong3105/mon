@@ -23,7 +23,7 @@ import numpy as np
 import torch
 
 from mon.coreml import data
-from mon.foundation import file_handler, pathlib
+from mon.foundation import file, pathlib
 from mon.vision import geometry, image as mi
 
 
@@ -438,7 +438,7 @@ class VOCDetectionsLabel(DetectionsLabel):
                 f"path must be a valid path to an .xml file, but got {path}."
             )
         
-        xml_data = file_handler.read_from_file(path=path)
+        xml_data = file.read_from_file(path=path)
         if "annotation" not in xml_data:
             raise ValueError("xml_data must contain the 'annotation' key.")
        

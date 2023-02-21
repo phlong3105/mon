@@ -5,5 +5,7 @@
 
 from __future__ import annotations
 
-from mon.vision.model.classification import *
-from mon.vision.model.enhancement import *
+import mon.vision.model.classify
+import mon.vision.model.enhance
+from mon.vision.model.classify import *
+from mon.vision.model.enhance import *

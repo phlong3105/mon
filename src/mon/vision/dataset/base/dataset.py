@@ -31,7 +31,7 @@ import numpy as np
 import torch
 
 from mon.coreml import data
-from mon.foundation import console, file_handler, pathlib, rich
+from mon.foundation import console, file, pathlib, rich
 from mon.globals import BBoxFormat
 from mon.vision import image as mi
 from mon.vision.dataset.base import label
@@ -877,7 +877,7 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
                 f"json_file must be a valid path to a .json file, but got "
                 f"{json_file}."
             )
-        json_data = file_handler.read_from_file(json_file)
+        json_data = file.read_from_file(json_file)
         if not isinstance(json_data, dict):
             raise TypeError(
                 f"json_data must be a dict, but got {type(json_data)}."

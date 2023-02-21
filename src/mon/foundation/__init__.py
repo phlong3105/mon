@@ -22,7 +22,7 @@ import mon.foundation.builtins
 import mon.foundation.config
 import mon.foundation.enum
 import mon.foundation.factory
-import mon.foundation.file_handler
+import mon.foundation.file
 import mon.foundation.logging
 import mon.foundation.math
 import mon.foundation.pathlib
@@ -32,7 +32,7 @@ from mon.foundation.builtins import *
 from mon.foundation.config import *
 from mon.foundation.enum import *
 from mon.foundation.factory import *
-from mon.foundation.file_handler import *
+from mon.foundation.file import *
 from mon.foundation.logging import *
 from mon.foundation.pathlib import *
 from mon.foundation.rich import console, error_console, get_progress_bar

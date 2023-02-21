@@ -36,8 +36,8 @@ dependencies:
       # Image
       - albumentations
       - ffmpeg-python     # Python bindings for FFmpeg - with complex filtering support.
-      - opencv-python     # Computer vision and machine learning software library.
-      - opencv-contrib-python
+      - opencv-python==4.5.5.62  # Computer vision and machine learning software library.
+      - opencv-contrib-python==4.5.5.62
       # Network
       - requests          # Requests is an elegant and simple HTTP library for Python, built with ♥
       # Plot              
@@ -49,7 +49,7 @@ dependencies:
       - lightning>=1.9.2  #
       - piqa              # PyTorch Image Quality Assessment package.
       - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
-      - pytorch-lightning>=1.9.2 #
+      - pytorch-lightning>=1.9.2
       - torch             # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio        # Simple audio I/O for pytorch.
       - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.

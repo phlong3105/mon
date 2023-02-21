@@ -6,17 +6,18 @@
 from __future__ import annotations
 
 import supr.camera
+import supr.config
 import supr.data
-import supr.detection
+import supr.detect
 import supr.globals
 import supr.io
 import supr.motion
 import supr.rmoi
-import supr.tracking
+import supr.track
 from supr.camera import *
 from supr.data import *
-from supr.detection import *
+from supr.detect import *
 from supr.io import *
 from supr.motion import *
 from supr.rmoi import *
-from supr.tracking import *
+from supr.track import *

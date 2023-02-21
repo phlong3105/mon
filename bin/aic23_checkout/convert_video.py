@@ -18,15 +18,20 @@ import mon
 @click.option("--destination", default=mon.DATA_DIR/"aic23-checkout/testA/convert", type=click.Path(exists=False), help="Output video filepath or directory.")
 @click.option("--from-index",  default=None, type=int, help="From/to frame index.")
 @click.option("--to-index",    default=None, type=int, help="From/to frame index.")
+@click.option("--size",        default=None, type=int, nargs="+", help="Output images/video size.")
+@click.option("--save-image",  is_flag=True, help="Save images.")
+@click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--verbose",     is_flag=True)
 def convert_video(
     source     : mon.Path,
     destination: mon.Path,
     from_index : int,
     to_index   : int,
+    size       : int | list[int],
+    save_image : bool,
+    extension  : str,
     verbose    : bool
 ):
-    """Visualize bounding boxes on images."""
     assert source is not None and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
 
     source = mon.Path(source)
@@ -41,36 +46,49 @@ def convert_video(
             destination = [destination / f"{s.stem}.mp4" for s in source]
     else:
         destination = [s.parent / f"{s.stem}-convert.mp4" for s in source]
+    if save_image:
+        destination = [d.parent / d.stem for d in destination]
+    
+    if size is not None:
+        size = mon.get_hw(size=size)
     
     for src, dst in zip(source, destination):
-        dst.parent.mkdir(parents=True, exist_ok=True)
         cap         = cv2.VideoCapture(str(src))
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps         = cap.get(cv2.CAP_PROP_FPS)
         w           = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h           = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        from_index  = from_index or 0
-        to_index    = to_index or frame_count
-        if not to_index >= from_index:
+        f_index     = from_index or 0
+        t_index     = to_index   or frame_count
+        if not t_index >= f_index:
             raise ValueError(
-                f"to_index must >= to from_index, but got {from_index} and "
-                f"{to_index}."
+                f"t_index must >= f_index, but got {f_index} and {t_index}."
             )
-
-        wrt = cv2.VideoWriter(str(dst), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
         
+        if not save_image:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            wrt = cv2.VideoWriter(str(dst), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+        else:
+            dst.mkdir(parents=True, exist_ok=True)
+            
         with mon.get_progress_bar() as pbar:
             for i in pbar.track(
                 sequence    = range(frame_count),
                 total       = frame_count,
-                description = f"[bright_yellow] Extracting {src.name}"
+                description = f"[bright_yellow] Converting {src.name}"
             ):
-                ret, image = cap.read()
-                if not ret:
+                success, image = cap.read()
+                if not success or not f_index <= i <= t_index:
                     continue
-                if i < from_index or i > to_index:
-                    continue
-                wrt.write(image)
+                
+                if size is not None:
+                    image = cv2.resize(image, size)
+                    
+                if save_image:
+                    cv2.imwrite(dst/f"{i:06}.{extension}", image)
+                else:
+                    wrt.write(image)
+               
                 if verbose:
                     cv2.imshow("Image", image)
                     if cv2.waitKey(1) == ord("q"):

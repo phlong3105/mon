@@ -11,6 +11,7 @@ __all__ = [
     "Instance",
 ]
 
+import uuid
 from timeit import default_timer as timer
 from typing import Any
 
@@ -44,19 +45,19 @@ class Instance:
     
     def __init__(
         self,
-        id_        : int | str,
-        roi_uid    : int | str,
         bbox       : np.ndarray,
+        id_        : int | str         = uuid.uuid4().int,
+        roi_uid    : int | str  | None = None,
         polygon    : np.ndarray | None = None,
-        confidence : float | None      = None,
-        classlabel : dict | None       = None,
-        frame_index: int | None        = None,
+        confidence : float      | None = None,
+        classlabel : dict       | None = None,
+        frame_index: int        | None = None,
         timestamp  : float             = timer(),
     ):
         self.id_         = id_
         self.roi_id      = roi_uid
-        self.bbox        = bbox
-        self.polygon     = polygon
+        self.bbox        = np.array(bbox)
+        self.polygon     = np.array(polygon)
         self.confidence  = confidence
         self.classlabel  = classlabel
         self.frame_index = frame_index
@@ -89,7 +90,7 @@ class Instance:
     
     def draw(
         self,
-        drawing: np.ndarray,
+        image  : np.ndarray,
         bbox   : bool             = False,
         polygon: bool             = False,
         label  : bool             = True,
@@ -101,7 +102,7 @@ class Instance:
         
         if bbox:
             cv2.rectangle(
-                img       = drawing,
+                img       = image,
                 pt1       = (self.bbox[0], self.bbox[1]),
                 pt2       = (self.bbox[2], self.bbox[3]),
                 color     = color,
@@ -110,7 +111,7 @@ class Instance:
         if polygon:
             pts = self.polygon.reshape((-1, 1, 2))
             cv2.polylines(
-                img       = drawing,
+                img       = image,
                 pts       = pts,
                 isClosed  = True,
                 color     = color,
@@ -120,7 +121,7 @@ class Instance:
             font = cv2.FONT_HERSHEY_SIMPLEX
             org = (self.box_tl[0] + 5, self.box_tl[1])
             cv2.putText(
-                img       = drawing,
+                img       = image,
                 text      = self.classlabel["name"],
                 fontFace  = font,
                 fontScale = 1.0,
@@ -128,6 +129,6 @@ class Instance:
                 color     = color,
                 thickness = 2
             )
-        return drawing
+        return image
 
 # endregion

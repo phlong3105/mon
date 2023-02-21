@@ -5,7 +5,6 @@ echo "$HOSTNAME"
 task=$1
 machine=$HOSTNAME
 read -e -i "$task" -p "Task [install, train, test, predict]: " task
-# read -e -i "$machine" -p "Machine [pc, server]: " machine
 
 # Initialization
 script_path=$(readlink -f "$0")

@@ -26,7 +26,7 @@ class ProductCountingWriter:
     """Save product counting results.
     
     Args:
-        output: A path to the counting results file.
+        destination: A path to the counting results file.
         camera_name: A camera name.
         start_time: The moment when the TexIO is initialized.
         subset: A subset name. One of: ['testA', 'testB'].
@@ -52,11 +52,11 @@ class ProductCountingWriter:
     
     def __init__(
         self,
-        output: mon.Path,
+        destination: mon.Path,
         camera_name: str,
-        start_time: float = timer(),
-        subset: str = "testA",
-        exclude: Sequence[int] = [116]
+        subset     : str           = "testA",
+        exclude    : Sequence[int] = [116],
+        start_time : float         = timer(),
     ):
         super().__init__()
         if subset not in self.video_map:
@@ -70,31 +70,33 @@ class ProductCountingWriter:
                 f"({self.video_map[subset].keys()}), but got {camera_name}."
             )
         
-        self.output      = mon.Path(output)
+        self.destination = mon.Path(destination)
         self.camera_name = camera_name
+        self.subset      = subset
         self.video_id    = self.video_map[subset][camera_name]
-        self.start_time  = start_time
         self.exclude     = exclude
+        self.start_time  = start_time
         self.lines       = []
+        self.init_writer()
     
     def __del__(self):
         """ Close the writer object."""
         pass
     
-    def init_writer(self, output: mon.Path | None = None):
+    def init_writer(self, destination: mon.Path | None = None):
         """Initialize the writer object.
 
         Args:
-            output: A path to the counting results file.
+            destination: A path to the counting results file.
         """
-        output = output or self.output
-        output = mon.Path(output)
-        if output.is_stem():
-            output = f"{output}.txt"
-        elif output.is_dir():
-            output = output / f"{self.camera_name}.txt"
-        output.parent.mkdir(parents=True, exist_ok=True)
-        self.output = output
+        destination = destination or self.destination
+        destination = mon.Path(destination)
+        if destination.is_basename() or destination.is_stem():
+            destination = f"{destination}.txt"
+        elif destination.is_dir():
+            destination = destination / f"{self.camera_name}.txt"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        self.destination = destination
     
     def append_results(self, products: list[data.Product]):
         """Write counting results.
@@ -111,10 +113,10 @@ class ProductCountingWriter:
     
     def write_to_file(self):
         """Dump all content in :attr:`lines` to :attr:`output` file."""
-        if not self.output.is_txt_file():
+        if not self.destination.is_txt_file(exist=False):
             self.init_writer()
         
-        with open(self.output, "w") as f:
+        with open(self.destination, "w") as f:
             for line in self.lines:
                 f.write(line)
     

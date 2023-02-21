@@ -28,9 +28,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
-      --data "data/visdrone-a2i2-synthetic.yaml" \
+      --data "data/visdrone-a2i2-haze-synthetic.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x-visdrone-a2i2-640" \
+      --name "yolov8x-visdrone-a2i2-haze-640" \
       --epochs 100 \
       --batch 8 \
       --imgsz 640 \
@@ -44,8 +44,8 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
       --data "data/visdrone-a2i2-synthetic.yaml" \
-      --project "${root_dir}/run/train" \
-      --name "yolov8x6-visdrone-a2i2-synthetic-2160" \
+      --project "${root_dir}/run-haze/train" \
+      --name "yolov8x6-visdrone-a2i2-haze-synthetic-2160" \
       --epochs 100 \
       --batch 4 \
       --imgsz 2160 \
@@ -58,9 +58,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
-      --data "data/visdrone-a2i2-synthetic.yaml" \
+      --data "data/visdrone-a2i2-haze-synthetic.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x-visdrone-a2i2-synthetic-2160" \
+      --name "yolov8x-visdrone-a2i2-haze-synthetic-2160" \
       --epochs 200 \
       --batch 4 \
       --imgsz 2160 \
@@ -84,7 +84,7 @@ if [ "$task" == "predict" ]; then
     --task "detect" \
     --model "${root_dir}/run/train/yolov8x-visdrone-a2i2-of-640/weights/best.pt" \
     --project "${root_dir}/run/predict" \
-    --name "yolov8x-visdrone-a2i2-of-640" \
+    --name "yolov8x-visdrone-a2i2-haze-of-640" \
     --source "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
     --imgsz 640 \
     --conf 0.0001 \

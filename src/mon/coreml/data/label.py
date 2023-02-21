@@ -16,7 +16,7 @@ import cv2
 import numpy as np
 import torch
 
-from mon.foundation import console, file_handler, pathlib, rich
+from mon.foundation import console, file, pathlib, rich
 
 
 # region Label
@@ -136,7 +136,7 @@ class ClassLabels(list[ClassLabel]):
         path = pathlib.Path(path)
         if not path.is_json_file():
             raise ValueError(f"path must be a .json file, but got {path}.")
-        return cls.from_dict(file_handler.read_from_file(path=path))
+        return cls.from_dict(file.read_from_file(path=path))
     
     @classmethod
     def from_value(cls, value: Any) -> ClassLabels | None:
@@ -214,13 +214,14 @@ class ClassLabels(list[ClassLabel]):
         Return:
             A list of colors.
         """
-        labels_colors = []
-        for label in self:
-            if hasattr(label, key) and hasattr(label, "color"):
-                if exclude_negative_key and label[key] < 0:
-                    continue
-                labels_colors.append(label.color)
-        return labels_colors
+        colors = []
+        for c in self:
+            key_value = c.get(key, None)
+            if (key_value is None) or (exclude_negative_key and key_value < 0):
+                continue
+            color = c.get("color", [255, 255, 255])
+            colors.append(color)
+        return colors
     
     @property
     def id2label(self) -> dict[int, dict]:
@@ -244,10 +245,10 @@ class ClassLabels(list[ClassLabel]):
         """
         ids = []
         for c in self:
-            if hasattr(c, key):
-                if exclude_negative_key and c[key] < 0:
-                    continue
-                ids.append(c[key])
+            key_value = c.get(key, None)
+            if (id is None) or (exclude_negative_key and key_value < 0):
+                continue
+            ids.append(key_value)
         return ids
     
     @property
@@ -267,12 +268,11 @@ class ClassLabels(list[ClassLabel]):
         """
         names = []
         for c in self:
-            if hasattr(c, "id"):
-                if exclude_negative_key and c["id"] < 0:
-                    continue
-                names.append(c["name"])
-            else:
-                names.append("")
+            key_value = c.get("id", None)
+            if (key_value is None) or (exclude_negative_key and key_value < 0):
+                continue
+            name = c.get("name", "")
+            names.append(name)
         return names
     
     def num_classes(
@@ -292,10 +292,10 @@ class ClassLabels(list[ClassLabel]):
         """
         count = 0
         for c in self:
-            if hasattr(c, key):
-                if exclude_negative_key and c[key] < 0:
-                    continue
-                count += 1
+            key_value = c.get(key, None)
+            if (key_value is None) or (exclude_negative_key and key_value < 0):
+                continue
+            count += 1
         return count
     
     def get_class(self, key: str = "id", value: Any = None) -> dict | None:
@@ -303,7 +303,8 @@ class ClassLabels(list[ClassLabel]):
         :param:`value`.
         """
         for c in self:
-            if hasattr(c, key) and (value == c[key]):
+            key_value = c.get(key, None)
+            if (key_value is not None) and (value == key_value):
                 return c
         return None
     

@@ -1,12 +1,11 @@
 #!/bin/bash
 
-echo "$HOSTNAME"
-
 video=$1
 convert=$2
 segmentation=$3
 inpainting=$4
 machine=$HOSTNAME
+echo "$machine"
 read -e -i "$video" -p "Video [testA_1, testA_2, testA_3, testA_4, all]: " video
 read -e -i "$convert" -p "Convert video [yes, no]: " convert
 read -e -i "$segmentation" -p "Segmentation method [yolov8, no]: " segmentation

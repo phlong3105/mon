@@ -8,17 +8,17 @@ from __future__ import annotations
 
 __all__ = [
     "CAMERAS",
-    "ROOT_DIR",
     "DATA_DIR",
     "DETECTORS",
     "DISTANCES",
     "MOTIONS",
     "MovingState",
     "OBJECTS",
+    "ROOT_DIR",
     "RUN_DIR",
     "SOURCE_DIR",
     "TRACKERS",
-    "WEIGHT_DIR",
+    "ZOO_DIR",
 ]
 
 import os
@@ -43,25 +43,31 @@ TRACKERS  = mon.Factory(name="Trackers")
 
 # region Directory
 
-__current_file = mon.Path(__file__).absolute()
-SOURCE_ROOT_DIR  = __current_file.parents[1]
-CONTENT_ROOT_DIR = __current_file.parents[2]
+_current_file = mon.Path(__file__).absolute()
+PACKAGE_DIR   = _current_file.parents[0]
+APP_DIR       = _current_file.parents[1]
+SOURCE_DIR    = _current_file.parents[2]
+ROOT_DIR      = _current_file.parents[3]
+BIN_DIR       = ROOT_DIR / "bin"
+DOCS_DIR      = ROOT_DIR / "docs"
+RUN_DIR       = ROOT_DIR / "run"
+TEST_DIR      = ROOT_DIR / "test"
 
-WEIGHT_DIR = SOURCE_ROOT_DIR / "weight"
-if not WEIGHT_DIR.is_dir():
-    WEIGHT_DIR = SOURCE_ROOT_DIR / "weight"
-    
-RUN_DIR = mon.Path() / "run"
+ZOO_DIR = PACKAGE_DIR / "zoo"
+if not ZOO_DIR.is_dir():
+    ZOO_DIR = SOURCE_DIR / "zoo"
+if not ZOO_DIR.is_dir():
+    ZOO_DIR = ROOT_DIR / "zoo"
+
 DATA_DIR = os.getenv("DATA_DIR", None)
 if DATA_DIR is None:
     DATA_DIR = mon.Path("/data")
 else:
     DATA_DIR = mon.Path(DATA_DIR)
 if not DATA_DIR.is_dir():
-    DATA_DIR = CONTENT_ROOT_DIR / "data"
+    DATA_DIR = ROOT_DIR / "data"
 if not DATA_DIR.is_dir():
     DATA_DIR = ""
-
 
 # endregion
 

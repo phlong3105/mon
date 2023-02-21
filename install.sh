@@ -4,8 +4,8 @@
 # chmod +x install.sh
 # conda init bash
 # ./install.sh
-# 
-# or
+#
+# or:
 # bash -l install.sh
 # zsh -i install.sh
 
@@ -106,10 +106,13 @@ case "$OSTYPE" in
     ;;
 esac
 
-# Install 'mon' package
+# Install/upgrade 'mon' package
 eval "$(conda shell.bash hook)"
 conda activate mon
-poetry install
+poetry install --with dev
+pip install -U openmim
+mim install mmcv-full==1.7.0
+pip install --force-reinstall --no-cache -U opencv-python==4.5.5.62
 
 # Set environment variables
 # shellcheck disable=SC2162

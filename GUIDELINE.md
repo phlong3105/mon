@@ -345,11 +345,28 @@ Rules:
 
 Rules:
 
+- Package names should be all lower cases.
+- It is usually preferable to stick to one word name. When multiple words are
+  needed, an underscore should separate them.
+- Use a noun as the name of the package because a package contains related
+  modules and represents a thing or concept, which can be easily represented by
+  a noun.
+- Use a verb as the name of the package if the package provides a specific
+  action or operation. For example, the package "pytest" is a testing framework
+  for Python and uses the verb "test" in its name to clearly show its purpose.
 - When stuck with coming up with a name for a package. Follow Apple's framework
   naming. See
   more: [Apple Documentation](https://developer.apple.com/documentation/technologies).
 
-## 8. List and Tuple
+## 8. Naming: Module
+
+Rules:
+
+- Module names should be all lower cases.
+- It is usually preferable to stick to one word name. When multiple words are
+  needed, an underscore should separate them.
+
+## 9. List and Tuple
 
 Rules:
 
@@ -357,7 +374,7 @@ Rules:
   When in doubt, use `list`.
 - `list` supports many useful functions such as `sort()`, `reverse()`, etc.
 
-## 9. Type Hint
+## 10. Type Hint
 
 Rules:
 
@@ -365,7 +382,7 @@ Rules:
 - Use the suffix `Like` for union type that representing objects that can be
   coerced into a certain type. Example: `DictLike`.
 
-## 10. `assert`, `raise`, `except`
+## 11. `assert`, `raise`, `except`
 
 Rules:
 

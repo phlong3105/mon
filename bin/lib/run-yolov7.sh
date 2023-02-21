@@ -5,7 +5,6 @@ echo "$HOSTNAME"
 task=$1
 machine=$HOSTNAME
 read -e -i "$task" -p "Task [install, train, test, predict]: " task
-# read -e -i "$machine" -p "Machine [pc, server]: " machine
 
 # Install
 if [ "$task" == "install" ]; then
@@ -123,4 +122,4 @@ if [ "$task" == "predict" ]; then
     --name yolov7-e6e-visdrone-1280
 fi
 
-cd "${root_dir}" || exist
+cd "${root_dir}" || exit

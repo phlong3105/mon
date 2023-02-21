@@ -10,9 +10,7 @@ __all__ = [
 ]
 
 import cv2
-import numpy as np
 
-import mon
 from supr import rmoi
 from supr.data import base, hand
 from supr.globals import MovingState, OBJECTS
@@ -25,7 +23,7 @@ from supr.globals import MovingState, OBJECTS
 class Product(base.MovingObject):
     """The retail product class.
     
-    See more: :class:`base.MovingObject`.
+    See more: :class:`supr.data.base.MovingObject`.
     """
     
     min_touched_landmarks: int = 1  # Min hand landmarks touching the object so that it is considered hand-handling.
@@ -71,10 +69,10 @@ class Product(base.MovingObject):
         elif self.is_confirmed:
             # NOTE: Here we want to look for non-hand-handling objects
             # Method 1
-            # if (roi.is_box_in_or_touch_roi(box_xyxy=self.detections[0].bbox) > 0 or
-            #     self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance):
-            #    self.moving_state = MovingState.Counted
-            
+            if hand is None \
+                and roi.is_box_in_roi(bbox=self.detections[0].bbox) > 0 \
+                or self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance:
+                self.moving_state = MovingState.COUNTED
             # Method 2
             if hands is not None:
                 num_lms_touches = 0
@@ -118,28 +116,5 @@ class Product(base.MovingObject):
                 self.moving_state = MovingState.EXITING
         
         # print(self.untouches, self.moving_state)
-        
-    def draw(self, drawing: np.ndarray, **kwargs) -> np.ndarray:
-        """Draw the current object on the :param:`image`."""
-        if self.moi_uid is not None:
-            color = mon.AppleRGB.values()[self.moi_uid]
-        else:
-            color = self.majority_label["color"]
-        if self.is_confirmed:
-            base.MovingObject.draw(self, drawing=drawing, label=False, **kwargs)
-            self.draw_trajectory(drawing=drawing)
-        elif self.is_counting:
-            base.MovingObject.draw(self, drawing=drawing, label=True, **kwargs)
-            self.draw_trajectory(drawing=drawing)
-        elif self.is_to_be_counted:
-            base.MovingObject.draw(self, drawing=drawing, label=True, color=color, **kwargs)
-            self.draw_trajectory(drawing=drawing)
-        elif self.is_counted:
-            # base.MovingObject.draw(self, image=image, label=False, color=color, **kwargs)
-            self.draw_trajectory(drawing=drawing)
-        elif self.is_exiting:
-            # base.MovingObject.draw(self, image=image, label=True, color=color, **kwargs)
-            self.draw_trajectory(drawing=drawing)
-        return drawing
     
 # endregion

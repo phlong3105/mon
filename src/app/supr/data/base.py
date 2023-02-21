@@ -79,8 +79,8 @@ class MovingObject(list[instance.Instance], Object):
         timestamp   : float             = timer(),
         frame_index : int               = -1,
     ):
+        instances = [instances] if not isinstance(instances, list | tuple) else instances
         super().__init__(instance.Instance.from_value(i) for i in instances)
-        
         self.uid          = id_
         self.motion       = motion
         self.moving_state = moving_state
@@ -257,7 +257,7 @@ class MovingObject(list[instance.Instance], Object):
      
     def draw(
         self,
-        drawing: np.ndarray,
+        image  : np.ndarray,
         bbox   : bool = True,
         polygon: bool = False,
         label  : bool = True,
@@ -268,33 +268,57 @@ class MovingObject(list[instance.Instance], Object):
             color = mon.AppleRGB.values()[self.moi_uid]
         else:
             color = color or self.majority_label["color"]
-        if self.is_confirmed:
-            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
+        if self.is_candidate:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = label,
+                color   = [2554, 255, 255]
+            )
+        elif self.is_confirmed:
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = color
+            )
         elif self.is_counting:
-            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = color
+            )
         elif self.is_counted:
-            self.draw_instance(
-                drawing = drawing,
-                bbox= bbox,
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
                 polygon = polygon,
                 label   = label,
                 color   = color
             )
-            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = color
+            )
         elif self.is_exiting:
-            self.draw_instance(
-                drawing = drawing,
-                bbox= bbox,
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
                 polygon = polygon,
                 label   = label,
                 color   = color
             )
-            mon.draw_trajectory(image=drawing, trajectory=self.trajectory, color=color)
-        return drawing
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = color
+            )
+        return image
     
     def draw_instance(
         self,
-        drawing: np.ndarray,
+        image  : np.ndarray,
         bbox   : bool = True,
         polygon: bool = False,
         label  : bool = True,
@@ -305,15 +329,15 @@ class MovingObject(list[instance.Instance], Object):
         if bbox:
             b = self.current.bbox
             cv2.rectangle(
-                img       = drawing,
-                pt1       = (b[0], b[1]),
-                pt2       = (b[2], b[3]),
+                img       = image,
+                pt1       = (int(b[0]), int(b[1])),
+                pt2       = (int(b[2]), int(b[3])),
                 color     = color,
                 thickness = 2
             )
             b_center = self.current.box_center.astype(int)
             cv2.circle(
-                img       = drawing,
+                img       = image,
                 center    = tuple(b_center),
                 radius    = 3,
                 thickness = -1,
@@ -321,14 +345,14 @@ class MovingObject(list[instance.Instance], Object):
             )
         if polygon:
             pts = self.current.polygon.reshape((-1, 1, 2))
-            cv2.polylines(img=drawing, pts=pts, isClosed=True, color=color, thickness=2)
+            cv2.polylines(img=image, pts=pts, isClosed=True, color=color, thickness=2)
         if label is not None:
-            box_tl     = bbox[0:2]
+            box_tl     = self.current.bbox[0:2]
             curr_label = self.majority_label
             font       = cv2.FONT_HERSHEY_SIMPLEX
-            org        = (box_tl[0] + 5, box_tl[1])
+            org        = (int(box_tl[0]) + 5, int(box_tl[1]))
             cv2.putText(
-                img       = drawing,
+                img       = image,
                 text      = curr_label["name"],
                 fontFace  = font,
                 fontScale = 1.0,
@@ -336,7 +360,7 @@ class MovingObject(list[instance.Instance], Object):
                 color     = color,
                 thickness = 2,
             )
-        return drawing
+        return image
     
     
 # endregion

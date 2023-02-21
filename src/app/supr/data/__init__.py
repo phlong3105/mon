@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import supr.data.base
 import supr.data.hand
+import supr.data.instance
 import supr.data.product
 import supr.data.vehicle
-import supr.data.instance
 from supr.data.base import *
 from supr.data.hand import *
 from supr.data.instance import *

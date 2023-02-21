@@ -40,17 +40,17 @@ class Path(type(pathlib.Path())):
         """
         return str(self) == self.name
     
-    def is_bmp_file(self) -> bool:
+    def is_bmp_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a bitmap file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() == ".bmp"
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".bmp"]
     
-    def is_ckpt_file(self) -> bool:
+    def is_ckpt_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a checkpoint file. Otherwise,
         return False.
         """
-        return self.is_file() and self.suffix.lower() in [".ckpt"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".ckpt"]
     
     def is_dir_like(self) -> bool:
         """Return True if the path is a correct file format. """
@@ -60,20 +60,21 @@ class Path(type(pathlib.Path())):
         """Return True if the path is a correct file format. """
         return "." in self.suffix
     
-    def is_image_file(self) -> bool:
+    def is_image_file(self, exist: bool = True) -> bool:
         """Return True if the current path is an image file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() in [
-            ".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm", ".raf",
-            ".tif", ".tiff",
-        ]
+        return (self.is_file() if exist else True) \
+            and self.suffix.lower() in [
+                ".arw", ".bmp", ".dng", ".jpg", ".jpeg", ".png", ".ppm", ".raf",
+                ".tif", ".tiff",
+            ]
     
-    def is_json_file(self) -> bool:
+    def is_json_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a JSON file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() in [".json"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".json"]
     
     def is_name(self) -> bool:
         """Return True if the current path is the same as the stem. Otherwise,
@@ -88,7 +89,7 @@ class Path(type(pathlib.Path())):
         """
         return str(self) == self.stem
     
-    def is_torch_file(self) -> bool:
+    def is_torch_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a file, and the file extension is
         one of the following:
             - pt
@@ -99,40 +100,38 @@ class Path(type(pathlib.Path())):
             - ckpt
             Otherwise, return False.
         """
-        return self.is_file() \
+        return (self.is_file() if exist else True) \
             and self.suffix.lower() in [
                 ".pt", ".pth", ".weights", ".ckpt", ".tar"
             ]
     
-    def is_txt_file(self) -> bool:
+    def is_txt_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a text file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() in [".txt"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".txt"]
     
     def is_url(self) -> bool:
         """Return True if the current path is a valid URL. Otherwise, return
         False.
         """
-        return not isinstance(
-            validators.url(str(self)),
-            validators.ValidationFailure
-        )
+        return not isinstance(validators.url(str(self)), validators.ValidationFailure)
     
-    def is_url_or_file(self) -> bool:
+    def is_url_or_file(self, exist: bool = True) -> bool:
         """Return True if the path is a file or a valid URL. Otherwise,
         return False.
         """
-        return self.is_file() or \
+        return (self.is_file() if exist else True) or \
             not isinstance(validators.url(self), validators.ValidationFailure)
     
-    def is_video_file(self) -> bool:
+    def is_video_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a video file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() in [
-            ".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv",
-        ]
+        return (self.is_file() if exist else True) \
+            and self.suffix.lower() in [
+                ".avi", ".m4v", ".mkv", ".mov", ".mp4", ".mpeg", ".mpg", ".wmv",
+            ]
     
     def is_video_stream(self) -> bool:
         """Return True if the current path is a video stream. Otherwise, return
@@ -140,23 +139,23 @@ class Path(type(pathlib.Path())):
         """
         return "rtsp" in str(self).lower()
     
-    def is_weights_file(self) -> bool:
+    def is_weights_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a PyTorch's weight file.
         Otherwise, return False.
         """
-        return self.is_file() and self.suffix.lower() in [".pt", ".pth"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".pt", ".pth"]
     
-    def is_xml_file(self) -> bool:
+    def is_xml_file(self, exist: bool = True) -> bool:
         """Return True if the current path is an XML file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() in [".xml"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".xml"]
     
-    def is_yaml_file(self) -> bool:
+    def is_yaml_file(self, exist: bool = True) -> bool:
         """Return True if the current path is a YAML file. Otherwise, return
         False.
         """
-        return self.is_file() and self.suffix.lower() in [".yaml", ".yml"]
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".yaml", ".yml"]
     
     def has_subdir(self, name: str) -> bool:
         """Return True if a directory has a subdirectory with the given name."""

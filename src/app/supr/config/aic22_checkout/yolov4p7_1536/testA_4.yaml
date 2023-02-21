@@ -1,0 +1,146 @@
+---
+dataset: &dataset "aic22retail"
+# Dataset name. It is also the name of the directory inside `data_dir`.
+subset: "test_a"
+# Subset name. One of: [`test_a`, `test_b`].
+name: &camera_name "testA_4"
+# Camera name is also used as the unique ID (NO FILE EXTENSION).
+id_: *camera_name
+# Camera's unique ID.
+verbose: true
+#  Verbosity mode
+save_image: &save_image false
+# Should save individual images?
+save_video: &save_video false
+# Should write video?
+save_results: true
+# Should save results?
+
+data:
+  file: &data "testA_4.mp4"
+  # Video file or image folder. By default, assume all video are put inside
+  # `aic22retail/<subset>/`.
+  stream: null
+  # If we run directly with the input stream, `stream` must be of some value.
+  # By default `null` means run with video file defined in `path`.
+  shape: &shape [1080, 1920, 3]
+  # Input size as [H, W, C].
+  "num_classes": &num_classes 117
+  # Number of classes in the dataset.
+  frame_rate: &frame_rate 59.94
+  # Frame rate of the video.
+  batch_size: &batch_size 8
+  # Number of samples in one forward & backward pass.
+
+class_labels:
+  file: "class_labels.json"
+  # Config file containing class_labels.
+
+rois:
+  file: "testA_4.json"
+  # Roi file.
+
+mois:
+  file: "testA_4.json"
+  # Moi file.
+  distance_function: "hausdorff"
+  # Distance function.
+  distance_threshold: 200
+  # Maximum distance for counting with track.
+  angle_threshold: 45
+  # Maximum angle for counting with track.
+
+detector:
+  name: "scaled_yolov4"
+  # Name of the detector model.
+  model_cfg:
+  # Detector model config.
+    cfg: "yolov4-p7.yaml"
+    # Scaled-YOLOv4 variances.
+    nc: *num_classes
+    # Number of classes.
+  weights: "yolov4-p7_aic22retail117_1536.pt"
+  # Pretrained weights file.
+  shape: [1536, 1536, 3]
+  # Input size as [H, W, C].
+  min_confidence: 0.3
+  # Detection confidence threshold. Disregard all detections that have a
+  # confidence lower than this value.
+  nms_max_overlap: 0.8
+  # Maximum detection overlap (non-maxima suppression threshold).
+  device: "0"
+  # CUDDevice, i.e. 0 or 0,1,2,3 or cpu
+
+tracker:
+  name: "sort"
+  # Name of the tracker.
+  motion_model:
+    "name": "kf_box_motion"
+  # Motion model of the tracked object.
+  max_age: 1
+  # Max number of frame keep the object before deleting.
+  min_hit: 3
+  # Number of frame which has matching bounding bbox of the detected object
+  # before the object is considered becoming the track.
+  iou_threshold: 0.3
+  # Intersection over Union between two track with their bounding bbox.
+  object_type: "product"
+  # Type of tracked object.
+
+hands_estimator:
+  static_image_mode: false
+  # Whether to treat the input images as a batch of static and possibly
+  # unrelated images, or a video stream.
+  max_num_hands: 2
+  # Maximum number of hands to detect.
+  model_complexity: 1
+  # Complexity of the hand landmark model: 0 or 1. Landmark accuracy as well as
+  # inference latency generally go up with the model complexity.
+  min_detection_confidence: 0.2
+  # Minimum confidence value ([0.0, 1.0]) for hand detection to be considered
+  # successful.
+  min_tracking_confidence: 0.2
+  # Minimum confidence value ([0.0, 1.0]) for the hand landmarks to be
+  # considered tracked successfully.
+
+moving_object:
+  min_entering_distance: 1
+  # Min distance when an object enters the ROI to be Confirmed.
+  # -1 (object touch or enter the ROI), 0 (whole object must be entered the
+  # ROI), > 0 (whole object must be in the ROI at some distance).
+  min_traveled_distance: 50
+  # Min distance between first trajectory point with last trajectory point.
+  min_hit_streak: 3
+  # Min number of consecutive frame has that track appear.
+  max_age: 1
+  # Max frame to wait until a dead track can be counted.
+  min_touched_landmarks: 1
+  # Min hand landmarks touching the object so that it is considered hand-handling.
+  max_untouches_age: 30
+  # Max frames that the object is untouched before considering for deletion.
+
+data_loader:
+  data: *data
+  # Data source. Can be a path to an image file, a directory, a video, or
+  # a stream. It can also be a pathname pattern to images.
+  batch_size: *batch_size
+  # Number of samples in one forward & backward pass.
+
+data_writer:
+  dst: null
+  # Output video file or a directory.
+  shape: *shape
+  # Output size [H, W, C].
+  frame_rate: *frame_rate
+  # Frame rate of the video.
+  fourcc: "mp4v"
+  # Video codec. One of: ["mp4v", "xvid", "mjpg", "wmv1"].
+  save_image: *save_image
+  # Should write individual image?
+  save_video: *save_video
+  # Should write video?
+
+result_writer:
+  dst: *camera_name
+  camera_name: *camera_name
+...
