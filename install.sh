@@ -138,7 +138,7 @@ fi
 echo -e "... Done"
 
 # Setup Resilio Sync
-echo -e "\nSetting Resilio Sync"
+echo -e "\nClearning up"
 rsync_dir="${root_dir}/.sync"
 mkdir -p "${rsync_dir}"
 cp "IgnoreList" "${rsync_dir}/IgnoreList"

@@ -57,16 +57,16 @@ class Hands:
 		else:
 			return None
 		
-	def draw(self, drawing: np.ndarray) -> np.ndarray:
+	def draw(self, image: np.ndarray) -> np.ndarray:
 		for hand_landmarks in self.multi_hand_landmarks:
-			[cv2.circle(drawing, l, 10, (139, 0, 0), cv2.FILLED) for l in hand_landmarks]
+			[cv2.circle(image, l, 10, (139, 0, 0), cv2.FILLED) for l in hand_landmarks]
 		for hand_landmarks in self.multi_hand_landmarks_norm:
 			mp.solutions.drawing_utils.draw_landmarks(
-				image         = drawing,
+				image         = image,
 				landmark_list = hand_landmarks,
 				connections   = mp.solutions.hands.HAND_CONNECTIONS
 			)
-		return drawing
+		return image
 	
 # endregion
 

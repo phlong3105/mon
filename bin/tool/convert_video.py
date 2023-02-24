@@ -14,12 +14,13 @@ import mon
 # region Function
 
 @click.command()
-@click.option("--source",      default=mon.DATA_DIR, type=click.Path(exists=True), help="Video filepath or directory.")
-@click.option("--destination", default=mon.DATA_DIR, type=click.Path(exists=False), help="Output video filepath or directory.")
+@click.option("--source",      default=mon.DATA_DIR/"aic23-autocheckout"/"testA"/"inpainting", type=click.Path(exists=True), help="Video filepath or directory.")
+@click.option("--destination", default=mon.DATA_DIR/"aic23-autocheckout"/"train"/"tray", type=click.Path(exists=False), help="Output video filepath or directory.")
 @click.option("--from-index",  default=None, type=int, help="From/to frame index.")
 @click.option("--to-index",    default=None, type=int, help="From/to frame index.")
 @click.option("--size",        default=None, type=int, nargs="+", help="Output images/video size.")
-@click.option("--save-image",  is_flag=True, help="Save images.")
+@click.option("--skip",        default=60, type=int, help="Skip n frames.")
+@click.option("--save-image",  default=True, is_flag=True, help="Save images.")
 @click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--verbose",     is_flag=True)
 def convert_video(
@@ -28,6 +29,7 @@ def convert_video(
     from_index : int,
     to_index   : int,
     size       : int | list[int],
+    skip       : int,
     save_image : bool,
     extension  : str,
     verbose    : bool
@@ -51,6 +53,8 @@ def convert_video(
     
     if size is not None:
         size = mon.get_hw(size=size)
+    
+    skip = skip or 1
     
     for src, dst in zip(source, destination):
         cap         = cv2.VideoCapture(str(src))
@@ -78,14 +82,14 @@ def convert_video(
                 description = f"[bright_yellow] Converting {src.name}"
             ):
                 success, image = cap.read()
-                if not success or not f_index <= i <= t_index:
+                if not success or not f_index <= i <= t_index or i % skip != 0:
                     continue
                 
                 if size is not None:
                     image = cv2.resize(image, size)
                     
                 if save_image:
-                    cv2.imwrite(dst/f"{i:06}.{extension}", image)
+                    cv2.imwrite(str(dst/f"{i:06}.{extension}"), image)
                 else:
                     wrt.write(image)
                

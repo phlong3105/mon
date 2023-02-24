@@ -11,15 +11,17 @@ class SegmentationPredictor(DetectionPredictor):
 
     def postprocess(self, preds, img, orig_img, classes=None):
         # TODO: filter by classes
-        p = ops.non_max_suppression(preds[0],
-                                    self.args.conf,
-                                    self.args.iou,
-                                    agnostic=self.args.agnostic_nms,
-                                    max_det=self.args.max_det,
-                                    nc=len(self.model.names),
-                                    classes=self.args.classes)
+        p = ops.non_max_suppression(
+            preds[0],
+            self.args.conf,
+            self.args.iou,
+            agnostic = self.args.agnostic_nms,
+            max_det  = self.args.max_det,
+            nc       = len(self.model.names),
+            classes  = self.args.classes
+        )
         results = []
-        proto = preds[1][-1] if len(preds[1]) == 3 else preds[1]  # second output is len 3 if pt, but only 1 if exported
+        proto   = preds[1][-1] if len(preds[1]) == 3 else preds[1]  # second output is len 3 if pt, but only 1 if exported
         for i, pred in enumerate(p):
             shape = orig_img[i].shape if isinstance(orig_img, list) else orig_img.shape
             if not len(pred):
@@ -36,7 +38,6 @@ class SegmentationPredictor(DetectionPredictor):
 
     def write_results(self, idx, results, batch):
         p, im, im0 = batch
-        
         log_string = ""
         if len(im.shape) == 3:
             im = im[None]  # expand for batch dim
@@ -49,8 +50,8 @@ class SegmentationPredictor(DetectionPredictor):
             frame = getattr(self.dataset, 'frame', 0)
 
         self.data_path = p
-        self.txt_path = str(self.save_dir / 'labels' / p.stem) + ('' if self.dataset.mode == 'image' else f'_{frame}')
-        log_string += '%gx%g ' % im.shape[2:]  # print string
+        self.txt_path  = str(self.save_dir / 'labels' / p.stem) + ('' if self.dataset.mode == 'image' else f'_{frame}')
+        log_string    += '%gx%g ' % im.shape[2:]  # print string
         self.annotator = self.get_annotator(im0)
 
         result = results[idx]

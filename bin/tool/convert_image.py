@@ -19,6 +19,7 @@ import mon
 @click.option("--from-index",  default=None, type=int, help="From/to frame index.")
 @click.option("--to-index",    default=None, type=int, help="From/to frame index.")
 @click.option("--size",        default=None, type=int, nargs="+", help="Output images/video size.")
+@click.option("--skip",        default=1, type=int, help="Skip n frames.")
 @click.option("--save-video",  is_flag=True, help="Save images.")
 @click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--verbose",     is_flag=True)
@@ -28,6 +29,7 @@ def visualize_image(
     from_index : int,
     to_index   : int,
     size       : int | list[int],
+    skip       : int,
     save_video : bool,
     extension  : str,
     verbose    : bool
@@ -49,6 +51,8 @@ def visualize_image(
     if size is not None:
         size = mon.get_hw(size=size)
 
+    skip = skip or 1
+    
     for src, dst in zip(source, destination):
         image_files = list(src.rglob("*"))
         image_files = [f for f in image_files if f.is_image_file()]
@@ -69,7 +73,7 @@ def visualize_image(
                 total       = len(image_files),
                 description = f"[bright_yellow] Converting {src.name}"
             ):
-                if not f_index <= i <= t_index:
+                if not f_index <= i <= t_index or i % skip != 0:
                     continue
                 
                 image = cv2.imread(str(image_files[i]))

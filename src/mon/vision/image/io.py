@@ -271,7 +271,7 @@ class ImageLoader(Loader):
                 images = torch.stack(images, dim=1)
                 images = torch.squeeze(images, dim=0)
             else:
-                images = np.hstack(images)
+                images = np.stack(images, axis=0)
             return images, indexes, files, rel_paths
     
     def init(self):
@@ -477,10 +477,10 @@ class VideoLoaderCV(VideoLoader):
                 self.index += 1
             
             if self.to_tensor:
-                images = torch.stack(images, dim=1)
+                images = torch.stack(images,   dim=1)
                 images = torch.squeeze(images, dim=0)
             else:
-                images = np.hstack(images)
+                images = np.stack(images, axis=0)
             return images, indexes, files, rel_paths
     
     @property
@@ -553,7 +553,7 @@ class VideoLoaderCV(VideoLoader):
                 str(source),
                 self.api_preference
             )
-            num_images = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+            num_images      = int(self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
             self.frame_rate = int(self.video_capture.get(cv2.CAP_PROP_FPS))
         elif source.is_video_stream():
             self.video_capture = cv2.VideoCapture(
@@ -684,7 +684,7 @@ class VideoLoaderFFmpeg(VideoLoader):
                 images = torch.stack(images, dim=1)
                 images = torch.squeeze(images, dim=0)
             else:
-                images = np.hstack(images)
+                images = np.stack(images, axis=0)
             return images, indexes, files, rel_paths
     
     @property
@@ -1184,13 +1184,12 @@ class VideoWriterCV(VideoWriter):
 
     Args:
         destination: A destination directory to save images.
-        image_size: A desired output size of shape HW. This is used to
-        reshape the
-            input. Defaults to [480, 640].
+        image_size: A desired output size of shape HW. This is used to reshape
+            the input. Defaults to [480, 640].
         frame_rate: A frame rate of the output video. Defaults to 10.
-        fourcc: Video codec. One of: ["mp4v", "xvid", "mjpg", "wmv"]. Defaults
+        fourcc: Video codec. One of: ['mp4v', 'xvid', 'mjpg', 'wmv']. Defaults
             to ".mp4v".
-        save_image: If True save each image separately. Defaults to False.
+        save_image: If True, save each image separately. Defaults to False.
         denormalize: If True, convert image to [0, 255]. Defaults to True.
         verbose: Verbosity. Defaults to False.
     """

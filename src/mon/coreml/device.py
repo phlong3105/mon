@@ -61,7 +61,7 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
     available on the current system.
     
     Args:
-        device: The device to run the model on. If None, the default “cpu”
+        device: The device to run the model on. If None, the default 'cpu'
             device is used.
         batch_size: The expected batch size in a single forward pass.
     

@@ -64,10 +64,10 @@ class MovingObject(list[instance.Instance], Object):
         frame_index: The frame index when the object is created.
     """
     
-    min_entering_distance: float = 0.0    # Min distance when an object enters the ROI to be `Confirmed`. Defaults to 0.0.
-    min_traveled_distance: float = 100.0  # Min distance between first trajectory point with last trajectory point. Defaults to 10.0.
-    min_hit_streak       : int   = 10     # Min number of `consecutive` frame has that track appear. Defaults to 10.
-    max_age              : int   = 1      # Max frame to wait until a dead track can be counted. Defaults to 1.
+    min_entering_distance: float = 0.0    # Minimum distance when an object enters the ROI to be `Confirmed`. Defaults to 0.0.
+    min_traveled_distance: float = 100.0  # Minimum distance between first trajectory point with last trajectory point. Defaults to 10.0.
+    min_hit_streak       : int   = 10     # Minimum number of `consecutive` frames that track appears. Defaults to 10.
+    max_age              : int   = 1      # Maximum frame to wait until a dead track can be counted. Defaults to 1.
 
     def __init__(
         self,
@@ -240,7 +240,7 @@ class MovingObject(list[instance.Instance], Object):
         """Update trajectory with a new instance's center point."""
         d = mon.distance.euclidean(u=self.trajectory[-1], v=self.current.box_center)
         if d >= self.min_traveled_distance:
-            self.trajectory.append(self.current.box_center)
+            self.trajectory.append(list(self.current.box_center))
             
     @abstractmethod
     def update_moving_state(self, rois: list[rmoi.ROI], **kwargs):
@@ -268,25 +268,36 @@ class MovingObject(list[instance.Instance], Object):
             color = mon.AppleRGB.values()[self.moi_uid]
         else:
             color = color or self.majority_label["color"]
+        
         if self.is_candidate:
+            pass
+        elif self.is_confirmed:
             image = self.draw_instance(
                 image   = image,
                 bbox    = bbox,
                 polygon = polygon,
                 label   = label,
-                color   = [2554, 255, 255]
+                color   = [255, 255, 255]
             )
-        elif self.is_confirmed:
             image = mon.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
-                color      = color
+                color      = [255, 255, 255],
+                thickness  = 3,
             )
         elif self.is_counting:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = label,
+                color   = [255, 255, 255]
+            )
             image = mon.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
-                color      = color
+                color      = [255, 255, 255],
+                thickness  = 3,
             )
         elif self.is_counted:
             image = self.draw_instance(
@@ -299,7 +310,8 @@ class MovingObject(list[instance.Instance], Object):
             image = mon.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
-                color      = color
+                color      = color,
+                thickness  = 3,
             )
         elif self.is_exiting:
             image = self.draw_instance(
@@ -312,16 +324,17 @@ class MovingObject(list[instance.Instance], Object):
             image = mon.draw_trajectory(
                 image      = image,
                 trajectory = self.trajectory,
-                color      = color
+                color      = color,
+                thickness  = 3,
             )
         return image
     
     def draw_instance(
         self,
         image  : np.ndarray,
-        bbox   : bool = True,
-        polygon: bool = False,
-        label  : bool = True,
+        bbox   : bool             = True,
+        polygon: bool             = False,
+        label  : bool             = True,
         color  : list[int] | None = None
     ) -> np.ndarray:
         """Draw the current object on the :param:`image`."""

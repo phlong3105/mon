@@ -18,20 +18,19 @@ from supr.globals import MovingState, OBJECTS
 
 # region Product
 
-# noinspection PyMethodOverriding
 @OBJECTS.register(name="product")
 class Product(base.MovingObject):
-    """The retail product class.
+    """Retail product.
     
     See more: :class:`supr.data.base.MovingObject`.
     """
-    
-    min_touched_landmarks: int = 1  # Min hand landmarks touching the object so that it is considered hand-handling.
-    max_untouches_age    : int = 3  # Max frames the product is untouched before considering for deletion.
 
+    min_touched_landmarks = 1  # Minimum hand landmarks touching the object so that it is considered hand-handling.
+    min_confirms          = 3  # Minimum frames that the object is considered for counting.
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.untouches = 0
+        self.num_confirms = 0
     
     def update_moving_state(
         self,
@@ -54,67 +53,45 @@ class Product(base.MovingObject):
         
         # From Candidate --> Confirmed
         if self.is_candidate:
-            entering_distance = roi.is_box_in_roi(
-                bbox             = self.current.bbox,
-                compute_distance = True,
-            )
-            if (
-                self.hit_streak >= self.min_hit_streak
-                and entering_distance >= self.min_entering_distance
-                and self.traveled_distance >= self.min_traveled_distance
-            ):
+            entering_distance = roi.is_box_center_in_roi(bbox=self.current.bbox, compute_distance=True)
+            if self.hit_streak >= self.min_hit_streak \
+                and entering_distance >= self.min_entering_distance \
+                and self.traveled_distance >= self.min_traveled_distance:
                 self.moving_state = MovingState.CONFIRMED
-            
+        
         # From Confirmed --> Counting
         elif self.is_confirmed:
-            # NOTE: Here we want to look for non-hand-handling objects
             # Method 1
-            if hand is None \
-                and roi.is_box_in_roi(bbox=self.detections[0].bbox) > 0 \
-                or self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance:
-                self.moving_state = MovingState.COUNTED
+            if hands is None:
+                self.num_confirms += 1
+                if self.num_confirms >= self.min_confirms:
+                    self.moving_state = MovingState.TO_BE_COUNTED
+                # if roi.is_box_in_roi(bbox=self.current.bbox) <= 0:
+                #     self.moving_state = MovingState.COUNTING
             # Method 2
-            if hands is not None:
+            else:
                 num_lms_touches = 0
                 box_points      = self.current.box_corners_points
                 for landmarks in hands.multi_hand_landmarks:
                     for l in landmarks:
                         if int(cv2.pointPolygonTest(box_points, l, True)) >= 0:
                             num_lms_touches += 1
-                if num_lms_touches < self.min_touched_landmarks:
-                    self.untouches += 1
-                else:
-                    self.untouches = 0
-
-            if roi.is_box_in_roi(bbox=self.current.bbox) <= 0:
-                if self.untouches > self.max_untouches_age:
-                    self.moving_state = MovingState.COUNTED
-                # elif (roi.is_box_in_or_touch_roi(box_xyxy=self.first_box) > 0 or
-                #      self.traveled_distance_between(-1, -2) <= Product.min_traveled_distance):
-                #    pass
-                    # self.moving_state = MovingState.Counted
-                else:
-                    self.moving_state = MovingState.COUNTING
-            
+                if num_lms_touches >= self.min_touched_landmarks:
+                    self.num_confirms += 1
+                if self.num_confirms >= self.min_confirms:
+                    self.moving_state = MovingState.TO_BE_COUNTED
+                
         # From Counting --> ToBeCounted
         elif self.is_counting:
-            if (
-                roi.is_box_center_in_roi(bbox=self.current.bbox) < 0
-                or self.time_since_update >= self.max_age
-            ):
-                self.moving_state = MovingState.TO_BE_COUNTED
-
+            self.moving_state = MovingState.TO_BE_COUNTED
+        
         # From ToBeCounted --> Counted
-        # Perform when counting the vehicle
-
+        # Perform when counting the vehicle in :class:`supr.camera.base.Camera`
+        # object.
+        
         # From Counted --> Exiting
         elif self.is_counted:
-            if (
-                roi.is_box_center_in_roi(bbox=self.current.bbox, compute_distance=True) <= 0
-                or self.time_since_update >= Product.max_age
-            ):
+            if roi.is_box_center_in_roi(bbox=self.current.bbox, compute_distance=True) <= 0:
                 self.moving_state = MovingState.EXITING
-        
-        # print(self.untouches, self.moving_state)
-    
+            
 # endregion

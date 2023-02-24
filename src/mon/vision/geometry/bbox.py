@@ -351,8 +351,10 @@ def convert_bbox(
     width : int | None = None
 ) -> np.ndarray:
     """Convert bounding box."""
-    code = ShapeCode.from_value(code)
+    code = ShapeCode.from_value(value=code)
     match code:
+        case ShapeCode.SAME:
+            return bbox
         case ShapeCode.VOC2COCO | ShapeCode.XYXY2XYWH:
             return bbox_voc_to_coco(bbox=bbox)
         case ShapeCode.VOC2YOLO | ShapeCode.XYXY2CXCYN:
@@ -366,7 +368,7 @@ def convert_bbox(
         case ShapeCode.YOLO2COCO | ShapeCode.CXCYN2XYXY:
             return bbox_yolo_to_coco(bbox=bbox, height=height, width=width)
         case _:
-            raise bbox
+            raise ValueError(f"{code}.")
 
 # endregion
 

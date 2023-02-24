@@ -27,12 +27,12 @@ class Detector(ABC):
     Args:
         config: A detector model's config.
         weight: A path to a pretrained weight file.
-        classlabels: A list of all labels' dicts.
+        classlabels: A list of all the class-labels defined in a dataset.
         image_size: The desired model's input size in HW format. Defaults to
-        640.
+            640.
         conf_threshold: An object confidence threshold. Defaults to 0.5.
         iou_threshold: An IOU threshold for NMS. Defaults to 0.4.
-        max_detections: Maximum number of detections per image. Defaults to 300.
+        max_detections: Maximum number of detections/image. Defaults to 300.
         device: Cuda device, i.e. 0 or 0,1,2,3 or cpu. Defaults to 'cpu'.
     """
     

@@ -14,7 +14,7 @@ import mon
 # region Function
 
 @click.command()
-@click.option("--image-dir", default=mon.DATA_DIR/"aic23-checkout/run/testA_1/visualize/", type=click.Path(exists=True), help="Image directory.")
+@click.option("--image-dir", default=mon.DATA_DIR/"aic23-autocheckout/run/testA_1/visualize/", type=click.Path(exists=True), help="Image directory.")
 @click.option("--verbose",   default=True, is_flag=True)
 def visualize_image(
     image_dir: mon.Path,

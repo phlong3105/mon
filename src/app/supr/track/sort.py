@@ -210,7 +210,7 @@ class SORT(base.Tracker):
         for m in matched_indexes:
             track_idx    = m[1]
             instance_idx = m[0]
-            self.tracks[track_idx].update(instances[instance_idx])
+            self.tracks[track_idx].update(instance=instances[instance_idx])
             # IF you don't call the function above, then call the following
             # functions:
             # self.tracks[track_idx].update_go_from_detection(measurement=detections[detection_idx])

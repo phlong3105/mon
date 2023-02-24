@@ -47,20 +47,20 @@ class YOLO:
             model (str, Path): model to load or create
             type (str): Type/version of models to use. Defaults to "v8".
         """
-        self.type = type
-        self.ModelClass = None  # model class
-        self.TrainerClass = None  # trainer class
+        self.type           = type
+        self.ModelClass     = None  # model class
+        self.TrainerClass   = None  # trainer class
         self.ValidatorClass = None  # validator class
         self.PredictorClass = None  # predictor class
-        self.predictor = None  # reuse predictor
-        self.model = None  # model object
-        self.trainer = None  # trainer object
-        self.task = None  # task type
-        self.ckpt = None  # if loaded from *.pt
-        self.cfg = None  # if loaded from *.yaml
-        self.ckpt_path = None
-        self.overrides = {}  # overrides for trainer object
-        self.metrics_data = None
+        self.predictor      = None  # reuse predictor
+        self.model          = None  # model object
+        self.trainer        = None  # trainer object
+        self.task           = None  # task type
+        self.ckpt           = None  # if loaded from *.pt
+        self.cfg            = None  # if loaded from *.yaml
+        self.ckpt_path      = None
+        self.overrides      = {}  # overrides for trainer object
+        self.metrics_data   = None
 
         # Load or create new YOLO model
         suffix = Path(model).suffix
@@ -157,7 +157,7 @@ class YOLO:
         Returns:
             (List[ultralytics.yolo.engine.results.Results]): The prediction results.
         """
-        overrides = self.overrides.copy()
+        overrides         = self.overrides.copy()
         overrides["conf"] = 0.25
         overrides.update(kwargs)
         overrides["mode"] = "predict"

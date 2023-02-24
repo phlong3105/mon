@@ -15,8 +15,8 @@ import mon
 # region Function
 
 @click.command()
-@click.option("--image-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/images", type=click.Path(exists=True), help="Image directory.")
-@click.option("--label-dir",   default=mon.DATA_DIR / "a2i2-haze/dry-run/2023/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--image-dir",   default=mon.DATA_DIR/"aic23-autocheckout/train/tray/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",   default=mon.DATA_DIR/"aic23-autocheckout/train/tray/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
 @click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
 @click.option("--bbox-format", default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
 @click.option("--label",       is_flag=True, help="Draw label.")
@@ -24,7 +24,7 @@ import mon
 @click.option("--fill",        is_flag=True, help="Fill the region inside the bounding box with transparent color.")
 @click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--save",        is_flag=True)
-@click.option("--verbose",     is_flag=True)
+@click.option("--verbose",     default=True, is_flag=True)
 def visualize_bbox(
     image_dir  : mon.Path,
     label_dir  : mon.Path,
@@ -40,12 +40,14 @@ def visualize_bbox(
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     assert label_dir is not None and mon.Path(label_dir).is_dir()
     
-    image_dir   = mon.Path(image_dir)
-    label_dir   = mon.Path(label_dir)
-    output_dir  = output_dir or label_dir.parent / "visualize"
-    output_dir  = mon.Path(output_dir)
+    image_dir  = mon.Path(image_dir)
+    label_dir  = mon.Path(label_dir)
+    output_dir = output_dir or label_dir.parent / "visualize"
+    output_dir = mon.Path(output_dir)
     if save:
         output_dir.mkdir(parents=True, exist_ok=True)
+    
+    code = mon.ShapeCode.from_value(value=f"{bbox_format}_to_voc")
     
     image_files = list(image_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
@@ -63,11 +65,10 @@ def visualize_bbox(
             if label_file.is_txt_file():
                 with open(label_file, "r") as in_file:
                     l = in_file.read().splitlines()
-                l    = [x.strip().split(" ") for x in l]
-                l    = [x for x in l if len(x) >= 5]
-                b    = np.array([list(map(float, x[1:])) for x in l])
-                code = mon.ShapeCode.from_value(value=f"{bbox_format}_to_voc")
-                b    = mon.convert_bbox(bbox=b, code=code, height=h, width=w)
+                l = [x.strip().split(" ") for x in l]
+                l = [x for x in l if len(x) >= 5]
+                b = np.array([list(map(float, x[1:])) for x in l])
+                b = mon.convert_bbox(bbox=b, code=code, height=h, width=w)
                 
                 colors = mon.RGB.values()
                 n      = len(colors)

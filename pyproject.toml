@@ -117,12 +117,12 @@ mmcv-full      = "=1.7.1"
 openmim        = "*"
 packaging      = "*"
 pandas         = "*"
-saicinpainting = {path="src/lib/lama"  }
+saicinpainting = {path="src/lib/lama"  , develop=true}
 tabulate       = "*"
 tensorflow     = "*"
 thop           = "*"
 torchfile      = "*"
-ultralytics    = {path="src/lib/yolov8"}
+ultralytics    = {path="src/lib/yolov8", develop=true}
 webdataset     = "*"
 
 [build-system]

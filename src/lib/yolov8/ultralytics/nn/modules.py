@@ -376,8 +376,8 @@ class Ensemble(nn.ModuleList):
 class Detect(nn.Module):
     # YOLOv8 Detect head for detection models
     dynamic = False  # force grid reconstruction
-    export = False  # export mode
-    shape = None
+    export  = False  # export mode
+    shape   = None
     anchors = torch.empty(0)  # init
     strides = torch.empty(0)  # init
 
@@ -406,8 +406,8 @@ class Detect(nn.Module):
             self.shape = shape
 
         box, cls = torch.cat([xi.view(shape[0], self.no, -1) for xi in x], 2).split((self.reg_max * 4, self.nc), 1)
-        dbox = dist2bbox(self.dfl(box), self.anchors.unsqueeze(0), xywh=True, dim=1) * self.strides
-        y = torch.cat((dbox, cls.sigmoid()), 1)
+        dbox     = dist2bbox(self.dfl(box), self.anchors.unsqueeze(0), xywh=True, dim=1) * self.strides
+        y        = torch.cat((dbox, cls.sigmoid()), 1)
         return y if self.export else (y, x)
 
     def bias_init(self):
@@ -424,23 +424,24 @@ class Segment(Detect):
     # YOLOv8 Segment head for segmentation models
     def __init__(self, nc=80, nm=32, npr=256, ch=()):
         super().__init__(nc, ch)
-        self.nm = nm  # number of masks
-        self.npr = npr  # number of protos
-        self.proto = Proto(ch[0], self.npr, self.nm)  # protos
+        self.nm     = nm  # number of masks
+        self.npr    = npr  # number of protos
+        self.proto  = Proto(ch[0], self.npr, self.nm)  # protos
         self.detect = Detect.forward
 
         c4 = max(ch[0] // 4, self.nm)
         self.cv4 = nn.ModuleList(nn.Sequential(Conv(x, c4, 3), Conv(c4, c4, 3), nn.Conv2d(c4, self.nm, 1)) for x in ch)
 
     def forward(self, x):
-        p = self.proto(x[0])  # mask protos
+        p  = self.proto(x[0])  # mask protos
         bs = p.shape[0]  # batch size
 
         mc = torch.cat([self.cv4[i](x[i]).view(bs, self.nm, -1) for i in range(self.nl)], 2)  # mask coefficients
-        x = self.detect(self, x)
+        x  = self.detect(self, x)
         if self.training:
             return x, mc, p
-        return (torch.cat([x, mc], 1), p) if self.export else (torch.cat([x[0], mc], 1), (x[1], mc, p))
+        return (torch.cat([x, mc], 1), p) if self.export \
+            else (torch.cat([x[0], mc], 1), (x[1], mc, p))
 
 
 class Classify(nn.Module):

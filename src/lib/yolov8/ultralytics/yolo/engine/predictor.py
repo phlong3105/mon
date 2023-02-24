@@ -86,18 +86,18 @@ class BasePredictor:
             self.args.show = check_imshow(warn=True)
 
         # Usable if setup is done
-        self.model = None
-        self.data = self.args.data  # data_dict
-        self.bs = None
-        self.imgsz = None
-        self.device = None
-        self.classes = self.args.classes
-        self.dataset = None
+        self.model       = None
+        self.data        = self.args.data  # data_dict
+        self.bs          = None
+        self.imgsz       = None
+        self.device      = None
+        self.classes     = self.args.classes
+        self.dataset     = None
         self.vid_path, self.vid_writer = None, None
-        self.annotator = None
-        self.data_path = None
+        self.annotator   = None
+        self.data_path   = None
         self.source_type = None
-        self.callbacks = defaultdict(list, callbacks.default_callbacks)  # add callbacks
+        self.callbacks   = defaultdict(list, callbacks.default_callbacks)  # add callbacks
         callbacks.add_integration_callbacks(self)
 
     def preprocess(self, img):

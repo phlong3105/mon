@@ -298,8 +298,7 @@ def draw_trajectory(
             )
         trajectory = np.array(trajectory)
     trajectory = np.array(trajectory).reshape((-1, 1, 2)).astype(int)
-    
-    color = color or [255, 255, 255]
+    color      = color or [255, 255, 255]
     cv2.polylines(
         img       = drawing,
         pts       = [trajectory],

@@ -221,11 +221,11 @@ class MovementOfInterest:
         id_               : int | str,
         points            : np.ndarray,
         shape_type        : str,
-        offset            : int | None    = None,
-        distance_function : str           = "hausdorff",
-        distance_threshold: float         = 300.0,
-        angle_threshold   : float         = 45.0,
-        color             : list[int]     = mon.AppleRGB.WHITE.value,
+        offset            : int | None = None,
+        distance_function : str        = "hausdorff",
+        distance_threshold: float      = 300.0,
+        angle_threshold   : float      = 45.0,
+        color             : list[int]  = mon.AppleRGB.WHITE.value,
     ):
         super().__init__()
         self.id_                = id_

@@ -15,8 +15,8 @@ import mon
 # region Function
 
 @click.command()
-@click.option("--image-dir",      default=mon.DATA_DIR / "aic23-checkout/run/testA_4/images/", type=click.Path(exists=True), help="Image directory.")
-@click.option("--label-dir",      default=mon.DATA_DIR / "aic23-checkout/run/testA_4/labels/", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--image-dir",      default=mon.DATA_DIR / "aic23-autocheckout/run/testA_4/images/", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",      default=mon.DATA_DIR / "aic23-autocheckout/run/testA_4/labels/", type=click.Path(exists=True), help="Bounding bbox directory.")
 @click.option("--output-dir",     default=None, type=click.Path(exists=False), help="Output directory.")
 @click.option("--segment-format", default="yolo", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Segmentation mask format.")
 @click.option("--thickness",      default=1, type=int, help="The thickness of the segmentation mask border line in px.")
@@ -53,6 +53,8 @@ def visualize_segment(
     if save:
         output_dir.mkdir(parents=True, exist_ok=True)
     
+    code = mon.ShapeCode.from_value(value=f"{segment_format}_to_voc")
+
     image_files = list(image_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
@@ -69,15 +71,13 @@ def visualize_segment(
             if label_file.is_txt_file():
                 with open(label_file, "r") as in_file:
                     l = in_file.read().splitlines()
-                l = [x.strip().split(" ") for x in l]
-                l = [x for x in l if len(x) >= 2]
-                s = [list(map(float, x[1:-1])) for x in l]
-    
+                l      = [x.strip().split(" ") for x in l]
+                l      = [x for x in l if len(x) >= 2]
+                s      = [list(map(float, x[1:-1])) for x in l]
                 colors = mon.RGB.values()
                 n      = len(colors)
                 for j, x in enumerate(s):
                     x     = np.array(x).reshape((-1, 2))
-                    code  = mon.ShapeCode.from_value(value=f"{segment_format}_to_voc")
                     x     = mon.convert_contour(contour=x, code=code, height=h, width=w)
                     image = mon.draw_segment(
                         image     = image,

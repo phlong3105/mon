@@ -273,8 +273,7 @@ def copy_file(src: Path | str, dst: Path | str):
         src: The path to the original file.
         dst: The destination path.
     """
-    src = Path(src)
-    src.copy_to(dst=dst)
+    shutil.copyfile(src=str(src), dst=str(dst))
 
 
 # endregion

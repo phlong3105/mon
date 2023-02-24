@@ -27,6 +27,7 @@ import multipledispatch
 import numpy as np
 import torch
 
+from mon.coreml import device as md
 from mon.foundation import error_console, math
 
 
@@ -718,6 +719,7 @@ def to_tensor(
     image    : torch.Tensor | np.ndarray,
     keepdim  : bool = True,
     normalize: bool = False,
+    device   : Any  = None,
 ) -> torch.Tensor:
     """Convert an image from :class:`PIL.Image` or :class:`numpy.ndarray` to
     :class:`torch.Tensor`. Optionally, convert :param:`image` to channel-first
@@ -727,8 +729,10 @@ def to_tensor(
         image: An image in channel-last or channel-first format.
         keepdim: If True, keep the original shape. If False, convert it to a 4-D
             shape. Defaults to True.
-        normalize: If True, normalize the image to [0, 1]. Defaults to False
-    
+        normalize: If True, normalize the image to [0, 1]. Defaults to False.
+        device: The device to run the model on. If None, the default 'cpu'
+            device is used.
+        
     Returns:
         A :class:`torch.Tensor` image.
     """
@@ -746,6 +750,10 @@ def to_tensor(
     image = normalize_image(image=image) if normalize else image
     # Place in memory
     image = image.contiguous()
+    if device is not None:
+        device = md.select_device(device=device) \
+            if not isinstance(device, torch.device) else device
+        image = image.to(device)
     return image
 
 
