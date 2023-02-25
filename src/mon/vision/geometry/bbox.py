@@ -74,10 +74,10 @@ def get_bbox_corners(bbox: np.ndarray) -> np.ndarray:
     c_y1    = y1
     c_x2    = x1 + w
     c_y2    = y1
-    c_x3    = x1
-    c_y3    = y1 + h
-    c_x4    = x2
-    c_y4    = y2
+    c_x3    = x2
+    c_y3    = y2
+    c_x4    = x1
+    c_y4    = y1 + h
     corners = np.hstack((c_x1, c_y1, c_x2, c_y2, c_x3, c_y3, c_x4, c_y4))
     return corners
 
@@ -98,10 +98,10 @@ def get_bbox_corners_points(bbox: np.ndarray) -> np.ndarray:
     c_y1   = y1
     c_x2   = x1 + w
     c_y2   = y1
-    c_x3   = x1
-    c_y3   = y1 + h
-    c_x4   = x2
-    c_y4   = y2
+    c_x3   = x2
+    c_y3   = y2
+    c_x4   = x1
+    c_y4   = y1 + h
     points = np.array([[c_x1, c_y1], [c_x2, c_y2], [c_x3, c_y3], [c_x4, c_y4]], np.int32)
     return points
 

@@ -41,7 +41,7 @@ class YOLOv8(Detector):
             stride  = self.model.stride,
             min_dim = 2
         )
-
+    
     def preprocess(self, images: np.ndarray) -> torch.Tensor:
         """Preprocessing step.
 
@@ -88,7 +88,7 @@ class YOLOv8(Detector):
             Predictions.
         """
         return self.model.forward(input)
-
+    
     def postprocess(
         self,
         indexes: np.ndarray,
@@ -117,24 +117,30 @@ class YOLOv8(Detector):
             max_det    = self.max_detections,
             classes    = self.allowed_ids
         )
-        batch_instances = []
         h0, w0 = mon.get_image_size(image=images)
         h1, w1 = mon.get_image_size(image=input)
         for i, p in enumerate(pred):
             p[:, :4]  = ops.scale_boxes((h1, w1), p[:, :4], (h0, w0)).round()
             p         = p.detach().cpu().numpy()
-            instances = []
-            for *xyxy, conf, cls in p:
-                classlabel = self.classlabels.get_class(key="id", value=cls)
-                instances.append(
-                    instance.Instance(
-                        bbox        = xyxy,
-                        confidence  = conf,
-                        classlabel  = classlabel,
-                        frame_index = indexes[0] + i,
+            pred[i]   = p
+            
+        if self.to_instance:
+            batch_instances = []
+            for i, p in enumerate(pred):
+                instances = []
+                for *xyxy, conf, cls in p:
+                    classlabel = self.classlabels.get_class(key="id", value=cls)
+                    instances.append(
+                        instance.Instance(
+                            bbox        = xyxy,
+                            confidence  = conf,
+                            classlabel  = classlabel,
+                            frame_index = indexes[0] + i,
+                        )
                     )
-                )
-            batch_instances.append(instances)
-        return batch_instances
-
+                batch_instances.append(instances)
+            return batch_instances
+        else:
+            return pred
+    
 # endregion

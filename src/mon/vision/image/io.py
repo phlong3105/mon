@@ -770,7 +770,7 @@ def write_image_cv(
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
-    denormalize: bool = True
+    denormalize: bool = False
 ):
     """Write an image to a directory using :mod:`cv2`.
     
@@ -780,7 +780,7 @@ def write_image_cv(
         name: An image's name.
         prefix: A prefix to add to the :param:`name`.
         extension: An extension of the image file. Defaults to '.png'.
-        denormalize: If True, convert the image to [0, 255]. Defaults to True.
+        denormalize: If True, convert the image to [0, 255]. Defaults to False.
     """
     # Convert image
     if isinstance(image, torch.Tensor):
@@ -811,7 +811,7 @@ def write_image_torch(
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
-    denormalize: bool = True
+    denormalize: bool = False
 ):
     """Write an image to a directory.
     
@@ -821,7 +821,7 @@ def write_image_torch(
         name: An image's name.
         prefix: A prefix to add to the :param:`name`.
         extension: An extension of the image file. Defaults to '.png'.
-        denormalize: If True, convert the image to [0, 255]. Defaults to True.
+        denormalize: If True, convert the image to [0, 255]. Defaults to False.
     """
     # Convert image
     if isinstance(image, np.ndarray):
@@ -858,7 +858,7 @@ def write_images_cv(
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
-    denormalize: bool      = True
+    denormalize: bool      = False
 ):
     """Write a list of images to a directory using :mod:`cv2`.
    
@@ -868,7 +868,7 @@ def write_images_cv(
         names: A list of images' names.
         prefixes: A prefix to add to the :param:`names`.
         extension: An extension of image files. Defaults to ".png".
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
     """
     if isinstance(names, str):
         names = [names for _ in range(len(images))]
@@ -899,7 +899,7 @@ def write_images_torch(
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
-    denormalize: bool      = True
+    denormalize: bool      = False
 ):
     """Write a list of images to a directory using :mod:`torchvision`.
    
@@ -909,7 +909,7 @@ def write_images_torch(
         names: A list of images' names.
         prefixes: A prefix to add to the :param:`names`.
         extension: An extension of image files. Defaults to ".png".
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
     """
     if isinstance(names, str):
         names = [names for _ in range(len(images))]
@@ -937,14 +937,14 @@ def write_images_torch(
 def write_video_ffmpeg(
     process,
     image      : torch.Tensor | np.ndarray,
-    denormalize: bool = True
+    denormalize: bool = False
 ):
     """Write an image to a video file using :mod:`ffmpeg`.
 
     Args:
         process: A subprocess that manages ffmpeg.
         image: A frame/image of shape 1CHW.
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
     """
     if isinstance(image, np.ndarray):
         if base.is_normalized_image(image=image):
@@ -976,7 +976,7 @@ class Writer(ABC):
     Args:
         destination: A directory to save images.
         image_size: An output image size of shape HW. Defaults to [480, 640].
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
         verbose: Verbosity. Defaults to False.
     """
     
@@ -984,7 +984,7 @@ class Writer(ABC):
         self,
         destination: pathlib.Path,
         image_size   : int | list[int] = [480, 640],
-        denormalize: bool = True,
+        denormalize: bool = False,
         verbose    : bool = False,
         *args, **kwargs
     ):
@@ -1019,14 +1019,14 @@ class Writer(ABC):
         self,
         image      : torch.Tensor | np.ndarray,
         path       : pathlib.Path | None = None,
-        denormalize: bool = True
+        denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
 
         Args:
             image: An image.
             path: An image filepath with an extension. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         pass
     
@@ -1035,14 +1035,14 @@ class Writer(ABC):
         self,
         images     : list[torch.Tensor  | np.ndarray],
         paths      : list[pathlib.Path] | None = None,
-        denormalize: bool = True
+        denormalize: bool = False
     ):
         """Write a batch of images to :attr:`dst`.
 
         Args:
             images: A list of images.
             paths: A list of image filepaths with extensions. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         pass
 
@@ -1055,7 +1055,7 @@ class ImageWriter(Writer):
         image_size: A desired output size of shape HW. This is used to
         reshape the
             input. Defaults to [480, 640].
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
         extension: The extension of the file to be saved. Defaults to '.png'.
         verbose: Verbosity. Defaults to False.
     """
@@ -1065,7 +1065,7 @@ class ImageWriter(Writer):
         destination: pathlib.Path,
         image_size : int | list[int] = [480, 640],
         extension  : str  = ".png",
-        denormalize: bool = True,
+        denormalize: bool = False,
         verbose    : bool = False,
         *args, **kwargs
     ):
@@ -1096,14 +1096,14 @@ class ImageWriter(Writer):
         self,
         image      : torch.Tensor | np.ndarray,
         path       : pathlib.Path | None = None,
-        denormalize: bool = True
+        denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
 
         Args:
             image: An image.
             path: An image filepath with an extension. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         if isinstance(path, pathlib.Path):
             path = self.dst / f"{path.stem}{self.extension}"
@@ -1125,14 +1125,14 @@ class ImageWriter(Writer):
         self,
         images     : list[torch.Tensor | np.ndarray],
         paths      : list[pathlib.Path] | None = None,
-        denormalize: bool = True,
+        denormalize: bool = False,
     ):
         """Write a batch of images to :attr:`dst`.
 
         Args:
             images: A list of 3-D images.
             paths: A list of image filepaths with extensions. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         if paths is None:
             paths = [None for _ in range(len(images))]
@@ -1154,7 +1154,7 @@ class VideoWriter(Writer, ABC):
             input. Defaults to [480, 640].
         frame_rate: A frame rate of the output video. Defaults to 10.
         save_image: If True save each image separately. Defaults to False.
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
         verbose: Verbosity. Defaults to False.
     """
     
@@ -1164,7 +1164,7 @@ class VideoWriter(Writer, ABC):
         image_size : int | list[int] = [480, 640],
         frame_rate : float = 10,
         save_image : bool  = False,
-        denormalize: bool  = True,
+        denormalize: bool  = False,
         verbose    : bool  = False,
         *args, **kwargs
     ):
@@ -1190,7 +1190,7 @@ class VideoWriterCV(VideoWriter):
         fourcc: Video codec. One of: ['mp4v', 'xvid', 'mjpg', 'wmv']. Defaults
             to ".mp4v".
         save_image: If True, save each image separately. Defaults to False.
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
         verbose: Verbosity. Defaults to False.
     """
     
@@ -1201,7 +1201,7 @@ class VideoWriterCV(VideoWriter):
         frame_rate : float = 30,
         fourcc     : str   = "mp4v",
         save_image : bool  = False,
-        denormalize: bool  = True,
+        denormalize: bool  = False,
         verbose    : bool  = False,
         *args, **kwargs
     ):
@@ -1248,19 +1248,19 @@ class VideoWriterCV(VideoWriter):
         self,
         image      : torch.Tensor | np.ndarray,
         path       : pathlib.Path | None = None,
-        denormalize: bool = True
+        denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
 
         Args:
             image: An image.
             path: An image filepath with an extension. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         if self.save_image:
             write_image_cv(
                 image       = image,
-                dirpath= self.dst,
+                dirpath     = self.dst,
                 name        = f"{pathlib.Path(path).stem}.png",
                 prefix      = "",
                 extension   =".png",
@@ -1269,7 +1269,7 @@ class VideoWriterCV(VideoWriter):
         
         image = base.to_nparray(
             image       = image,
-            keepdim     = False,
+            keepdim     = True,
             denormalize = denormalize or self.denormalize,
         )
         # IMPORTANT: Image must be in a BGR format
@@ -1282,14 +1282,14 @@ class VideoWriterCV(VideoWriter):
         self,
         images     : list[torch.Tensor | np.ndarray],
         paths      : list[pathlib.Path] | None = None,
-        denormalize: bool  = True
+        denormalize: bool  = False
     ):
         """Write a batch of images to :attr:`dst`.
 
         Args:
             images: A list of images.
             paths: A list of image filepaths with extensions. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         if paths is None:
             paths = [None for _ in range(len(images))]
@@ -1307,7 +1307,7 @@ class VideoWriterFFmpeg(VideoWriter):
         frame_rate: A frame rate of the output video. Defaults to 10.
         pix_fmt: A video codec. Defaults to 'yuv420p'.
         save_image: If True save each image separately. Defaults to False.
-        denormalize: If True, convert image to [0, 255]. Defaults to True.
+        denormalize: If True, convert image to [0, 255]. Defaults to False.
         verbose: Verbosity. Defaults to False.
         kwargs: Any supplied kwargs are passed to :mod:`ffmpeg` verbatim.
     """
@@ -1319,7 +1319,7 @@ class VideoWriterFFmpeg(VideoWriter):
         frame_rate : float = 10,
         pix_fmt    : str   = "yuv420p",
         save_image : bool  = False,
-        denormalize: bool  = True,
+        denormalize: bool  = False,
         verbose    : bool  = False,
         *args, **kwargs
     ):
@@ -1392,14 +1392,14 @@ class VideoWriterFFmpeg(VideoWriter):
         self,
         image      : torch.Tensor | np.ndarray,
         path       : pathlib.Path | None = None,
-        denormalize: bool = True
+        denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
 
         Args:
             image: An image.
             path: An image filepath with an extension. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         if self.save_image:
             assert isinstance(path, pathlib.Path)
@@ -1423,14 +1423,14 @@ class VideoWriterFFmpeg(VideoWriter):
         self,
         images     : list[torch.Tensor | np.ndarray],
         paths      : list[pathlib.Path] | None = None,
-        denormalize: bool = True,
+        denormalize: bool = False,
     ):
         """Write a batch of images to :attr:`dst`.
 
         Args:
             images: A list of images.
             paths: A list of image filepaths with extensions. Defaults to None.
-            denormalize: If True, convert image to [0, 255]. Defaults to True.
+            denormalize: If True, convert image to [0, 255]. Defaults to False.
         """
         if paths is None:
             paths = [None for _ in range(len(images))]

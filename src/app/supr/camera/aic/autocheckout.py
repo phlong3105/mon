@@ -58,6 +58,7 @@ class AutoCheckoutCamera(Camera):
         moving_object  : Any,
         detector       : Any,
         tracker        : Any,
+        tray_detector  : Any       = None,
         hands_estimator: Any       = None,
         id_            : int | str = uuid.uuid4().int,
         save_image     : bool      = False,
@@ -86,8 +87,8 @@ class AutoCheckoutCamera(Camera):
         self.result_writer   = result_writer
         self.detector        = detector
         self.tracker         = tracker
+        self.tray_detector   = tray_detector
         self.hands_estimator = hands_estimator
-        
         self.start_time      = None
         self.hands           = None
         self.moving_objects  = []
@@ -164,7 +165,20 @@ class AutoCheckoutCamera(Camera):
             raise ValueError(
                 f"Cannot initialize hands estimator with {hands_estimator}."
             )
-    
+
+    @property
+    def tray_detector(self) -> detect.Detector:
+        return self._tray_detector
+
+    @tray_detector.setter
+    def tray_detector(self, tray_detector: Any):
+        if isinstance(tray_detector, detect.Detector):
+            self._tray_detector = tray_detector
+        elif isinstance(tray_detector, dict):
+            self._tray_detector = DETECTORS.build(**tray_detector)
+        else:
+            raise ValueError(f"Cannot initialize tray detector with {tray_detector}.")
+
     # noinspection PyMethodMayBeStatic
     def init_moving_object(self, moving_object: dict | None):
         if moving_object is None:
@@ -204,22 +218,36 @@ class AutoCheckoutCamera(Camera):
             ):
                 if len(indexes) == 0 or images is None:
                     break
-                    
-                # Detect
+                
+                # Detect Trays
+                if self.tray_detector:
+                    batch_trays = self.tray_detector.detect(indexes=indexes, images=images)
+                else:
+                    batch_trays = None
+                
+                # Detect Objects
                 batch_instances = self.detector.detect(indexes=indexes, images=images)
                 if self.hands_estimator:
                     batch_hands = self.hands_estimator.estimate(indexes=indexes, images=images)
                 else:
                     batch_hands = None
                     
-                # Get ROIs
+                # Process batches
                 for idx, instances in enumerate(batch_instances):
+                    # Update ROI (optional)
+                    if batch_trays:
+                        tray = batch_trays[idx]
+                        if len(tray) > 0:
+                            tray = np.array(tray[0, 0:4])
+                            tray = mon.get_bbox_corners_points(bbox=tray)
+                            self.rois[0].points = tray
+                    
+                    # Assign ROI
                     roi_ids = [rmoi.get_roi_for_box(bbox=i.bbox, rois=self.rois) for i in instances]
                     for instance, roi_id in zip(instances, roi_ids):
                         instance.roi_id = roi_id
                         
-                # Track
-                for idx, instances in enumerate(batch_instances):
+                    # Track
                     self.tracker.update(instances=instances)
                     self.moving_objects: list[data.Product] = self.tracker.tracks
                     self.hands = batch_hands[idx] if batch_hands else None

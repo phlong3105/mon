@@ -82,10 +82,12 @@ detector      = {
     "config"        : "yolov8x",  # A detector model's config.
     "weight"        : _current_dir/"yolov8x-aic23-autocheckout-117-640.pt",
     "image_size"    : 640,        # The desired model's input size in HW format.
+    "classlabels"   : classlabels,
     "conf_threshold": 0.3,        # An object confidence threshold.
     "iou_threshold" : 0.5,        # An IOU threshold for NMS.
     "max_detections": 300,        # Maximum number of detections/image.
     "device"        : 0,          # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
+    "to_instance"   : True,       # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
 tracker       = {
     "name"         : "sort",                 # Name of the tracker.
@@ -94,6 +96,18 @@ tracker       = {
     "iou_threshold": 0.3,                    # An Intersection-over-Union threshold between two tracks.
     "motion_type"  : "kf_box_motion",        # A motion model.
     "object_type"  : moving_object["name"],  # An object type
+}
+tray_detector = {
+    "name"          : "yolov8",   # A detector name.
+    "config"        : "yolov8x",  # A detector model's config.
+    "weight"        : _current_dir/"yolov8x-aic23-autocheckout-tray-640.pt",
+    "image_size"    : 640,        # The desired model's input size in HW format.
+    "classlabels"   : _current_dir/"classlabels-tray.json",
+    "conf_threshold": 0.8,        # An object confidence threshold.
+    "iou_threshold" : 0.5,        # An IOU threshold for NMS.
+    "max_detections": 1,          # Maximum number of detections/image.
+    "device"        : 0,          # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
+    "to_instance"   : False,      # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
 save_image    = False      # Save processing images?
 save_video    = False      # Save processing video?

@@ -82,10 +82,12 @@ detector        = {
     "config"        : "yolov8x",  # A detector model's config.
     "weight"        : _current_dir/"yolov8x-aic22-autocheckout-117-640.pt",
     "image_size"    : 640,        # The desired model's input size in HW format.
+    "classlabels"   : classlabels,
     "conf_threshold": 0.3,        # An object confidence threshold.
     "iou_threshold" : 0.8,        # An IOU threshold for NMS.
     "max_detections": 300,        # Maximum number of detections/image.
     "device"        : 0,          # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
+    "to_instance"   : True,       # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
 tracker         = {
     "name"         : "sort",                 # Name of the tracker.

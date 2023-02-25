@@ -86,9 +86,9 @@ if [ "$task" == "predict" ]; then
     	--data "data/aic23-autocheckout-tray.yaml" \
     	--project "${root_dir}/run/predict" \
     	--name "yolov8x-aic22-autocheckout-tray-640" \
-    	--source "${root_dir}/data/aic22-autocheckout/testA/testA_5.mp4" \
+    	--source "${root_dir}/data/aic22-autocheckout/testA/inpainting/testA_5.mp4" \
     	--imgsz 640 \
-    	--conf 0.9 \
+    	--conf 0.8 \
     	--iou 0.5 \
     	--max-det 500 \
     	--augment \

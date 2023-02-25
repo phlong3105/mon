@@ -106,7 +106,7 @@ class RegionOfInterest:
         if isinstance(value, str | mon.Path):
             return cls.from_file(value=value)
         return None
-
+    
     def is_box_in_roi(self, bbox: np.ndarray, compute_distance: bool = False) -> int:
         """Check a bounding bbox touches the current ROI.
         
@@ -147,13 +147,13 @@ class RegionOfInterest:
     def draw(self, image: np.ndarray) -> np.ndarray:
         """Draw the current ROI on the :param:`image`."""
         color = mon.BasicRGB.GREEN.value
-        pts = self.points.reshape((-1, 1, 2))
+        pts   = self.points.reshape((-1, 1, 2))
         cv2.polylines(
             img       = image,
             pts       = [pts],
             isClosed  = True,
             color     = color,
-            thickness = 2
+            thickness = 3
         )
         return image
 
@@ -304,7 +304,7 @@ class MovementOfInterest:
         if isinstance(value, str | mon.Path):
             return cls.from_file(value=value)
         return None
-    
+       
     def calculate_distance_with_track(self, object_track: np.ndarray) -> float:
         """Calculate the distance between an object's track to the MOI's tracks.
         

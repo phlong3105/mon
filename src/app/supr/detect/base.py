@@ -34,6 +34,9 @@ class Detector(ABC):
         iou_threshold: An IOU threshold for NMS. Defaults to 0.4.
         max_detections: Maximum number of detections/image. Defaults to 300.
         device: Cuda device, i.e. 0 or 0,1,2,3 or cpu. Defaults to 'cpu'.
+        to_instance: If True, wrap the predictions to a list of
+            :class:`supr.data.instance.Instance` object. Else, return raw
+            predictions. Defaults to True.
     """
     
     def __init__(
@@ -46,6 +49,7 @@ class Detector(ABC):
         iou_threshold : float = 0.4,
         max_detections: int   = 300,
         device        : int | str | list[int | str] = "cpu",
+        to_instance   : bool  = True,
     ):
         super().__init__()
         self.config         = config
@@ -57,6 +61,7 @@ class Detector(ABC):
         self.iou_threshold  = iou_threshold
         self.max_detections = max_detections
         self.device         = mon.select_device(device=device)
+        self.to_instance    = to_instance
         # Load model
         self.model = None
         self.init_model()
@@ -92,7 +97,7 @@ class Detector(ABC):
         self,
         indexes: np.ndarray,
         images : np.ndarray
-    ) -> list[list[ins.Instance]]:
+    ) -> list[list[ins.Instance]] | list[np.ndarray]:
         """Detect objects in the images.
 
         Args:
@@ -114,7 +119,7 @@ class Detector(ABC):
             pred    = pred
         )
         return instances
-
+    
     @abstractmethod
     def preprocess(self, images: np.ndarray) -> torch.Tensor:
         """Preprocessing step.
@@ -126,7 +131,7 @@ class Detector(ABC):
             Input tensor of shape NCHW.
         """
         pass
-
+    
     @abstractmethod
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         """Forward pass.
@@ -138,7 +143,7 @@ class Detector(ABC):
             Predictions.
         """
         pass
-
+    
     @abstractmethod
     def postprocess(
         self,
@@ -161,7 +166,7 @@ class Detector(ABC):
             items.
         """
         pass
-
+    
     def suppress_wrong_labels(
         self,
         instances: list[list[ins.Instance]],
@@ -200,7 +205,7 @@ class Detector(ABC):
             valid_ins = [d for d in ins if (d.confidence >= self.conf_threshold)]
             valid_instances.append(valid_ins)
         return valid_instances
-
+    
     def perform_nms(
         self,
         instances: list[list[ins.Instance]],
@@ -266,11 +271,11 @@ class Detector(ABC):
             valid_instances.append(valid_ins)
 
         return valid_instances
-
+    
     def is_correct_label(self, label: dict) -> bool:
         """Check if the label is allowed."""
         if label["id"] in self.allowed_ids:
             return True
         return False
-
+    
 # endregion
