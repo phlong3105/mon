@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for all detectors."""
+"""This module implements YOLOv8 detectors."""
 
 from __future__ import annotations
 
@@ -16,9 +16,8 @@ from ultralytics.yolo.data import augment
 from ultralytics.yolo.utils import checks, ops
 
 import mon
-from supr.data import instance
-from supr.detect.base import Detector
-from supr.globals import DETECTORS
+from mon.globals import DETECTORS
+from mon.vision.model.detect.base import Detector
 
 
 # region YOLOv8
@@ -96,7 +95,7 @@ class YOLOv8(Detector):
         input  : torch.Tensor,
         pred   : torch.Tensor,
         *args, **kwargs
-    ) -> list[list[instance.Instance]]:
+    ) -> list[list[mon.Instance]]:
         """Postprocessing step.
 
         Args:
@@ -131,7 +130,7 @@ class YOLOv8(Detector):
                 for *xyxy, conf, cls in p:
                     classlabel = self.classlabels.get_class(key="id", value=cls)
                     instances.append(
-                        instance.Instance(
+                        mon.Instance(
                             bbox        = xyxy,
                             confidence  = conf,
                             classlabel  = classlabel,

@@ -44,8 +44,8 @@ mois          = [
 classlabels   = _current_dir/"classlabels.json"
 num_classes   = 117
 image_loader  = {
-    # "source"        : root/subset/"inpainting"/f"{name}.mp4",  # Data source.
-    "source"        : root/subset/f"{name}.mp4",  # Data source.
+    "source"        : root/subset/"inpainting"/f"{name}.mp4",  # Data source.
+    # "source"        : root/subset/f"{name}.mp4",  # Data source.
     "max_samples"   : None,   # The maximum number of datapoints to be processed.
     "batch_size"    : 8,      # The number of samples in a single forward pass
     "to_rgb"        : True,   # Convert the image from BGR to RGB.
@@ -80,20 +80,20 @@ moving_object = {
 detector      = {
     "name"          : "yolov8",   # A detector name.
     "config"        : "yolov8x",  # A detector model's config.
-    "weight"        : _current_dir/"yolov8x-aic23-autocheckout-117-640.pt",
-    "image_size"    : 640,        # The desired model's input size in HW format.
+    "weight"        : _current_dir/"yolov8x-aic23-autocheckout-117-1920.pt",
+    "image_size"    : 1024,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
-    "conf_threshold": 0.3,        # An object confidence threshold.
-    "iou_threshold" : 0.5,        # An IOU threshold for NMS.
-    "max_detections": 300,        # Maximum number of detections/image.
+    "conf_threshold": 0.2,        # An object confidence threshold.
+    "iou_threshold" : 0.3,        # An IOU threshold for NMS.
+    "max_detections": 50,        # Maximum number of detections/image.
     "device"        : 0,          # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
     "to_instance"   : True,       # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
 tracker       = {
     "name"         : "sort",                 # Name of the tracker.
-    "max_age"      : 1,                      # Maximum number of frame keep the object before deleting.
+    "max_age"      : 3,                      # Maximum number of frame keep the object before deleting.
     "min_hits"     : 3,                      # Number of frames, which have matching bounding bbox of the detected object before the object is considered becoming the track.
-    "iou_threshold": 0.2,                    # An Intersection-over-Union threshold between two tracks.
+    "iou_threshold": 0.1,                    # An Intersection-over-Union threshold between two tracks.
     "motion_type"  : "kf_box_motion",        # A motion model.
     "object_type"  : moving_object["name"],  # An object type
 }

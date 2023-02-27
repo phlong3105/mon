@@ -3,7 +3,8 @@
 # Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
 path : ../mon/data/aic23-autocheckout/
 train: [
-  train/synthetic-117/images/,
+  train/synthetic-01/images/,
+  train/synthetic-02/images/,
 ] 
 val  : val/images/
 test : val/images/

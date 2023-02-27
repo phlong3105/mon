@@ -10,7 +10,6 @@ __all__ = [
 ]
 
 import uuid
-from queue import Queue
 from timeit import default_timer as timer
 from typing import Any
 
@@ -18,9 +17,10 @@ import cv2
 import numpy as np
 
 import mon
-from supr import data, detect, io, rmoi, track
+from mon.globals import DETECTORS, MovingState, OBJECTS, TRACKERS
+from supr import data, io, rmoi
 from supr.camera.base import Camera
-from supr.globals import CAMERAS, DETECTORS, MovingState, OBJECTS, TRACKERS
+from supr.globals import CAMERAS
 
 
 # region AutoCheckoutCamera
@@ -123,12 +123,12 @@ class AutoCheckoutCamera(Camera):
             )
     
     @property
-    def detector(self) -> detect.Detector:
+    def detector(self) -> mon.Detector:
         return self._detector
     
     @detector.setter
     def detector(self, detector: Any):
-        if isinstance(detector, detect.Detector):
+        if isinstance(detector, mon.Detector):
             self._detector = detector
         elif isinstance(detector, dict):
             detector["classlabels"] = self.classlabels
@@ -137,12 +137,12 @@ class AutoCheckoutCamera(Camera):
             raise ValueError(f"Cannot initialize detector with {detector}.")
     
     @property
-    def tracker(self) -> track.Tracker:
+    def tracker(self) -> mon.Tracker:
         return self._tracker
     
     @tracker.setter
     def tracker(self, tracker: Any):
-        if isinstance(tracker, track.Tracker):
+        if isinstance(tracker, mon.Tracker):
             self._tracker = tracker
         elif isinstance(tracker, dict):
             self._tracker = TRACKERS.build(**tracker)
@@ -167,12 +167,12 @@ class AutoCheckoutCamera(Camera):
             )
 
     @property
-    def tray_detector(self) -> detect.Detector:
+    def tray_detector(self) -> mon.Detector:
         return self._tray_detector
 
     @tray_detector.setter
     def tray_detector(self, tray_detector: Any):
-        if isinstance(tray_detector, detect.Detector):
+        if isinstance(tray_detector, mon.Detector):
             self._tray_detector = tray_detector
         elif isinstance(tray_detector, dict):
             self._tray_detector = DETECTORS.build(**tray_detector)
@@ -241,17 +241,17 @@ class AutoCheckoutCamera(Camera):
                             tray = np.array(tray[0, 0:4])
                             tray = mon.get_bbox_corners_points(bbox=tray)
                             self.rois[0].points = tray
-                    
+                            
                     # Assign ROI
                     roi_ids = [rmoi.get_roi_for_box(bbox=i.bbox, rois=self.rois) for i in instances]
                     for instance, roi_id in zip(instances, roi_ids):
                         instance.roi_id = roi_id
-                        
+                    
                     # Track
                     self.tracker.update(instances=instances)
                     self.moving_objects: list[data.Product] = self.tracker.tracks
                     self.hands = batch_hands[idx] if batch_hands else None
-                
+                    
                     # Update moving objects' moving state
                     for mo in self.moving_objects:
                         mo.update_moving_state(rois=self.rois, hands=self.hands)
@@ -259,7 +259,7 @@ class AutoCheckoutCamera(Camera):
                             fps = getattr(self.image_loader, "fps", 30)
                             timestamp    = (mo.current.frame_index - self.tracker.min_hits) / fps
                             mo.timestamp = mon.math.floor(timestamp)
-                            
+                    
                     # Count
                     countable = [o for o in self.moving_objects if o.is_to_be_counted]
                     if self.save_result:

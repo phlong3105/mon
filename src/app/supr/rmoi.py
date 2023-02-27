@@ -56,6 +56,10 @@ class RegionOfInterest:
             raise ValueError(
                 f"points' number of dimensions must be == 2, but got {points.ndim}."
             )
+        if not len(points) >= 3:
+            raise ValueError(
+                f"Number of points must be >= 3, but got {len(points)}."
+            )
         self._points = points
     
     @property

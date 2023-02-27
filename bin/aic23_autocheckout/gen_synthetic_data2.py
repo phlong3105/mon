@@ -18,6 +18,7 @@ import mon
 from mon.foundation import math
 
 random.seed(0)
+item_idx = 0
 
 
 # region Function
@@ -174,13 +175,13 @@ def gen_synthetic_image(
     assert background_dir is not None and mon.Path(background_dir).is_dir()
     assert label_dir is not None and mon.Path(label_dir).is_dir()
     
-    image_dir           = mon.Path(image_dir)
-    background_dir      = mon.Path(background_dir)
-    synthetic_image_dir = output_dir/"images" or image_dir.parent/"synthetic/images"
-    synthetic_image_dir = mon.Path(synthetic_image_dir)
-    synthetic_bbox_dir  = synthetic_image_dir.parent / f"labels-{bbox_format}"
-    synthetic_bbox_dir  = mon.Path(synthetic_bbox_dir)
-    mon.mkdirs(paths=[synthetic_image_dir, synthetic_bbox_dir], parents=True, exist_ok=True)
+    image_dir          = mon.Path(image_dir)
+    background_dir     = mon.Path(background_dir)
+    synthetic_dir      = output_dir or image_dir.parent / "synthetic"
+    synthetic_dir      = mon.Path(synthetic_dir)
+    synthetic_bbox_dir = output_dir or image_dir.parent / f"synthetic-bboxes-{bbox_format}"
+    synthetic_bbox_dir = mon.Path(synthetic_bbox_dir)
+    synthetic_dir.mkdir(parents=True, exist_ok=True)
     
     image_files = []
     masks_files = []
@@ -207,12 +208,15 @@ def gen_synthetic_image(
     # Generate train images and labels for training YOLO models
     with mon.get_progress_bar() as pbar:
         patches_per_image = int(patches_per_image)
-        total    = math.floor(len(image_files) / patches_per_image)
-        item_idx = 0
-        for i in pbar.track(
+        total = math.floor(len(image_files) / patches_per_image)
+        task  = pbar.add_task(f"[bright_yellow]Generating data", total=total)
+        for idx in pbar.track(
             sequence    = range(total),
             description = f"[bright_yellow]Generating data"
         ):
+        
+        def patch_image(i):
+            global item_idx
             images     = []
             masks      = []
             ids        = []
@@ -226,8 +230,7 @@ def gen_synthetic_image(
                 ids.append(id)
                 images.append(image)
                 masks.append(mask)
-                if verbose:
-                    mon.console.log(image_files[j])
+                print(image_files[j])
                 
             synthetic, boxes = random_patch_image_box(
                 canvas        = background,
@@ -239,7 +242,7 @@ def gen_synthetic_image(
                 iou_threshold = iou_threshold,
             )
             synthetic      = cv2.cvtColor(synthetic, cv2.COLOR_BGR2RGB)
-            synthetic_file = str(synthetic_image_dir / f"{i:06}.jpg")
+            synthetic_file = str(synthetic_dir / f"{i:06}.jpg")
             cv2.imwrite(synthetic_file, synthetic)
             
             h, w = mon.get_image_size(image=synthetic)
@@ -248,12 +251,17 @@ def gen_synthetic_image(
             elif bbox_format in ["yolo"]:
                 boxes[:, 1:5] = mon.bbox_xyxy_to_cxcywhn(boxes[:, 1:5], h, w)
             
-            synthetic_bbox_file = str(synthetic_bbox_dir / f"{i:06}.txt")
+            synthetic_bbox_file = synthetic_bbox_dir / f"{i:06}.txt"
             with open(synthetic_bbox_file, "w") as f:
                 for b in boxes:
                     f.write(f"{int(b[0])} {b[1]} {b[2]} {b[3]} {b[4]}\n")
             
             item_idx += patches_per_image
+            pbar.update(task, advance=1)
+            
+        Parallel(n_jobs=os.cpu_count(), require="sharedmem")(
+            delayed(patch_image)(i) for i in range(total)
+        )
     
 # endregion
 

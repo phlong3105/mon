@@ -11,15 +11,16 @@ __all__ = [
 
 import cv2
 
+import mon
+from mon.globals import MovingState, OBJECTS
 from supr import rmoi
-from supr.data import base, hand
-from supr.globals import MovingState, OBJECTS
+from supr.data import hand
 
 
 # region Product
 
 @OBJECTS.register(name="product")
-class Product(base.MovingObject):
+class Product(mon.MovingObject):
     """Retail product.
     
     See more: :class:`supr.data.base.MovingObject`.

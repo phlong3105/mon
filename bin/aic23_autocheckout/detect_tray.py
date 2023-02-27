@@ -32,7 +32,6 @@ def process_image(image: np.ndarray):
     ret, out_img, mask, rect = cv2.floodFill(grad, np.zeros((h + 2, w + 2), dtype=np.uint8), seed, 255, 5, 5)
     image       = cv2.cvtColor(out_img, cv2.COLOR_GRAY2BGR)
     cv2.rectangle(image, (rect[0], rect[1]), (rect[0] + rect[2], rect[1] + rect[3]), (0, 0, 255), 7)
-    
     """
     edge        = cv2.Canny(blurred, 10, 250)
     contours, _ = cv2.findContours(edge, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)

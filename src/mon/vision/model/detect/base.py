@@ -16,7 +16,6 @@ import numpy as np
 import torch
 
 import mon
-from supr.data import instance as ins
 
 
 # region Detector
@@ -97,7 +96,7 @@ class Detector(ABC):
         self,
         indexes: np.ndarray,
         images : np.ndarray
-    ) -> list[list[ins.Instance]] | list[np.ndarray]:
+    ) -> list[list[mon.Instance]] | list[np.ndarray]:
         """Detect objects in the images.
 
         Args:
@@ -152,7 +151,7 @@ class Detector(ABC):
         input  : torch.Tensor,
         pred   : torch.Tensor,
         *args, **kwargs
-    ) -> list[list[ins.Instance]]:
+    ) -> list[list[mon.Instance]]:
         """Postprocessing step.
 
         Args:
@@ -166,116 +165,5 @@ class Detector(ABC):
             items.
         """
         pass
-    
-    def suppress_wrong_labels(
-        self,
-        instances: list[list[ins.Instance]],
-    ) -> list[list[ins.Instance]]:
-        """Suppress all detections with wrong labels.
-
-        Args:
-            instances: A 2-D list of :class:`data.Instance` objects.
-
-        Returns:
-            A 2-D list of valid :class:`data.Instance` objects.
-        """
-        valid_instances = []
-        for ins in instances:
-            valid_ins = [d for d in ins if self.is_correct_label(d.classlabel)]
-            valid_instances.append(valid_ins)
-        return valid_instances
-    
-    def suppress_low_confident(
-        self,
-        instances: list[list[ins.Instance]],
-    ) -> list[list[ins.Instance]]:
-        """Suppress detections with low confidence scores.
-
-        Args
-            instances: A 2-D list of :class:`data.Instance` objects.
-        
-        Returns:
-             A 2-D list of :class:`data.Instance` objects.
-        """
-        if self.conf_threshold is None:
-            return instances
-        
-        valid_instances = []
-        for ins in instances:
-            valid_ins = [d for d in ins if (d.confidence >= self.conf_threshold)]
-            valid_instances.append(valid_ins)
-        return valid_instances
-    
-    def perform_nms(
-        self,
-        instances: list[list[ins.Instance]],
-    ) -> list[list[ins.Instance]]:
-        """Suppress overlapping detections (high-level). Original code from:
-        .. [1] http://www.pyimagesearch.com/2015/02/16/faster-non-maximum-suppression-python/
-
-        Args:
-            instances: A 2-D list of :class:`data.Instance` objects.
-
-        Returns:
-            A 2-D list of non-overlapped :class:`data.Instance` objects.
-        """
-        if self.iou_threshold is None:
-            return instances
-        
-        valid_instances = []
-        for ins in instances:
-            # NOTE: Extract measurement bounding boxes and scores
-            boxes  = np.array([d.bbox       for d in ins])
-            scores = np.array([d.confidence for d in ins])
-
-            # NOTE: Extract road_objects indices that survive
-            # non-max-suppression
-            indices = []
-            if len(boxes) > 0:
-                boxes = boxes.astype(np.float)
-
-                # Top-left to Bottom-right
-                x1 = boxes[:, 0]
-                y1 = boxes[:, 1]
-                x2 = boxes[:, 2] + boxes[:, 0]
-                y2 = boxes[:, 3] + boxes[:, 1]
-
-                # Area
-                area = (boxes[:, 2] + 1) * (boxes[:, 3] + 1)
-                if scores is not None:
-                    idxs = np.argsort(scores)
-                else:
-                    idxs = np.argsort(y2)
-
-                # Suppression via iterating boxes
-                while len(idxs) > 0:
-                    last = len(idxs) - 1
-                    i    = idxs[last]
-                    indices.append(i)
-
-                    xx1     = np.maximum(x1[i], x1[idxs[:last]])
-                    yy1     = np.maximum(y1[i], y1[idxs[:last]])
-                    xx2     = np.minimum(x2[i], x2[idxs[:last]])
-                    yy2     = np.minimum(y2[i], y2[idxs[:last]])
-                    w       = np.maximum(0, xx2 - xx1 + 1)
-                    h       = np.maximum(0, yy2 - yy1 + 1)
-                    overlap = (w * h) / area[idxs[:last]]
-                    idxs    = np.delete(
-                        idxs, np.concatenate((
-                            [last], np.where(overlap > self.iou_threshold)[0]
-                        ))
-                    )
-
-            # Get exactly the vehicles surviving non-max-suppression
-            valid_ins = [ins[i] for i in indices]
-            valid_instances.append(valid_ins)
-
-        return valid_instances
-    
-    def is_correct_label(self, label: dict) -> bool:
-        """Check if the label is allowed."""
-        if label["id"] in self.allowed_ids:
-            return True
-        return False
     
 # endregion

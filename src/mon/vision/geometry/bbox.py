@@ -14,8 +14,8 @@ __all__ = [
     "bbox_xyxyn_to_xywh", "bbox_xyxyn_to_xyxy", "bbox_yolo_to_coco",
     "bbox_yolo_to_voc", "convert_bbox", "get_bbox_area", "get_bbox_center",
     "get_bbox_corners", "get_bbox_corners_points",
-    "get_bbox_intersection_union", "get_bbox_iou", "get_enclosing_bbox",
-    "get_single_bbox_iou",
+    "get_bbox_intersection_union", "get_bbox_iou", "get_bbox_iou2",
+    "get_enclosing_bbox", "get_single_bbox_iou",
 ]
 
 import numpy as np
@@ -147,6 +147,42 @@ def get_bbox_iou(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
     """
     inter, union = get_bbox_intersection_union(bbox1=bbox1, bbox2=bbox2)
     iou = inter / union
+    return iou
+
+
+def get_bbox_iou2(bbox1: np.ndarray, bbox2: np.ndarray) -> np.ndarray:
+    """From SORT: Compute IOU between two sets of boxes.
+    
+    Return intersection-over-union (Jaccard index) between two sets of boxes.
+    Both sets of boxes are expected to be in [x1, y1, x2, y2] format with
+    `0 <= x1 < x2` and `0 <= y1 < y2`.
+
+    Args:
+        bbox1: The first set of boxes of shape [N, 4].
+        bbox2: The second set of boxes of shape [M, 4].
+    
+    Returns:
+        The NxM matrix containing the pairwise IoU values for every element in
+        boxes1 and boxes2.
+    """
+    assert bbox1.ndim == 2
+    assert bbox2.ndim == 2
+    if isinstance(bbox1, np.ndarray) and type(bbox1) == type(bbox2):
+        bbox1 = np.expand_dims(bbox1, 1)
+        bbox2 = np.expand_dims(bbox2, 0)
+        xx1   = np.maximum(bbox1[..., 0], bbox2[..., 0])
+        yy1   = np.maximum(bbox1[..., 1], bbox2[..., 1])
+        xx2   = np.minimum(bbox1[..., 2], bbox2[..., 2])
+        yy2   = np.minimum(bbox1[..., 3], bbox2[..., 3])
+        w     = np.maximum(0.0, xx2 - xx1)
+        h     = np.maximum(0.0, yy2 - yy1)
+    else:
+        raise TypeError
+    wh  = w * h
+    iou = wh / ((bbox1[..., 2] - bbox1[..., 0]) *
+                (bbox1[..., 3] - bbox1[..., 1]) +
+                (bbox2[..., 2] - bbox2[..., 0]) *
+                (bbox2[..., 3] - bbox2[..., 1]) - wh)
     return iou
 
 

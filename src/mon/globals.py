@@ -12,14 +12,14 @@ Notes:
 from __future__ import annotations
 
 __all__ = [
-    "ACCELERATORS", "AppleRGB", "ShapeCode", "BBoxFormat", "BIN_DIR",
-    "BasicRGB", "BorderType", "CALLBACKS", "DATAMODULES", "DATASETS",
-    "DATA_DIR", "DISTANCES", "DOCS_DIR", "FILE_HANDLERS", "IMG_MEAN", "IMG_STD",
-    "ImageFormat", "InterpolationMode", "LAYERS", "LOGGERS", "LOSSES",
-    "LR_SCHEDULERS", "METRICS", "MODELS", "MemoryUnit", "ModelPhase",
-    "OPTIMIZERS", "PaddingMode", "RGB", "ROOT_DIR", "RUN_DIR", "Reduction",
-    "SOURCE_DIR", "STRATEGIES", "TEST_DIR", "TRANSFORMS", "VideoFormat",
-    "ZOO_DIR",
+    "ACCELERATORS", "AppleRGB", "BBoxFormat", "BIN_DIR", "BasicRGB",
+    "BorderType", "CALLBACKS", "DATAMODULES", "DATASETS", "DATA_DIR",
+    "DETECTORS", "DISTANCES", "DOCS_DIR", "FILE_HANDLERS", "IMG_MEAN",
+    "IMG_STD", "ImageFormat", "InterpolationMode", "LAYERS", "LOGGERS",
+    "LOSSES", "LR_SCHEDULERS", "METRICS", "MODELS", "MOTIONS", "MemoryUnit",
+    "ModelPhase", "MovingState", "OBJECTS", "OPTIMIZERS", "PaddingMode", "RGB",
+    "ROOT_DIR", "RUN_DIR", "Reduction", "SOURCE_DIR", "STRATEGIES", "ShapeCode",
+    "TEST_DIR", "TRACKERS", "TRANSFORMS", "VideoFormat", "ZOO_DIR",
 ]
 
 import os
@@ -65,6 +65,7 @@ ACCELERATORS  = factory.Factory(name="Accelerators")
 CALLBACKS     = factory.Factory(name="Callbacks")
 DATAMODULES   = factory.Factory(name="DataModules")
 DATASETS      = factory.Factory(name="Datasets")
+DETECTORS     = factory.Factory(name="Detectors")
 DISTANCES     = factory.Factory(name="Distances")
 FILE_HANDLERS = factory.Factory(name="FileHandlers")
 LAYERS        = factory.Factory(name="Layers")
@@ -73,10 +74,12 @@ LOSSES        = factory.Factory(name="Losses")
 LR_SCHEDULERS = factory.Factory(name="LRSchedulers")
 METRICS       = factory.Factory(name="Metrics")
 MODELS        = factory.Factory(name="Models")
+MOTIONS       = factory.Factory(name="Motions")
+OBJECTS       = factory.Factory(name="Objects")
 OPTIMIZERS    = factory.Factory(name="Optimizers")
 STRATEGIES    = factory.Factory(name="Strategies")
+TRACKERS      = factory.Factory(name="Trackers")
 TRANSFORMS    = factory.Factory(name="Transforms")
-
 
 # endregion
 
@@ -1014,6 +1017,71 @@ class MemoryUnit(enum.Enum):
             return cls.from_int(value=value)
         return None
 
+
+# Tracking
+
+class MovingState(enum.Enum):
+    
+    """The tracking state of an object when moving through the camera."""
+    CANDIDATE     = 1  # Preliminary state.
+    CONFIRMED     = 2  # Confirmed the Detection is a road_objects eligible for counting.
+    COUNTING      = 3  # Object is in the counting zone/counting state.
+    TO_BE_COUNTED = 4  # Mark object to be counted somewhere in this loop iteration.
+    COUNTED       = 5  # Mark object has been counted.
+    EXITING       = 6  # Mark object for exiting the ROI or image frame. Let's it die by itself.
+    
+    @classmethod
+    def str_mapping(cls) -> dict:
+        """Return a dictionary mapping strings to enums."""
+        return {
+            "candidate"    : cls.CANDIDATE,
+            "confirmed"    : cls.CONFIRMED,
+            "counting"     : cls.COUNTING,
+            "to_be_counted": cls.TO_BE_COUNTED,
+            "counted"      : cls.COUNTED,
+            "existing"     : cls.EXITING,
+        }
+    
+    @classmethod
+    def int_mapping(cls) -> dict:
+        """Return a dictionary mapping integers to enums."""
+        return {
+            0: cls.CANDIDATE,
+            1: cls.CONFIRMED,
+            2: cls.COUNTING,
+            3: cls.TO_BE_COUNTED,
+            4: cls.COUNTED,
+            5: cls.EXITING,
+        }
+    
+    @classmethod
+    def from_str(cls, value: str) -> MovingState:
+        """Convert a string to an enum."""
+        if value.lower() not in cls.str_mapping():
+            raise ValueError(
+                f"value must be a valid enum key, but got {value.lower()}."
+            )
+        return cls.str_mapping()[value]
+    
+    @classmethod
+    def from_int(cls, value: int) -> MovingState:
+        """Convert an integer to an enum."""
+        if value not in cls.int_mapping():
+            raise ValueError(
+                f"value must be a valid enum key, but got {value}."
+            )
+        return cls.int_mapping()[value]
+    
+    @classmethod
+    def from_value(cls, value: MovingState | dict | str) -> MovingState | None:
+        """Convert an arbitrary value to an enum."""
+        if isinstance(value, MovingState):
+            return value
+        if isinstance(value, str):
+            return cls.from_str(value)
+        if isinstance(value, int):
+            return cls.from_int(value)
+        return None
 
 # endregion
 
