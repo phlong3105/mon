@@ -16,12 +16,12 @@ from saicinpainting.evaluation.data import InpaintingVideoDataset
 from saicinpainting.evaluation.refinement import refine_predict
 from saicinpainting.evaluation.utils import move_to_device
 
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['OPENBLAS_NUM_THREADS'] = '1'
-os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS']        = '1'
+os.environ['OPENBLAS_NUM_THREADS']   = '1'
+os.environ['MKL_NUM_THREADS']        = '1'
 os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
-os.environ['NUMEXPR_NUM_THREADS'] = '1'
-os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
+os.environ['NUMEXPR_NUM_THREADS']    = '1'
+os.environ['CUDA_LAUNCH_BLOCKING']   = '1'
 
 import cv2
 import hydra

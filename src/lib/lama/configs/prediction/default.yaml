@@ -3,6 +3,9 @@ outdir: no  # to be overriden in CLI
 video_file: no
 label_file: no
 output_file: no
+image_dir: no
+label_dir: no
+output_dir: no
 
 model:
   path: no  # to be overriden in CLI

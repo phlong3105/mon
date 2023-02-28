@@ -216,6 +216,7 @@ class ImageLoader(Loader):
         to_tensor  : bool       = False,
         normalize  : bool       = False,
         verbose    : bool       = False,
+        *args, **kwargs
     ):
         self.images = []
         super().__init__(
@@ -276,17 +277,17 @@ class ImageLoader(Loader):
     
     def init(self):
         """Initialize the data source."""
-        self.images = []
+        images = []
         if self.source.is_image_file():
-            self.images = [self.source]
+            images = [self.source]
         elif self.source.is_dir():
-            self.images = [i for i in self.source.rglob("*") if i.is_image_file()]
+            images = [i for i in self.source.rglob("*") if i.is_image_file()]
         elif isinstance(self.source, str):
             images = [pathlib.Path(i) for i in glob.glob(self.source)]
             images = [i for i in images if i.is_image_file()]
-            self.images = images
         else:
             raise IOError(f"Error when listing image files.")
+        self.images = sorted(images)
         
         if self.num_images == 0:
             self.num_images = len(self.images)

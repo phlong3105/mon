@@ -53,7 +53,7 @@ def gen_human_mask(
     
     image_dir   = mon.Path(image_dir)
     label_dir   = mon.Path(label_dir)
-    output_dir  = output_dir or label_dir.parent / "person-masks"
+    output_dir  = output_dir or label_dir / "person-masks"
     output_dir  = mon.Path(output_dir)
     if save:
         output_dir.mkdir(parents=True, exist_ok=True)

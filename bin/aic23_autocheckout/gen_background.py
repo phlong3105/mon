@@ -16,14 +16,14 @@ import mon
 @click.command()
 @click.option("--source",      default=mon.DATA_DIR/"aic23-autocheckout/testA/inpainting/", type=click.Path(exists=True), help="Video path or directory.")
 @click.option("--destination", default=mon.DATA_DIR/"aic23-autocheckout/testA/background/", type=click.Path(exists=False), help="Output video filepath or directory.")
-@click.option("--from-index",  default=None, type=int, help="From/to frame index.")
-@click.option("--to-index",    default=None, type=int, help="From/to frame index.")
+@click.option("--start-frame", default=None, type=int, help="Start/end frame.")
+@click.option("--end-frame",   default=None, type=int, help="Start/end frame.")
 @click.option("--verbose",     is_flag=True)
 def convert_video(
     source     : mon.Path,
     destination: mon.Path,
-    from_index : int,
-    to_index   : int,
+    start_frame: int,
+    end_frame  : int,
     verbose    : bool
 ):
     assert source is not None and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())
@@ -48,12 +48,12 @@ def convert_video(
         fps         = cap.get(cv2.CAP_PROP_FPS)
         w           = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h           = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        from_index  = from_index or 0
-        to_index    = to_index or frame_count
-        if not to_index >= from_index:
+        start_frame  = start_frame or 0
+        end_frame    = end_frame or frame_count
+        if not end_frame >= start_frame:
             raise ValueError(
-                f"to_index must >= from_index, but got {from_index} and "
-                f"{to_index}."
+                f"start_frame must >= end_frame, but got {start_frame} and "
+                f"{end_frame}."
             )
         
         # fg_dst = dst.parent / f"{dst.stem}-fg.mp4"
@@ -72,7 +72,7 @@ def convert_video(
                 ret, image = cap.read()
                 if not ret:
                     continue
-                if i < from_index or i > to_index:
+                if i < start_frame or i > end_frame:
                     continue
 
                 fg = bg_sub.apply(image)

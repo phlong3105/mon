@@ -1,13 +1,16 @@
 #!/bin/bash
 
-dataset="aic22-autocheckout"
-subset=$2
-video=$3
-preprocess=$4
 machine=$HOSTNAME
 echo "$machine"
-read -e -i "$subset" -p "Video [testA, testB]: " subset
-read -e -i "$video" -p "Video [${subset}_1, ${subset}_2, ${subset}_3, ${subset}_4, all]: " video
+
+dataset=${1:-"aic23-autocheckout"}
+subset=${2:-"testA"}
+video=${3:-"all"}
+preprocess=${4:-"yes"}
+
+read -e -i "$dataset"    -p "Dataset [aic23-autocheckout]: " dataset
+read -e -i "$subset"     -p "Video [testA, testB]: " subset
+read -e -i "$video"      -p "Video [${subset}_1, ${subset}_2, ${subset}_3, ${subset}_4, all]: " video
 read -e -i "$preprocess" -p "Preprocess [yes, no]: " preprocess
 
 # Initialization
@@ -18,19 +21,18 @@ root_dir=$(dirname "$bin_dir")
 yolov8_dir="${root_dir}/src/lib/yolov8"
 lama_dir="${root_dir}/src/lib/lama"
 
+video_list=()
 if [ "$video" == "all" ]; then
-  if [ "$subset" == "testA" ]; then
-    if [ "$dataset" == "aic22-autocheckout" ]; then
-      video_list=("testA_1" "testA_2" "testA_3" "testA_4" "testA_5")
-    else
-      video_list=("testA_1" "testA_2" "testA_3" "testA_4")
-    fi
-  else
-    if [ "$dataset" == "aic22-autocheckout" ]; then
-      video_list=("testB_1" "testB_2" "testB_3" "testB_4" "testB_5")
-    else
-      video_list=("testB_1" "testB_2" "testB_3" "testB_4")
-    fi
+  if [ "$dataset" == "aic22-autocheckout" ]; then
+    for var in {1..5}
+    do
+      video_list+=("${subset}_${var}")
+    done
+  elif [ "$dataset" == "aic23-autocheckout" ]; then
+    for var in {1..4}
+    do
+      video_list+=("${subset}_${var}")
+    done
   fi
 else
   video_list=("$video")
@@ -44,7 +46,7 @@ for video in ${video_list[*]}; do
   if [ "$preprocess" == "yes" ]; then
     echo -e "\nConverting video"
     cd "${current_dir}" || exit
-    python convert_video.py \
+    python extract_frame.py \
       --source "${root_dir}/data/${dataset}/${subset}/${video}.mp4" \
       --destination "${root_dir}/data/${dataset}/${subset}/convert"
 
@@ -54,9 +56,9 @@ for video in ${video_list[*]}; do
       --task "segment" \
       --model "${root_dir}/zoo/yolov8/yolov8x-seg-coco.pt" \
       --data "data/coco.yaml" \
-      --project "${root_dir}/data/${dataset}/${subset}/" \
-      --name "person" \
-      --source "${root_dir}/data/${dataset}/${subset}/convert/${video}.mp4" \
+      --project "${root_dir}/data/${dataset}/${subset}/person" \
+      --name "${video}" \
+      --source "${root_dir}/data/${dataset}/${subset}/convert/${video}" \
       --imgsz 640 \
       --conf 0.1 \
       --iou 0.1 \
@@ -71,25 +73,25 @@ for video in ${video_list[*]}; do
 
     echo -e "\nPerforming inpainting"
     cd "${lama_dir}" || exit
-    python bin/predict_video.py \
-      video_file="${root_dir}/data/${dataset}/${subset}/convert/${video}.mp4" \
-      label_file="${root_dir}/data/${dataset}/${subset}/person/${video}.mp4" \
-      output_file="${root_dir}/data/${dataset}/${subset}/inpainting/${video}.mp4" \
+    python bin/predict_image_label.py \
+      image_dir="${root_dir}/data/${dataset}/${subset}/convert/${video}" \
+      label_dir="${root_dir}/data/${dataset}/${subset}/person/${video}" \
+      output_dir="${root_dir}/data/${dataset}/${subset}/inpainting/${video}" \
       model.path="${root_dir}/zoo/lama/big-lama-aic" \
       dataset.kind="video" \
       dataset.dilate=7
 
-    echo -e "\nPerforming background subtraction"
-    cd "${current_dir}" || exit
-    python gen_background.py \
-      --source "${root_dir}/data/${dataset}/${subset}/convert/${video}.mp4" \
-      --destination "${root_dir}/data/${dataset}/${subset}/background/"
+    # echo -e "\nPerforming background subtraction"
+    # cd "${current_dir}" || exit
+    # python gen_background.py \
+    #   --source "${root_dir}/data/${dataset}/${subset}/convert/${video}" \
+    #  --destination "${root_dir}/data/${dataset}/${subset}/background/"
 
-    echo -e "\nDetecting tray"
-    cd "${current_dir}" || exit
-    python detect_tray.py \
-      --source "${root_dir}/data/${dataset}/${subset}/background/${video}-bg.mp4" \
-      --destination "${root_dir}/data/${dataset}/${subset}/tray/${video}.mp4"
+    # echo -e "\nDetecting tray"
+    # cd "${current_dir}" || exit
+    # python detect_tray.py \
+    #   --source "${root_dir}/data/${dataset}/${subset}/background/${video}-bg" \
+    #  --destination "${root_dir}/data/${dataset}/${subset}/tray/${video}"
   fi
 done
 

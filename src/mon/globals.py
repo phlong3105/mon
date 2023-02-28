@@ -14,12 +14,13 @@ from __future__ import annotations
 __all__ = [
     "ACCELERATORS", "AppleRGB", "BBoxFormat", "BIN_DIR", "BasicRGB",
     "BorderType", "CALLBACKS", "DATAMODULES", "DATASETS", "DATA_DIR",
-    "DETECTORS", "DISTANCES", "DOCS_DIR", "FILE_HANDLERS", "IMG_MEAN",
-    "IMG_STD", "ImageFormat", "InterpolationMode", "LAYERS", "LOGGERS",
-    "LOSSES", "LR_SCHEDULERS", "METRICS", "MODELS", "MOTIONS", "MemoryUnit",
-    "ModelPhase", "MovingState", "OBJECTS", "OPTIMIZERS", "PaddingMode", "RGB",
-    "ROOT_DIR", "RUN_DIR", "Reduction", "SOURCE_DIR", "STRATEGIES", "ShapeCode",
-    "TEST_DIR", "TRACKERS", "TRANSFORMS", "VideoFormat", "ZOO_DIR",
+    "DETECTORS", "DISTANCES", "DOCS_DIR", "EMBEDDERS", "FILE_HANDLERS",
+    "IMG_MEAN", "IMG_STD", "ImageFormat", "InterpolationMode", "LAYERS",
+    "LOGGERS", "LOSSES", "LR_SCHEDULERS", "METRICS", "MODELS", "MOTIONS",
+    "MemoryUnit", "ModelPhase", "MovingState", "OBJECTS", "OPTIMIZERS",
+    "PaddingMode", "RGB", "ROOT_DIR", "RUN_DIR", "Reduction", "SOURCE_DIR",
+    "STRATEGIES", "ShapeCode", "TEST_DIR", "TRACKERS", "TRANSFORMS",
+    "VideoFormat", "ZOO_DIR",
 ]
 
 import os
@@ -67,6 +68,7 @@ DATAMODULES   = factory.Factory(name="DataModules")
 DATASETS      = factory.Factory(name="Datasets")
 DETECTORS     = factory.Factory(name="Detectors")
 DISTANCES     = factory.Factory(name="Distances")
+EMBEDDERS     = factory.Factory(name="Embedders")
 FILE_HANDLERS = factory.Factory(name="FileHandlers")
 LAYERS        = factory.Factory(name="Layers")
 LOGGERS       = factory.Factory(name="Loggers")

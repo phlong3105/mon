@@ -157,7 +157,7 @@ class Camera(ABC):
         pass
     
     @abstractmethod
-    def run_step_end(self, image: np.ndarray):
+    def run_step_end(self, index: int, image: np.ndarray):
         """Perform some postprocessing operations when a run step end."""
         pass
     
@@ -167,10 +167,16 @@ class Camera(ABC):
         pass
 
     @abstractmethod
-    def draw(self, image: np.ndarray, elapsed_time: float) -> np.ndarray:
+    def draw(
+        self,
+        index       : int,
+        image       : np.ndarray,
+        elapsed_time: float
+    ) -> np.ndarray:
         """Visualize the results on the image.
 
         Args:
+            index: Current frame index.
             image: Image to be drawn.
             elapsed_time: Elapsed time per iteration.
         """

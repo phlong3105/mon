@@ -80,7 +80,7 @@ moving_object   = {
 detector        = {
     "name"          : "yolov8",   # A detector name.
     "config"        : "yolov8x",  # A detector model's config.
-    "weight"        : _current_dir/"yolov8x-aic22-autocheckout-117-640.pt",
+    "weight"        : _current_dir/"yolov8x-aic22-autocheckout-117-1920.pt",
     "image_size"    : 640,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
     "conf_threshold": 0.3,        # An object confidence threshold.
@@ -94,7 +94,7 @@ tracker         = {
     "max_age"      : 1,                      # Maximum number of frame keep the object before deleting.
     "min_hits"     : 3,                      # Number of frames, which have matching bounding bbox of the detected object before the object is considered becoming the track.
     "iou_threshold": 0.3,                    # An Intersection-over-Union threshold between two tracks.
-    "motion_type"  : "kf_box_motion",        # A motion model.
+    "motion_type"  : "kf_bbox_motion",       # A motion model.
     "object_type"  : moving_object["name"],  # An object type
 }
 hands_estimator = {

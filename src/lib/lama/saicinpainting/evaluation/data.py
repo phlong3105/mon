@@ -139,6 +139,124 @@ class InpaintingVideoDataset(Dataset):
             result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
         
         return result
+
+
+class InpaintingImageLabelDataset(Dataset):
+    def __init__(
+        self,
+        image_dir,
+        label_dir,
+        pad_out_to_modulo = None,
+        scale_factor      = None,
+        dilate            = 7,
+        *args,
+        **kwargs
+    ):
+        assert mon.Path(image_dir).is_dir()
+        assert mon.Path(label_dir).is_dir()
+        image_dir  = mon.Path(image_dir)
+        label_dir  = mon.Path(label_dir)
+        
+        image_files = list(image_dir.rglob("*"))
+        image_files = [i for i in image_files if i.is_image_file()]
+        self.image_files = sorted(image_files)
+        
+        label_files = list(label_dir.rglob("*"))
+        label_files = [l for l in label_files if l.is_image_file()]
+        self.label_files = sorted(label_files)
+        
+        assert len(self.image_files) == len(self.label_files)
+        
+        self.pad_out_to_modulo = pad_out_to_modulo
+        self.scale_factor = scale_factor
+        self.kernel = np.ones((dilate, dilate), np.uint8) if dilate >= 2 else None
+
+    def __len__(self):
+        return len(self.image_files)
+
+    def __getitem__(self, i):
+        image = cv2.imread(str(self.image_files[i]))
+        mask  = cv2.imread(str(self.label_files[i]))
+        
+        if self.kernel is not None:
+            mask = cv2.dilate(mask, self.kernel, iterations=1)
+
+        image  = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        mask   = cv2.cvtColor(mask,  cv2.COLOR_BGR2GRAY)
+        
+        if image.ndim == 3:
+            image = np.transpose(image, (2, 0, 1))
+            image = image.astype('float32') / 255
+            
+        result = dict(image=image, mask=mask[None, ...])
+
+        if self.scale_factor is not None:
+            result['image'] = scale_image(result['image'], self.scale_factor)
+            result['mask'] = scale_image(result['mask'], self.scale_factor, interpolation=cv2.INTER_NEAREST)
+
+        if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
+            result['unpad_to_size'] = result['image'].shape[1:]
+            result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
+            result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+        
+        return result
+
+
+class InpaintingVideoDataset(Dataset):
+    def __init__(
+        self,
+        video_file,
+        label_file,
+        pad_out_to_modulo = None,
+        scale_factor      = None,
+        dilate            = 7,
+        *args,
+        **kwargs
+    ):
+        assert mon.Path(video_file).is_video_file()
+        assert mon.Path(label_file).is_video_file()
+        self.video_file = mon.Path(video_file)
+        self.label_file = mon.Path(label_file)
+        
+        self.video_cap = cv2.VideoCapture(str(self.video_file))
+        self.label_cap = cv2.VideoCapture(str(self.label_file))
+        self.video_length = int(self.video_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.label_length = int(self.label_cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        assert self.video_length == self.label_length, f"{self.video_length} != {self.label_length}"
+        
+        self.pad_out_to_modulo = pad_out_to_modulo
+        self.scale_factor      = scale_factor
+        self.kernel = np.ones((dilate, dilate), np.uint8) if dilate >= 2 else None
+
+    def __len__(self):
+        return self.video_length
+
+    def __getitem__(self, i):
+        success, image = self.video_cap.read()
+        success, mask  = self.label_cap.read()
+        
+        if self.kernel is not None:
+            mask = cv2.dilate(mask, self.kernel, iterations=1)
+
+        image  = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        mask   = cv2.cvtColor(mask,  cv2.COLOR_BGR2GRAY)
+        
+        if image.ndim == 3:
+            image = np.transpose(image, (2, 0, 1))
+            image = image.astype('float32') / 255
+            
+        result = dict(image=image, mask=mask[None, ...])
+
+        if self.scale_factor is not None:
+            result['image'] = scale_image(result['image'], self.scale_factor)
+            result['mask'] = scale_image(result['mask'], self.scale_factor, interpolation=cv2.INTER_NEAREST)
+
+        if self.pad_out_to_modulo is not None and self.pad_out_to_modulo > 1:
+            result['unpad_to_size'] = result['image'].shape[1:]
+            result['image'] = pad_img_to_modulo(result['image'], self.pad_out_to_modulo)
+            result['mask'] = pad_img_to_modulo(result['mask'], self.pad_out_to_modulo)
+        
+        return result
     
 
 class OurInpaintingDataset(Dataset):

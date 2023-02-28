@@ -18,7 +18,7 @@ import numpy as np
 
 import mon
 from mon.globals import DETECTORS, MovingState, OBJECTS, TRACKERS
-from supr import data, io, rmoi
+from supr import io, obj, rmoi
 from supr.camera.base import Camera
 from supr.globals import CAMERAS
 
@@ -150,17 +150,17 @@ class AutoCheckoutCamera(Camera):
             raise ValueError(f"Cannot initialize tracker with {tracker}.")
     
     @property
-    def hands_estimator(self) -> data.HandsEstimator | None:
+    def hands_estimator(self) -> obj.HandsEstimator | None:
         return self._hands_estimator
     
     @hands_estimator.setter
     def hands_estimator(self, hands_estimator: Any):
         if hands_estimator is None:
             self._hands_estimator = None
-        elif isinstance(hands_estimator, data.HandsEstimator):
+        elif isinstance(hands_estimator, obj.HandsEstimator):
             self._hands_estimator = hands_estimator
         elif isinstance(hands_estimator, dict):
-            self._hands_estimator = data.HandsEstimator(**hands_estimator)
+            self._hands_estimator = obj.HandsEstimator(**hands_estimator)
         else:
             raise ValueError(
                 f"Cannot initialize hands estimator with {hands_estimator}."
@@ -192,7 +192,8 @@ class AutoCheckoutCamera(Camera):
         object_class.max_age               = moving_object.get("max_age"              , 1)
         object_class.min_touched_landmarks = moving_object.get("min_touched_landmarks", 1)
         object_class.min_confirms          = moving_object.get("min_confirms"         , 3)
-    
+        object_class.min_counting_distance = moving_object.get("min_counting_distance", 10)
+        
     def on_run_start(self):
         """Called at the beginning of run loop."""
         self.moving_objects = []
@@ -249,16 +250,17 @@ class AutoCheckoutCamera(Camera):
                     
                     # Track
                     self.tracker.update(instances=instances)
-                    self.moving_objects: list[data.Product] = self.tracker.tracks
+                    self.moving_objects: list[obj.Product] = self.tracker.tracks
                     self.hands = batch_hands[idx] if batch_hands else None
                     
                     # Update moving objects' moving state
                     for mo in self.moving_objects:
                         mo.update_moving_state(rois=self.rois, hands=self.hands)
-                        if mo.is_confirmed:
-                            fps = getattr(self.image_loader, "fps", 30)
-                            timestamp    = (mo.current.frame_index - self.tracker.min_hits) / fps
-                            mo.timestamp = mon.math.floor(timestamp)
+                        if mo.is_to_be_counted:
+                            # fps          = getattr(self.image_loader, "fps", 30)
+                            # timestamp    = (mo.current.frame_index - self.tracker.min_hits) / fps
+                            # mo.timestamp = mon.math.floor(timestamp)
+                            mo.timestamp = mo.current.frame_index
                     
                     # Count
                     countable = [o for o in self.moving_objects if o.is_to_be_counted]
@@ -266,16 +268,16 @@ class AutoCheckoutCamera(Camera):
                         self.result_writer.append_results(products=countable)
                     for mo in countable:
                         mo.moving_state = MovingState.COUNTED
-                    self.run_step_end(image=images[idx])
+                    self.run_step_end(index=indexes[idx], image=images[idx])
                 
         self.on_run_end()
     
-    def run_step_end(self, image: np.ndarray):
+    def run_step_end(self, index: int, image: np.ndarray):
         """Perform some postprocessing operations when a run step end."""
         if not (self.verbose or self.save_image or self.save_video):
             return
         elapsed_time = timer() - self.start_time
-        image        = self.draw(image=image, elapsed_time=elapsed_time)
+        image = self.draw(index=index, image=image, elapsed_time=elapsed_time)
         if self.save_video:
             self.image_writer.write(image=image)
         if self.verbose:
@@ -291,29 +293,34 @@ class AutoCheckoutCamera(Camera):
         if self.verbose:
             cv2.destroyAllWindows()
     
-    def draw(self, image: np.ndarray, elapsed_time: float) -> np.ndarray:
+    def draw(
+        self,
+        index       : int,
+        image       : np.ndarray,
+        elapsed_time: float
+    ) -> np.ndarray:
         """Visualize the results on the image.
 
         Args:
+            index: Current frame index.
             image: Drawing canvas.
             elapsed_time: Elapsed time per iteration.
         """
-        # NOTE: Draw ROI
+        # Draw ROI
         for r in self.rois:
             image = r.draw(image=image)
-        # NOTE: Draw MOIs
+        # Draw MOIs
         for m in self.mois:
             image = m.draw(image=image)
-        # NOTE: Draw Products
+        # Draw Products
         for o in self.moving_objects:
             image = o.draw(image=image)
-        # NOTE: Draw Hands
+        # Draw Hands
             if self.hands:
                 self.hands.draw(image=image)
-        # NOTE: Draw frame index
-        index = self.image_loader.index
-        fps   = index / elapsed_time
-        text  = f"Frame: {index}: {format(elapsed_time, '.3f')}s ({format(fps, '.1f')} fps)"
+        # Draw frame index
+        fps  = index / elapsed_time
+        text = f"Frame: {index}: {format(elapsed_time, '.3f')}s ({format(fps, '.1f')} fps)"
         cv2.rectangle(
             img       = image,
             pt1       = (10,   0),

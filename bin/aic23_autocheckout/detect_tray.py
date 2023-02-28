@@ -50,15 +50,15 @@ def process_image(image: np.ndarray):
 @click.command()
 @click.option("--source",      default=mon.DATA_DIR/"aic23-autocheckout/testA/background/", type=click.Path(exists=True), help="Video filepath or directory.")
 @click.option("--destination", default=mon.DATA_DIR/"aic23-autocheckout/testA/tray/", type=click.Path(exists=False), help="Output video filepath or directory.")
-@click.option("--from-index",  default=None, type=int, help="From/to frame index.")
-@click.option("--to-index",    default=None, type=int, help="From/to frame index.")
+@click.option("--start-frame", default=None, type=int, help="Start/end frame.")
+@click.option("--end-frame",   default=None, type=int, help="Start/end frame.")
 @click.option("--save",        default=True, is_flag=True)
 @click.option("--verbose",     default=True, is_flag=True)
 def detect_tray(
     source     : mon.Path,
     destination: mon.Path,
-    from_index : int,
-    to_index   : int,
+    start_frame: int,
+    end_frame  : int,
     save       : bool,
     verbose    : bool
 ):
@@ -84,12 +84,12 @@ def detect_tray(
         fps         = cap.get(cv2.CAP_PROP_FPS)
         w           = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h           = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        from_index  = from_index or 0
-        to_index    = to_index   or frame_count
-        if not to_index >= from_index:
+        start_frame  = start_frame or 0
+        end_frame    = end_frame   or frame_count
+        if not end_frame >= start_frame:
             raise ValueError(
-                f"to_index must >= from_index, but got {from_index} and "
-                f"{to_index}."
+                f"start_frame must >= end_frame, but got {start_frame} and "
+                f"{end_frame}."
             )
         if save:
             wrt = cv2.VideoWriter(str(dst), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
@@ -105,7 +105,7 @@ def detect_tray(
                 ret, image = cap.read()
                 if not ret:
                     continue
-                if i < from_index or i > to_index:
+                if i < start_frame or i > end_frame:
                     continue
                 result, _ = process_image(image=image)
                 if save:

@@ -82,6 +82,12 @@ class Path(type(pathlib.Path())):
         """
         return self == self.stem
     
+    def is_py_file(self, exist: bool = True) -> bool:
+        """Return True if the current path is a python file. Otherwise, return
+        False.
+        """
+        return (self.is_file() if exist else True) and self.suffix.lower() in [".py"]
+    
     def is_stem(self) -> bool:
         """Return True if the current path isn't None, and the parent of the
         path is the current directory, and the path has no extension. Otherwise,

@@ -15,7 +15,7 @@ from timeit import default_timer as timer
 from typing import Sequence
 
 import mon
-from supr import data
+from supr import obj
 
 console = mon.console
 
@@ -98,16 +98,20 @@ class ProductCountingWriter:
         destination.parent.mkdir(parents=True, exist_ok=True)
         self.destination = destination
     
-    def append_results(self, products: list[data.Product]):
+    def append_results(self, products: list[obj.Product]):
         """Write counting results.
 
         Args:
             products: A list of tracking :class:`data.Product` objects.
         """
+        prev_id = 0
         for p in products:
             class_id = p.majority_label_id
             if class_id in self.exclude:
                 continue
+            if prev_id == class_id:
+                continue
+            prev_id = class_id
             line = f"{self.video_id} {class_id + 1} {int(p.timestamp)}\n"
             self.lines.append(line)
     

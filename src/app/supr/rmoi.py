@@ -19,7 +19,7 @@ import cv2
 import numpy as np
 
 import mon
-from supr import data
+from supr import obj
 
 error_console = mon.error_console
 
@@ -62,6 +62,10 @@ class RegionOfInterest:
             )
         self._points = points
     
+    @property
+    def center(self) -> np.ndarray:
+        return np.mean(self.points, axis=0)
+        
     @property
     def has_valid_points(self) -> bool:
         """Return True if there are more than 3 points."""
@@ -188,7 +192,7 @@ def get_roi_for_box(
     return None
 
 
-def assign_detections_to_rois(instances: list[data.Instance], rois: list[ROI]):
+def assign_detections_to_rois(instances: list[obj.Instance], rois: list[ROI]):
     """Assign :class:`data.Detection` objects to ROIs.
 
     Args:
@@ -494,15 +498,15 @@ def assign_moving_objects_to_mois(
     
     if shape_type == "polygon":
         for o in objects:
-            if o.moi_uid is None:
-                o.moi_uid = get_moi_for_box(
+            if o.moi_id is None:
+                o.moi_id = get_moi_for_box(
                     bbox = o.current_box,
                     mois = polygon_mois
                 )
     elif shape_type == "line":
         for o in objects:
-            if o.moi_uid is None:
-                o.moi_uid = get_best_matched_moi(
+            if o.moi_id is None:
+                o.moi_id = get_best_matched_moi(
                     object_track = o.trajectory,
                     mois         = line_mois
                 )[0]

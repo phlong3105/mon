@@ -16,8 +16,8 @@ import mon
 @click.command()
 @click.option("--source",      default=mon.DATA_DIR/"aic23-autocheckout"/"testA"/"inpainting", type=click.Path(exists=True), help="Video filepath or directory.")
 @click.option("--destination", default=mon.DATA_DIR/"aic23-autocheckout"/"train"/"tray", type=click.Path(exists=False), help="Output video filepath or directory.")
-@click.option("--from-index",  default=None, type=int, help="From/to frame index.")
-@click.option("--to-index",    default=None, type=int, help="From/to frame index.")
+@click.option("--start-frame", default=None, type=int, help="Start/end frame.")
+@click.option("--end-frame",   default=None, type=int, help="Start/end frame.")
 @click.option("--size",        default=None, type=int, nargs="+", help="Output images/video size.")
 @click.option("--skip",        default=60, type=int, help="Skip n frames.")
 @click.option("--save-image",  default=True, is_flag=True, help="Save images.")
@@ -26,8 +26,8 @@ import mon
 def convert_video(
     source     : mon.Path,
     destination: mon.Path,
-    from_index : int,
-    to_index   : int,
+    start_frame: int,
+    end_frame  : int,
     size       : int | list[int],
     skip       : int,
     save_image : bool,
@@ -62,11 +62,12 @@ def convert_video(
         fps         = cap.get(cv2.CAP_PROP_FPS)
         w           = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         h           = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        f_index     = from_index or 0
-        t_index     = to_index   or frame_count
-        if not t_index >= f_index:
+        start_frame = start_frame or 0
+        end_frame   = end_frame or frame_count
+        if not end_frame >= start_frame:
             raise ValueError(
-                f"t_index must >= f_index, but got {f_index} and {t_index}."
+                f"end_frame must >= start_frame, but got {start_frame} and "
+                f"{end_frame}."
             )
         
         if not save_image:
@@ -82,7 +83,7 @@ def convert_video(
                 description = f"[bright_yellow] Converting {src.name}"
             ):
                 success, image = cap.read()
-                if not success or not f_index <= i <= t_index or i % skip != 0:
+                if not success or not start_frame <= i <= end_frame or i % skip != 0:
                     continue
                 
                 if size is not None:

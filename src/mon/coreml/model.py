@@ -407,16 +407,17 @@ class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
     Attributes:
-        cfgs: A dictionary containing all configurations of the model.
+        config: A dictionary containing all configurations of the model.
         zoo: A dictionary containing all pretrained weights of the model.
         
     Args:
-        cfg: The model's configuration that is used to build the model. Any of:
-            - A dictionary.
-            - A key in the :attr:`cfgs`.
-            - A file name. Ex: 'alexnet.yaml'.
-            - A path to a .yaml file. Ex: '../cfgs/alexnet.yaml'.
-            - None, define each layer manually.
+        config: The model's configuration that is used to build the model.
+            Any of:
+                - A dictionary.
+                - A key in the :attr:`cfgs`.
+                - A file name. Ex: 'alexnet.yaml'.
+                - A path to a .yaml file. Ex: '../cfgs/alexnet.yaml'.
+                - None, define each layer manually.
         hparams: Layer's hyperparameters. They are used to change the values of
             :param:`args`. Usually used in grid search or random search during
             training. Defaults to None.
@@ -450,12 +451,12 @@ class Model(lightning.LightningModule, ABC):
         verbose: Verbosity. Defaults to True.
     """
     
-    cfgs    = {}
+    configs = {}
     zoo     = {}
     
     def __init__(
         self,
-        cfg        : Any                   = None,
+        config     : Any                   = None,
         hparams    : dict | None           = None,
         channels   : int                   = 3,
         num_classes: int  | None           = None,
@@ -482,15 +483,13 @@ class Model(lightning.LightningModule, ABC):
         self.fullname      = fullname
         self.project       = project
         self.root          = root
-        
-        self.cfg           = cfg
+        self.config        = config
         self.hyperparams   = hparams
         self.channels      = channels
         self.num_classes   = num_classes
         self.weight        = weight
         self.classlabels   = md.ClassLabels.from_value(classlabels) \
-                                if classlabels is not None else None
-        
+                             if classlabels is not None else None
         self.loss          = loss
         self.train_metrics = metrics
         self.val_metrics   = metrics
@@ -558,7 +557,7 @@ class Model(lightning.LightningModule, ABC):
     
     @property
     @abstractmethod
-    def cfg_dir(self) -> pathlib.Path:
+    def config_dir(self) -> pathlib.Path:
         pass
     
     @property
@@ -596,17 +595,17 @@ class Model(lightning.LightningModule, ABC):
         return ZOO_DIR / self.name
     
     @property
-    def cfg(self) -> dict | None:
+    def config(self) -> dict | None:
         return self._cfg
     
-    @cfg.setter
-    def cfg(self, cfg: Any = None):
+    @config.setter
+    def config(self, cfg: Any = None):
         variant = None
-        if isinstance(cfg, str) and cfg in self.cfgs:
+        if isinstance(cfg, str) and cfg in self.configs:
             variant = str(cfg)
-            cfg     = self.cfgs[cfg]
+            cfg     = self.configs[cfg]
         elif isinstance(cfg, str) and ".yaml" in cfg:
-            cfg     = self.cfg_dir / cfg
+            cfg     = self.config_dir / cfg
             variant = str(cfg.stem)
         elif isinstance(cfg, pathlib.Path):
             variant = str(cfg.stem)
@@ -651,8 +650,8 @@ class Model(lightning.LightningModule, ABC):
         self._phase = ModelPhase.from_value(value=phase)
         if self._phase is ModelPhase.TRAINING:
             self.unfreeze()
-            if self.cfg is not None:
-                freeze = self.cfg.get("freeze", None)
+            if self.config is not None:
+                freeze = self.config.get("freeze", None)
                 if isinstance(freeze, list):
                     for k, v in self.model.named_parameters():
                         if any(x in k for x in freeze):
@@ -816,15 +815,15 @@ class Model(lightning.LightningModule, ABC):
             A list of layer index to save the features during forward pass.
             A list of layer's info for debugging.
         """
-        if not isinstance(self.cfg, dict):
-            raise TypeError(f"cfg must be a dictionary, but got {self.cfg}.")
+        if not isinstance(self.config, dict):
+            raise TypeError(f"cfg must be a dictionary, but got {self.config}.")
         
         console.log(f"Parsing model from cfg.")
         
-        if "channels" in self.cfg:
-            channels = self.cfg["channels"]
+        if "channels" in self.config:
+            channels = self.config["channels"]
             if channels != self.channels:
-                self.cfg["channels"] = self.channels
+                self.config["channels"] = self.channels
                 console.log(
                     f"Overriding model.yaml channels={channels} with "
                     f"num_classes={self.channels}."
@@ -837,20 +836,20 @@ class Model(lightning.LightningModule, ABC):
             num_classes = num_classes or self.weight["num_classes"]
         self.num_classes = num_classes
         
-        if "num_classes" in self.cfg:
-            num_classes = self.cfg["num_classes"]
+        if "num_classes" in self.config:
+            num_classes = self.config["num_classes"]
             if num_classes != self.num_classes:
-                self.cfg["num_classes"] = self.num_classes
+                self.config["num_classes"] = self.num_classes
                 console.log(
                     f"Overriding model.yaml num_classes={num_classes} with "
                     f"num_classes={self.num_classes}."
                 )
         
-        if "backbone" not in self.cfg and "head" not in self.cfg:
+        if "backbone" not in self.config and "head" not in self.config:
             raise ValueError("cfg must contain 'backbone' and 'head' keys.")
 
         model, save, info = layer.parse_model(
-            d       = self.cfg,
+            d       = self.config,
             ch      = [self.channels],
             hparams = self.hyperparams,
         )
@@ -1046,7 +1045,7 @@ class Model(lightning.LightningModule, ABC):
     def on_train_epoch_start(self):
         """Called in the training loop at the beginning of the epoch."""
         self.epoch_step = 0
-
+    
     def training_step(
         self,
         batch        : Any,
@@ -1159,7 +1158,7 @@ class Model(lightning.LightningModule, ABC):
     def on_validation_epoch_start(self):
         """Called in the validation loop at the beginning of the epoch."""
         self.epoch_step = 0
-
+    
     def validation_step(
         self,
         batch         : Any,
@@ -1295,7 +1294,7 @@ class Model(lightning.LightningModule, ABC):
         """Called at the very beginning of testing."""
         for path in [self.root, self.ckpt_dir, self.debug_dir]:
             path.mkdir(parents=True, exist_ok=True)
-        
+    
     def on_test_epoch_start(self):
         """Called in the test loop at the very beginning of the epoch."""
         self.epoch_step = 0

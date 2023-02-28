@@ -42,9 +42,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
-      --data "data/aic23-autocheckout-synthetic-117.yaml" \
+      --data "data/aic23-autocheckout-synthetic-117-of.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x6-aic23-autocheckout-synthetic-117-1920" \
+      --name "yolov8x6-aic23-autocheckout-synthetic-117-of-1920" \
       --epochs 50 \
       --batch 4 \
       --imgsz 1920 \

@@ -44,7 +44,7 @@ mois          = [
 classlabels   = _current_dir/"classlabels.json"
 num_classes   = 117
 image_loader  = {
-    "source"        : root/subset/"inpainting"/f"{name}.mp4",  # Data source.
+    "source"        : root/subset/"inpainting"/f"{name}",  # Data source.
     # "source"        : root/subset/f"{name}.mp4",  # Data source.
     "max_samples"   : None,   # The maximum number of datapoints to be processed.
     "batch_size"    : 8,      # The number of samples in a single forward pass
@@ -71,30 +71,31 @@ result_writer = {
 }
 moving_object = {
     "name"                 : "product",  # An object type.
-    "min_entering_distance": 50,  # Minimum distance when an object enters the ROI to be Confirmed.
-    "min_traveled_distance": 50,  # Minimum distance between first trajectory point with last trajectory point.
-    "min_hit_streak"       : 3,   # Minimum number of consecutive frames that track appears.
-    "max_age"              : 1,   # Maximum frame to wait until a dead track can be counted.
-    "min_confirms"         : 3,   # Minimum frames that the object is considered for counting.
+    "min_entering_distance": 50,   # Minimum distance when an object enters the ROI to be Confirmed.
+    "min_traveled_distance": 50,   # Minimum distance between first trajectory point with last trajectory point.
+    "min_hit_streak"       : 3,    # Minimum number of consecutive frames that track appears.
+    "max_age"              : 1,    # Maximum frame to wait until a dead track can be counted.
+    "min_confirms"         : 3,    # Minimum frames that the object is considered for counting.
+    "min_counting_distance": 15,   # Minimum distance to the ROI's center that the object is considered for counting.
 }
 detector      = {
-    "name"          : "yolov8",   # A detector name.
-    "config"        : "yolov8x",  # A detector model's config.
+    "name"          : "yolov8",    # A detector name.
+    "config"        : "yolov8x",   # A detector model's config.
     "weight"        : _current_dir/"yolov8x-aic23-autocheckout-117-1920.pt",
     "image_size"    : 1024,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
-    "conf_threshold": 0.2,        # An object confidence threshold.
-    "iou_threshold" : 0.3,        # An IOU threshold for NMS.
-    "max_detections": 50,        # Maximum number of detections/image.
-    "device"        : 0,          # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
-    "to_instance"   : True,       # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
+    "conf_threshold": 0.5,         # An object confidence threshold.
+    "iou_threshold" : 0.5,         # An IOU threshold for NMS.
+    "max_detections": 3,           # Maximum number of detections/image.
+    "device"        : 0,           # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
+    "to_instance"   : True,        # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
 tracker       = {
     "name"         : "sort",                 # Name of the tracker.
-    "max_age"      : 3,                      # Maximum number of frame keep the object before deleting.
+    "max_age"      : 30,                     # Maximum number of frame keep the object before deleting.
     "min_hits"     : 3,                      # Number of frames, which have matching bounding bbox of the detected object before the object is considered becoming the track.
-    "iou_threshold": 0.1,                    # An Intersection-over-Union threshold between two tracks.
-    "motion_type"  : "kf_box_motion",        # A motion model.
+    "iou_threshold": 0.3,                    # An Intersection-over-Union threshold between two tracks.
+    "motion_type"  : "kf_bbox_motion",       # A motion model.
     "object_type"  : moving_object["name"],  # An object type
 }
 tray_detector = {
@@ -110,7 +111,7 @@ tray_detector = {
     "to_instance"   : False,      # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
 save_image    = False      # Save processing images?
-save_video    = False      # Save processing video?
+save_video    = True       # Save processing video?
 save_results  = True       # Save counting results.
 verbose       = True       # Verbosity.
 

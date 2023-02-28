@@ -47,6 +47,8 @@ case "$OSTYPE" in
     pip install --upgrade pip
     # Remove `cv2/plugin` folder
     rm -rf $CONDA_PREFIX/lib/python3.10/site-packages/cv2/qt/plugins
+    # Install FFMPEG
+    sudo apt-get install ffmpeg
     ;;
   darwin*)
     echo -e "\nMacOS"
@@ -69,6 +71,8 @@ case "$OSTYPE" in
     pip install --upgrade pip
     # Remove `cv2/plugin` folder:
     rm -rf $CONDA_PREFIX/lib/python3.10/site-packages/cv2/qt/plugins
+    # Install FFMPEG
+    brew install ffmpeg
     ;;
   win*)
     echo -e "\nWindows"

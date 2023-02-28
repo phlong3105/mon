@@ -20,21 +20,23 @@ console = mon.console
 @click.option(
     "--config", default="testA_3",
     type=click.Choice([
-        "testA", "testA_1", "testA_2", "testA_3", "testA_4", "testA_5",
-        "testB", "testB_1", "testB_2", "testB_3", "testB_4", "testA_5",
+        "testA", "testA_1", "testA_2", "testA_3", "testA_4", "testA_5", "all",
+        "testB", "testB_1", "testB_2", "testB_3", "testB_4", "testA_5", "all",
     ], case_sensitive=True),
     help="Camera configuration."
 )
 def run_camera(config: mon.Path | str):
     config_files = dir(autocheckout)
-    config_files = [f for f in config_files if config in f]
+    if config == "all":
+        config_files = [f for f in config_files if "test" in f]
+    else:
+        config_files = [f for f in config_files if config in f]
     
     for cf in config_files:
         config = mon.get_module_vars(getattr(autocheckout, cf))
         camera = config.pop("camera")
         camera = CAMERAS.get(camera)
         camera = camera(**config)
-        # camera = supr.aic.AutoCheckoutCamera(**config)
         camera.run()
         
 # endregion

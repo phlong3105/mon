@@ -48,7 +48,7 @@ def convert_contour(
     width  : int
 ) -> np.ndarray:
     """Convert bounding box."""
-    code = ShapeCode.from_value(code)
+    code = ShapeCode.from_value(value=code)
     match code:
         case ShapeCode.VOC2YOLO:
             return contour_voc_to_yolo(contour=contour, height=height, width=width)

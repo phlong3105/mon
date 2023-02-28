@@ -16,8 +16,8 @@ import mon
 @click.command()
 @click.option("--source",      default=mon.DATA_DIR, type=click.Path(exists=True), help="Image directory.")
 @click.option("--destination", default=mon.DATA_DIR, type=click.Path(exists=False), help="Output video filepath or directory.")
-@click.option("--from-index",  default=None, type=int, help="From/to frame index.")
-@click.option("--to-index",    default=None, type=int, help="From/to frame index.")
+@click.option("--start-frame", default=None, type=int, help="Start/end frame.")
+@click.option("--end-frame",   default=None, type=int, help="Start/end frame.")
 @click.option("--size",        default=None, type=int, nargs="+", help="Output images/video size.")
 @click.option("--skip",        default=1, type=int, help="Skip n frames.")
 @click.option("--save-video",  is_flag=True, help="Save images.")
@@ -26,8 +26,8 @@ import mon
 def visualize_image(
     source     : mon.Path,
     destination: mon.Path,
-    from_index : int,
-    to_index   : int,
+    start_frame: int,
+    end_frame  : int,
     size       : int | list[int],
     skip       : int,
     save_video : bool,
@@ -57,12 +57,12 @@ def visualize_image(
         image_files = list(src.rglob("*"))
         image_files = [f for f in image_files if f.is_image_file()]
         image_files = sorted(image_files)
-
-        f_index     = from_index or 0
-        t_index     = to_index or len(image_files)
-        if not t_index >= f_index:
+        start_frame = start_frame or 0
+        end_frame   = end_frame or len(image_files)
+        if not end_frame >= start_frame:
             raise ValueError(
-                f"t_index must >= f_index, but got {f_index} and {t_index}."
+                f"end_frame must >= start_frame, but got {start_frame} and "
+                f"{end_frame}."
             )
 
         dst.mkdir(parents=True, exist_ok=True)
@@ -73,7 +73,7 @@ def visualize_image(
                 total       = len(image_files),
                 description = f"[bright_yellow] Converting {src.name}"
             ):
-                if not f_index <= i <= t_index or i % skip != 0:
+                if not start_frame <= i <= end_frame or i % skip != 0:
                     continue
                 
                 image = cv2.imread(str(image_files[i]))

@@ -7,11 +7,12 @@ from __future__ import annotations
 
 import supr.camera
 import supr.config
-import supr.data
 import supr.globals
 import supr.io
+import supr.obj
 import supr.rmoi
 from supr.camera import *
-from supr.data import *
+from supr.globals import *
 from supr.io import *
+from supr.obj import *
 from supr.rmoi import *
