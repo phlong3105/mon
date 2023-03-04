@@ -29,8 +29,8 @@ class ImageClassificationModel(model.Model, ABC):
     @property
     def config_dir(self) -> pathlib.Path:
         current_file = pathlib.Path(__file__).absolute()
-        cfg_dir      = current_file.parent / "cfg"
-        return cfg_dir
+        config_dir   = current_file.parent / "config"
+        return config_dir
     
     def forward(
         self,
@@ -103,20 +103,20 @@ class ImageClassificationModel(model.Model, ABC):
             save: Save debug image. Defaults to False.
             verbose: If True shows the results on the screen. Defaults to False.
         """
-        save_cfg = {
+        save_config = {
             "filepath"  : filepath or self.debug_image_filepath ,
             "pil_kwargs": dict(quality=image_quality)
         } if save else None
         visualize.imshow_classification(
-            winname   = self.fullname,  # self.phase.value,
-            image     = input,
-            pred      = pred,
-            target    = target,
-            scale     = 2,
-            save_cfg  = save_cfg,
-            max_n     = max_n,
-            nrow      = nrow,
-            wait_time = wait_time,
+            winname     = self.fullname, # self.phase.value,
+            image       = input,
+            pred        = pred,
+            target      = target,
+            scale       = 2,
+            save_config = save_config,
+            max_n       = max_n,
+            nrow        = nrow,
+            wait_time   = wait_time,
         )
 
 # endregion

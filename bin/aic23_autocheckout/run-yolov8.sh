@@ -42,9 +42,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
-      --data "data/aic23-autocheckout-synthetic-117-of.yaml" \
+      --data "data/aic23-autocheckout-mix-117.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x6-aic23-autocheckout-synthetic-117-of-1920" \
+      --name "yolov8x6-aic23-autocheckout-mix-117-1920" \
       --epochs 50 \
       --batch 4 \
       --imgsz 1920 \
@@ -55,11 +55,11 @@ if [ "$task" == "train" ]; then
       --pretrained
   elif [ "$machine" == "vsw-ws03" ]; then
     python train.py \
-      --task "segment" \
-      --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
-      --data "data/aic23-autocheckout-synthetic-117-of.yaml" \
+      --task "detect" \
+      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
+      --data "data/aic23-autocheckout-mix-117.yaml" \
       --project "${root_dir}/run/train" \
-      --name "yolov8x6-aic23-autocheckout-synthetic-117-of-1920" \
+      --name "yolov8x-aic23-autocheckout-mix-117-1920" \
       --epochs 50 \
       --batch 4 \
       --imgsz 1920 \
@@ -82,21 +82,19 @@ if [ "$task" == "predict" ]; then
   if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
     python predict.py \
     	--task "detect" \
-    	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-tray-640/weights/best.pt" \
-    	--data "data/aic23-autocheckout-tray.yaml" \
+    	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-mix-117-1920/weights/best.pt" \
+    	--data "data/aic23-autocheckout-mix-117.yaml" \
     	--project "${root_dir}/run/predict" \
-    	--name "yolov8x-aic22-autocheckout-tray-640" \
-    	--source "${root_dir}/data/aic22-autocheckout/testA/inpainting/testA_5.mp4" \
-    	--imgsz 640 \
-    	--conf 0.8 \
+    	--name "testA_3" \
+    	--source "${root_dir}/data/aic23-autocheckout/testA/inpainting/testA_3" \
+    	--imgsz 1024 \
+    	--conf 0.5 \
     	--iou 0.5 \
-    	--max-det 500 \
+    	--max-det 3 \
     	--augment \
     	--device 0 \
     	--exist-ok \
-    	--save \
     	--save-txt \
-    	--save-conf \
     	--overlap-mask \
     	--box
   elif [ "$machine" == "VSW-WS02" ]; then
@@ -121,22 +119,21 @@ if [ "$task" == "predict" ]; then
     	--box
   elif [ "$machine" == "vsw-ws03" ]; then
     python predict.py \
-    	--task "segment" \
-    	--model "${root_dir}/run/train/yolov8l-aic23-autocheckout-tray-640/weights/best.pt" \
-    	--data "data/aic23-autocheckout-tray.yaml" \
+    	--task "detect" \
+    	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-mix-117-1920/weights/best.pt" \
+    	--data "data/aic23-autocheckout-mix-117.yaml" \
     	--project "${root_dir}/run/predict" \
-    	--name "yolov8l-aic23-autocheckout-tray-640" \
-    	--source "${root_dir}/data/aic23-autocheckout/testA/testA_1.mp4" \
-    	--imgsz 640 \
-    	--conf 0.9 \
+    	--name "testA_3" \
+    	--source "${root_dir}/data/aic23-autocheckout/testA/inpainting/testA_3" \
+    	--imgsz 1024 \
+    	--conf 0.5 \
     	--iou 0.5 \
-    	--max-det 500 \
+    	--max-det 3 \
+    	--augment \
     	--device 0 \
-    	--stream \
-      --exist-ok \
-      --save \
-      --retina-masks \
-      --overlap-mask \
+    	--exist-ok \
+    	--save-txt \
+    	--overlap-mask \
     	--box
   fi
 fi

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements several tracking/moving objects."""
+"""This package implements tracking/moving objects."""
 
 from __future__ import annotations
 

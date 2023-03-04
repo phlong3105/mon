@@ -24,7 +24,7 @@ import torch
 from torch import nn
 from torch.nn import parallel
 
-from mon.coreml import data as md, layer, loss as ml, metric as mm
+from mon.coreml import data as mdata, layer, loss as mloss, metric as mmetric
 from mon.foundation import config, console, error_console, pathlib, rich
 from mon.globals import (
     LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS,
@@ -205,7 +205,7 @@ def attempt_load(
     model      : nn.Module | Model,
     weights    : dict | pathlib.Path,
     name       : str  | None                = None,
-    cfg        : dict | pathlib.Path | None = None,
+    config     : dict | pathlib.Path | None = None,
     fullname   : str  | None                = None,
     num_classes: int  | None                = None,
     phase      : str                        = "inference",
@@ -221,7 +221,7 @@ def attempt_load(
         model: A PyTorch :class:`nn.Module` or a :class:`Model`.
         weights: A weight dictionary or a checkpoint filepath.
         name: A name of the model.
-        cfg: A configuration dictionary or a YAML filepath containing the
+        config: A configuration dictionary or a YAML filepath containing the
             building configuration of the model.
         fullname: An optional fullname of the model, in other words,
             a model's base name + its variant + a training dataset name.
@@ -239,12 +239,12 @@ def attempt_load(
         A :class:`Model` object.
     """
     # Get model's configuration
-    if cfg is not None:
-        cfg = config.load_config(cfg=cfg)
+    if config is not None:
+        config = config.load_config(config=config)
     
     # Get model
     if model is None:
-        if name is None and cfg is None:
+        if name is None and config is None:
             if debugging:
                 raise RuntimeError
             else:
@@ -253,7 +253,7 @@ def attempt_load(
             model: Model = MODELS.build(
                 name        = name,
                 fullname    = fullname,
-                cfg         = cfg,
+                config      = config,
                 num_classes = num_classes,
                 phase       = phase,
             )
@@ -269,7 +269,7 @@ def attempt_load(
         model = model.load_from_checkpoint(
             checkpoint_path = weights,
             name            = name,
-            cfg             = cfg,
+            cfg             = config,
             num_classes     = num_classes,
             phase           = phase,
         )
@@ -418,7 +418,7 @@ class Model(lightning.LightningModule, ABC):
                 - A file name. Ex: 'alexnet.yaml'.
                 - A path to a .yaml file. Ex: '../cfgs/alexnet.yaml'.
                 - None, define each layer manually.
-        hparams: Layer's hyperparameters. They are used to change the values of
+        hparams: Model's hyperparameters. They are used to change the values of
             :param:`args`. Usually used in grid search or random search during
             training. Defaults to None.
         channels: The first layer's input channel. Defaults to 3.
@@ -427,7 +427,7 @@ class Model(lightning.LightningModule, ABC):
             parsing.
         classlabels: A :class:`mon.coreml.data.label.ClassLabels` object that
             contains all labels in the dataset. Defaults to None.
-        weight: The model's weight. Any of:
+        weights: The model's weight. Any of:
             - A state dictionary.
             - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
             - A path to a weight or ckpt file.
@@ -436,9 +436,10 @@ class Model(lightning.LightningModule, ABC):
         variant: The model's variant. For example, :param:`name` is 'yolov8' and
             :param:`variant` is 'yolov8x'. Defaults to None mean it will be same
             as :param:`name`.
-        fullname: A full model name to save the checkpoint or weight. It should
-            have the following format: {name}/{variant}-{dataset}-{postfix}.
-            Defaults to None mean it will be same as :param:`name`.
+        fullname: The model's fullname to save the checkpoint or weight. It
+            should have the following format:
+            {name}/{variant}-{dataset}-{postfix}. Defaults to None mean it will
+            be same as :param:`name`.
         root: The root directory of the model. It is used to save the model
             checkpoint during training: {root}/{project}/{fullname}.
         project: A project name. Defaults to None.
@@ -456,39 +457,40 @@ class Model(lightning.LightningModule, ABC):
     
     def __init__(
         self,
-        config     : Any                   = None,
-        hparams    : dict | None           = None,
-        channels   : int                   = 3,
-        num_classes: int  | None           = None,
-        classlabels: md.ClassLabels | None = None,
-        weight     : Any                   = None,
+        config     : Any                      = None,
+        hparams    : dict | None              = None,
+        channels   : int                      = 3,
+        num_classes: int  | None              = None,
+        classlabels: mdata.ClassLabels | None = None,
+        weights    : Any                      = None,
         # For saving/loading
-        name       : str  | None           = None,
-        variant    : str  | None           = None,
-        fullname   : str  | None           = None,
-        root       : pathlib.Path          = pathlib.Path(),
-        project    : str  | None           = None,
-        # For training
-        phase      : ModelPhase | str      = ModelPhase.TRAINING,
-        loss       : Any                   = None,
-        metrics    : Any                   = None,
-        optimizers : Any                   = None,
-        debug      : dict | None           = None,
-        verbose    : bool                  = True,
+        name       : str  | None              = None,
+        variant    : str  | None              = None,
+        fullname   : str  | None              = None,
+        root       : pathlib.Path             = pathlib.Path(),
+        project    : str  | None              = None,
+        # For training                        
+        phase      : ModelPhase | str         = ModelPhase.TRAINING,
+        loss       : Any                      = None,
+        metrics    : Any                      = None,
+        optimizers : Any                      = None,
+        debug      : dict | None              = None,
+        verbose    : bool                     = True,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.name          = name
-        self.variant       = variant
+        self.config        = config
+        #
+        self.hyperparams   = hparams
+        self.channels      = channels or self.channels
+        self.num_classes   = num_classes
+        self.weights       = weights
+        self.name          = name     or self.name
+        self.variant       = variant  or self.variant
         self.fullname      = fullname
         self.project       = project
         self.root          = root
-        self.config        = config
-        self.hyperparams   = hparams
-        self.channels      = channels
-        self.num_classes   = num_classes
-        self.weight        = weight
-        self.classlabels   = md.ClassLabels.from_value(classlabels) \
+        self.classlabels   = mdata.ClassLabels.from_value(classlabels) \
                              if classlabels is not None else None
         self.loss          = loss
         self.train_metrics = metrics
@@ -498,20 +500,14 @@ class Model(lightning.LightningModule, ABC):
         self.debug         = debug
         self.verbose       = verbose
         self.epoch_step    = 0
-        
         # Define model
-        # self.model = None
-        # self.save  = None
-        # self.info  = None
         self.model, self.save, self.info = self.parse_model()
-        
         # Load weights
-        if self.weight:
+        if self.weights:
             self.load_weight()
         else:
             self.apply(self.init_weight)
         self.print_info()
-        
         # Set phase to freeze or unfreeze layers
         self.phase = phase
     
@@ -542,7 +538,7 @@ class Model(lightning.LightningModule, ABC):
     @root.setter
     def root(self, root: Any):
         if root is None:
-            root = pathlib.Path() / "run" / "train"
+            root = pathlib.Path() / "run"
         else:
             root = pathlib.Path(root)
         self._root = root
@@ -596,29 +592,31 @@ class Model(lightning.LightningModule, ABC):
     
     @property
     def config(self) -> dict | None:
-        return self._cfg
+        return self._config
     
     @config.setter
-    def config(self, cfg: Any = None):
+    def config(self, config: Any = None):
         variant = None
-        if isinstance(cfg, str) and cfg in self.configs:
-            variant = str(cfg)
-            cfg     = self.configs[cfg]
-        elif isinstance(cfg, str) and ".yaml" in cfg:
-            cfg     = self.config_dir / cfg
-            variant = str(cfg.stem)
-        elif isinstance(cfg, pathlib.Path):
-            variant = str(cfg.stem)
-        elif isinstance(cfg, dict):
-            variant = cfg.get("variant", None)
-        elif cfg is None:
+        if isinstance(config, str) and config in self.configs:
+            variant = str(config)
+            config     = self.configs[config]
+        elif isinstance(config, str) and ".yaml" in config:
+            config     = self.config_dir / config
+            variant = str(config.stem)
+        elif isinstance(config, pathlib.Path):
+            variant = str(config.stem)
+        elif isinstance(config, dict):
+            variant = config.get("variant", None)
+        elif config is None:
             pass
         else:
             raise TypeError
             
-        self._cfg    = config.load_config(cfg=cfg) if cfg is not None else None
-        self.variant = self.variant or variant
-    
+        self._config  = config.load_config(config=config) if config is not None else None
+        self.channels = self._config.get("channels", None)
+        self.name     = self._config.get("name", None)
+        self.variant  = variant
+        
     @property
     def params(self) -> int:
         if self.info is not None:
@@ -628,11 +626,11 @@ class Model(lightning.LightningModule, ABC):
             return 0
     
     @property
-    def weight(self) -> pathlib.Path | dict:
+    def weights(self) -> pathlib.Path | dict:
         return self._weights
     
-    @weight.setter
-    def weight(self, weights: Any = None):
+    @weights.setter
+    def weights(self, weights: Any = None):
         if isinstance(weights, str) and weights in self.zoo:
             weights = pathlib.Path(self.zoo[weights])
         elif isinstance(weights, pathlib.Path):
@@ -660,15 +658,17 @@ class Model(lightning.LightningModule, ABC):
             self.freeze()
     
     @property
-    def loss(self) -> ml.Loss | None:
+    def loss(self) -> mloss.Loss | None:
         return self._loss
     
     @loss.setter
     def loss(self, loss: Any):
-        if isinstance(loss, ml.Loss | nn.Module):
+        if isinstance(loss, mloss.Loss | nn.Module):
             self._loss = loss
-        elif isinstance(loss, str | dict):
-            self._loss = LOSSES.build_instances(cfg=loss)
+        elif isinstance(loss, str):
+            self._loss = LOSSES.build(name=loss)
+        elif isinstance(loss, dict):
+            self._loss = LOSSES.build(config=loss)
         else:
             self._loss = None
         
@@ -677,7 +677,7 @@ class Model(lightning.LightningModule, ABC):
             # self._loss.cuda()
     
     @property
-    def train_metrics(self) -> list[mm.Metric] | None:
+    def train_metrics(self) -> list[mmetric.Metric] | None:
         return self._train_metrics
     
     @train_metrics.setter
@@ -711,7 +711,7 @@ class Model(lightning.LightningModule, ABC):
                 setattr(self, name, metric)
     
     @property
-    def val_metrics(self) -> list[mm.Metric] | None:
+    def val_metrics(self) -> list[mmetric.Metric] | None:
         return self._val_metrics
     
     @val_metrics.setter
@@ -730,7 +730,7 @@ class Model(lightning.LightningModule, ABC):
                 setattr(self, name, metric)
     
     @property
-    def test_metrics(self) -> list[mm.Metric] | None:
+    def test_metrics(self) -> list[mmetric.Metric] | None:
         return self._test_metrics
     
     @test_metrics.setter
@@ -750,17 +750,17 @@ class Model(lightning.LightningModule, ABC):
     
     @staticmethod
     def create_metrics(metrics: Any):
-        if isinstance(metrics, mm.Metric):
+        if isinstance(metrics, mmetric.Metric):
             if getattr(metrics, "name", None) is None:
                 metrics.name = humps.depascalize(
                     humps.pascalize(metrics.__class__.__name__)
                 )
             return [metrics]
         elif isinstance(metrics, dict):
-            return [METRICS.build(cfg=metrics)]
+            return [METRICS.build(config=metrics)]
         elif isinstance(metrics, list | tuple):
             return [
-                METRICS.build(cfg=metric)
+                METRICS.build(config=metric)
                 if isinstance(metric, dict) else metric
                 for metric in metrics
             ]
@@ -816,9 +816,11 @@ class Model(lightning.LightningModule, ABC):
             A list of layer's info for debugging.
         """
         if not isinstance(self.config, dict):
-            raise TypeError(f"cfg must be a dictionary, but got {self.config}.")
+            raise TypeError(
+                f"config must be a dictionary, but got {self.config}."
+            )
         
-        console.log(f"Parsing model from cfg.")
+        console.log(f"Parsing model from config.")
         
         if "channels" in self.config:
             channels = self.config["channels"]
@@ -830,10 +832,10 @@ class Model(lightning.LightningModule, ABC):
                 )
         
         num_classes = self.num_classes
-        if isinstance(self.classlabels, md.ClassLabels):
+        if isinstance(self.classlabels, mdata.ClassLabels):
             num_classes = num_classes or self.classlabels.num_classes()
-        if isinstance(self.weight, dict) and "num_classes" in self.weight:
-            num_classes = num_classes or self.weight["num_classes"]
+        if isinstance(self.weights, dict) and "num_classes" in self.weights:
+            num_classes = num_classes or self.weights["num_classes"]
         self.num_classes = num_classes
         
         if "num_classes" in self.config:
@@ -846,7 +848,7 @@ class Model(lightning.LightningModule, ABC):
                 )
         
         if "backbone" not in self.config and "head" not in self.config:
-            raise ValueError("cfg must contain 'backbone' and 'head' keys.")
+            raise ValueError("config must contain 'backbone' and 'head' keys.")
 
         model, save, info = layer.parse_model(
             d       = self.config,
@@ -864,19 +866,19 @@ class Model(lightning.LightningModule, ABC):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        if isinstance(self.weight, dict | pathlib.Path):
+        if isinstance(self.weights, dict | pathlib.Path):
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
             self.model = attempt_load(
                 model     = self.model,
-                weights   = self.weight,
+                weights   = self.weights,
                 strict    = False,
                 model_dir = self.zoo_dir,
             )
             if self.verbose:
-                console.log(f"Load weight from: {self.weight}!")
+                console.log(f"Load weight from: {self.weights}!")
         else:
             error_console.log(
-                f"[yellow]Cannot load from weights: {self.weight}!"
+                f"[yellow]Cannot load from weights: {self.weights}!"
             )
     
     def configure_optimizers(self):
@@ -916,7 +918,7 @@ class Model(lightning.LightningModule, ABC):
             if optimizer is None:
                 raise ValueError(f"optimizer must be defined.")
             if isinstance(optimizer,  dict):
-                optimizer = OPTIMIZERS.build(net=self, cfg=optimizer)
+                optimizer = OPTIMIZERS.build(net=self, config=optimizer)
             optim["optimizer"] = optimizer
             
             # Define learning rate scheduler
@@ -930,7 +932,7 @@ class Model(lightning.LightningModule, ABC):
                 if isinstance(scheduler,  dict):
                     scheduler = LR_SCHEDULERS.build(
                         optimizer = optim["optimizer"],
-                        cfg       = scheduler
+                        config= scheduler
                     )
                 lr_scheduler["scheduler"] = scheduler
             

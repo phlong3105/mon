@@ -81,7 +81,7 @@ def imshow(
     label      : str | list[str] | None = None,
     denormalize: bool                   = True,
     scale      : int                    = 1,
-    save_cfg   : dict | None            = None,
+    save_config: dict | None            = None,
     max_n      : int  | None            = None,
     nrow       : int  | None            = 8,
     wait_time  : float                  = 0.01
@@ -95,7 +95,7 @@ def imshow(
         label: Sequence of images' labels string. Defaults to None.
         denormalize: If True, convert image to [0, 255]. Defaults to True.
         scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
-        save_cfg: Save figure config. Defaults to None.
+        save_config: Save figure config. Defaults to None.
         max_n: Show max n images if :param:`image` has a batch size of more than
             :param:`max_n` images. Defaults to None mean show all.
         nrow: The maximum number of items to display in a row. The final grid
@@ -145,9 +145,9 @@ def imshow(
     plt.subplots_adjust(wspace=0.0, hspace=0.0)
     
     # Save figure
-    if save_cfg:
-        filepath = save_cfg.pop("filepath")
-        plt.savefig(filepath, **save_cfg)
+    if save_config:
+        filepath = save_config.pop("filepath")
+        plt.savefig(filepath, **save_config)
     
     plt.pause(wait_time)
 
@@ -162,7 +162,7 @@ def imshow_classification(
     top_k      : int  | None            = 5,
     denormalize: bool                   = True,
     scale      : int                    = 1,
-    save_cfg   : dict | None            = None,
+    save_config: dict | None            = None,
     max_n      : int  | None            = None,
     nrow       : int  | None            = 8,
     wait_time  : float                  = 0.01,
@@ -184,7 +184,7 @@ def imshow_classification(
             all. Defaults to 5.
         denormalize: If True, denormalize the image [0, 255]. Defaults to True.
         scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
-        save_cfg: Save figure config. Defaults to None.
+        save_config: Save figure config. Defaults to None.
         max_n: Show max n images if :param:`image` has a batch size of more than
             :param:`max_n` images. Defaults to None mean show all.
         nrow: The maximum number of items to display in a row. The final grid
@@ -289,9 +289,9 @@ def imshow_classification(
     plt.subplots_adjust(wspace=0.0, hspace=0.0)
     
     # Save figure
-    if save_cfg:
-        filepath = save_cfg.pop("filepath")
-        plt.savefig(filepath, **save_cfg)
+    if save_config:
+        filepath = save_config.pop("filepath")
+        plt.savefig(filepath, **save_config)
     
     plt.pause(wait_time)
 
@@ -302,7 +302,7 @@ def imshow_enhancement(
     label      : str | list[str] | None = None,
     denormalize: bool        = True,
     scale      : int         = 1,
-    save_cfg   : dict | None = None,
+    save_config: dict | None = None,
     max_n      : int | None  = None,
     nrow       : int | None  = 8,
     wait_time  : float       = 0.01,
@@ -318,7 +318,7 @@ def imshow_enhancement(
         label: A sequence of images' labels string. Defaults to None.
         denormalize: If True, convert image to [0, 255]. Defaults to True.
         scale: Scale the size of matplotlib figure. Defaults to 1 mean size x 1.
-        save_cfg: Save figure config. Defaults to None.
+        save_config: Save figure config. Defaults to None.
         max_n: Show max n images if :param:`image` has a batch size of more than
             :param:`max_n` images. Defaults to None mean show all.
         nrow: The maximum number of items to display in a row. The final grid
@@ -366,9 +366,9 @@ def imshow_enhancement(
     plt.subplots_adjust(wspace=0.0, hspace=0.0)
     
     # Save figure
-    if save_cfg:
-        filepath = save_cfg.pop("filepath")
-        plt.savefig(filepath, **save_cfg)
+    if save_config:
+        filepath = save_config.pop("filepath")
+        plt.savefig(filepath, **save_config)
     
     plt.pause(wait_time)
 

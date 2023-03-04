@@ -28,9 +28,7 @@ class ImageEnhancementModel(model.Model, ABC):
     
     @property
     def config_dir(self) -> pathlib.Path:
-        current_file = pathlib.Path(__file__).absolute()
-        cfg_dir      = current_file.parent / "cfg"
-        return cfg_dir
+        return pathlib.Path(__file__).absolute().parent / "config"
     
     def forward(
         self,
@@ -114,18 +112,18 @@ class ImageEnhancementModel(model.Model, ABC):
             else:
                 result["pred"] = pred
         
-        save_cfg = {
+        save_config = {
             "filepath"  : filepath or self.debug_image_filepath ,
             "pil_kwargs": dict(quality=image_quality)
         } if save else None
         visualize.imshow_enhancement(
-            winname   = self.fullname,  # self.phase.value,
-            image     = result,
-            scale     = 2,
-            save_cfg  = save_cfg,
-            max_n     = max_n,
-            nrow      = nrow,
-            wait_time = wait_time,
+            winname     = self.fullname,  # self.phase.value,
+            image       = result,
+            scale       = 2,
+            save_config = save_config,
+            max_n       = max_n,
+            nrow        = nrow,
+            wait_time   = wait_time,
         )
 
 # endregion

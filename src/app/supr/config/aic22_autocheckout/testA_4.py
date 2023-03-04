@@ -80,7 +80,7 @@ moving_object   = {
 detector        = {
     "name"          : "yolov8",   # A detector name.
     "config"        : "yolov8x",  # A detector model's config.
-    "weight"        : _current_dir/"yolov8x-aic22-autocheckout-117-1920.pt",
+    "weight"        : _current_dir/"yolov8x-aic22-autocheckout-mix-117-1920.pt",
     "image_size"    : 640,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
     "conf_threshold": 0.3,        # An object confidence threshold.

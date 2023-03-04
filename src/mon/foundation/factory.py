@@ -150,7 +150,7 @@ class Factory(dict):
     def build(
         self,
         name   : str  | None = None,
-        cfg    : dict | None = None,
+        config : dict | None = None,
         to_dict: bool        = False,
         **kwargs
     ):
@@ -159,20 +159,20 @@ class Factory(dict):
         
         Args:
             name: A class name.
-            cfg: The class's arguments.
+            config: The class's arguments.
             to_dict: If True, return a dictionary of
                 {:param:`name`: attr:`instance`}. Defaults to False.
             
         Returns:
             An instance of the registered class.
         """
-        if (name is None and cfg is None) \
-            or (name is None and cfg is not None and "name" not in cfg):
+        if (name is None and config is None) \
+            or (name is None and config is not None and "name" not in config):
             return None
-        if cfg is not None:
-            cfg_    = copy.deepcopy(cfg)
-            name    = name or cfg_.pop("name", None)
-            kwargs |= cfg_
+        if config is not None:
+            config_ = copy.deepcopy(config)
+            name    = name or config_.pop("name", None)
+            kwargs |= config_
         if name is None or name not in self:
             raise ValueError(
                 "name must be a valid keyword inside the registry."
@@ -189,7 +189,7 @@ class Factory(dict):
     
     def build_instances(
         self,
-        cfgs   : list[Any] | None,
+        configs: list[Any] | None,
         to_dict: bool = False,
         **kwargs
     ):
@@ -197,7 +197,7 @@ class Factory(dict):
         arguments.
         
         Args:
-            cfgs: A list of classes' arguments. Each item can be:
+            configs: A list of classes' arguments. Each item can be:
                 - A name (string).
                 - A dictionary of arguments containing the 'name' key.
             to_dict: If True, return a dictionary of
@@ -206,23 +206,23 @@ class Factory(dict):
         Returns:
             A list, or a dictionary of instances.
         """
-        if cfgs is None:
+        if configs is None:
             return None
-        if not isinstance(cfgs, list):
-            raise ValueError(f"cfgs must be a list, but got {type(cfgs)}.")
+        if not isinstance(configs, list):
+            raise ValueError(f"configs must be a list, but got {type(configs)}.")
         
-        cfgs_ = copy.deepcopy(cfgs)
-        objs = {} if to_dict else []
-        for cfg in cfgs_:
-            if isinstance(cfg, str):
-                name = cfg
-            elif isinstance(cfg, dict):
-                name    = cfg.pop("name")
-                kwargs |= cfg
+        configs_ = copy.deepcopy(configs)
+        objs     = {} if to_dict else []
+        for config in configs_:
+            if isinstance(config, str):
+                name = config
+            elif isinstance(config, dict):
+                name    = config.pop("name")
+                kwargs |= config
             else:
                 raise ValueError(
-                    f"item inside cfgs must be a str or dict, but got "
-                    f"{type(cfg)}."
+                    f"item inside configs must be a str or dict, but got "
+                    f"{type(config)}."
                 )
             
             obj = self.build(name=name, to_dict=to_dict, **kwargs)

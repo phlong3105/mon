@@ -76,12 +76,12 @@ moving_object = {
     "min_hit_streak"       : 3,    # Minimum number of consecutive frames that track appears.
     "max_age"              : 1,    # Maximum frame to wait until a dead track can be counted.
     "min_confirms"         : 3,    # Minimum frames that the object is considered for counting.
-    "min_counting_distance": 30,   # Minimum distance to the ROI's center that the object is considered for counting.
+    "min_counting_distance": 10,   # Minimum distance to the ROI's center that the object is considered for counting.
 }
 detector      = {
     "name"          : "yolov8",    # A detector name.
     "config"        : "yolov8x",   # A detector model's config.
-    "weight"        : _current_dir/"yolov8x-aic23-autocheckout-117-1920.pt",
+    "weight"        : _current_dir/"yolov8x-aic23-autocheckout-mix-117-1920.pt",
     "image_size"    : 1024,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
     "conf_threshold": 0.5,         # An object confidence threshold.

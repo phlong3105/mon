@@ -6,13 +6,14 @@
 from __future__ import annotations
 
 __all__ = [
-    "ProductCountingWriter",
+    "AICAutoCheckoutWriter", "AIC22AutoCheckoutWriter",
+    "AIC23AutoCheckoutWriter"
 ]
 
 import os
+from abc import ABC
 from operator import itemgetter
 from timeit import default_timer as timer
-from typing import Sequence
 
 import mon
 from supr import obj
@@ -22,7 +23,7 @@ console = mon.console
 
 # region Writer
 
-class ProductCountingWriter:
+class AICAutoCheckoutWriter(ABC):
     """Save product counting results.
     
     Args:
@@ -33,30 +34,15 @@ class ProductCountingWriter:
         exclude: A list of class ID to exclude from writing. Defaults to [116].
     """
     
-    video_map = {
-        "testA": {
-            "testA_1": 1,
-            "testA_2": 2,
-            "testA_3": 3,
-            "testA_4": 4,
-            "testA_5": 5,
-        },
-        "testB": {
-            "testB_1": 1,
-            "testB_2": 2,
-            "testB_3": 3,
-            "testB_4": 4,
-            "testB_5": 5,
-        },
-    }
+    video_map = {}
     
     def __init__(
         self,
         destination: mon.Path,
         camera_name: str,
-        subset     : str           = "testA",
-        exclude    : Sequence[int] = [116],
-        start_time : float         = timer(),
+        subset     : str       = "testA",
+        exclude    : list[int] = [116],  # Just to be sure
+        start_time : float     = timer(),
     ):
         super().__init__()
         if subset not in self.video_map:
@@ -185,5 +171,50 @@ class ProductCountingWriter:
                 compress_writer.write("\n")
         
         compress_writer.close()
+
+
+class AIC22AutoCheckoutWriter(AICAutoCheckoutWriter):
+    """Save product checkout results for AIC22 Multi-Class Product Counting &
+    Recognition for Automated Retail Checkout.
+    """
+    
+    video_map = {
+        "testA": {
+            "testA_1": 1,
+            "testA_2": 2,
+            "testA_3": 3,
+            "testA_4": 4,
+            "testA_5": 5,
+        },
+        "testB": {
+            "testB_1": 1,
+            "testB_2": 2,
+            "testB_3": 3,
+            "testB_4": 4,
+            "testB_5": 5,
+        },
+    }
+
+
+class AIC23AutoCheckoutWriter(AICAutoCheckoutWriter):
+    """Save product checkout results for AIC23 Multi-Class Product Counting &
+    Recognition for Automated Retail Checkout.
+    """
+    
+    video_map = {
+        "testA": {
+            "testA_1": 1,
+            "testA_2": 2,
+            "testA_3": 3,
+            "testA_4": 4,
+        },
+        "testB": {
+            "testB_1": 1,
+            "testB_2": 2,
+            "testB_3": 3,
+            "testB_4": 4,
+        },
+    }
+    
 
 # endregion

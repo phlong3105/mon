@@ -10,9 +10,10 @@ __all__ = [
 ]
 
 import cv2
+import numpy as np
 
 import mon
-from mon.globals import MovingState, OBJECTS
+from mon.globals import AppleRGB, MovingState, OBJECTS
 from supr import rmoi
 from supr.obj import hand
 
@@ -69,9 +70,9 @@ class Product(mon.MovingObject):
                 if self.num_confirms >= self.min_confirms:
                     p1 = roi.center
                     p2 = self.current.bbox_center
-                    counting_distance = abs(p2[0] - p1[0])
+                    counting_distance = p2[0] - p1[0]
                     # counting_distance = mon.math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
-                    if counting_distance <= self.min_counting_distance:
+                    if counting_distance >= self.min_counting_distance:
                         self.moving_state = MovingState.TO_BE_COUNTED
                 # if roi.is_box_in_roi(bbox=self.current.bbox) <= 0:
                 #     self.moving_state = MovingState.COUNTING
@@ -100,5 +101,138 @@ class Product(mon.MovingObject):
         elif self.is_counted:
             if roi.is_box_center_in_roi(bbox=self.current.bbox, compute_distance=True) <= 0:
                 self.moving_state = MovingState.EXITING
-            
+    
+    def draw(
+        self,
+        image  : np.ndarray,
+        bbox   : bool             = True,
+        polygon: bool             = False,
+        label  : bool             = True,
+        color  : list[int] | None = None
+    ) -> np.ndarray:
+        """Draw the current object and its trajectory on the :param:`image`."""
+        if self.moi_id is not None:
+            color = AppleRGB.values()[self.moi_id]
+        else:
+            color = color or self.majority_label["color"]
+        
+        if self.is_candidate:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = False,
+                color   = [255, 255, 255]
+            )
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = [255, 255, 255],
+                thickness  = 3,
+            )
+        elif self.is_confirmed:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = False,
+                color   = [255, 255, 255]
+            )
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = [255, 255, 255],
+                thickness  = 3,
+            )
+        elif self.is_counting:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = label,
+                color   = [255, 255, 255]
+            )
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = [255, 255, 255],
+                thickness  = 3,
+            )
+        elif self.is_counted:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = label,
+                color   = color
+            )
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = color,
+                thickness  = 3,
+            )
+        elif self.is_exiting:
+            image = self.draw_instance(
+                image   = image,
+                bbox    = bbox,
+                polygon = polygon,
+                label   = label,
+                color   = color
+            )
+            image = mon.draw_trajectory(
+                image      = image,
+                trajectory = self.trajectory,
+                color      = color,
+                thickness  = 3,
+            )
+        return image
+    
+    def draw_instance(
+        self,
+        image  : np.ndarray,
+        bbox   : bool             = True,
+        polygon: bool             = False,
+        label  : bool             = True,
+        color  : list[int] | None = None
+    ) -> np.ndarray:
+        """Draw the current object on the :param:`image`."""
+        color = color or self.majority_label["color"]
+        if bbox:
+            b = self.current.bbox
+            cv2.rectangle(
+                img       = image,
+                pt1       = (int(b[0]), int(b[1])),
+                pt2       = (int(b[2]), int(b[3])),
+                color     = color,
+                thickness = 2
+            )
+            b_center = self.current.bbox_center.astype(int)
+            cv2.circle(
+                img       = image,
+                center    = tuple(b_center),
+                radius    = 3,
+                thickness = -1,
+                color     = color
+            )
+        if polygon:
+            pts = self.current.polygon.reshape((-1, 1, 2))
+            cv2.polylines(img=image, pts=pts, isClosed=True, color=color, thickness=2)
+        if label:
+            box_tl     = self.current.bbox[0:2]
+            curr_label = self.majority_label
+            text       = f"{curr_label['name']}, {curr_label['id'] + 1}"
+            font       = cv2.FONT_HERSHEY_SIMPLEX
+            org        = (int(box_tl[0]) + 5, int(box_tl[1]))
+            cv2.putText(
+                img       = image,
+                text      = text,
+                fontFace  = font,
+                fontScale = 1.0,
+                org       = org,
+                color     = color,
+                thickness = 2,
+            )
+        return image
+    
 # endregion

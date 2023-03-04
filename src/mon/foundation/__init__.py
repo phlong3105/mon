@@ -35,4 +35,6 @@ from mon.foundation.factory import *
 from mon.foundation.file import *
 from mon.foundation.logging import *
 from mon.foundation.pathlib import *
-from mon.foundation.rich import console, error_console, get_progress_bar
+from mon.foundation.rich import (
+    console, error_console, get_progress_bar, print_dict, print_table,
+)

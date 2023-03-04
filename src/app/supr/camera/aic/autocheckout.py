@@ -95,14 +95,14 @@ class AutoCheckoutCamera(Camera):
         self.init_moving_object(moving_object)
         
     @property
-    def result_writer(self) -> io.ProductCountingWriter:
+    def result_writer(self) -> io.AIC23AutoCheckoutWriter:
         return self._result_writer
     
     @result_writer.setter
     def result_writer(self, result_writer: Any):
         if not self.save_result:
             self._result_writer = None
-        elif isinstance(result_writer, io.ProductCountingWriter):
+        elif isinstance(result_writer, io.AIC23AutoCheckoutWriter):
             self._result_writer = result_writer
         elif isinstance(result_writer, dict):
             destination = mon.Path(result_writer.get("destination", None))
@@ -116,7 +116,7 @@ class AutoCheckoutCamera(Camera):
                     f"{destination}."
                 )
             result_writer["destination"] = destination
-            self._result_writer = io.ProductCountingWriter(**result_writer)
+            self._result_writer = io.AIC23AutoCheckoutWriter(**result_writer)
         else:
             raise ValueError(
                 f"Cannot initialize result writer with {result_writer}."

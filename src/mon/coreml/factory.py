@@ -27,7 +27,7 @@ class OptimizerFactory(factory.Factory):
         self,
         net    : nn.Module,
         name   : str  | None = None,
-        cfg    : dict | None = None,
+        config : dict | None = None,
         to_dict: bool        = False,
         **kwargs
     ):
@@ -37,7 +37,7 @@ class OptimizerFactory(factory.Factory):
         Args:
             net: A neural network.
             name: An optimizer's name.
-            cfg: The optimizer's arguments.
+            config: The optimizer's arguments.
             to_dict: If True, return a dictionary of
                 {:param:`name`: attr:`instance`}. Defaults to False.
             **kwargs: Additional arguments that may be needed for the optimizer.
@@ -45,18 +45,18 @@ class OptimizerFactory(factory.Factory):
         Returns:
             An optimizer.
         """
-        if name is None and cfg is None:
+        if name is None and config is None:
             return None
-        if name is None and cfg is not None:
-            assert "name" in cfg
-            cfg_    = copy.deepcopy(cfg)
-            name_   = cfg_.pop("name")
+        if name is None and config is not None:
+            assert "name" in config
+            config_ = copy.deepcopy(config)
+            name_   = config_.pop("name")
             name    = name or name_
-            kwargs |= cfg_
-        assert name is not None and name in self.registry
+            kwargs |= config_
+        assert name is not None and name in self
         
         if hasattr(net, "parameters"):
-            instance = self.registry[name](params=net.parameters(), **kwargs)
+            instance = self[name](params=net.parameters(), **kwargs)
             if getattr(instance, "name", None) is None:
                 instance.name = humps.depascalize(humps.pascalize(name))
             if to_dict:
@@ -69,7 +69,7 @@ class OptimizerFactory(factory.Factory):
     def build_instances(
         self,
         net    : nn.Module,
-        cfgs   : list | None,
+        configs   : list | None,
         to_dict: bool = False,
         *kwargs
     ):
@@ -78,7 +78,7 @@ class OptimizerFactory(factory.Factory):
         
         Args:
             net: A neural network.
-            cfgs: A list of optimizers' arguments. Each item can be:
+            configs: A list of optimizers' arguments. Each item can be:
                 - A name (string)
                 - A dictionary of arguments containing the “name” key.
             to_dict: If True, return a dictionary of
@@ -87,18 +87,18 @@ class OptimizerFactory(factory.Factory):
         Returns:
             A list, or dictionary of optimizers.
         """
-        if cfgs is None:
+        if configs is None:
             return None
-        assert isinstance(cfgs, list)
+        assert isinstance(configs, list)
         
-        cfgs_ = copy.deepcopy(cfgs)
+        configs_ = copy.deepcopy(configs)
         optimizers = {} if to_dict else []
-        for cfg in cfgs_:
-            if isinstance(cfg, str):
-                name    = cfg
+        for config in configs_:
+            if isinstance(config, str):
+                name    = config
             else:
-                name    = cfg.pop("name")
-                kwargs |= cfg
+                name    = config.pop("name")
+                kwargs |= config
             opt = self.build(net=net, name=name, to_dict=to_dict, **kwargs)
             if opt is not None:
                 if to_dict:
@@ -116,7 +116,7 @@ class LRSchedulerFactory(factory.Factory):
         self,
         optimizer: optim.Optimizer,
         name     : str  | None = None,
-        cfg      : dict | None = None,
+        config      : dict | None = None,
         **kwargs
     ):
         """Build an instance of the registered scheduler corresponding to the
@@ -125,20 +125,20 @@ class LRSchedulerFactory(factory.Factory):
         Args:
             optimizer: An optimizer.
             name: A scheduler's name.
-            cfg: The scheduler's arguments.
+            config: The scheduler's arguments.
         
         Returns:
             A learning rate scheduler.
         """
-        if name is None and cfg is None:
+        if name is None and config is None:
             return None
-        if name is None and cfg is not None:
-            assert "name" in cfg
-            cfg_    = copy.deepcopy(cfg)
-            name_   = cfg_.pop("name")
+        if name is None and config is not None:
+            assert "name" in config
+            config_ = copy.deepcopy(config)
+            name_   = config_.pop("name")
             name    = name or name_
-            kwargs |= cfg_
-        assert name is not None and name in self.registry
+            kwargs |= config_
+        assert name is not None and name in self
         
         if name in [
             "GradualWarmupScheduler",
@@ -148,25 +148,22 @@ class LRSchedulerFactory(factory.Factory):
             after_scheduler = kwargs.pop("after_scheduler")
             if isinstance(after_scheduler, dict):
                 name_ = after_scheduler.pop("name")
-                if name_ in self.registry:
-                    after_scheduler = self.registry[name_](
-                        optimizer=optimizer,
-                        **after_scheduler
-                    )
+                if name_ in self:
+                    after_scheduler = self[name_](optimizer=optimizer, **after_scheduler)
                 else:
                     after_scheduler = None
-            return self.registry[name](
-                optimizer=optimizer,
-                after_scheduler=after_scheduler,
+            return self[name](
+                optimizer       = optimizer,
+                after_scheduler = after_scheduler,
                 **kwargs
             )
         
-        return self.registry[name](optimizer=optimizer, **kwargs)
+        return self[name](optimizer=optimizer, **kwargs)
     
     def build_instances(
         self,
         optimizer: optim.Optimizer,
-        cfgs     : list | None,
+        configs     : list | None,
         **kwargs
     ):
         """Build multiple instances of different schedulers with the given
@@ -174,25 +171,25 @@ class LRSchedulerFactory(factory.Factory):
         
         Args:
             optimizer: An optimizer.
-            cfgs: A list of schedulers' arguments. Each item can be:
+            configs: A list of schedulers' arguments. Each item can be:
                 - A name (string)
                 - A dictionary of arguments containing the “name” key.
         
         Returns:
             A list of learning rate schedulers
         """
-        if cfgs is None:
+        if configs is None:
             return None
-        assert isinstance(cfgs, list)
+        assert isinstance(configs, list)
         
-        cfgs_ = copy.deepcopy(cfgs)
+        configs_   = copy.deepcopy(configs)
         schedulers = []
-        for cfg in cfgs_:
-            if isinstance(cfg, str):
-                name = cfg
+        for config in configs_:
+            if isinstance(config, str):
+                name = config
             else:
-                name = cfg.pop("name")
-                kwargs |= cfg
+                name    = config.pop("name")
+                kwargs |= config
             schedulers.append(
                 self.build(optimizer=optimizer, name=name, **kwargs)
             )

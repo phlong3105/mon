@@ -17,7 +17,7 @@ import mon
 @click.option("--source",      default=mon.DATA_DIR/"aic23-autocheckout/testA/", type=click.Path(exists=True), help="Video filepath or directory.")
 @click.option("--destination", default=mon.DATA_DIR/"aic23-autocheckout/testA/convert", type=click.Path(exists=False), help="Output video filepath or directory.")
 @click.option("--size",        default=None, type=int, nargs="+", help="Output images/video size.")
-@click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
+@click.option("--extension",   default="jpg", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--verbose",     is_flag=True)
 def convert_video(
     source     : mon.Path,

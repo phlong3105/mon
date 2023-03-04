@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the default configuration."""
+"""This module implements some default configurations."""
 
 from __future__ import annotations
 
@@ -76,41 +76,37 @@ See Also: :class:`ray.tune.integration.pytorch_lightning.TuneReportCallback`
 # region Data
 
 dataset = {
-    "name"        : "a2i2-haze",       # Dataset/datamodule name.
-    "split"       : None,              # 'train', 'test', 'predict' (None = load all).
-    "root"        : DATA_DIR,          # The root directory of the dataset.
-    "image_size"  : 256,               # Image size in HW format (for resizing).
-    "classlabels" : None,              # A file containing all class definitions.
-    "transform"   : A.Compose(         # Transformations performing on both the input and target. 
-        [
-            A.Resize(width=256, height=256),
-        ]
-    ),
-    "to_tensor"   : False,             # Convert input and target to torch.Tensor.
-    "cache_data"  : False,             # Cache labels data to disk for faster loading next time.
-    "cache_images": False,             # Cache images into memory for faster loading.
-    "verbose"     : True,              # Verbosity.
+    "name"        : None,        # Dataset/datamodule name.
+    "split"       : None,        # 'train', 'test', 'predict' (None = load all).
+    "root"        : DATA_DIR,    # The root directory of the dataset.
+    "image_size"  : 256,         # Image size in HW format (for resizing).
+    "classlabels" : None,        # A file containing all class definitions.
+    "transform"   : A.Compose([  # Transformations performing on both the input and target.
+        A.Resize(width=256, height=256),
+    ]),                          
+    "to_tensor"   : False,       # Convert input and target to torch.Tensor.
+    "cache_data"  : False,       # Cache labels data to disk for faster loading next time.
+    "cache_images": False,       # Cache images into memory for faster loading.
+    "verbose"     : True,        # Verbosity.
 }
 """
 See Also: :class:`mon.coreml.data.dataset.Dataset`
 """
 
 datamodule = {
-    "name"        : "a2i2-haze",       # Dataset/datamodule name.
-    "root"        : DATA_DIR,          # The root directory of the dataset.
-    "image_size"  : 256,               # Image size in HW format (for resizing).
-    "transform"   : A.Compose(         # Transformations performing on both the input and target.
-        [
-            A.Resize(width=256, height=256),
-        ]
-    ),
-    "to_tensor"   : False,             # Convert input and target to torch.Tensor.
-    "cache_data"  : False,             # Cache labels data to disk for faster loading next time.
-    "cache_images": False,             # Cache images into memory for faster loading.
-    "batch_size"  : 8,                 # The number of samples in one forward pass.
-    "devices"     : 0,                 # A list of devices to use.
-    "shuffle"     : True,              # Reshuffle the datapoints at the beginning of every epoch.
-    "verbose"     : True,              # Verbosity.
+    "name"        : None,        # Dataset/datamodule name.
+    "root"        : DATA_DIR,    # The root directory of the dataset.
+    "image_size"  : 256,         # Image size in HW format (for resizing).
+    "transform"   : A.Compose([  # Transformations performing on both the input and target.
+        A.Resize(width=256, height=256),
+    ]),
+    "to_tensor"   : False,       # Convert input and target to torch.Tensor.
+    "cache_data"  : False,       # Cache labels data to disk for faster loading next time.
+    "cache_images": False,       # Cache images into memory for faster loading.
+    "batch_size"  : 8,           # The number of samples in one forward pass.
+    "devices"     : 0,           # A list of devices to use.
+    "shuffle"     : True,        # Reshuffle the datapoints at the beginning of every epoch.
+    "verbose"     : True,        # Verbosity.
 }
 """
 See Also:

@@ -16,7 +16,7 @@ from mon.vision import visualize
 # region Helper Function
 
 def load_image_enhancement_dataset(cfg):
-    dm = DATAMODULES.build(cfg=cfg)
+    dm = DATAMODULES.build(config=cfg)
     dm.setup()
     if dm.classlabels:
         dm.classlabels.print()

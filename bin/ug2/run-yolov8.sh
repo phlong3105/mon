@@ -91,7 +91,7 @@ if [ "$task" == "predict" ]; then
     --iou 0.5 \
     --max-det 500 \
     --augment \
-    --device "cpu" \
+    --device 0 \
     --exist-ok \
     --show \
     --save-txt \

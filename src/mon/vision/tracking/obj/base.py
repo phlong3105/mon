@@ -90,7 +90,7 @@ class Instance:
     @property
     def bbox_corners_points(self) -> np.ndarray:
         return geometry.get_bbox_corners_points(bbox=self.bbox)
-    
+        
     def draw(
         self,
         image  : np.ndarray,
@@ -293,7 +293,7 @@ class MovingObject(list[Instance], Object):
         elif isinstance(motion, str):
             self._motion = MOTIONS.build(name=motion, instance=self.current)
         elif isinstance(motion, dict):
-            self._motion = MOTIONS.build(cfg=motion, instance=self.current)
+            self._motion = MOTIONS.build(config=motion, instance=self.current)
         else:
             raise TypeError
         
@@ -479,7 +479,7 @@ class MovingObject(list[Instance], Object):
         if label:
             box_tl     = self.current.bbox[0:2]
             curr_label = self.majority_label
-            text       = f"{curr_label['id'] + 1} {curr_label['name']}"
+            text       = f"{curr_label['name']}, {curr_label['id'] + 1}"
             font       = cv2.FONT_HERSHEY_SIMPLEX
             org        = (int(box_tl[0]) + 5, int(box_tl[1]))
             cv2.putText(

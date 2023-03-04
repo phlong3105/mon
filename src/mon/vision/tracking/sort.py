@@ -6,14 +6,15 @@
 from __future__ import annotations
 
 __all__ = [
-    "SORT",
+    "SORT", "SORTBBox",
 ]
 
 import numpy as np
 
+from mon.foundation import console
 from mon.globals import TRACKERS
 from mon.vision import geometry
-from mon.vision.tracking import base
+from mon.vision.tracking import base, motion as mmotion
 
 np.random.seed(0)
 
@@ -30,6 +31,7 @@ def linear_assignment(cost_matrix):
         x, y = linear_sum_assignment(cost_matrix)
         return np.array(list(zip(x, y)))
 
+
 # endregion
 
 
@@ -42,6 +44,47 @@ class SORT(base.Tracker):
     See more: :class:`mon.vision.model.track.base.Tracker`.
     """
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if isinstance(self.motion_type, type(mmotion.KFBBoxMotion)):
+            track = SORTBBox(*args, **kwargs)
+            self.__class__ = track.__class__
+            self.__dict__  = track.__dict__
+        else:
+            raise RuntimeError
+    
+    def update(self, instances: list | np.ndarray = ()):
+        console.log(f"This function should not be called!")
+        pass
+    
+    def assign_instances_to_tracks(
+        self,
+        instances: list | np.ndarray,
+        tracks   : list | np.ndarray,
+    ):
+        console.log(f"This function should not be called!")
+        pass
+    
+    def update_matched_tracks(
+        self,
+        matched_indexes: list | np.ndarray,
+        instances      : list | np.ndarray
+    ):
+        console.log(f"This function should not be called!")
+        pass
+    
+    def delete_dead_tracks(self):
+        console.log(f"This function should not be called!")
+        pass
+
+
+@TRACKERS.register(name="sort_bbox")
+class SORTBBox(base.Tracker):
+    """SORT (Simple Online Realtime Tracker) for bounding box.
+    
+    See more: :class:`mon.vision.model.track.base.Tracker`.
+    """
+    
     def update(self, instances: list | np.ndarray = ()):
         """Update :attr:`tracks` with new detections. This method will call the
         following methods:
@@ -49,7 +92,7 @@ class SORT(base.Tracker):
             - :meth:`update_matched_tracks`
             - :meth:`create_new_tracks`
             - :meth`:delete_dead_tracks`
-
+        
         Args:
             instances: A list of new instances. Defaults to ().
         """
@@ -59,7 +102,10 @@ class SORT(base.Tracker):
         if len(instances) > 0:
             # dets - a numpy array of detections in the format
             # [[x1,y1,x2,y2,score], [x1,y1,x2,y2,score],...]
-            insts = np.array([np.append(np.float64(i.bbox), np.float64(i.confidence)) for i in instances])
+            insts = np.array([
+                np.append(np.float64(i.bbox), np.float64(i.confidence))
+                for i in instances
+            ])
         else:
             insts = np.empty((0, 5))
         
@@ -92,7 +138,7 @@ class SORT(base.Tracker):
         )
         # Delete all dead tracks
         self.delete_dead_tracks()
-
+    
     def assign_instances_to_tracks(
         self,
         instances: list | np.ndarray,
@@ -159,7 +205,7 @@ class SORT(base.Tracker):
             matched_indexes,\
             np.array(unmatched_inst_indexes),\
             np.array(unmatched_trks_indexes)
-
+    
     def update_matched_tracks(
         self,
         matched_indexes: list | np.ndarray,
@@ -180,7 +226,7 @@ class SORT(base.Tracker):
             # functions:
             # self.tracks[track_idx].update_go_from_detection(measurement=detections[detection_idx])
             # self.tracks[track_idx].update_motion_state()
-
+    
     def delete_dead_tracks(self):
         """Delete all dead tracks."""
         i = len(self.tracks)

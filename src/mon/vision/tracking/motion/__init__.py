@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements several motion models."""
+"""This package implements motion models."""
 
 from __future__ import annotations
 

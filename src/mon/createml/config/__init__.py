@@ -6,4 +6,3 @@
 from __future__ import annotations
 
 import mon.createml.config.default
-from mon.createml.config.default import *

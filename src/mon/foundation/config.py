@@ -14,20 +14,21 @@ from mon.foundation import file, pathlib
 
 # region Config
 
-def load_config(cfg: dict | pathlib.Path | str) -> dict:
+def load_config(config: dict | pathlib.Path | str) -> dict:
     """Load a configuration dictionary from the given :param:`cfg`. If it is a
     file, load its contents.
     """
-    if isinstance(cfg, dict):
-        data = cfg
-    elif isinstance(cfg, pathlib.Path | str):
-        data = file.read_from_file(path=cfg)
+    if isinstance(config, dict):
+        data = config
+    elif isinstance(config, pathlib.Path | str):
+        data = file.read_from_file(path=config)
     else:
         raise TypeError(
-            f"cfg must be a dict or a path to the config file, but got {cfg}."
+            f"config must be a dict or a path to the config file, but got "
+            f"{config}."
         )
     if data is None:
-        raise IOError(f"No configuration is found at {cfg}.")
+        raise IOError(f"No configuration is found at {config}.")
     return data
     
 # endregion
