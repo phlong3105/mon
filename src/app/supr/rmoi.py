@@ -161,7 +161,15 @@ class RegionOfInterest:
             pts       = [pts],
             isClosed  = True,
             color     = color,
-            thickness = 3
+            thickness = 3,
+        )
+        center = self.center.astype(np.int32).reshape(2)
+        cv2.circle(
+            img       = image,
+            center    = center,
+            radius    = 5,
+            color     = mon.BasicRGB.RED.value,
+            thickness = - 1,
         )
         return image
 

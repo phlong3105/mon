@@ -71,10 +71,10 @@ for video in ${video_list[*]}; do
       --retina-masks \
       --classes 0
 
-    cd "${current_dir}" || exit
-    python postprocess_mask.py \
-      --mask-dir "${root_dir}/data/${dataset}/${subset}/person/${video}" \
-      --dilate 5
+    # cd "${current_dir}" || exit
+    # python postprocess_mask.py \
+    #   --mask-dir "${root_dir}/data/${dataset}/${subset}/person/${video}" \
+    #   --dilate 5
 
     echo -e "\nPerforming inpainting"
     cd "${lama_dir}" || exit

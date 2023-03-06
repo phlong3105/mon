@@ -566,7 +566,7 @@ class ExposureControlLoss(Loss):
     def __init__(
         self,
         reduction : Reduction | str = "mean",
-        patch_size: list[int]       = 16,
+        patch_size: int | list[int] = 16,
         mean_val  : float           = 0.6,
     ):
         super().__init__(reduction=reduction)
@@ -685,7 +685,7 @@ class IlluminationSmoothnessLoss(Loss):
     
     def forward(
         self,
-        input: torch.Tensor,
+        input : torch.Tensor,
         target: torch.Tensor = None
     ) -> torch.Tensor:
         x       = input

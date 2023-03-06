@@ -71,8 +71,8 @@ result_writer = {
 }
 moving_object = {
     "name"                 : "product",  # An object type.
-    "min_entering_distance": 50,    # Minimum distance when an object enters the ROI to be Confirmed.
-    "min_traveled_distance": 50,    # Minimum distance between first trajectory point with last trajectory point.
+    "min_entering_distance": 20,    # Minimum distance when an object enters the ROI to be Confirmed.
+    "min_traveled_distance": 20,    # Minimum distance between first trajectory point with last trajectory point.
     "min_hit_streak"       : 3,     # Minimum number of consecutive frames that track appears.
     "max_age"              : 1,     # Maximum frame to wait until a dead track can be counted.
     "min_confirms"         : 3,     # Minimum frames that the object is considered for counting.

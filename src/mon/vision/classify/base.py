@@ -32,6 +32,10 @@ class ImageClassificationModel(model.Model, ABC):
         config_dir   = current_file.parent / "config"
         return config_dir
     
+    def init_weights(self, m: torch.nn.Module):
+        """Initialize model's weights."""
+        pass
+    
     def forward(
         self,
         input    : torch.Tensor,

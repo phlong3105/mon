@@ -20,7 +20,7 @@ from torch import nn
 
 # region Parsing Mixin
 
-class LayerParsingMixin:
+class LayerParsingMixin(ABC):
     """The base class for layers' mixins. It adds additional methods used in the
     layer parsing process.
     """

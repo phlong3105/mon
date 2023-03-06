@@ -16,6 +16,13 @@ from rich import panel, pretty, progress, table, text, theme
 from mon.foundation import builtins, pynvml
 from mon.globals import MemoryUnit
 
+__all__ = [
+    "GPUMemoryUsageColumn", "ProcessedItemsColumn", "ProcessingSpeedColumn",
+    "console", "error_console", "field_style", "get_console",
+    "get_download_bar", "get_error_console", "get_progress_bar", "level_styles",
+    "print_dict", "print_table", "rich_console_theme",
+]
+
 # region Console
 
 field_style = {
@@ -260,7 +267,7 @@ def print_table(x: list[dict]):
     for d in x:
         row = [f"{v}" for v in d.values()]
         tab.add_row(*row)
-    console.log(table)
+    console.log(tab)
 
 
 @multipledispatch.dispatch(dict)
@@ -273,6 +280,6 @@ def print_table(x: dict):
     for k, v in x.items():
         row = [f"{k}", f"{v}"]
         tab.add_row(*row)
-    console.log(table)
+    console.log(tab)
 
 # endregion

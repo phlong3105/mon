@@ -1,0 +1,31 @@
+name    : "zerodce-tiny"
+channels: 3
+backbone: [
+  # [from,  number, module,                       args(out_channels, ...)]
+  [-1,      1,      Identity,                    []],                      # 0  (x)
+  [-1,      1,      GhostConv2d,                 [32]],                    # 1
+  [-1,      1,      ExtractFeatures,             [0,  16]],                # 2
+  [-2,      1,      ExtractFeatures,             [16, 32]],                # 3
+  [-1,      1,      ReLU,                        [True]],                  # 4  (x1)
+  [-1,      1,      GhostConv2d,                 [16]],                    # 5
+  [-1,      1,      ReLU,                        [True]],                  # 6  (x2)
+  [-1,      1,      GhostConv2d,                 [16]],                    # 7
+  [-1,      1,      ReLU,                        [True]],                  # 8  (x3)
+  [-1,      1,      GhostConv2d,                 [16]],                    # 9
+  [-1,      1,      ReLU,                        [True]],                  # 10 (x4)
+  [[8, 10], 1,      Concat,                      []],                      # 11
+  [-1,      1,      GhostConv2d,                 [16]],                    # 12
+  [-1,      1,      ReLU,                        [True]],                  # 13 (x5)
+  [[6, 13], 1,      Concat,                      []],                      # 14
+  [-1,      1,      GhostConv2d,                 [16]],                    # 15
+  [-1,      1,      ReLU,                        [True]],                  # 16 (x6)
+  [[4, 16], 1,      Concat,                      []],                      # 17
+  [-1,      1,      GhostConv2d,                 [32]],                    # 18
+  [-1,      1,      ReLU,                        [True]],                  # 19 (x7)
+  [[19, 2], 1,      Concat,                      []],                      # 20
+  [-1,      1,      DepthwiseSeparableConv2d,    [3, 3, 1, 1, 1, 1, 0]],   # 21
+  [-1,      1,      Tanh,                        []],                      # 22
+]
+head    : [
+  [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                    # 23
+]

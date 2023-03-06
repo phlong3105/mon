@@ -1,0 +1,20 @@
+name    : "convnext-small"
+channels: 3
+backbone: [
+  # [from, number, module,               args(out_channels, ...)]
+  [-1,     1,      Conv2dNormActivation, [96,  4, 4, 0, 1, LayerNorm2d, None, 1, True, True]],  # 0 total_stage_blocks = 36
+  [-1,     1,      ConvNeXtBlock,        [96,  1e-6, 0.4, 3,  0,  36]],                         # 1
+  [-1,     1,      LayerNorm2d,          [96]],                                                 # 2
+  [-1,     1,      Conv2d,               [192, 2, 2]],                                          # 3
+  [-1,     1,      ConvNeXtBlock,        [192, 1e-6, 0.4, 3,  3,  36]],                         # 4
+  [-1,     1,      LayerNorm2d,          [192]],                                                # 5
+  [-1,     1,      Conv2d,               [384, 2, 2]],                                          # 6
+  [-1,     1,      ConvNeXtBlock,        [384, 1e-6, 0.4, 27, 6,  36]],                         # 7
+  [-1,     1,      LayerNorm2d,          [384]],                                                # 8
+  [-1,     1,      Conv2d,               [768, 2, 2]],                                          # 9
+  [-1,     1,      ConvNeXtBlock,        [768, 1e-6, 0.4, 3,  33, 36]],                         # 10
+  [-1,     1,      AdaptiveAvgPool2d,    [1]],                                                  # 11
+]
+head    : [
+  [-1,     1,      ConvNeXtClassifier,   [768, LayerNorm2d]],                                   # 12
+]

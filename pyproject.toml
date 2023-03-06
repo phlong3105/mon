@@ -117,7 +117,7 @@ mmcv-full      = "=1.7.1"
 openmim        = "*"
 packaging      = "*"
 pandas         = "*"
-saicinpainting = {path="src/lib/lama"  , develop=true}
+saicinpainting = {path="src/lib/lama",   develop=true}
 tabulate       = "*"
 tensorflow     = "*"
 thop           = "*"

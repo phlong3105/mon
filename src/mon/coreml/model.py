@@ -25,10 +25,11 @@ from torch import nn
 from torch.nn import parallel
 
 from mon.coreml import data as mdata, layer, loss as mloss, metric as mmetric
-from mon.foundation import config, console, error_console, pathlib, rich
+from mon.foundation import (
+    config as mconfig, console, error_console, pathlib, rich,
+)
 from mon.globals import (
-    LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS,
-    ZOO_DIR,
+    LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS, ZOO_DIR,
 )
 
 StepOutput  = lightning.pytorch.utilities.types.STEP_OUTPUT
@@ -347,7 +348,7 @@ def load_state_dict_from_path(
         and (model_dir is None or not model_dir.is_dir()):
         raise ValueError(f"'model_dir' must be defined. But got: {model_dir}.")
     
-    save_weight = ""
+    save_weight = pathlib.Path()
     if file_name:
         save_weight = model_dir / file_name
     
@@ -407,8 +408,9 @@ class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
     Attributes:
-        config: A dictionary containing all configurations of the model.
+        configs: A dictionary containing all configurations of the model.
         zoo: A dictionary containing all pretrained weights of the model.
+        map_weights: A dictionary mapping pretrained weights to model's layers.
         
     Args:
         config: The model's configuration that is used to build the model.
@@ -452,8 +454,9 @@ class Model(lightning.LightningModule, ABC):
         verbose: Verbosity. Defaults to True.
     """
     
-    configs = {}
-    zoo     = {}
+    configs     = {}
+    zoo         = {}
+    map_weights = {}
     
     def __init__(
         self,
@@ -504,9 +507,9 @@ class Model(lightning.LightningModule, ABC):
         self.model, self.save, self.info = self.parse_model()
         # Load weights
         if self.weights:
-            self.load_weight()
+            self.load_weights()
         else:
-            self.apply(self.init_weight)
+            self.apply(self.init_weights)
         self.print_info()
         # Set phase to freeze or unfreeze layers
         self.phase = phase
@@ -612,7 +615,7 @@ class Model(lightning.LightningModule, ABC):
         else:
             raise TypeError
             
-        self._config  = config.load_config(config=config) if config is not None else None
+        self._config  = mconfig.load_config(config=config) if config is not None else None
         self.channels = self._config.get("channels", None)
         self.name     = self._config.get("name", None)
         self.variant  = variant
@@ -632,7 +635,7 @@ class Model(lightning.LightningModule, ABC):
     @weights.setter
     def weights(self, weights: Any = None):
         if isinstance(weights, str) and weights in self.zoo:
-            weights = pathlib.Path(self.zoo[weights])
+            weights = self.zoo[weights]
         elif isinstance(weights, pathlib.Path):
             pass
         elif isinstance(weights, dict):
@@ -816,21 +819,23 @@ class Model(lightning.LightningModule, ABC):
             A list of layer's info for debugging.
         """
         if not isinstance(self.config, dict):
-            raise TypeError(
-                f"config must be a dictionary, but got {self.config}."
-            )
+            raise TypeError(f"config must be a dictionary, but got {self.config}.")
+        if "backbone" not in self.config and "head" not in self.config:
+            raise ValueError("config must contain 'backbone' and 'head' keys.")
         
         console.log(f"Parsing model from config.")
         
+        # Channels
         if "channels" in self.config:
             channels = self.config["channels"]
             if channels != self.channels:
                 self.config["channels"] = self.channels
                 console.log(
                     f"Overriding model.yaml channels={channels} with "
-                    f"num_classes={self.channels}."
+                    f"channels={self.channels}."
                 )
         
+        # Num_classes
         num_classes = self.num_classes
         if isinstance(self.classlabels, mdata.ClassLabels):
             num_classes = num_classes or self.classlabels.num_classes()
@@ -846,10 +851,10 @@ class Model(lightning.LightningModule, ABC):
                     f"Overriding model.yaml num_classes={num_classes} with "
                     f"num_classes={self.num_classes}."
                 )
+        else:
+            self.config["num_classes"] = num_classes
         
-        if "backbone" not in self.config and "head" not in self.config:
-            raise ValueError("config must contain 'backbone' and 'head' keys.")
-
+        # Parsing
         model, save, info = layer.parse_model(
             d       = self.config,
             ch      = [self.channels],
@@ -858,19 +863,23 @@ class Model(lightning.LightningModule, ABC):
         return model, save, info
     
     @abstractmethod
-    def init_weight(self, model: nn.Module):
+    def init_weights(self, model: nn.Module):
         """Initialize model's weight."""
         pass
     
-    def load_weight(self):
+    def load_weights(self):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
         if isinstance(self.weights, dict | pathlib.Path):
+            if "filename" in self.weights:
+                weights = self.zoo_dir / self.weights["filename"]
+            else:
+                weights = self.weights
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
             self.model = attempt_load(
                 model     = self.model,
-                weights   = self.weights,
+                weights   = weights,
                 strict    = False,
                 model_dir = self.zoo_dir,
             )
@@ -966,7 +975,7 @@ class Model(lightning.LightningModule, ABC):
         """
         pred = self.forward(input=input, *args, **kwargs)
         # features = None
-        if isinstance(pred, (list, tuple)):
+        if isinstance(pred, list | tuple):
             # features = pred[0:-1]
             pred = pred[-1]
         loss = self.loss(pred, target) if self.loss else None

@@ -62,7 +62,7 @@ class AICAutoCheckoutWriter(ABC):
         self.video_id    = self.video_map[subset][camera_name]
         self.exclude     = exclude
         self.start_time  = start_time
-        self.lines       = []
+        self.results     = []
         self.init_writer()
     
     def __del__(self):
@@ -90,16 +90,11 @@ class AICAutoCheckoutWriter(ABC):
         Args:
             products: A list of tracking :class:`data.Product` objects.
         """
-        prev_id = 0
         for p in products:
             class_id = p.majority_label_id
             if class_id in self.exclude:
                 continue
-            if prev_id == class_id:
-                continue
-            prev_id = class_id
-            line = f"{self.video_id} {class_id + 1} {int(p.timestamp)}\n"
-            self.lines.append(line)
+            self.results.append((self.video_id, class_id + 1, int(p.timestamp)))
     
     def write_to_file(self):
         """Dump all content in :attr:`lines` to :attr:`output` file."""
@@ -107,8 +102,15 @@ class AICAutoCheckoutWriter(ABC):
             self.init_writer()
         
         with open(self.destination, "w") as f:
-            for line in self.lines:
-                f.write(line)
+            prev_id = 0
+            for r in self.results:
+                video_id  = r[0]
+                class_id  = r[1]
+                timestamp = r[2]
+                if prev_id == class_id:
+                    continue
+                prev_id = class_id
+                f.write(f"{video_id} {class_id } {timestamp}\n")
     
     @classmethod
     def merge_results(

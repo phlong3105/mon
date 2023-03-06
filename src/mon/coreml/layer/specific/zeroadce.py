@@ -30,7 +30,7 @@ from typing import Any, Callable
 
 import torch
 
-from mon.coreml.layer import common
+from mon.coreml.layer import base, common
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -270,7 +270,10 @@ class AttentionSubspaceBlueprintSeparableConv2d13(
 
 
 @LAYERS.register()
-class ADCE(torch.nn.Module):
+class ADCE(
+    base.ConvLayerParsingMixin,
+    torch.nn.Module
+):
     
     def __init__(
         self,

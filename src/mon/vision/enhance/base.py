@@ -30,6 +30,10 @@ class ImageEnhancementModel(model.Model, ABC):
     def config_dir(self) -> pathlib.Path:
         return pathlib.Path(__file__).absolute().parent / "config"
     
+    def init_weights(self, m: torch.nn.Module):
+        """Initialize model's weights."""
+        pass
+    
     def forward(
         self,
         input    : torch.Tensor,

@@ -21,8 +21,8 @@ import mon.coreml.layer.specific.squeezenet
 import mon.coreml.layer.specific.srcnn
 import mon.coreml.layer.specific.unet
 import mon.coreml.layer.specific.vdsr
-import mon.coreml.layer.specific.zero_adce
-import mon.coreml.layer.specific.zero_dce
+import mon.coreml.layer.specific.zeroadce
+import mon.coreml.layer.specific.zerodce
 from mon.coreml.layer.specific.convnext import *
 from mon.coreml.layer.specific.densenet import *
 from mon.coreml.layer.specific.ffanet import *
@@ -37,5 +37,5 @@ from mon.coreml.layer.specific.squeezenet import *
 from mon.coreml.layer.specific.srcnn import *
 from mon.coreml.layer.specific.unet import *
 from mon.coreml.layer.specific.vdsr import *
-from mon.coreml.layer.specific.zero_adce import *
-from mon.coreml.layer.specific.zero_dce import *
+from mon.coreml.layer.specific.zeroadce import *
+from mon.coreml.layer.specific.zerodce import *

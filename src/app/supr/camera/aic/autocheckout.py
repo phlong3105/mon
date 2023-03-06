@@ -132,7 +132,7 @@ class AutoCheckoutCamera(Camera):
             self._detector = detector
         elif isinstance(detector, dict):
             detector["classlabels"] = self.classlabels
-            self._detector = DETECTORS.build(**detector)
+            self._detector = DETECTORS.build(config=detector)
         else:
             raise ValueError(f"Cannot initialize detector with {detector}.")
     
@@ -145,7 +145,7 @@ class AutoCheckoutCamera(Camera):
         if isinstance(tracker, mon.Tracker):
             self._tracker = tracker
         elif isinstance(tracker, dict):
-            self._tracker = TRACKERS.build(**tracker)
+            self._tracker = TRACKERS.build(config=tracker)
         else:
             raise ValueError(f"Cannot initialize tracker with {tracker}.")
     
@@ -175,7 +175,7 @@ class AutoCheckoutCamera(Camera):
         if isinstance(tray_detector, mon.Detector):
             self._tray_detector = tray_detector
         elif isinstance(tray_detector, dict):
-            self._tray_detector = DETECTORS.build(**tray_detector)
+            self._tray_detector = DETECTORS.build(config=tray_detector)
         else:
             raise ValueError(f"Cannot initialize tray detector with {tray_detector}.")
 

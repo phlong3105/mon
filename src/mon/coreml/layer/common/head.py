@@ -34,8 +34,8 @@ class AlexNetClassifier(base.HeadLayerParsingMixin, nn.Module):
         self.out_channels = out_channels
         self.drop1   = dropout_layer.Dropout()
         self.linear1 = linear.Linear(
-            in_features=in_channels * 6 * 6,
-            out_features=4096
+            in_features  = in_channels * 6 * 6,
+            out_features = 4096
         )
         self.act1    = activation.ReLU(inplace=True)
         self.drop2   = dropout_layer.Dropout()

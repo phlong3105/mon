@@ -41,7 +41,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             out_channels = out_channels,
             kernel_size  = 3,
             padding      = 1,
-            bias         = True
+            bias         = True,
         )
         self.relu1 = common.LeakyReLU(relu_slope, inplace=False)
         self.conv2 = common.Conv2d(
@@ -49,7 +49,7 @@ class HINetConvBlock(base.ConvLayerParsingMixin, nn.Module):
             out_channels = out_channels,
             kernel_size  = 3,
             padding      = 1,
-            bias         = True
+            bias         = True,
         )
         self.relu2    = common.LeakyReLU(relu_slope, inplace = False)
         self.identity = common.Conv2d(
