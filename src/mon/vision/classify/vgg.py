@@ -24,7 +24,6 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 
 # region Model
 
-@MODELS.register(name="vgg")
 class VGG(base.ImageClassificationModel, ABC):
     """VGG.
     
@@ -32,14 +31,7 @@ class VGG(base.ImageClassificationModel, ABC):
     """
     
     configs     = {}
-    zoo         = {
-        "imagenet": {
-            "name"       : "imagenet",
-            "path"       : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
-            "file_name"  : "alexnet-imagenet.pth",
-            "num_classes": 1000,
-        },
-    }
+    zoo         = {}
     map_weights = {}
     
     def init_weights(self, m: torch.nn.Module):
@@ -80,7 +72,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["22.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["22.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["22.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["22.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["22.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "30.linear1.weight" in model_state_dict:  # vgg11-bn
@@ -88,7 +80,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["30.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["30.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["30.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["30.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["30.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "26.linear1.weight" in model_state_dict:  # vgg13
@@ -96,7 +88,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["26.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["26.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["26.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["26.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["26.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "36.linear1.weight" in model_state_dict:  # vgg13-bn
@@ -104,7 +96,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["36.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["36.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["36.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["36.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["36.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "32.linear1.weight" in model_state_dict:  # vgg16
@@ -112,7 +104,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["32.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["32.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["32.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["32.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["32.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "45.linear1.weight" in model_state_dict:  # vgg16-bn
@@ -120,7 +112,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["45.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["45.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["45.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["45.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["45.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "38.linear1.weight" in model_state_dict:  # vgg19
@@ -128,7 +120,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["38.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["38.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["38.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["38.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["38.linear3.bias"]   = state_dict["classifier.6.bias"]
             elif "54.linear1.weight" in model_state_dict:  # vgg19-bn
@@ -136,7 +128,7 @@ class VGG(base.ImageClassificationModel, ABC):
                 model_state_dict["54.linear1.bias"]   = state_dict["classifier.0.bias"]
                 model_state_dict["54.linear2.weight"] = state_dict["classifier.3.weight"]
                 model_state_dict["54.linear2.bias"]   = state_dict["classifier.3.bias"]
-                if self.pretrained["num_classes"] == self.num_classes:
+                if self.weights["num_classes"] == self.num_classes:
                     model_state_dict["54.linear3.weight"] = state_dict["classifier.6.weight"]
                     model_state_dict["54.linear3.bias"]   = state_dict["classifier.6.bias"]
             self.model.load_state_dict(model_state_dict)
@@ -163,9 +155,12 @@ class VGG11(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg11.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg11.yaml",
+            "name"   : "vgg",
+            "variant": "vgg11"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg11-bn")
@@ -187,9 +182,12 @@ class VGG11BN(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg11-bn.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg11-bn.yaml",
+            "name"   : "vgg",
+            "variant": "vgg11-bn"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg13")
@@ -211,9 +209,12 @@ class VGG13(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg13.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg13.yaml",
+            "name"   : "vgg",
+            "variant": "vgg13"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg13-bn")
@@ -235,9 +236,12 @@ class VGG13BN(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg13-bn.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg13-bn.yaml",
+            "name"   : "vgg",
+            "variant": "vgg13-bn"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg16")
@@ -259,9 +263,12 @@ class VGG16(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg16.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg16.yaml",
+            "name"   : "vgg",
+            "variant": "vgg16"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg16-bn")
@@ -283,9 +290,12 @@ class VGG16BN(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg16-bn.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg16-bn.yaml",
+            "name"   : "vgg",
+            "variant": "vgg16-bn"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg19")
@@ -307,9 +317,12 @@ class VGG19(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg19.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg19.yaml",
+            "name"   : "vgg",
+            "variant": "vgg19"
+        }
+        super().__init__(*args, **kwargs)
 
 
 @MODELS.register(name="vgg19-bn")
@@ -331,8 +344,11 @@ class VGG19BN(VGG):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="vgg19-bn.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "vgg19-bn.yaml",
+            "name"   : "vgg",
+            "variant": "vgg19"
+        }
+        super().__init__(*args, **kwargs)
     
 # endregion

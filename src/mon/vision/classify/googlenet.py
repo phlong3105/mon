@@ -411,9 +411,12 @@ class GoogleNet(base.ImageClassificationModel):
     }
 
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="googlenet.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "googlenet.yaml",
+            "name"   : "googlenet",
+            "variant": "googlenet"
+        }
+        super().__init__(*args, **kwargs)
     
     def init_weights(self, m: torch.nn.Module):
         classname    = m.__class__.__name__

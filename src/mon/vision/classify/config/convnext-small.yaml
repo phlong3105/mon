@@ -1,4 +1,5 @@
-name    : "convnext-small"
+name    : "convnext"
+variant : "convnext-small"
 channels: 3
 backbone: [
   # [from, number, module,               args(out_channels, ...)]

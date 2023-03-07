@@ -33,8 +33,11 @@ class LeNet(base.ImageClassificationModel):
     map_weights = {}
     
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="lenet.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "lenet.yaml",
+            "name"   : "lenet",
+            "variant": "lenet"
+        }
+        super().__init__(*args, **kwargs)
     
 # endregion

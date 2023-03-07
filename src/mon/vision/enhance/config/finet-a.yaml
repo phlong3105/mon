@@ -1,5 +1,6 @@
 # Using Conv, change alpha and feature selection
-name    : "finet-a"
+name    : "finet"
+variant : "finet-a"
 channels: 3
 backbone: [
   # [from,       number, module,         args(out_channels, ...)]

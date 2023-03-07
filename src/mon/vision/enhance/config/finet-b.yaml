@@ -1,5 +1,6 @@
 # Using GhostConv
-name    : "finet-b"
+name    : "finet"
+variant : "finet-b"
 channels: 3
 backbone: [
   # [from,       number, module,         args(out_channels, ...)]

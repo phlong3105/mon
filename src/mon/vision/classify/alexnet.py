@@ -61,9 +61,12 @@ class AlexNet(base.ImageClassificationModel):
     }
 
     def __init__(self, *args, **kwargs):
-        if "config" in kwargs:
-            _ = kwargs.pop("config")
-        super().__init__(config="alexnet.yaml", *args, **kwargs)
+        kwargs |= {
+            "config" : "alexnet.yaml",
+            "name"   : "alexnet",
+            "variant": "alexnet"
+        }
+        super().__init__(*args, **kwargs)
     
     def load_weights(self):
         """Load weights. It only loads the intersection layers of matching keys

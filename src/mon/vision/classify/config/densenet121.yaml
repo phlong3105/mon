@@ -1,4 +1,5 @@
-name    : "densenet121"
+name    : "densenet"
+variant : "densenet121"
 channels: 3
 backbone: [
   # [from, number, module,            args(out_channels, ...)]

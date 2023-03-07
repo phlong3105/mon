@@ -531,7 +531,13 @@ class Model(lightning.LightningModule, ABC):
     @fullname.setter
     def fullname(self, fullname: str | None = None):
         if fullname is None or fullname == "":
-            fullname = self.name
+            if self.variant is not None:
+                if self.name in self.variant:
+                    fullname = self.variant
+                else:
+                    fullname = f"{self.name}-{self.variant}"
+            else:
+                fullname = self.name
         self._fullname = fullname
     
     @property
@@ -602,9 +608,9 @@ class Model(lightning.LightningModule, ABC):
         variant = None
         if isinstance(config, str) and config in self.configs:
             variant = str(config)
-            config     = self.configs[config]
+            config  = self.configs[config]
         elif isinstance(config, str) and ".yaml" in config:
-            config     = self.config_dir / config
+            config  = self.config_dir / config
             variant = str(config.stem)
         elif isinstance(config, pathlib.Path):
             variant = str(config.stem)
@@ -617,7 +623,7 @@ class Model(lightning.LightningModule, ABC):
             
         self._config  = mconfig.load_config(config=config) if config is not None else None
         self.channels = self._config.get("channels", None)
-        self.name     = self._config.get("name", None)
+        self.name     = self._config.get("name",     None)
         self.variant  = variant
         
     @property
@@ -824,6 +830,14 @@ class Model(lightning.LightningModule, ABC):
             raise ValueError("config must contain 'backbone' and 'head' keys.")
         
         console.log(f"Parsing model from config.")
+        
+        # Name
+        if "name" in self.config:
+            self.name = self.name or self.config["name"]
+        
+        # Variant
+        if "variant" in self.config:
+            self.variant = self.variant or self.config["variant"]
         
         # Channels
         if "channels" in self.config:
