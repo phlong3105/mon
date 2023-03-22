@@ -60,7 +60,7 @@ def move_figure(x: int, y: int):
     the location specified by :param:`(x,  y)`.
     """
     mngr = plt.get_current_fig_manager()
-    fig = plt.gcf()
+    fig  = plt.gcf()
     backend = matplotlib.get_backend()
     if backend == "TkAgg":
         mngr.window.wm_geometry("+%d+%d" % (x, y))

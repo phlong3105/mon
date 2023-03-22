@@ -20,6 +20,7 @@ bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
 yolov8_dir="${root_dir}/src/lib/yolov8"
 lama_dir="${root_dir}/src/lib/lama"
+nafnet_dir="${root_dir}/src/lib/nafnet"
 
 video_list=()
 if [ "$video" == "all" ]; then
@@ -44,11 +45,19 @@ for video in ${video_list[*]}; do
 
   # Preprocess
   if [ "$preprocess" == "yes" ]; then
+
     echo -e "\nConverting video"
     cd "${current_dir}" || exit
     python extract_frame.py \
       --source "${root_dir}/data/${dataset}/${subset}/${video}.mp4" \
       --destination "${root_dir}/data/${dataset}/${subset}/convert"
+
+    echo -e "\nPerforming deblurring"
+    cd "${nafnet_dir}" || exit
+    python predict.py \
+      --source "${root_dir}/data/${dataset}/${subset}/convert/${video}" \
+      --destination "${root_dir}/data/${dataset}/${subset}/deblur/${video}" \
+      --option "options/test/REDS/NAFNet-width64.yml"
 
     echo -e "\nGenerating person masks"
     cd "${yolov8_dir}" || exit
@@ -58,7 +67,7 @@ for video in ${video_list[*]}; do
       --data "data/coco.yaml" \
       --project "${root_dir}/data/${dataset}/${subset}/person" \
       --name "${video}" \
-      --source "${root_dir}/data/${dataset}/${subset}/convert/${video}" \
+      --source "${root_dir}/data/${dataset}/${subset}/deblur/${video}" \
       --imgsz 640 \
       --conf 0.1 \
       --iou 0.1 \
@@ -79,7 +88,7 @@ for video in ${video_list[*]}; do
     echo -e "\nPerforming inpainting"
     cd "${lama_dir}" || exit
     python bin/predict_image_label.py \
-      image_dir="${root_dir}/data/${dataset}/${subset}/convert/${video}" \
+      image_dir="${root_dir}/data/${dataset}/${subset}/deblur/${video}" \
       label_dir="${root_dir}/data/${dataset}/${subset}/person/${video}" \
       output_dir="${root_dir}/data/${dataset}/${subset}/inpainting/${video}" \
       model.path="${root_dir}/zoo/lama/big-lama-aic" \

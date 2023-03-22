@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements datasets, transforms and models specific to computer
+"""This package implements datasets, transforms, and models specific to computer
 vision.
 """
 

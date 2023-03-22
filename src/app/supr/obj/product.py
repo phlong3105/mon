@@ -27,14 +27,16 @@ class Product(mon.MovingObject):
     See more: :class:`mon.vision.tracking.obj.base.MovingObject`.
     """
 
-    min_touched_landmarks = 1   # Minimum hand landmarks touching the object so that it is considered hand-handling.
-    min_confirms          = 3   # Minimum frames that the object is considered for counting.
-    min_counting_distance = 10  # Minimum distance to the ROI's center that the object is considered for counting.
+    min_touched_landmarks = 1    # Minimum hand landmarks touching the object so that it is considered hand-handling.
+    min_confirms          = 3    # Minimum frames that the object is considered for counting.
+    min_counting_distance = 10   # Minimum distance to the ROI's center that the object is considered for counting.
+    min_counting_iou      = 0.9  # Minimum IoU value between the ROI and the object that is considered for counting.
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.num_confirms = 0
-    
+        self.num_confirms   = 0
+        self.counting_point = None
+
     def update_moving_state(
         self,
         rois : list[rmoi.ROI],
@@ -68,12 +70,18 @@ class Product(mon.MovingObject):
             if hands is None:
                 self.num_confirms += 1
                 if self.num_confirms >= self.min_confirms:
-                    p1 = roi.center
-                    p2 = self.current.bbox_center
-                    counting_distance = p2[0] - p1[0]
-                    # counting_distance = mon.math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
-                    if counting_distance >= self.min_counting_distance:
-                        self.moving_state = MovingState.TO_BE_COUNTED
+                    p1   = roi.center
+                    p2   = self.current.bbox_center
+                    dx   = p2[0] - p1[0]
+                    dy   = p2[1] - p1[1]
+                    sign = -1 if p2[0] < p1[0] or p2[1] < p1[1] else 0
+                    d    = sign * mon.math.sqrt((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)
+                    iou  = 1 - roi.calculate_iou(bbox=self.current.bbox)
+                    if iou >= self.min_counting_iou \
+                        and d >= self.min_counting_distance \
+                        or (abs(dx) <= 40):
+                        self.moving_state   = MovingState.TO_BE_COUNTED
+                        self.counting_point = p2
                 # if roi.is_box_in_roi(bbox=self.current.bbox) <= 0:
                 #     self.moving_state = MovingState.COUNTING
             # Method 2
@@ -215,6 +223,15 @@ class Product(mon.MovingObject):
                 thickness = -1,
                 color     = color
             )
+            if self.counting_point is not None:
+                counting_point = self.counting_point.astype(int)
+                cv2.circle(
+                    img       = image,
+                    center    = tuple(counting_point),
+                    radius    = 9,
+                    thickness = -1,
+                    color     = color
+                )
         if polygon:
             pts = self.current.polygon.reshape((-1, 1, 2))
             cv2.polylines(img=image, pts=pts, isClosed=True, color=color, thickness=2)

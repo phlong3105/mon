@@ -193,6 +193,7 @@ class AutoCheckoutCamera(Camera):
         object_class.min_touched_landmarks = moving_object.get("min_touched_landmarks", 1)
         object_class.min_confirms          = moving_object.get("min_confirms"         , 3)
         object_class.min_counting_distance = moving_object.get("min_counting_distance", 10)
+        object_class.min_counting_iou      = moving_object.get("min_counting_iou",      0.9)
         
     def on_run_start(self):
         """Called at the beginning of run loop."""
@@ -319,12 +320,13 @@ class AutoCheckoutCamera(Camera):
             if self.hands:
                 self.hands.draw(image=image)
         # Draw frame index
-        fps  = index / elapsed_time
-        text = f"Frame: {index}: {format(elapsed_time, '.3f')}s ({format(fps, '.1f')} fps)"
+        fps   = index / elapsed_time
+        total = len(self.image_loader)
+        text  = f"Frame {index}/{total}: {format(elapsed_time, '.3f')}s ({format(fps, '.1f')} fps)"
         cv2.rectangle(
             img       = image,
             pt1       = (10,   0),
-            pt2       = (600, 40),
+            pt2       = (800, 40),
             color     = (0, 0, 0),
             thickness = -1
         )

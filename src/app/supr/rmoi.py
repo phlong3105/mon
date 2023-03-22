@@ -61,10 +61,21 @@ class RegionOfInterest:
                 f"Number of points must be >= 3, but got {len(points)}."
             )
         self._points = points
+        self._bbox   = np.array([
+            np.min(points, axis=0).min(),
+            np.min(points, axis=1).min(),
+            np.max(points, axis=0).max(),
+            np.max(points, axis=1).max()
+        ])
+        self._center = np.mean(self.points, axis=0)
+    
+    @property
+    def bbox(self) -> np.ndarray:
+        return self._bbox
     
     @property
     def center(self) -> np.ndarray:
-        return np.mean(self.points, axis=0)
+        return self._center
         
     @property
     def has_valid_points(self) -> bool:
@@ -115,6 +126,17 @@ class RegionOfInterest:
             return cls.from_file(value=value)
         return None
     
+    def calculate_iou(self, bbox: np.ndarray) -> float:
+        """Calculate the IoU.
+        
+        Args:
+            bbox: Bounding boxes in XYXY format.
+            
+        Returns:
+            IoU value.
+        """
+        return mon.get_single_bbox_iou(bbox1=self.bbox, bbox2=bbox)
+    
     def is_box_in_roi(self, bbox: np.ndarray, compute_distance: bool = False) -> int:
         """Check a bounding bbox touches the current ROI.
         
@@ -154,21 +176,21 @@ class RegionOfInterest:
     
     def draw(self, image: np.ndarray) -> np.ndarray:
         """Draw the current ROI on the :param:`image`."""
-        color = mon.BasicRGB.GREEN.value
+        color = mon.AppleRGB.GREEN.value
         pts   = self.points.reshape((-1, 1, 2))
         cv2.polylines(
             img       = image,
             pts       = [pts],
             isClosed  = True,
             color     = color,
-            thickness = 3,
+            thickness = 6,
         )
         center = self.center.astype(np.int32).reshape(2)
         cv2.circle(
             img       = image,
             center    = center,
-            radius    = 5,
-            color     = mon.BasicRGB.RED.value,
+            radius    = 10,
+            color     = color,
             thickness = - 1,
         )
         return image

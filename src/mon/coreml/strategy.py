@@ -12,14 +12,11 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "BaguaStrategy", "CPUAccelerator", "CUDAAccelerator", "ColossalAIStrategy",
-    "DDPFullyShardedNativeStrategy", "DDPFullyShardedStrategy",
-    "DDPShardedStrategy", "DDPSpawnShardedStrategy", "DDPSpawnStrategy",
-    "DDPStrategy", "DataParallelStrategy", "DeepSpeedStrategy",
-    "HPUAccelerator", "HPUParallelStrategy", "HivemindStrategy",
-    "HorovodStrategy", "IPUAccelerator", "IPUStrategy", "MPSAccelerator",
-    "SingleHPUStrategy", "SingleTPUStrategy", "TPUAccelerator",
-    "TPUSpawnStrategy",
+    "FSDPStrategy", "CPUAccelerator", "CUDAAccelerator", "ParallelStrategy",
+    "SingleDeviceStrategy", "DDPStrategy", "DeepSpeedStrategy",
+    "HPUAccelerator", "HPUParallelStrategy", "Strategy", "IPUAccelerator",
+    "IPUStrategy", "MPSAccelerator", "SingleHPUStrategy", "SingleTPUStrategy",
+    "TPUAccelerator", "XLAStrategy",
 ]
 
 import os
@@ -56,41 +53,28 @@ ACCELERATORS.register(name="tpu" , module=TPUAccelerator)
 
 # region Strategy
 
-BaguaStrategy                 = strategies.BaguaStrategy
-HivemindStrategy              = strategies.HivemindStrategy
-ColossalAIStrategy            = strategies.ColossalAIStrategy
-DDPFullyShardedNativeStrategy = strategies.DDPFullyShardedNativeStrategy
-DDPFullyShardedStrategy       = strategies.DDPFullyShardedStrategy
-DDPShardedStrategy            = strategies.DDPShardedStrategy
-DDPSpawnShardedStrategy       = strategies.DDPSpawnShardedStrategy
-DDPSpawnStrategy              = strategies.DDPSpawnStrategy
-DDPStrategy                   = strategies.DDPStrategy
-DataParallelStrategy          = strategies.DataParallelStrategy
-DeepSpeedStrategy             = strategies.DeepSpeedStrategy
-HorovodStrategy               = strategies.HorovodStrategy
-HPUParallelStrategy           = strategies.HPUParallelStrategy
-SingleHPUStrategy             = strategies.SingleHPUStrategy
-IPUStrategy                   = strategies.IPUStrategy
-TPUSpawnStrategy              = strategies.TPUSpawnStrategy
-SingleTPUStrategy             = strategies.SingleTPUStrategy
+DDPStrategy          = strategies.DDPStrategy
+DeepSpeedStrategy    = strategies.DeepSpeedStrategy
+FSDPStrategy         = strategies.FSDPStrategy
+HPUParallelStrategy  = strategies.HPUParallelStrategy
+IPUStrategy          = strategies.IPUStrategy
+ParallelStrategy     = strategies.ParallelStrategy
+SingleDeviceStrategy = strategies.SingleDeviceStrategy
+SingleHPUStrategy    = strategies.SingleHPUStrategy
+SingleTPUStrategy    = strategies.SingleTPUStrategy
+Strategy             = strategies.Strategy
+XLAStrategy          = strategies.XLAStrategy
 
-STRATEGIES.register(name="bagua"            , module=BaguaStrategy)
-STRATEGIES.register(name="collaborative"    , module=HivemindStrategy)
-STRATEGIES.register(name="colossalai"       , module=ColossalAIStrategy)
-STRATEGIES.register(name="fsdp_native"      , module=DDPFullyShardedNativeStrategy)
-STRATEGIES.register(name="fsdp"             , module=DDPFullyShardedStrategy)
-STRATEGIES.register(name="ddp_sharded"      , module=DDPShardedStrategy)
-STRATEGIES.register(name="ddp_sharded_spawn", module=DDPSpawnShardedStrategy)
-STRATEGIES.register(name="ddp_spawn"        , module=DDPSpawnStrategy)
-STRATEGIES.register(name="ddp"              , module=DDPStrategy)
-STRATEGIES.register(name="dp"               , module=DataParallelStrategy)
-STRATEGIES.register(name="deepspeed"        , module=DeepSpeedStrategy)
-STRATEGIES.register(name="horovod"          , module=HorovodStrategy)
-STRATEGIES.register(name="hpu_parallel"     , module=HPUParallelStrategy)
-STRATEGIES.register(name="hpu_single"       , module=SingleHPUStrategy)
-STRATEGIES.register(name="ipu_strategy"     , module=IPUStrategy)
-STRATEGIES.register(name="tpu_spawn"        , module=TPUSpawnStrategy)
-STRATEGIES.register(name="single_tpu"       , module=SingleTPUStrategy)
+STRATEGIES.register(name = "ddp"          , module = DDPStrategy)
+STRATEGIES.register(name = "deepspeed"    , module = DeepSpeedStrategy)
+STRATEGIES.register(name = "fsdp"         , module = FSDPStrategy)
+STRATEGIES.register(name = "hpu_parallel" , module = HPUParallelStrategy)
+STRATEGIES.register(name = "hpu_single"   , module = SingleHPUStrategy)
+STRATEGIES.register(name = "ipu"          , module = IPUStrategy)
+STRATEGIES.register(name = "parallel"     , module = ParallelStrategy)
+STRATEGIES.register(name = "single_device", module = SingleDeviceStrategy)
+STRATEGIES.register(name = "single_tpu"   , module = SingleTPUStrategy)
+STRATEGIES.register(name = "xla"          , module = XLAStrategy)
 
 # endregion
 

@@ -36,8 +36,8 @@ dependencies:
       # Image
       - albumentations
       - ffmpeg-python     # Python bindings for FFmpeg - with complex filtering support.
-      - opencv-python==4.5.5.62  # Computer vision and machine learning software library.
-      - opencv-contrib-python==4.5.5.62
+      - opencv-python     # Computer vision and machine learning software library.
+      - opencv-contrib-python
       # Network
       - requests          # Requests is an elegant and simple HTTP library for Python, built with ♥
       # Plot              
@@ -46,11 +46,12 @@ dependencies:
       # PyTorch           
       - einops            # A new flavour of deep learning operations.
       - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
-      - lightning>=1.9.2  #
+      - lightning>=2.0.0  #
+      - pytorch-lightning==1.9.2
       - piqa              # PyTorch Image Quality Assessment package.
       - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
-      - pytorch-lightning>=1.9.2
-      - torch             # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - thop              # Count the MACs / FLOPs of your PyTorch model.
+      - torch>=2.0.0      # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio        # Simple audio I/O for pytorch.
       - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
       - torchvision       # Image and video datasets and models for torch deep learning.
@@ -63,11 +64,11 @@ dependencies:
       - scikit-learn      # A set of python modules for machine learning and data mining.
       - scipy             # Scientific Library for Python.
       # Syntax
-      - PyYAML            # YAML parser and emitter for Python.
       - click             # Click is a Python package for creating beautiful command line interfaces.
       - multipledispatch  # Multiple dispatch.
       - protobuf          # Protocol Buffers - Google's data interchange format.
       - pyhumps           # Convert strings (and dictionary keys) between snake case, camel case and pascal case in Python.
+      - PyYAML            # YAML parser and emitter for Python.
       - sortedcontainers  # Python Sorted Container Types: SortedList, SortedDict, and SortedSet.
       - typing-extensions # Backported and Experimental Type Hints for Python 3.7+.
       - validators        # Python Data Validation for Humans.
@@ -75,4 +76,5 @@ dependencies:
       # UI                
       - PyQt6             # Python bindings for the Qt cross-platform application toolkit.
       - rich              # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
+      - tabulate          # Pretty-print tabular data in Python, a library and a command-line utility.
       - tqdm              # Fast, Extensible Progress Meter.

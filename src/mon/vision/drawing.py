@@ -6,10 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "draw_bbox",
-    "draw_contour",
-    "draw_segment",
-    "draw_trajectory",
+    "draw_bbox", "draw_contour", "draw_segment", "draw_trajectory",
 ]
 
 import cv2

@@ -12,9 +12,8 @@ __all__ = [
     "BatchSizeFinder", "Callback", "Checkpoint", "DeviceStatsMonitor",
     "EarlyStopping", "GradientAccumulationScheduler", "LambdaCallback",
     "LearningRateFinder", "LearningRateMonitor", "ModelPruning", "ModelSummary",
-    "ProgressBarBase", "QuantizationAwareTraining", "StochasticWeightAveraging",
-    "TQDMProgressBar", "Timer", "TuneReportCallback",
-    "TuneReportCheckpointCallback",
+    "StochasticWeightAveraging", "TQDMProgressBar", "Timer",
+    "TuneReportCallback", "TuneReportCheckpointCallback",
 ]
 
 import ray.tune.integration.pytorch_lightning as ray
@@ -38,8 +37,7 @@ LearningRateFinder            = callbacks.LearningRateFinder
 LearningRateMonitor           = callbacks.LearningRateMonitor
 ModelPruning                  = callbacks.ModelPruning
 ModelSummary                  = callbacks.ModelSummary
-ProgressBarBase               = callbacks.ProgressBarBase
-QuantizationAwareTraining     = callbacks.QuantizationAwareTraining
+ProgressBar                   = callbacks.ProgressBar
 StochasticWeightAveraging     = callbacks.StochasticWeightAveraging
 Timer                         = callbacks.Timer
 TQDMProgressBar               = callbacks.TQDMProgressBar
@@ -55,7 +53,6 @@ CALLBACKS.register(name="learning_rate_finder"           , module=LearningRateFi
 CALLBACKS.register(name="learning_rate_monitor"          , module=LearningRateMonitor)
 CALLBACKS.register(name="model_pruning"                  , module=ModelPruning)
 CALLBACKS.register(name="model_summary"                  , module=ModelSummary)
-CALLBACKS.register(name="quantization_aware_training"    , module=QuantizationAwareTraining)
 CALLBACKS.register(name="stochastic_weight_averaging"    , module=StochasticWeightAveraging)
 CALLBACKS.register(name="timer"                          , module=Timer)
 CALLBACKS.register(name="tqdm_progress_bar"              , module=TQDMProgressBar)

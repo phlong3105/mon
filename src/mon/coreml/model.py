@@ -33,7 +33,7 @@ from mon.globals import (
 )
 
 StepOutput  = lightning.pytorch.utilities.types.STEP_OUTPUT
-EpochOutput = lightning.pytorch.utilities.types.EPOCH_OUTPUT
+EpochOutput = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
 
 
 # region Checkpoint

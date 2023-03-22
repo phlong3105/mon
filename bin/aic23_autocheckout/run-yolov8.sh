@@ -28,7 +28,7 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8l-det-coco.pt" \
       --data "data/aic23-autocheckout-tray.yaml" \
-      --project "${root_dir}/run/train" \
+      --project "${root_dir}/run/train/aic23" \
       --name "yolov8l-aic23-autocheckout-tray-640" \
       --epochs 10 \
       --batch 8 \
@@ -43,7 +43,7 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
       --data "data/aic23-autocheckout-mix-117.yaml" \
-      --project "${root_dir}/run/train" \
+      --project "${root_dir}/run/train/aic23" \
       --name "yolov8x6-aic23-autocheckout-mix-117-1920" \
       --epochs 50 \
       --batch 4 \
@@ -56,12 +56,12 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "vsw-ws03" ]; then
     python train.py \
       --task "detect" \
-      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8l-det-coco.pt" \
       --data "data/aic23-autocheckout-mix-117.yaml" \
-      --project "${root_dir}/run/train" \
-      --name "yolov8x-aic23-autocheckout-mix-117-1920" \
+      --project "${root_dir}/run/train/aic23" \
+      --name "yolov8l-aic23-autocheckout-mix-117-1920" \
       --epochs 50 \
-      --batch 4 \
+      --batch 16 \
       --imgsz 1920 \
       --workers 8 \
       --device 0,1 \
@@ -120,7 +120,7 @@ if [ "$task" == "predict" ]; then
   elif [ "$machine" == "vsw-ws03" ]; then
     python predict.py \
     	--task "detect" \
-    	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-mix-117-1920/weights/best.pt" \
+    	--model "${root_dir}/run/train/yolov8l-aic23-autocheckout-mix-117-1920/weights/best.pt" \
     	--data "data/aic23-autocheckout-mix-117.yaml" \
     	--project "${root_dir}/run/predict" \
     	--name "testA_3" \
