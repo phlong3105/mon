@@ -71,8 +71,8 @@ class Predictor(BasePredictor):
         else:
 
             img_input = imread(str(image))
-            inp = img2tensor(img_input)
-            out_path = Path(tempfile.mkdtemp()) / "output.png"
+            inp       = img2tensor(img_input)
+            out_path  = Path(tempfile.mkdtemp()) / "output.png"
             single_image_inference(model, inp, str(out_path))
 
         return out_path
@@ -101,7 +101,7 @@ def single_image_inference(model, img, save_path):
         model.grids_inverse()
 
     visuals = model.get_current_visuals()
-    sr_img = tensor2img([visuals["result"]])
+    sr_img  = tensor2img([visuals["result"]])
     imwrite(sr_img, save_path)
 
 
@@ -143,7 +143,7 @@ def stereo_image_inference(model, img_l, img_r, out_path):
 @click.option("--source",      default="", type=click.Path(exists=True), help="Video filepath or directory.")
 @click.option("--destination", default="", type=click.Path(exists=False), help="Output video filepath or directory.")
 @click.option("--option",      default="options/test/REDS/NAFNet-width64.yml", type=click.Path(exists=True), help="Opt path.")
-@click.option("--extension",   default="jpg", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
+@click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 def predict(
     source     : mon.Path,
     destination: mon.Path,

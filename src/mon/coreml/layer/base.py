@@ -111,7 +111,7 @@ class ConvLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -144,7 +144,7 @@ class ConcatLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -174,7 +174,7 @@ class MergingLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -283,7 +283,7 @@ class PassThroughLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.
@@ -311,7 +311,7 @@ class SameChannelsLayerParsingMixin(LayerParsingMixin):
     """
     
     @classmethod
-    def parse_layer_args(cls, f : int, args: list, ch: list) -> tuple[list, list]:
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
         """Parse layer's arguments :param:`args`, calculate the
         :param:`out_channels`, and update :param:`args`. Also, append the
         :param:`out_channels` to :param:`ch` if needed.

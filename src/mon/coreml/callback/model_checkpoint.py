@@ -23,11 +23,12 @@ import lightning.pytorch as pl
 import torch
 from lightning.pytorch import callbacks
 
+import mon
 from mon.foundation import console, error_console, pathlib
 from mon.globals import CALLBACKS
 
 
-# region Model Checkpoint Callback
+# region Model Checkpoint
 
 @CALLBACKS.register(name="model_checkpoint")
 class ModelCheckpoint(callbacks.ModelCheckpoint):
@@ -38,7 +39,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
     
     CHECKPOINT_JOIN_CHAR = "-"
     CHECKPOINT_NAME_LAST = "last"
-    CHECKPOINT_NAME_BEST = "last"
+    CHECKPOINT_NAME_BEST = "best"
     FILE_EXTENSION       = ".ckpt"
     STARTING_VERSION     = 1
     
@@ -63,9 +64,9 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         self.last_epoch_saved = 0
         self.best_model_score: torch.Tensor | None = None
         self.keys     = {}
-        self.ckpt_dir = dirpath / "weights" if (dirpath is not None) else None
+        self.ckpt_dir = dirpath/"weights" if (dirpath is not None) else None
         self.logger   = None
-        
+
         super().__init__(
             dirpath                 = dirpath,
             filename                = filename,
@@ -101,10 +102,11 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         pl_module: "pl.LightningModule",
         stage    : str
     ) -> None:
-        dirpath       = pathlib.Path(self.__resolve_ckpt_dir(trainer))
-        dirpath       = trainer.strategy.broadcast(dirpath)
-        self.dirpath  = dirpath
-        self.ckpt_dir = self.dirpath / "weights"
+        dirpath = pathlib.Path(self.__resolve_ckpt_dir(trainer))
+        dirpath = trainer.strategy.broadcast(dirpath)
+        if dirpath != self.dirpath:
+            self.dirpath  = dirpath
+            self.ckpt_dir = self.dirpath / "weights"
         if trainer.is_global_zero and stage == "fit":
             self.__warn_if_dir_not_empty(self.dirpath)
     
@@ -118,41 +120,38 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         # Our extension
         self.start_epoch = trainer.current_epoch
         self.start_time  = timer()
-        self.logger      = open(self.dirpath / "log.txt", "a", encoding = "utf-8")
-        self.logger.write(
-            f"\n================================================================================\n"
-        )
-        self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n\n")
+        self.logger      = open(self.dirpath / "result.csv", "a")
+        self.logger.write(f"{datetime.now().strftime('%m/%d/%Y, %H:%M:%S')}\n")
         
         # Print model's info
-        self.logger.write(f"{'Model':<10}: {pl_module.name}\n")
-        self.logger.write(f"{'Data':<10}: {pl_module.fullname}\n")
+        self.logger.write(f"{'Model':<12},{pl_module.name}\n")
+        self.logger.write(f"{'Fullname':<12},{pl_module.fullname}\n")
         if hasattr(pl_module, "params"):
-            self.logger.write(f"{'Parameters':<10}: {pl_module.params}\n")
+            self.logger.write(f"{'Parameters':<10},{pl_module.params}\n")
+        self.logger.write(f"{'Monitor':<10},{self.monitor}\n")
         
         # Print header
-        monitor = self.monitor.replace("checkpoint/", "")
-        monitor = f"monitor_" + monitor.split("/")[0]
-        headers = f"\n{'Epoch':>10} {'step':>10} {monitor:>16} " \
-                  f"{'train_loss':>12} "
-        self.keys = collections.OrderedDict(train_loss=0)
+        headers    = f"{'epoch'},{'step'},{'train/loss'},"
+        self.keys  = collections.OrderedDict()
+        self.keys |= {"epoch": 0}
+        self.keys |= {"step": 0}
+        self.keys |= {"train/loss": 0}
         if pl_module.train_metrics is not None:
             for m in pl_module.train_metrics:
-                headers += f"{f'train_{m.name}':>12} "
-                self.keys |= {f'train_{m.name}': 0}
-        headers += f"{'val_loss':>12} "
-        self.keys |= {"val_loss": 0}
+                headers   += f"{f'train/{m.name}'},"
+                self.keys |= {f'train/{m.name}': 0}
+        headers   += f"{'val/loss'},"
+        self.keys |= {"val/loss": 0}
         if pl_module.val_metrics is not None:
             for m in pl_module.val_metrics:
-                headers += f"{f'val_{m.name}':>12} "
-                self.keys |= {f'val_{m.name}': 0}
-        headers += f" {'reach':<16}"
-        
-        console.log(f"[bold]{headers}")
-        self.logger.write(f"\nTraining:")
-        self.logger.write(headers + "\n")
+                headers   += f"{f'val/{m.name}'},"
+                self.keys |= {f'val/{m.name}': 0}
+        headers   += f"{'reach'}\n"
+        self.keys |= {"reach": ""}
+        #
+        self.logger.write(f"\nTraining\n{headers}")
         self.logger.flush()
-    
+        
     def on_train_end(
         self,
         trainer  : "pl.Trainer",
@@ -162,41 +161,41 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         console.log(
             f"\n{trainer.current_epoch - self.start_epoch} epochs completed "
             f"in {(end_time - self.start_time):.3f} seconds "
-            f"({((end_time - self.start_time) / 3600):.3f} hours)"
+            f"({((end_time - self.start_time) / 3600):.3f} hours)\n"
         )
         self.logger.write(
-            f"\n{trainer.current_epoch - self.start_epoch} epochs completed "
-            f"in {(end_time - self.start_time):.3f} seconds "
-            f"({((end_time - self.start_time) / 3600):.3f} hours)"
+            f"\nEpochs,{trainer.current_epoch - self.start_epoch}"
+            f"Seconds,{(end_time - self.start_time):.3f}"
+            f"Hours,{((end_time - self.start_time) / 3600):.3f}\n"
         )
         self.logger.flush()
         self.logger.close()
     
     def state_dict(self) -> dict[str, Any]:
         return {
-            "dirpath"               : self.dirpath,
-            "ckpt_dir"              : self.ckpt_dir,
+            "dirpath"               : str(self.dirpath),
+            "ckpt_dir"              : str(self.ckpt_dir),
             "last_epoch_saved"      : self.last_epoch_saved,
             "last_global_step_saved": self._last_global_step_saved,
             "monitor"               : self.monitor,
             "best_model_score"      : self.best_model_score,
-            "best_model_path"       : self.best_model_path,
+            "best_model_path"       : str(self.best_model_path),
             "current_score"         : self.current_score,
             "best_k_models"         : self.best_k_models,
-            "kth_best_model_path"   : self.kth_best_model_path,
+            "kth_best_model_path"   : str(self.kth_best_model_path),
             "kth_value"             : self.kth_value,
-            "last_model_path"       : self.last_model_path,
+            "last_model_path"       : str(self.last_model_path),
         }
     
     def load_state_dict(self, state_dict: dict[str, Any]):
         dirpath_from_ckpt = state_dict.get("dirpath", self.dirpath)
         
-        if self.dirpath_from_ckpt == dirpath_from_ckpt:
+        if self.dirpath == dirpath_from_ckpt:
             self.best_model_score    = state_dict["best_model_score"]
-            self.kth_best_model_path = state_dict.get("kth_best_model_path", self.kth_best_model_path)
-            self.kth_value           = state_dict.get("kth_value"          , self.kth_value)
+            self.kth_best_model_path = pathlib.Path(state_dict.get("kth_best_model_path", self.kth_best_model_path))
+            self.kth_value           = (state_dict.get("kth_value"          , self.kth_value))
             self.best_k_models       = state_dict.get("best_k_models"      , self.best_k_models)
-            self.last_model_path     = state_dict.get("last_model_path"    , self.last_model_path)
+            self.last_model_path     = pathlib.Path(state_dict.get("last_model_path"    , self.last_model_path))
             
             # Our extension
             self.kth_best_model_path = pathlib.Path(self.kth_best_model_path)
@@ -212,7 +211,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         
         self.best_model_path         = pathlib.Path(state_dict["best_model_path"])
         self.last_epoch_saved        = state_dict.get("last_epoch_saved",       self.last_epoch_saved)
-        self._last_global_step_saved = state_dict.get("last_global_step_saved", self.last_global_step_saved)
+        self._last_global_step_saved = state_dict.get("last_global_step_saved", self._last_global_step_saved)
     
     def _save_checkpoint(
         self,
@@ -220,10 +219,8 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         filepath: pathlib.Path | str
     ):
         trainer.save_checkpoint(pathlib.Path(filepath), self.save_weights_only)
-        
         self.last_epoch_saved        = trainer.current_epoch
         self._last_global_step_saved = trainer.global_step
-        
         # Notify loggers
         if trainer.is_global_zero:
             for logger in trainer.loggers:
@@ -272,13 +269,29 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         # Our extension
         return (self.ckpt_dir / ckpt_name) if self.ckpt_dir else ckpt_name
     
+    def __resolve_ckpt_dir(self, trainer: "pl.Trainer") -> pathlib.Path | str:
+        """Determines model checkpoint save directory at runtime. Reference attributes from the trainer's logger to
+        determine where to save checkpoints. The path for saving weights is set in this priority:
+
+        1.  The ``ModelCheckpoint``'s ``dirpath`` if passed in
+        2.  The ``Logger``'s ``log_dir`` if the trainer has loggers
+        3.  The ``Trainer``'s ``default_root_dir`` if the trainer has no loggers
+
+        The path gets extended with subdirectory "checkpoints".
+        """
+        if self.dirpath is not None:
+            # Short circuit if dirpath was passed to ModelCheckpoint
+            return self.dirpath
+        else:
+            # Use default_root_dir
+            return trainer.default_root_dir
+
     def _find_last_checkpoints(self, trainer: "pl.Trainer") -> set[str]:
         # Find all checkpoints in the folder
-        ckpt_path = self.__resolve_ckpt_dir(trainer) / "weights"
-        if self._fs.exists(ckpt_path):
+        if self._fs.exists(self.ckpt_dir):
             return {
                 os.path.normpath(p)
-                for p in self._fs.ls(ckpt_path, detail=False)
+                for p in self._fs.ls(self.ckpt_dir, detail=False)
                 if self.CHECKPOINT_NAME_LAST in os.path.split(p)[1]
             }
         return set()
@@ -295,6 +308,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         monitor_candidates: dict[str, torch.Tensor]
     ):
         assert self.monitor
+
         current = monitor_candidates.get(self.monitor)
         if self.check_monitor_top_k(trainer, current):
             assert current is not None
@@ -304,28 +318,13 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 monitor_candidates = monitor_candidates
             )
         elif self.verbose:
-            epoch = monitor_candidates.pop("epoch")
-            step  = monitor_candidates.pop("step")
             for c, v in monitor_candidates.items():
-                if "epoch" not in c:
-                    continue
-                c = c.replace("checkpoint/", "")
-                m = c.split("/")[0]
-                c = f"train_{m}" if "train" in c else f"val_{m}"
-                self.keys[c] = v
-            row1 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
-            row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
-            for _, v in self.keys.items():
-                row1 += f"{v:>12.6f} "
-                row2 += f"{v:>12.6f} "
-            row1 += f" {f'not in top {self.save_top_k}':<16.6s}"
-            row2 += f" {f'not in top {self.save_top_k}':<16.6s}\n"
-            
-            console.log(row1)
-            self.logger.write(row2)
-            self.logger.flush()
-    
-    def update_best_and_save(
+                if c in self.keys:
+                    self.keys[c] = v
+            self.keys["reach"] = f"not in top {self.save_top_k}"
+            self._log(data=self.keys)
+           
+    def _update_best_and_save(
         self,
         current           : torch.Tensor,
         trainer           : "pl.Trainer",
@@ -352,7 +351,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         )
         
         # Save the current score
-        self.current_score = current
+        self.current_score                = current
         self.best_k_models[str(filepath)] = current
         
         if len(self.best_k_models) == k:
@@ -365,57 +364,76 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         self.best_model_path  = _op(self.best_k_models, key=self.best_k_models.get)  # type: ignore[arg-type]
         self.best_model_score = self.best_k_models[self.best_model_path]
         
+        # Update value in :attr:`keys` first
         is_new_best = str(filepath) == str(self.best_model_path)
-        epoch = monitor_candidates.pop("epoch")
-        step  = monitor_candidates.pop("step")
         for c, v in monitor_candidates.items():
-            if "epoch" not in c:
-                continue
-            c = c.replace("checkpoint/", "")
-            m = c.split("/")[0]
-            c = f"train_{m}" if "train" in c else f"val_{m}"
-            self.keys[c] = v
+            if c in self.keys:
+                self.keys[c] = v
+        self.keys["reach"] = f"best" if is_new_best else f"top {k}"
+        
         if is_new_best:
-            if self.verbose and trainer.is_global_zero:
-                row1 = f"{epoch:>10d} {step:>10d} [red]{current:>16.6f}[" \
-                       f"default] "
-                row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
-                for _, v in self.keys.items():
-                    row1 += f"{v:>12.6f} "
-                    row2 += f"{v:>12.6f} "
-                row1 += f" [red]{'best':<16.6s}[default]"
-                row2 += f" {'best':<16.6s}\n"
-                console.log(row1)
-                self.logger.write(row2)
-            
             # Our extension
             trainer.save_checkpoint(
-                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.pt",
+                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.ckpt",
+            )
+            trainer.save_checkpoint(
+                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}-strip.pt",
                 weights_only = True
             )
-        else:
             if self.verbose and trainer.is_global_zero:
-                row1 = f"{epoch:>10d} {step:>10d} [orange1]{current:>16.6f}[" \
-                       f"default] "
-                row2 = f"{epoch:>10d} {step:>10d} {current:>16.6f} "
-                for _, v in self.keys.items():
-                    row1 += f"{v:>12.6f} "
-                    row2 += f"{v:>12.6f} "
-                row1 += f" [orange1]{f'top {k}':<16.6s}[default]"
-                row2 += f" {f'top {k}':<16.6s}\n"
-                console.log(row1)
-                self.logger.write(row2)
-        
-        self.logger.flush()
-        self._save_checkpoint(trainer=trainer, filepath=filepath)
-        
-        # Our extension
-        trainer.save_checkpoint(
-            filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.pt",
-            weights_only = True
-        )
+                self._log(data=self.keys)
+        else:
+            self._save_checkpoint(trainer=trainer, filepath=filepath)
+            # Our extension
+            trainer.save_checkpoint(
+                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.ckpt",
+            )
+            trainer.save_checkpoint(
+                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}-strip.pt",
+                weights_only = True
+            )
+            if self.verbose and trainer.is_global_zero:
+                self._log(data=self.keys)
         
         if del_filepath is not None and filepath != del_filepath:
             self._remove_checkpoint(trainer, del_filepath)
+    
+    def _log(self, data: dict | None = None):
+        if data is None or not isinstance(data, dict):
+            return
+        
+        # Logger
+        row = f""
+        for c, v in self.keys.items():
+            row += f"{v},"
+        self.logger.write(f"{row}\n")
+        self.logger.flush()
+        
+        # Console
+        row  = f""
+        row1 = f""
+        row2 = f""
+        for i, (c, v) in enumerate(data.items()):
+            if i > 0 and i % 6 == 0:
+                row  += f"{row1}\n{row2}\n"
+                row1  = f""
+                row2  = f""
+            if c in ["reach"]:
+                row1 += f"{c:>12} "
+                if "best" in v:
+                    row2 += f"[red]{v:>12}[default] "
+                elif "top" in v:
+                    row2 += f"[orange]{v:>12}[default] "
+                else:
+                    row2 += f"{v:>12} "
+            else:
+                row1 += f"{c:>12} "
+                if int(v) == v:
+                    row2 += f"{v:>12d} "
+                else:
+                    row2 += f"{v:>12.6f} "
+        if row1 != "" and row2 != "":
+            row += f"{row1}\n{row2}\n"
+        console.log(row)
     
 # endregion

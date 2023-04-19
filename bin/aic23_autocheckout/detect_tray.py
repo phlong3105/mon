@@ -19,7 +19,7 @@ _current_dir = mon.Path(__file__).absolute().parent
 def process_image(image: np.ndarray):
     h, w, c     = image.shape
     gray        = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    blurred     = cv2.GaussianBlur(gray, (5, 5), 0)
+    blurred     = cv2.GaussianBlur(gray, (7, 7), 0)
     scale       = 1
     delta       = 0
     grad_x      = cv2.Scharr(blurred, cv2.CV_16S, 1, 0, scale=scale, delta=delta, borderType=cv2.BORDER_DEFAULT)
@@ -50,71 +50,42 @@ def process_image(image: np.ndarray):
 @click.command()
 @click.option("--source",      default=mon.DATA_DIR/"aic23-autocheckout/testA/background/", type=click.Path(exists=True), help="Video filepath or directory.")
 @click.option("--destination", default=mon.DATA_DIR/"aic23-autocheckout/testA/tray/", type=click.Path(exists=False), help="Output video filepath or directory.")
-@click.option("--start-frame", default=None, type=int, help="Start/end frame.")
-@click.option("--end-frame",   default=None, type=int, help="Start/end frame.")
-@click.option("--save",        default=True, is_flag=True)
+@click.option("--extension",   default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--verbose",     default=True, is_flag=True)
 def detect_tray(
     source     : mon.Path,
     destination: mon.Path,
-    start_frame: int,
-    end_frame  : int,
-    save       : bool,
+    extension  : str,
     verbose    : bool
 ):
     assert source is not None and (mon.Path(source).is_dir() or mon.Path(source).is_video_file())
     
     source = mon.Path(source)
-    source = [source] if mon.Path(source).is_video_file() else list(source.glob("*"))
-    source = [s for s in source if s.is_video_file()]
-        
+    source = [source] if mon.Path(source).is_image_file() else list(source.glob("*"))
+    source = [s for s in source if s.is_image_file()]
+    source = sorted(source)
+    
     if destination is not None:
         destination = mon.Path(destination)
-        if destination.suffix in mon.VideoFormat.str_mapping():
-            destination = [destination]
-        else:
-            destination = [destination / f"{s.stem}.mp4" for s in source]
+        destination = [destination / f"{s.stem}.{extension}" for s in source]
     else:
-        destination = [s.parent / f"{s.stem}-tray.mp4" for s in source]
-    
-    for src, dst in zip(source, destination):
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        cap         = cv2.VideoCapture(str(src))
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        fps         = cap.get(cv2.CAP_PROP_FPS)
-        w           = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        h           = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        start_frame  = start_frame or 0
-        end_frame    = end_frame   or frame_count
-        if not end_frame >= start_frame:
-            raise ValueError(
-                f"start_frame must >= end_frame, but got {start_frame} and "
-                f"{end_frame}."
-            )
-        if save:
-            wrt = cv2.VideoWriter(str(dst), cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-        else:
-            wrt = None
-    
-        with mon.get_progress_bar() as pbar:
-            for i in pbar.track(
-                sequence    = range(frame_count),
-                total       = frame_count,
-                description = f"[bright_yellow] Detecting tray {src.name}"
-            ):
-                ret, image = cap.read()
-                if not ret:
-                    continue
-                if i < start_frame or i > end_frame:
-                    continue
-                result, _ = process_image(image=image)
-                if save:
-                    wrt.write(result)
-                if verbose:
-                    cv2.imshow("Image", result)
-                    if cv2.waitKey(1) == ord("q"):
-                        break
-                    
+        destination = [s.parent / f"{s.stem}-tray.{extension}" for s in source]
+
+    with mon.get_progress_bar() as pbar:
+        for i in pbar.track(
+            sequence    = range(len(source)),
+            total       = len(source),
+            description = f"[bright_yellow] Detecting tray"
+        ):
+            image = cv2.imread(str(source[i]))
+            image, ret = process_image(image=image)
+            destination[i].parent.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(str(destination[i]), image)
+            if verbose:
+                cv2.imshow("Tray", image)
+                if cv2.waitKey(1) == ord("q"):
+                    break
+
 # endregion
 
 

@@ -65,7 +65,7 @@ def train(
 ):
     # Load a model
     model = YOLO(model)  # load a pretrained model (recommended for training)
-    
+
     # Train the model
     args = {
         "task"           : task,

@@ -8,16 +8,16 @@ from __future__ import annotations
 import albumentations as A
 
 from mon.createml.config import default
-from mon.globals import RUN_DIR
+from mon.globals import RUN_DIR, DATA_DIR
 
 # region Basic
 
-root         = RUN_DIR / "train"
+root         = RUN_DIR/"train"
 project      = "hinet"
 model_name   = "hinet"
 model_config = "hinet.yaml"
 data_name    = "rain13k"
-num_classes  = 10
+num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [256, 256]
 
@@ -40,7 +40,7 @@ model = {
 	"project"    : project,        # A project name.
 	"phase"      : "training",     # The model's running phase.
 	"loss"       : {
-		"name": "psnr_loss", "max_val": 1.0, "weight": 0.5,
+		"name": "psnr_loss", "max_val": 1.0,
 	},          # Loss function for training the model.
 	"metrics"    : {
 	    "train": [{"name": "psnr"}],
@@ -82,8 +82,8 @@ model = {
 # region Data
 
 datamodule = {
-    "name"        : data_name,    # A root directory where the data is stored.
-    # "root"        : DATA_DIR / "a2i2-haze",
+    "name"        : data_name,
+    "root"        : DATA_DIR/"rain13k",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
@@ -105,8 +105,8 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
-		    "monitor": "checkpoint/psnr/train_epoch",  # Quantity to monitor.
-			"mode"   : "max",                          # 'min' or 'max'.
+		    "monitor": "train/psnr",  # Quantity to monitor.
+			"mode"   : "max",         # 'min' or 'max'.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,

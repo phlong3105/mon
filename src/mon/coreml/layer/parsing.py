@@ -77,7 +77,9 @@ def parse_model(
             args, ch = m.parse_layer(f=f, args=args, nc=nc, ch=ch, hparams=hparams)
         else:
             args, ch = m.parse_layer(f=f, args=args, ch=ch, hparams=hparams)
-        
+        if i == 0:
+            ch = ch[1:]
+
         # Create layers
         m_    = Sequential(*[m(*args) for _ in range(n)]) if n > 1 else m(*args)
         m_.i  = i

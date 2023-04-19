@@ -71,12 +71,12 @@ result_writer = {
 }
 moving_object = {
     "name"                 : "product",  # An object type.
-    "min_entering_distance": 100,   # Minimum distance when an object enters the ROI to be Confirmed.
-    "min_traveled_distance": 20,    # Minimum distance between first trajectory point with last trajectory point.
-    "min_hit_streak"       : 3,     # Minimum number of consecutive frames that track appears.
+    "min_entering_distance": 120,   # Minimum distance when an object enters the ROI to be Confirmed.
+    "min_traveled_distance": 5,     # Minimum distance between first trajectory point with last trajectory point.
+    "min_hit_streak"       : 5,     # Minimum number of consecutive frames that track appears.
     "max_age"              : 1,     # Maximum frame to wait until a dead track can be counted.
-    "min_confirms"         : 3,     # Minimum frames that the object is considered for counting.
-    "min_counting_distance": -50,   # Minimum distance to the ROI's center that the object is considered for counting.
+    "min_confirms"         : 5,     # Minimum frames that the object is considered for counting.
+    "min_counting_distance": -90,   # Minimum distance to the ROI's center that the object is considered for counting.
     "min_counting_iou"     : 0.9,   # Minimum IoU value between the ROI and the object that is considered for counting.
 }
 detector      = {
@@ -85,7 +85,7 @@ detector      = {
     "weight"        : _current_dir/"yolov8x6-aic23-autocheckout-mix-117-1920.pt",
     "image_size"    : 1024,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
-    "conf_threshold": 0.5,         # An object confidence threshold.
+    "conf_threshold": 0.6,         # An object confidence threshold.
     "iou_threshold" : 0.5,         # An IOU threshold for NMS.
     "max_detections": 3,           # Maximum number of detections/image.
     "device"        : 0,           # Cuda device, i.e. 0 or 0,1,2,3 or cpu.

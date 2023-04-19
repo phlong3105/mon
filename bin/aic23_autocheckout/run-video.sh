@@ -3,14 +3,19 @@
 machine=$HOSTNAME
 echo "$machine"
 
+# Input
 dataset=${1:-"aic23-autocheckout"}
 subset=${2:-"testA"}
 video=${3:-"all"}
 preprocess=${4:-"yes"}
 
-read -e -i "$dataset"    -p "Dataset [aic23-autocheckout]: " dataset
-read -e -i "$subset"     -p "Video [testA, testB]: " subset
-read -e -i "$video"      -p "Video [${subset}_1, ${subset}_2, ${subset}_3, ${subset}_4, all]: " video
+read -e -i "$dataset" -p "Dataset [aic23-autocheckout]: " dataset
+read -e -i "$subset"  -p "Video [testA, testB]: " subset
+if [ "$dataset" == "aic22-autocheckout" ]; then
+  read -e -i "$video" -p "Video [${subset}_1, ${subset}_2, ${subset}_3, ${subset}_4, ${subset}_5, all]: " video
+else
+  read -e -i "$video" -p "Video [${subset}_1, ${subset}_2, ${subset}_3, ${subset}_4, all]: " video
+fi
 read -e -i "$preprocess" -p "Preprocess [yes, no]: " preprocess
 
 # Initialization
@@ -39,12 +44,10 @@ else
   video_list=("$video")
 fi
 
-# Main loop
-for video in ${video_list[*]}; do
-  echo -e "\n$video"
-
-  # Preprocess
-  if [ "$preprocess" == "yes" ]; then
+# Preprocess
+if [ "$preprocess" == "yes" ]; then
+  for video in ${video_list[*]}; do
+    echo -e "\n$video"
 
     echo -e "\nConverting video"
     cd "${current_dir}" || exit
@@ -95,18 +98,22 @@ for video in ${video_list[*]}; do
       dataset.kind="video" \
       dataset.dilate=7
 
-    # echo -e "\nPerforming background subtraction"
-    # cd "${current_dir}" || exit
-    # python gen_background.py \
-    #   --source "${root_dir}/data/${dataset}/${subset}/convert/${video}" \
-    #  --destination "${root_dir}/data/${dataset}/${subset}/background/"
+    echo -e "\nPerforming background subtraction"
+    cd "${current_dir}" || exit
+    python gen_background.py \
+      --source "${root_dir}/data/${dataset}/${subset}/inpainting/${video}" \
+      --destination "${root_dir}/data/${dataset}/${subset}/background/${video}"
 
-    # echo -e "\nDetecting tray"
-    # cd "${current_dir}" || exit
-    # python detect_tray.py \
-    #   --source "${root_dir}/data/${dataset}/${subset}/background/${video}-bg" \
-    #  --destination "${root_dir}/data/${dataset}/${subset}/tray/${video}"
-  fi
-done
+    echo -e "\nDetecting tray"
+    cd "${current_dir}" || exit
+    python detect_tray.py \
+      --source "${root_dir}/data/${dataset}/${subset}/background/${video}" \
+      --destination "${root_dir}/data/${dataset}/${subset}/tray/${video}"
+  done
+fi
+
+# Main process
+cd "${current_dir}" || exit
+python run_camera.py --config "${subset}"
 
 cd "${root_dir}" || exit

@@ -62,13 +62,17 @@ def prepare_submission(
                 for j, x in enumerate(b):
                     if float(l[j][5]) < conf:
                         continue
+                    x[0] = x[0] if x[0] >= 0.0 else 0.0
+                    x[1] = x[1] if x[1] >= 0.0 else 0.0
+                    x[2] = x[2] if x[2] >= 0.0 else 0.0
+                    x[3] = x[3] if x[3] >= 0.0 else 0.0
                     out_file.write(
                         "vehicle "
-                        f"{x[0]:.02f} "
-                        f"{x[1]:.02f} "
-                        f"{x[2]:.02f} "
-                        f"{x[3]:.02f} "
-                        f"{float(l[j][5]):.02f}\n"
+                        f"{x[0]:.08f} "
+                        f"{x[1]:.08f} "
+                        f"{x[2]:.08f} "
+                        f"{x[3]:.08f} "
+                        f"{float(l[j][5]):.08f}\n"
                     )
                 out_file.close()
 

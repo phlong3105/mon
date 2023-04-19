@@ -793,7 +793,7 @@ class PSNRLoss(Loss):
         max_val  : float           = 1.0
     ):
         super().__init__(reduction=reduction)
-        self.mse = MSELoss(reduction=reduction)
+        self.mse     = MSELoss(reduction=reduction)
         self.max_val = max_val
     
     def __str__(self) -> str:

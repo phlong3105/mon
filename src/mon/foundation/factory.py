@@ -175,9 +175,10 @@ class Factory(dict):
             kwargs |= config_
         if name is None or name not in self:
             raise ValueError(
-                "name must be a valid keyword inside the registry."
+                f"name must be a valid keyword inside the registry, but got: "
+                f"{name}."
             )
-        
+
         obj = self[name](**kwargs)
         if getattr(obj, "name", None) is None:
             obj.name = humps.depascalize(humps.pascalize(name))
@@ -217,15 +218,15 @@ class Factory(dict):
             if isinstance(config, str):
                 name = config
             elif isinstance(config, dict):
-                name    = config.pop("name")
-                kwargs |= config
+                name = config.pop("name")
+                # kwargs |= config
             else:
                 raise ValueError(
                     f"item inside configs must be a str or dict, but got "
                     f"{type(config)}."
                 )
             
-            obj = self.build(name=name, to_dict=to_dict, **kwargs)
+            obj = self.build(name=name, to_dict=to_dict, **config)
             if obj is not None:
                 if to_dict:
                     objs |= obj

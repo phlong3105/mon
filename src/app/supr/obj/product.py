@@ -79,7 +79,7 @@ class Product(mon.MovingObject):
                     iou  = 1 - roi.calculate_iou(bbox=self.current.bbox)
                     if iou >= self.min_counting_iou \
                         and d >= self.min_counting_distance \
-                        or (abs(dx) <= 40):
+                        or (abs(dx) <= 30):
                         self.moving_state   = MovingState.TO_BE_COUNTED
                         self.counting_point = p2
                 # if roi.is_box_in_roi(bbox=self.current.bbox) <= 0:

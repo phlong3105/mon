@@ -22,7 +22,7 @@ _current_dir = mon.Path(__file__).absolute().parent
 @click.option("--project",        default="run/train", type=click.Path(exists=False), help="Project name.")
 @click.option("--name",           default="exp", help="Experiment name.")
 @click.option("--source",         default=mon.DATA_DIR, type=click.Path(exists=True), help="Source directory for images or videos.")
-@click.option("--imgsz",          default=1280, type=int,  help="Size of input images as integer or w,h.")
+@click.option("--imgsz",          default=1280, type=int,   help="Size of input images as integer or w,h.")
 @click.option("--conf",           default=0.25, type=float, help="Object confidence threshold for detection.")
 @click.option("--iou",            default=0.7,  type=float, help="Intersection over union (IoU) threshold for NMS.")
 @click.option("--max-det",        default=300,  type=int,   help="Maximum number of detections per image.")

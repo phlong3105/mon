@@ -5,6 +5,7 @@ path : ../mon/data/aic23-autocheckout/
 train: [
   train/synthetic-01/images/,
   train/synthetic-02/images/,
+  train/synthetic-03/images/,
   train/testA-01/images/,
   train/testA-02/images/,
 ] 

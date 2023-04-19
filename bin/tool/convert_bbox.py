@@ -17,8 +17,8 @@ _current_dir = mon.Path(__file__).absolute().parent
 # region Functions
 
 @click.command()
-@click.option("--image-dir",   default=mon.DATA_DIR/"aic23-autocheckout/train/synthetic-01/images", type=click.Path(exists=True), help="Image directory.")
-@click.option("--label-dir",   default=mon.DATA_DIR/"aic23-autocheckout/train/synthetic-01/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
+@click.option("--image-dir",   default=mon.DATA_DIR/"aic23-autocheckout/train/synthetic-03/images", type=click.Path(exists=True), help="Image directory.")
+@click.option("--label-dir",   default=mon.DATA_DIR/"aic23-autocheckout/train/synthetic-03/labels-voc", type=click.Path(exists=True), help="Bounding bbox directory.")
 @click.option("--output-dir",  default=None, type=click.Path(exists=False), help="Output directory.")
 @click.option("--from-format", default="voc",  type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
 @click.option("--to-format",   default="yolo", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")

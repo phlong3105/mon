@@ -19,7 +19,7 @@ console = mon.console
 
 @click.command()
 @click.option(
-    "--config", default="testA",
+    "--config", default="testA_2",
     type=click.Choice([
         "testA_1", "testA_2", "testA_3", "testA_4", "testA_5", "testA",
         "testB_1", "testB_2", "testB_3", "testB_4", "testB_5", "testB",

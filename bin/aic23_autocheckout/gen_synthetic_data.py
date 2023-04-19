@@ -152,10 +152,10 @@ def random_patch_image_box(
 
 
 @click.command()
-@click.option("--image-dir",         default=mon.DATA_DIR/"aic23-autocheckout/train/patches", type=click.Path(exists=True), help="Image directory.")
+@click.option("--image-dir",         default=mon.DATA_DIR/"aic23-autocheckout/train/patches-denoise-deblur", type=click.Path(exists=True), help="Image directory.")
 @click.option("--label-dir",         default=mon.DATA_DIR/"aic23-autocheckout/train/segmentation-labels", type=click.Path(exists=True), help="Binary mask directory.")
 @click.option("--background-dir",    default=mon.DATA_DIR/"aic23-autocheckout/train/backgrounds", type=click.Path(exists=True), help="Background image directory.")
-@click.option("--output-dir",        default=mon.DATA_DIR/"aic23-autocheckout/train/synthetic", type=click.Path(exists=False), help="Output directory.")
+@click.option("--output-dir",        default=mon.DATA_DIR/"aic23-autocheckout/train/synthetic-03", type=click.Path(exists=False), help="Output directory.")
 @click.option("--patches-per-image", default=3,     type=int, help="Number of patches to place on an image.")
 @click.option("--iou-threshold",     default=0.0,   type=float)
 @click.option("--bbox-format",       default="voc", type=click.Choice(["voc", "coco", "yolo"], case_sensitive=False), help="Bounding bbox format.")
@@ -192,12 +192,12 @@ def gen_synthetic_image(
         ):
             file_name = str(f).split(".")[0]
             seg_file  = f"{file_name}_seg.jpg"
-            seg_file  = seg_file.replace("patches", "segmentation-labels")
+            seg_file  = seg_file.replace(str(f.parent.name), "segmentation-labels")
             seg_file  = mon.Path(seg_file)
             if f.is_image_file() and seg_file.is_image_file():
                 image_files.append(f)
                 masks_files.append(seg_file)
-    
+            
     # Shuffle
     shuffle          = mon.shuffle_dict(dict(zip(image_files, masks_files)))
     image_files      = list(shuffle.keys())

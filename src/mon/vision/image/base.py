@@ -708,7 +708,7 @@ def to_nparray(
     if isinstance(image, torch.Tensor):
         image = image.detach()
         image = image.cpu().numpy()
-    image = denormalize_image(image=image) if denormalize else image
+    image = denormalize_image(image=image).astype(np.uint) if denormalize else image
     image = to_channel_last(image=image)
     if not keepdim:
         image = to_3d(image=image)

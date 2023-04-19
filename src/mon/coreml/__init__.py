@@ -14,6 +14,7 @@ from __future__ import annotations
 import mon.coreml.callback
 import mon.coreml.data
 import mon.coreml.device
+import mon.coreml.factory
 import mon.coreml.layer
 import mon.coreml.logger
 import mon.coreml.loop
@@ -24,6 +25,7 @@ import mon.coreml.strategy
 from mon.coreml.callback import *
 from mon.coreml.data import *
 from mon.coreml.device import *
+from mon.coreml.factory import *
 from mon.coreml.layer import *
 from mon.coreml.logger import *
 from mon.coreml.loop import *

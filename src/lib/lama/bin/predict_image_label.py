@@ -52,7 +52,7 @@ def main(predict_config: OmegaConf):
         train_config.training_model.predict_only = True
         train_config.visualizer.kind = 'noop'
 
-        out_ext = predict_config.get('out_ext', '.jpg')
+        out_ext = predict_config.get('out_ext', '.png')
         
         checkpoint_path = os.path.join(predict_config.model.path, 'models', predict_config.model.checkpoint)
         model = load_checkpoint(train_config, checkpoint_path, strict=False, map_location='cpu')
@@ -71,8 +71,8 @@ def main(predict_config: OmegaConf):
         
         #
         dataset = InpaintingImageLabelDataset(
-            image_dir=predict_config.image_dir,
-            label_dir=predict_config.label_dir,
+            image_dir = predict_config.image_dir,
+            label_dir = predict_config.label_dir,
             **predict_config.dataset
         )
         
@@ -98,7 +98,7 @@ def main(predict_config: OmegaConf):
 
             cur_res      = np.clip(cur_res * 255, 0, 255).astype('uint8')
             cur_res      = cv2.cvtColor(cur_res, cv2.COLOR_RGB2BGR)
-            cur_res_name = output_dir / f"{img_i:06}{out_ext}"
+            cur_res_name = output_dir / f"{(img_i + 1):06}{out_ext}"
             cv2.imwrite(str(cur_res_name), cur_res)
             if predict_config.get('verbose', False):
                 cv2.imshow("Inpainting", cur_res)

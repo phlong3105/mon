@@ -21,10 +21,10 @@ console = mf.console
 
 hosts = {
 	"lp-labdesktop01-ubuntu": {
-		"config"     : "",
+		"config"     : "hinet_gt_rain",
         "root"       : RUN_DIR/"train",
-        "project"    : None,
-        "name"       : None,
+        "project"    : "hinet",
+        "name"       : "hinet-gt-rain",
         "weights"    : None,
         "batch_size" : 4,
         "image_size" : (256, 256),
@@ -32,7 +32,21 @@ hosts = {
 		"devices"    : 1,
         "max_epochs" : None,
         "max_steps"  : None,
-		"strategy"   : None,
+		"strategy"   : "auto",
+	},
+    "vsw-ws01": {
+		"config"     : "hinet_gt_rain",
+        "root"       : RUN_DIR/"train",
+        "project"    : "hinet",
+        "name"       : "hinet-gt-rain",
+        "weights"    : None,
+        "batch_size" : 4,
+        "image_size" : (512, 512),
+        "accelerator": "auto",
+		"devices"    : 1,
+        "max_epochs" : None,
+        "max_steps"  : None,
+		"strategy"   : "auto",
 	},
     "vsw-ws02": {
 		"config"     : "",
@@ -46,7 +60,7 @@ hosts = {
 		"devices"    : 1,
         "max_epochs" : None,
         "max_steps"  : None,
-		"strategy"   : None,
+		"strategy"   : "auto",
 	},
     "vsw-ws03": {
 		"config"     : "",
@@ -60,7 +74,7 @@ hosts = {
 		"devices"    : 1,
         "max_epochs" : None,
         "max_steps"  : None,
-		"strategy"   : None,
+		"strategy"   : "auto",
 	},
 }
 
@@ -76,12 +90,12 @@ hosts = {
 @click.option("--name",        default=None,  type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--weights",     default=None,  type=click.Path(exists=False), help="Weights paths.")
 @click.option("--batch-size",  default=8,     type=int, help="Total Batch size for all GPUs.")
-@click.option("--image-size",  default=None,  type=int, nargs="+", help="Image sizes.")
+@click.option("--image-size",  default=None,  type=int, help="Image sizes.")
 @click.option("--accelerator", default="gpu", type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False))
 @click.option("--devices",     default=0,     type=int, help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
 @click.option("--max-epochs",  default=None,  type=int, help="Stop training once this number of epochs is reached.")
 @click.option("--max-steps",   default=None,  type=int, help="Stop training once this number of steps is reached.")
-@click.option("--strategy",    default=None,  type=int, help="Supports different training strategies with aliases as well custom strategies.")
+@click.option("--strategy",    default=None,  type=str, help="Supports different training strategies with aliases as well custom strategies.")
 def train(
     config     : mf.Path | str,
     root       : mf.Path,
@@ -124,16 +138,16 @@ def train(
     # Update arguments
     args = mf.get_module_vars(config_args)
     args["hostname"]     = hostname
-    args["config_file"]  = config_args.__file__,
-    args["data"]        |= {
+    args["config_file"]  = config_args.__file__
+    args["datamodule"]  |= {
         "image_size": image_size,
         "batch_size": batch_size,
     }
     args["model"]       |= {
-        "weights": weights,
-        "name"   : name,
-        "root"   : root,
-        "project": project,
+        "weights" : weights,
+        "fullname": name,
+        "root"    : root,
+        "project" : project,
     }
     args["trainer"]     |= {
         "accelerator": accelerator,
@@ -156,18 +170,17 @@ def _train(args: dict):
     args["model"]["classlabels"] = datamodule.classlabels
     model: coreml.Model          = MODELS.build(config=args["model"])
     model.phase                  = "training"
-    
+
     mf.print_dict(args, title=model.fullname)
     console.log("[green]Done")
-    
+
     # Trainer
     console.rule("[bold red]2. SETUP TRAINER")
-    mf.copy_file(src=args["config_file"], dst=model.root)
-    
-    ckpt      = coreml.get_latest_checkpoint(dirpath=model.weights_dir)
+    mf.copy_file(src=args["config_file"], dst=model.root/"config.py")
+
+    ckpt      = coreml.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
     callbacks = CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])
-    enable_checkpointing = any(isinstance(cb, lcallbacks.Checkpoint) for cb in callbacks)
-    
+
     logger = []
     for k, v in args["trainer"]["logger"].items():
         if k == "tensorboard":
@@ -176,7 +189,7 @@ def _train(args: dict):
     
     args["trainer"]["callbacks"]            = callbacks
     args["trainer"]["default_root_dir"]     = model.root
-    args["trainer"]["enable_checkpointing"] = enable_checkpointing
+    args["trainer"]["enable_checkpointing"] = any(isinstance(cb, lcallbacks.Checkpoint) for cb in callbacks)
     args["trainer"]["logger"]               = logger
     args["trainer"]["num_sanity_val_steps"] = (0 if (ckpt is not None) else args["trainer"]["num_sanity_val_steps"])
     

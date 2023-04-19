@@ -279,6 +279,7 @@ def copy_file(src: Path | str, dst: Path | str):
         src: The path to the original file.
         dst: The destination path.
     """
+    Path(dst).parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src=str(src), dst=str(dst))
 
 

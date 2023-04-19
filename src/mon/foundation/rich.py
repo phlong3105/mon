@@ -52,7 +52,7 @@ rich_console_theme = theme.Theme(
 
 console = rich.console.Console(
     color_system    = "auto",
-    log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
+    log_time_format = "[%m/%d/%Y %H:%M:%S]",
     soft_wrap       = False,
     width           = 150,
     theme           = rich_console_theme,
@@ -60,7 +60,7 @@ console = rich.console.Console(
 
 error_console = rich.console.Console(
     color_system    = "auto",
-    log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
+    log_time_format = "[%m/%d/%Y %H:%M:%S]",
     soft_wrap       = False,
     width           = 150,
     stderr          = True,
@@ -77,7 +77,7 @@ def get_console() -> rich.console.Console:
     if console is None:
         console = rich.console.Console(
             color_system    = "auto",
-            log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
+            log_time_format = "[%m/%d/%Y %H:%M:%S]",
             soft_wrap       = False,
             width           = 200,
             theme           = rich_console_theme,
@@ -93,7 +93,7 @@ def get_error_console() -> rich.console.Console:
     if error_console is None:
         error_console = rich.console.Console(
             color_system    = "auto",
-            log_time_format = "[%m/%d/%Y %H:%M:%S.%f]",
+            log_time_format = "[%m/%d/%Y %H:%M:%S]",
             soft_wrap       = False,
             width           = 200,
             stderr          = True,
@@ -116,9 +116,9 @@ def get_download_bar() -> progress.Progress:
     """
     return progress.Progress(
         progress.TextColumn(
-            console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
-            justify="left",
-            style="log.time",
+            console.get_datetime().strftime("[%x %H:%M:%S]"),
+            justify = "left",
+            style   = "log.time",
         ),
         progress.TextColumn("{task.description}", justify="right"),
         progress.BarColumn(bar_width=None),
@@ -143,8 +143,9 @@ def get_progress_bar() -> progress.Progress:
     """
     return progress.Progress(
         progress.TextColumn(
-            console.get_datetime().strftime("[%x %H:%M:%S:%f]"),
-            justify="left", style="log.time"
+            console.get_datetime().strftime("[%x %H:%M:%S]"),
+            justify = "left",
+            style   = "log.time"
         ),
         progress.TextColumn("{task.description}", justify="right"),
         progress.BarColumn(bar_width=None, finished_style="green"),
@@ -173,8 +174,8 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     
     def __init__(
         self,
-        device: int = 0,
-        unit: MemoryUnit = MemoryUnit.GB,
+        device      : int                 = 0,
+        unit        : MemoryUnit          = MemoryUnit.GB,
         table_column: table.Column | None = None
     ):
         super().__init__(table_column=table_column)
@@ -187,7 +188,7 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
         """
         total, used, free = pynvml.get_device_memory(device=self.device)
         memory_status = f"{used:.1f}/{total:.1f}{self.unit.value}"
-        memory_text = text.Text(memory_status, style="bright_yellow")
+        memory_text   = text.Text(memory_status, style="bright_yellow")
         return memory_text
 
 
@@ -206,8 +207,8 @@ class ProcessedItemsColumn(progress.ProgressColumn):
         """Return a :class:`rich.text.Text` object showing the number of
         processed items.
         """
-        completed = int(task.completed)
-        total = int(task.total)
+        completed     = int(task.completed)
+        total         = int(task.total)
         download_text = f"{completed}/{total}"
         download_text = text.Text(download_text, style="progress.download")
         return download_text

@@ -29,19 +29,19 @@ See Also: :class:`lightning.pytorch.callbacks.lr_monitor.LearningRateMonitor`
 
 model_checkpoint = {
     "name"                   : "model_checkpoint",
-    "auto_insert_metric_name": True,   # The checkpoints filenames will contain the metric name.
-    "dirpath"                : None,   # Directory to save the model file.
-    "every_n_epochs"         : 1,      # Number of epochs between checkpoints.
-    "every_n_train_steps"    : 0,      # Number of training steps between checkpoints (0 = disable).
-    "filename"               : None,   # Checkpoint filename.
-    "mode"                   : "min",  # 'min' or 'max'.
-    "monitor"                : "checkpoint/loss/val_epoch",  # Quantity to monitor.
-    "save_last"              : True,   # Save an exact copy of the checkpoint to a file `last.ckpt`.
-    "save_on_train_epoch_end": None,   # Run checkpointing at the end of the training epoch.
-    "save_top_k"             : 1,      # Save the best k models.
-    "save_weights_only"      : True,   # Only the model's weights will be saved.
-    "train_time_interval"    : None,   # Checkpoints are monitored at the specified time interval.
-    "verbose"                : True,   # Verbosity mode.
+    "auto_insert_metric_name": True,        # The checkpoints filenames will contain the metric name.
+    "dirpath"                : None,        # Directory to save the model file.
+    "every_n_epochs"         : 1,           # Number of epochs between checkpoints.
+    "every_n_train_steps"    : 0,           # Number of training steps between checkpoints (0 = disable).
+    "filename"               : None,        # Checkpoint filename.
+    "mode"                   : "min",       # 'min' or 'max'.
+    "monitor"                : "loss/val",  # Quantity to monitor.
+    "save_last"              : True,        # Save an exact copy of the checkpoint to a file `last.ckpt`.
+    "save_on_train_epoch_end": None,        # Run checkpointing at the end of the training epoch.
+    "save_top_k"             : 1,           # Save the best k models.
+    "save_weights_only"      : False,       # Only the model's weights will be saved.
+    "train_time_interval"    : None,        # Checkpoints are monitored at the specified time interval.
+    "verbose"                : True,        # Verbosity mode.
 }
 """
 See Also: :class:`lightning.pytorch.callbacks.model_checkpoint.ModelCheckpoint`
@@ -56,7 +56,9 @@ See Also: :class:`lightning.pytorch.callbacks.rich_model_summary.RichModelSummar
 """
 
 rich_progress_bar = {
-    "name": "rich_progress_bar",
+    "name"        : "rich_progress_bar",
+    "refresh_rate": 1,
+    "leave"       : False,
 }
 """
 See Also: :class:`lightning.pytorch.callbacks.progress.rich_progress.RichProgressBar`
@@ -155,9 +157,7 @@ debug = {
 
 trainer = {
     "accelerator"                      : "auto",  # 'cpu', 'gpu', 'tpu', 'ipu', 'hpu', 'mps', 'auto'.
-    "accumulate_grad_batches"          : None,    # Accumulates grads every k batches.
-    "auto_lr_find"                     : False,   # Find the initial learning for faster convergence.
-    "auto_scale_batch_size"            : False,   # Find the largest batch size that can fit into memory.
+    "accumulate_grad_batches"          : 1,       # Accumulates grads every k batches.
     "benchmark"                        : None,
     "callbacks"                        : None,    # Add a callback or list of callbacks.
     "check_val_every_n_epoch"          : 1,       # Run validation loop every after every `n` training epochs.
@@ -183,8 +183,6 @@ trainer = {
     "max_time"                         : None,    # Stop training after this amount of time has passed.
     "min_epochs"                       : None,    # Force training for at least these many epochs.
     "min_steps"                        : None,    # Force training for at least these many steps.
-    "move_metrics_to_cpu"              : False,
-    "multiple_trainloader_mode"        : "max_size_cycle",  # 'max_size_cycle' or 'min_size'.
     "num_nodes"                        : 1,       # Number of GPU nodes for distributed training.
     "num_sanity_val_steps"             : 0,       # Sanity check runs `n` validation batches before starting the training routine.
     "overfit_batches"                  : 0.0,     # Overfit training/validation data (float = fraction, int = num_batches).
@@ -192,10 +190,9 @@ trainer = {
     "precision"                        : 32,      # Double precision (64), full precision (32), half precision (16) or bfloat16 precision (bf16).
     "profiler"                         : None,    # Profile individual steps during training and assist in identifying bottlenecks.
     "reload_dataloaders_every_n_epochs": 0,
-    "replace_sampler_ddp"              : True,
     "strategy"                         : None,
     "sync_batchnorm"                   : False,   # Synchronize batch norm layers between process groups/whole world.
-    "track_grad_norm"                  : -1,
+    "use_distributed_sampler"          : True,
     "val_check_interval"               : 1.0,     # How often to check the validation set (float = fraction of training epoch, int = fixed number of training batches).
 }
 """

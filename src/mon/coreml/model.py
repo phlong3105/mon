@@ -166,18 +166,18 @@ def match_state_dicts(
 
 
 def strip_optimizer(weight_file: str, new_file: str | None = None):
-    """Strip the optimizer from a saved weight file to finalize the training
+    """Strip the optimizer from a saved weights file to finalize the training
     process.
     
     Args:
-        weight_file: A PyTorch saved weight filepath.
+        weight_file: A PyTorch saved weights filepath.
         new_file: A filepath to save the stripped weights. If :param:`new_file`
             is given, save the weights as a new file. Otherwise, overwrite the
             :param:`weight_file`.
     """
     if not pathlib.Path(weight_file).is_weights_file():
         raise ValueError(
-            f"weight_file must be a valid path to a weight file, but got "
+            f"weight_file must be a valid path to a weights file, but got "
             f"{pathlib}."
         )
     
@@ -220,7 +220,7 @@ def attempt_load(
     
     Args:
         model: A PyTorch :class:`nn.Module` or a :class:`Model`.
-        weights: A weight dictionary or a checkpoint filepath.
+        weights: Weights dictionary or a checkpoint filepath.
         name: A name of the model.
         config: A configuration dictionary or a YAML filepath containing the
             building configuration of the model.
@@ -410,7 +410,6 @@ class Model(lightning.LightningModule, ABC):
     Attributes:
         configs: A dictionary containing all configurations of the model.
         zoo: A dictionary containing all pretrained weights of the model.
-        map_weights: A dictionary mapping pretrained weights to model's layers.
         
     Args:
         config: The model's configuration that is used to build the model.
@@ -429,16 +428,16 @@ class Model(lightning.LightningModule, ABC):
             parsing.
         classlabels: A :class:`mon.coreml.data.label.ClassLabels` object that
             contains all labels in the dataset. Defaults to None.
-        weights: The model's weight. Any of:
+        weights: The model's weights. Any of:
             - A state dictionary.
             - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
-            - A path to a weight or ckpt file.
+            - A path to a weights file or ckpt file.
         name: The model's name. Defaults to None mean it will be
             :attr:`self.__class__.__name__`. .
         variant: The model's variant. For example, :param:`name` is 'yolov8' and
             :param:`variant` is 'yolov8x'. Defaults to None mean it will be same
             as :param:`name`.
-        fullname: The model's fullname to save the checkpoint or weight. It
+        fullname: The model's fullname to save the checkpoint or weights. It
             should have the following format:
             {name}/{variant}-{dataset}-{postfix}. Defaults to None mean it will
             be same as :param:`name`.
@@ -454,9 +453,8 @@ class Model(lightning.LightningModule, ABC):
         verbose: Verbosity. Defaults to True.
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+    configs = {}
+    zoo     = {}
     
     def __init__(
         self,
@@ -513,7 +511,7 @@ class Model(lightning.LightningModule, ABC):
         self.print_info()
         # Set phase to freeze or unfreeze layers
         self.phase = phase
-    
+
     @property
     def name(self) -> str:
         return self._name
@@ -558,7 +556,7 @@ class Model(lightning.LightningModule, ABC):
             self._root = self._root / self.fullname
         
         self._debug_dir = self._root / "debug"
-        self._ckpt_dir  = self._root / "weight"
+        self._ckpt_dir  = self._root / "weights"
     
     @property
     @abstractmethod
@@ -712,11 +710,11 @@ class Model(lightning.LightningModule, ABC):
         
         self._train_metrics = self.create_metrics(metrics=metrics)
         # This is a simple hack since LightningModule needs the
-        # metric to be defined with self.<metric>. Here we dynamically
-        # add the metric attribute to the class.
+        # metric to be defined with self.<metric>. So, here we
+        # dynamically add the metric attribute to the class.
         if self._train_metrics:
             for metric in self._train_metrics:
-                name = f"train_{metric.name}"
+                name = f"train/{metric.name}"
                 setattr(self, name, metric)
     
     @property
@@ -725,17 +723,14 @@ class Model(lightning.LightningModule, ABC):
     
     @val_metrics.setter
     def val_metrics(self, metrics: Any):
-        """Assign val metrics. See Also: :meth:`self.train_metrics()`."""
+        """Assign val metrics. Similar to: :meth:`self.train_metrics()`."""
         if isinstance(metrics, dict) and "val" in metrics:
             metrics = metrics.get("val", metrics)
         
         self._val_metrics = self.create_metrics(metrics)
-        # This is a simple hack since LightningModule needs the
-        # metric to be defined with self.<metric>. Here we dynamically
-        # add the metric attribute to the class.
         if self._val_metrics:
             for metric in self._val_metrics:
-                name = f"val_{metric.name}"
+                name = f"val/{metric.name}"
                 setattr(self, name, metric)
     
     @property
@@ -744,17 +739,14 @@ class Model(lightning.LightningModule, ABC):
     
     @test_metrics.setter
     def test_metrics(self, metrics: Any):
-        """Assign test metrics. See Also: :meth:`self.train_metrics()`."""
+        """Assign test metrics. Similar to: :meth:`self.train_metrics()`."""
         if isinstance(metrics, dict) and "test" in metrics:
             metrics = metrics.get("test", metrics)
         
         self._test_metrics = self.create_metrics(metrics)
-        # This is a simple hack since LightningModule needs the
-        # metric to be defined with self.<metric>. Here we dynamically
-        # add the metric attribute to the class.
         if self._test_metrics:
             for metric in self._test_metrics:
-                name = f"test_{metric.name}"
+                name = f"test/{metric.name}"
                 setattr(self, name, metric)
     
     @staticmethod
@@ -802,6 +794,10 @@ class Model(lightning.LightningModule, ABC):
                 self._debug.wait_time = 0.01
     
     # Initialize Model
+    
+    def create_dir(self):
+        for path in [self.root, self.ckpt_dir, self.debug_dir]:
+            path.mkdir(parents=True, exist_ok=True)
     
     def parse_model(self) -> tuple[nn.Sequential, list[int], list[dict]]:
         """Build the model. You have 2 options for building a model: (1) define
@@ -878,7 +874,7 @@ class Model(lightning.LightningModule, ABC):
     
     @abstractmethod
     def init_weights(self, model: nn.Module):
-        """Initialize model's weight."""
+        """Initialize model's weights."""
         pass
     
     def load_weights(self):
@@ -898,7 +894,7 @@ class Model(lightning.LightningModule, ABC):
                 model_dir = self.zoo_dir,
             )
             if self.verbose:
-                console.log(f"Load weight from: {self.weights}!")
+                console.log(f"Load weights from: {self.weights}!")
         else:
             error_console.log(
                 f"[yellow]Cannot load from weights: {self.weights}!"
@@ -1042,18 +1038,15 @@ class Model(lightning.LightningModule, ABC):
         x     = input
         y, dt = [], []
         for m in self.model:
-            
             # console.log(f"{m.i}")
-            
-            if m.f != -1:  # Get features from previous layer
+            if m.f != -1:  # Get features from the previous layer
                 if isinstance(m.f, int):
                     x = y[m.f]  # From directly previous layer
                 else:
                     x = [x if j == -1 else y[j] for j in m.f]  # From earlier layers
-            
             x = m(x)  # pass features through current layer
             y.append(x if m.i in self.save else None)
-        
+
         if out_index > -1 and out_index in self.save:
             output = y[out_index]
         else:
@@ -1064,18 +1057,16 @@ class Model(lightning.LightningModule, ABC):
     
     def on_fit_start(self):
         """Called at the beginning of fit."""
-        for path in [self.root, self.ckpt_dir, self.debug_dir]:
-            path.mkdir(parents=True, exist_ok=True)
-    
+        self.create_dir()
+
     def on_train_epoch_start(self):
         """Called in the training loop at the beginning of the epoch."""
         self.epoch_step = 0
     
     def training_step(
         self,
-        batch        : Any,
-        batch_idx    : int,
-        optimizer_idx: int,
+        batch    : Any,
+        batch_idx: int,
         *args, **kwargs
     ) -> StepOutput | None:
         """Here you compute and return the training loss, and some additional
@@ -1085,8 +1076,6 @@ class Model(lightning.LightningModule, ABC):
             batch: The output of :class:`~torch.utils.data.DataLoader`. It can
                 be a tensor, tuple or list.
             batch_idx: An integer displaying index of this batch.
-            optimizer_idx: When using multiple optimizers, this argument will
-                also be present.
             
         Return:
             Any of:
@@ -1095,100 +1084,87 @@ class Model(lightning.LightningModule, ABC):
                   'loss'.
                 - None, training will skip to the next batch.
         """
+        # Forward
         input, target, extra = batch[0], batch[1], batch[2:]
         pred, loss = self.forward_loss(
             input  = input,
             target = target,
             *args, **kwargs
         )
-        return {
-            "loss"  : loss,
-            "input" : input,
-            "target": target,
-            "pred"  : pred
-        }
-    
-    def training_step_end(self, step_output: StepOutput) -> StepOutput:
-        """Use this when training with dp because :meth:`training_step` will
-        operate on only part of the batch. However, this is still optional and
-        only needed for things like softmax or NCE loss.
-        
-        Note:
-            If you later switch to ddp or some other mode, this will still be
-            called so that you don't have to change your code.
-        
-        Args:
-            step_output: What you return in `training_step` for each batch part.
-        """
-        if not isinstance(step_output,  dict):
-            return step_output
-        
-        # Gather results
-        # For DDP strategy, gather outputs from multiple devices
-        if self.trainer.num_devices > 1:
-            step_output = self.all_gather(step_output)
-        
-        loss   = step_output["loss"]    # losses from each device
-        input  = step_output["input"]   # images from each device
-        target = step_output["target"]  # ground-truths from each device
-        pred   = step_output["pred"]    # predictions from each device
-        
-        # Tensors
-        if self.trainer.num_devices > 1:
-            input  = input.flatten(start_dim=0, end_dim=1)
-            target = target.flatten(start_dim=0, end_dim=1)
-            pred   = pred.flatten(start_dim=0, end_dim=1)
-        
         # Loss
-        loss = loss.mean() if loss is not None else None
-        self.ckpt_log_scalar(f"checkpoint/loss/train_step", loss)
-        # self.tb_log(f"{loss_tag}", loss, "step")
-        
-        # Metrics
+        self.log(
+            name           = f"train/loss",
+            value          = loss,
+            prog_bar       = False,
+            logger         = True,
+            on_step        = True,
+            on_epoch       = True,
+            sync_dist      = True,
+            rank_zero_only = True,
+            batch_size     = 1,
+        )
+        # Metric
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
                 value = metric(pred, target)
-                self.ckpt_log_scalar(f"checkpoint/{metric.name}/train_step", value, True)
-                # self.tb_log(f"{metric.name}/train_step", value, "step")
-        
+                self.log(
+                    name           = f"train/{metric.name}",
+                    value          = value,
+                    prog_bar       = False,
+                    logger         = True,
+                    on_step        = True,
+                    on_epoch       = True,
+                    sync_dist      = True,
+                    rank_zero_only = True,
+                    batch_size     = 1,
+                )
+        # Debug
         self.epoch_step += 1
-        return {
-            "loss": loss,
-            # "input" : input,
-            # "target": target,
-            # "pred"  : pred,
-        }
-    
-    def training_epoch_end(self, outputs: EpochOutput):
-        """Called at the end of the training epoch with the outputs of all
-        training steps. Use this in case you need to do something with all the
-        outputs returned by :meth:`training_step`.
-        
-        Args:
-            outputs: A list of outputs you defined in :meth:`training_step`.
+        return loss
+
+    def on_train_epoch_end(self):
+        """Called in the training loop at the very end of the epoch."""
+        for i, metric in enumerate(self.train_metrics):
+            # value = metric.compute()
+            metric.reset()
         """
         # Loss
-        loss = torch.stack([x["loss"] for x in outputs]).mean()
-        self.ckpt_log_scalar(f"checkpoint/loss/train_epoch", loss)
-        self.tb_log_scalar(f"loss/train_epoch", loss, "epoch")
-        
+        loss = torch.stack([x["loss"] for x in epoch_output]).mean()
+        if self.trainer.is_global_zero:
+            self.log(
+                name      = f"loss/train_epoch",
+                value     = loss,
+                prog_bar  = False,
+                on_step   = False,
+                on_epoch  = True,
+                sync_dist = True,
+            )
+            self.tb_log_scalar(f"loss/train_epoch", loss, "epoch")
         # Metrics
         if self.train_metrics:
             for i, metric in enumerate(self.train_metrics):
                 value = metric.compute()
-                self.ckpt_log_scalar(f"checkpoint/{metric.name}/train_epoch", value)
-                self.tb_log_scalar(f"{metric.name}/train_epoch", value, "epoch")
                 metric.reset()
-    
+                if self.trainer.is_global_zero:
+                    self.log(
+                        name      = f"{metric.name}/train_epoch",
+                        value     = value,
+                        prog_bar  = False,
+                        on_step   = False,
+                        on_epoch  = True,
+                        sync_dist = True,
+                    )
+                    self.tb_log_scalar(f"{metric.name}/train_epoch", value, "epoch")
+        """
+
     def on_validation_epoch_start(self):
         """Called in the validation loop at the beginning of the epoch."""
         self.epoch_step = 0
     
     def validation_step(
         self,
-        batch         : Any,
-        batch_idx     : int,
-        dataloader_idx: int,
+        batch    : Any,
+        batch_idx: int,
         *args, **kwargs
     ) -> StepOutput | None:
         """Operates on a single batch of data from the validation set. In this
@@ -1198,9 +1174,7 @@ class Model(lightning.LightningModule, ABC):
         Args:
             batch: The output of :class:`~torch.utils.data.DataLoader`.
             batch_idx: The index of this batch.
-            dataloader_idx: The index of the dataloader that produced this batch.
-                (only if multiple val dataloaders used).
-        
+
         Return:
             - Any object or value.
             - None, validation will skip to the next batch.
@@ -1211,49 +1185,34 @@ class Model(lightning.LightningModule, ABC):
             target = target,
             *args, **kwargs
         )
-        return {
-            "loss"  : loss,
-            "input" : input,
-            "target": target,
-            "pred"  : pred
-        }
-    
-    def validation_step_end(
-        self,
-        step_output: StepOutput,
-        *args, **kwargs
-    ) -> StepOutput | None:
-        """Use this when validating with dp because :meth:`validation_step` will
-        operate on only part of the batch. However, this is still optional and
-        only needed for things like softmax or NCE loss.
-
-        Note:
-            If you later switch to ddp or some other mode, this will still be
-            called so that you don't have to change your code.
-        
-        Return:
-            None or anything
-        """
-        if not isinstance(step_output,  dict):
-            return None
-        
-        # Gather results
-        # For DDP strategy, gather outputs from multiple devices.
-        if self.trainer.num_devices > 1:
-            step_output = self.all_gather(step_output)
-        
-        loss   = step_output["loss"]  # losses from each device
-        input  = step_output["input"]  # images from each device
-        target = step_output["target"]  # ground-truths from each device
-        pred   = step_output["pred"]  # predictions from each device
-        
-        # Tensors
-        if self.trainer.num_devices > 1:
-            input  = input.flatten(start_dim=0, end_dim=1)
-            target = target.flatten(start_dim=0, end_dim=1)
-            pred   = pred.flatten(start_dim=0, end_dim=1)
-        
-        # Debugging
+        # Loss
+        self.log(
+            name           = f"val/loss",
+            value          = loss,
+            prog_bar       = False,
+            logger         = True,
+            on_step        = True,
+            on_epoch       = True,
+            sync_dist      = True,
+            rank_zero_only = True,
+            batch_size     = 1,
+        )
+        # Metric
+        if self.val_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                value = metric(pred, target)
+                self.log(
+                    name           = f"val/{metric.name}",
+                    value          = value,
+                    prog_bar       = False,
+                    logger         = True,
+                    on_step        = True,
+                    on_epoch       = True,
+                    sync_dist      = True,
+                    rank_zero_only = True,
+                    batch_size     = 1,
+                )
+        # Debug
         epoch = self.current_epoch + 1
         if self.debug \
             and epoch % self.debug["every_n_epochs"] == 0 \
@@ -1269,56 +1228,18 @@ class Model(lightning.LightningModule, ABC):
                         "nrow" : input[0],
                     }
                 )
-        
-        # Loss
-        loss = loss.mean() if loss is not None else None
-        self.ckpt_log_scalar(f"checkpoint/loss/val_step", loss)
-        # self.tb_log(f"{loss_tag}", loss, "step")
-        
-        # Metrics
-        if self.val_metrics:
-            for i, metric in enumerate(self.val_metrics):
-                value = metric(pred, target)
-                self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_step", value)
-                # self.tb_log(f"{metric.name}/val_step", value, "step")
-        
         self.epoch_step += 1
-        return {
-            "loss": loss,
-            # "input" : input,
-            # "target": target,
-            # "pred"  : pred,
-        }
-    
-    def validation_epoch_end(self, outputs: EpochOutput | list[EpochOutput]):
-        """Called at the end of the validation epoch with the outputs of all
-        validation steps.
-        
-        Args:
-            outputs: A list of outputs you defined in :meth:`validation_step`,
-                or if there are multiple dataloaders, a list containing a list
-                of outputs for each dataloader.
-        
-        Return:
-             None.
-        """
-        # Loss
-        loss = torch.stack([x["loss"] for x in outputs]).mean()
-        self.ckpt_log_scalar(f"checkpoint/loss/val_epoch", loss)
-        self.tb_log_scalar(f"loss/val_epoch", loss, "epoch")
-        
-        # Metrics
-        if self.val_metrics:
-            for i, metric in enumerate(self.val_metrics):
-                value = metric.compute()
-                self.ckpt_log_scalar(f"checkpoint/{metric.name}/val_epoch", value)
-                self.tb_log_scalar(f"{metric.name}/val_epoch", value, "epoch")
-                metric.reset()
-    
+        return loss
+
+    def on_validation_epoch_end(self):
+        """Called in the validation loop at the very end of the epoch."""
+        for i, metric in enumerate(self.val_metrics):
+            # value = metric.compute()
+            metric.reset()
+
     def on_test_start(self) -> None:
         """Called at the very beginning of testing."""
-        for path in [self.root, self.ckpt_dir, self.debug_dir]:
-            path.mkdir(parents=True, exist_ok=True)
+        self.create_dir()
     
     def on_test_epoch_start(self):
         """Called in the test loop at the very beginning of the epoch."""
@@ -1326,9 +1247,8 @@ class Model(lightning.LightningModule, ABC):
     
     def test_step(
         self,
-        batch        : Any,
-        batch_idx    : int,
-        dataloader_id: int,
+        batch    : Any,
+        batch_idx: int,
         *args, **kwargs
     ) -> StepOutput | None:
         """Operates on a single batch of data from the test set. In this step
@@ -1338,8 +1258,6 @@ class Model(lightning.LightningModule, ABC):
         Args:
             batch: The output of your :class:`~torch.utils.data.DataLoader`.
             batch_idx: The index of this batch.
-            dataloader_id: The index of the dataloader that produced this batch.
-                (only if multiple test dataloaders used).
 
         Return:
             Any of:
@@ -1352,57 +1270,38 @@ class Model(lightning.LightningModule, ABC):
             target = target,
             *args, **kwargs
         )
-        return {
-            "loss"  : loss,
-            "input" : input,
-            "target": target,
-            "pred"  : pred
-        }
-    
-    def test_step_end(
-        self,
-        step_output: StepOutput,
-        *args, **kwargs
-    ) -> StepOutput | None:
-        """Use this when testing with DP because :meth:`test_step` will operate
-        on only part of the batch. However, this is still optional and only
-        needed for things like softmax or NCE loss.
-
-        Note:
-            If you later switch to ddp or some other mode, this will still be
-            called so that you don't have to change your code.
-        
-        Args:
-            step_output: What you return in :meth:`test_step` for each batch
-            part.
-            
-        Return:
-            None or anything
-        """
-        if not isinstance(step_output,  dict):
-            return step_output
-        
-        # Gather results
-        # For DDP strategy, gather outputs from multiple devices.
-        if self.trainer.num_devices > 1:
-            step_output = self.all_gather(step_output)
-        
-        loss   = step_output["loss"]    # losses from each GPU
-        input  = step_output["input"]   # images from each GPU
-        target = step_output["target"]  # ground-truths from each GPU
-        pred   = step_output["pred"]    # predictions from each GPU
-        
-        # Tensors
-        if self.trainer.num_devices > 1:
-            input  = input.flatten(start_dim=0, end_dim=1)
-            target = target.flatten(start_dim=0, end_dim=1)
-            pred   = pred.flatten(start_dim=0, end_dim=1)
-        
-        # Debugging
+        # Loss
+        self.log(
+            name           = f"test/loss",
+            value          = loss,
+            prog_bar       = False,
+            logger         = True,
+            on_step        = True,
+            on_epoch       = True,
+            sync_dist      = True,
+            rank_zero_only = True,
+            batch_size     = 1,
+        )
+        # Metric
+        if self.val_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                value = metric(pred, target)
+                self.log(
+                    name           = f"test/{metric.name}",
+                    value          = value,
+                    prog_bar       = False,
+                    logger         = True,
+                    on_step        = True,
+                    on_epoch       = True,
+                    sync_dist      = True,
+                    rank_zero_only = True,
+                    batch_size     = 1,
+                )
+        # Debug
         epoch = self.current_epoch + 1
-        if self.debug and \
-            epoch % self.debug["every_n_epochs"] == 0 and \
-            self.epoch_step < self.debug["max_n"]:
+        if self.debug \
+            and epoch % self.debug["every_n_epochs"] == 0 \
+            and self.epoch_step < self.debug["max_n"]:
             if self.trainer.is_global_zero:
                 self.show_results(
                     input    = input,
@@ -1414,47 +1313,14 @@ class Model(lightning.LightningModule, ABC):
                         "nrow" : input[0],
                     }
                 )
-        
-        # Loss
-        loss = loss.mean() if loss is not None else None
-        self.ckpt_log_scalar(f"checkpoint/loss/test_step", loss)
-        # self.tb_log(f"loss/test_step", loss, "step")
-        
-        # Metrics
-        if self.test_metrics:
-            for i, metric in enumerate(self.test_metrics):
-                value = metric(pred, target)
-                self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_step", value)
-                # self.tb_log(f"{metric.name}/test_step", value, "step")
-        
         self.epoch_step += 1
-        return {
-            "loss": loss,
-            # "input" : input,
-            # "target": target,
-            # "pred"  : pred,
-        }
+        return loss
     
-    def test_epoch_end(self, outputs: EpochOutput | list[EpochOutput]):
-        """Called at the end of a test epoch with the output of all test steps.
-        
-        Args:
-            outputs: A list of outputs you defined in :meth:`test_step_end`, or
-                if there are multiple dataloaders, a list containing a list of
-                outputs for each dataloader.
-        """
-        # Loss
-        loss = torch.stack([x["loss"] for x in outputs]).mean()
-        self.ckpt_log_scalar(f"checkpoint/loss/test_epoch", loss)
-        self.tb_log_scalar(f"loss/test_epoch", loss, "epoch")
-        
-        # Metrics
-        if self.test_metrics:
-            for i, metric in enumerate(self.test_metrics):
-                value = metric.compute()
-                self.ckpt_log_scalar(f"checkpoint/{metric.name}/test_epoch", value)
-                self.tb_log_scalar(f"{metric.name}/test_epoch", value, "epoch")
-                metric.reset()
+    def on_test_epoch_end(self):
+        """Called in the test loop at the very end of the epoch."""
+        for i, metric in enumerate(self.test_metrics):
+            # value = metric.compute()
+            metric.reset()
     
     def export_to_onnx(
         self,
@@ -1555,55 +1421,5 @@ class Model(lightning.LightningModule, ABC):
             console.log(f"[red]{self.fullname}")
             rich.print_table(self.info)
             console.log(f"Save indexes: {self.save}")
-    
-    def tb_log_scalar(
-        self,
-        tag : str,
-        data: Any | None,
-        step: str | int = "step"
-    ):
-        """Log scalar values using tensorboard."""
-        if data is None:
-            return
-        if isinstance(step, str):
-            step = self.current_epoch if step == "epoch" else self.global_step
-        if self.trainer.is_global_zero and self.logger is not None:
-            self.logger.experiment.add_scalar(tag, data, step)
-    
-    def tb_log_class_metrics(
-        self,
-        tag : str,
-        data: Any | None,
-        step: str | int = "step"
-    ):
-        """Log class metrics using tensorboard."""
-        if data is None:
-            return
-        if self.classlabels is None:
-            return
-        if isinstance(step, str):
-            step = self.current_epoch if step == "epoch" else self.global_step
-        if self.trainer.is_global_zero and self.logger is not None:
-            for n, a in zip(self.classlabels.names(), data):
-                n = f"{tag}/{n}"
-                self.logger.experiment.add_scalar(n, a, step)
-    
-    def ckpt_log_scalar(
-        self,
-        tag     : str,
-        data    : Any | None,
-        prog_bar: bool = False
-    ):
-        """Log for model checkpointing."""
-        if data is None:
-            return
-        if self.trainer.is_global_zero:
-            self.log(
-                name           = tag,
-                value          = data,
-                prog_bar       = prog_bar,
-                sync_dist      = True,
-                rank_zero_only = True
-            )
 
 # endregion

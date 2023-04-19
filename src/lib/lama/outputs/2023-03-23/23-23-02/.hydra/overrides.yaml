@@ -1,0 +1,6 @@
+- image_dir=/mnt/workspace/mon/data/aic23-autocheckout/testA/deblur/testA_3
+- label_dir=/mnt/workspace/mon/data/aic23-autocheckout/testA/person/testA_3
+- output_dir=/mnt/workspace/mon/data/aic23-autocheckout/testA/inpainting/testA_3
+- model.path=/mnt/workspace/mon/zoo/lama/big-lama-aic
+- dataset.kind=video
+- dataset.dilate=7

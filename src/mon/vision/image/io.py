@@ -277,7 +277,6 @@ class ImageLoader(Loader):
     
     def init(self):
         """Initialize the data source."""
-        images = []
         if self.source.is_image_file():
             images = [self.source]
         elif self.source.is_dir():

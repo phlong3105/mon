@@ -123,6 +123,7 @@ class ImageEnhancementModel(model.Model, ABC):
         visualize.imshow_enhancement(
             winname     = self.fullname,  # self.phase.value,
             image       = result,
+            denormalize = True,
             scale       = 2,
             save_config = save_config,
             max_n       = max_n,

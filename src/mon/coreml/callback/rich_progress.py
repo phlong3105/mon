@@ -17,7 +17,7 @@ from mon.foundation import console, rich
 from mon.globals import CALLBACKS
 
 
-# region Rich Progress Bar Callback
+# region Rich Progress Bar
 
 @CALLBACKS.register(name="rich_progress_bar")
 class RichProgressBar(rich_progress.RichProgressBar):
@@ -48,7 +48,7 @@ class RichProgressBar(rich_progress.RichProgressBar):
         if torch.cuda.is_available():
             return [
                 rich.progress.TextColumn(
-                    rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S.%f]"),
+                    rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S]"),
                     justify = "left",
                     style   = "log.time"
                 ),
@@ -72,7 +72,7 @@ class RichProgressBar(rich_progress.RichProgressBar):
         else:
             return [
                 rich.progress.TextColumn(
-                    rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S.%f]"),
+                    rich.console.get_datetime().strftime("[%m/%d/%Y %H:%M:%S]"),
                     justify = "left",
                     style   = "log.time"
                 ),

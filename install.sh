@@ -119,7 +119,7 @@ read -e -i "$data_dir" -p "Enter DATA_DIR=" input
 data_dir="${input:-$data_dir}"
 if [ "$data_dir" != "" ]; then
   export DATA_DIR="$data_dir"
-  mamba env config vars set data_dir="$data_dir"
+  conda env config vars set data_dir="$data_dir"
   echo -e "\nDATA_DIR has been set to $data_dir."
 else
   echo -e "\nDATA_DIR has NOT been set."

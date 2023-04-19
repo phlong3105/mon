@@ -261,7 +261,7 @@ class AutoCheckoutCamera(Camera):
                             # fps          = getattr(self.image_loader, "fps", 30)
                             # timestamp    = (mo.current.frame_index - self.tracker.min_hits) / fps
                             # mo.timestamp = mon.math.floor(timestamp)
-                            mo.timestamp = mo.current.frame_index
+                            mo.timestamp = mo.current.frame_index + 1
                     
                     # Count
                     countable = [o for o in self.moving_objects if o.is_to_be_counted]
@@ -269,7 +269,7 @@ class AutoCheckoutCamera(Camera):
                         self.result_writer.append_results(products=countable)
                     for mo in countable:
                         mo.moving_state = MovingState.COUNTED
-                    self.run_step_end(index=indexes[idx], image=images[idx])
+                    self.run_step_end(index=indexes[idx] + 1, image=images[idx])
                 
         self.on_run_end()
     
