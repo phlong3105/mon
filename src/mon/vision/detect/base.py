@@ -28,7 +28,7 @@ class Detector(ABC):
 
     Args:
         config: A detector model's config.
-        weight: A path to a pretrained weight file.
+        weights: A path to a pretrained weights file.
         classlabels: A list of all the class-labels defined in a dataset.
         image_size: The desired model's input size in HW format. Defaults to
             640.
@@ -44,7 +44,7 @@ class Detector(ABC):
     def __init__(
         self,
         config        : dict | pathlib.Path | None,
-        weight        : Any,
+        weights       : Any,
         image_size    : int | list[int] = 640,
         classlabels   : Any   = None,
         conf_threshold: float = 0.5,
@@ -55,7 +55,7 @@ class Detector(ABC):
     ):
         super().__init__()
         self.config         = config
-        self.weight         = weight
+        self.weights        = weights
         self.classlabels    = mdata.ClassLabels.from_value(value=classlabels)
         self.allowed_ids    = self.classlabels.ids(key="id", exclude_negative_key=True)
         self.image_size     = mimage.get_hw(size=image_size)
@@ -69,26 +69,26 @@ class Detector(ABC):
         self.init_model()
     
     @property
-    def weight(self):
-        return self._weight
+    def weights(self):
+        return self._weights
     
-    @weight.setter
-    def weight(self, weight: Any):
-        if isinstance(weight, pathlib.Path | str):
-            weight = pathlib.Path(weight)
-            if not weight.is_torch_file():
+    @weights.setter
+    def weights(self, weights: Any):
+        if isinstance(weights, pathlib.Path | str):
+            weights = pathlib.Path(weights)
+            if not weights.is_torch_file():
                 raise ValueError(
-                    f"weight must be a valid path to a torch saved file, but "
-                    f"got {weight}."
+                    f"weights must be a valid path to a torch saved file, but "
+                    f"got {weights}."
                 )
-        elif isinstance(weight, list | tuple):
-            weight = [pathlib.Path(w) for w in weight]
-            if not all(w.is_torch_file for w in weight):
+        elif isinstance(weights, list | tuple):
+            weights = [pathlib.Path(w) for w in weights]
+            if not all(w.is_torch_file for w in weights):
                 raise ValueError(
-                    f"weight must be a valid path to a torch saved file, but "
-                    f"got {weight}."
+                    f"weights must be a valid path to a torch saved file, but "
+                    f"got {weights}."
                 )
-        self._weight = weight
+        self._weights = weights
     
     @abstractmethod
     def init_model(self):

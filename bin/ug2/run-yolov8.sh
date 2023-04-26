@@ -41,10 +41,10 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "VSW-WS02" ]; then
     python train.py \
       --task "detect" \
-      --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
       --data "data/visdrone-uavdt-a2i2-haze-synthetic-of.yaml" \
       --project "${root_dir}/run/train/ug2+" \
-      --name "yolov8x6-visdrone-uavdt-a2i2-haze-synthetic-of-1920" \
+      --name "yolov8x-visdrone-uavdt-a2i2-haze-synthetic-of-1920" \
       --epochs 200 \
       --batch 4 \
       --imgsz 1920 \
@@ -81,12 +81,12 @@ if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python predict.py \
     --task "detect" \
-    --model "${root_dir}/run/train/ug2+/yolov8x6-visdrone-a2i2-haze-synthetic-of-1920/weights/best.pt" \
+    --model "${root_dir}/run/train/ug2+/yolov8x6-visdrone-uavdt-a2i2-haze-synthetic-of-1920/weights/best.pt" \
     --data "data/visdrone-a2i2-haze-synthetic.yaml" \
     --project "${root_dir}/run/predict/ug2+" \
     --name "submission" \
     --source "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
-    --imgsz 2160 \
+    --imgsz 2560 \
     --conf 0.00001 \
     --iou 0.5 \
     --max-det 2000 \

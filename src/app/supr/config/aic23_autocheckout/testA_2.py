@@ -82,7 +82,7 @@ moving_object = {
 detector      = {
     "name"          : "yolov8",    # A detector name.
     "config"        : "yolov8x",   # A detector model's config.
-    "weight"        : _current_dir/"yolov8x6-aic23-autocheckout-mix-117-1920.pt",
+    "weights"       : _current_dir/"yolov8x6-aic23-autocheckout-mix-117-1920.pt",
     "image_size"    : 1024,        # The desired model's input size in HW format.
     "classlabels"   : classlabels,
     "conf_threshold": 0.5,         # An object confidence threshold.
@@ -102,7 +102,7 @@ tracker       = {
 tray_detector = {
     "name"          : "yolov8",   # A detector name.
     "config"        : "yolov8x",  # A detector model's config.
-    "weight"        : _current_dir/"yolov8x-aic23-autocheckout-tray-640.pt",
+    "weights"       : _current_dir/"yolov8x-aic23-autocheckout-tray-640.pt",
     "image_size"    : 640,        # The desired model's input size in HW format.
     "classlabels"   : _current_dir/"classlabels-tray.json",
     "conf_threshold": 0.8,        # An object confidence threshold.

@@ -57,9 +57,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
-      --data "data/aic23-autocheckout-testA-117.yaml" \
+      --data "data/aic23-autocheckout-mix-117.yaml" \
       --project "${root_dir}/run/train/aic23" \
-      --name "yolov8x-aic23-autocheckout-testA-117-1920" \
+      --name "yolov8x-aic23-autocheckout-mix-117-1920" \
       --epochs 50 \
       --batch 8 \
       --imgsz 1920 \
@@ -82,12 +82,12 @@ if [ "$task" == "predict" ]; then
   if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
     python predict.py \
     	--task "detect" \
-    	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-mix-117-1920/weights/best.pt" \
-    	--data "data/aic23-autocheckout-mix-117.yaml" \
+    	--model "${root_dir}/run/train/aic23/yolov8x-aic23-autocheckout-tray-640/weights/best.pt" \
+    	--data "data/aic23-autocheckout-tray.yaml" \
     	--project "${root_dir}/run/predict" \
-    	--name "testA_3" \
-    	--source "${root_dir}/data/aic23-autocheckout/testA/inpainting/testA_3" \
-    	--imgsz 1024 \
+    	--name "synthetic-03" \
+    	--source "${root_dir}/data/aic23-autocheckout/train/synthetic-03/images" \
+    	--imgsz 640 \
     	--conf 0.5 \
     	--iou 0.5 \
     	--max-det 3 \

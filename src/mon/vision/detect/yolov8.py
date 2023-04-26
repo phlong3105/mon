@@ -33,7 +33,7 @@ class YOLOv8(base.Detector):
     def init_model(self):
         """Create model."""
         self.model = tasks.attempt_load_weights(
-            weights = str(self.weight),
+            weights = str(self.weights),
             device  = self.device
         )
         self.image_size = checks.check_imgsz(
