@@ -11,12 +11,13 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.10
+  - python=3.11
   - pip                   # PyPA recommended tool for installing Python packages.
   # CUDA
   - cudatoolkit=11.8      # CUDA Toolkit - Including CUDA runtime.
   - cudnn                 # NVIDIA's cuDNN deep neural network acceleration library.
-  # GitHub                
+  - pynvml                # Python Bindings for the NVIDIA Management Library.
+  # GitHub
   - git                   # Distributed version control system.
   - git-lfs               # An open source Git extension for versioning large files.
   # Scientific
@@ -24,8 +25,6 @@ dependencies:
   - pip:
       - poetry            # Python packaging and dependency management made easy.
       - setuptools
-      # CUDA              
-      - pynvml            # Python Bindings for the NVIDIA Management Library.
       # Documentation
       - markdown          # Python implementation of Markdown.
       - mkdocs            # Project documentation with Markdown.
@@ -45,13 +44,13 @@ dependencies:
       - tensorboard       # TensorFlow's Visualization Toolkit.
       # PyTorch           
       - einops            # A new flavour of deep learning operations.
-      - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
-      - lightning>=2.0.0  #
-      - pytorch-lightning==1.9.2
+      # - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
+      - lightning>=2.0.2  #
+      # - pytorch-lightning==1.9.2
       - piqa              # PyTorch Image Quality Assessment package.
       - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
       - thop              # Count the MACs / FLOPs of your PyTorch model.
-      - torch>=2.0.0      # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - torch>=2.0.1      # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio        # Simple audio I/O for pytorch.
       - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
       - torchvision       # Image and video datasets and models for torch deep learning.

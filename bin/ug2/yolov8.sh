@@ -41,13 +41,13 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "VSW-WS02" ]; then
     python train.py \
       --task "detect" \
-      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
-      --data "data/visdrone-uavdt-a2i2-haze-synthetic-of.yaml" \
+      --model "${root_dir}/run/train/ug2+/yolov8x6-visdrone-uavdt-a2i2-haze-synthetic-of-1920/weights/best.pt" \
+      --data "data/a2i2-haze-test.yaml" \
       --project "${root_dir}/run/train/ug2+" \
-      --name "yolov8x-visdrone-uavdt-a2i2-haze-synthetic-of-1920" \
-      --epochs 200 \
+      --name "yolov8x6-visdrone-uavdt-a2i2-haze-synthetic-of-1920-02" \
+      --epochs 50 \
       --batch 4 \
-      --imgsz 1920 \
+      --imgsz 2160 \
       --workers 8 \
       --device 0,1 \
       --save \
@@ -85,7 +85,7 @@ if [ "$task" == "predict" ]; then
     --data "data/visdrone-a2i2-haze-synthetic.yaml" \
     --project "${root_dir}/run/predict/ug2+" \
     --name "submission" \
-    --source "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
+    --source "${root_dir}/data/a2i2-haze/test/images/" \
     --imgsz 2560 \
     --conf 0.00001 \
     --iou 0.5 \
@@ -97,10 +97,10 @@ if [ "$task" == "predict" ]; then
     --save-conf
   cd "${current_dir}" || exit
   python prepare_submission.py \
-    --image-dir "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
+    --image-dir "${root_dir}/data/a2i2-haze/test/images/" \
     --label-dir "${root_dir}/run/predict/ug2+/submission/labels/" \
     --output-dir "${root_dir}/run/predict/ug2+/submission/labels-voc/" \
-    --conf 0.00001
+    --conf 0.1
 fi
 
 cd "${root_dir}" || exist

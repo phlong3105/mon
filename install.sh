@@ -23,6 +23,7 @@ echo -e "... Done"
 # Update 'base' env
 echo -e "\nUpdating 'base' environment:"
 conda init bash
+conda update -n base -c defaults conda --y
 conda update --a --y
 pip install --upgrade pip
 echo -e "... Done"
@@ -96,14 +97,15 @@ case "$OSTYPE" in
     ;;
 esac
 
+echo -e "\nInstall third-party library"
 rm -rf poetry.lock
 rm -rf $CONDA_PREFIX/lib/python3.10/site-packages/cv2/qt/plugins
 eval "$(conda shell.bash hook)"
 conda activate mon
-pip install --upgrade pip
-poetry install --with dev
-pip install -U openmim
-mim install mmcv-full==1.7.0
+poetry install --extras "dev"
+# poetry install --with dev
+# pip install -U openmim
+# mim install mmcv-full==1.7.0
 conda update --a  --y
 conda clean --a --y
 

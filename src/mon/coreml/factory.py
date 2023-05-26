@@ -69,7 +69,7 @@ class OptimizerFactory(factory.Factory):
     def build_instances(
         self,
         net    : nn.Module,
-        configs   : list | None,
+        configs: list | None,
         to_dict: bool = False,
         *kwargs
     ):

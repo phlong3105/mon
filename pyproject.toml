@@ -9,7 +9,7 @@
 #
 [tool.poetry]
 name          = "mon"
-version       = "1.2.3"
+version       = "1.2.4"
 description   = "MON covers a wide range of research topics in computer vision, machine learning, and deep learning."
 license       = "MIT"
 authors       = [
@@ -39,7 +39,6 @@ classifiers = [
 packages = [
     {include="mon",  from="src"    },
     {include="supr", from="src/app"},
-    # { include="saicinpainting", from="src/lib/lama" },
 ]
 include = [
     "CHANGELOG.md",
@@ -52,75 +51,32 @@ include = [
 exclude = []
 
 [tool.poetry.dependencies]
-python                = ">=3.10, <3.12"
-# # CUDA
-# pynvml                = "*"
-# # Documentation
-# markdown              = "*"
-# mkdocs                = "*"
-# mkdocstrings          = "*"
-# mkdocs-material       = "*"
-# sphinx                = "*"
-# sphinx-paramlinks     = "*"
-# # Image
-# albumentations        = "*"
-# ffmpeg-python         = "*"
-# opencv-python         = "*"
-# opencv-contrib-python = "*"
-# # Network
-# requests              = "*"
-# # Plot
-# matplotlib            = "*"
-# tensorboard           = "*"
-# # PyTorch
-# einops                = "*"
-# flopco-pytorch        = "*"
-# lightning             = ">=1.9.1"
-# pytorch-lightning     = ">=1.9.1"
-# piqa                  = "*"
-# pyiqa                 = "*"
-# torch                 = "*"
-# torchaudio            = "*"
-# torchmetrics          = "*"
-# torchvision           = "*"
-# # Ray
-# ray                   = "*"
-# # Scientific
-# filterpy              = "*"
-# numpy                 = "*"
-# scipy                 = "*"
-# scikit-learn          = "*"
-# # Syntax
-# multipledispatch      = "*"
-# mypy                  = "*"
-# protobuf              = "*"
-# pyhumps               = "*"
-# PyYAML                = "*"
-# sortedcontainers      = "*"
-# typing-extensions     = "*"
-# validators            = "*"
-# xmltodict             = "*"
-# # UI
-# PyQt6                 = "*"
-# rich                  = "*"
-# tqdm                  = "*"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-addict         = "*"
-cog            = "*"
-easydict       = "*"
-hydra-core     = "*"
-kornia         = "=0.5.0"
-mediapipe      = "*"
-pandas         = "*"
-tensorflow     = "*"
-torchfile      = "*"
-webdataset     = "*"
+python         = ">=3.11, <3.12"
+addict         = {version="*", optional=true}
+cog            = {version="*", optional=true}
+easydict       = {version="*", optional=true}
+hydra-core     = {version="*", optional=true}
+kornia         = {version="=0.5.0", optional=true}
+mediapipe      = {version="*", optional=true}
+pandas         = {version="*", optional=true}
+tensorflow     = {version="*", optional=true}
+torchfile      = {version="*", optional=true}
+webdataset     = {version="*", optional=true}
 saicinpainting = {path="src/lib/lama"  , develop=true}
 ultralytics    = {path="src/lib/yolov8", develop=true}
+
+[tool.poetry.extras]
+dev = ["ultralytics"]
+aic = [
+    "addict", "cog", "easydict", "hydra-core", "kornia", "mediapipe",
+    "pandas", "tensorflow", "torchfile", "saicinpainting", "ultralytics",
+]
+
+# [tool.poetry.group.dev]
+# optional = true
+
+# [tool.poetry.group.dev.dependencies]
+# ultralytics = {path="src/lib/yolov8", develop=true}
 
 [build-system]
 requires      = ["poetry-core>=1.2.0"]
