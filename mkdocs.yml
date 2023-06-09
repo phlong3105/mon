@@ -34,7 +34,7 @@ theme:
   icon:
     repo: fontawesome/brands/github
   language: en
-  logo: asset/one-80.png
+  logo: asset/cat-80.png
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
