@@ -12,7 +12,7 @@ copyright: Copyright &copy; 2021 - 2023 Long H. Pham
 
 theme:
   name: "material"
-  favicon: asset/one-40.png
+  favicon: asset/cat-40.png
   features:
     - announce.dismiss
     - header.autohide
