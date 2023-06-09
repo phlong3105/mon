@@ -11,7 +11,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.11
+  - python=3.10
   - pip                   # PyPA recommended tool for installing Python packages.
   # CUDA
   - cudatoolkit=11.8      # CUDA Toolkit - Including CUDA runtime.

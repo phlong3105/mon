@@ -3,10 +3,8 @@
 # Usage:
 # chmod +x install.sh
 # conda init bash
-# ./install.sh
-#
-# or:
 # bash -l install.sh
+# or
 # zsh -i install.sh
 
 script_path=$(readlink -f "$0")
@@ -106,7 +104,8 @@ poetry install --extras "dev"
 # poetry install --with dev
 # pip install -U openmim
 # mim install mmcv-full==1.7.0
-conda update --a  --y
+conda install cudatoolkit=11.8 --y
+conda update --a --y
 conda clean --a --y
 
 # Set environment variables

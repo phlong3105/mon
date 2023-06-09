@@ -11,12 +11,12 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.11
+  - python=3.10
   - pip                   # PyPA recommended tool for installing Python packages.
   # CUDA
   # - cudatoolkit=11.8      # CUDA Toolkit - Including CUDA runtime.
   # - cudnn                 # NVIDIA's cuDNN deep neural network acceleration library.
-  # - pynvml                #  Python Bindings for the NVIDIA Management Library.
+  - pynvml                #  Python Bindings for the NVIDIA Management Library.
   # GitHub
   - git                   # Distributed version control system.
   - git-lfs               # An open source Git extension for versioning large files.
@@ -55,7 +55,7 @@ dependencies:
       - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
       - torchvision       # Image and video datasets and models for torch deep learning.
       # Ray
-      # - ray[tune]         # Ray is a fast and simple framework for building and running distributed applications.
+      - ray[tune]         # Ray is a fast and simple framework for building and running distributed applications.
       # Scientific
       - filterpy          # Kalman filters and other optimal and non-optimal estimation filters in Python.
       - numpy             # The fundamental package for scientific computing with Python.

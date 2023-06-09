@@ -1,6 +1,6 @@
-# MON
+# 🐈 mon
 
-`MON` covers a wide range of research topics in computer vision, machine learning, and deep learning.
+`🐈 mon` covers a wide range of research topics in computer vision, machine learning, and deep learning.
 
 ## Installation
 
@@ -9,12 +9,11 @@ git clone https://phlong3105@github.com/phlong3105/mon
 cd mon
 chmod +x install.sh
 bash -i install.sh
-(or just simply ./install.sh)
 ```
 
 Or read the [advanced install guide](get-started/installation.md)
 
-We are fully compatible with any stable PyTorch version v1.13 and above.
+The code is fully compatible with PyTorch version 1.13 and above.
 
 ## Get Started
 

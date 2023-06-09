@@ -1,0 +1,38 @@
+# DelftBikes dataset
+
+# train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
+train: [
+  ../../mon/data/vipriors/delftbikes/train/images,
+  ../../mon/data/vipriors/delftbikes/val/images,
+]
+val  : ../../mon/data/vipriors/delftbikes/val/images/
+test : ../../mon/data/vipriors/delftbikes/test/images/
+
+# number of classes
+nc: 22
+
+# class names
+names : [
+  "back_hand_break",
+  "back_handle",
+  "back_light",
+  "back_mudguard",
+  "back_pedal",
+  "back_reflector",
+  "back_wheel",
+  "bell",
+  "chain",
+  "dress_guard",
+  "dynamo",
+  "front_handbreak",
+  "front_handle",
+  "front_light",
+  "front_mudguard",
+  "front_pedal",
+  "front_wheel",
+  "gear_case",
+  "kickstand",
+  "lock",
+  "saddle",
+  "steer",
+]

@@ -297,5 +297,5 @@ class ZeroDCEPPVanilla(torch.nn.Module):
             a = self.upsample(a)
         x = self.enhance(x, a)
         return x
-    
+
 # endregion

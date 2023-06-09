@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="gen_haze_image" type="PythonConfigurationType" factoryName="Python" folderName="ug2" nameIsGenerated="true">
+  <configuration default="false" name="gen_haze_image" type="PythonConfigurationType" factoryName="Python" folderName="ug2_dethaze" nameIsGenerated="true">
     <module name="mon" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -22,7 +22,7 @@
         <ENTRY IS_ENABLED="true" PARSER="runconfig" IS_EXECUTABLE="false" />
       </ENTRIES>
     </EXTENSION>
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bin/ug2/gen_haze_image.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bin/ug2_dethaze/gen_haze_image.py" />
     <option name="PARAMETERS" value="" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="true" />

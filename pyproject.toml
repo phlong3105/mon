@@ -51,7 +51,7 @@ include = [
 exclude = []
 
 [tool.poetry.dependencies]
-python         = ">=3.11, <3.12"
+python         = ">=3.10, <3.12"
 addict         = {version="*", optional=true}
 cog            = {version="*", optional=true}
 easydict       = {version="*", optional=true}
