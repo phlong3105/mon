@@ -111,13 +111,16 @@ nav:
   - Home: index.md
   - "Get Started":
       - "Installation": get-started/installation.md
-  - "Explanation":
-      - explanation/index.md
-      - "BaseModel": explanation/base-model.md
   - "Tutorials":
       - tutorial/index.md
   - "How-To":
       - how-to/index.md
+  - "Explanation":
+      - explanation/index.md
+      - "Framework Structure": explanation/framework_structure.md
+      - "foundation": explanation/foundation.md
+      - "coreml": explanation/coreml.md
+      - "vision": explanation/vision.md
   - "Reference":
       - reference/index.md
 

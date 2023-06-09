@@ -1,1 +1,5 @@
 # Explanation
+
+---
+
+## Core API
