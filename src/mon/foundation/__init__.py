@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """This package provides a base layer of functionality by extending Python
-built-in functions. The low-level operating system operations includes:
+built-in functions. The low-level operating system operations include:
 - Managing devices.
 - Filesystem handling.
 - Basic file I/O.
