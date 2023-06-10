@@ -47,12 +47,12 @@ mon
 `🐈 mon`'s core API includes several packages built on top of 
 [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
 
-| Package                                           | Description                           |
-|---------------------------------------------------|---------------------------------------|
-| __[foundation](explanation/foundation/index.md)__ | Base functionality for other packages |
-| __[coreml](explanation/coreml/index.md)__         | Machine learning code                 |
-| __[createml](explanation/createml/index.md)__     | Training code                         |
-| __[vision](explanation/vision/index.md)__         | Computer vision code                  |
+| Package                                   | Description                           |
+|-------------------------------------------|---------------------------------------|
+| __[foundation](mon/foundation/index.md)__ | Base functionality for other packages |
+| __[coreml](mon/coreml/index.md)__         | Machine learning code                 |
+| __[createml](mon/createml/index.md)__     | Training code                         |
+| __[vision](mon/vision/index.md)__         | Computer vision code                  |
 
 ---
 
@@ -63,7 +63,7 @@ __[lib](explanation/lib/index.md)__ package. In addition, projects, which are
 built on top of __[mon](explanation/mon/index.md)__, can be placed inside 
 __[app](explanation/app/index.md)__ package for better management.
 
-| Package                             | Description         |
-|-------------------------------------|---------------------|
-| __[app](explanation/app/index.md)__ | Application code    |
-| __[lib](explanation/lib/index.md)__ | Third-party library |
+| Package                   | Description         |
+|---------------------------|---------------------|
+| __[app](app/index.md)__   | Application code    |
+| __[lib](lib/index.md)__   | Third-party library |
