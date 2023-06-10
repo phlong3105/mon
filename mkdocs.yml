@@ -110,18 +110,22 @@ markdown_extensions:
 nav:
   - Home: index.md
   - "Get Started":
+      - "Quick Glance": get-started/quick_glance.md
       - "Installation": get-started/installation.md
   - "Tutorials":
       - tutorial/index.md
   - "How-To Guides":
       - how-to/index.md
-  - "API Explanation":
-      - explanation/index.md
-      - "mon": explanation/mon.md
-          - "foundation": explanation/foundation.md
-          - "coreml": explanation/coreml.md
-          - "createml": explanation/createml.md
-          - "vision": explanation/vision.md
+  - "Core API":
+      - explanation/mon.md
+      - "foundation": explanation/foundation.md
+      - "coreml": explanation/coreml.md
+      - "createml": explanation/createml.md
+      - "vision": explanation/vision.md
+  - "Optional API":
+      - explanation/optional.md
+      - "app": explanation/app.md
+      - "lib": explanation/lib.md
   - "Reference":
       - reference/index.md
 

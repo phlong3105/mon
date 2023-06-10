@@ -1,6 +1,4 @@
-# API Explanation
-
-This section explains `🐈 mon`'s API.
+# Quick Glance
 
 ---
 
@@ -44,7 +42,8 @@ mon
 
 ## Core API
 
-`🐈 mon`'s core API is placed under __[mon](explanation/mon.md)__.
+`🐈 mon`'s core API includes several packages built on top of 
+[Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
 
 | Package                                     | Description                           |
 |---------------------------------------------|---------------------------------------|
