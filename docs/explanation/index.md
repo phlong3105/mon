@@ -47,23 +47,23 @@ mon
 `🐈 mon`'s core API includes several packages built on top of 
 [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
 
-| Package                                     | Description                           |
-|---------------------------------------------|---------------------------------------|
-| __[foundation](explanation/foundation.md)__ | Base functionality for other packages |
-| __[coreml](explanation/coreml.md)__         | Machine learning code                 |
-| __[createml](explanation/createml.md)__     | Training code                         |
-| __[vision](explanation/vision.md)__         | Computer vision code                  |
+| Package                                           | Description                           |
+|---------------------------------------------------|---------------------------------------|
+| __[foundation](explanation/foundation/index.md)__ | Base functionality for other packages |
+| __[coreml](explanation/coreml/index.md)__         | Machine learning code                 |
+| __[createml](explanation/createml/index.md)__     | Training code                         |
+| __[vision](explanation/vision/index.md)__         | Computer vision code                  |
 
 ---
 
 ## Optional API
 
 `🐈 mon`'s functionality can be extended by incorporating third-party code to
-__[lib](explanation/lib.md)__ package. In addition, projects which are built on 
-top of __[mon](explanation/mon.md)__ can be placed inside 
-__[app](explanation/app.md)__ package for better management.
+__[lib](explanation/lib/index.md)__ package. In addition, projects, which are 
+built on top of __[mon](explanation/mon/index.md)__, can be placed inside 
+__[app](explanation/app/index.md)__ package for better management.
 
-| Package                       | Description         |
-|-------------------------------|---------------------|
-| __[app](explanation/app.md)__ | Application code    |
-| __[lib](explanation/lib.md)__ | Third-party library |
+| Package                             | Description         |
+|-------------------------------------|---------------------|
+| __[app](explanation/app/index.md)__ | Application code    |
+| __[lib](explanation/lib/index.md)__ | Third-party library |

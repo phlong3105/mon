@@ -110,7 +110,6 @@ markdown_extensions:
 nav:
   - Home: index.md
   - "Get Started":
-      - "Quick Glance": get-started/quick_glance.md
       - "Installation": get-started/installation.md
   - "Tutorials":
       - tutorial/index.md
