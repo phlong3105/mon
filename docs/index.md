@@ -16,7 +16,8 @@ bash -i install.sh
 
 Or read the [advanced install guide](get-started/installation.md)
 
-The code is fully compatible with PyTorch version 1.20 and above.
+The code is fully compatible with [PyTorch](https://pytorch.org/) version 2.0 
+and above.
 
 ---
 

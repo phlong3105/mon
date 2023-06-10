@@ -40,7 +40,7 @@ mon
 
 ---
 
-## Core API
+## [Core API](../explanation/mon/index.md)
 
 `🐈 mon`'s core API includes several packages built on top of 
 [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
@@ -54,14 +54,14 @@ mon
 
 ---
 
-## Optional API
+## [Optional API](../explanation/optional/index.md)
 
 `🐈 mon`'s functionality can be extended by incorporating third-party code to
-__[lib](explanation/lib.md)__ package. In addition, projects which are built on 
-top of __[mon](explanation/mon/index.md)__ can be placed inside 
-__[app](explanation/optional/app.md)__ package for better management.
+__[lib](../explanation/optional/lib.md)__ package. In addition, projects, which 
+are built on top of __[mon](../explanation/mon/index.md)__, can be placed inside 
+__[app](../explanation/optional/app.md)__ package for better management.
 
-| Package                                   | Description         |
-|-------------------------------------------|---------------------|
-| __[app](../explanation/optional/app.md)__ | Application code    |
-| __[lib](../explanation/optional/lib.md)__ | Third-party library |
+| Package                                   | Description                             |
+|-------------------------------------------|-----------------------------------------|
+| __[app](../explanation/optional/app.md)__ | Code for specific applications/projects |
+| __[lib](../explanation/optional/lib.md)__ | Third-party libraries                   |
