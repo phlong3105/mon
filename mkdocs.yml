@@ -115,7 +115,7 @@ nav:
       - tutorial/index.md
   - "How-To Guides":
       - how-to/index.md
-  - "Explanation":
+  - "API Explanation":
       - explanation/index.md
       - "foundation": explanation/foundation.md
       - "coreml": explanation/coreml.md
