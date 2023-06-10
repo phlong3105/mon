@@ -1,4 +1,4 @@
-# 🐈 mon
+# `🐈 mon`
 
 - `🐈 mon` is an all-in-one research framework built using [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
 - It covers a wide range of research topics in computer vision and machine learning.
