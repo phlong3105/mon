@@ -8,7 +8,7 @@ This section explains `🐈 mon`'s API.
 
 `🐈 mon` is designed to keep everything within the framework, including data,
 libraries, scripts, and more. It works optimally with an IDE like 
-[PyCharm](https://www.jetbrains.com/), but can also be easily used in any 
+__[PyCharm](https://www.jetbrains.com/)__, but can also be easily used in any 
 console environment.
 
 ```text
@@ -45,7 +45,7 @@ mon
 ## Core API
 
 `🐈 mon`'s core API includes several packages built on top of 
-[Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
+__[Python](https://www.python.org/)__ and __[PyTorch](https://pytorch.org/)__.
 
 | Package                                   | Description                           |
 |-------------------------------------------|---------------------------------------|
