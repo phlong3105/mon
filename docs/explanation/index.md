@@ -6,7 +6,7 @@ This section explains `🐈 mon`'s API.
 
 ## Framework Structure
 
-🐈 mon is designed to keep everything within the framework, including data,
+`🐈 mon` is designed to keep everything within the framework, including data,
 libraries, scripts, and more. It works optimally with an IDE like 
 [PyCharm](https://www.jetbrains.com/), but can also be easily used in any 
 console environment.
@@ -27,25 +27,42 @@ mon
  |       |_ vision       # Computer vision package
  |_ test                 # Testing code
  |_ zoo                  # Model zoo
- |_ dockerfile       
- |_ pycharm.env  
- |_ CHANGELOG.md  
+ |_ dockerfile           # Docker setup
+ |_ pycharm.env          # Local environment variables
+ |_ CHANGELOG.md         # Changelogs
  |_ GUIDELINE.md  
- |_ README.md  
- |_ install.sh  
+ |_ README.md            # Github Readme
+ |_ install.sh           # Installation script
  |_ pyproject.toml  
  |_ LICENSE  
- |_ linux.yaml  
- |_ mac.yaml  
- |_ mkdocs.yaml  
+ |_ linux.yaml           # conda setup for Linux
+ |_ mac.yaml             # conda setup for macOS
+ |_ mkdocs.yaml          # mkdocs setup
 ```
 
 ---
 
 ## Core API
 
-| Section                                     | Description                           |
+`🐈 mon`'s core API is placed under __[mon](explanation/mon.md)__.
+
+| Package                                     | Description                           |
 |---------------------------------------------|---------------------------------------|
 | __[foundation](explanation/foundation.md)__ | Base functionality for other packages |
 | __[coreml](explanation/coreml.md)__         | Machine learning code                 |
+| __[createml](explanation/createml.md)__     | Training code                         |
 | __[vision](explanation/vision.md)__         | Computer vision code                  |
+
+---
+
+## Optional API
+
+`🐈 mon`'s functionality can be extended by incorporating third-party code to
+__[lib](explanation/lib.md)__. In addition, projects which are built on top of
+__[mon](explanation/mon.md)__ can be placed in __[app](explanation/app.md)__
+for better organization.
+
+| Package                       | Description         |
+|-------------------------------|---------------------|
+| __[app](explanation/app.md)__ | Application code    |
+| __[lib](explanation/lib.md)__ | Third-party library |
