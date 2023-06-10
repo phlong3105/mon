@@ -25,12 +25,13 @@ and above.
 
 The documents are organized using the [Diátaxis framework](https://diataxis.fr/):
 
-| Section                                     | Description                                   |
-|---------------------------------------------|-----------------------------------------------|
-| __[Tutorials](tutorial/index.md)__          | Step-by-step guidelines on how to use the API |
-| __[How-To Guides](how-to/index.md)__        | Solutions to specific problems                |
-| __[API Explanation](explanation/index.md)__ | Explanation of the API                        |
-| __[Reference](reference/index.md)__         | Referencing documents                         |
+| Section                                           | Description                                   |
+|---------------------------------------------------|-----------------------------------------------|
+| __[Tutorials](tutorial/index.md)__                | Step-by-step guidelines on how to use the API |
+| __[How-To Guides](how-to/index.md)__              | Solutions to specific problems                |
+| __[Core API](explanation/mon/index.md)__          | Explanation of the core API                   |
+| __[Optional API](explanation/optional/index.md)__ | Explanation of the optional API               |
+| __[Reference](reference/index.md)__               | Referencing documents                         |
 
 --- 
 
