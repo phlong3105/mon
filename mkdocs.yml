@@ -117,7 +117,7 @@ nav:
       - how-to/index.md
   - "API Explanation":
       - explanation/index.md
-      - "foundation": explanation/mon.md
+      - "mon": explanation/mon.md
         - "foundation": explanation/foundation.md
         - "coreml": explanation/coreml.md
         - "createml": explanation/createml.md
