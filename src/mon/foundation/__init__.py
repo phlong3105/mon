@@ -5,12 +5,14 @@
 `Python <https://www.python.org/>`_ built-in functions.
 
 The low-level operating system operations include:
+
 - Managing devices.
 - Filesystem handling.
 - Basic file I/O.
 - Logging.
 
 Design Principle:
+
 - All submodules must be the most ATOMIC and self-contained.
 - Each submodule should extend a Python module.
 - The import statement for each submodule should look like this:
