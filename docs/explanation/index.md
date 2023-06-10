@@ -1,4 +1,6 @@
-# Quick Glance
+# API Explanation
+
+This section explains `🐈 mon`'s API.
 
 ---
 
