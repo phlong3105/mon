@@ -44,10 +44,8 @@ mon
 
 ## Core API
 
-<div class="grid cards" markdown>
-
-- __[foundation](explanation/foundation.md)__ provides base functionality for other packages.
-- __[coreml](explanation/coreml.md)__ provides machine learning code.
-- __[vision](explanation/vision.md)__ provides computer vision research code.
-
-</div>
+| Section                                     | Description                           |
+|---------------------------------------------|---------------------------------------|
+| __[foundation](explanation/foundation.md)__ | Base functionality for other packages |
+| __[coreml](explanation/coreml.md)__         | Machine learning code                 |
+| __[vision](explanation/vision.md)__         | Computer vision code                  |

@@ -24,12 +24,12 @@ The code is fully compatible with PyTorch version 1.20 and above.
 
 The documents are organized using the [Diátaxis framework](https://diataxis.fr/):
 
-| Section                             | Description                                   |
-|-------------------------------------|-----------------------------------------------|
-| [Tutorials](tutorial/index.md)      | Step-by-step guidelines on how to use the API |
-| [How-To Guides](how-to/index.md)    | Solutions to specific problems                |
-| [Explanation](explanation/index.md) | Explanation of the API                        |
-| [Reference](reference/index.md)     | Referencing documents                         |
+| Section                                     | Description                                   |
+|---------------------------------------------|-----------------------------------------------|
+| __[Tutorials](tutorial/index.md)__          | Step-by-step guidelines on how to use the API |
+| __[How-To Guides](how-to/index.md)__        | Solutions to specific problems                |
+| __[API Explanation](explanation/index.md)__ | Explanation of the API                        |
+| __[Reference](reference/index.md)__         | Referencing documents                         |
 
 --- 
 
