@@ -118,7 +118,8 @@ nav:
       - how-to/index.md
   - "Core API":
       - explanation/mon/index.md
-      - "foundation": explanation/mon/foundation.md
+      - "foundation":
+        - "enum": explanation/mon/foundation.md
       - "coreml": explanation/mon/coreml.md
       - "createml": explanation/mon/createml.md
       - "vision": explanation/mon/vision.md
@@ -132,6 +133,7 @@ nav:
 plugins:
   - mkdocstrings
   - search
+  - autorefs
   # - social
 
 repo_url: https://github.com/phlong3105/mon

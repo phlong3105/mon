@@ -39,10 +39,10 @@ if [ "$task" == "train" ]; then
       --model "yolov8x.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8x-delftbikes-640" \
+      --name "yolov8x-delftbikes-1280" \
       --epochs 500 \
-      --batch 16 \
-      --imgsz 640 \
+      --batch 8 \
+      --imgsz 1280 \
       --workers 8 \
       --device 0 \
       --save \
