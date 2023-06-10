@@ -1,3 +1,3 @@
 # foundation
 
-::: mon.foundation.builtins
+::: src.mon.foundation.builtins
