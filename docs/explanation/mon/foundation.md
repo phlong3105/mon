@@ -1,4 +1,4 @@
 # foundation
 
-::: mon.foundation.enum
+::: src.mon.foundation.enum
     handler: python
