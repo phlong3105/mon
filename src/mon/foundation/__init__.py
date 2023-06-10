@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides a base layer of functionality by extending Python
-built-in functions. The low-level operating system operations include:
+"""The `foundation` package provides a base layer of functionality by extending
+`Python <https://www.python.org/>`_ built-in functions.
+
+The low-level operating system operations include:
 - Managing devices.
 - Filesystem handling.
 - Basic file I/O.
@@ -12,8 +14,8 @@ Design Principle:
 - All submodules must be the most ATOMIC and self-contained.
 - Each submodule should extend a Python module.
 - The import statement for each submodule should look like this:
-    - Before: import math
-    - Now: from mon.foundation import math
+    - Before: `import math`
+    - Now: `from mon.foundation import math`
 """
 
 from __future__ import annotations
