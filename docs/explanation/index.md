@@ -46,37 +46,8 @@ mon
 
 <div class="grid cards" markdown>
 
-- :fontawesome-brands-html5: __HTML__ for content and structure
-- :fontawesome-brands-js: __JavaScript__ for interactivity
-- :fontawesome-brands-css3: __CSS__ for text running out of boxes
-- :fontawesome-brands-internet-explorer: __Internet Explorer__ ... huh?
-
-</div>
-
-<div class="grid cards" markdown>
-
--   __foundation__
-
-    ---
-
-    Base functionality for other packages
-
-    [:octicons-arrow-right-24: Go](explanation/foundation.md)
-
--   __coreml__
-
-    ---
-
-    Core functionality to build machine learning models
-
-    [:octicons-arrow-right-24: Go](explanation/coreml.md)
-
--   __vision__
-
-    ---
-
-    Computer vision research
-
-    [:octicons-arrow-right-24: Go](explanation/vision.md)
+- __[foundation](explanation/foundation.md)__ provides base functionality for other packages.
+- __[coreml](explanation/coreml.md)__ provides machine learning code.
+- __[vision](explanation/vision.md)__ provides computer vision research code.
 
 </div>
