@@ -1,3 +1,3 @@
 # foundation
 
-::: src.mon.foundation.enum
+::: mon.foundation.enum

@@ -4,7 +4,6 @@
 # chmod +x install.sh
 # conda init bash
 # bash -l install.sh
-# or
 # zsh -i install.sh
 
 script_path=$(readlink -f "$0")
