@@ -119,7 +119,8 @@ nav:
   - "Core API":
       - explanation/mon/index.md
       - "foundation":
-        - "enum": explanation/mon/foundation.md
+          - explanation/mon/foundation/index.md
+          - "enum": explanation/mon/foundation/enum.md
       - "coreml": explanation/mon/coreml.md
       - "createml": explanation/mon/createml.md
       - "vision": explanation/mon/vision.md
