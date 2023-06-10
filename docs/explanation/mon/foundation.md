@@ -1,1 +1,3 @@
 # foundation
+
+::: mon.foundation
