@@ -12,8 +12,8 @@ This section explains `🐈 mon`'s core API.
 | Package                               | Description                           |
 |---------------------------------------|---------------------------------------|
 | __[foundation](foundation/index.md)__ | Base functionality for other packages |
-| __[coreml](coreml.md)__               | Machine learning code                 |
-| __[createml](createml.md)__           | Training code                         |
-| __[vision](vision.md)__               | Computer vision code                  |
+| __[coreml](coreml/index.md)__         | Machine learning code                 |
+| __[createml](createml/index.md)__     | Training code                         |
+| __[vision](vision/index.md)__         | Computer vision code                  |
 
 ---
