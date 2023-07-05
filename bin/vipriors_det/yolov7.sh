@@ -20,7 +20,7 @@ if [ "$task" == "install" ]; then
     --shm-size=64g nvcr.io/nvidia/pytorch:21.08-py3
   apt update
   apt install -y zip htop screen libgl1-mesa-glx
-  pip install seaborn thop
+  pip install seaborn thop pandas
 fi
 
 cd "${root_dir}/src/lib/yolov7" || exit
@@ -28,53 +28,53 @@ cd "${root_dir}/src/lib/yolov7" || exit
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
-  if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
+  if [ "$machine" == "e600ce73fded" ]; then
     python train_aux.py \
-      --weights "weight/yolov7-e6e-training.pt" \
-      --cfg "cfg/training/yolov7-e6e.yaml" \
-      --data "data/visdrone-a2i2-of.yaml" \
+      --weights "" \
+      --cfg "cfg/training/yolov7-d6.yaml" \
+      --data "data/delftbikes.yaml" \
       --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 100 \
-      --batch-size 4 \
-      --img-size 1280 \
+      --epochs 500 \
+      --batch-size 8 \
+      --img-size 640 \
       --workers 4 \
       --device 0 \
       --sync-bn \
       --exist-ok \
-      --project "${root_dir}/run/train" \
-      --name "yolov7-e6e-visdrone-a2i2-of-1280" \
+      --project "${root_dir}/run/train/delftbikes" \
+      --name "yolov7-d6-delftbikes-640" \
       # --resume
-  elif [ "$machine" == "d32ef290e9ba" ]; then
+  elif [ "$machine" == "cc6e0b2cc23d" ]; then
     python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
-      --weights "weight/yolov7-e6e-training.pt" \
+      --weights "" \
       --cfg "cfg/training/yolov7-e6e.yaml" \
-      --data "data/visdrone-a2i2.yaml" \
+      --data "data/delftbikes.yaml" \
       --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 200 \
-      --batch-size 4 \
-      --img-size 2160 \
+      --epochs 500 \
+      --batch-size 8 \
+      --img-size 640 \
+      --workers 4 \
+      --device 0,1  \
+      --sync-bn \
+      --exist-ok \
+      --project "${root_dir}/run/train/delftbikes" \
+      --name "yolov7-e6e-delftbikes-640" \
+      # --resume
+  elif [ "$machine" == "db2c052f922d" ]; then
+    python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
+      --weights "" \
+      --cfg "cfg/training/yolov7-e6.yaml" \
+      --data "data/delftbikes.yaml" \
+      --hyp "data/hyp.scratch.custom.yaml" \
+      --epochs 500 \
+      --batch-size 8 \
+      --img-size 640 \
       --workers 4 \
       --device 0,1 \
       --sync-bn \
       --exist-ok \
-      --project "${root_dir}/run/train" \
-      --name "yolov7-e6e-visdrone-a2i2-2160" \
-      # --resume
-  elif [ "$machine" == "VSW-WS03" ]; then
-    python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
-      --weights "weight/yolov7-e6e-training.pt" \
-      --cfg "cfg/training/yolov7-e6e.yaml" \
-      --data "data/visdrone-a2i2-of.yaml" \
-      --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 100 \
-      --batch-size 4 \
-      --img-size 2160 \
-      --workers 4 \
-      --device 0,1 \
-      --sync-bn \
-      --exist-ok \
-      --project "${root_dir}/run/train" \
-      --name "yolov7-e6e-visdrone-a2i2-of-2160" \
+      --project "${root_dir}/run/train/delftbikes" \
+      --name "yolov7-e6-delftbikes-640" \
       # --resume
   fi
 fi

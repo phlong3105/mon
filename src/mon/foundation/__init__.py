@@ -13,7 +13,7 @@ The low-level operating system operations include:
 
 Design Principle:
 
-- All submodules must be the most ATOMIC and self-contained.
+- All submodules must be ATOMIC and self-contained.
 - Each submodule should extend a Python module.
 - The import statement for each submodule should look like this:
     - Before: `import math`
