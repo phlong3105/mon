@@ -59,16 +59,20 @@ def run_camera(
     
     # End timer
     process_time = timer() - process_start_time
-    console.log(f"Total processing time: {process_time} seconds.")
-    console.log(f"Total camera init time: {camera_init_time} seconds.")
-    console.log(f"Actual processing time: {process_time - camera_init_time} seconds.")
     
+    console.log(f"Compressing results.")
     subset = "testA" if "testA" in config else "testB"
     io.AIC23AutoCheckoutWriter.merge_results(
         output_dir  = DATA_DIR/"aic23-autocheckout"/subset/"result",
         output_name = "track4.txt",
         subset      = subset
     )
+    
+    console.log(f"Total processing time: {process_time} seconds.")
+    console.log(f"Total camera init time: {camera_init_time} seconds.")
+    console.log(f"Actual processing time: {process_time - camera_init_time} seconds.")
+    console.log(f"Done.")
+
     
 # endregion
 
