@@ -56,24 +56,39 @@ def generate_submission(
             h, w, c = image.shape
             
             with open(input_file, "r") as input_f:
-                lines = input_f.read().splitlines()
-                lines = [x.strip().split(" ") for x in lines]
+                lines   = input_f.read().splitlines()
+                lines   = lines[::-1]  # Sort detection based on confidence score
+                lines   = [x.strip().split(" ") for x in lines]
+                # outputs = {}
                 for l in lines:
-                    l[0] = int(l[0])
-                    l[3] = float(l[3]) * w
-                    l[4] = float(l[4]) * h
+                    l[3] = (float(l[3]) * w)
+                    l[4] = (float(l[4]) * h)
                     l[1] = (float(l[1]) * w) - (l[3] / 2)
                     l[2] = (float(l[2]) * h) - (l[4] / 2)
-                    l[5] = float(l[5])
+                    image_id    = i
+                    category_id = int(l[0]) + 1
+                    bbox        = [l[1], l[2], l[3], l[4]]
+                    score       = float(l[5])
+                    '''
+                    if category_id in outputs and score < outputs[category_id]["score"]:
+                        continue
+                    outputs[category_id] = {
+                        "image_id"   : image_id,
+                        "category_id": category_id,
+                        "bbox"       : bbox,
+                        "score"      : score,
+                    }
+                    '''
                     output_list.append(
                         {
-                            "image_id"   : i,  # f"{i}.jpg",
-                            "category_id": l[0] + 1,
-                            "bbox"       : [l[1], l[2], l[3], l[4]],
-                            "score"      : l[5],
+                            "image_id"   : image_id,
+                            "category_id": category_id,
+                            "bbox"       : bbox,
+                            "score"      : score,
                         }
                     )
-
+                # output_list.extend(outputs.values())
+                
     with open(output_file, "w") as output_f:
         json.dump(output_list, output_f)
     

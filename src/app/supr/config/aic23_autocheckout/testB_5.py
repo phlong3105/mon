@@ -111,6 +111,7 @@ tray_detector = {
     "device"        : 0,          # Cuda device, i.e. 0 or 0,1,2,3 or cpu.
     "to_instance"   : False,      # If True, wrap the predictions to a list of :class:`supr.data.instance.Instance` object.
 }
+queue_size    = 1          # Queue size for multi-threading
 save_image    = False      # Save processing images?
 save_video    = False      # Save processing video?
 save_results  = True       # Save counting results.

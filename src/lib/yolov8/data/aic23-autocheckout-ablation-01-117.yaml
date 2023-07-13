@@ -3,15 +3,14 @@
 # Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
 path : ../mon/data/aic23-autocheckout/
 train: [
-  train/testA-01/images/,
-  train/testA-02/images/,
+  train/original/images/,
 ]
 # val  : val/images/
 val  : [
   train/testA-01/images/,
   train/testA-02/images/,
 ]
-test : val/images/
+test : train/testA-02/images/
 
 # number of classes
 nc: 117

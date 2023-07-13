@@ -247,10 +247,10 @@ def print_dict(x: dict, title: str = ""):
     assert isinstance(x, dict)
     pr = pretty.Pretty(
         x,
-        expand_all=True,
-        indent_guides=True,
-        insert_line=True,
-        overflow="fold"
+        expand_all    = True,
+        indent_guides = True,
+        insert_line   = True,
+        overflow      = "fold"
     )
     p = panel.Panel(pr, title=f"{title}")
     console.log(p)

@@ -4,7 +4,7 @@ echo "$HOSTNAME"
 
 task=$1
 machine=$HOSTNAME
-read -e -i "$task" -p "Task [train, test, predict]: " task
+read -e -i "$task" -p "Task [train, test, predict, ensemble]: " task
 
 # Initialization
 script_path=$(readlink -f "$0")
@@ -21,12 +21,12 @@ if [ "$task" == "train" ]; then
   if [ "$machine" == "LP-LabDesktop-01-Ubuntu" ]; then
     python train.py \
       --task "detect" \
-      --model "yolov8n.yaml" \
+      --model "yolov8s.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8n-delftbikes-1920" \
+      --name "yolov8s-delftbikes-1920" \
       --epochs 500 \
-      --batch 8 \
+      --batch 4 \
       --imgsz 1920 \
       --workers 8 \
       --device 0 \
@@ -39,10 +39,10 @@ if [ "$task" == "train" ]; then
       --model "yolov8x.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8x-delftbikes-1920" \
+      --name "yolov8x-delftbikes-2160" \
       --epochs 500 \
       --batch 4 \
-      --imgsz 1920 \
+      --imgsz 2160 \
       --workers 8 \
       --device 0 \
       --save \
@@ -54,10 +54,10 @@ if [ "$task" == "train" ]; then
       --model "yolov8x6.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8x6-delftbikes-1920" \
+      --name "yolov8x6-delftbikes-2160" \
       --epochs 500 \
       --batch 4 \
-      --imgsz 1920 \
+      --imgsz 2160 \
       --workers 8 \
       --device 0 \
       --save \
@@ -76,13 +76,44 @@ if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python predict.py \
   	--task "detect" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
   	--data "data/delftbikes.yaml" \
   	--project "${root_dir}/run/predict/delftbikes/" \
   	--name "submission" \
   	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
-  	--imgsz 1280 \
+  	--imgsz 2560 \
   	--conf 0.0001 \
+  	--iou 0.5 \
+  	--max-det 1000 \
+  	--augment \
+  	--device 0 \
+  	--exist-ok \
+  	--save-txt \
+  	--save-conf \
+  	--overlap-mask \
+  	--box
+fi
+
+# Ensemble
+if [ "$task" == "ensemble" ]; then
+  echo -e "\nPredicting"
+  python ensemble.py \
+  	--task "detect" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-2160/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-2160/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1280/weights/best.pt" \
+  	--data "data/delftbikes.yaml" \
+  	--project "${root_dir}/run/predict/delftbikes/" \
+  	--name "submission" \
+  	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
+  	--imgsz 2160 \
+  	--conf 0.00001 \
   	--iou 0.5 \
   	--max-det 1000 \
   	--augment \

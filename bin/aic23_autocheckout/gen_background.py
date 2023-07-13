@@ -21,7 +21,7 @@ import mon
 def convert_video(
     source     : mon.Path,
     destination: mon.Path,
-    extension: str,
+    extension  : str,
     verbose    : bool
 ):
     assert source is not None and (mon.Path(source).is_video_file() or mon.Path(source).is_dir())

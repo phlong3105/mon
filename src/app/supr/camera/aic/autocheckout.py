@@ -7,16 +7,17 @@ from __future__ import annotations
 
 __all__ = [
     "AutoCheckoutCamera",
+    "AutoCheckoutCameraMultithread",
 ]
 
 import uuid
+from queue import Queue
 from timeit import default_timer as timer
 from typing import Any
 
 import cv2
-import numpy as np
-
 import mon
+import numpy as np
 from mon.globals import DETECTORS, MovingState, OBJECTS, TRACKERS
 from supr import io, obj, rmoi
 from supr.camera.base import Camera
@@ -341,4 +342,156 @@ class AutoCheckoutCamera(Camera):
         )
         return image
     
+# endregion
+
+
+# region AutoCheckoutCameraMultithread
+
+@CAMERAS.register(name="auto_checkout_camera_multithread")
+class AutoCheckoutCameraMultithread(AutoCheckoutCamera):
+    """Automated Retail Checkout Camera Multithread.
+    
+    Args:
+        queue_size: The queue size.
+        
+    See Also: :class:`supr.camera.aic.autocheckout.AutoCheckoutCamera`.
+    """
+    
+    def __init__(
+        self,
+        queue_size: int,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.pbar             = None
+        self.frames_queue     = Queue(maxsize=queue_size)
+        self.detections_queue = Queue(maxsize=queue_size)
+        self.counting_queue   = Queue(maxsize=queue_size)
+    
+    def run(self):
+        """Main run loop."""
+        self.on_run_start()
+        
+        self.pbar = tqdm(total=self.image_loader.num_images, desc=f"{self.name}")
+        
+        # Thread for image loader
+        thread_image_loader = threading.Thread(target=self.run_image_loader)
+        thread_image_loader.start()
+        
+        # Thread for detector
+        thread_detector = threading.Thread(target=self.run_detector)
+        thread_detector.start()
+        
+        # Thread for tracker
+        thread_tracker = threading.Thread(target=self.run_tracker)
+        thread_tracker.start()
+        
+        # Thread for counter
+        thread_counter = threading.Thread(target=self.run_counter)
+        thread_counter.start()
+        
+        # Joins threads when all terminate
+        thread_image_loader.join()
+        thread_detector.join()
+        thread_tracker.join()
+        thread_counter.join()
+        
+        self.on_run_end()
+        
+    def run_image_loader(self):
+        for images, indexes, files, rel_paths in self.image_loader:
+            if len(indexes) == 0 or images is None:
+                break
+            # Push frame index and images to queue
+            self.frames_queue.put([indexes, images, files, rel_paths])
+        
+        # Push None to queue to act as a stopping condition for next thread
+        self.frames_queue.put([None, None, None, None])
+    
+    def run_detector(self):
+        while True:
+            # Get frame indexes and images from queue
+            (images, indexes, files, rel_paths) = self.frames_queue.get()
+            if indexes is None or len(indexes) == 0 or images is None:
+                break
+            
+            # Detect Trays
+            if self.tray_detector:
+                batch_trays = self.tray_detector.detect(indexes=indexes, images=images)
+            else:
+                batch_trays = None
+                
+            # Detect Objects
+            batch_instances = self.detector.detect(indexes=indexes, images=images)
+            if self.hands_estimator:
+                batch_hands = self.hands_estimator.estimate(indexes=indexes, images=images)
+            else:
+                batch_hands = None
+            
+            # Push detections to queue
+            self.detections_queue.put([indexes, images, files, rel_paths, batch_trays, batch_instances])
+        
+        # Push None to queue to act as a stopping condition for next thread
+        self.detections_queue.put([None, None, None, None, None, None])
+    
+    def run_tracker(self):
+        while True:
+            # Get batch detections from queue
+            (indexes, images, files, rel_paths, batch_trays, batch_instances) = self.detections_queue.get()
+            if batch_instances is None:
+                break
+            
+            # Process batches
+            for idx, instances in enumerate(batch_instances):
+                # Update ROI (optional)
+                if batch_trays:
+                    tray = batch_trays[idx]
+                    if len(tray) > 0:
+                        tray = np.array(tray[0, 0:4])
+                        tray = mon.get_bbox_corners_points(bbox=tray)
+                        self.rois[0].points = tray
+                        
+                # Assign ROI
+                roi_ids = [rmoi.get_roi_for_box(bbox=i.bbox, rois=self.rois) for i in instances]
+                for instance, roi_id in zip(instances, roi_ids):
+                    instance.roi_id = roi_id
+                
+                # Track
+                self.tracker.update(instances=instances)
+                self.moving_objects: list[obj.Product] = self.tracker.tracks
+                self.hands = batch_hands[idx] if batch_hands else None
+                
+                # Update moving objects' moving state
+                for mo in self.moving_objects:
+                    mo.update_moving_state(rois=self.rois, hands=self.hands)
+                    if mo.is_to_be_counted:
+                        # fps          = getattr(self.image_loader, "fps", 30)
+                        # timestamp    = (mo.current.frame_index - self.tracker.min_hits) / fps
+                        # mo.timestamp = mon.math.floor(timestamp)
+                        mo.timestamp = mo.current.frame_index + 1
+                        
+                countable = [o for o in self.moving_objects if o.is_to_be_counted]
+                # Push countable moving objects to queue
+                self.counting_queue.put([
+                    indexes[idx], images[idx], files[idx], rel_paths[idx], countable
+                ])
+            
+            self.pbar.update(len(batch_instances))
+            
+        # Push None to queue to act as a stopping condition for next thread
+        self.counting_queue.put([None, None, None, None, None])
+                
+    def run_counter(self):
+        while True:
+            # Get countable moving objects from queue
+            (index, image, file, rel_path, countable) = self.counting_queue.get()
+            if countable is None:
+                break
+            
+            if self.save_result:
+                self.result_writer.append_results(products=countable)
+            for mo in countable:
+                mo.moving_state = MovingState.COUNTED
+            self.run_step_end(index=index + 1, image=image)
+            
 # endregion

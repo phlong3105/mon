@@ -34,15 +34,15 @@ if [ "$task" == "train" ]; then
       --cfg "cfg/training/yolov7-d6.yaml" \
       --data "data/delftbikes.yaml" \
       --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 500 \
-      --batch-size 8 \
-      --img-size 640 \
+      --epochs 200 \
+      --batch-size 4 \
+      --img-size 1280 \
       --workers 4 \
       --device 0 \
       --sync-bn \
       --exist-ok \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov7-d6-delftbikes-640" \
+      --name "yolov7-d6-delftbikes-1280" \
       # --resume
   elif [ "$machine" == "cc6e0b2cc23d" ]; then
     python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
@@ -50,31 +50,31 @@ if [ "$task" == "train" ]; then
       --cfg "cfg/training/yolov7-e6e.yaml" \
       --data "data/delftbikes.yaml" \
       --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 500 \
-      --batch-size 8 \
-      --img-size 640 \
+      --epochs 200 \
+      --batch-size 4 \
+      --img-size 1920 \
       --workers 4 \
       --device 0,1  \
       --sync-bn \
       --exist-ok \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov7-e6e-delftbikes-640" \
+      --name "yolov7-e6e-delftbikes-1920" \
       # --resume
   elif [ "$machine" == "db2c052f922d" ]; then
     python -m torch.distributed.launch --nproc_per_node 2 --master_port 9527 train_aux.py \
       --weights "" \
-      --cfg "cfg/training/yolov7-e6.yaml" \
+      --cfg "cfg/training/yolov7-w6.yaml" \
       --data "data/delftbikes.yaml" \
       --hyp "data/hyp.scratch.custom.yaml" \
-      --epochs 500 \
-      --batch-size 8 \
-      --img-size 640 \
+      --epochs 200 \
+      --batch-size 4 \
+      --img-size 1920 \
       --workers 4 \
       --device 0,1 \
       --sync-bn \
       --exist-ok \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov7-e6-delftbikes-640" \
+      --name "yolov7-w6-delftbikes-1920" \
       # --resume
   fi
 fi
@@ -83,31 +83,40 @@ fi
 if [ "$task" == "test" ]; then
   echo -e "\nTesting"
   python test.py \
-    --weights "run/train/yolov7-e6e-visdrone-1280/weights/best.pt" \
-    --data "data/a2i2.yaml" \
+    --weights "run/train/delftbikes/yolov7-e6e-delftbikes-640/weights/best.pt" \
+    --data "data/delftbikes.yaml" \
     --batch-size 8 \
-    --img-size 1280 \
+    --img-size 640 \
     --conf-thres 0.00001 \
     --iou-thres 0.5 \
     --device 0 \
     --augment \
-    --project "${root_dir}/run/test" \
-    --name yolov7-e6e-visdrone-1280
+    --project "${root_dir}/run/test/delftbikes" \
+    --name "yolov7-e6e-delftbikes-640"
 fi
 
 # Predict
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python detect.py \
-    --weights "${root_dir}/run/train/yolov7-e6e-visdrone-1280/weights/best.pt" \
-    --source "${root_dir}/data/a2i2-haze/dry-run/2023/images/" \
-    --img-size 1280 \
-    --conf-thres 0.00001 \
+    --weights \
+    "${root_dir}/run/train/delftbikes/yolov7-d6-delftbikes-1280/weights/best.pt" \
+    "${root_dir}/run/train/delftbikes/yolov7-e6-delftbikes-1920/weights/best.pt" \
+    "${root_dir}/run/train/delftbikes/yolov7-e6e-delftbikes-1920/weights/best.pt" \
+    --source "${root_dir}/data/vipriors/delftbikes/test/images" \
+    --img-size 2160 \
+    --conf-thres 0.0001 \
     --iou-thres 0.5 \
+    --device "0" \
+    --save-txt \
+    --save-conf \
+    --nosave \
     --agnostic-nms \
     --augment \
-    --project "${root_dir}/run/predict" \
-    --name yolov7-e6e-visdrone-1280
+    --project "${root_dir}/run/predict/delftbikes/prediction" \
+    --name "yolov7-ensemble" \
+    --exist-ok \
+    --no-trace
 fi
 
 cd "${root_dir}" || exit

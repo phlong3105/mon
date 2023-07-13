@@ -4,12 +4,7 @@ echo "$HOSTNAME"
 
 task=$1
 machine=$HOSTNAME
-read -e -i "$task" -p "Task [install, train, test, predict]: " task
-
-# Install
-if [ "$task" == "install" ]; then
-  echo -e "\nInstalling YOLOv8"
-fi
+read -e -i "$task" -p "Task [train, test, predict, ensemble]: " task
 
 # Initialization
 script_path=$(readlink -f "$0")
@@ -23,15 +18,15 @@ cd "${yolov8_dir}" || exit
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
-  if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
+  if [ "$machine" == "LP-LabDesktop-01-Ubuntu" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8l-det-coco.pt" \
-      --data "data/aic23-autocheckout-tray.yaml" \
-      --project "${root_dir}/run/train/aic23" \
-      --name "yolov8l-aic23-autocheckout-tray-640" \
-      --epochs 10 \
-      --batch 8 \
+      --data "data/aic23-autocheckout-synthetic-117.yaml" \
+      --project "${root_dir}/run/train/aic23/ablation" \
+      --name "yolov8l-aic23-autocheckout-synthetic-117-640" \
+      --epochs 50 \
+      --batch 16 \
       --imgsz 640 \
       --workers 8 \
       --device 0 \
