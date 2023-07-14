@@ -112,10 +112,10 @@ if [ "$task" == "ensemble" ]; then
   	--project "${root_dir}/run/predict/delftbikes/" \
   	--name "submission" \
   	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
-  	--imgsz 2160 \
+  	--imgsz 2800 \
   	--conf 0.00001 \
   	--iou 0.5 \
-  	--max-det 1000 \
+  	--max-det 2000 \
   	--augment \
   	--device 0 \
   	--exist-ok \

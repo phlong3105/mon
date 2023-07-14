@@ -73,7 +73,6 @@ def run_camera(
     console.log(f"Actual processing time: {process_time - camera_init_time} seconds.")
     console.log(f"Done.")
 
-    
 # endregion
 
 

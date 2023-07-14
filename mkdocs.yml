@@ -115,6 +115,7 @@ nav:
       - tutorial/index.md
   - "How-To Guides":
       - how-to/index.md
+      - "Dev Guideline": how-to/dev-guidelines.md
   - "API Explanation":
       - explanation/index.md
       - "mon":
