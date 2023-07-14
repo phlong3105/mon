@@ -1,5 +1,7 @@
 # Developer Guidelines
 
+---
+
 ## Introduction
 
 Python is the main dynamic language used in this project. This style guide is a
@@ -7,6 +9,8 @@ list of dos and don’ts for Python programs.
 
 Most of the guidelines here are adopted
 from [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
+
+---
 
 ## 1. Import
 
@@ -41,6 +45,8 @@ Exemption:
 - `globals` module. This module contains all user-defined globals like
   constants, enum, type alias
 
+---
+
 ## 2. Packaging Layout
 
 Rules:
@@ -69,12 +75,16 @@ Advantages:
 - The `src` layout helps enforce that an editable installation is only able to
   import files that were meant to be importable.
 
+---
+
 ## 3. Naming Convention
 
 `module_name`, `package_name`, `ClassName`, `method_name`, `ExceptionName`,
 `function_name`, `GLOBAL_CONSTANT_NAME`, `global_var_name`, `instance_var_name`,
 `function_parameter_name`, `local_var_name`, `query_proper_noun_for_thing`,
 `send_acronym_via_https`.
+
+---
 
 ## 4. Naming: Singular or Plural
 
@@ -106,6 +116,8 @@ Reasons:
 
 See
 more: [Table Naming Dilemma: Singular vs. Plural Names](https://stackoverflow.com/questions/338156/table-naming-dilemma-singular-vs-plural-names)
+
+---
 
 ## 5. Naming: Abbreviation
 
@@ -272,6 +284,8 @@ more: [Abbreviations in code](https://github.com/kisvegabor/abbreviations-in-cod
 	- `w` for width {shape}
 	- `win` for window
 
+---
+
 ## 6. Naming: Functions & Methods
 
 Rules:
@@ -341,6 +355,8 @@ Rules:
 		  is `get_something`,
 		  as in `product.get_price()` --> `product.price()`.
 
+---
+
 ## 7. Naming: Package
 
 Rules:
@@ -358,6 +374,8 @@ Rules:
   naming. See
   more: [Apple Documentation](https://developer.apple.com/documentation/technologies).
 
+---
+
 ## 8. Naming: Module
 
 Rules:
@@ -365,6 +383,8 @@ Rules:
 - Module names should be all lower cases.
 - It is usually preferable to stick to one word name. When multiple words are
   needed, an underscore should separate them.
+
+---
 
 ## 9. List and Tuple
 
@@ -374,6 +394,8 @@ Rules:
   When in doubt, use `list`.
 - `list` supports many useful functions such as `sort()`, `reverse()`, etc.
 
+---
+
 ## 10. Type Hint
 
 Rules:
@@ -381,6 +403,8 @@ Rules:
 - DO NOT overuse it when coding. Think about it while refactoring your code.
 - Use the suffix `Like` for union type that representing objects that can be
   coerced into a certain type. Example: `DictLike`.
+
+---
 
 ## 11. `assert`, `raise`, `except`
 

@@ -6,7 +6,6 @@ This section lists solutions to specific problems when using `🐈 mon` framewor
 
 ## Overview
 
-
 | Package                               | Description         |
 |---------------------------------------|---------------------|
 | __[Dev Guideline](dev-guideline.md)__ | Developer Guideline |
