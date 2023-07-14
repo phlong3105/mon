@@ -1,6 +1,4 @@
-# API Explanation
-
-This section explains `🐈 mon`'s API.
+# Quick Glance
 
 ---
 
@@ -8,7 +6,7 @@ This section explains `🐈 mon`'s API.
 
 `🐈 mon` is designed to keep everything within the framework, including data,
 libraries, scripts, and more. It works optimally with an IDE like 
-__[PyCharm](https://www.jetbrains.com/)__, but can also be easily used in any 
+[PyCharm](https://www.jetbrains.com/), but can also be easily used in any 
 console environment.
 
 ```text
@@ -39,32 +37,3 @@ mon
  |_ mac.yaml             # conda setup for macOS
  |_ mkdocs.yaml          # mkdocs setup
 ```
-
----
-
-## Core API
-
-`🐈 mon`'s core API includes several packages built on top of 
-__[Python](https://www.python.org/)__ and __[PyTorch](https://pytorch.org/)__.
-
-| Package                                   | Description                           |
-|-------------------------------------------|---------------------------------------|
-| __[foundation](mon/foundation/index.md)__ | Base functionality for other packages |
-| __[coreml](mon/coreml/index.md)__         | Machine learning code                 |
-| __[createml](mon/createml/index.md)__     | Training code                         |
-| __[vision](mon/vision/index.md)__         | Computer vision code                  |
-
----
-
-## Optional API
-
-- `🐈 mon`'s functionality can be extended by incorporating third-party code to
-__[lib](explanation/lib/index.md)__ package. 
-- Also, projects built on top of __[mon](explanation/mon/index.md)__, can be
-  placed inside __[app](explanation/app/index.md)__ package for better
-  management.
-
-| Package                   | Description         |
-|---------------------------|---------------------|
-| __[app](app/index.md)__   | Application code    |
-| __[lib](lib/index.md)__   | Third-party library |

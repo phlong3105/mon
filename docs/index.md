@@ -11,6 +11,7 @@
 git clone https://phlong3105@github.com/phlong3105/mon
 cd mon
 chmod +x install.sh
+conda init bash
 bash -i install.sh
 ```
 
