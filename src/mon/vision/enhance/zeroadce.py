@@ -6,25 +6,162 @@
 from __future__ import annotations
 
 __all__ = [
-    "ZeroADCE", "ZeroADCEJIT",
+    "ADCE", "ZeroADCE", "ZeroADCEJIT",
 ]
 
 from functools import partial
-from typing import Any
+from typing import Any, Callable
 
 import torch
 
-from mon.coreml import loss as mloss, layer as mlayer
+from mon.coreml import layer, loss
+from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import pathlib
-from mon.globals import MODELS
+from mon.globals import LAYERS, MODELS
 from mon.vision.enhance import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
 
+# region Module
+
+@LAYERS.register()
+class ADCE(
+    layer.ConvLayerParsingMixin,
+    torch.nn.Module
+):
+    
+    def __init__(
+        self,
+        in_channels : int       = 3,
+        out_channels: int       = 3,
+        mid_channels: int       = 32,
+        conv        : Callable  = layer.BSConv2dS,
+        kernel_size : _size_2_t = 3,
+        stride      : _size_2_t = 1,
+        padding     : _size_2_t = 1,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
+    ):
+        super().__init__()
+        self.downsample = layer.Downsample(None, 1, "bilinear")
+        self.upsample   = layer.UpsamplingBilinear2d(None, 1)
+        self.relu       = layer.ReLU(inplace=True)
+        self.conv1 = conv(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv2 = conv(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv3 = conv(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv4 = conv(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv5 = conv(
+            in_channels  = mid_channels * 2,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv6 = conv(
+            in_channels  = mid_channels * 2,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv7 = layer.Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x  = input
+        x  = self.downsample(x)
+        y1 = self.relu(self.conv1(x))
+        y2 = self.relu(self.conv2(y1))
+        y3 = self.relu(self.conv3(y2))
+        y4 = self.relu(self.conv4(y3))
+        y5 = self.relu(self.conv5(torch.cat([y3, y4], dim=1)))
+        y6 = self.relu(self.conv6(torch.cat([y2, y5], dim=1)))
+        y  = torch.tanh(self.conv7(torch.cat([y1, y6], dim=1)))
+        y  = self.upsample(y)
+        return y
+
+# endregion
+
+
 # region Loss
 
-class CombinedLoss(mloss.Loss):
+class CombinedLoss(loss.Loss):
     """Loss = SpatialConsistencyLoss
               + ExposureControlLoss
               + ColorConstancyLoss
@@ -53,16 +190,16 @@ class CombinedLoss(mloss.Loss):
         self.channel_weight = channel_weight
         self.edge_weight    = edge_weight
         
-        self.loss_spa = mloss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = mloss.ExposureControlLoss(
+        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = loss.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = mloss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = mloss.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = mloss.ChannelConsistencyLoss(reduction=reduction)
-        self.loss_edge    = mloss.EdgeLoss(reduction=reduction)
+        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_edge    = loss.EdgeLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -185,21 +322,21 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
             *args, **kwargs
         )
         if config in ["zero-adce-a"]:
-            conv       = partial(mlayer.ABSConv2dS, act2=mlayer.HalfInstanceNorm2d)
-            final_conv = mlayer.Conv2d
+            conv       = partial(layer.ABSConv2dS, act2=layer.HalfInstanceNorm2d)
+            final_conv = layer.Conv2d
         elif config in ["zero-adce-b"]:
-            conv       = partial(mlayer.ABSConv2dS, ac1=mlayer.HalfInstanceNorm2d, act2=mlayer.HalfInstanceNorm2d)
-            final_conv = mlayer.Conv2d
+            conv       = partial(layer.ABSConv2dS, ac1=layer.HalfInstanceNorm2d, act2=layer.HalfInstanceNorm2d)
+            final_conv = layer.Conv2d
         elif config in ["zero-adce-c"]:
-            conv       = partial(mlayer.ABSConv2dS, ac1=mlayer.HalfInstanceNorm2d, act2=mlayer.HalfInstanceNorm2d)
-            final_conv = partial(mlayer.ABSConv2dS, ac1=mlayer.HalfInstanceNorm2d, act2=mlayer.HalfInstanceNorm2d)
+            conv       = partial(layer.ABSConv2dS, ac1=layer.HalfInstanceNorm2d, act2=layer.HalfInstanceNorm2d)
+            final_conv = partial(layer.ABSConv2dS, ac1=layer.HalfInstanceNorm2d, act2=layer.HalfInstanceNorm2d)
         else:
             raise ValueError(
                 f"config must be one of: `zero-adce-[a, b, c, d, e]`. "
                 f"But got: {config}."
             )
            
-        self.relu  = mlayer.ReLU(inplace=True)
+        self.relu  = layer.ReLU(inplace=True)
         self.conv1 = conv(
             in_channels  = 3,
             out_channels = 32,
@@ -226,7 +363,7 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
             device       = None,
             dtype        = None,
         )
-        self.conv3 = mlayer.ABSConv2dS(
+        self.conv3 = layer.ABSConv2dS(
             in_channels  = 32,
             out_channels = 32,
             kernel_size  = 3,

@@ -6,19 +6,73 @@
 from __future__ import annotations
 
 __all__ = [
-    "SqueezeNet1_0", "SqueezeNet1_1",
+    "Fire", "SqueezeNet1_0", "SqueezeNet1_1",
 ]
 
 from abc import ABC
 
 import torch
+from torch import nn, Tensor
 
-from mon.coreml import layer as mlayer, model as mmodel
+from mon.coreml import layer, model
 from mon.foundation import pathlib
-from mon.globals import MODELS
+from mon.globals import LAYERS, MODELS
 from mon.vision.classify import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
+
+
+# region Module
+
+@LAYERS.register()
+class Fire(layer.LayerParsingMixin, nn.Module):
+    
+    def __init__(
+        self,
+        in_channels     : int,
+        squeeze_planes  : int,
+        expand1x1_planes: int,
+        expand3x3_planes: int,
+    ):
+        super().__init__()
+        self.in_channels = in_channels
+        self.squeeze     = layer.Conv2d(
+            in_channels  = in_channels,
+            out_channels = squeeze_planes,
+            kernel_size  = 1,
+        )
+        self.squeeze_activation = layer.ReLU(inplace = True)
+        self.expand1x1 = layer.Conv2d(
+            in_channels  = squeeze_planes,
+            out_channels = expand1x1_planes,
+            kernel_size  = 1,
+        )
+        self.expand1x1_activation = layer.ReLU(inplace=True)
+        self.expand3x3 = layer.Conv2d(
+            in_channels  = squeeze_planes,
+            out_channels = expand3x3_planes,
+            kernel_size  = 3,
+            padding      = 1,
+        )
+        self.expand3x3_activation = layer.ReLU(inplace=True)
+    
+    def forward(self, input: Tensor) -> Tensor:
+        x     = input
+        x     = self.squeeze_activation(self.squeeze(x))
+        y_1x1 = self.expand1x1_activation(self.expand1x1(x))
+        y_3x3 = self.expand3x3_activation(self.expand3x3(x))
+        y     = torch.cat([y_1x1, y_3x3], dim=1)
+        return y
+    
+    @classmethod
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+        expand1x1_planes = args[2]
+        expand3x3_planes = args[3]
+        c2 = expand1x1_planes + expand3x3_planes
+        ch.append(c2)
+        return args, ch
+
+# endregion
 
 
 # region Model
@@ -39,7 +93,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = mmodel.load_state_dict_from_path(
+            state_dict = model.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

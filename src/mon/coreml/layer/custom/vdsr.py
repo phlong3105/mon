@@ -15,7 +15,7 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml.layer import base, common
+from mon.coreml.layer import base
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import math
 from mon.globals import LAYERS
@@ -45,7 +45,7 @@ class VDSR(base.ConvLayerParsingMixin, nn.Module):
         dtype       : Any             = None,
     ):
         super().__init__()
-        self.conv1 = common.Conv2d(
+        self.conv1 = base.Conv2d(
             in_channels  = in_channels,
             out_channels = 64,
             kernel_size  = kernel_size,
@@ -60,7 +60,7 @@ class VDSR(base.ConvLayerParsingMixin, nn.Module):
         )
         self.residual_layer = nn.Sequential(
             *[
-                common.Conv2dNormActivation(
+                base.Conv2dNormActivation(
                     in_channels      = 64,
                     out_channels     = 64,
                     kernel_size      = kernel_size,
@@ -70,11 +70,11 @@ class VDSR(base.ConvLayerParsingMixin, nn.Module):
                     groups           = groups,
                     bias             = bias,
                     norm_layer       = None,
-                    activation_layer = common.ReLU,
+                    activation_layer = base.ReLU,
                 ) for _ in range(18)
             ]
         )
-        self.conv2 = common.Conv2d(
+        self.conv2 = base.Conv2d(
             in_channels  = 64,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -87,10 +87,10 @@ class VDSR(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.relu = common.ReLU(inplace=True)
+        self.relu = base.ReLU(inplace=True)
         
         for m in self.modules():
-            if isinstance(m, common.Conv2d):
+            if isinstance(m, base.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2.0 / n))
     

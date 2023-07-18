@@ -6,24 +6,154 @@
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCE", "ZeroDCEVanilla",
+    "DCE", "ZeroDCE", "ZeroDCEVanilla",
 ]
 
 from typing import Any
 
 import torch
+from torch import nn
 
-from mon.coreml import loss as mloss, model as mmodel, layer as mlayer
+from mon.coreml import layer, loss, model
+from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import pathlib
-from mon.globals import MODELS
+from mon.globals import LAYERS, MODELS
 from mon.vision.enhance import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
 
+# region Module
+
+@LAYERS.register()
+class DCE(layer.ConvLayerParsingMixin, nn.Module):
+    
+    def __init__(
+        self,
+        in_channels : int       = 3,
+        out_channels: int       = 24,
+        mid_channels: int       = 32,
+        kernel_size : _size_2_t = 3,
+        stride      : _size_2_t = 1,
+        padding     : _size_2_t = 1,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
+    ):
+        super().__init__()
+        self.relu  = layer.ReLU(inplace=True)
+        self.conv1 = layer.Conv2d(
+            in_channels  = in_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv2 = layer.Conv2d(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv3 = layer.Conv2d(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv4 = layer.Conv2d(
+            in_channels  = mid_channels,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv5 = layer.Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv6 = layer.Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = mid_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv7 = layer.Conv2d(
+            in_channels  = mid_channels * 2,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x  = input
+        y1 = self.relu(self.conv1(x))
+        y2 = self.relu(self.conv2(y1))
+        y3 = self.relu(self.conv3(y2))
+        y4 = self.relu(self.conv4(y3))
+        y5 = self.relu(self.conv5(torch.cat([y3, y4], dim=1)))
+        y6 = self.relu(self.conv6(torch.cat([y2, y5], dim=1)))
+        y  = torch.tanh(self.conv7(torch.cat([y1, y6], dim=1)))
+        return y
+    
+# endregion
+
+
 # region Loss
 
-class CombinedLoss(mloss.Loss):
+class CombinedLoss(loss.Loss):
     """Loss = SpatialConsistencyLoss
               + ExposureControlLoss
               + ColorConstancyLoss
@@ -47,14 +177,14 @@ class CombinedLoss(mloss.Loss):
         self.col_weight = col_weight
         self.tv_weight  = tv_weight
         
-        self.loss_spa = mloss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = mloss.ExposureControlLoss(
+        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = loss.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col = mloss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv  = mloss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_col = loss.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv  = loss.IlluminationSmoothnessLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -157,7 +287,7 @@ class ZeroDCE(base.ImageEnhancementModel):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["sice"]:
-            state_dict = mmodel.load_state_dict_from_path(
+            state_dict = model.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             state_dict       = state_dict["params"]
@@ -210,14 +340,14 @@ class ZeroDCEVanilla(torch.nn.Module):
     def __init__(self):
         super().__init__()
         number_f   = 32
-        self.relu  = mlayer.ReLU(inplace=True)
-        self.conv1 = mlayer.Conv2d(3,            number_f, 3, 1, 1, bias=True)
-        self.conv2 = mlayer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
-        self.conv3 = mlayer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
-        self.conv4 = mlayer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
-        self.conv5 = mlayer.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
-        self.conv6 = mlayer.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
-        self.conv7 = mlayer.Conv2d(number_f * 2, 24,       3, 1, 1, bias=True)
+        self.relu  = layer.ReLU(inplace=True)
+        self.conv1 = layer.Conv2d(3,            number_f, 3, 1, 1, bias=True)
+        self.conv2 = layer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv3 = layer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv4 = layer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv5 = layer.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
+        self.conv6 = layer.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
+        self.conv7 = layer.Conv2d(number_f * 2, 24,       3, 1, 1, bias=True)
     
     def enhance(self, x: torch.Tensor, x_r: torch.Tensor) -> torch.Tensor:
         x = x + x_r * (torch.pow(x, 2) - x)

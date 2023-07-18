@@ -6,18 +6,142 @@
 from __future__ import annotations
 
 __all__ = [
-    "ShuffleNetV2_x0_5", "ShuffleNetV2_x1_0", "ShuffleNetV2_x1_5",
-    "ShuffleNetV2_x2_0",
+    "InvertedResidual", "ShuffleNetV2_x0_5", "ShuffleNetV2_x1_0",
+    "ShuffleNetV2_x1_5", "ShuffleNetV2_x2_0",
 ]
 
 from abc import ABC
 
-from mon.coreml import model as mmodel
+import torch
+from torch import nn
+
+from mon.coreml import layer, model
 from mon.foundation import pathlib
-from mon.globals import MODELS
+from mon.globals import LAYERS, MODELS
 from mon.vision.classify import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
+
+
+# region Module
+
+@LAYERS.register()
+class InvertedResidual(layer.LayerParsingMixin, nn.Module):
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        stride      : int,
+    ):
+        super().__init__()
+        
+        if not (1 <= stride <= 3):
+            raise ValueError("Illegal stride value.")
+        self.stride = stride
+        
+        branch_features = out_channels // 2
+        if (self.stride == 1) and (in_channels != branch_features << 1):
+            raise ValueError(
+                f"Invalid combination of 'stride' {stride}, "
+                f"'in_channels' {in_channels} and 'out_channels' "
+                f"{out_channels} "
+                f"values. If stride == 1 then 'in_channels' should be equal "
+                f"to 'out_channels' // 2 << 1."
+            )
+        
+        if self.stride > 1:
+            self.branch1 = nn.Sequential(
+                layer.Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = in_channels,
+                    kernel_size  = 3,
+                    stride       = self.stride,
+                    padding      = 1,
+                    groups       = in_channels,
+                    bias         = False,
+                ),
+                layer.BatchNorm2d(in_channels),
+                layer.Conv2d(
+                    in_channels  = in_channels,
+                    out_channels = branch_features,
+                    kernel_size  = 1,
+                    stride       = 1,
+                    padding      = 0,
+                    bias         = False
+                ),
+                layer.BatchNorm2d(branch_features),
+                layer.ReLU(inplace=True),
+            )
+        else:
+            self.branch1 = nn.Sequential()
+        
+        self.branch2 = nn.Sequential(
+            layer.Conv2d(
+                in_channels  = in_channels if (self.stride > 1) else branch_features,
+                out_channels = branch_features,
+                kernel_size  = 1,
+                stride       = 1,
+                padding      = 0,
+                bias         = False,
+            ),
+            layer.BatchNorm2d(branch_features),
+            layer.ReLU(inplace=True),
+            layer.Conv2d(
+                in_channels  = branch_features,
+                out_channels = branch_features,
+                kernel_size  = 3,
+                stride       = self.stride,
+                padding      = 1,
+                groups       = branch_features,
+                bias         = False,
+            ),
+            layer.BatchNorm2d(branch_features),
+            layer.Conv2d(
+                in_channels  = branch_features,
+                out_channels = branch_features,
+                kernel_size  = 1,
+                stride       = 1,
+                padding      = 0,
+                bias         = False,
+            ),
+            layer.BatchNorm2d(branch_features),
+            layer.ReLU(inplace=True),
+        )
+    
+    @staticmethod
+    def channel_shuffle(x: torch.Tensor, groups: int) -> torch.Tensor:
+        b, c, h, w = x.size()
+        channels_per_group = c // groups
+        # reshape
+        x = x.view(b, groups, channels_per_group, h, w)
+        x = torch.transpose(x, 1, 2).contiguous()
+        # flatten
+        x = x.view(b, -1, h, w)
+        return x
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        if self.stride == 1:
+            x1, x2 = x.chunk(2, dim=1)
+            y      = torch.cat((x1, self.branch2(x2)), dim=1)
+        else:
+            y = torch.cat((self.branch1(x), self.branch2(x)), dim=1)
+        y = self.channel_shuffle(y, 2)
+        return y
+    
+    @classmethod
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+        if isinstance(f, list | tuple):
+            c1, c2 = ch[f[0]], args[0]
+        else:
+            c1, c2 = ch[f], args[0]
+        args = [c1, *args[0:]]
+        ch.append(c2)
+        return args, ch
+
+
+# endregion
 
 
 # region Model
@@ -38,7 +162,7 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = mmodel.load_state_dict_from_path(
+            state_dict = model.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

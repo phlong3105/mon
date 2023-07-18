@@ -1,208 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements attention-based blocks."""
+"""This module implements layers and blocks especially used for MobileOne
+models.
+"""
 
 from __future__ import annotations
 
 __all__ = [
-    "ABSConv2dS", "ABSConv2dU", "AttentionSubspaceBlueprintSeparableConv2d",
-    "AttentionUnconstrainedBlueprintSeparableConv2d", "MobileOneConv2d"
+    "MobileOneConv2d", "MobileOneStage",
 ]
 
 from typing import Any
 
+import torch
 from torch import nn
-from torchvision.ops.misc import *
 
 from mon.coreml.layer import base
-from mon.coreml.layer.common import (
-    activation, attention, conv, linear, normalization,
-)
 from mon.coreml.layer.typing import _size_2_t
-from mon.foundation import math
 from mon.globals import LAYERS
-
-
-# region Attention Blueprint Separable Convolution
-
-@LAYERS.register()
-class AttentionSubspaceBlueprintSeparableConv2d(
-    base.ConvLayerParsingMixin,
-    nn.Module
-):
-    """Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-    
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : _size_2_t,
-        stride          : _size_2_t       = 1,
-        padding         : _size_2_t | str = 0,
-        dilation        : _size_2_t       = 1,
-        groups          : int             = 1,
-        bias            : bool            = True,
-        padding_mode    : str             = "zeros",
-        device          : Any             = None,
-        dtype           : Any             = None,
-        p               : float           = 0.25,
-        min_mid_channels: int             = 4,
-        act1            : Callable        = None,
-        act2            : Callable        = None,
-    ):
-        super().__init__()
-        assert 0.0 <= p <= 1.0
-        mid_channels = min(
-            in_channels, max(min_mid_channels, math.ceil(p * in_channels))
-        )
-        self.pw_conv1 = conv.Conv2d(
-            in_channels  = in_channels,
-            out_channels = mid_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act1 = act1(num_features=mid_channels) if act1 is not None else None
-        self.pw_conv2 = conv.Conv2d(
-            in_channels  = mid_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act2 = act2(num_features=out_channels) if act2 is not None else None
-        self.dw_conv = conv.Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.simam = attention.SimAM()
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = self.pw_conv1(x)
-        y = self.simam(y)
-        if self.act1 is not None:
-            y = self.act1(y)
-        y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
-        y = self.dw_conv(y)
-        return y
-    
-    def regularization_loss(self):
-        w   = self.pw_conv1.weight[:, :, 0, 0]
-        wwt = torch.mm(w, torch.transpose(w, 0, 1))
-        i   = torch.eye(wwt.shape[0], device=wwt.device)
-        return torch.norm(wwt - i, p="fro")
-
-
-@LAYERS.register()
-class AttentionUnconstrainedBlueprintSeparableConv2d(
-    base.ConvLayerParsingMixin,
-    nn.Module
-):
-    """Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        https://github.com/zeiss-microscopy/BSConv
-    """
-    
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : _size_2_t,
-        stride          : _size_2_t       = 1,
-        padding         : _size_2_t | str = 0,
-        dilation        : _size_2_t       = 1,
-        groups          : int             = 1,
-        bias            : bool            = True,
-        padding_mode    : str             = "zeros",
-        device          : Any             = None,
-        dtype           : Any             = None,
-        p               : float           = 0.25,
-        min_mid_channels: int             = 4,
-        act             : Callable        = None,
-    ):
-        super().__init__()
-        self.pw_conv = conv.Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.act = act(num_features=out_channels) if act is not None else None
-        self.dw_conv = conv.Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.simam = attention.SimAM()
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = self.pw_conv(x)
-        y = self.simam(y)
-        if self.act is not None:
-            y = self.act(y)
-        y = self.dw_conv(y)
-        return y
-
-
-ABSConv2dS = AttentionSubspaceBlueprintSeparableConv2d
-ABSConv2dU = AttentionUnconstrainedBlueprintSeparableConv2d
-LAYERS.register(module=ABSConv2dS)
-LAYERS.register(module=ABSConv2dU)
-
-
-# endregion
 
 
 # region MobileOne Convolution
@@ -251,21 +67,21 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         
         # Check if SE-ReLU is requested
         if se is True:
-            self.se = attention.SqueezeExciteC(
+            self.se = base.SqueezeExciteC(
                 channels        = out_channels,
                 reduction_ratio = 16,
                 bias            = True,
             )
         else:
-            self.se = linear.Identity()
-        self.act = activation.ReLU()
+            self.se = base.Identity()
+        self.act = base.ReLU()
         
         self.reparam_conv = None
         self.rbr_skip     = None
         self.rbr_conv     = None
         self.rbr_scale    = None
         if inference_mode:
-            self.reparam_conv = conv.Conv2d(
+            self.reparam_conv = base.Conv2d(
                 in_channels  = in_channels,
                 out_channels = out_channels,
                 kernel_size  = kernel_size,
@@ -280,7 +96,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             )
         else:
             # Re-parameterizable skip connection
-            self.rbr_skip = normalization.BatchNorm2d(
+            self.rbr_skip = base.BatchNorm2d(
                 num_features=in_channels) \
                 if out_channels == in_channels and stride == 1 else None
             
@@ -288,7 +104,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             rbr_conv = list()
             for _ in range(self.num_conv_branches):
                 rbr_conv.append(
-                    conv.Conv2dBn(
+                    base.Conv2dBn(
                         in_channels  = in_channels,
                         out_channels = out_channels,
                         kernel_size  = kernel_size,
@@ -302,11 +118,11 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
                         dtype        = dtype,
                     )
                 )
-            self.rbr_conv = torch.nn.ModuleList(rbr_conv)
+            self.rbr_conv = nn.ModuleList(rbr_conv)
             
             # Re-parameterizable scale branch
             if kernel_size > 1:
-                self.rbr_scale = conv.Conv2dBn(
+                self.rbr_scale = base.Conv2dBn(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = 1,
@@ -368,7 +184,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         Returns:
             Tuple of (kernel, bias) after fusing batchnorm.
         """
-        if isinstance(branch, conv.Conv2dBn):
+        if isinstance(branch, base.Conv2dBn):
             kernel       = branch.conv.weight
             running_mean = branch.bn.running_mean
             running_var  = branch.bn.running_var
@@ -376,7 +192,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             beta         = branch.bn.bias
             eps          = branch.bn.eps
         else:
-            assert isinstance(branch, normalization.BatchNorm2d)
+            assert isinstance(branch, base.BatchNorm2d)
             if not hasattr(self, "id_tensor"):
                 input_dim = self.in_channels // self.groups
                 kernel_value = torch.zeros(
@@ -410,7 +226,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         if self.inference_mode:
             return
         kernel, bias = self._get_kernel_bias()
-        self.reparam_conv = conv.Conv2d(
+        self.reparam_conv = base.Conv2d(
             in_channels  = self.rbr_conv[0].conv.in_channels,
             out_channels = self.rbr_conv[0].conv.out_channels,
             kernel_size  = self.rbr_conv[0].conv.kernel_size,
@@ -456,5 +272,82 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             # Final output
             y = self.act(self.se(y))
             return y
+
+# endregion
+
+
+# region MobuleOne Module
+
+@LAYERS.register()
+class MobileOneStage(base.ConvLayerParsingMixin, nn.Module):
+    """MobileOneStage used to construct the MobileOne Model from the paper:
+    "An Improved One millisecond Mobile Backbone" (https://arxiv.org/pdf/2206.04040.pdf).
+    
+    References:
+        https://github.com/apple/ml-mobileone/blob/main/mobileone.py
+    """
+    
+    def __init__(
+        self,
+        in_channels      : int,
+        out_channels     : int,
+        num_blocks       : int,
+        num_se_blocks    : int,
+        inference_mode   : bool = False,
+        num_conv_branches: int  = 1,
+    ):
+        super().__init__()
+        strides = [2] + [1] * (num_blocks - 1)
+        convs   = []
+        for ix, stride in enumerate(strides):
+            se = False
+            if num_se_blocks > num_blocks:
+                raise ValueError(
+                    f"Require number of SE blocks less than number of layers. "
+                    f"But got: {num_se_blocks} > {num_blocks}."
+                )
+            if ix >= (num_blocks - num_se_blocks):
+                se = True
+            
+            # Depthwise
+            convs.append(
+                MobileOneConv2d(
+                    in_channels       = in_channels,
+                    out_channels      = in_channels,
+                    kernel_size       = 3,
+                    stride            = stride,
+                    padding           = 1,
+                    groups            = in_channels,
+                    inference_mode    = inference_mode,
+                    se                = se,
+                    num_conv_branches = num_conv_branches,
+                )
+            )
+            # Pointwise
+            convs.append(
+                MobileOneConv2d(
+                    in_channels       = in_channels,
+                    out_channels      = out_channels,
+                    kernel_size       = 1,
+                    stride            = 1,
+                    padding           = 0,
+                    groups            = 1,
+                    inference_mode    = inference_mode,
+                    se                = se,
+                    num_conv_branches = num_conv_branches,
+                )
+            )
+            in_channels = out_channels
+        self.convs = nn.Sequential(*convs)
+    
+    def reparameterize(self):
+        for module in self.convs.modules():
+            if hasattr(module, "reparameterize"):
+                module.reparameterize()
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.convs(x)
+        return y
 
 # endregion

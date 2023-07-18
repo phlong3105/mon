@@ -17,9 +17,9 @@ from typing import Callable
 import torch
 from torch import nn
 
-from mon.coreml.layer import base
-from mon.coreml.layer.common import (
-    activation, conv, dropout as dropout_layer, linear, mutating, pooling,
+from mon.coreml.layer.base import (
+    activation, base, conv,
+    dropout as dropout_layer, linear, mutating, pooling,
 )
 from mon.globals import LAYERS
 

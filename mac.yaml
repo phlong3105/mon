@@ -35,6 +35,7 @@ dependencies:
       # Image
       - albumentations
       - ffmpeg-python     # Python bindings for FFmpeg - with complex filtering support.
+      - kornia            # Kornia is a differentiable computer vision library for PyTorch.
       - opencv-python     # Computer vision and machine learning software library.
       - opencv-contrib-python
       # Network

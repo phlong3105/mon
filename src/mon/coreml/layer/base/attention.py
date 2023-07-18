@@ -19,9 +19,8 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops import misc as torchvision_misc
 
-from mon.coreml.layer import base
-from mon.coreml.layer.common import (
-    activation, conv, linear, normalization, pooling,
+from mon.coreml.layer.base import (
+    activation, base, conv, linear, normalization, pooling,
 )
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
@@ -51,7 +50,7 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)  # squeeze
-        self.excitation = torch.nn.Sequential(
+        self.excitation = nn.Sequential(
             conv.Conv2d(
                 in_channels  = channels,
                 out_channels = channels  // reduction_ratio,
@@ -107,7 +106,7 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)  # squeeze
-        self.excitation = torch.nn.Sequential(
+        self.excitation = nn.Sequential(
             linear.Linear(
                 in_features  = channels,
                 out_features = channels  // reduction_ratio,

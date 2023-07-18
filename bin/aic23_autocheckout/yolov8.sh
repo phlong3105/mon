@@ -21,10 +21,10 @@ if [ "$task" == "train" ]; then
   if [ "$machine" == "LP-LabDesktop-01-Ubuntu" ]; then
     python train.py \
       --task "detect" \
-      --model "${root_dir}/zoo/yolov8/yolov8m-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8n-det-coco.pt" \
       --data "data/aic23-autocheckout-synthetic-117.yaml" \
       --project "${root_dir}/run/train/aic23/ablation" \
-      --name "yolov8m-aic23-autocheckout-synthetic-117-640" \
+      --name "yolov8n-aic23-autocheckout-synthetic-117-640" \
       --epochs 50 \
       --batch 32 \
       --imgsz 640 \

@@ -11,7 +11,7 @@ __all__ = [
 
 from torch import nn
 
-from mon.coreml.layer import base
+from mon.coreml.layer.base import base
 from mon.globals import LAYERS
 
 

@@ -112,7 +112,7 @@ if [ "$task" == "ensemble" ]; then
   	--project "${root_dir}/run/predict/delftbikes/" \
   	--name "submission" \
   	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
-  	--imgsz 2800 \
+  	--imgsz 3440 \
   	--conf 0.00001 \
   	--iou 0.5 \
   	--max-det 2000 \

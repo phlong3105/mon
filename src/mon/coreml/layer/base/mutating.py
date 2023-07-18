@@ -19,7 +19,7 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops.misc import Permute
 
-from mon.coreml.layer import base
+from mon.coreml.layer.base import base
 from mon.foundation import builtins
 from mon.globals import LAYERS
 
