@@ -2,27 +2,27 @@ name    : "zerodce++"
 channels: 3
 backbone: [
   # [from,  number, module,                       args(out_channels, ...)]
-  [-1,      1,      Identity,                    []],                      # 0  (x)
-  [-1,      1,      Downsample,                  [None, 1, "bilinear"]],   # 1  (x_down)
-  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 2
-  [-1,      1,      ReLU,                        [True]],                  # 3  (x1)
-  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 4
-  [-1,      1,      ReLU,                        [True]],                  # 5  (x2)
-  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 6
-  [-1,      1,      ReLU,                        [True]],                  # 7  (x3)
-  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 8
-  [-1,      1,      ReLU,                        [True]],                  # 9  (x4)
-  [[7, 9],  1,      Concat,                      []],                      # 10
-  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 11
-  [-1,      1,      ReLU,                        [True]],                  # 12 (x5)
-  [[5, 12], 1,      Concat,                      []],                      # 13
-  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 1, 0]],  # 14
-  [-1,      1,      ReLU,                        [True]],                  # 15 (x6)
-  [[3, 15], 1,      Concat,                      []],                      # 16
-  [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 1, 0]],  # 17 (a)
-  [-1,      1,      Tanh,                        []],                      # 18
-  [-1,      1,      UpsamplingBilinear2d,        [None, 1]],               # 19
+  [-1,      1,      Identity,                    []],                        # 0  (x)
+  [-1,      1,      Downsample,                  [None, 1, "bilinear"]],     # 1  (x_down)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 0, 1, 1]], # 2
+  [-1,      1,      ReLU,                        [True]],                    # 3  (x1)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 0, 1, 1]], # 4
+  [-1,      1,      ReLU,                        [True]],                    # 5  (x2)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 0, 1, 1]], # 6
+  [-1,      1,      ReLU,                        [True]],                    # 7  (x3)
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 0, 1, 1]], # 8
+  [-1,      1,      ReLU,                        [True]],                    # 9  (x4)
+  [[7, 9],  1,      Concat,                      []],                        # 10
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 0, 1, 1]], # 11
+  [-1,      1,      ReLU,                        [True]],                    # 12 (x5)
+  [[5, 12], 1,      Concat,                      []],                        # 13
+  [-1,      1,      DepthwiseSeparableConv2d,    [32, 3, 1, 1, 1, 0, 1, 1]], # 14
+  [-1,      1,      ReLU,                        [True]],                    # 15 (x6)
+  [[3, 15], 1,      Concat,                      []],                        # 16
+  [-1,      1,      DepthwiseSeparableConv2d,    [3,  3, 1, 1, 1, 0, 1, 1]], # 17 (a)
+  [-1,      1,      Tanh,                        []],                        # 18
+  [-1,      1,      UpsamplingBilinear2d,        [None, 1]],                 # 19
 ]
 head    : [
-  [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                    # 20
+  [[-1, 0], 1,      PixelwiseHigherOrderLECurve,  [8]],                      # 20
 ]

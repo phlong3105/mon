@@ -2,9 +2,12 @@
 
 echo "$HOSTNAME"
 
-task=$1
 machine=$HOSTNAME
+task=$1
 read -e -i "$task" -p "Task [train, test, predict, ensemble]: " task
+
+machine=$(echo $machine | tr '[:upper:]' '[:lower:]')
+task=$(echo $task | tr '[:upper:]' '[:lower:]')
 
 # Initialization
 script_path=$(readlink -f "$0")
@@ -18,22 +21,22 @@ cd "${yolov8_dir}" || exit
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
-  if [ "$machine" == "LP-LabDesktop-01-Ubuntu" ]; then
+  if [ "$machine" == "lp-labdesktop-01-ubuntu" ]; then
     python train.py \
       --task "detect" \
-      --model "${root_dir}/zoo/yolov8/yolov8n-det-coco.pt" \
+      --model "${root_dir}/zoo/yolov8/yolov8x-det-coco.pt" \
       --data "data/aic23-autocheckout-synthetic-117.yaml" \
       --project "${root_dir}/run/train/aic23/ablation" \
-      --name "yolov8n-aic23-autocheckout-synthetic-117-640" \
+      --name "yolov8x-aic23-autocheckout-synthetic-117-640" \
       --epochs 50 \
-      --batch 32 \
+      --batch 16 \
       --imgsz 640 \
       --workers 8 \
       --device 0 \
       --save \
       --exist-ok \
       --pretrained
-  elif [ "$machine" == "VSW-WS02" ]; then
+  elif [ "$machine" == "vsw-ws02" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
@@ -74,7 +77,7 @@ fi
 # Predict
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
-  if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
+  if [ "$machine" == "lp-labdesktop-01-ubuntu" ]; then
     python predict.py \
     	--task "detect" \
     	--model "${root_dir}/run/train/aic23/yolov8x-aic23-autocheckout-tray-640/weights/best.pt" \
@@ -92,7 +95,7 @@ if [ "$task" == "predict" ]; then
     	--save-txt \
     	--overlap-mask \
     	--box
-  elif [ "$machine" == "VSW-WS02" ]; then
+  elif [ "$machine" == "vsw-ws02" ]; then
     python predict.py \
     	--task "detect" \
     	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-tray-640/weights/best.pt" \

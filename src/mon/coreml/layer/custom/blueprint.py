@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Attention Subspace Blueprint Separable Conv layers.
+"""This module implements Subspace Blueprint Separable Convolution layers.
 """
 
 from __future__ import annotations

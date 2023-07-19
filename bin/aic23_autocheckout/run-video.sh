@@ -18,6 +18,11 @@ else
 fi
 read -e -i "$preprocess" -p "Preprocess [yes, no]: " preprocess
 
+dataset=$(echo $dataset | tr '[:upper:]' '[:lower:]')
+subset=$(echo $subset | tr '[:upper:]' '[:lower:]')
+video=$(echo $video | tr '[:upper:]' '[:lower:]')
+preprocess=$(echo $preprocess | tr '[:upper:]' '[:lower:]')
+
 # Initialization
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")

@@ -2,9 +2,12 @@
 
 echo "$HOSTNAME"
 
-task=$1
 machine=$HOSTNAME
-read -e -i "$task" -p "Task [install, train, test, predict]: " task
+task=$1
+read -e -i "$task" -p "Task [train, test, predict]: " task
+
+machine=$(echo $machine | tr '[:upper:]' '[:lower:]')
+task=$(echo $task | tr '[:upper:]' '[:lower:]')
 
 # Initialization
 script_path=$(readlink -f "$0")

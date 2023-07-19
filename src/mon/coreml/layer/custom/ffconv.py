@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements convolutional layers."""
+"""This module implements Fast-Fourier Convolution layers."""
 
 from __future__ import annotations
 
 __all__ = [
-    "FFConv2d",
-    "FFConv2dNormActivation",
-    "FastFourierConvolution2d",
-    "FourierUnit",
-    "LearnableSpatialTransform",
-    "SpectralTransform",
+    "FFConv2d", "FFConv2dNormAct", "FastFourierConv2d",
+    "FastFourierConv2dNormActivation", "FourierUnit",
+    "LearnableSpatialTransform", "SpectralTransform",
 ]
 
 import torch
@@ -254,15 +251,15 @@ class LearnableSpatialTransform(nn.Module):
 # region Fast-Fourier Convolution
 
 @LAYERS.register()
-class FastFourierConvolution2d(base.ConvLayerParsingMixin, nn.Module):
+class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
         in_channels             : int,
         out_channels            : int,
         kernel_size             : _size_2_t,
-        ratio_gin               : int,
-        ratio_gout              : int,
+        ratio_gin               : float,
+        ratio_gout              : float,
         stride                  : _size_2_t  = 1,
         padding                 : _size_2_t  = 0,
         dilation                : _size_2_t  = 1,
@@ -353,7 +350,7 @@ class FastFourierConvolution2d(base.ConvLayerParsingMixin, nn.Module):
     
     def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = input
-        x_local, x_global = x if type(x) is tuple else (x, 0)
+        x_local, x_global = x if isinstance(x, tuple | list) else (x, 0)
         y_local, y_global = 0, 0
 
         if self.gated:
@@ -376,15 +373,19 @@ class FastFourierConvolution2d(base.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FFConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
-
+class FastFourierConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
+    """
+    
+    Notes: Mimicking the naming of `torchvision.ops.misc.Conv2dNormActivation`.
+    """
+    
     def __init__(
         self,
         in_channels             : int,
         out_channels            : int,
         kernel_size             : _size_2_t,
-        ratio_gin               : int,
-        ratio_gout              : int,
+        ratio_gin               : float,
+        ratio_gout              : float,
         stride                  : _size_2_t  = 1,
         padding                 : _size_2_t  = 0,
         dilation                : _size_2_t  = 1,
@@ -446,7 +447,10 @@ class FFConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
         return y_local, y_global
 
 
-FFConv2d = FastFourierConvolution2d
+FFConv2d        = FastFourierConv2d
+FFConv2dNormAct = FastFourierConv2dNormActivation
 LAYERS.register(module=FFConv2d)
+LAYERS.register(module=FFConv2dNormAct)
+
 
 # endregion

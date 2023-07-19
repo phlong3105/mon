@@ -2,9 +2,12 @@
 
 echo "$HOSTNAME"
 
-task=$1
 machine=$HOSTNAME
+task=$1
 read -e -i "$task" -p "Task [train, test, predict]: " task
+
+machine=$(echo $machine | tr '[:upper:]' '[:lower:]')
+task=$(echo $task | tr '[:upper:]' '[:lower:]')
 
 # Initialization
 script_path=$(readlink -f "$0")
@@ -18,7 +21,7 @@ cd "${yolov8_dir}" || exit
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
-  if [ "$machine" == "LP-LabDesktop01-Ubuntu" ]; then
+  if [ "$machine" == "lp-labdesktop-01-ubuntu" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
@@ -33,7 +36,7 @@ if [ "$task" == "train" ]; then
       --save \
       --exist-ok \
       --pretrained
-  elif [ "$machine" == "VSW-WS02" ]; then
+  elif [ "$machine" == "vsw-ws02" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \

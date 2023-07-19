@@ -11,13 +11,11 @@ import mon.vision.enhance.finet
 import mon.vision.enhance.hinet
 import mon.vision.enhance.zeroadce
 import mon.vision.enhance.zerodce
-import mon.vision.enhance.zerodce_tiny
-import mon.vision.enhance.zerodcepp
+import mon.vision.enhance.zerodcev2
 from mon.vision.enhance.base import *
 from mon.vision.enhance.ffanet import *
 from mon.vision.enhance.finet import *
 from mon.vision.enhance.hinet import *
 from mon.vision.enhance.zeroadce import *
 from mon.vision.enhance.zerodce import *
-from mon.vision.enhance.zerodce_tiny import *
-from mon.vision.enhance.zerodcepp import *
+from mon.vision.enhance.zerodcev2 import *
