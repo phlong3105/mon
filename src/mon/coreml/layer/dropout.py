@@ -15,7 +15,7 @@ import torch
 from torch import nn
 from torchvision import ops
 
-from mon.coreml.layer.base import base
+from mon.coreml.layer import base
 from mon.globals import LAYERS
 
 

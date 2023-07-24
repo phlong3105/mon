@@ -14,11 +14,11 @@ from typing import Any, Sequence
 import torch
 from torch import nn
 
-from mon.coreml import layer
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import builtins, pathlib
 from mon.globals import LAYERS, MODELS
 from mon.vision.enhance import base
+from mon.vision.ml import layer
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 

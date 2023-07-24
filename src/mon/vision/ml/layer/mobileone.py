@@ -16,7 +16,9 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml.layer import base
+from mon.coreml.layer import (
+    activation, attention, base, conv, linear, normalization,
+)
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -67,21 +69,21 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         
         # Check if SE-ReLU is requested
         if se is True:
-            self.se = base.SqueezeExciteC(
+            self.se = attention.SqueezeExciteC(
                 channels        = out_channels,
                 reduction_ratio = 16,
                 bias            = True,
             )
         else:
-            self.se = base.Identity()
-        self.act = base.ReLU()
+            self.se = linear.Identity()
+        self.act = activation.ReLU()
         
         self.reparam_conv = None
         self.rbr_skip     = None
         self.rbr_conv     = None
         self.rbr_scale    = None
         if inference_mode:
-            self.reparam_conv = base.Conv2d(
+            self.reparam_conv = conv.Conv2d(
                 in_channels  = in_channels,
                 out_channels = out_channels,
                 kernel_size  = kernel_size,
@@ -96,7 +98,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             )
         else:
             # Re-parameterizable skip connection
-            self.rbr_skip = base.BatchNorm2d(
+            self.rbr_skip = normalization.BatchNorm2d(
                 num_features=in_channels) \
                 if out_channels == in_channels and stride == 1 else None
             
@@ -104,7 +106,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             rbr_conv = list()
             for _ in range(self.num_conv_branches):
                 rbr_conv.append(
-                    base.Conv2dBn(
+                    conv.Conv2dBn(
                         in_channels  = in_channels,
                         out_channels = out_channels,
                         kernel_size  = kernel_size,
@@ -122,7 +124,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             
             # Re-parameterizable scale branch
             if kernel_size > 1:
-                self.rbr_scale = base.Conv2dBn(
+                self.rbr_scale = conv.Conv2dBn(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = 1,
@@ -184,7 +186,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         Returns:
             Tuple of (kernel, bias) after fusing batchnorm.
         """
-        if isinstance(branch, base.Conv2dBn):
+        if isinstance(branch, conv.Conv2dBn):
             kernel       = branch.conv.weight
             running_mean = branch.bn.running_mean
             running_var  = branch.bn.running_var
@@ -192,7 +194,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             beta         = branch.bn.bias
             eps          = branch.bn.eps
         else:
-            assert isinstance(branch, base.BatchNorm2d)
+            assert isinstance(branch, normalization.BatchNorm2d)
             if not hasattr(self, "id_tensor"):
                 input_dim = self.in_channels // self.groups
                 kernel_value = torch.zeros(
@@ -226,7 +228,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         if self.inference_mode:
             return
         kernel, bias = self._get_kernel_bias()
-        self.reparam_conv = base.Conv2d(
+        self.reparam_conv = conv.Conv2d(
             in_channels  = self.rbr_conv[0].conv.in_channels,
             out_channels = self.rbr_conv[0].conv.out_channels,
             kernel_size  = self.rbr_conv[0].conv.kernel_size,

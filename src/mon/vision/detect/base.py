@@ -15,9 +15,9 @@ from typing import Any
 import numpy as np
 import torch
 
-from mon.coreml import data as mdata, device as mdevice
 from mon.foundation import pathlib
 from mon.vision import image as mimage, tracking
+from mon.vision.ml import data as mdata, device as mdevice
 
 
 # region Detector

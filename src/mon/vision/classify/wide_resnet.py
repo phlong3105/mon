@@ -12,11 +12,12 @@ __all__ = [
 from abc import ABC
 
 import torch
+from torch import nn
 
-from mon.coreml import layer as mlayer, model as mmodel
 from mon.foundation import pathlib
 from mon.globals import MODELS
-from mon.vision.classify import base
+from mon.vision.classify import base, resnet
+from mon.vision.ml import model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -33,7 +34,7 @@ class WideResNet(base.ImageClassificationModel, ABC):
     zoo         = {}
     map_weights = {}
     
-    def init_weights(self, m: torch.nn.Module):
+    def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -50,9 +51,9 @@ class WideResNet(base.ImageClassificationModel, ABC):
 
         zero_init_residual = self.config["zero_init_residual"]
         if zero_init_residual:
-            if isinstance(m, mlayer.ResNetBottleneck) and m.bn3.weight is not None:
+            if isinstance(m, resnet.ResNetBottleneck) and m.bn3.weight is not None:
                 torch.nn.init.constant_(m.bn3.weight, 0)
-            elif isinstance(m, mlayer.ResNetBottleneck) and m.bn2.weight is not None:
+            elif isinstance(m, resnet.ResNetBottleneck) and m.bn2.weight is not None:
                 torch.nn.init.constant_(m.bn2.weight, 0)
     
     def load_weights(self):
@@ -61,7 +62,7 @@ class WideResNet(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = mmodel.load_state_dict_from_path(
+            state_dict = model.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

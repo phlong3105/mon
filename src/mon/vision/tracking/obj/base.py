@@ -18,9 +18,9 @@ from typing import Any, Callable
 import cv2
 import numpy as np
 
-from mon.coreml import data as mdata
 from mon.globals import AppleRGB, MOTIONS, MovingState
 from mon.vision import drawing, geometry
+from mon.vision.ml import data as mdata
 from mon.vision.tracking import motion as mmotion
 
 

@@ -15,11 +15,11 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon.coreml import layer, model
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import builtins, pathlib
 from mon.globals import LAYERS, MODELS
 from mon.vision.classify import base
+from mon.vision.ml import layer, model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 

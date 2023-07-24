@@ -16,10 +16,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from mon.coreml import layer, loss
 from mon.foundation import pathlib
 from mon.globals import MODELS
 from mon.vision.enhance import base
+from mon.vision.ml import layer, loss
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 

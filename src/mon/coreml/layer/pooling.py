@@ -22,7 +22,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon.coreml.layer.base import base, padding as pad
+from mon.coreml.layer import base, padding as pad
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import builtins
 from mon.globals import LAYERS
@@ -133,7 +133,7 @@ class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
         pool_type  : str  = "fast",
         flatten    : bool = False,
     ):
-        from mon.coreml.layer.base import linear, mutating
+        from mon.coreml.layer import linear, mutating
         
         super().__init__()
         self.pool_type = pool_type or ""

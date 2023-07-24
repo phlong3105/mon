@@ -9,9 +9,6 @@ __all__ = [
     "LeNet",
 ]
 
-from typing import Any
-
-from mon.coreml import model as mmodel
 from mon.foundation import pathlib
 from mon.globals import MODELS
 from mon.vision.classify import base

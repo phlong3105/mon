@@ -15,9 +15,9 @@ from typing import Any
 import numpy as np
 import torch
 
-from mon.coreml import device as mdevice
 from mon.foundation import pathlib
 from mon.vision import image as mimage
+from mon.vision.ml import device as mdevice
 
 
 # region Embedder

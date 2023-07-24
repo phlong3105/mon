@@ -14,10 +14,10 @@ from abc import ABC
 
 import torch
 
-from mon.coreml import model as mmodel
 from mon.foundation import pathlib
 from mon.globals import MODELS
 from mon.vision.classify import base
+from mon.vision.ml import model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -53,7 +53,7 @@ class VGG(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = mmodel.load_state_dict_from_path(
+            state_dict = model.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

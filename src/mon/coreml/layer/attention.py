@@ -15,14 +15,15 @@ __all__ = [
 from typing import Any, Sequence
 
 import torch
-from mon.coreml.layer.base import (
+from torch import nn
+from torch.nn import functional
+from torchvision.ops import misc as torchvision_misc
+
+from mon.coreml.layer import (
     activation, base, conv, linear, normalization, pooling,
 )
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
-from torch import nn
-from torch.nn import functional
-from torchvision.ops import misc as torchvision_misc
 
 
 # region Channel Attention

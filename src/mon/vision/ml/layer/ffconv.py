@@ -16,7 +16,9 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml.layer import base
+from mon.coreml.layer import (
+    activation, base, conv, linear, normalization, pooling,
+)
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -50,7 +52,7 @@ class FourierUnit(nn.Module):
         self.groups     = groups
         self.ffc3d      = ffc3d
         self.fft_norm   = fft_norm
-        self.conv_layer = base.Conv2d(
+        self.conv_layer = conv.Conv2d(
             in_channels  = in_channels * 2,
             out_channels = out_channels * 2,
             kernel_size  = 1,
@@ -59,8 +61,8 @@ class FourierUnit(nn.Module):
             groups       = self.groups,
             bias         = False,
         )
-        self.bn   = base.BatchNorm2d(out_channels * 2)
-        self.relu = base.ReLU(inplace=True)
+        self.bn   = normalization.BatchNorm2d(out_channels * 2)
+        self.relu = activation.ReLU(inplace=True)
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x          = input
@@ -147,21 +149,21 @@ class SpectralTransform2d(nn.Module):
         # bn_layer not used
         self.enable_lfu = enable_lfu
         if stride == 2:
-            self.downsample = base.AvgPool2d(kernel_size=(2, 2), stride=2)
+            self.downsample = pooling.AvgPool2d(kernel_size=(2, 2), stride=2)
         else:
-            self.downsample = base.Identity()
+            self.downsample = linear.Identity()
 
         self.stride = stride
         self.conv1  = nn.Sequential(
-            base.Conv2d(
+            conv.Conv2d(
                 in_channels  = in_channels,
                 out_channels = out_channels // 2,
                 kernel_size  = 1,
                 groups       = groups,
                 bias         = False
             ),
-            base.BatchNorm2d(out_channels // 2),
-            base.ReLU(inplace=True)
+            normalization.BatchNorm2d(out_channels // 2),
+            activation.ReLU(inplace=True)
         )
         self.fu = FourierUnit2d(
             in_channels  = out_channels // 2,
@@ -176,7 +178,7 @@ class SpectralTransform2d(nn.Module):
                 groups       = groups,
                 fft_norm     = fft_norm,
             )
-        self.conv2 = base.Conv2d(
+        self.conv2 = conv.Conv2d(
             in_channels  = out_channels // 2,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -255,7 +257,7 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
         self.ratio_gin  = ratio_gin
         self.ratio_gout = ratio_gout
         
-        self.conv_l2l   = base.Conv2d(
+        self.conv_l2l   = conv.Conv2d(
             in_channels  = in_cl,
             out_channels = out_cl,
             kernel_size  = kernel_size,
@@ -265,8 +267,8 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
             groups       = groups,
             bias         = bias,
             padding_mode = padding_mode,
-        ) if in_cl > 0 and out_cl > 0 else base.Identity()
-        self.conv_l2g   = base.Conv2d(
+        ) if in_cl > 0 and out_cl > 0 else linear.Identity()
+        self.conv_l2g   = conv.Conv2d(
             in_channels  = in_cl,
             out_channels = out_cg,
             kernel_size  = kernel_size,
@@ -276,8 +278,8 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
             groups       = groups,
             bias         = bias,
             padding_mode = padding_mode,
-        ) if in_cl > 0 and out_cg > 0 else base.Identity()
-        self.conv_g2l   = base.Conv2d(
+        ) if in_cl > 0 and out_cg > 0 else linear.Identity()
+        self.conv_g2l   = conv.Conv2d(
             in_channels  = in_cg,
             out_channels = out_cl,
             kernel_size  = kernel_size,
@@ -287,7 +289,7 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
             groups       = groups,
             bias         = bias,
             padding_mode = padding_mode,
-        ) if in_cg > 0 and out_cl > 0 else base.Identity()
+        ) if in_cg > 0 and out_cl > 0 else linear.Identity()
         self.conv_g2g   = SpectralTransform2d(
             in_channels  = in_cg,
             out_channels = out_cg,
@@ -295,7 +297,7 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
             groups       = 1 if groups == 1 else groups // 2,
             enable_lfu   = enable_lfu,
             fft_norm     = fft_norm,
-        ) if in_cg > 0 and out_cg > 0 else base.Identity()
+        ) if in_cg > 0 and out_cg > 0 else linear.Identity()
     
     def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x        = input
@@ -339,8 +341,8 @@ class FastFourierConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
         groups       : int        = 1,
         bias         : bool       = False,
         padding_mode : str        = "zeros",
-        norm_layer   : Any        = base.BatchNorm2d,
-        act_layer    : Any        = base.Identity,
+        norm_layer   : Any        = normalization.BatchNorm2d,
+        act_layer    : Any        = linear.Identity,
         enable_lfu   : bool       = True,
         fft_norm     : str | None = "ortho",
     ):
@@ -360,10 +362,10 @@ class FastFourierConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
             enable_lfu   = enable_lfu,
             fft_norm     = fft_norm,
         )
-        self.norm_l = base.Identity() if ratio_gout == 1 else norm_layer(int(out_channels * (1 - ratio_gout)))
-        self.norm_g = base.Identity() if ratio_gout == 0 else norm_layer(int(out_channels * ratio_gout))
-        self.act_l  = base.Identity() if ratio_gout == 1 else act_layer(inplace=True)
-        self.act_g  = base.Identity() if ratio_gout == 0 else act_layer(inplace=True)
+        self.norm_l = linear.Identity() if ratio_gout == 1 else norm_layer(int(out_channels * (1 - ratio_gout)))
+        self.norm_g = linear.Identity() if ratio_gout == 0 else norm_layer(int(out_channels * ratio_gout))
+        self.act_l  = linear.Identity() if ratio_gout == 1 else act_layer(inplace=True)
+        self.act_g  = linear.Identity() if ratio_gout == 0 else act_layer(inplace=True)
     
     def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x        = input
@@ -388,27 +390,27 @@ class FastFourierConv2dSE(base.ConvLayerParsingMixin, nn.Module):
         in_cg = int(channels * ratio_g)
         in_cl = channels - in_cg
         r     = 16
-        self.avgpool  = base.AdaptiveAvgPool2d((1, 1))
-        self.conv1    = base.Conv2d(
+        self.avgpool  = pooling.AdaptiveAvgPool2d((1, 1))
+        self.conv1    = conv.Conv2d(
             in_channels  = channels,
             out_channels = channels // r,
             kernel_size  = 1,
             bias         = True,
         )
-        self.relu1    = base.ReLU(inplace=True)
-        self.conv_a2l = None if in_cl == 0 else base.Conv2d(
+        self.relu1    = activation.ReLU(inplace=True)
+        self.conv_a2l = None if in_cl == 0 else conv.Conv2d(
             in_channels  = channels // r,
             out_channels = in_cl,
             kernel_size  = 1,
             bias         = True,
         )
-        self.conv_a2g = None if in_cg == 0 else base.Conv2d(
+        self.conv_a2g = None if in_cg == 0 else conv.Conv2d(
             in_channels  = channels // r,
             out_channels = in_cg,
             kernel_size  = 1,
             bias         = True,
         )
-        self.sigmoid  = base.Sigmoid()
+        self.sigmoid  = activation.Sigmoid()
     
     def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x          = input

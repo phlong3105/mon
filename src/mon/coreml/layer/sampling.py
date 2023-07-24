@@ -14,7 +14,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from mon.coreml.layer.base import base
+from mon.coreml.layer import base
 from mon.coreml.layer.typing import _ratio_2_t, _size_2_t
 from mon.foundation import math
 from mon.globals import LAYERS

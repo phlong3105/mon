@@ -9,14 +9,9 @@ __all__ = [
     "Bottleneck",
 ]
 
-from typing import Any, Callable
-
-import torch
 import torchvision
-from torch import nn
 
-from mon.coreml.layer.base import activation, base, conv, normalization, pooling
-from mon.coreml.layer.typing import _size_2_t
+from mon.coreml.layer import base
 from mon.globals import LAYERS
 
 

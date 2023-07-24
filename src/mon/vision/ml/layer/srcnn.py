@@ -15,7 +15,7 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml.layer import base
+from mon.coreml.layer import activation, base, conv
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -53,7 +53,7 @@ class SRCNN(base.ConvLayerParsingMixin, nn.Module):
         dtype: Any = None,
     ):
         super().__init__()
-        self.conv1 = base.Conv2d(
+        self.conv1 = conv.Conv2d(
             in_channels  = in_channels,
             out_channels = 64,
             kernel_size  = kernel_size1,
@@ -66,7 +66,7 @@ class SRCNN(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv2 = base.Conv2d(
+        self.conv2 = conv.Conv2d(
             in_channels  = 64,
             out_channels = 32,
             kernel_size  = kernel_size2,
@@ -79,7 +79,7 @@ class SRCNN(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv3 = base.Conv2d(
+        self.conv3 = conv.Conv2d(
             in_channels  = 32,
             out_channels = out_channels,
             kernel_size  = kernel_size3,
@@ -92,7 +92,7 @@ class SRCNN(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.relu = base.ReLU()
+        self.relu = activation.ReLU()
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input

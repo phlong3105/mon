@@ -15,7 +15,7 @@ from typing import Any
 import torch
 from torch import nn
 
-from mon.coreml.layer import base
+from mon.coreml.layer import activation, base, conv, normalization
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -40,7 +40,7 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
         dtype       : Any             = None,
     ):
         super().__init__()
-        self.conv1 = base.Conv2d(
+        self.conv1 = conv.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -53,9 +53,9 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.norm1 = base.BatchNorm2d(num_features=out_channels)
-        self.relu1 = base.ReLU(inplace=True)
-        self.conv2 = base.Conv2d(
+        self.norm1 = normalization.BatchNorm2d(num_features=out_channels)
+        self.relu1 = activation.ReLU(inplace=True)
+        self.conv2 = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -68,8 +68,8 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.norm2 = base.BatchNorm2d(num_features=out_channels)
-        self.relu2 = base.ReLU(inplace=True)
+        self.norm2 = normalization.BatchNorm2d(num_features=out_channels)
+        self.relu2 = activation.ReLU(inplace=True)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input

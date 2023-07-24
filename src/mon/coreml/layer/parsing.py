@@ -9,10 +9,12 @@ __all__ = [
     "parse_model"
 ]
 
-from mon.foundation import console
 from torch import nn
-from mon.coreml.layer.base import *
-from mon.coreml.layer.custom import *
+
+from mon import foundation as mf
+from mon.coreml.layer import *
+
+console = mf.console
 
 
 # region Model Parsing

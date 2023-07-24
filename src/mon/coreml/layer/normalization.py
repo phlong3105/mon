@@ -24,7 +24,7 @@ from torch import nn
 from torch.nn import functional
 from torchvision.ops import misc
 
-from mon.coreml.layer.base import activation, base, linear
+from mon.coreml.layer import activation, base, linear
 from mon.foundation import math
 from mon.globals import LAYERS
 

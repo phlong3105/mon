@@ -233,7 +233,6 @@ def get_num_channels(image: torch.Tensor | np.ndarray) -> int:
         c = 1
     return c
 
-
 # endregion
 
 
@@ -281,7 +280,6 @@ def vec_like(n: int, x: torch.Tensor) -> torch.Tensor:
         raise ValueError(f"n must be > 0, but got {n}.")
     vec = torch.zeros(n, 1, device=x.device, dtype=x.dtype)
     return vec[None].repeat(x.shape[0], 1, 1)
-
 
 # endregion
 
@@ -791,7 +789,6 @@ def upcast(
         return image  # x.astype(np.int64) if keep_type else x.astype(np.int64)
     return image
 
-
 # endregion
 
 
@@ -860,4 +857,5 @@ def blend(
         beta   = 1.0 - alpha,
         gamma  = gamma,
     )
+
 # endregion

@@ -13,9 +13,9 @@ from abc import ABC
 
 import torch
 
-from mon.coreml import model
 from mon.foundation import pathlib
 from mon.vision import visualize
+from mon.vision.ml import model
 
 
 # region Model
