@@ -25,9 +25,9 @@ class PixelwiseHigherOrderLECurve(base.MergingLayerParsingMixin, nn.Module):
         LE_{n}(x) = LE_{n−1}(x) + A_{n}(x) * LE_{n−1}(x)(1 − LE_{n−1}(x)),
         
         where `A` is a parameter map with the same size as the given image, and
-        `n` is the number of iteration, which controls the curvature.
+        `n` is the number of iterations, which controls the curvature.
     
-    This module is designed to accompany both:
+    This module is designed to go with:
         - ZeroDCE   (estimate 3 * n curve parameter maps)
         - ZeroDCE++ (estimate 3   curve parameter maps)
     

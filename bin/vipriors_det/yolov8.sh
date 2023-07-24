@@ -109,6 +109,7 @@ if [ "$task" == "ensemble" ]; then
   	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-1280/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-1280/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1280/weights/best.pt" \
   	--data "data/delftbikes.yaml" \

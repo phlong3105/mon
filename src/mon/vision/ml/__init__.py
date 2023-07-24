@@ -5,7 +5,8 @@
 for vision tasks. We try to make this package as generic as possible. For
 specific modules and layers, just implement them in the corresponding model.
 
-This package is built on top of :mod:`mon.coreml`.
+This package is built on top of :mod:`mon.coreml`. Think of it as an interface
+to :mod:`mon.coreml` module.
 
 The development process should be as follows:
     1. Implement specific modules or layers in their dedicated model file.

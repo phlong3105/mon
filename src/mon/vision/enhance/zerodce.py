@@ -149,7 +149,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
         y6 = self.relu(self.conv6(torch.cat([y2, y5], dim=1)))
         y  = torch.tanh(self.conv7(torch.cat([y1, y6], dim=1)))
         return y
-    
+
 # endregion
 
 
@@ -279,7 +279,7 @@ class CombinedLoss02(loss.Loss):
 # endregion
 
 
-# region Model
+# region Zero-DCE
 
 @MODELS.register(name="zerodce")
 class ZeroDCE(base.ImageEnhancementModel):
@@ -446,8 +446,12 @@ class ZeroDCEVanilla(nn.Module):
         x = x + r8 * (torch.pow(x, 2) - x)
         r = torch.cat([r1, r2, r3, r4, r5, r6, r7, r8], 1)
         return x
-    
-    
+
+# endregion
+
+
+# region Zero-DCE++
+
 @MODELS.register(name="zerodce++")
 class ZeroDCEPP(base.ImageEnhancementModel):
     """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
@@ -631,6 +635,10 @@ class ZeroDCEPPVanilla(nn.Module):
         x = self.enhance(x, a)
         return x
 
+# endregion
+
+
+# region Zero-DCE-Tiny
 
 @MODELS.register(name="zerodce-tiny")
 class ZeroDCETiny(base.ImageEnhancementModel):
