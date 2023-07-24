@@ -363,6 +363,7 @@ class ChannelConsistencyLoss(Loss):
         kl_gb = functional.kl_div(d_gb1, d_gb2, reduction="mean", log_target=self.log_target)
         
         loss = kl_rb + kl_rg + kl_gb
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 
@@ -373,8 +374,7 @@ class ColorConstancyLoss(Loss):
     channels.
 
     References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code
-        /Myloss.py
+        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
     """
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -397,7 +397,6 @@ class ColorConstancyLoss(Loss):
             torch.pow(d_rg, 2) + torch.pow(d_rb, 2) + torch.pow(d_gb, 2), 0.5
         )
         loss = reduce_loss(loss=loss, reduction=self.reduction)
-        loss = self.weight[0] * loss
         return loss
 
 
@@ -697,7 +696,6 @@ class IlluminationSmoothnessLoss(Loss):
         h_tv = torch.pow((x[:, :, 1:, :] - x[:, :, :h_x - 1, :]), 2).sum()
         w_tv = torch.pow((x[:, :, :, 1:] - x[:, :, :, :w_x - 1]), 2).sum()
         loss = self.tv_loss_weight * 2 * (h_tv / count_h + w_tv / count_w) / b
-        loss = self.weight[0] * loss
         return loss
 
 

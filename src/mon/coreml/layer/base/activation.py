@@ -9,9 +9,9 @@ __all__ = [
     "ArgMax", "CELU", "Clamp", "Clip", "ELU", "FReLU", "GELU", "GLU",
     "Hardshrink", "Hardsigmoid", "Hardswish", "Hardtanh", "LeakyReLU",
     "LogSigmoid", "LogSoftmax", "Mish", "MultiheadAttention", "PReLU", "ReLU",
-    "ReLU6", "RReLU", "SELU", "Sigmoid", "SiLU", "Softmax", "Softmax2d",
-    "Softmin", "Softplus", "Softshrink", "Softsign", "Tanh", "Tanhshrink",
-    "Threshold", "hard_sigmoid", "to_act_layer",
+    "ReLU6", "RReLU", "SELU", "SiLU", "Sigmoid", "SimpleGate", "Softmax",
+    "Softmax2d", "Softmin", "Softplus", "Softshrink", "Softsign", "Tanh",
+    "Tanhshrink", "Threshold", "hard_sigmoid", "to_act_layer",
 ]
 
 import functools
@@ -98,6 +98,39 @@ class SiLU(base.PassThroughLayerParsingMixin, nn.SiLU):
     pass
 
 
+@LAYERS.register()
+class SimpleGate(base.LayerParsingMixin, nn.Module):
+    """Simple gate activation unit proposed in the paper: "`Simple Baselines for
+    Image Restoration <https://arxiv.org/pdf/2204.04676.pdf>`__".
+    """
+    
+    @classmethod
+    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
+        """Parse layer's arguments :param:`args`, calculate the
+        :param:`out_channels`, and update :param:`args`. Also, append the
+        :param:`out_channels` to :param:`ch` if needed.
+
+        Args:
+            f: From, i.e., the current layer receives output from the f-th layer.
+                For example, -1 means from a previous layer; -2 means from 2
+                previous layers; [99, 101] means from the 99th and 101st layers.
+                This attribute is used in forward pass.
+            args: Layer's parameters.
+            ch: A list containing output channels of previous layers (of the
+                model)
+        
+        Returns:
+            The adjusted :param:`args` and :param:`ch`.
+        """
+        c2 = ch[f] // 2
+        ch.append(c2)
+        return args, ch
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x      = input
+        x1, x2 = x.chunk(chunks=2, dim=1)
+        return x1 * x2
+    
 # endregion
 
 
@@ -255,7 +288,7 @@ def to_act_layer(act: Callable = ReLU(), *args, **kwargs) -> nn.Module:
     # if isinstance(act, str):
     #     act = LAYER.build(name=act)
     act_layer = act
-    if act is None:
+    if act is None or act == False:
         act_layer = nn.Identity()
     elif isinstance(act, Callable | types.FunctionType | functools.partial):
         act_layer = act(*args, **kwargs)

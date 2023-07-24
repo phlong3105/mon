@@ -167,7 +167,7 @@ class Factory(dict):
             An instance of the registered class.
         """
         if (name is None and config is None) \
-            or (name is None and config is not None and "name" not in config):
+            or (config is not None and "name" not in config):
             return None
         if config is not None:
             config_ = copy.deepcopy(config)

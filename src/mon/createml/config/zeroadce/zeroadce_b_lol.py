@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DCEv2 model trained on LOL226 dataset."""
+"""Zero-ADCE-B model trained on LOL dataset."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ from mon.globals import RUN_DIR, DATA_DIR
 # region Basic
 
 root         = RUN_DIR / "train"
-project      = "zerodcev2"
-model_name   = "zerodcev2"
-model_config = "zerodcev2.yaml"
-data_name    = "lol226"
+project      = "zeroadce"
+model_name   = "zeroadce"
+model_config = "zeroadce-b.yaml"
+data_name    = "lol"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]
@@ -41,9 +41,9 @@ model = {
 	"phase"      : "training",     # The model's running phase.
 	# "loss"       : None,           # Loss function for training the model.
 	"metrics"    : {
-	    "train": None,
-		"val"  : None,
-		"test" : None,
+	    "train": [{"name": "psnr"}],
+		"val"  : [{"name": "psnr"}],
+		"test" : [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{

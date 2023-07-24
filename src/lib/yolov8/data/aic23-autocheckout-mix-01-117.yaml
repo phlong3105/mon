@@ -1,16 +1,18 @@
-# VisDrone + A2I2 dataset
+# AIC23 AutoCheckout dataset
 
 # Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
 path : ../mon/data/aic23-autocheckout/
 train: [
-  train/original/images/,
+  train/synthetic-01/images/,
+  train/synthetic-02/images/,
+  train/synthetic-03/images/,
+  train/testA-01/images/,
 ]
 # val  : val/images/
 val  : [
-  train/testA-01/images/,
   train/testA-02/images/,
 ]
-test : train/testA-02/images/
+test : val/images/
 
 # number of classes
 nc: 117

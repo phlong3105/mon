@@ -431,8 +431,8 @@ class Rain100DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = Rain100(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -488,8 +488,8 @@ class Rain100HDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = Rain100H(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -545,8 +545,8 @@ class Rain100LDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = Rain100L(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -602,8 +602,8 @@ class Rain12DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = Rain12(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -769,8 +769,8 @@ class Rain1400DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = Rain1400(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -826,8 +826,8 @@ class Rain2800DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = Rain2800(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)

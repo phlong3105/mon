@@ -6,38 +6,37 @@
 from __future__ import annotations
 
 __all__ = [
-    "BAM", "CBAM", "ChannelAttentionModule", "GhostSAM",
+    "BAM", "CBAM", "ChannelAttention", "ChannelAttentionModule", "GhostSAM",
     "GhostSupervisedAttentionModule", "PixelAttentionModule", "SAM", "SimAM",
-    "SqueezeExcitation", "SqueezeExciteC", "SqueezeExciteL",
-    "SupervisedAttentionModule",
+    "SimplifiedChannelAttention", "SqueezeExcitation", "SqueezeExciteC",
+    "SqueezeExciteL", "SupervisedAttentionModule",
 ]
 
 from typing import Any, Sequence
 
 import torch
-from torch import nn
-from torch.nn import functional
-from torchvision.ops import misc as torchvision_misc
-
 from mon.coreml.layer.base import (
     activation, base, conv, linear, normalization, pooling,
 )
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
+from torch import nn
+from torch.nn import functional
+from torchvision.ops import misc as torchvision_misc
 
 
 # region Channel Attention
 
 @LAYERS.register()
 class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
-    """Squeeze and Excite layer from the paper "Squeeze and Excitation
-    Networks" (https://arxiv.org/pdf/1709.01507.pdf).
+    """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
+    Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
+    
+    This implementation use :class:`torch.nn.Conv2d` layer.
     
     References:
-        https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and
-        -excitation-block-in-pytorch
-        https://github.com/moskomule/senet.pytorch/blob/master/senet
-        /se_module.py
+        - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
+        - https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
     """
     
     def __init__(
@@ -76,24 +75,29 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         b, c, _, _ = x.size()
-        y = self.avg_pool(x)
-        # y = y.view(b, c)
-        y = self.excitation(y)
-        y = y.view(-1, c, 1, 1)
-        y = x * y
+        
+        y = self.avg_pool(x).view(b, c)
+        y = self.excitation(y).view(b, c, 1, 1)
+        y = x * y.expand_as(x)
+        
+        # y = self.avg_pool(x)
+        # y = self.excitation(y)
+        # y = y.view(-1, c, 1, 1)
+        # y = x * y
+        
         return y
 
 
 @LAYERS.register()
 class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
-    """Squeeze and Excite layer from the paper "Squeeze and Excitation
-    Networks" (https://arxiv.org/pdf/1709.01507.pdf).
+    """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
+    Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
+    
+    This implementation use :class:`torch.nn.Linear` layer.
     
     References:
-        https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and
-        -excitation-block-in-pytorch
-        https://github.com/moskomule/senet.pytorch/blob/master/senet
-        /se_module.py
+        - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
+        - https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
     """
     
     def __init__(
@@ -131,6 +135,11 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
         y = self.avg_pool(x).view(b, c)
         y = self.excitation(y).view(b, c, 1, 1)
         y = x * y.expand_as(x)
+        
+        # y = self.avg_pool(x)
+        # y = self.excitation(y)
+        # y = y.view(-1, c, 1, 1)
+        # y = x * y
         return y
 
 
@@ -138,6 +147,51 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
 class SqueezeExcitation(base.PassThroughLayerParsingMixin, torchvision_misc.SqueezeExcitation):
     pass
 
+
+@LAYERS.register()
+class SimplifiedChannelAttention(base.PassThroughLayerParsingMixin, nn.Module):
+    """Simplified channel attention layer proposed in the paper: "`Simple
+    Baselines for Image Restoration <https://arxiv.org/pdf/2204.04676.pdf>`__".
+    """
+    
+    def __init__(
+        self,
+        channels: int,
+        bias    : bool = True,
+        device  : Any  = None,
+        dtype   : Any  = None,
+    ):
+        super().__init__()
+        self.avg_pool   = pooling.AdaptiveAvgPool2d(1)  # squeeze
+        self.excitation = conv.Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            bias         = bias,
+            device       = device,
+            dtype        = dtype,
+        )
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        b, c, _, _ = x.size()
+        
+        y = self.avg_pool(x).view(b, c)
+        y = self.excitation(y).view(b, c, 1, 1)
+        y = x * y.expand_as(x)
+        
+        # y = self.avg_pool(x)
+        # y = self.excitation(y)
+        # y = y.view(-1, c, 1, 1)
+        # y = x * y
+
+        return y
+    
+
+ChannelAttention = SqueezeExciteC
+LAYERS.register(module=ChannelAttention)
 
 # endregion
 
@@ -171,7 +225,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
             gate_channels += [channels // reduction_ratio] * num_layers
             gate_channels += [channels]
             
-            self.c_gate = torch.nn.Sequential()
+            self.c_gate = nn.Sequential()
             self.c_gate.add_module("flatten", self.Flatten())
             for i in range(len(gate_channels) - 2):
                 self.c_gate.add_module(
@@ -217,7 +271,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
             *args, **kwargs
         ):
             super().__init__()
-            self.s_gate = torch.nn.Sequential()
+            self.s_gate = nn.Sequential()
             self.s_gate.add_module(
                 name   = "gate_s_conv_reduce0",
                 module = conv.Conv2d(
@@ -327,7 +381,7 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
         ):
             super().__init__()
             self.channels = channels
-            self.mlp      = torch.nn.Sequential(
+            self.mlp      = nn.Sequential(
                 self.Flatten(),
                 linear.Linear(
                     in_features  = channels,
@@ -451,7 +505,7 @@ class ChannelAttentionModule(base.PassThroughLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         self.avg_pool   = pooling.AdaptiveAvgPool2d(1)
-        self.excitation = torch.nn.Sequential(
+        self.excitation = nn.Sequential(
             conv.Conv2d(
                 in_channels  = channels,
                 out_channels = channels // reduction_ratio,
@@ -518,7 +572,6 @@ class SimAM(base.PassThroughLayerParsingMixin, nn.Module):
         y = x * self.act(e_inv)
         return y
 
-
 # endregion
 
 
@@ -543,7 +596,7 @@ class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         dtype          : Any             = None,
     ):
         super().__init__()
-        self.fc = torch.nn.Sequential(
+        self.fc = nn.Sequential(
             conv.Conv2d(
                 in_channels  = channels,
                 out_channels = channels // reduction_ratio,
@@ -580,7 +633,6 @@ class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         y = self.act(y)
         y = torch.mul(x, y)
         return y
-
 
 # endregion
 
@@ -764,5 +816,7 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
 
 GhostSAM = GhostSupervisedAttentionModule
 SAM      = SupervisedAttentionModule
+LAYERS.register(module=GhostSAM)
+LAYERS.register(module=SAM)
 
 # endregion

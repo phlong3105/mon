@@ -1,4 +1,4 @@
-# AIC23 AutoCheckout dataset
+# AIC22 AutoCheckout dataset
 
 # Train and val data as 1) directory: path/images/, 2) file: path/images.txt, or 3) list: [path1/images/, path2/images/]
 path : ../mon/data/aic23-autocheckout/
@@ -10,7 +10,6 @@ train: [
 # val  : val/images/
 val  : [
   train/testA-01/images/,
-  train/testA-02/images/,
 ]
 test : val/images/
 

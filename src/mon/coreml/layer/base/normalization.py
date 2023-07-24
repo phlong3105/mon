@@ -306,32 +306,32 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             raise ValueError(
                 f"'scheme' must be one of: {self.schemes}. But got: {scheme}."
             )
-        if scheme is "half":
+        if scheme == "half":
             self.alpha = torch.zeros(num_features)
             self.alpha[0:math.ceil(num_features * 0.5)] = 1
-        elif scheme is "bipartite":
+        elif scheme == "bipartite":
             self.alpha = torch.zeros(num_features)
             self.alpha[0:math.ceil(num_features * p)] = 1
-        elif scheme is "checkerboard":
+        elif scheme == "checkerboard":
             in_channels = math.ceil(num_features * p)
             step_size  = int(math.floor(in_channels / num_features))
             self.alpha = torch.zeros(num_features)
             for i in range(0, in_channels, step_size):
                 self.alpha[i] = 1
-        elif scheme is "random":
+        elif scheme == "random":
             in_channels = math.ceil(num_features * p)
             rand        = random.sample(range(in_channels), num_features)
             self.alpha  = torch.zeros(num_features)
             for i in rand:
                 self.alpha[i] = 1
-        elif scheme is "adaptive":
+        elif scheme == "adaptive":
             self.alpha = torch.nn.Parameter(torch.full([num_features], p))
-        elif scheme is "attentive":
+        elif scheme == "attentive":
             if pool not in ["avg", "max"]:
                 raise ValueError(
                     f"pool must be one of: ['avg', 'max'], but got {pool}."
                 )
-            self.channel_attention = torch.nn.Sequential(
+            self.channel_attention = nn.Sequential(
                 self.Flatten(),
                 linear.Linear(
                     in_features  = num_features,
@@ -381,7 +381,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             else:
                 y = (x_norm * alpha) + (x * (1 - alpha))
         elif self.scheme in ["attentive"]:
-            if self.pool is "avg":
+            if self.pool == "avg":
                 pool = functional.avg_pool2d(
                     input       = x,
                     kernel_size = (x.size(2), x.size(3)),

@@ -206,10 +206,10 @@ class CombinedLoss01(loss.Loss):
         loss_exp = self.loss_exp(input=enhance)
         loss_col = self.loss_col(input=enhance)
         loss_tv  = self.loss_tv(input=a)
-        loss = self.spa_weight * loss_spa \
-               + self.exp_weight * loss_exp \
-               + self.col_weight * loss_col \
-               + self.tv_weight * loss_tv
+        loss     = self.spa_weight * loss_spa \
+                   + self.exp_weight * loss_exp \
+                   + self.col_weight * loss_col \
+                   + self.tv_weight * loss_tv
         return loss
 
 
@@ -591,13 +591,13 @@ class ZeroDCEPPVanilla(nn.Module):
         self.relu         = layer.ReLU(inplace=True)
         self.scale_factor = scale_factor
         self.upsample     = layer.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.conv1        = layer.DSConv2d(in_channels=3,            out_channels=number_f, kernel_size=3, groups=1)
-        self.conv2        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, groups=1)
-        self.conv3        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, groups=1)
-        self.conv4        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, groups=1)
-        self.conv5        = layer.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, groups=1)
-        self.conv6        = layer.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, groups=1)
-        self.conv7        = layer.DSConv2d(in_channels=number_f * 2, out_channels=3,        kernel_size=3, groups=1)
+        self.conv1        = layer.DSConv2d(in_channels=3,            out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv2        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv3        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv4        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv5        = layer.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv6        = layer.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv7        = layer.DSConv2d(in_channels=number_f * 2, out_channels=3,        kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
     
     def enhance(self, x: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
         x = x + a * (torch.pow(x, 2) - x)
@@ -634,7 +634,7 @@ class ZeroDCEPPVanilla(nn.Module):
 
 @MODELS.register(name="zerodce-tiny")
 class ZeroDCETiny(base.ImageEnhancementModel):
-    """Zero-DCE Tiny (Zero-Reference Deep Curve Estimation) model.
+    """Zero-DCE-Tiny (Zero-Reference Deep Curve Estimation) model.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """

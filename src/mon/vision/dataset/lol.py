@@ -317,8 +317,8 @@ class DCIMDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = DCIM(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -374,8 +374,8 @@ class LIMEDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = LIME(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -486,13 +486,13 @@ class LOL226DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = LOL226(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
             self.collate_fn  = getattr(self.test, "collate_fn",  None)
-        
+
         if self.classlabels is None:
             self.get_classlabels()
         
@@ -543,8 +543,8 @@ class LOL4KDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = LOL4K(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -600,8 +600,8 @@ class MEFDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = MEF(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -657,8 +657,8 @@ class NPEDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = NPE(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -714,8 +714,8 @@ class VIPDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = VIP(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -771,8 +771,8 @@ class VVDataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = VV(split="train", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)

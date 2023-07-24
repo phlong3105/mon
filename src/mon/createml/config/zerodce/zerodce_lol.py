@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DCEv2 model trained on LOL226 dataset."""
+"""Zero-DCE model trained on LOL dataset."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ from mon.globals import RUN_DIR, DATA_DIR
 # region Basic
 
 root         = RUN_DIR / "train"
-project      = "zerodcev2"
-model_name   = "zerodcev2"
-model_config = "zerodcev2.yaml"
-data_name    = "lol226"
+project      = "zerodce"
+model_name   = "zerodce"
+model_config = "zerodce.yaml"
+data_name    = "lol"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]

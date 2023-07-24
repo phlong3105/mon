@@ -1124,9 +1124,10 @@ class Model(lightning.LightningModule, ABC):
 
     def on_train_epoch_end(self):
         """Called in the training loop at the very end of the epoch."""
-        for i, metric in enumerate(self.train_metrics):
-            # value = metric.compute()
-            metric.reset()
+        if self.train_metrics:
+            for i, metric in enumerate(self.train_metrics):
+                # value = metric.compute()
+                metric.reset()
         """
         # Loss
         loss = torch.stack([x["loss"] for x in epoch_output]).mean()
@@ -1199,7 +1200,7 @@ class Model(lightning.LightningModule, ABC):
         )
         # Metric
         if self.val_metrics:
-            for i, metric in enumerate(self.train_metrics):
+            for i, metric in enumerate(self.val_metrics):
                 value = metric(pred, target)
                 self.log(
                     name           = f"val/{metric.name}",
@@ -1233,9 +1234,10 @@ class Model(lightning.LightningModule, ABC):
 
     def on_validation_epoch_end(self):
         """Called in the validation loop at the very end of the epoch."""
-        for i, metric in enumerate(self.val_metrics):
-            # value = metric.compute()
-            metric.reset()
+        if self.val_metrics:
+            for i, metric in enumerate(self.val_metrics):
+                # value = metric.compute()
+                metric.reset()
 
     def on_test_start(self) -> None:
         """Called at the very beginning of testing."""
@@ -1283,8 +1285,8 @@ class Model(lightning.LightningModule, ABC):
             batch_size     = 1,
         )
         # Metric
-        if self.val_metrics:
-            for i, metric in enumerate(self.train_metrics):
+        if self.test_metrics:
+            for i, metric in enumerate(self.test_metrics):
                 value = metric(pred, target)
                 self.log(
                     name           = f"test/{metric.name}",
@@ -1318,9 +1320,10 @@ class Model(lightning.LightningModule, ABC):
     
     def on_test_epoch_end(self):
         """Called in the test loop at the very end of the epoch."""
-        for i, metric in enumerate(self.test_metrics):
-            # value = metric.compute()
-            metric.reset()
+        if self.test_metrics:
+            for i, metric in enumerate(self.test_metrics):
+                # value = metric.compute()
+                metric.reset()
     
     def export_to_onnx(
         self,

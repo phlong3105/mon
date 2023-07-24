@@ -9,8 +9,8 @@ __all__ = [
     "parse_model"
 ]
 
+from mon.foundation import console
 from torch import nn
-
 from mon.coreml.layer.base import *
 from mon.coreml.layer.custom import *
 
@@ -72,6 +72,7 @@ def parse_model(
             except:
                 pass
         
+        # console.log(f"Parsing layer: {i}")
         if issubclass(m, base.HeadLayerParsingMixin):
             args, ch = m.parse_layer(f=f, args=args, nc=nc, ch=ch, hparams=hparams)
         else:

@@ -23,25 +23,27 @@ if [ "$task" == "train" ]; then
   echo -e "\nTraining"
   if [ "$machine" == "lp-labdesktop-01-ubuntu" ]; then
     python train.py \
-      --config "hinet_gt_rain" \
+      --config "zerodcev2_a_lol" \
       --root "${root_dir}/run/train" \
-      --project "hinet" \
-      --name "hinet-gt-rain" \
-      --batch-size 4 \
-      --image-size 256 \
-      --accelerator "auto" \
-      --devices 0 \
-      --strategy "auto"
-  elif [ "$machine" == "lp-labdesktop-02-ubuntu" ]; then
-    python train.py \
-      --config "hinet_gt_rain" \
-      --root "${root_dir}/run/train" \
-      --project "hinet" \
-      --name "hinet-gt-rain" \
-      --batch-size 4 \
+      --project "zerodcev2" \
+      --name "zerodcev2-a-lol" \
+      --batch-size 8 \
       --image-size 512 \
       --accelerator "auto" \
       --devices 0 \
+      --max-epochs 20 \
+      --strategy "auto"
+  elif [ "$machine" == "lp-labdesktop-02-ubuntu" ]; then
+    python train.py \
+      --config "zerodcev2_c_lol" \
+      --root "${root_dir}/run/train" \
+      --project "zerodcev2" \
+      --name "zerodcev2-c-lol" \
+      --batch-size 2 \
+      --image-size 128 \
+      --accelerator "auto" \
+      --devices 0 \
+      --max-epochs 200 \
       --strategy "auto"
   elif [ "$machine" == "vsw-ws01" ]; then
     python train.py \
@@ -53,6 +55,7 @@ if [ "$task" == "train" ]; then
       --image-size 512 \
       --accelerator "auto" \
       --devices 0 \
+      --max-epochs 100 \
       --strategy "auto"
   elif [ "$machine" == "vsw-ws02" ]; then
     python train.py \
@@ -65,9 +68,8 @@ if [ "$task" == "train" ]; then
       --image-size 256 256 \
       --accelerator "auto" \
       --devices 1 \
-      --max-epochs "NULL" \
-      --max-steps "NULL" \
-      --strategy "NULL"
+      --max-epochs 100 \
+      --strategy "auto"
   elif [ "$machine" == "vsw-ws03" ]; then
     python train.py \
       --config "hinet_rain13k" \
@@ -79,9 +81,8 @@ if [ "$task" == "train" ]; then
       --image-size 256 256 \
       --accelerator "auto" \
       --devices 1 \
-      --max-epochs "NULL" \
-      --max-steps "NULL" \
-      --strategy "NULL"
+      --max-epochs 100 \
+      --strategy "auto"
   fi
 fi
 

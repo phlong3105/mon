@@ -329,8 +329,8 @@ class CIFAR10DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = CIFAR10(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
@@ -386,8 +386,8 @@ class CIFAR100DataModule(base.DataModule):
             train_size = int(0.8 * len(train))
             val_size   = len(train) - train_size
             self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.classlabels = getattr(train, "classlabels", None)
+            self.collate_fn  = getattr(train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = CIFAR100(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)

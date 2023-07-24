@@ -3,46 +3,47 @@ channels: 3
 backbone: [
   # [from,   number, module,               args(out_channels, ...)]
   [-1,       1,      Identity,             []],                      # 0  (x)
-  [-1,       1,      Downsample,           [None, 1, "bilinear"]],   # 1  (x_down)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0,   0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 2 (x1)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0.5, 0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 3 (x2)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0.5, 0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 4 (x3)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0.5, 0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 5 (x4)
+  [-1,       1,      DSConv2d,             [32, 3, 1, 1, 1, 0, 1, 1]],           # 1
+  [-1,       1,      FFConv2dNormAct,      [32, 1,   0, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 2 (x1)
+  [-1,       1,      FFConv2dNormAct,      [32, 1, 0.5, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 3 (x2)
+  [-1,       1,      FFConv2dNormAct,      [32, 1, 0.5, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 4 (x3)
+  [-1,       1,      FFConv2dNormAct,      [32, 1, 0.5, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 5 (x4)
   #
-  [2,        1,      ExtractItem,          [0]],                     # 7  (x1_local)
-  [2,        1,      ExtractItem,          [1]],                     # 8  (x1_global)
-  [3,        1,      ExtractItem,          [0]],                     # 9  (x2_local)
-  [3,        1,      ExtractItem,          [1]],                     # 10 (x2_global)
-  [4,        1,      ExtractItem,          [0]],                     # 11 (x3_local)
-  [4,        1,      ExtractItem,          [1]],                     # 12 (x3_global)
+  [2,        1,      ExtractItem,          [0]],                     # 6  (x1_local)
+  [2,        1,      ExtractItem,          [1]],                     # 7  (x1_global)
+  [3,        1,      ExtractItem,          [0]],                     # 8  (x2_local)
+  [3,        1,      ExtractItem,          [1]],                     # 9  (x2_global)
+  [4,        1,      ExtractItem,          [0]],                     # 10 (x3_local)
+  [4,        1,      ExtractItem,          [1]],                     # 11 (x3_global)
   # x5
-  [5,        1,      ExtractItem,          [0]],                     # 13 (x4_local)
-  [5,        1,      ExtractItem,          [1]],                     # 14 (x4_global)
-  [[11, 13], 1,      Concat,               []],                      # 15 (x4_local  + x3_local)
-  [[12, 14], 1,      Concat,               []],                      # 16 (x4_global + x3_global)
-  [[15, 16], 1,      Join,                 []],                      # 17 (local, global)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0.5, 0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 18 (x5)
+  [5,        1,      ExtractItem,          [0]],                     # 12 (x4_local)
+  [5,        1,      ExtractItem,          [1]],                     # 13 (x4_global)
+  [[12,  0], 1,      Concat,               []],                      # 14 (x4_local  + x3_local)
+  [[13, 11], 1,      Concat,               []],                      # 15 (x4_global + x3_global)
+  [[14, 15], 1,      Join,                 []],                      # 16 (local, global)
+  [-1,       1,      FFConv2dNormAct,      [32, 1, 0.5, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 17 (x5)
   # x6
-  [18,       1,      ExtractItem,          [0]],                     # 19 (x5_local)
-  [18,       1,      ExtractItem,          [1]],                     # 20 (x5_global)
-  [[19,  9], 1,      Concat,               []],                      # 21 (x5_local  + x2_local)
-  [[20, 10], 1,      Concat,               []],                      # 22 (x5_global + x2_global)
-  [[21, 22], 1,      Join,                 []],                      # 23 (local, global)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0.5, 0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 24 (x6)
+  [17,       1,      ExtractItem,          [0]],                     # 18 (x5_local)
+  [17,       1,      ExtractItem,          [1]],                     # 19 (x5_global)
+  [[18,  8], 1,      Concat,               []],                      # 20 (x5_local  + x2_local)
+  [[19,  9], 1,      Concat,               []],                      # 21 (x5_global + x2_global)
+  [[20, 21], 1,      Join,                 []],                      # 22 (local, global)
+  [-1,       1,      FFConv2dNormAct,      [32, 1, 0.5, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 23 (x6)
   # a
-  [24,       1,      ExtractItem,          [0]],                     # 25 (x6_local)
-  [24,       1,      ExtractItem,          [1]],                     # 26 (x6_global)
-  [[25,  7], 1,      Concat,               []],                      # 27 (x6_local  + x1_local)
-  [[26,  8], 1,      Concat,               []],                      # 28 (x6_global + x1_global)
-  [[27, 28], 1,      Join,                 []],                      # 29 (local, global)
-  [-1,       1,      FFConv2dNormAct,      [32, 3, 0.5, 0.5, 1, 0, 1, 1, False, BatchNorm2d, ReLU, "reflect", True, None, "bilinear", False, False, 16, False, False, "ortho", False]],  # 30 (a)
+  [23,       1,      ExtractItem,          [0]],                     # 24 (x6_local)
+  [23,       1,      ExtractItem,          [1]],                     # 25 (x6_global)
+  [[24,  6], 1,      Concat,               []],                      # 26 (x6_local  + x1_local)
+  [[25,  7], 1,      Concat,               []],                      # 27 (x6_global + x1_global)
+  [[26, 27], 1,      Join,                 []],                      # 28 (local, global)
+  [-1,       1,      FFConv2dNormAct,      [32, 1, 0.5, 0.5, 1, 0, 1, 1, False, "reflect", BatchNorm2d, ReLU, True]],  # 29 (a)
   # Final
-  [30,       1,      ExtractItem,          [0]],                     # 31 (a_local)
-  [30,       1,      ExtractItem,          [1]],                     # 32 (a_global)
-  [[31, 32], 1,      Concat,               []],                      # 33 (a_local + a_global)
+  [29,       1,      ExtractItem,          [0]],                     # 30 (a_local)
+  [29,       1,      ExtractItem,          [1]],                     # 31 (a_global)
+  [[30, 31], 1,      Concat,               []],                      # 32 (a_local + a_global)
+  [[32,  1], 1,      Concat,               []],                      # 32 (a_local + a_global)
+  [-1,       1,      DSConv2d,             [3, 3, 1, 1, 1, 0, 1, 1]], # 33 (a)
   [-1,       1,      Tanh,                 []],                      # 34
-  [-1,       1,      UpsamplingBilinear2d, [None, 1]],               # 35
 ]
 head    : [
-  [[-1, 0], 1,      PixelwiseHigherOrderLECurve, [8]],               # 36
+  [[-1, 0], 1,       PixelwiseHigherOrderLECurve, [8]],              # 35
 ]

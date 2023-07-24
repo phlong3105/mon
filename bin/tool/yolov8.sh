@@ -77,63 +77,55 @@ fi
 # Predict
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
-  if [ "$machine" == "lp-labdesktop-01-ubuntu" ]; then
-    python predict.py \
-    	--task "detect" \
-    	--model "${root_dir}/run/train/aic23/yolov8x-aic23-autocheckout-tray-640/weights/best.pt" \
-    	--data "data/aic23-autocheckout-tray.yaml" \
-    	--project "${root_dir}/run/predict" \
-    	--name "synthetic-03" \
-    	--source "${root_dir}/data/aic23-autocheckout/train/synthetic-03/images" \
-    	--imgsz 640 \
-    	--conf 0.5 \
-    	--iou 0.5 \
-    	--max-det 3 \
-    	--augment \
-    	--device 0 \
-    	--exist-ok \
-    	--save-txt \
-    	--overlap-mask \
-    	--box
-  elif [ "$machine" == "vsw-ws02" ]; then
-    python predict.py \
-    	--task "detect" \
-    	--model "${root_dir}/run/train/yolov8x-aic23-autocheckout-tray-640/weights/best.pt" \
-    	--data "data/aic23-autocheckout-tray.yaml" \
-    	--project "${root_dir}/run/predict" \
-    	--name "yolov8x-aic23-autocheckout-tray-640" \
-    	--source "${root_dir}/data/aic23-autocheckout/testA/testA_4.mp4" \
-    	--imgsz 640 \
-    	--conf 0.9 \
-    	--iou 0.5 \
-    	--max-det 500 \
-    	--augment \
-    	--device 0 \
-    	--exist-ok \
-    	--save \
-    	--save-txt \
-    	--save-conf \
-    	--overlap-mask \
-    	--box
-  elif [ "$machine" == "vsw-ws03" ]; then
-    python predict.py \
-    	--task "detect" \
-    	--model "${root_dir}/run/train/yolov8l-aic23-autocheckout-mix-117-1920/weights/best.pt" \
-    	--data "data/aic23-autocheckout-mix-117.yaml" \
-    	--project "${root_dir}/run/predict" \
-    	--name "testA_3" \
-    	--source "${root_dir}/data/aic23-autocheckout/testA/inpainting/testA_3" \
-    	--imgsz 1024 \
-    	--conf 0.5 \
-    	--iou 0.5 \
-    	--max-det 3 \
-    	--augment \
-    	--device 0 \
-    	--exist-ok \
-    	--save-txt \
-    	--overlap-mask \
-    	--box
-  fi
+  python predict.py \
+  	--task "detect" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	--data "data/delftbikes.yaml" \
+  	--project "${root_dir}/run/predict/delftbikes/" \
+  	--name "submission" \
+  	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
+  	--imgsz 2560 \
+  	--conf 0.0001 \
+  	--iou 0.5 \
+  	--max-det 1000 \
+  	--augment \
+  	--device 0 \
+  	--exist-ok \
+  	--save-txt \
+  	--save-conf \
+  	--overlap-mask \
+  	--box
+fi
+
+# Ensemble
+if [ "$task" == "ensemble" ]; then
+  echo -e "\nPredicting"
+  python ensemble.py \
+  	--task "detect" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-2160/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-2160/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1280/weights/best.pt" \
+  	--data "data/delftbikes.yaml" \
+  	--project "${root_dir}/run/predict/delftbikes/" \
+  	--name "submission" \
+  	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
+  	--imgsz 3440 \
+  	--conf 0.00001 \
+  	--iou 0.5 \
+  	--max-det 2000 \
+  	--augment \
+  	--device 0 \
+  	--exist-ok \
+  	--save-txt \
+  	--save-conf \
+  	--overlap-mask \
+  	--box
 fi
 
 cd "${root_dir}" || exit
