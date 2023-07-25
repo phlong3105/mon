@@ -13,13 +13,12 @@ from functools import partial
 from typing import Any, Callable
 
 import torch
-from torch import nn
 
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.enhance import base
-from mon.vision.ml import layer, loss
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -27,14 +26,14 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class ADCE(layer.ConvLayerParsingMixin, nn.Module):
+class ADCE(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
         in_channels : int       = 3,
         out_channels: int       = 3,
         mid_channels: int       = 32,
-        conv        : Callable  = layer.BSConv2dS,
+        conv        : Callable  = nn.BSConv2dS,
         kernel_size : _size_2_t = 3,
         stride      : _size_2_t = 1,
         padding     : _size_2_t = 1,
@@ -46,9 +45,9 @@ class ADCE(layer.ConvLayerParsingMixin, nn.Module):
         dtype       : Any       = None,
     ):
         super().__init__()
-        self.downsample = layer.Downsample(None, 1, "bilinear")
-        self.upsample   = layer.UpsamplingBilinear2d(None, 1)
-        self.relu       = layer.ReLU(inplace=True)
+        self.downsample = nn.Downsample(None, 1, "bilinear")
+        self.upsample   = nn.UpsamplingBilinear2d(None, 1)
+        self.relu       = nn.ReLU(inplace=True)
         self.conv1 = conv(
             in_channels  = in_channels,
             out_channels = mid_channels,
@@ -127,7 +126,7 @@ class ADCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv7 = layer.Conv2d(
+        self.conv7 = nn.Conv2d(
             in_channels  = mid_channels * 2,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -159,7 +158,7 @@ class ADCE(layer.ConvLayerParsingMixin, nn.Module):
 
 # region Loss
 
-class CombinedLoss(loss.Loss):
+class CombinedLoss(nn.Loss):
     """Loss = SpatialConsistencyLoss
               + ExposureControlLoss
               + ColorConstancyLoss
@@ -188,16 +187,16 @@ class CombinedLoss(loss.Loss):
         self.channel_weight = channel_weight
         self.edge_weight    = edge_weight
         
-        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = loss.ExposureControlLoss(
+        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
-        self.loss_edge    = loss.EdgeLoss(reduction=reduction)
+        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_edge    = nn.EdgeLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -320,21 +319,21 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
             *args, **kwargs
         )
         if config in ["zero-adce-a"]:
-            conv       = partial(layer.ABSConv2dS, act2=layer.HalfInstanceNorm2d)
-            final_conv = layer.Conv2d
+            conv       = partial(nn.ABSConv2dS, act2=nn.HalfInstanceNorm2d)
+            final_conv = nn.Conv2d
         elif config in ["zero-adce-b"]:
-            conv       = partial(layer.ABSConv2dS, ac1=layer.HalfInstanceNorm2d, act2=layer.HalfInstanceNorm2d)
-            final_conv = layer.Conv2d
+            conv       = partial(nn.ABSConv2dS, ac1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
+            final_conv = nn.Conv2d
         elif config in ["zero-adce-c"]:
-            conv       = partial(layer.ABSConv2dS, ac1=layer.HalfInstanceNorm2d, act2=layer.HalfInstanceNorm2d)
-            final_conv = partial(layer.ABSConv2dS, ac1=layer.HalfInstanceNorm2d, act2=layer.HalfInstanceNorm2d)
+            conv       = partial(nn.ABSConv2dS, ac1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
+            final_conv = partial(nn.ABSConv2dS, ac1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
         else:
             raise ValueError(
                 f"config must be one of: `zero-adce-[a, b, c, d, e]`. "
                 f"But got: {config}."
             )
            
-        self.relu  = layer.ReLU(inplace=True)
+        self.relu  = nn.ReLU(inplace=True)
         self.conv1 = conv(
             in_channels  = 3,
             out_channels = 32,
@@ -361,7 +360,7 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
             device       = None,
             dtype        = None,
         )
-        self.conv3 = layer.ABSConv2dS(
+        self.conv3 = nn.ABSConv2dS(
             in_channels  = 32,
             out_channels = 32,
             kernel_size  = 3,

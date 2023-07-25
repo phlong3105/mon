@@ -14,13 +14,12 @@ from abc import ABC
 import torch
 
 from mon.foundation import pathlib
-from mon.vision import visualize
-from mon.vision.ml import model
+from mon.vision import nn, visualize
 
 
 # region Model
 
-class ImageClassificationModel(model.Model, ABC):
+class ImageClassificationModel(nn.Model, ABC):
     """The base class for all image classification models.
     
     See Also: :class:`mon.coreml.model.Model`.

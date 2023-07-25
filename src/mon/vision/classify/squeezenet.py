@@ -12,12 +12,11 @@ __all__ = [
 from abc import ABC
 
 import torch
-from torch import nn, Tensor
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.classify import base
-from mon.vision.ml import layer, model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -25,7 +24,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class Fire(layer.LayerParsingMixin, nn.Module):
+class Fire(nn.LayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -36,27 +35,27 @@ class Fire(layer.LayerParsingMixin, nn.Module):
     ):
         super().__init__()
         self.in_channels = in_channels
-        self.squeeze     = layer.Conv2d(
+        self.squeeze     = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = squeeze_planes,
             kernel_size  = 1,
         )
-        self.squeeze_activation = layer.ReLU(inplace = True)
-        self.expand1x1 = layer.Conv2d(
+        self.squeeze_activation = nn.ReLU(inplace = True)
+        self.expand1x1 = nn.Conv2d(
             in_channels  = squeeze_planes,
             out_channels = expand1x1_planes,
             kernel_size  = 1,
         )
-        self.expand1x1_activation = layer.ReLU(inplace=True)
-        self.expand3x3 = layer.Conv2d(
+        self.expand1x1_activation = nn.ReLU(inplace=True)
+        self.expand3x3 = nn.Conv2d(
             in_channels  = squeeze_planes,
             out_channels = expand3x3_planes,
             kernel_size  = 3,
             padding      = 1,
         )
-        self.expand3x3_activation = layer.ReLU(inplace=True)
+        self.expand3x3_activation = nn.ReLU(inplace=True)
     
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
         x     = input
         x     = self.squeeze_activation(self.squeeze(x))
         y_1x1 = self.expand1x1_activation(self.expand1x1(x))
@@ -93,7 +92,7 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

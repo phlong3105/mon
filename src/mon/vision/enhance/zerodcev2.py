@@ -13,21 +13,19 @@ from abc import ABC
 from typing import Any
 
 import torch
-from torch import nn
-from torch.nn import functional as F
 
 from mon.foundation import pathlib
 from mon.globals import MODELS
+from mon.vision import image, nn
 from mon.vision.enhance import base
-from mon.vision.image import enhance
-from mon.vision.ml import layer, loss
+from mon.vision.nn import functional as F
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
 
 # region Loss
 
-class CombinedLoss(loss.Loss):
+class CombinedLoss(nn.Loss):
     """Loss = SpatialConsistencyLoss
               + ExposureControlLoss
               + ColorConstancyLoss
@@ -54,15 +52,15 @@ class CombinedLoss(loss.Loss):
         self.tv_weight      = tv_weight
         self.channel_weight = channel_weight
         
-        self.loss_spa     = loss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp     = loss.ExposureControlLoss(
+        self.loss_spa     = nn.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp     = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -173,17 +171,17 @@ class ZeroDCEv2A(ZeroDCEv2):
         self.scale_factor = scale_factor
         self.ratio        = ratio
         
-        self.relu     = layer.ReLU(inplace=True)
-        self.upsample = layer.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.conv0    = layer.DSConv2d(3, self.num_channels, 3, dw_stride=1, dw_padding=1)
-        self.conv1    = layer.FFConv2dNormAct(self.num_channels * 2, self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv2    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv3    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv4    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv5    = layer.DSConv2d(self.num_channels,                          self.num_channels, 3, dw_stride=1, dw_padding=1)
-        self.conv6    = layer.DSConv2d(self.num_channels + self.num_channels // 2, self.num_channels, 3, dw_stride=1, dw_padding=1)
-        self.conv7    = layer.DSConv2d(self.num_channels + self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
-        self.le_curve = layer.PixelwiseHigherOrderLECurve(n=8)
+        self.relu     = nn.ReLU(inplace=True)
+        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        self.conv0    = nn.DSConv2d(3, self.num_channels, 3, dw_stride=1, dw_padding=1)
+        self.conv1    = nn.FFConv2dNormAct(self.num_channels * 2, self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv2    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv3    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv4    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv5    = nn.DSConv2d(self.num_channels,                          self.num_channels, 3, dw_stride=1, dw_padding=1)
+        self.conv6    = nn.DSConv2d(self.num_channels + self.num_channels // 2, self.num_channels, 3, dw_stride=1, dw_padding=1)
+        self.conv7    = nn.DSConv2d(self.num_channels + self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
+        self.le_curve = image.PixelwiseHigherOrderLECurve(n=8)
         
     def forward(
         self,
@@ -238,18 +236,18 @@ class ZeroDCEv2B(ZeroDCEv2):
         self.scale_factor = scale_factor
         self.ratio        = ratio
         
-        self.relu     = layer.ReLU(inplace=True)
-        self.upsample = layer.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.conv0    = layer.DSConv2d(3, self.num_channels, 3, dw_stride=1, dw_padding=1)
-        self.conv1    = layer.FFConv2dNormAct(self.num_channels * 2, self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv2    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv3    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv4    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv5    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv6    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv7    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
-        self.conv8    = layer.DSConv2d(self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
-        self.le_curve = enhance.PixelwiseHigherOrderLECurve(n=8)
+        self.relu     = nn.ReLU(inplace=True)
+        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        self.conv0    = nn.DSConv2d(3, self.num_channels, 3, dw_stride=1, dw_padding=1)
+        self.conv1    = nn.FFConv2dNormAct(self.num_channels * 2, self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv2    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv3    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv4    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv5    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv6    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv7    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
+        self.conv8    = nn.DSConv2d(self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
+        self.le_curve = image.PixelwiseHigherOrderLECurve(n=8)
         
     def forward(
         self,

@@ -16,8 +16,7 @@ import numpy as np
 import torch
 
 from mon.foundation import pathlib
-from mon.vision import image as mimage
-from mon.vision.ml import device as mdevice
+from mon.vision import image, nn
 
 
 # region Embedder
@@ -68,8 +67,8 @@ class DeepEmbedder(Embedder, ABC):
         super().__init__()
         self.config     = config
         self.weight     = weight
-        self.image_size = mimage.get_hw(size=image_size)
-        self.device     = mdevice.select_device(device=device)
+        self.image_size = image.get_hw(size=image_size)
+        self.device     = nn.select_device(device=device)
         self.to_numpy   = to_numpy
         # Load model
         self.model = None

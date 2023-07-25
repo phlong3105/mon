@@ -10,8 +10,8 @@ __all__ = [
 ]
 
 import torch
-from torch.nn import functional
 
+from mon.coreml import functional as F
 from mon.vision.image import base
 
 
@@ -39,7 +39,7 @@ def get_dark_channel(image: torch.Tensor, size: int = 15) -> torch.Tensor:
     
     b, c, h, w  = image.shape
     p            = size // 2
-    padded       = functional.pad(input=image, pad=(p, p, p, p), mode="replicate")
+    padded       = F.pad(input=image, pad=(p, p, p, p), mode="replicate")
     dark_channel = torch.zeros([b, 1, h, w])
     
     for k in range(b):

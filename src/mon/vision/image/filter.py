@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements image filtering functions.
+"""This module implements filtering functions and layers that are used to
+built models in :mod:`mon.vision.enhance` as well as losses and metrics in
+:mod:`mon.vision.ml`.
 
 Common layers are:
     - bilateral
@@ -30,10 +32,13 @@ __all__ = [
     "log2d_kernel_np",
 ]
 
+from typing import Callable
+
 import numpy as np
 import torch
-from torch import nn
 
+from mon import coreml as nn
+from mon.coreml import functional as F
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import math
 from mon.globals import LAYERS
@@ -97,8 +102,10 @@ class BoxFilter(nn.Module):
 
 @LAYERS.register()
 class GuidedFilter(nn.Module):
-    """Guided Filter layer from: "`DeepGuidedFilter
-    <https://github.com/wuhuikai/DeepGuidedFilter>`__"
+    """Guided Filter layer proposed in the paper: "`Fast End-to-End Trainable
+    Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
+    
+    The code is from "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
     
     Args:
         kernel_size: Blurring kernel size.
@@ -160,6 +167,176 @@ class GuidedFilter(nn.Module):
         mean_A = self.boxfilter(A) / n
         mean_b = self.boxfilter(b) / n
         y      = mean_A * x + mean_b
+        
+        return y
+
+
+@LAYERS.register()
+class FastGuidedFilter(nn.Module):
+    """Fast Guided Filter layer proposed in the paper: "`Fast End-to-End
+    Trainable Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
+     
+    The code is from "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
+    
+    Args:
+        kernel_size: Blurring kernel size.
+        radius: kernel_size = 2 * radius + 1.
+    """
+    
+    def __init__(
+        self,
+        kernel_size: int | None = None,
+        radius     : int | None = None,
+        eps        : float      = 1e-8,
+    ):
+        super().__init__()
+        assert kernel_size is not None and radius is not None
+        if kernel_size is not None:
+            self.kernel_size = kernel_size
+            self.radius      = int((kernel_size - 1) / 2)
+        else:
+            self.kernel_size = radius * 2 + 1
+            self.radius      = radius
+        self.eps        = eps
+        self.box_filter = BoxFilter(kernel_size=kernel_size, radius=radius)
+
+    def forward(
+        self,
+        input_lowres : torch.Tensor,
+        guide_lowres : torch.Tensor,
+        input_highres: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        
+        Args:
+            input_lowres: Low resolution input image.
+            guide_lowres: Guidance image.
+            input_highres: High resolution input image.
+            
+        Returns:
+            y: Filtering output.
+        """
+        x_lr = input_lowres
+        y_lr = guide_lowres
+        x_hr = input_highres
+        n_xlr, c_xlr, h_xlr, w_xlr = x_lr.size()
+        n_ylr, c_ylr, h_ylr, w_ylr = y_lr.size()
+        n_xhr, c_xhr, h_xhr, w_xhr = x_hr.size()
+
+        assert n_xlr == n_ylr and n_ylr == n_xhr
+        assert c_xlr == c_xhr and (c_xlr == 1 or c_xlr == c_ylr)
+        assert h_xlr == h_ylr and w_xlr == w_ylr
+        assert h_xlr > 2 * self.r + 1 and w_xlr > 2 * self.r + 1
+
+        # n
+        N = self.boxfilter(torch.autograd.Variable(x_lr.data.new().resize_((1, 1, h_xlr, w_xlr)).fill_(1.0)))
+        # mean_x
+        mean_x = self.boxfilter(x_lr) / N
+        # mean_y
+        mean_y = self.boxfilter(y_lr) / N
+        # cov_xy
+        cov_xy = self.boxfilter(x_lr * y_lr) / N - mean_x * mean_y
+        # var_x
+        var_x = self.boxfilter(x_lr * x_lr) / N - mean_x * mean_x
+        # A
+        A = cov_xy / (var_x + self.eps)
+        # b
+        b = mean_y - A * mean_x
+        # mean_A; mean_b
+        mean_A = F.interpolate(A, (h_xhr, w_xhr), mode="bilinear", align_corners=True)
+        mean_b = F.interpolate(b, (h_xhr, w_xhr), mode="bilinear", align_corners=True)
+        y      = mean_A * x_hr + mean_b
+        
+        return y
+
+
+@LAYERS.register()
+class GuidedFilterConv2d(nn.Module):
+    """Guided Filter layer using 2d convolution layers proposed in the paper:
+    "`Fast End-to-End Trainable Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
+    
+    The code is from "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
+    
+    Args:
+        kernel_size: Blurring kernel size.
+        radius: kernel_size = 2 * radius + 1.
+    """
+    
+    def __init__(
+        self,
+        kernel_size: int | None = None,
+        radius     : int | None = None,
+        norm       : Callable   = nn.BatchNorm2d,
+    ):
+        super().__init__()
+        assert kernel_size is not None and radius is not None
+        if kernel_size is not None:
+            self.kernel_size = kernel_size
+            self.radius      = int((kernel_size - 1) / 2)
+        else:
+            self.kernel_size = radius * 2 + 1
+            self.radius      = radius
+        
+        self.box_filter = nn.Conv2d(
+            in_channels  = 3,
+            out_channels = 3,
+            kernel_size  = 3,
+            padding      = self.radius,
+            dilation     = self.radius,
+            bias         = False,
+            groups       = 3,
+        )
+        self.conv_a = nn.Sequential(
+            nn.Conv2d(in_channels=6,  out_channels=32, kernel_size=1, bias=False),
+            norm(num_features=32),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=32, out_channels=32, kernel_size=1, bias=False),
+            norm(num_features=32),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(in_channels=32, out_channels=3,  kernel_size=1, bias=False)
+        )
+        self.box_filter.weight.data[...] = 1.0
+
+    def forward(
+        self,
+        input_lowres : torch.Tensor,
+        guide_lowres : torch.Tensor,
+        input_highres: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        
+        Args:
+            input_lowres: Low resolution input image.
+            guide_lowres: Guidance image.
+            input_highres: High resolution input image.
+            
+        Returns:
+            y: Filtering output.
+        """
+        x_lr = input_lowres
+        y_lr = guide_lowres
+        x_hr = input_highres
+        n_xlr, c_xlr, h_xlr, w_xlr = x_lr.size()
+        n_ylr, c_ylr, h_ylr, w_ylr = y_lr.size()
+        n_xhr, c_xhr, h_xhr, w_xhr = x_hr.size()
+
+        n = self.box_filter(x_lr.data.new().resize_((1, 3, h_xlr, w_xlr)).fill_(1.0))
+        # mean_x
+        mean_x = self.box_filter(x_lr) / n
+        # mean_y
+        mean_y = self.box_filter(y_lr) / n
+        # cov_xy
+        cov_xy = self.box_filter(x_lr * y_lr) / n - mean_x * mean_y
+        # var_x
+        var_x  = self.box_filter(x_lr * x_lr) / n - mean_x * mean_x
+        # A
+        A = self.conv_a(torch.cat([cov_xy, var_x], dim=1))
+        # b
+        b = mean_y - A * mean_x
+        # mean_A; mean_b
+        mean_A = F.interpolate(A, (h_xhr, w_xhr), mode="bilinear", align_corners=True)
+        mean_b = F.interpolate(b, (h_xhr, w_xhr), mode="bilinear", align_corners=True)
+        y      = mean_A * x_hr + mean_b
         
         return y
 

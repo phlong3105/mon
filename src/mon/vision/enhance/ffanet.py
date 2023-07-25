@@ -12,13 +12,12 @@ __all__ = [
 from typing import Any, Sequence
 
 import torch
-from torch import nn
 
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import builtins, pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.enhance import base
-from mon.vision.ml import layer
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -26,7 +25,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class FFA(layer.SameChannelsLayerParsingMixin, nn.Module):
+class FFA(nn.SameChannelsLayerParsingMixin, nn.Module):
     """This is the main feature in FFA-Net, the Feature Fusion Attention.
     
     We concatenate all feature maps output by G Group Architectures in the
@@ -43,26 +42,26 @@ class FFA(layer.SameChannelsLayerParsingMixin, nn.Module):
         self.num_groups = num_groups
         self.ca = nn.Sequential(
             *[
-                layer.AdaptiveAvgPool2d(1),
-                layer.Conv2d(
+                nn.AdaptiveAvgPool2d(1),
+                nn.Conv2d(
                     in_channels  = self.channels * self.num_groups,
                     out_channels = self.channels // 16,
                     kernel_size  = 1,
                     padding      = 0,
                     bias         = True,
                 ),
-                layer.ReLU(inplace=True),
-                layer.Conv2d(
+                nn.ReLU(inplace=True),
+                nn.Conv2d(
                     in_channels  = self.channels // 16,
                     out_channels = self.channels * self.num_groups,
                     kernel_size  = 1,
                     padding      = 0,
                     bias         = True
                 ),
-                layer.Sigmoid()
+                nn.Sigmoid()
             ]
         )
-        self.pa = layer.PixelAttentionModule(
+        self.pa = nn.PixelAttentionModule(
             channels        = self.channels,
             reduction_ratio = 8,
             kernel_size     = 1,
@@ -80,27 +79,27 @@ class FFA(layer.SameChannelsLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FFABlock(layer.SameChannelsLayerParsingMixin, nn.Module):
+class FFABlock(nn.SameChannelsLayerParsingMixin, nn.Module):
     """A basic block structure in FFA-Net."""
 
     def __init__(self, channels: int, kernel_size: _size_2_t):
         super().__init__()
-        self.conv1 = layer.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = channels,
             out_channels = channels,
             kernel_size  = kernel_size,
             padding      = (kernel_size // 2),
             bias         = True
         )
-        self.act1  = layer.ReLU(inplace=True)
-        self.conv2 = layer.Conv2d(
+        self.act1  = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
             in_channels  = channels,
             out_channels = channels,
             kernel_size  = kernel_size,
             padding      = (kernel_size // 2),
             bias         = True
         )
-        self.ca = layer.ChannelAttentionModule(
+        self.ca = nn.ChannelAttentionModule(
             channels        = channels,
             reduction_ratio = 8,
             kernel_size     = 1,
@@ -109,7 +108,7 @@ class FFABlock(layer.SameChannelsLayerParsingMixin, nn.Module):
             bias            = True,
             max_pool        = False,
         )
-        self.pa = layer.PixelAttentionModule(
+        self.pa = nn.PixelAttentionModule(
             channels        = channels,
             reduction_ratio = 8,
             kernel_size     = 1,
@@ -130,7 +129,7 @@ class FFABlock(layer.SameChannelsLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FFAGroup(layer.SameChannelsLayerParsingMixin, nn.Module):
+class FFAGroup(nn.SameChannelsLayerParsingMixin, nn.Module):
     """Our Group Architecture combines B Basic Block structures with skip
     connections module. Continuous B blocks increase the depth and
     expressiveness of the FFA-Net. And skip connections make FFA-Net get around
@@ -151,7 +150,7 @@ class FFAGroup(layer.SameChannelsLayerParsingMixin, nn.Module):
             for _ in range(num_blocks)
         ]
         m.append(
-            layer.Conv2d(
+            nn.Conv2d(
                 in_channels  = channels,
                 out_channels = channels,
                 kernel_size  = kernel_size,
@@ -169,7 +168,7 @@ class FFAGroup(layer.SameChannelsLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FFAPostProcess(layer.ConvLayerParsingMixin, nn.Module):
+class FFAPostProcess(nn.ConvLayerParsingMixin, nn.Module):
     """Post-process module in FFA-Net."""
     
     def __init__(
@@ -179,14 +178,14 @@ class FFAPostProcess(layer.ConvLayerParsingMixin, nn.Module):
         kernel_size : _size_2_t = 3,
     ):
         super().__init__()
-        self.conv1 = layer.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = in_channels,
             kernel_size  = kernel_size,
             padding      = (kernel_size // 2),
             bias         = True
         )
-        self.conv2 = layer.Conv2d(
+        self.conv2 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -201,7 +200,7 @@ class FFAPostProcess(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FFAPreProcess(layer.ConvLayerParsingMixin, nn.Module):
+class FFAPreProcess(nn.ConvLayerParsingMixin, nn.Module):
     """Pre-process module in FFA-Net."""
     
     def __init__(
@@ -211,7 +210,7 @@ class FFAPreProcess(layer.ConvLayerParsingMixin, nn.Module):
         kernel_size : _size_2_t = 3,
     ):
         super().__init__()
-        self.conv = layer.Conv2d(
+        self.conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,

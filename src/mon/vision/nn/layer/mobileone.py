@@ -14,11 +14,8 @@ __all__ = [
 from typing import Any
 
 import torch
-from torch import nn
 
-from mon.coreml.layer import (
-    activation, attention, base, conv, linear, normalization,
-)
+from mon import coreml as nn
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -26,7 +23,7 @@ from mon.globals import LAYERS
 # region MobileOne Convolution
 
 @LAYERS.register()
-class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
+class MobileOneConv2d(nn.ConvLayerParsingMixin, nn.Module):
     """MobileOneConv2d from the paper: "An Improved One millisecond Mobile
     Backbone". This block has a multi-branched architecture at train-time and
     plain-CNN style architecture at inference time. It is similar to a Conv2d.
@@ -69,21 +66,21 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         
         # Check if SE-ReLU is requested
         if se is True:
-            self.se = attention.SqueezeExciteC(
+            self.se = nn.SqueezeExciteC(
                 channels        = out_channels,
                 reduction_ratio = 16,
                 bias            = True,
             )
         else:
-            self.se = linear.Identity()
-        self.act = activation.ReLU()
+            self.se = nn.Identity()
+        self.act = nn.ReLU()
         
         self.reparam_conv = None
         self.rbr_skip     = None
         self.rbr_conv     = None
         self.rbr_scale    = None
         if inference_mode:
-            self.reparam_conv = conv.Conv2d(
+            self.reparam_conv = nn.Conv2d(
                 in_channels  = in_channels,
                 out_channels = out_channels,
                 kernel_size  = kernel_size,
@@ -98,7 +95,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             )
         else:
             # Re-parameterizable skip connection
-            self.rbr_skip = normalization.BatchNorm2d(
+            self.rbr_skip = nn.BatchNorm2d(
                 num_features=in_channels) \
                 if out_channels == in_channels and stride == 1 else None
             
@@ -106,7 +103,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             rbr_conv = list()
             for _ in range(self.num_conv_branches):
                 rbr_conv.append(
-                    conv.Conv2dBn(
+                    nn.Conv2dBn(
                         in_channels  = in_channels,
                         out_channels = out_channels,
                         kernel_size  = kernel_size,
@@ -124,7 +121,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             
             # Re-parameterizable scale branch
             if kernel_size > 1:
-                self.rbr_scale = conv.Conv2dBn(
+                self.rbr_scale = nn.Conv2dBn(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = 1,
@@ -186,7 +183,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         Returns:
             Tuple of (kernel, bias) after fusing batchnorm.
         """
-        if isinstance(branch, conv.Conv2dBn):
+        if isinstance(branch, nn.Conv2dBn):
             kernel       = branch.conv.weight
             running_mean = branch.bn.running_mean
             running_var  = branch.bn.running_var
@@ -194,7 +191,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
             beta         = branch.bn.bias
             eps          = branch.bn.eps
         else:
-            assert isinstance(branch, normalization.BatchNorm2d)
+            assert isinstance(branch, nn.BatchNorm2d)
             if not hasattr(self, "id_tensor"):
                 input_dim = self.in_channels // self.groups
                 kernel_value = torch.zeros(
@@ -228,7 +225,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         if self.inference_mode:
             return
         kernel, bias = self._get_kernel_bias()
-        self.reparam_conv = conv.Conv2d(
+        self.reparam_conv = nn.Conv2d(
             in_channels  = self.rbr_conv[0].conv.in_channels,
             out_channels = self.rbr_conv[0].conv.out_channels,
             kernel_size  = self.rbr_conv[0].conv.kernel_size,
@@ -281,7 +278,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
 # region MobuleOne Module
 
 @LAYERS.register()
-class MobileOneStage(base.ConvLayerParsingMixin, nn.Module):
+class MobileOneStage(nn.ConvLayerParsingMixin, nn.Module):
     """MobileOneStage used to construct the MobileOne Model from the paper:
     "An Improved One millisecond Mobile Backbone" (https://arxiv.org/pdf/2206.04040.pdf).
     

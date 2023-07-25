@@ -18,15 +18,15 @@ from torch import nn
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.classify import base
-from mon.vision.ml import layer, model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
 
 # region Module
 @LAYERS.register()
-class ResNetBasicBlock(layer.ConvLayerParsingMixin, nn.Module):
+class ResNetBasicBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     expansion: int = 1
     
@@ -44,7 +44,7 @@ class ResNetBasicBlock(layer.ConvLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         if norm is None:
-            norm = layer.BatchNorm2d
+            norm = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
             raise ValueError(
                 "'BasicBlock' only supports 'groups=1' and 'base_width=64'"
@@ -55,7 +55,7 @@ class ResNetBasicBlock(layer.ConvLayerParsingMixin, nn.Module):
             )
         # Both self.conv1 and self.downsample layers downsample the input when
         # stride != 1
-        self.conv1 = layer.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -66,8 +66,8 @@ class ResNetBasicBlock(layer.ConvLayerParsingMixin, nn.Module):
             dilation     = dilation,
         )
         self.bn1   = norm(out_channels)
-        self.relu  = layer.ReLU(inplace=True)
-        self.conv2 = layer.Conv2d(
+        self.relu  = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -96,7 +96,7 @@ class ResNetBasicBlock(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class ResNetBottleneck(layer.ConvLayerParsingMixin, nn.Module):
+class ResNetBottleneck(nn.ConvLayerParsingMixin, nn.Module):
     """Bottleneck in torchvision places the stride for down-sampling at 3x3
     convolution(self.conv2) while original implementation places the stride at
     the first 1x1 convolution(self.conv1) according to "Deep residual learning
@@ -121,11 +121,11 @@ class ResNetBottleneck(layer.ConvLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         if norm is None:
-            norm = layer.BatchNorm2d
+            norm = nn.BatchNorm2d
         width = int(out_channels * (base_width / 64.0)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when
         # stride != 1
-        self.conv1 = layer.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = width,
             kernel_size  = 1,
@@ -136,7 +136,7 @@ class ResNetBottleneck(layer.ConvLayerParsingMixin, nn.Module):
             bias         = False
         )
         self.bn1 = norm(width)
-        self.conv2 = layer.Conv2d(
+        self.conv2 = nn.Conv2d(
             in_channels  = width,
             out_channels = width,
             kernel_size  = 3,
@@ -147,7 +147,7 @@ class ResNetBottleneck(layer.ConvLayerParsingMixin, nn.Module):
             dilation     = dilation,
         )
         self.bn2   = norm(width)
-        self.conv3 = layer.Conv2d(
+        self.conv3 = nn.Conv2d(
             in_channels  = width,
             out_channels = out_channels * self.expansion,
             kernel_size  = 1,
@@ -158,7 +158,7 @@ class ResNetBottleneck(layer.ConvLayerParsingMixin, nn.Module):
             bias         = False
         )
         self.bn3        = norm(out_channels * self.expansion)
-        self.relu       = layer.ReLU(inplace=True)
+        self.relu       = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride     = stride
     
@@ -180,7 +180,7 @@ class ResNetBottleneck(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class ResNetBlock(layer.LayerParsingMixin, nn.Module):
+class ResNetBlock(nn.LayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -193,7 +193,7 @@ class ResNetBlock(layer.LayerParsingMixin, nn.Module):
         dilation    : int      = 1,
         base_width  : int      = 64,
         dilate      : bool     = False,
-        norm        : Callable = layer.BatchNorm2d,
+        norm        : Callable = nn.BatchNorm2d,
     ):
         super().__init__()
         downsample    = None
@@ -204,7 +204,7 @@ class ResNetBlock(layer.LayerParsingMixin, nn.Module):
         
         if stride != 1 or in_channels != out_channels * block.expansion:
             downsample = torch.nn.Sequential(
-                layer.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = out_channels * block.expansion,
                     kernel_size  = 1,
@@ -297,7 +297,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

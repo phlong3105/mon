@@ -13,9 +13,8 @@ __all__ = [
 from typing import Any
 
 import torch
-from torch import nn
 
-from mon.coreml.layer import activation, base, conv, normalization
+from mon import coreml as nn
 from mon.coreml.layer.typing import _size_2_t
 from mon.globals import LAYERS
 
@@ -23,7 +22,7 @@ from mon.globals import LAYERS
 # region UNet Block
 
 @LAYERS.register()
-class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
+class UNetBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -40,7 +39,7 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
         dtype       : Any             = None,
     ):
         super().__init__()
-        self.conv1 = conv.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -53,9 +52,9 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.norm1 = normalization.BatchNorm2d(num_features=out_channels)
-        self.relu1 = activation.ReLU(inplace=True)
-        self.conv2 = conv.Conv2d(
+        self.norm1 = nn.BatchNorm2d(num_features=out_channels)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -68,8 +67,8 @@ class UNetBlock(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.norm2 = normalization.BatchNorm2d(num_features=out_channels)
-        self.relu2 = activation.ReLU(inplace=True)
+        self.norm2 = nn.BatchNorm2d(num_features=out_channels)
+        self.relu2 = nn.ReLU(inplace=True)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input

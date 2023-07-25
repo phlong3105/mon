@@ -27,7 +27,7 @@ import multipledispatch
 import numpy as np
 import torch
 
-from mon.coreml import device as md
+from mon import coreml as nn
 from mon.foundation import error_console, math
 
 
@@ -749,7 +749,7 @@ def to_tensor(
     # Place in memory
     image = image.contiguous()
     if device is not None:
-        device = md.select_device(device=device) \
+        device = nn.select_device(device=device) \
             if not isinstance(device, torch.device) else device
         image = image.to(device)
     return image

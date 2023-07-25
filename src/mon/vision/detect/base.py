@@ -16,8 +16,7 @@ import numpy as np
 import torch
 
 from mon.foundation import pathlib
-from mon.vision import image as mimage, tracking
-from mon.vision.ml import data as mdata, device as mdevice
+from mon.vision import image as mimage, nn, tracking
 
 
 # region Detector
@@ -56,13 +55,13 @@ class Detector(ABC):
         super().__init__()
         self.config         = config
         self.weights        = weights
-        self.classlabels    = mdata.ClassLabels.from_value(value=classlabels)
+        self.classlabels    = nn.ClassLabels.from_value(value=classlabels)
         self.allowed_ids    = self.classlabels.ids(key="id", exclude_negative_key=True)
         self.image_size     = mimage.get_hw(size=image_size)
         self.conf_threshold = conf_threshold
         self.iou_threshold  = iou_threshold
         self.max_detections = max_detections
-        self.device         = mdevice.select_device(device=device)
+        self.device         = nn.select_device(device=device)
         self.to_instance    = to_instance
         # Load model
         self.model = None

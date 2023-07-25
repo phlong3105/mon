@@ -12,12 +12,11 @@ __all__ = [
 from typing import Any, Sequence
 
 import torch
-from torch import nn
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.enhance import base
-from mon.vision.ml import layer, model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -25,7 +24,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class HINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
+class HINetConvBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -41,23 +40,23 @@ class HINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
         self.use_csff   = use_csff
         self.use_hin    = use_hin
         
-        self.conv1 = layer.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 3,
             padding      = 1,
             bias         = True,
         )
-        self.relu1 = layer.LeakyReLU(relu_slope, inplace=False)
-        self.conv2 = layer.Conv2d(
+        self.relu1 = nn.LeakyReLU(relu_slope, inplace=False)
+        self.conv2 = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = 3,
             padding      = 1,
             bias         = True,
         )
-        self.relu2    = layer.LeakyReLU(relu_slope, inplace = False)
-        self.identity = layer.Conv2d(
+        self.relu2    = nn.LeakyReLU(relu_slope, inplace = False)
+        self.identity = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -66,14 +65,14 @@ class HINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
         )
         
         if downsample and use_csff:
-            self.csff_enc = layer.Conv2d(
+            self.csff_enc = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 3,
                 stride       = 1,
                 padding      = 1,
             )
-            self.csff_dec = layer.Conv2d(
+            self.csff_dec = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 3,
@@ -82,10 +81,10 @@ class HINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
             )
         
         if self.use_hin:
-            self.norm = layer.InstanceNorm2d(out_channels // 2, affine=True)
+            self.norm = nn.InstanceNorm2d(out_channels // 2, affine=True)
         
         if downsample:
-            self.downsample = layer.Conv2d(
+            self.downsample = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 4,
@@ -140,7 +139,7 @@ class HINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class HINetUpBlock(layer.ConvLayerParsingMixin, nn.Module):
+class HINetUpBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -149,7 +148,7 @@ class HINetUpBlock(layer.ConvLayerParsingMixin, nn.Module):
         relu_slope  : float,
     ):
         super().__init__()
-        self.up = layer.ConvTranspose2d(
+        self.up = nn.ConvTranspose2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 2,
@@ -178,7 +177,7 @@ class HINetUpBlock(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class HINetSkipBlock(layer.ConvLayerParsingMixin, nn.Module):
+class HINetSkipBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -189,7 +188,7 @@ class HINetSkipBlock(layer.ConvLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         self.repeat_num = repeat_num
-        self.shortcut   = layer.Conv2d(
+        self.shortcut   = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -229,7 +228,6 @@ class HINetSkipBlock(layer.ConvLayerParsingMixin, nn.Module):
         y      = self.blocks(x)
         y      = y + x_skip
         return y
-
 
 # endregion
 
@@ -477,7 +475,7 @@ class HINet(base.ImageEnhancementModel):
                 },
                 "head"    : {},
             }
-            state_dict  = model.load_state_dict_from_path(
+            state_dict  = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             state_dict       = state_dict["params"]

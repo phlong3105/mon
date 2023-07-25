@@ -14,13 +14,12 @@ from abc import ABC
 from typing import Sequence
 
 import torch
-from torch import nn
-from torch.nn import functional
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.classify import base
-from mon.vision.ml import layer, model
+from mon.vision.nn import functional as F
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -28,7 +27,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class DenseLayer(layer.ConvLayerParsingMixin, nn.Module):
+class DenseLayer(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -39,18 +38,18 @@ class DenseLayer(layer.ConvLayerParsingMixin, nn.Module):
         memory_efficient: bool  = False,
     ):
         super().__init__()
-        self.norm1 = layer.BatchNorm2d(in_channels)
-        self.relu1 = layer.ReLU(inplace=True)
-        self.conv1 = layer.Conv2d(
+        self.norm1 = nn.BatchNorm2d(in_channels)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels * bn_size,
             kernel_size  = 1,
             stride       = 1,
             bias         = False
         )
-        self.norm2 = layer.BatchNorm2d(out_channels * bn_size)
-        self.relu2 = layer.ReLU(inplace=True)
-        self.conv2 = layer.Conv2d(
+        self.norm2 = nn.BatchNorm2d(out_channels * bn_size)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(
             in_channels  = out_channels * bn_size,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -68,7 +67,7 @@ class DenseLayer(layer.ConvLayerParsingMixin, nn.Module):
         y = self.conv1(self.relu1(self.norm1(x)))  # bottleneck
         y = self.conv2(self.relu2(self.norm2(y)))  # new features
         if self.drop_rate > 0.0:
-            y = functional.dropout(
+            y = F.dropout(
                 input    = y,
                 p        = self.drop_rate,
                 training = self.training
@@ -77,7 +76,7 @@ class DenseLayer(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class DenseBlock(layer.LayerParsingMixin, nn.ModuleDict):
+class DenseBlock(nn.LayerParsingMixin, nn.ModuleDict):
     
     def __init__(
         self,
@@ -119,20 +118,20 @@ class DenseBlock(layer.LayerParsingMixin, nn.ModuleDict):
 
 
 @LAYERS.register()
-class DenseTransition(layer.LayerParsingMixin, nn.Module):
+class DenseTransition(nn.LayerParsingMixin, nn.Module):
     
     def __init__(self, in_channels: int, out_channels: int):
         super().__init__()
-        self.norm = layer.BatchNorm2d(in_channels)
-        self.relu = layer.ReLU(inplace=True)
-        self.conv = layer.Conv2d(
+        self.norm = nn.BatchNorm2d(in_channels)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
             stride       = 1,
             bias         = False,
         )
-        self.pool = layer.AvgPool2d(kernel_size=2, stride=2)
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -185,7 +184,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

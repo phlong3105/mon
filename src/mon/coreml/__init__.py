@@ -23,6 +23,7 @@ import mon.coreml.metric
 import mon.coreml.model
 import mon.coreml.optimizer
 import mon.coreml.strategy
+import mon.coreml.torch_nn
 from mon.coreml.callback import *
 from mon.coreml.data import *
 from mon.coreml.device import *
@@ -35,3 +36,4 @@ from mon.coreml.metric import *
 from mon.coreml.model import *
 from mon.coreml.optimizer import *
 from mon.coreml.strategy import *
+from mon.coreml.torch_nn import *

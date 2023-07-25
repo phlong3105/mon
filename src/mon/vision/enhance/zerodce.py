@@ -13,14 +13,13 @@ __all__ = [
 from typing import Any
 
 import torch
-from torch import nn
-from torch.nn import functional as F
 
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.enhance import base
-from mon.vision.ml import layer, loss, model
+from mon.vision.nn import functional as F
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -28,7 +27,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Layer
 
 @LAYERS.register()
-class DCE(layer.ConvLayerParsingMixin, nn.Module):
+class DCE(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -46,8 +45,8 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
         dtype       : Any       = None,
     ):
         super().__init__()
-        self.relu  = layer.ReLU(inplace=True)
-        self.conv1 = layer.Conv2d(
+        self.relu  = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -60,7 +59,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv2 = layer.Conv2d(
+        self.conv2 = nn.Conv2d(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -73,7 +72,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv3 = layer.Conv2d(
+        self.conv3 = nn.Conv2d(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -86,7 +85,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv4 = layer.Conv2d(
+        self.conv4 = nn.Conv2d(
             in_channels  = mid_channels,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -99,7 +98,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv5 = layer.Conv2d(
+        self.conv5 = nn.Conv2d(
             in_channels  = mid_channels * 2,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -112,7 +111,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv6 = layer.Conv2d(
+        self.conv6 = nn.Conv2d(
             in_channels  = mid_channels * 2,
             out_channels = mid_channels,
             kernel_size  = kernel_size,
@@ -125,7 +124,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.conv7 = layer.Conv2d(
+        self.conv7 = nn.Conv2d(
             in_channels  = mid_channels * 2,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -155,7 +154,7 @@ class DCE(layer.ConvLayerParsingMixin, nn.Module):
 
 # region Loss
 
-class CombinedLoss01(loss.Loss):
+class CombinedLoss01(nn.Loss):
     """Loss = SpatialConsistencyLoss
               + ExposureControlLoss
               + ColorConstancyLoss
@@ -179,14 +178,14 @@ class CombinedLoss01(loss.Loss):
         self.col_weight = col_weight
         self.tv_weight  = tv_weight
         
-        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = loss.ExposureControlLoss(
+        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col = loss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv  = loss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv  = nn.IlluminationSmoothnessLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -213,7 +212,7 @@ class CombinedLoss01(loss.Loss):
         return loss
 
 
-class CombinedLoss02(loss.Loss):
+class CombinedLoss02(nn.Loss):
     """Loss = SpatialConsistencyLoss
               + ExposureControlLoss
               + ColorConstancyLoss
@@ -240,15 +239,15 @@ class CombinedLoss02(loss.Loss):
         self.tv_weight      = tv_weight
         self.channel_weight = channel_weight
         
-        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = loss.ExposureControlLoss(
+        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -353,7 +352,7 @@ class ZeroDCE(base.ImageEnhancementModel):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["sice"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             state_dict       = state_dict["params"]
@@ -406,14 +405,14 @@ class ZeroDCEVanilla(nn.Module):
     def __init__(self):
         super().__init__()
         number_f   = 32
-        self.relu  = layer.ReLU(inplace=True)
-        self.conv1 = layer.Conv2d(3,            number_f, 3, 1, 1, bias=True)
-        self.conv2 = layer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
-        self.conv3 = layer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
-        self.conv4 = layer.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
-        self.conv5 = layer.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
-        self.conv6 = layer.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
-        self.conv7 = layer.Conv2d(number_f * 2, 24,       3, 1, 1, bias=True)
+        self.relu  = nn.ReLU(inplace=True)
+        self.conv1 = nn.Conv2d(3,            number_f, 3, 1, 1, bias=True)
+        self.conv2 = nn.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv3 = nn.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv4 = nn.Conv2d(number_f,     number_f, 3, 1, 1, bias=True)
+        self.conv5 = nn.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
+        self.conv6 = nn.Conv2d(number_f * 2, number_f, 3, 1, 1, bias=True)
+        self.conv7 = nn.Conv2d(number_f * 2, 24,       3, 1, 1, bias=True)
     
     def enhance(self, x: torch.Tensor, x_r: torch.Tensor) -> torch.Tensor:
         x = x + x_r * (torch.pow(x, 2) - x)
@@ -539,7 +538,7 @@ class ZeroDCEPP(base.ImageEnhancementModel):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["sice"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             state_dict       = state_dict["params"]
@@ -592,16 +591,16 @@ class ZeroDCEPPVanilla(nn.Module):
     def __init__(self, scale_factor: float = 1.0):
         super().__init__()
         number_f          = 32
-        self.relu         = layer.ReLU(inplace=True)
+        self.relu         = nn.ReLU(inplace=True)
         self.scale_factor = scale_factor
-        self.upsample     = layer.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.conv1        = layer.DSConv2d(in_channels=3,            out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.conv2        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.conv3        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.conv4        = layer.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.conv5        = layer.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.conv6        = layer.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.conv7        = layer.DSConv2d(in_channels=number_f * 2, out_channels=3,        kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.upsample     = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        self.conv1        = nn.DSConv2d(in_channels=3,            out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv2        = nn.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv3        = nn.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv4        = nn.DSConv2d(in_channels=number_f,     out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv5        = nn.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv6        = nn.DSConv2d(in_channels=number_f * 2, out_channels=number_f, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
+        self.conv7        = nn.DSConv2d(in_channels=number_f * 2, out_channels=3,        kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
     
     def enhance(self, x: torch.Tensor, a: torch.Tensor) -> torch.Tensor:
         x = x + a * (torch.pow(x, 2) - x)

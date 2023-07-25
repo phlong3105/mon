@@ -20,10 +20,9 @@ __all__ = [
 import numpy as np
 import piqa
 import torch
-from torch import nn
-from torch.nn import functional
 
-from mon.coreml import layer
+from mon import coreml as nn
+from mon.coreml import functional as F
 from mon.coreml.loss import *
 from mon.globals import LOSSES, Reduction
 
@@ -110,9 +109,9 @@ class ChannelConsistencyLoss(Loss):
         d_gb1 = g1 - b1
         d_gb2 = g2 - b2
         
-        kl_rb = functional.kl_div(d_rb1, d_rb2, reduction="mean", log_target=self.log_target)
-        kl_rg = functional.kl_div(d_rg1, d_rg2, reduction="mean", log_target=self.log_target)
-        kl_gb = functional.kl_div(d_gb1, d_gb2, reduction="mean", log_target=self.log_target)
+        kl_rb = F.kl_div(d_rb1, d_rb2, reduction="mean", log_target=self.log_target)
+        kl_rg = F.kl_div(d_rg1, d_rg2, reduction="mean", log_target=self.log_target)
+        kl_gb = F.kl_div(d_gb1, d_gb2, reduction="mean", log_target=self.log_target)
         
         loss = kl_rb + kl_rg + kl_gb
         loss = reduce_loss(loss=loss, reduction=self.reduction)
@@ -208,12 +207,12 @@ class EdgeLoss(Loss):
         if self.kernel.devices != image.device:
             self.kernel = self.kernel.to(image.device)
         n_channels, _, kw, kh = self.kernel.shape
-        image = functional.pad(
+        image = F.pad(
             image,
             (kw // 2, kh // 2, kw // 2, kh // 2),
             mode="replicate"
         )
-        return functional.conv2d(image, self.kernel, groups=n_channels)
+        return F.conv2d(image, self.kernel, groups=n_channels)
     
     def laplacian_kernel(self, image: torch.Tensor) -> torch.Tensor:
         filtered   = self.conv_gauss(image)  # filter
@@ -238,8 +237,8 @@ class ExclusionLoss(Loss):
     def __init__(self, reduction: Reduction | str = "mean", level: int = 3):
         super().__init__(reduction=reduction)
         self.level    = level
-        self.avg_pool = layer.AvgPool2d(kernel_size = 2, stride = 2)
-        self.sigmoid  = layer.Sigmoid()
+        self.avg_pool = nn.AvgPool2d(kernel_size = 2, stride = 2)
+        self.sigmoid  = nn.Sigmoid()
     
     def __str__(self) -> str:
         return f"exclusion_loss"
@@ -323,7 +322,7 @@ class ExposureControlLoss(Loss):
         super().__init__(reduction=reduction)
         self.patch_size = patch_size
         self.mean_val   = mean_val
-        self.pool       = layer.AvgPool2d(self.patch_size)
+        self.pool       = nn.AvgPool2d(self.patch_size)
     
     def __str__(self) -> str:
         return f"exposure_control_loss"
@@ -574,7 +573,7 @@ class SpatialConsistencyLoss(Loss):
         self.weight_right = nn.Parameter(data=kernel_right, requires_grad=False)
         self.weight_up    = nn.Parameter(data=kernel_up, requires_grad=False)
         self.weight_down  = nn.Parameter(data=kernel_down, requires_grad=False)
-        self.pool         = layer.AvgPool2d(4)
+        self.pool         = nn.AvgPool2d(4)
     
     def __str__(self) -> str:
         return f"spatial_consistency_loss"
@@ -599,20 +598,20 @@ class SpatialConsistencyLoss(Loss):
         org_pool     = self.pool(org_mean)
         enhance_pool = self.pool(enhance_mean)
         
-        d_org_left  = functional.conv2d(org_pool, self.weight_left, padding=1)
-        d_org_right = functional.conv2d(org_pool, self.weight_right, padding=1)
-        d_org_up    = functional.conv2d(org_pool, self.weight_up, padding=1)
-        d_org_down  = functional.conv2d(org_pool, self.weight_down, padding=1)
+        d_org_left  = F.conv2d(org_pool, self.weight_left, padding=1)
+        d_org_right = F.conv2d(org_pool, self.weight_right, padding=1)
+        d_org_up    = F.conv2d(org_pool, self.weight_up, padding=1)
+        d_org_down  = F.conv2d(org_pool, self.weight_down, padding=1)
         
-        d_enhance_left  = functional.conv2d(enhance_pool, self.weight_left,  padding=1)
-        d_enhance_right = functional.conv2d(enhance_pool, self.weight_right, padding=1)
-        d_enhance_up    = functional.conv2d(enhance_pool, self.weight_up,    padding=1)
-        d_enhance_down  = functional.conv2d(enhance_pool, self.weight_down,  padding=1)
+        d_enhance_left  = F.conv2d(enhance_pool, self.weight_left,  padding=1)
+        d_enhance_right = F.conv2d(enhance_pool, self.weight_right, padding=1)
+        d_enhance_up    = F.conv2d(enhance_pool, self.weight_up,    padding=1)
+        d_enhance_down  = F.conv2d(enhance_pool, self.weight_down,  padding=1)
         
-        d_left  = torch.pow(d_org_left - d_enhance_left, 2)
+        d_left  = torch.pow(d_org_left  - d_enhance_left,  2)
         d_right = torch.pow(d_org_right - d_enhance_right, 2)
-        d_up    = torch.pow(d_org_up - d_enhance_up, 2)
-        d_down  = torch.pow(d_org_down - d_enhance_down, 2)
+        d_up    = torch.pow(d_org_up    - d_enhance_up,    2)
+        d_down  = torch.pow(d_org_down  - d_enhance_down,  2)
         loss    = d_left + d_right + d_up + d_down
         loss    = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
@@ -689,8 +688,8 @@ class StdLoss(Loss):
         
         input_mean = torch.mean(input, 1, keepdim=True)
         loss = self.mse(
-            input  = functional.conv2d(input_mean, self.image),
-            target = functional.conv2d(input_mean, self.blur)
+            input  = F.conv2d(input_mean, self.image),
+            target = F.conv2d(input_mean, self.blur)
         )
         return loss
 

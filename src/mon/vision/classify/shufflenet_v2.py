@@ -17,8 +17,8 @@ from torch import nn
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.classify import base
-from mon.vision.ml import layer, model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -26,7 +26,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class InvertedResidual(layer.LayerParsingMixin, nn.Module):
+class InvertedResidual(nn.LayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -52,7 +52,7 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
         
         if self.stride > 1:
             self.branch1 = nn.Sequential(
-                layer.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = in_channels,
                     kernel_size  = 3,
@@ -61,8 +61,8 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
                     groups       = in_channels,
                     bias         = False,
                 ),
-                layer.BatchNorm2d(in_channels),
-                layer.Conv2d(
+                nn.BatchNorm2d(in_channels),
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = branch_features,
                     kernel_size  = 1,
@@ -70,14 +70,14 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
                     padding      = 0,
                     bias         = False
                 ),
-                layer.BatchNorm2d(branch_features),
-                layer.ReLU(inplace=True),
+                nn.BatchNorm2d(branch_features),
+                nn.ReLU(inplace=True),
             )
         else:
             self.branch1 = nn.Sequential()
         
         self.branch2 = nn.Sequential(
-            layer.Conv2d(
+            nn.Conv2d(
                 in_channels  = in_channels if (self.stride > 1) else branch_features,
                 out_channels = branch_features,
                 kernel_size  = 1,
@@ -85,9 +85,9 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
                 padding      = 0,
                 bias         = False,
             ),
-            layer.BatchNorm2d(branch_features),
-            layer.ReLU(inplace=True),
-            layer.Conv2d(
+            nn.BatchNorm2d(branch_features),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(
                 in_channels  = branch_features,
                 out_channels = branch_features,
                 kernel_size  = 3,
@@ -96,8 +96,8 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
                 groups       = branch_features,
                 bias         = False,
             ),
-            layer.BatchNorm2d(branch_features),
-            layer.Conv2d(
+            nn.BatchNorm2d(branch_features),
+            nn.Conv2d(
                 in_channels  = branch_features,
                 out_channels = branch_features,
                 kernel_size  = 1,
@@ -105,8 +105,8 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
                 padding      = 0,
                 bias         = False,
             ),
-            layer.BatchNorm2d(branch_features),
-            layer.ReLU(inplace=True),
+            nn.BatchNorm2d(branch_features),
+            nn.ReLU(inplace=True),
         )
     
     @staticmethod
@@ -140,7 +140,6 @@ class InvertedResidual(layer.LayerParsingMixin, nn.Module):
         ch.append(c2)
         return args, ch
 
-
 # endregion
 
 
@@ -162,7 +161,7 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

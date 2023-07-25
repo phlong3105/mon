@@ -12,16 +12,15 @@ __all__ = [
 ]
 
 import torch
-from torch import nn
 
-from mon.coreml.layer import base
+from mon import coreml as nn
 from mon.globals import LAYERS
 
 
 # region Light Enhancement Curve
 
 @LAYERS.register()
-class PixelwiseHigherOrderLECurve(base.MergingLayerParsingMixin, nn.Module):
+class PixelwiseHigherOrderLECurve(nn.MergingLayerParsingMixin, nn.Module):
     """Pixelwise Light-Enhancement Curve is a higher-order curves that can be
     applied iteratively to enable more versatile adjustment to cope with
     challenging low-light conditions:

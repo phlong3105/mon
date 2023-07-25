@@ -13,12 +13,11 @@ __all__ = [
 from typing import Any, Callable, Sequence
 
 import torch
-from torch import nn
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.enhance import base
-from mon.vision.ml import layer
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -26,7 +25,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
+class FINetConvBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -47,7 +46,7 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
         self.use_norm   = use_norm
         self.p          = p
         
-        self.conv1 = layer.Conv2d(
+        self.conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -55,8 +54,8 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
             bias         = True
         )
         # self.relu1 = LeakyReLU(relu_slope, inplace=False)
-        self.relu1 = layer.GELU()
-        self.conv2 = layer.Conv2d(
+        self.relu1 = nn.GELU()
+        self.conv2 = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = 3,
@@ -64,8 +63,8 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
             bias         = True
         )
         # self.relu2    = LeakyReLU(relu_slope, inplace=False)
-        self.relu2    = layer.GELU()
-        self.identity = layer.Conv2d(
+        self.relu2    = nn.GELU()
+        self.identity = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -74,14 +73,14 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
         )
         
         if downsample and use_csff:
-            self.csff_enc = layer.Conv2d(
+            self.csff_enc = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 3,
                 stride       = 1,
                 padding      = 1,
             )
-            self.csff_dec = layer.Conv2d(
+            self.csff_dec = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 3,
@@ -90,7 +89,7 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
             )
         
         if self.use_norm:
-            self.norm = layer.FractionalInstanceNorm2d(
+            self.norm = nn.FractionalInstanceNorm2d(
                 num_features = out_channels,
                 p            = self.p,
                 scheme       = scheme,
@@ -99,7 +98,7 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
             )
         
         if downsample:
-            self.downsample = layer.Conv2d(
+            self.downsample = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 4,
@@ -153,7 +152,7 @@ class FINetConvBlock(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FINetUpBlock(layer.ConvLayerParsingMixin, nn.Module):
+class FINetUpBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -168,7 +167,7 @@ class FINetUpBlock(layer.ConvLayerParsingMixin, nn.Module):
         *args, **kwargs
     ):
         super().__init__()
-        self.up = layer.ConvTranspose2d(
+        self.up = nn.ConvTranspose2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 2,
@@ -200,7 +199,7 @@ class FINetUpBlock(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FINetGhostConv(layer.ConvLayerParsingMixin, nn.Module):
+class FINetGhostConv(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -221,23 +220,23 @@ class FINetGhostConv(layer.ConvLayerParsingMixin, nn.Module):
         self.use_norm   = use_norm
         self.p          = p
         
-        self.conv1 = layer.GhostConv2d(
+        self.conv1 = nn.GhostConv2d(
             in_channels    = in_channels,
             out_channels   = out_channels,
             dw_kernel_size = 3,
             stride         = 1,
             bias           = True,
         )
-        self.relu1 = layer.GELU()
-        self.conv2 = layer.GhostConv2d(
+        self.relu1 = nn.GELU()
+        self.conv2 = nn.GhostConv2d(
             in_channels    = out_channels,
             out_channels   = out_channels,
             dw_kernel_size = 3,
             stride         = 1,
             bias           = True,
         )
-        self.relu2    = layer.GELU()
-        self.identity = layer.GhostConv2d(
+        self.relu2    = nn.GELU()
+        self.identity = nn.GhostConv2d(
             in_channels    = in_channels,
             out_channels   = out_channels,
             dw_kernel_size = 1,
@@ -245,14 +244,14 @@ class FINetGhostConv(layer.ConvLayerParsingMixin, nn.Module):
             padding        = 0,
         )
         if downsample and use_csff:
-            self.csff_enc = layer.GhostConv2d(
+            self.csff_enc = nn.GhostConv2d(
                 in_channels    = out_channels,
                 out_channels   = out_channels,
                 dw_kernel_size = 3,
                 stride         = 1,
                 padding        = 1,
             )
-            self.csff_dec = layer.GhostConv2d(
+            self.csff_dec = nn.GhostConv2d(
                 in_channels    = out_channels,
                 out_channels   = out_channels,
                 dw_kernel_size = 3,
@@ -260,7 +259,7 @@ class FINetGhostConv(layer.ConvLayerParsingMixin, nn.Module):
                 padding        = 1,
             )
         if self.use_norm:
-            self.norm = layer.FractionalInstanceNorm2d(
+            self.norm = nn.FractionalInstanceNorm2d(
                 num_features = out_channels,
                 p            = self.p,
                 scheme       = scheme,
@@ -268,7 +267,7 @@ class FINetGhostConv(layer.ConvLayerParsingMixin, nn.Module):
                 bias         = bias,
             )
         if downsample:
-            self.downsample = layer.Conv2d(
+            self.downsample = nn.Conv2d(
                 in_channels  = out_channels,
                 out_channels = out_channels,
                 kernel_size  = 4,
@@ -322,7 +321,7 @@ class FINetGhostConv(layer.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FINetGhostUpBlock(layer.ConvLayerParsingMixin, nn.Module):
+class FINetGhostUpBlock(nn.ConvLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -337,7 +336,7 @@ class FINetGhostUpBlock(layer.ConvLayerParsingMixin, nn.Module):
         *args, **kwargs
     ):
         super().__init__()
-        self.up = layer.ConvTranspose2d(
+        self.up = nn.ConvTranspose2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 2,

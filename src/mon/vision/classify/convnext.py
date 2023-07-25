@@ -16,12 +16,11 @@ from typing import Callable
 
 import torch
 import torchvision.ops
-from torch import nn
 
 from mon.foundation import pathlib
 from mon.globals import LAYERS, MODELS
+from mon.vision import nn
 from mon.vision.classify import base
-from mon.vision.ml import layer, model
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -29,7 +28,7 @@ _current_dir = pathlib.Path(__file__).absolute().parent
 # region Module
 
 @LAYERS.register()
-class ConvNeXtLayer(layer.PassThroughLayerParsingMixin, nn.Module):
+class ConvNeXtLayer(nn.PassThroughLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -45,9 +44,9 @@ class ConvNeXtLayer(layer.PassThroughLayerParsingMixin, nn.Module):
         if (stage_block_id is not None) and (total_stage_blocks is not None):
             sd_prob = stochastic_depth_prob * stage_block_id / (total_stage_blocks - 1.0)
         if norm is None:
-            norm = functools.partial(layer.LayerNorm, eps=1e-6)
+            norm = functools.partial(nn.LayerNorm, eps=1e-6)
         self.block = torch.nn.Sequential(
-            layer.Conv2d(
+            nn.Conv2d(
                 in_channels  = dim,
                 out_channels = dim,
                 kernel_size  = 7,
@@ -55,20 +54,20 @@ class ConvNeXtLayer(layer.PassThroughLayerParsingMixin, nn.Module):
                 groups       = dim,
                 bias         = True,
             ),
-            layer.Permute([0, 2, 3, 1]),
+            nn.Permute([0, 2, 3, 1]),
             norm(dim),
-            layer.Linear(
+            nn.Linear(
                 in_features  = dim,
                 out_features = 4 * dim,
                 bias         = True,
             ),
-            layer.GELU(),
-            layer.Linear(
+            nn.GELU(),
+            nn.Linear(
                 in_features  = 4 * dim,
                 out_features = dim,
                 bias         = True,
             ),
-            layer.Permute([0, 3, 1, 2]),
+            nn.Permute([0, 3, 1, 2]),
         )
         self.layer_scale      = torch.nn.Parameter(torch.ones(dim, 1, 1) * layer_scale)
         self.stochastic_depth = torchvision.ops.StochasticDepth(sd_prob, "row")
@@ -82,7 +81,7 @@ class ConvNeXtLayer(layer.PassThroughLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class ConvNeXtBlock(layer.PassThroughLayerParsingMixin, nn.Module):
+class ConvNeXtBlock(nn.PassThroughLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -151,7 +150,7 @@ class ConNeXt(base.ImageClassificationModel, ABC):
         """
         if isinstance(self.weights, dict) \
             and self.weights["name"] in ["imagenet"]:
-            state_dict = model.load_state_dict_from_path(
+            state_dict = nn.load_state_dict_from_path(
                 model_dir=self.zoo_dir, **self.weights
             )
             model_state_dict = self.model.state_dict()

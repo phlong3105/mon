@@ -31,9 +31,8 @@ __all__ = [
 from typing import Any, Callable
 
 import torch
-from torch import nn
 
-from mon.coreml.layer import activation, attention, base, conv
+from mon import coreml as nn
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import math
 from mon.globals import LAYERS
@@ -42,7 +41,7 @@ from mon.globals import LAYERS
 # region Blueprint Separable Convolution
 
 @LAYERS.register()
-class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
+class SubspaceBlueprintSeparableConv2d(nn.ConvLayerParsingMixin, nn.Module):
     """Subspace Blueprint Separable Conv2d adopted from the paper: "Rethinking
     Depthwise Separable Convolutions: How Intra-Kernel Correlations Lead to
     Improved MobileNets".
@@ -71,7 +70,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     ):
         super().__init__()
         mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
-        self.pw_conv1 = conv.Conv2d(
+        self.pw_conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
             kernel_size  = 1,
@@ -84,11 +83,11 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act1 = activation.to_act_layer(
+        self.act1 = nn.to_act_layer(
             act          = act,
             num_features = mid_channels
         )  # if act else None
-        self.pw_conv2 = conv.Conv2d(
+        self.pw_conv2 = nn.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -101,11 +100,11 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act2 = activation.to_act_layer(
+        self.act2    = nn.to_act_layer(
             act          = act,
             num_features = out_channels
         )  # if act else None
-        self.dw_conv = conv.Conv2d(
+        self.dw_conv = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -138,7 +137,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
+class UnconstrainedBlueprintSeparableConv2d(nn.ConvLayerParsingMixin, nn.Module):
     """Unconstrained Blueprint Separable Conv2d adopted from the paper:
     "Rethinking Depthwise Separable Convolutions: How Intra-Kernel Correlations
     Lead to Improved MobileNets," CVPR 2020.
@@ -164,7 +163,7 @@ class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Modul
         *args, **kwargs
     ):
         super().__init__()
-        self.pw_conv = conv.Conv2d(
+        self.pw_conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -177,8 +176,8 @@ class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Modul
             device       = device,
             dtype        = dtype,
         )
-        self.act     = activation.to_act_layer(act=act, num_features=out_channels)
-        self.dw_conv = conv.Conv2d(
+        self.act     = nn.to_act_layer(act=act, num_features=out_channels)
+        self.dw_conv = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -213,7 +212,7 @@ LAYERS.register(module=BSConv2dU)
 
 @LAYERS.register()
 class AttentionSubspaceBlueprintSeparableConv2d(
-    base.ConvLayerParsingMixin,
+    nn.ConvLayerParsingMixin,
     nn.Module
 ):
     """Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
@@ -248,7 +247,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         mid_channels = min(
             in_channels, max(min_mid_channels, math.ceil(p * in_channels))
         )
-        self.pw_conv1 = conv.Conv2d(
+        self.pw_conv1 = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
             kernel_size  = 1,
@@ -261,8 +260,8 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act1 = act1(num_features=mid_channels) if act1 is not None else None
-        self.pw_conv2 = conv.Conv2d(
+        self.act1     = act1(num_features=mid_channels) if act1 is not None else None
+        self.pw_conv2 = nn.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -275,8 +274,8 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act2 = act2(num_features=out_channels) if act2 is not None else None
-        self.dw_conv = conv.Conv2d(
+        self.act2    = act2(num_features=out_channels) if act2 is not None else None
+        self.dw_conv = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -289,7 +288,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.simam = attention.SimAM()
+        self.simam   = nn.SimAM()
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -312,7 +311,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
 
 @LAYERS.register()
 class AttentionUnconstrainedBlueprintSeparableConv2d(
-    base.ConvLayerParsingMixin,
+    nn.ConvLayerParsingMixin,
     nn.Module
 ):
     """Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
@@ -342,7 +341,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
         act             : Callable        = None,
     ):
         super().__init__()
-        self.pw_conv = conv.Conv2d(
+        self.pw_conv = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
@@ -355,8 +354,8 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act = act(num_features=out_channels) if act is not None else None
-        self.dw_conv = conv.Conv2d(
+        self.act     = act(num_features=out_channels) if act is not None else None
+        self.dw_conv = nn.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
@@ -369,7 +368,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.simam = attention.SimAM()
+        self.simam   = nn.SimAM()
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input

@@ -13,10 +13,9 @@ __all__ = [
 from typing import Callable
 
 import torch
-from torch import nn
-from torch.nn import functional as F
 
-from mon.coreml.layer import activation, base, conv, normalization, pooling
+from mon import coreml as nn
+from mon.coreml import functional as F
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import math
 from mon.globals import LAYERS
@@ -25,7 +24,7 @@ from mon.globals import LAYERS
 # region Ghost Convolution
 
 @LAYERS.register()
-class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
+class GhostConv2d(nn.ConvLayerParsingMixin, nn.Module):
     """Ghost Convolution 2d proposed in the paper: "`GhostNet: More Features
     from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
     
@@ -41,7 +40,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
         kernel_size   : _size_2_t       = 1,
         dw_kernel_size: _size_2_t       = 3,
         stride        : _size_2_t       = 1,
-        act           : bool | Callable = activation.ReLU,
+        act           : bool | Callable = nn.ReLU,
     ):
         super().__init__()
         self.out_channels = out_channels
@@ -49,7 +48,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
         new_channels      = init_channels * (ratio - 1)
         
         self.primary_conv = nn.Sequential(
-            conv.Conv2d(
+            nn.Conv2d(
                 in_channels  = in_channels,
                 out_channels = init_channels,
                 kernel_size  = kernel_size,
@@ -57,11 +56,11 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
                 padding      = kernel_size // 2,
                 bias         = False,
             ),
-            normalization.BatchNorm2d(init_channels),
-            activation.to_act_layer(act=act, inplace=True),
+            nn.BatchNorm2d(init_channels),
+            nn.to_act_layer(act=act, inplace=True),
         )
         self.cheap_operation = nn.Sequential(
-            conv.Conv2d(
+            nn.Conv2d(
                 in_channels  = init_channels,
                 out_channels = new_channels,
                 kernel_size  = dw_kernel_size,
@@ -70,8 +69,8 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
                 groups       = init_channels,
                 bias         = False,
             ),
-            normalization.BatchNorm2d(new_channels),
-            activation.to_act_layer(act=act, inplace=True),
+            nn.BatchNorm2d(new_channels),
+            nn.to_act_layer(act=act, inplace=True),
         )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -84,7 +83,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
+class GhostConv2dV2(nn.ConvLayerParsingMixin, nn.Module):
     """Ghost Convolution 2d V2 proposed in the from the paper: "`GhostNetV2:
     Enhance Cheap Operation with Long-Range Attention
     <https://arxiv.org/pdf/2211.12905.pdf>`__"
@@ -101,19 +100,19 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
         kernel_size   : _size_2_t       = 1,
         dw_kernel_size: _size_2_t       = 3,
         stride        : _size_2_t       = 1,
-        act           : bool | Callable = activation.ReLU,
+        act           : bool | Callable = nn.ReLU,
         mode          : str             = "original",
     ):
         super().__init__()
         self.mode    = mode
-        self.gate_fn = activation.Sigmoid()
+        self.gate_fn = nn.Sigmoid()
         
         if self.mode in ["original"]:
             self.out_channels = out_channels
             init_channels     = math.ceil(out_channels / ratio)
             new_channels      = init_channels * (ratio - 1)
             self.primary_conv = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = init_channels,
                     kernel_size  = kernel_size,
@@ -121,11 +120,11 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     padding      = kernel_size // 2,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(init_channels),
-                activation.to_act_layer(act=act, inplace=True),
+                nn.BatchNorm2d(init_channels),
+                nn.to_act_layer(act=act, inplace=True),
             )
             self.cheap_operation = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = init_channels,
                     out_channels = new_channels,
                     kernel_size  = dw_kernel_size,
@@ -134,15 +133,15 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     groups       = init_channels,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(new_channels),
-                activation.to_act_layer(act=act, inplace=True),
+                nn.BatchNorm2d(new_channels),
+                nn.to_act_layer(act=act, inplace=True),
             )
         elif self.mode in ["attn", "attention"]:
             self.out_channels = out_channels
             init_channels     = math.ceil(out_channels / ratio)
             new_channels      = init_channels * (ratio - 1)
             self.primary_conv = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = init_channels,
                     kernel_size  = kernel_size,
@@ -151,11 +150,11 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     groups       = 1,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(init_channels),
-                activation.to_act_layer(act=act, inplace=True),
+                nn.BatchNorm2d(init_channels),
+                nn.to_act_layer(act=act, inplace=True),
             )
             self.cheap_operation = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = init_channels,
                     out_channels = new_channels,
                     kernel_size  = dw_kernel_size,
@@ -164,11 +163,11 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     groups       = init_channels,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(new_channels),
-                activation.to_act_layer(act=act, inplace=True),
+                nn.BatchNorm2d(new_channels),
+                nn.to_act_layer(act=act, inplace=True),
             )
             self.short_conv = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = kernel_size,
@@ -177,8 +176,8 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     groups       = 1,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(out_channels),
-                conv.Conv2d(
+                nn.BatchNorm2d(out_channels),
+                nn.Conv2d(
                     in_channels  = out_channels,
                     out_channels = out_channels,
                     kernel_size  = (1, 5),
@@ -187,8 +186,8 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     groups       = out_channels,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(out_channels),
-                conv.Conv2d(
+                nn.BatchNorm2d(out_channels),
+                nn.Conv2d(
                     in_channels  = out_channels,
                     out_channels = out_channels,
                     kernel_size  = (5, 1),
@@ -197,7 +196,7 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
                     groups       = out_channels,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(out_channels),
+                nn.BatchNorm2d(out_channels),
             )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -221,7 +220,7 @@ class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
 # region Ghost Bottleneck
 
 @LAYERS.register()
-class GhostBottleneckSE(base.PassThroughLayerParsingMixin, nn.Module):
+class GhostBottleneckSE(nn.PassThroughLayerParsingMixin, nn.Module):
     """Squeeze-and-Excite Bottleneck layer used in
     :class:`mon.coreml.layer.custom.ghost.GhostBottleneck` module.
     """
@@ -231,8 +230,8 @@ class GhostBottleneckSE(base.PassThroughLayerParsingMixin, nn.Module):
         in_channels     : int,
         se_ratio        : float      = 0.25,
         reduced_base_chs: int | None = None,
-        act             : Callable   = activation.ReLU,
-        gate_fn         : Callable   = activation.hard_sigmoid,
+        act             : Callable   = nn.ReLU,
+        gate_fn         : Callable   = nn.hard_sigmoid,
         divisor         : int        = 4,
     ):
         super().__init__()
@@ -241,15 +240,15 @@ class GhostBottleneckSE(base.PassThroughLayerParsingMixin, nn.Module):
             v       = (reduced_base_chs or in_channels) * se_ratio,
             divisor = divisor
         )
-        self.avg_pool    = pooling.AdaptiveAvgPool2d(1)
-        self.conv_reduce = conv.Conv2d(
+        self.avg_pool    = nn.AdaptiveAvgPool2d(1)
+        self.conv_reduce = nn.Conv2d(
             in_channels  = in_channels,
             out_channels = reduced_channels,
             kernel_size  = 1,
             bias         = True
         )
-        self.act         = activation.to_act_layer(act=act, inplace=True)
-        self.conv_expand = conv.Conv2d(
+        self.act         = nn.to_act_layer(act=act, inplace=True)
+        self.conv_expand = nn.Conv2d(
             in_channels  = reduced_channels,
             out_channels = in_channels,
             kernel_size  = 1,
@@ -280,7 +279,7 @@ class GhostBottleneckSE(base.PassThroughLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
+class GhostBottleneck(nn.PassThroughLayerParsingMixin, nn.Module):
     """Ghost Bottleneck with optional SE proposed in the paper: "`GhostNet: More
     Features from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
     
@@ -296,7 +295,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
         kernel_size : _size_2_t = 3,
         stride      : _size_2_t = 1,
         se_ratio    : float     = 0.0,
-        act         : Callable  = activation.ReLU,
+        act         : Callable  = nn.ReLU,
     ):
         super().__init__()
         has_se      = se_ratio is not None and se_ratio > 0.0
@@ -311,7 +310,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
         
         # Depth-wise convolution
         if self.stride > 1:
-            self.conv_dw = conv.Conv2d(
+            self.conv_dw = nn.Conv2d(
                 in_channels  = mid_channels,
                 out_channels = mid_channels,
                 kernel_size  = kernel_size,
@@ -320,7 +319,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
                 groups       = mid_channels,
                 bias         = False,
             )
-            self.bn_dw = normalization.BatchNorm2d(mid_channels)
+            self.bn_dw = nn.BatchNorm2d(mid_channels)
         
         # Squeeze-and-excitation
         if has_se:
@@ -340,7 +339,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
             self.shortcut = nn.Sequential()
         else:
             self.shortcut = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = kernel_size,
@@ -349,8 +348,8 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
                     groups       = in_channels,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(in_channels),
-                conv.Conv2d(
+                nn.BatchNorm2d(in_channels),
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = 1,
@@ -358,7 +357,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
                     padding      = 0,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(out_channels),
+                nn.BatchNorm2d(out_channels),
             )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -379,7 +378,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
+class GhostBottleneckV2(nn.PassThroughLayerParsingMixin, nn.Module):
     
     def __init__(
         self,
@@ -389,7 +388,7 @@ class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
         kernel_size : _size_2_t  = 3,
         stride      : _size_2_t  = 1,
         se_ratio    : float      = 0.0,
-        act         : Callable   = activation.ReLU,
+        act         : Callable   = nn.ReLU,
         layer_id    : int | None = None,
     ):
         super().__init__()
@@ -414,7 +413,7 @@ class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
 
         # Depth-wise convolution
         if self.stride > 1:
-            self.conv_dw = conv.Conv2d(
+            self.conv_dw = nn.Conv2d(
                 in_channels  = mid_channels,
                 out_channels = mid_channels,
                 kernel_size  = kernel_size,
@@ -423,7 +422,7 @@ class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
                 groups       = mid_channels,
                 bias         = False,
             )
-            self.bn_dw = normalization.BatchNorm2d(mid_channels)
+            self.bn_dw = nn.BatchNorm2d(mid_channels)
 
         # Squeeze-and-excitation
         if has_se:
@@ -443,7 +442,7 @@ class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
             self.shortcut = nn.Sequential()
         else:
             self.shortcut = nn.Sequential(
-                conv.Conv2d(
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = in_channels,
                     kernel_size  = kernel_size,
@@ -452,8 +451,8 @@ class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
                     groups       = in_channels,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(in_channels),
-                conv.Conv2d(
+                nn.BatchNorm2d(in_channels),
+                nn.Conv2d(
                     in_channels  = in_channels,
                     out_channels = out_channels,
                     kernel_size  = 1,
@@ -461,7 +460,7 @@ class GhostBottleneckV2(base.PassThroughLayerParsingMixin, nn.Module):
                     padding      = 0,
                     bias         = False,
                 ),
-                normalization.BatchNorm2d(out_channels),
+                nn.BatchNorm2d(out_channels),
             )
             
     def forward(self, input: torch.Tensor) -> torch.Tensor:

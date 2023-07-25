@@ -30,11 +30,11 @@ import cv2
 import numpy as np
 import torch
 
-from mon.coreml import data
 from mon.foundation import console, file, pathlib, rich
 from mon.globals import BBoxFormat
 from mon.vision import image as mi
 from mon.vision.dataset.base import label
+from mon.vision.nn import data
 
 DataModule = data.DataModule
 
