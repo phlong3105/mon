@@ -26,8 +26,8 @@ from mon.globals import LAYERS
 
 @LAYERS.register()
 class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
-    """Ghost Convolution 2d proposed in the from the paper: "`GhostNet: More
-    Features from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
+    """Ghost Convolution 2d proposed in the paper: "`GhostNet: More Features
+    from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
     
     References:
         - https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py

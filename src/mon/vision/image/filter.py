@@ -1,7 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements image filtering layers."""
+"""This module implements image filtering functions.
+
+Common layers are:
+    - bilateral
+    - blur
+    - canny
+    - dexined
+    - filter
+    - gaussian
+    - guided
+    - kernel
+    - laplacian
+    - median
+    - motion
+    - sobel
+    - unsharp
+"""
 
 from __future__ import annotations
 
@@ -20,9 +36,137 @@ from torch import nn
 
 from mon.coreml.layer.typing import _size_2_t
 from mon.foundation import math
+from mon.globals import LAYERS
 
 
-# region Unsharp Masking Layer
+# region Filter
+
+@LAYERS.register()
+class BoxFilter(nn.Module):
+    """Box Filter layer from: "`DeepGuidedFilter
+    <https://github.com/wuhuikai/DeepGuidedFilter>`__"
+    
+    Args:
+        kernel_size: Blurring kernel size.
+        radius: kernel_size = 2 * radius + 1.
+    """
+    
+    def __init__(
+        self,
+        kernel_size: int | None = None,
+        radius     : int | None = None,
+    ):
+        super().__init__()
+        assert kernel_size is not None and radius is not None
+        if kernel_size is not None:
+            self.kernel_size = kernel_size
+            self.radius      = int((kernel_size - 1) / 2)
+        else:
+            self.kernel_size = radius * 2 + 1
+            self.radius      = radius
+        
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        assert input.dim() == 4
+        x = input
+        return self.diff_y(self.diff_x(x.cumsum(dim=2)).cumsum(dim=3))
+    
+    def diff_x(self, input: torch.Tensor) -> torch.Tensor:
+        assert input.dim() == 4
+        x      = input
+        r      = self.radius
+        left   = x[:, :,         r:2 * r + 1]
+        middle = x[:, :, 2 * r + 1:         ] - x[:, :,           :-2 * r - 1]
+        right  = x[:, :,        -1:         ] - x[:, :, -2 * r - 1:    -r - 1]
+        y      = torch.cat([left, middle, right], dim=2)
+        return y
+    
+    def diff_y(self, input: torch.Tensor) -> torch.Tensor:
+        assert input.dim() == 4
+        x      = input
+        r      = self.radius
+        left   = x[:, :, :,         r:2 * r + 1]
+        middle = x[:, :, :, 2 * r + 1:         ] - x[:, :, :,           :-2 * r - 1]
+        right  = x[:, :, :,        -1:         ] - x[:, :, :, -2 * r - 1:    -r - 1]
+        y      = torch.cat([left, middle, right], dim=3)
+        return y
+
+# endregion
+
+
+# region Guided Filter
+
+@LAYERS.register()
+class GuidedFilter(nn.Module):
+    """Guided Filter layer from: "`DeepGuidedFilter
+    <https://github.com/wuhuikai/DeepGuidedFilter>`__"
+    
+    Args:
+        kernel_size: Blurring kernel size.
+        radius: kernel_size = 2 * radius + 1.
+    """
+    
+    def __init__(
+        self,
+        kernel_size: int | None = None,
+        radius     : int | None = None,
+        eps        : float      = 1e-8,
+    ):
+        super().__init__()
+        assert kernel_size is not None and radius is not None
+        if kernel_size is not None:
+            self.kernel_size = kernel_size
+            self.radius      = int((kernel_size - 1) / 2)
+        else:
+            self.kernel_size = radius * 2 + 1
+            self.radius      = radius
+        self.eps        = eps
+        self.box_filter = BoxFilter(kernel_size=kernel_size, radius=radius)
+    
+    def forward(self, input: torch.Tensor, guide: torch.Tensor) -> torch.Tensor:
+        """
+        
+        Args:
+            input: Input image.
+            guide: Guidance image.
+
+        Returns:
+            y: Filtering output.
+        """
+        x = input
+        y = guide
+        n_x, c_x, h_x, w_x = x.size()
+        n_y, c_y, h_y, w_y = y.size()
+
+        assert n_x == n_y
+        assert c_x == 1 or c_x == c_y
+        assert h_x == h_y and w_x == w_y
+        assert h_x > 2 * self.r + 1 and w_x > 2 * self.r + 1
+
+        # n
+        n = self.boxfilter(torch.autograd.Variable(x.data.new().resize_((1, 1, h_x, w_x)).fill_(1.0)))
+        # mean_x
+        mean_x = self.boxfilter(x) / n
+        # mean_y
+        mean_y = self.boxfilter(y) / n
+        # cov_xy
+        cov_xy = self.boxfilter(x * y) / n - mean_x * mean_y
+        # var_x
+        var_x = self.boxfilter(x * x) / n - mean_x * mean_x
+        # A
+        A = cov_xy / (var_x + self.eps)
+        # b
+        b = mean_y - A * mean_x
+        # mean_A ; mean_b
+        mean_A = self.boxfilter(A) / n
+        mean_b = self.boxfilter(b) / n
+        y      = mean_A * x + mean_b
+        
+        return y
+
+# endregion
+
+
+# region Unsharp Masking
 
 def log2d_kernel_np(k: int, sigma: float) -> np.ndarray:
     """Get LoG kernel."""
@@ -60,6 +204,7 @@ def log2d_kernel(k: int, sigma: torch.Tensor, cuda: bool = False) -> torch.Tenso
     return kernel
 
 
+@LAYERS.register()
 class LoG2d(nn.Module):
     """LogGd layer from: "`pytorch_usm
     <https://github.com/maeotaku/pytorch_usm/blob/master/LoG.py>`__".
@@ -191,6 +336,7 @@ class USMBase2d(nn.Module):
         return unsharp
 
 
+@LAYERS.register()
 class USM2d(USMBase2d):
     """Unsharp masking layer proposed in the paper: "`Unsharp Masking Layer:
     Injecting Prior Knowledge in Convolutional Networks for Image Classification
@@ -229,6 +375,7 @@ class USM2d(USMBase2d):
             self.init_weights()
 
 
+@LAYERS.register()
 class AdaptiveUSM2d(USMBase2d):
     """Unsharp masking layer proposed in the paper: "`Unsharp Masking Layer:
     Injecting Prior Knowledge in Convolutional Networks for Image Classification

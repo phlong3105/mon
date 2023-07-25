@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements light enhancement curve.
+"""This module implements enhancement functions and layers that are used to
+built models in :mod:`mon.vision.enhance`.
 """
 
 from __future__ import annotations
@@ -17,6 +18,8 @@ from mon.coreml.layer import base
 from mon.globals import LAYERS
 
 
+# region Light Enhancement Curve
+
 @LAYERS.register()
 class PixelwiseHigherOrderLECurve(base.MergingLayerParsingMixin, nn.Module):
     """Pixelwise Light-Enhancement Curve is a higher-order curves that can be
@@ -28,8 +31,8 @@ class PixelwiseHigherOrderLECurve(base.MergingLayerParsingMixin, nn.Module):
         `n` is the number of iterations, which controls the curvature.
     
     This module is designed to go with:
-        - ZeroDCE   (estimate 3 * n curve parameter maps)
-        - ZeroDCE++ (estimate 3   curve parameter maps)
+        - Zero-DCE (estimate 3 * n curve parameter maps)
+        - Zero-DCE++, Zero-DCE-Tiny (estimate 3 curve parameter maps)
     
     Args:
         n: Number of iterations.
@@ -68,3 +71,5 @@ class PixelwiseHigherOrderLECurve(base.MergingLayerParsingMixin, nn.Module):
         y = list(y) if isinstance(y, tuple) else y
         y = torch.cat(y, dim=1) if isinstance(y, list) else y
         return y, x
+
+# endregion

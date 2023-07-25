@@ -25,7 +25,7 @@ from mon.vision.ml import layer, loss, model
 _current_dir = pathlib.Path(__file__).absolute().parent
 
 
-# region Module
+# region Layer
 
 @LAYERS.register()
 class DCE(layer.ConvLayerParsingMixin, nn.Module):

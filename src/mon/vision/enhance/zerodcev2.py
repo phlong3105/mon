@@ -19,6 +19,7 @@ from torch.nn import functional as F
 from mon.foundation import pathlib
 from mon.globals import MODELS
 from mon.vision.enhance import base
+from mon.vision.image import enhance
 from mon.vision.ml import layer, loss
 
 _current_dir = pathlib.Path(__file__).absolute().parent
@@ -248,7 +249,7 @@ class ZeroDCEv2B(ZeroDCEv2):
         self.conv6    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
         self.conv7    = layer.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=layer.BatchNorm2d, act_layer=layer.ReLU)
         self.conv8    = layer.DSConv2d(self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
-        self.le_curve = layer.PixelwiseHigherOrderLECurve(n=8)
+        self.le_curve = enhance.PixelwiseHigherOrderLECurve(n=8)
         
     def forward(
         self,
