@@ -35,9 +35,9 @@ def copy_attr(src: Any, dst: Any, include: list = [], exclude: list = []):
     Args:
         src: An object to copy from.
         dst: An object to copy to.
-        include: A list of attributes to include. If given, only attributes
-            whose names reside in this list are copied.
-        exclude: A list of attributes to exclude from copying.
+        include: A :class:`list` of attributes to include. If given, only
+            attributes whose names reside in this list are copied.
+        exclude: A :class:`list` of attributes to exclude from copying.
     """
     for k, v in src.__dict__.items():
         if (len(include) and k not in include) \
@@ -50,7 +50,7 @@ def copy_attr(src: Any, dst: Any, include: list = [], exclude: list = []):
 
 
 def get_module_vars(module: ModuleType) -> dict:
-    """Return all public variables of a module in a dictionary."""
+    """Return all public variables of a module in a :class:`dict`."""
     return {
         k: v for k, v in vars(module).items()
         if not (
@@ -61,25 +61,23 @@ def get_module_vars(module: ModuleType) -> dict:
         )
     }
     
-    
 # endregion
 
 
 # region Numeric
 
 def to_int(x: str | int | float) -> int:
-    """Convert a value to int."""
+    """Convert a value to :class:`int`."""
     if isinstance(x, str) and not x.isdigit():
         raise ValueError(f"x must be a digit string, but got {x}.")
     return int(x)
 
 
 def to_float(x: str | int | float) -> float:
-    """Convert a value to float."""
+    """Convert a value to :class:`float`."""
     if isinstance(x, str) and not x.isdigit():
         raise ValueError(f"x must be a digit string, but got {x}.")
     return float(x)
-
 
 # endregion
 
@@ -87,16 +85,16 @@ def to_float(x: str | int | float) -> float:
 # region Collection
 
 def intersect_dicts(x: dict, y: dict, exclude: list = []) -> dict:
-    """Find the intersection between two dictionaries.
+    """Find the intersection between two :class:`dict`.
     
     Args:
-        x: The first dictionary.
-        y: The second dictionary.
-        exclude: A list of excluding keys.
+        x: The first :class:`dict`.
+        y: The second :class:`dict`.
+        exclude: A :class:`list` of excluding keys.
     
     Returns:
-        A dictionary that contains only the keys that are in both dictionaries,
-        and whose values are equal.
+        A :class:`dict` that contains only the keys that are in both
+        :param:`x` and :param:`y`, and whose values are equal.
     """
     return {
         k: v for k, v in x.items()
@@ -109,16 +107,16 @@ def intersect_ordered_dicts(
     y      : OrderedDict,
     exclude: list = [],
 ) -> OrderedDict:
-    """Find the intersection between two ordered dictionaries.
+    """Find the intersection between two :class:`OrderedDict`.
     
     Args:
-        x: The first ordered dictionary.
-        y: The second ordered dictionary.
-        exclude: A list of excluding keys.
+        x: The first ordered :class:`dict`.
+        y: The second ordered :class:`dict`.
+        exclude: A :class:`list` of excluding keys.
     
     Returns:
-        An ordered dictionary that contains only the keys that are in both
-        dictionaries, and whose values are equal.
+        An :class:`OrderedDict` that contains only the keys that are in both
+        :param:`x` and :param:`y`, and whose values are equal.
     """
     return OrderedDict(
         (k, v) for k, v in x.items()
@@ -127,7 +125,7 @@ def intersect_ordered_dicts(
 
 
 def shuffle_dict(x: dict) -> dict:
-    """Shuffle a dictionary randomly."""
+    """Shuffle a :class:`dict` randomly."""
     keys = list(x.keys())
     random.shuffle(keys)
     shuffled = {}
@@ -141,20 +139,20 @@ def shuffle_dict(x: dict) -> dict:
 # region Sequence
 
 def concat_lists(x: list[list]) -> list:
-    """Concatenate a list of lists into a flattened list."""
+    """Concatenate a :class:`list` of lists into a flattened list."""
     x = list(itertools.chain(*x))
     return x
 
 
 def iter_to_iter(x: Iterable, item_type: type, return_type: type | None = None):
     """Convert an iterable object to a desired sequence type specified by the
-    :param:`return_type`. Also, casts each item into the desired
+    :param:`return_type`. Also, cast each item into the desired
     :param:`item_type`.
     
     Args:
         x: An iterable object.
         item_type: The item type.
-        return_type: The desired iterable type. Default: None.
+        return_type: The desired iterable type. Default: ``None``.
     
     Returns:
         An iterable object cast to the desired type.
@@ -170,25 +168,25 @@ def iter_to_iter(x: Iterable, item_type: type, return_type: type | None = None):
 
 
 def iter_to_list(x: Iterable, item_type: type) -> list:
-    """Convert an arbitrary iterable object to a list."""
+    """Convert an arbitrary :class:`Iterable` object to a :class:`list`."""
     return iter_to_iter(x=x, item_type=item_type, return_type=list)
 
 
 def iter_to_tuple(x: Iterable, item_type: type) -> tuple:
-    """Convert an arbitrary iterable object to a tuple."""
+    """Convert an arbitrary :class:`Iterable` object to a :class:`tuple`."""
     return iter_to_iter(x=x, item_type=item_type, return_type=tuple)
 
 
 def split_list(x: list, n: int | list[int]) -> list[list]:
-    """Slice a single list into a list of lists.
+    """Slice a single :class:`list` into a list of lists.
     
     Args:
-        x: A list.
-        n: A number of sub-lists or a list of integers to specifying the length
-            of each sub-list.
+        x: A :class:`list` object.
+        n: A number of sub-lists, or a :class:`list` of integers to specify the
+            length of each sub-list.
         
     Returns:
-        A list of lists.
+        A :class:`list` of lists.
     
     Examples:
         >>> x = [1, 2, 3, 4, 5, 6]
@@ -218,7 +216,7 @@ def split_list(x: list, n: int | list[int]) -> list[list]:
 
 
 def to_list(x: Any) -> list:
-    """Convert an arbitrary value into a list."""
+    """Convert an arbitrary value into a :class:`list`."""
     if isinstance(x, list):
         pass
     elif isinstance(x, tuple):
@@ -231,15 +229,15 @@ def to_list(x: Any) -> list:
 
 
 def to_nlist(n: int) -> Callable[[Any], list]:
-    """Take an integer :param:`n` and return a function that takes an iterable
-    object and returns a list of length :param:`n`.
+    """Take an integer :param:`n` and return a function that takes an
+    :class:`Iterable` object and returns a :class:`list` of length :param:`n`.
     
     Args:
-        n: The number of elements in the tuple.
+        n: The number of elements in the :class:`list`.
     
     Returns:
-        A function that takes an integer and returns a list of that integer
-        repeated n times.
+        A function that takes an integer and returns :class:`list` of that
+        integer :param:`n` repeated n times.
     """
     def parse(x) -> list:
         if isinstance(x, Iterable):
@@ -262,7 +260,7 @@ to_6list = to_nlist(6)
 
 
 def to_tuple(x: Any) -> tuple:
-    """Convert an arbitrary value into a tuple."""
+    """Convert an arbitrary value into a :class:`tuple`."""
     if isinstance(x, list):
         x = tuple(x)
     elif isinstance(x, tuple):
@@ -275,15 +273,15 @@ def to_tuple(x: Any) -> tuple:
 
 
 def to_ntuple(n: int) -> Callable[[Any], tuple]:
-    """Take an integer :param:`n` and return a function that takes an iterable
-    object and returns a tuple of length :param:`n`.
+    """Take an integer :param:`n` and return a function that takes an
+    :class:`Iterable` object and returns a :class:`tuple` of length :param:`n`.
     
     Args:
-        n: The number of elements in the tuple.
+        n: The number of elements in the :class:`tuple`.
     
     Returns:
-        A function that takes an integer and returns a tuple of that integer
-        repeated n times.
+        A function that takes an integer :param:`n`n and returns a
+        :class:`tuple` of that integer repeated n times.
     """
     def parse(x) -> tuple:
         if isinstance(x, Iterable):
@@ -311,13 +309,13 @@ to_quadruple = to_ntuple(4)
 
 @multipledispatch.dispatch(list)
 def unique(x: list) -> list:
-    """Get unique items from a list."""
+    """Get unique items from a :class:`list`."""
     return list(set(x))
 
 
 @multipledispatch.dispatch(tuple)
 def unique(x: tuple) -> tuple:
-    """Get unique items from a tuple."""
+    """Get unique items from a :class:`tuple`."""
     return tuple(set(x))
 
 # endregion

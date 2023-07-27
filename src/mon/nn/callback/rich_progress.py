@@ -21,7 +21,7 @@ from mon.globals import CALLBACKS
 
 @CALLBACKS.register(name="rich_progress_bar")
 class RichProgressBar(rich_progress.RichProgressBar):
-    """The progress bar with rich text formatting. """
+    """The progress bar with rich text formatting."""
     
     def _init_progress(self, trainer: lightning.Trainer):
         if self.is_enabled and (self.progress is None or self._progress_stopped):

@@ -454,8 +454,8 @@ class MedianPool2d(base.PassThroughLayerParsingMixin, nn.Module):
          kernel_size : Size of pooling kernel.
          stride: Pool stride, int or 2-tuple
          padding: Pool padding, int or 4-tuple (ll, r, t, b) as in pytorch
-         F.pad.
-         same: Override padding and enforce same padding. Default: False.
+            F.pad.
+         same: Override padding and enforce same padding. Default: ``False``.
     """
     
     def __init__(

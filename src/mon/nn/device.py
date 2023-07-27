@@ -23,14 +23,14 @@ from mon.core import console
 def extract_device_dtype(
     tensors: list[torch.Tensor]
 ) -> tuple[torch.device, torch.dtype]:
-    """Extract the device and data-type from a list of tensors.
+    """Extract the device and data-type from a :class:`list` of tensors.
     
     Args:
-        tensors: A list of tensors.
+        tensors: A :class:`list` of tensors.
     
     Returns:
-        A tuple (device, dtype), where device is a :class:`torch.device`, and
-        dtype is a :class:`torch.dtype`.
+        A :class:`tuple` of (device, dtype), where device is a
+        :class:`torch.device`, and dtype is a :class:`torch.dtype`.
     """
     device, dtype = None, None
     for tensors in tensors:
@@ -61,8 +61,8 @@ def select_device(device: Any = "", batch_size: int = 1) -> torch.device:
     available on the current system.
     
     Args:
-        device: The device to run the model on. If None, the default 'cpu'
-            device is used.
+        device: The device to run the model on. If ``None``, the default
+            ``'cpu'`` device is used.
         batch_size: The expected batch size in a single forward pass.
     
     Returns:
@@ -123,8 +123,8 @@ def time_synchronized(device: Any = None) -> float:
     then return the current time.
     
     Args:
-        device: a device for which to synchronize. It uses the current device,
-            given by :meth:`current_device()`, if device is None (default).
+        device: a device for which to synchronize. If ``None``, it uses the
+        current device, given by :meth:`current_device()`. Default: ``None``.
     """
     torch.cuda.synchronize(device=device) if torch.cuda.is_available() else None
     return time.time()

@@ -52,7 +52,7 @@ class LayerParsingMixin(ABC):
                 model)
             hparams: Layer's hyperparameters. They are used to change the values
                 of :param:`args`. Usually used in grid search or random search
-                during training. Default: None.
+                during training. Default: ``None``.
         
         Returns:
             Layer's :param:`in_channels`.
@@ -94,7 +94,7 @@ class LayerParsingMixin(ABC):
             args: Layer's parameters.
             hparams: Layer's hyperparameters. They're used to change the values
                 of :param:`args`. Usually used in grid search or random search
-                during training. Default: None.
+                during training. Default: ``None``.
 
         Returns:
             The adjusted :param:`args`.
@@ -232,7 +232,7 @@ class HeadLayerParsingMixin(LayerParsingMixin):
                 model)
             hparams: Layer's hyperparameters. They are used to change the values
                 of :param:`args`. Usually used in grid search or random search
-                during training. Default: None.
+                during training. Default: ``None``.
         
         Returns:
             Layer's :param:`in_channels`.

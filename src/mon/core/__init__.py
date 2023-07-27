@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""The :mod:`core` package implements basic functionality Python operations.
+"""This package implements the basic functionalities of Python operations.
 
 This is achieved by extending `Python <https://www.python.org/>`__ built-in
 functions, including:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements basic functionality on image data.
+"""This module implements the basic functionalities of image data.
 """
 
 from __future__ import annotations

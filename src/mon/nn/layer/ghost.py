@@ -26,11 +26,11 @@ from mon.nn.typing import _size_2_t
 
 @LAYERS.register()
 class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
-    """Ghost Convolution 2d proposed in the paper: "`GhostNet: More Features
+    """2D Ghost Convolution proposed in the paper: "`GhostNet: More Features
     from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
     
     References:
-        - https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
+        https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
     """
     
     def __init__(
@@ -85,12 +85,12 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
 
 @LAYERS.register()
 class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
-    """Ghost Convolution 2d V2 proposed in the from the paper: "`GhostNetV2:
-    Enhance Cheap Operation with Long-Range Attention
+    """2D Ghost Convolution V2 proposed in the paper: "`GhostNetV2: Enhance
+    Cheap Operation with Long-Range Attention
     <https://arxiv.org/pdf/2211.12905.pdf>`__"
     
     References:
-        - https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+        https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
     """
     
     def __init__(
@@ -258,7 +258,7 @@ class GhostBottleneckSE(base.PassThroughLayerParsingMixin, nn.Module):
     
     def make_divisible(self, v, divisor, min_value=None):
         """This function is taken from the original tf repo. It ensures that
-        all layers have a channel number that is divisible by 8 It can be seen
+        all layers have a channel number that's divisible by 8 It can be seen
         here: https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
         """
         if min_value is None:

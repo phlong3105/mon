@@ -25,8 +25,8 @@ class JSONHandler(base.FileHandler):
     
     @staticmethod
     def set_default(obj: Any):
-        """If an object is a set, range, numpy array, or numpy generic, convert
-        it to a list.
+        """If an object is a :class:`set`, :class:`range`, numpy array, or numpy
+        generic, convert it to a :class:`list`.
         
         Args:
             obj: A serializable object.
@@ -48,7 +48,7 @@ class JSONHandler(base.FileHandler):
         """Load content from a file.
 
         Args:
-            path: A filepath or an input stream object.
+            path: A file path or an input stream object.
 
         Returns:
             File's content.
@@ -66,14 +66,14 @@ class JSONHandler(base.FileHandler):
 
         Args:
             obj: A serializable object.
-            path: The filepath to dump :param:`obj` content.
+            path: The file path to dump :param:`obj` content.
         """
         path = pathlib.Path(path)
         kwargs.setdefault("default", self.set_default)
         dump(obj=obj, fp=path, **kwargs)
     
     def write_to_string(self, obj: Any, **kwargs) -> str:
-        """Dump content from a serializable object to a string.
+        """Dump content from a serializable object to a :class:`str`.
 
         Args:
             obj: A serializable object.

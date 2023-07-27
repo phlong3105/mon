@@ -14,11 +14,12 @@ def get_device_memory(
     device: int = 0,
     unit  : MemoryUnit = MemoryUnit.GB
 ) -> list[int]:
-    """Return the GPU memory status as a tuple (total, used, and free).
+    """Return the GPU memory status as a :class:`tuple` of
+    (total, used, and free).
     
     Args:
-        device: The index of the GPU device. Default: 0.
-        unit: The memory unit. Default: 'GB'.
+        device: The index of the GPU device. Default: ``0``.
+        unit: The memory unit. Default: ``'GB'``.
     """
     nvmlInit()
     unit  = MemoryUnit.from_value(value=unit)

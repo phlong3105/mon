@@ -81,14 +81,15 @@ def drop_path(
     training: bool  = False,
 ) -> torch.Tensor:
     """Drop paths (Stochastic Depth) per sample (when applied in main path of
-    residual blocks). We follow the implementation:
-    https://github.com/rwightman/pytorch-image-models/blob
-    /a2727c1bf78ba0d7b5727f5f95e37fb7f8866b1f/timm/models/layers/drop.py
+    residual blocks).
+    
+    References:
+        https://github.com/rwightman/pytorch-image-models/blob/a2727c1bf78ba0d7b5727f5f95e37fb7f8866b1f/timm/models/layers/drop.py
 
     Args:
         input: Input.
-        p: Probability of the path to be zeroed. Default: 0.0.
-        training: Is in training run?. Default: False.
+        p: Probability of the path to be zeroed. Default: ``0.0``.
+        training: Is in training run?. Default: ``False``.
     """
     x = input
     if p == 0.0 or not training:
@@ -105,7 +106,7 @@ class DropPath(base.PassThroughLayerParsingMixin, nn.Module):
     """Drop paths (Stochastic Depth) per sample.
 
     Args:
-        p: Probability of the path to be zeroed. Default: 0.1.
+        p: Probability of the path to be zeroed. Default: ``0.1``.
     """
     
     def __init__(self, p: float = 0.1):

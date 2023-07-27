@@ -30,7 +30,7 @@ class XMLHandler(base.FileHandler):
         """Load content from a file.
 
         Args:
-            path: A filepath or an input stream object.
+            path: A file path or an input stream object.
 
         Returns:
             File's content.
@@ -48,7 +48,7 @@ class XMLHandler(base.FileHandler):
 
         Args:
             obj: A serializable object.
-            path: The filepath to dump :param:`obj` content.
+            path: The file path to dump :param:`obj` content.
         """
         assert isinstance(obj, dict)
         path = pathlib.Path(path)
@@ -56,7 +56,7 @@ class XMLHandler(base.FileHandler):
             f.write(unparse(input_dict=obj, pretty=True))
     
     def write_to_string(self, obj: Any, **kwargs) -> str:
-        """Dump content from a serializable object to a string.
+        """Dump content from a serializable object to a :class:`str`.
 
         Args:
             obj: A serializable object.

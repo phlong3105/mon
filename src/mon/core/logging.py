@@ -31,7 +31,7 @@ def get_logger(path: pathlib.Path | None = None) -> logging.Logger:
     :mod:`rich`. Create a new one if it doesn't exist.
     
     Args:
-        path: The path to store the log info. Default: None.
+        path: The path to store the log info. Default: ``None``.
     """
     if path:
         path = logging.FileHandler(path)

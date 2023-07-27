@@ -41,11 +41,11 @@ def parse_model(
         d: Model definition dictionary. Default to None means building the model
             manually.
         ch: The first layer's input channels. If given, it will be used to
-            further calculate the next layer's input channels. Default: None
+            further calculate the next layer's input channels. Default: ``None``
             means defines each layer in_ and out_channels manually.
         hparams: Layer's hyperparameters. They are used to change the values of
             :param:`args`. Usually used in grid search or random search during
-            training. Default: None.
+            training. Default: ``None``.
         
     Returns:
         A Sequential model.

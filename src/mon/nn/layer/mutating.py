@@ -111,7 +111,7 @@ class ExtractItem(base.PassThroughLayerParsingMixin, nn.Module):
 
 @LAYERS.register()
 class ExtractItems(base.PassThroughLayerParsingMixin, nn.Module):
-    """Extract a list of items (features) at `indexes` in a sequence of
+    """Extract a :class:`list` of items (features) at `indexes` in a sequence of
     tensors.
     
     Args:
@@ -159,7 +159,7 @@ class FlattenSingle(base.PassThroughLayerParsingMixin, nn.Module):
     """Flatten a tensor along a single dimension.
 
     Args:
-        dim: Dimension to flatten. Default: 1.
+        dim: Dimension to flatten. Default: ``1``.
     """
     
     def __init__(self, dim: int = 1):
@@ -207,7 +207,7 @@ class Concat(base.ConcatLayerParsingMixin, nn.Module):
     """Concatenate a list of tensors along dimension.
     
     Args:
-        dim: Dimension to concat to. Default: 1.
+        dim: Dimension to concat to. Default: ``1``.
     """
     
     def __init__(self, dim: str | ellipsis | None = 1, ):
@@ -225,7 +225,7 @@ class Chuncat(base.ConcatLayerParsingMixin, nn.Module):
     """
     
     Args:
-        dim: Dimension to concat to. Default: 1.
+        dim: Dimension to concat to. Default: ``1``.
     """
     
     def __init__(self, dim: str | ellipsis | None = 1):
@@ -249,7 +249,7 @@ class Foldcut(base.PassThroughLayerParsingMixin, nn.Module):
     """
     
     Args:
-        dim: Dimension to concat to. Default: 0.
+        dim: Dimension to concat to. Default: ``0``.
     """
     
     def __init__(self, dim: str | ellipsis | None = 0):
@@ -271,10 +271,10 @@ class Foldcut(base.PassThroughLayerParsingMixin, nn.Module):
 
 @LAYERS.register()
 class InterpolateConcat(base.ConcatLayerParsingMixin, nn.Module):
-    """Concatenate a list of tensors along dimension.
+    """Concatenate a :class:`list` of tensors along dimension.
     
     Args:
-        dim: Dimension to concat to. Default: 1.
+        dim: Dimension to concat to. Default: ``1``.
     """
 
     def __init__(self, dim: str | ellipsis | None = 1):
@@ -300,7 +300,7 @@ class InterpolateConcat(base.ConcatLayerParsingMixin, nn.Module):
 
 @LAYERS.register()
 class Join(base.MergingLayerParsingMixin, nn.Module):
-    """Join multiple features and return a list tensors."""
+    """Join multiple features and return a :class:`list` tensors."""
     
     def forward(self, input: Sequence[torch.Tensor]) -> list[torch.Tensor]:
         x = input
@@ -313,7 +313,7 @@ class Shortcut(base.MergingLayerParsingMixin, nn.Module):
     """
     
     Args:
-        dim: Dimension to concat to. Default: 0.
+        dim: Dimension to concat to. Default: ``0``.
     """
     
     def __init__(self, dim: str | ellipsis | None = 0):

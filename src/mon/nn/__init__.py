@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package provides the base functionalities for machine learning and
+"""This package implements the basic functionalities for machine learning and
 deep learning research. It provides support for high-level machine learning
 packages, such as vision, natural language, or speech.
 
@@ -16,7 +16,7 @@ from __future__ import annotations
 # noinspection PyUnresolvedReferences
 from torch.nn import (
     Container, functional, init, Module, ModuleDict, ModuleList, ParameterDict,
-    ParameterList, Sequential, utils,
+    ParameterList, Sequential,
 )
 # noinspection PyUnresolvedReferences
 from torch.nn.parallel import DataParallel as DataParallel

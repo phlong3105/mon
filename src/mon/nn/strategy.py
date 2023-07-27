@@ -31,6 +31,7 @@ from torch import distributed
 from mon.core import console
 from mon.globals import ACCELERATORS, STRATEGIES
 
+
 # region Accelerator
 
 CPUAccelerator  = accelerators.CPUAccelerator
@@ -83,7 +84,7 @@ STRATEGIES.register(name = "xla"          , module = XLAStrategy)
 
 def get_distributed_info() -> list[int]:
     """If distributed is available, return the rank and world size, otherwise
-    return 0 and 1
+    return ``0`` and ``1``.
     
     Returns:
         The rank and world size of the current process.
@@ -103,11 +104,12 @@ def get_distributed_info() -> list[int]:
 
 def set_distributed_backend(strategy: str | Callable, cudnn: bool = True):
     """If you're running on Windows, set the distributed backend to gloo. If
-    you're running on Linux, set the distributed backend to nccl.
+    you're running on Linux, set the distributed backend to ``'nccl'``.
     
     Args:
-        strategy: The distributed strategy to use. One of ["ddp", "ddp2"].
-        cudnn: Whether to use cuDNN or not. Default: True.
+        strategy: The distributed strategy to use. One of: ``'ddp'``, or
+            ``'ddp2'``.
+        cudnn: Whether to use cuDNN or not. Default: ``True``.
     """
     if torch.backends.cudnn.is_available():
         torch.backends.cudnn.enabled = cudnn

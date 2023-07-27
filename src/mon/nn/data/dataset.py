@@ -30,12 +30,12 @@ class Dataset(dataset.Dataset, ABC):
     
     Args:
         root: The root directory where the data is stored.
-        split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Default: 'train'.
-        transform: Transformations performing on both the input and target.
-        to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Default: False.
-        verbose: Verbosity. Default: True.
+        split: The data split to use. One of: ``'train'``, ``'val'``,
+            ``'test'``, or ``'predict'``. Default: ``'train'``.
+        transform: Transformations performed on both the input and target.
+        to_tensor: If ``True``, convert input and target to
+            :class:`torch.Tensor`. Default: ``False``.
+        verbose: Verbosity. Default: ``True``.
     """
     
     def __init__(
@@ -55,7 +55,7 @@ class Dataset(dataset.Dataset, ABC):
         self.verbose   = verbose
     
     def __iter__(self):
-        """Returns an iterator starting at index 0."""
+        """Returns an iterator starting at index ``0``."""
         self.reset()
         return self
     

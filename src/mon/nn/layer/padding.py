@@ -30,7 +30,7 @@ def get_same_padding(
     stride     : int,
     dilation   : int
 ) -> int:
-    """Calculate asymmetric TensorFlow-like 'same' padding value for 1
+    """Calculate asymmetric TensorFlow-like ``same`` padding value for 1
     dimension of the convolution.
     """
     return max(
@@ -52,8 +52,8 @@ def to_same_padding(
     kernel_size: _size_2_t,
     padding    : _size_2_t | None = None,
 ) -> int | list | None:
-    """It takes a kernel size and a padding, and if the padding is None, it
-    returns None, otherwise it returns the kernel size divided by 2.
+    """It takes a kernel size and a padding, and if the padding is ``None``, it
+    returns ``None``, otherwise it returns the kernel size divided by ``2``.
     
     Args:
         kernel_size: The size of the convolutional kernel.
@@ -77,7 +77,7 @@ def pad_same(
     dilation   : _size_2_t = (1, 1),
     value      : float     = 0,
 ):
-    """Pad input tensor with 'same' padding for conv with specified args."""
+    """Pad input tensor with ``same`` padding for conv with specified args."""
     x      = input
     ih, iw = x.size()[-2:]
     pad_h  = get_same_padding(ih, kernel_size[0], stride[0], dilation[0])

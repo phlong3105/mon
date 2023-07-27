@@ -33,7 +33,7 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
     """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
     Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
     
-    This implementation use :class:`torch.nn.Conv2d` layer.
+    This implementation uses :class:`torch.nn.Conv2d` layer.
     
     References:
         - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
@@ -94,7 +94,7 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
     """Squeeze and Excite layer from the paper: "`Squeeze and Excitation
     Networks <https://arxiv.org/pdf/1709.01507.pdf>`__"
     
-    This implementation use :class:`torch.nn.Linear` layer.
+    This implementation uses :class:`torch.nn.Linear` layer.
     
     References:
         - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
@@ -205,7 +205,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
     Module".
     
     References:
-        https://github.com/Jongchan/attention-module/blob/master/MODELS/bam.py
+        - https://github.com/Jongchan/attention-module/blob/master/MODELS/bam.py
     """
     
     class Flatten(nn.Module):
@@ -357,13 +357,13 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
     Block Attention Module".
     
     References:
-        https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py
+        - https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py
     
     Args:
         channels:
-        reduction_ratio: Default: 16.
-        pool_type: Pooling layer. One of: ["avg", "lp", "lse", "max"]. Defaults
-            to ["avg", "max"].
+        reduction_ratio: Default: ``16``.
+        pool_type: Pooling layer. One of ``'avg'``, `''lp''`, `''lse''`, or
+            `''max''`. Defaults to ``["avg", "max"]``.
     """
     
     class Flatten(nn.Module):
@@ -550,7 +550,7 @@ class SimAM(base.PassThroughLayerParsingMixin, nn.Module):
     Module for Convolutional Neural Networks".
     
     References:
-        https://github.com/ZjjConan/SimAM
+        - https://github.com/ZjjConan/SimAM
     """
     
     def __init__(self, e_lambda: float = 1e-4, *args, **kwargs):
@@ -706,8 +706,9 @@ class GhostSupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Modu
         """Run forward pass.
 
         Args:
-            input: A list of 2 tensors. The first tensor is the output from
-                the previous layer. The second tensor is the current step input.
+            input: A :class:`list` of 2 tensors. The first tensor is the output
+                from the previous layer. The second tensor is the current step
+                input.
             
         Returns:
             Supervised attention features.
@@ -793,8 +794,9 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         """Run forward pass.
 
         Args:
-            input: A list of 2 tensors. The first tensor is the output from
-                previous layer. The second tensor is the current step input.
+            input: A :class:`list` of 2 tensors. The first tensor is the output
+                from the previous layer. The second tensor is the current step
+                input.
             
         Returns:
             Supervised attention features.

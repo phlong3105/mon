@@ -14,13 +14,13 @@ def make_divisible(x: int, divisor: int) -> int:
 
 
 def get_hw(size: int | list[int]) -> list[int]:
-    """Casts a size object to the standard HW.
+    """Casts a size object to the standard :math:`[H, W]`.
 
     Args:
         size: A size of an image, windows, or kernels, etc.
 
     Returns:
-        A size in HW format.
+        A size in :math:`[H, W]` format.
     """
     if isinstance(size, list | tuple):
         if len(size) == 3:

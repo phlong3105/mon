@@ -40,7 +40,7 @@ def reduce_loss(
     Args:
         loss: Elementwise loss tensor.
         reduction: Reduction value to use.
-        weight: Element-wise weights. Default: None.
+        weight: Element-wise weights. Default: ``None``.
         
     Returns:
         Reduced loss.
@@ -72,12 +72,13 @@ class Loss(_Loss, ABC):
     
     Args:
         reduction: Specifies the reduction to apply to the output.
-            One of: ['none', 'mean', 'sum', 'weighted_sum'].
-            - none: No reduction will be applied.
-            - mean: The sum of the output will be divided by the number of
-                elements in the output.
-            - sum: The output will be summed.
-            Default: mean.
+            One of: ``'none'``, ``'mean'``, ``'sum'``, or ``'weighted_sum'``.
+            
+            - ``None``: No reduction will be applied.
+            - ``'mean'``: The sum of the output will be divided by the number of
+              elements in the output.
+            - ``'sum'``: The output will be summed.
+            - Default: ``'mean'``.
     """
     
     # If your loss function only supports some custom reduction. Consider
@@ -192,7 +193,7 @@ class L2Loss(Loss):
 
 @LOSSES.register(name="extended_l1_loss")
 class ExtendedL1Loss(Loss):
-    """Also pays attention to the mask, to be relative to its size. """
+    """Also pays attention to the mask, to be relative to its size."""
     
     def __init__(self, reduction: Reduction | str = "mean"):
         super().__init__(reduction=reduction)

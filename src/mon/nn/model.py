@@ -46,7 +46,7 @@ def extract_weight_from_checkpoint(
     
     Args:
         ckpt: A checkpoint file.
-        weight_file: A path to save the extracting weights. Default: None,
+        weight_file: A path to save the extracting weights. Default: ``None``,
             which saves the weights at the same location as the :param:`ckpt`
             file.
     """
@@ -72,7 +72,7 @@ def get_epoch(ckpt: pathlib.Path | None) -> int:
     """Get an epoch value stored in a checkpoint file.
 
     Args:
-        ckpt: A checkpoint filepath.
+        ckpt: A checkpoint file path.
     """
     if ckpt is None:
         return 0
@@ -89,7 +89,7 @@ def get_global_step(ckpt: pathlib.Path | None) -> int:
     """Get a global step stored in a checkpoint file.
 
     Args:
-        ckpt: A checkpoint filepath.
+        ckpt: A checkpoint file path.
     """
     if ckpt is None:
         return 0
@@ -103,7 +103,7 @@ def get_global_step(ckpt: pathlib.Path | None) -> int:
 
 
 def get_latest_checkpoint(dirpath: pathlib.Path) -> str | None:
-    """Get the latest checkpoint (last saved) filepath in a directory.
+    """Get the latest checkpoint (last saved) file path in a directory.
 
     Args:
         dirpath: The directory that contains the checkpoints.
@@ -121,16 +121,16 @@ def get_latest_checkpoint(dirpath: pathlib.Path) -> str | None:
 # region Weight/State Dict
 
 def intersect_state_dicts(x: dict, y: dict, exclude: list = []) -> dict:
-    """Find the intersection between two state dictionaries.
+    """Find the intersection between two state :class:`dict`.
     
     Args:
-        x: The first state dictionaries.
-        y: The second state dictionaries.
-        exclude: A list of excluding keys.
+        x: The first state :class:`dict`.
+        y: The second state :class:`dict`.
+        exclude: A :class:`list` of excluding keys.
     
     Return:
-        A dictionary that contains only the keys that are in both dictionaries,
-        and whose values have the same shape.
+        A :class:`dict` that contains only the keys that are in both :param:`x`
+        and :param:`y`, and whose values have the same shape.
     """
     return {
         k: v for k, v in x.items()
@@ -143,13 +143,13 @@ def match_state_dicts(
     pretrained_dict: dict,
     exclude        : list = []
 ) -> dict:
-    """Filter out unmatched keys btw the model's :attr:`state_dict`, and the
+    """Filter out unmatched keys between the model's :attr:`state_dict`, and the
     weights' :attr:`state_dict`. Omitting :param:`exclude` keys.
 
     Args:
         model_dict: Model :attr:`state_dict`.
         pretrained_dict: Pretrained :attr:`state_dict`.
-        exclude: List of excluded keys. Default: ().
+        exclude: A :class:`list` of excluded keys. Default: ``()``.
         
     Return:
         Filtered model's :attr:`state_dict`.
@@ -170,8 +170,8 @@ def strip_optimizer(weight_file: str, new_file: str | None = None):
     process.
     
     Args:
-        weight_file: A PyTorch saved weights filepath.
-        new_file: A filepath to save the stripped weights. If :param:`new_file`
+        weight_file: A PyTorch saved weights file path.
+        new_file: A file path to save the stripped weights. If :param:`new_file`
             is given, save the weights as a new file. Otherwise, overwrite the
             :param:`weight_file`.
     """
@@ -220,21 +220,21 @@ def attempt_load(
     
     Args:
         model: A PyTorch :class:`nn.Module` or a :class:`Model`.
-        weights: Weights dictionary or a checkpoint filepath.
+        weights: Weights :class:`dict`, or a checkpoint file path.
         name: A name of the model.
-        config: A configuration dictionary or a YAML filepath containing the
-            building configuration of the model.
+        config: A configuration :class:`dict`, or a ``.yaml`` file path
+            containing the building configuration of the model.
         fullname: An optional fullname of the model, in other words,
             a model's base name + its variant + a training dataset name.
         num_classes: The number of classes, in other words, the final layer's
             output channels.
         phase: The model running phase.
-        strict: Default: True.
+        strict: Default: ``True``.
         file_name: Name for the downloaded file. Filename from :param:`path`
         model_dir: Directory in which to save the object. Default to
             :attr:`ZOO_DIR`.
-        debugging: If True, stop and raise errors. Otherwise, just return the
-            current model.
+        debugging: If ``True``, stop and raise errors. Otherwise, just return
+            the current model.
         
     Return:
         A :class:`Model` object.
@@ -319,22 +319,22 @@ def load_state_dict_from_path(
     file_name   : str | None          = None,
     **_
 ) -> dict | None:
-    """Load state dict at the given URL. If downloaded file is a zip file, it
-    will be automatically decompressed. If the object is already present in
+    """Load state dict at the given URL. If downloaded file is a ``.zip`` file,
+    it will be automatically decompressed. If the object is already present in
     :param:`model_dir`, it is deserialized and returned.
     
     Args:
         path: The weights or checkpoints file to load. If it is a URL, it will
             be downloaded.
-        model_dir: Directory in which to save the object. Default to None.
-        map_location: A function, or a dict specifying how to remap storage
-            locations (see torch.load). Default: None.
-        progress: Whether to display a progress bar to stderr. Default: True.
-        check_hash: If True, the file_name part of the URL should follow the
-            naming convention `file_name-<sha256>.ext` where `<sha256>` is the
-            first eight or more digits of the SHA256 hash of the contents of the
-            file. Hash is used to ensure unique names and to verify the contents
-            of the file. Default: False.
+        model_dir: Directory in which to save the object. Default to ``None``.
+        map_location: A function, or a :class:`dict` specifying how to remap
+            storage locations (see :meth:`torch.load`). Default: ``None``.
+        progress: Whether to display a progress bar to stderr. Default: ``True``.
+        check_hash: If ``True``, the :param:`file_name` part of the URL should
+            follow the naming convention `file_name-<sha256>.ext` where
+            `<sha256>` is the first eight or more digits of the SHA256 hash of
+            the contents of the file. Hash is used to ensure unique names and to
+            verify the contents of the file. Default: ``False``.
         file_name: Name for the downloaded file. Filename from :param:`path`
             will be used if not set.
     """
@@ -380,8 +380,8 @@ def load_state_dict_from_path(
 # region Model Parsing
 
 def is_parallel(model: nn.Module) -> bool:
-    """Return True if a model is in a parallel run-mode. Otherwise, return
-    False.
+    """Return ``True`` if a model is in a parallel run-mode. Otherwise, return
+    ``False``.
     """
     return type(model) in (
         parallel.DataParallel,
@@ -408,49 +408,49 @@ class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
     Attributes:
-        configs: A dictionary containing all configurations of the model.
-        zoo: A dictionary containing all pretrained weights of the model.
+        configs: A :class:`dict` containing all configurations of the model.
+        zoo: A :class:`dict` containing all pretrained weights of the model.
         
     Args:
-        config: The model's configuration that is used to build the model.
+        config: The model's configuration that's used to build the model.
             Any of:
-                - A dictionary.
+                - A :class:`dict`.
                 - A key in the :attr:`cfgs`.
                 - A file name. Ex: 'alexnet.yaml'.
-                - A path to a .yaml file. Ex: '../cfgs/alexnet.yaml'.
+                - A path to a ``.yaml`` file. Ex: '../cfgs/alexnet.yaml'.
                 - None, define each layer manually.
         hparams: Model's hyperparameters. They are used to change the values of
             :param:`args`. Usually used in grid search or random search during
-            training. Default: None.
-        channels: The first layer's input channel. Default: 3.
+            training. Default: ``None``.
+        channels: The first layer's input channel. Default: ``3``.
         num_classes: A number of classes, which is also the last layer's output
-            channels. Default: None mean it will be determined during model
+            channels. Default: ``None`` mean it will be determined during model
             parsing.
         classlabels: A :class:`mon.nn.data.label.ClassLabels` object that
-            contains all labels in the dataset. Default: None.
+            contains all labels in the dataset. Default: ``None``.
         weights: The model's weights. Any of:
-            - A state dictionary.
+            - A state :class:`dict`.
             - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
             - A path to a weights file or ckpt file.
-        name: The model's name. Default: None mean it will be
+        name: The model's name. Default: ``None`` mean it will be
             :attr:`self.__class__.__name__`. .
-        variant: The model's variant. For example, :param:`name` is 'yolov8' and
-            :param:`variant` is 'yolov8x'. Default: None mean it will be same
-            as :param:`name`.
+        variant: The model's variant. For example, :param:`name` is ``'yolov8'``
+            and :param:`variant` is ``'yolov8x'``. Default: ``None`` mean it
+            will be same as :param:`name`.
         fullname: The model's fullname to save the checkpoint or weights. It
             should have the following format:
-            {name}/{variant}-{dataset}-{postfix}. Default: None mean it will
+            {name}/{variant}-{dataset}-{postfix}. Default: ``None`` mean it will
             be same as :param:`name`.
         root: The root directory of the model. It is used to save the model
             checkpoint during training: {root}/{project}/{fullname}.
-        project: A project name. Default: None.
-        phase: The model's running phase. Default: training.
-        loss: Loss function for training the model. Default: None.
+        project: A project name. Default: ``None``.
+        phase: The model's running phase. Default: ``'training'``.
+        loss: Loss function for training the model. Default: ``None``.
         metrics: A list metrics for validating and testing model. Default:
-            None.
-        optimizers: Optimizer(s) for training model. Default: None.
-        debug: Debug configs. Default: None.
-        verbose: Verbosity. Default: True.
+            ``None``.
+        optimizers: Optimizer(s) for a training model. Default: ``None``.
+        debug: Debug configs. Default: ``None``.
+        verbose: Verbosity. Default: ``True``.
     """
     
     configs = {}
@@ -584,7 +584,7 @@ class Model(lightning.LightningModule, ABC):
     
     @property
     def debug_image_filepath(self) -> pathlib.Path:
-        """The debug image filepath located at: <debug_dir>/"""
+        """The debug image file path located at: <debug_dir>/"""
         save_dir = self.debug_subdir \
             if self.debug["save_to_subdir"] \
             else self.debug_dir
@@ -802,7 +802,7 @@ class Model(lightning.LightningModule, ABC):
     def parse_model(self) -> tuple[nn.Sequential, list[int], list[dict]]:
         """Build the model. You have 2 options for building a model: (1) define
         each layer manually, or (2) build model automatically from a config
-        dictionary.
+        :class:`dict`.
         
         Either way, each layer should have the following attributes:
             - i: index of the layer.
@@ -817,8 +817,9 @@ class Model(lightning.LightningModule, ABC):
         
         Return:
             A Sequential model.
-            A list of layer index to save the features during forward pass.
-            A list of layer's info for debugging.
+            A :class:`list` of layer index to save the features during forward
+                pass.
+            A :class:`list` of layer's info for debugging.
         """
         if not isinstance(self.config, dict):
             raise TypeError(f"config must be a dictionary, but got {self.config}.")
@@ -908,16 +909,16 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of these 6 options:
                 - Single optimizer.
-                - List or Tuple of optimizers.
-                - Two lists - First list has multiple optimizers, and the
-                  second has multiple LR schedulers (or multiple
-                  lr_scheduler_config).
-                - Dictionary, with an "optimizer" key, and (optionally) a
-                  "lr_scheduler" key whose value is a single LR scheduler or
+                - :class:`list` or :class:`tuple` of optimizers.
+                - Two :class:`list` - First :class:`list` has multiple
+                  optimizers, and the second has multiple LR schedulers (or
+                  multiple lr_scheduler_config).
+                - :class:`dict`, with an ``'optimizer'`` key, and (optionally) a
+                  ``'lr_scheduler'`` key whose value is a single LR scheduler or
                   lr_scheduler_config.
-                - Tuple of dictionaries as described above, with an optional
-                  "frequency" key.
-                - None - Fit will run without any optimizer.
+                - :class:`tuple` of :class:`dict` as described above, with an
+                  optional ``'frequency'`` key.
+                - ``None`` - Fit will run without any optimizer.
         """
         optims = self.optims
         
@@ -977,8 +978,9 @@ class Model(lightning.LightningModule, ABC):
         metrics, we only need the final predictions and ground-truth.
 
         Args:
-            input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Default: None.
+            input: An input of shape :math:`[B, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default:
+                ``None``.
             
         Return:
             Predictions and loss value.
@@ -1006,11 +1008,12 @@ class Model(lightning.LightningModule, ABC):
         :meth:`forward_once()`.
 
         Args:
-            input: An input of shape NCHW.
-            augment: If True, perform test-time augmentation. Default: False.
-            profile: If True, Measure processing time. Default: False.
+            input: An input of shape :math:`[N, C, H, W]`.
+            augment: If ``True``, perform test-time augmentation. Default:
+                ``False``.
+            profile: If ``True``, Measure processing time. Default: ``False``.
             out_index: Return specific layer's output from :param:`out_index`.
-                Default: -1 means the last layer.
+                Default: ``-1`` means the last layer.
             
         Return:
             Predictions.
@@ -1027,10 +1030,10 @@ class Model(lightning.LightningModule, ABC):
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
-            input: An input of shape NCHW.
-            profile: Measure processing time. Default: False.
+            input: An input of shape :math:`[N, C, H, W]`.
+            profile: Measure processing time. Default: ``False``.
             out_index: Return specific layer's output from :param:`out_index`.
-                Default: -1 means the last layer.
+                Default: ``-1`` means the last layer.
                 
         Return:
             Predictions.
@@ -1074,15 +1077,15 @@ class Model(lightning.LightningModule, ABC):
 
         Args:
             batch: The output of :class:`~torch.utils.data.DataLoader`. It can
-                be a tensor, tuple or list.
+                be a :class:`torch.Tensor`, :class:`tuple` or :class:`list`.
             batch_idx: An integer displaying index of this batch.
             
         Return:
             Any of:
                 - The loss tensor.
-                - A dictionary. Can include any keys, but must include the key
-                  'loss'.
-                - None, training will skip to the next batch.
+                - A :class:`dict`. Can include any keys, but must include the
+                  key ``'loss'``.
+                - ``None``, training will skip to the next batch.
         """
         # Forward
         input, target, extra = batch[0], batch[1], batch[2:]
@@ -1178,7 +1181,7 @@ class Model(lightning.LightningModule, ABC):
 
         Return:
             - Any object or value.
-            - None, validation will skip to the next batch.
+            - ``None``, validation will skip to the next batch.
         """
         input, target, extra = batch[0], batch[1], batch[2:]
         pred, loss = self.forward_loss(
@@ -1264,7 +1267,7 @@ class Model(lightning.LightningModule, ABC):
         Return:
             Any of:
                 - Any object or value.
-                - None, testing will skip to the next batch.
+                - ``None``, testing will skip to the next batch.
         """
         input, target, extra = batch[0], batch[1], batch[2:]
         pred, loss = self.forward_loss(
@@ -1328,22 +1331,23 @@ class Model(lightning.LightningModule, ABC):
     def export_to_onnx(
         self,
         input_dims   : list[int]    | None = None,
-        filepath     : pathlib.Path | None = None,
+        file_path    : pathlib.Path | None = None,
         export_params: bool = True
     ):
-        """Export the model to `onnx` format.
+        """Export the model to ``onnx`` format.
 
         Args:
-            input_dims: Input dimensions in CHW format. Default: None.
-            filepath: Path to save the model. If None or empty, then save to
-                :attr:`root`. Default: None.
-            export_params: Should export parameters? Default: True.
+            input_dims: Input dimensions in :math:`[C, H, W]` format. Default:
+                ``None``.
+            file_path: Path to save the model. If ``None`` or empty, then save
+                to :attr:`root`. Default: ``None``.
+            export_params: Should export parameters? Default: ``True``.
         """
         # Check filepath
-        if filepath in [None, ""]:
-            filepath = self.root / f"{self.fullname}.onnx"
-        if ".onnx" not in str(filepath):
-            filepath = pathlib.Path(str(filepath) + ".onnx")
+        if file_path in [None, ""]:
+            file_path = self.root / f"{self.fullname}.onnx"
+        if ".onnx" not in str(file_path):
+            file_path = pathlib.Path(str(file_path) + ".onnx")
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
@@ -1351,7 +1355,7 @@ class Model(lightning.LightningModule, ABC):
             raise ValueError(f"input_dims must be defined.")
         
         self.to_onnx(
-            file_path     = filepath,
+            file_path     = file_path,
             input_sample  = input_sample,
             export_params = export_params
         )
@@ -1359,23 +1363,23 @@ class Model(lightning.LightningModule, ABC):
     def export_to_torchscript(
         self,
         input_dims: list[int]    | None = None,
-        filepath  : pathlib.Path | None = None,
+        file_path : pathlib.Path | None = None,
         method    : str = "script"
     ):
         """Export the model to TorchScript format.
 
         Args:
-            input_dims: Input dimensions. Default: None.
-            filepath: Path to save the model. If None or empty, then save to
-                :attr:`root`. Default: None.
-            method: Whether to use TorchScript's “script” or “trace” method.
-                Default: “script”.
+            input_dims: Input dimensions. Default: ``None``.
+            file_path: Path to save the model. If ``None`` or empty, then save to
+                :attr:`root`. Default: ``None``.
+            method: Whether to use TorchScript's `''script''` or ``'trace'``
+                method. Default: ``'script'``.
         """
         # Check filepath
-        if filepath in [None, ""]:
-            filepath = self.root / f"{self.fullname}.pt"
-        if ".pt" not in str(filepath):
-            filepath = pathlib.Path(str(filepath) + ".pt")
+        if file_path in [None, ""]:
+            file_path = self.root / f"{self.fullname}.pt"
+        if ".pt" not in str(file_path):
+            file_path = pathlib.Path(str(file_path) + ".pt")
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
@@ -1383,7 +1387,7 @@ class Model(lightning.LightningModule, ABC):
             raise ValueError(f"'input_dims' must be defined.")
         
         script = self.to_torchscript(method=method, example_inputs=input_sample)
-        torch.jit.save(script, filepath)
+        torch.jit.save(script, file_path)
     
     @abstractmethod
     def show_results(
@@ -1407,15 +1411,17 @@ class Model(lightning.LightningModule, ABC):
             target: A ground-truth.
             pred: A prediction.
             filepath: A path to save the debug result.
-            image_quality: The image quality to be saved. Default: 95.
-            max_n: Show max n items if :param:`input` has a batch size of more
-                than :param:`max_n` items. Default: None means show all.
+            image_quality: The image quality to be saved. Default: ``95``.
+            max_n: Show max ``n`` items if :param:`input` has a batch size of
+                more than :param:`max_n` items. Default: ``None`` means show
+                all.
             nrow: The maximum number of items to display in a row. Default:
-                8.
+                ``8``.
             wait_time: Wait for some time (in seconds) to display the figure
-                then reset. Default: 0.01.
-            save: Save debug image. Default: False.
-            verbose: If True shows the results on the screen. Default: False.
+                then reset. Default: ``0.01``.
+            save: Save debug image. Default: ``False``.
+            verbose: If ``True`` shows the results on the screen. Default:
+                ``False``.
         """
         pass
     

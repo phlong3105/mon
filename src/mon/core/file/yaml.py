@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements an YAML file handler by extending the :mod:`yaml`
-module.
+"""This module implements YAML file handler by extending the :mod:`yaml` module.
 """
 
 from __future__ import annotations
@@ -31,7 +30,7 @@ class YAMLHandler(base.FileHandler):
         """Load content from a file.
         
         Args:
-            path: A filepath or an input stream object.
+            path: A file path or an input stream object.
         
         Returns:
             File's content.
@@ -49,14 +48,14 @@ class YAMLHandler(base.FileHandler):
 
         Args:
             obj: A serializable object.
-            path: The filepath to dump :param:`obj` content.
+            path: The file path to dump :param:`obj` content.
         """
         path = pathlib.Path(path)
         kwargs.setdefault("Dumper", Dumper)
         dump(data=obj, stream=path, **kwargs)
     
     def write_to_string(self, obj: Any, **kwargs) -> str:
-        """Dump content from a serializable object to a string.
+        """Dump content from a serializable object to a :class:`str`.
 
         Args:
             obj: A serializable object.

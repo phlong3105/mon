@@ -32,7 +32,7 @@ class Downsample(base.PassThroughLayerParsingMixin, nn.Module):
     expect a 4D Tensor and for volumetric inputs, we expect a 5D Tensor.
 
     The algorithms available for upsampling are nearest neighbor and linear,
-    bilinear, bicubic and trilinear for 3D, 4D and 5D input Tensor,
+    bilinear, bicubic and trilinear for 3D, 4D and 5D input tensor,
     respectively.
 
     One can either give a :attr:`scale_factor` or the target output :attr:`size`
@@ -42,24 +42,26 @@ class Downsample(base.PassThroughLayerParsingMixin, nn.Module):
         size: Output spatial sizes
         scale_factor: Multiplier for spatial size. Has to match input size if
             it is a tuple.
-        mode: The upsampling algorithm. One of ['nearest', 'linear', 'bilinear',
-            'bicubic', 'trilinear']. Default: 'nearest'.
-        align_corners: If True, the corner pixels of the input and output
-            tensors are aligned, and thus preserving the values at those pixels.
-            This only has effect when :param:`mode` is 'linear', 'bilinear',
-            'bicubic', or 'trilinear'. Default: False.
-        recompute_scale_factor: Recompute the scale_factor for use in the
-            interpolation calculation.
-            - If True, then :param:`scale_factor` must be passed in and
+        mode: The upsampling algorithm. One of: ``'nearest'``, ``'linear'``,
+            ``'bilinear'``, ``'bicubic'``, or ``'trilinear'``. Default:
+            ``'nearest'``.
+        align_corners: If ``True``, the corner pixels of the input and output
+            tensors are aligned, and thus preserving the values of those pixels.
+            This only has effect when :param:`mode` is ``'linear'``,
+            ``'bilinear'``, ``'bicubic'``, or ``'trilinear'``. Default:
+            ``False``.
+        recompute_scale_factor: Recompute the :param:`scale_factor` for use in
+            the interpolation calculation.
+            - If ``True``, then :param:`scale_factor` must be passed in and
                 :param:`scale_factor` is used to compute the output
                 :param:`size`. The computed output :param:`size` will be used
                 to infer new scales for the interpolation. Note that when
                 :param:`scale_factor` is floating-point, it may differ from the
                 recomputed :param:`scale_factor` due to rounding and precision
                 issues.
-            - If False, then :param:`size` or :param:`scale_factor` will be used
-                directly for interpolation.
-            Default: False.
+            - If ``False``, then :param:`size` or :param:`scale_factor` will be
+                used directly for interpolation.
+            - Default: ``False``.
     """
     
     def __init__(
@@ -125,11 +127,11 @@ class UpsamplingNearest2d(base.PassThroughLayerParsingMixin, nn.UpsamplingNeares
 @LAYERS.register()
 class Scale(base.PassThroughLayerParsingMixin, nn.Module):
     """A learnable scale parameter. This layer scales the input by a learnable
-    factor. It multiplies a learnable scale parameter of shape (1,) with input
-    of any shape.
+    factor. It multiplies a learnable scale parameter of shape :math:`(1,)` with
+    input of any shape.
     
     Args:
-        scale: Initial value of the scale factor. Default: 1.0.
+        scale: Initial value of the scale factor. Default: ``1.0``.
     """
     
     def __init__(self, scale: float = 1.0):

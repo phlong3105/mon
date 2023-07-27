@@ -116,8 +116,8 @@ class SimpleGate(base.LayerParsingMixin, nn.Module):
                 previous layers; [99, 101] means from the 99th and 101st layers.
                 This attribute is used in forward pass.
             args: Layer's parameters.
-            ch: A list containing output channels of previous layers (of the
-                model)
+            ch: A :class:`list` containing output channels of previous layers
+                (of the model)
         
         Returns:
             The adjusted :param:`args` and :param:`ch`.
@@ -212,7 +212,7 @@ class ArgMax(base.PassThroughLayerParsingMixin, nn.Module):
     :param`dim`.
     
     Args:
-        dim: A dimension to find indices of maximum values. Default: None.
+        dim: A dimension to find indices of maximum values. Default: ``None``.
     """
     
     def __init__(self, dim: int | None = None, *args, **kwargs):
@@ -226,17 +226,17 @@ class ArgMax(base.PassThroughLayerParsingMixin, nn.Module):
 
 
 class Clamp(base.PassThroughLayerParsingMixin, nn.Module):
-    """Clamps a tensor' values within a range of [min, max].
+    """Clamps a tensor' values within a range of :math:`[min, max]`.
 
     Args:
-        min: The lower-bound of the range to be clamped to. Default: -1.0.
-        max: The upper-bound of the range to be clamped to. Default: -1.0.
+        min: The lower-bound of the range to be clamped to. Default: ``-1.0``.
+        max: The upper-bound of the range to be clamped to. Default: ``-1.0``.
     """
     
     def __init__(
         self,
         min: float = -1.0,
-        max: float = 1.0,
+        max: float =  1.0,
         *args, **kwargs
     ):
         super().__init__()

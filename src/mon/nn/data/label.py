@@ -88,7 +88,7 @@ class ClassLabel(dict, Label):
 
 
 class ClassLabels(list[ClassLabel]):
-    """A list of all the class-labels defined in a dataset.
+    """A :class:`list` of all the class-labels defined in a dataset.
     
     Notes:
         We inherit the standard Python :class:`list` to take advantage of the
@@ -112,8 +112,8 @@ class ClassLabels(list[ClassLabel]):
     
     @classmethod
     def from_dict(cls, value: dict) -> ClassLabels:
-        """Create a :class:`ClassLabels` object from a dictionary :param:`d`.
-        The dictionary must contain the key 'classlabels', and it's
+        """Create a :class:`ClassLabels` object from a :class:`dict` :param:`d`.
+        The :class:`dict` must contain the key ``'classlabels'``, and it's
         corresponding value is a list of dictionary. Each item in the list
         :param:`d["classlabels"]` is a dictionary describing a
         :class:`ClassLabel` object.
@@ -130,7 +130,7 @@ class ClassLabels(list[ClassLabel]):
     
     @classmethod
     def from_file(cls, path: pathlib.Path) -> ClassLabels:
-        """Create a :class:`ClassLabels` object from the content of a '.json'
+        """Create a :class:`ClassLabels` object from the content of a ``.json``
         file specified by the :param:`path`.
         """
         path = pathlib.Path(path)
@@ -204,12 +204,13 @@ class ClassLabels(list[ClassLabel]):
         key: str = "id",
         exclude_negative_key: bool = True,
     ) -> list:
-        """Return a list of colors corresponding to the items in :attr:`self`.
+        """Return a :class:`list` of colors corresponding to the items in
+        :attr:`self`.
         
         Args:
-            key: The key to search for. Default: 'id'.
-            exclude_negative_key: If `True`, excludes the key with negative
-                value. Default: `True`.
+            key: The key to search for. Default: ``'id'``.
+            exclude_negative_key: If ``True``, excludes the key with negative
+                value. Default: ``True``.
             
         Return:
             A list of colors.
@@ -225,7 +226,7 @@ class ClassLabels(list[ClassLabel]):
     
     @property
     def id2label(self) -> dict[int, dict]:
-        """A dictionary mapping items' IDs (keys) to items (values)."""
+        """A :class:`dict` mapping items' IDs (keys) to items (values)."""
         return {label["id"]: label for label in self}
     
     def ids(
@@ -233,15 +234,16 @@ class ClassLabels(list[ClassLabel]):
         key: str = "id",
         exclude_negative_key: bool = True,
     ) -> list:
-        """Return a list of IDs corresponding to the items in :attr:`self`.
+        """Return a :class:`list` of IDs corresponding to the items in
+        :attr:`self`.
         
         Args:
-            key: The key to search for. Default: 'id'.
-            exclude_negative_key: If True, excludes the key with negative value.
-                Default: True.
+            key: The key to search for. Default: ``'id'``.
+            exclude_negative_key: If ``True``, excludes the key with negative
+                value. Default: ``True``.
             
         Return:
-            A list of IDs.
+            A :class:`list` of IDs.
         """
         ids = []
         for c in self:
@@ -260,8 +262,8 @@ class ClassLabels(list[ClassLabel]):
         """Return a list of names corresponding to the items in :attr:`self`.
         
         Args:
-            exclude_negative_key: If True, excludes the key with negative value.
-                Default: True.
+            exclude_negative_key: If ``True``, excludes the key with negative
+                value. Default: ``True``.
             
         Return:
             A list of IDs.
@@ -283,9 +285,9 @@ class ClassLabels(list[ClassLabel]):
         """Counts the number of items.
         
         Args:
-            key: The key to search for. Default: 'id'.
-            exclude_negative_key: If True, excludes the key with negative value.
-                Default: True.
+            key: The key to search for. Default: ``'id'``.
+            exclude_negative_key: If ``True``, excludes the key with negative
+                value. Default: ``True``.
             
         Return:
             The number of items (classes) in the dataset.
@@ -309,7 +311,7 @@ class ClassLabels(list[ClassLabel]):
         return None
     
     def get_class_by_name(self, name: str) -> dict | None:
-        """Return the item (class-label) with the :param:`key` is 'name' and
+        """Return the item (class-label) with the :param:`key` is ``'name'`` and
         value matching the given :param:`name`.
         """
         return self.get_class(key="name", value=name)
@@ -340,7 +342,7 @@ class ClassLabels(list[ClassLabel]):
         return None
     
     def print(self):
-        """Print all items (class-labels) in rich format."""
+        """Print all items (class-labels) in a rich format."""
         if len(self) <= 0:
             console.log("[yellow]No class is available.")
             return
@@ -353,7 +355,7 @@ def majority_voting(labels: list[ClassLabel]) -> ClassLabel:
     label with the highest count.
     
     Args:
-        labels: A list of :class:`ClassLabel`s.
+        labels: A :class:`list` of :class:`ClassLabel`s.
     
     Return:
         The :class:`ClassLabel` object that has the most votes.

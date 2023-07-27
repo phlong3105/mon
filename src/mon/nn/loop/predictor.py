@@ -108,7 +108,7 @@ class Inferrer(ABC):
         1. Get the input.
         2. Preprocess the input.
         3. Run model forward pass.
-        4. Postporcess the prediction.
+        4. Post-process the prediction.
 
         Args:
             model: A model.
@@ -125,10 +125,10 @@ class Inferrer(ABC):
         """Pre-process an input.
 
         Args:
-            input: An input of shape [B, C, H, W].
+            input: An input of shape :math:`[B, C, H, W]`.
 
         Returns:
-            The processed input of shape [B, C H, W].
+            The processed input of shape :math:`[B, C H, W]`.
         """
         pass
     
@@ -142,11 +142,11 @@ class Inferrer(ABC):
         """Post-process a prediction.
 
         Args:
-            input: The input of shape [B, C, H, W].
-            pred: The prediction of shape [B, C, H, W].
+            input: The input of shape :math:`[B, C, H, W]`.
+            pred: The prediction of shape :math:`[B, C, H, W]`.
 
         Returns:
-            The post-processed prediction of shape [B, C, H, W].
+            The post-processed prediction of shape :math:`[B, C, H, W]`.
         """
         pass
     

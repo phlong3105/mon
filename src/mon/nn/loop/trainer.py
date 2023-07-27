@@ -19,8 +19,8 @@ from mon.nn import strategy
 # region Trainer
 
 class Trainer(lightning.Trainer):
-    """The trainer class that extend the :class:`lightning.Trainer` with several
-    methods and properties.
+    """The trainer class that extends the :class:`lightning.Trainer` with
+    several methods and properties.
     
     See Also: :class:`lightning.Trainer`.
     """

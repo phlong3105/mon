@@ -110,7 +110,7 @@ class ImageClassificationModel(nn.Model, ABC):
             "filepath"  : filepath or self.debug_image_filepath ,
             "pil_kwargs": dict(quality=image_quality)
         } if save else None
-        visualize.imshow_classification(
+        view.imshow_classification(
             winname     = self.fullname, # self.phase.value,
             image       = input,
             pred        = pred,

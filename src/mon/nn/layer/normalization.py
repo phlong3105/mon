@@ -155,13 +155,14 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
     
     Args:
         num_features: Number of input features.
-        ratio: Ratio of input features that will be normalized. Default: 0.5.
-        selection: Feature selection mechanism.
-            One of: ["linear", "random", "interleave"]
-                - "linear"    : normalized only first half.
-                - "random"    : randomly choose features to normalize.
-                - "interleave": interleaving choose features to normalize.
-            Default: linear.
+        ratio: Ratio of input features that will be normalized. Default:
+            ``0.5``.
+        selection: Feature selection mechanism. One of: ``'linear'``,
+            ``'random'``, or ``'interleave'``
+                - ``'linear'``    : normalized only first half.
+                - ``'random'``    : randomly choose features to normalize.
+                - ``'interleave'``: interleaving choose features to normalize.
+            Default: ``linear``.
     """
     
     def __init__(
@@ -253,25 +254,26 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
     
     Args:
         num_features: Number of input features.
-        p: Ratio of input features that will be normalized. Default: 0.5.
+        p: Ratio of input features that will be normalized. Default: ``0.5``.
         scheme: Feature selection mechanism. One of:
-            - `full`        : Run Instance Normalization as normal.
-            - `half`        : Split the input tensor into two even parts.
-                              Normalized the first half.
-            - `bipartite`   : Split the input tensor into two uneven parts.
-                              Normalized the first half.
-            - `checkerboard`: Normalized the input tensor following the
-                              checkerboard pattern.
-            - `random`      : Normalized the input tensor in randomly.
-            - `adaptive`    : Define a learnable weight parameter. Then apply
-                              weighted sum between the normalized tensor and
-                              the original tensor.
-            - `attentive`   : Apply channel attention to determine the channels'
-                              weights. Then apply weighted sum between
-                              the normalized tensor and the original tensor.
-            Default to "half".
-        pool: Pooling type. One of: ["avg", "max"]. Default: "avg"".
-        bias: Add bias for `adaptive` scheme. Default: `True`.
+            - ``'full'``        : Run Instance Normalization as normal.
+            - ``'half'``        : Split the input tensor into two even parts.
+                                  Normalized the first half.
+            - ``'bipartite'``   : Split the input tensor into two uneven parts.
+                                  Normalized the first half.
+            - ``'checkerboard'``: Normalized the input tensor following the
+                                  checkerboard pattern.
+            - ``'random'``      : Normalized the input tensor in randomly.
+            - ``'adaptive'``    : Define a learnable weight parameter. Then
+                                  apply weighted sum between the normalized
+                                  tensor and the original tensor.
+            - ``'attentive'``   : Apply channel attention to determine the
+                                  channels' weights. Then apply weighted sum
+                                  between the normalized tensor and the original
+                                  tensor.
+            Default to ``'half'``.
+        pool: Pooling type. One of: ``'avg'``, or ``'max'``. Default: ``'avg'``.
+        bias: Add bias for ``adaptive`` scheme. Default: ``True``.
     """
     
     schemes = [

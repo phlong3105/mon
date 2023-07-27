@@ -25,20 +25,20 @@ from mon.nn.data import dataset, label
 class DataModule(lightning.LightningDataModule, ABC):
     """The base class for all datamodules.
     
-    See Also: :mod:`lightning.LightningDataModule`.
+    See Also: :class:`lightning.LightningDataModule`.
     
     Attributes:
-        dataset_kwargs: A dictionary containing datasets' default arguments.
+        dataset_kwargs: A :class:`dict` containing datasets' default arguments.
             Example usage: train = Dataset(split='train', **self.dataset_kwargs)
         
     Args:
-        batch_size: The number of samples in one forward pass. Default: 1.
-        devices: A list of devices to use. Default: 0.
-        shuffle: If `True`, reshuffle the datapoints at the beginning of every
-            epoch. Default: `True`.
+        batch_size: The number of samples in one forward pass. Default: ``1``.
+        devices: A list of devices to use. Default: ``0``.
+        shuffle: If ``True``, reshuffle the datapoints at the beginning of every
+            epoch. Default: ``True``.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Default: `True`.
+        verbose: Verbosity. Default: ``True``.
     """
     
     def __init__(
@@ -82,7 +82,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     
     @property
     def devices(self) -> list:
-        """The list of devices."""
+        """The :class:`list` of devices."""
         return self._devices
     
     @devices.setter
@@ -107,7 +107,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     @property
     def train_dataloader(self) -> data.DataLoader | None:
         """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`train` exists. Otherwise, returns None.
+        :attr:`train` exists. Otherwise, returns ``None``.
         """
         if self.train:
             return data.DataLoader(
@@ -126,7 +126,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     @property
     def val_dataloader(self) -> data.DataLoader | None:
         """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`val` exists. Otherwise, returns None.
+        :attr:`val` exists. Otherwise, returns ``None``.
         """
         if self.val:
             return data.DataLoader(
@@ -145,7 +145,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     @property
     def test_dataloader(self) -> data.DataLoader | None:
         """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`test` exists. Otherwise, returns None.
+        :attr:`test` exists. Otherwise, returns ``None``.
         """
         if self.test:
             return data.DataLoader(
@@ -164,7 +164,7 @@ class DataModule(lightning.LightningDataModule, ABC):
     @property
     def predict_dataloader(self):
         """Returns a :class:`torch.utils.data.DataLoader` object if
-        :attr:`predict` exists. Otherwise, returns None.
+        :attr:`predict` exists. Otherwise, returns ``None``.
         """
         if self.predict:
             return data.DataLoader(
@@ -200,11 +200,12 @@ class DataModule(lightning.LightningDataModule, ABC):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+            
+                - ``'training'`` : prepares :attr:`train` and :attr:`val`.
+                - ``'testing'``  : prepares :attr:`test`.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``       : prepares all.
+                - Default: ``None``.
         """
         pass
     

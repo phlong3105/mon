@@ -32,9 +32,9 @@ class FourierUnit(nn.Module):
         fft_norm: Normalization mode. For the backward transform
             (:func:`~torch.fft.irfft`), these correspond to:
             
-            - ``"forward"`` - no normalization
-            - ``"backward"`` - normalize by ``1/n``
-            - ``"ortho"`` - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
+            - ``'forward'``  - no normalization
+            - ``'backward'`` - normalize by ``1/n``
+            - ``'ortho'``    - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
     """
     
     def __init__(
@@ -128,9 +128,9 @@ class SpectralTransform2d(nn.Module):
         fft_norm: Normalization mode. For the backward transform
             (:func:`~torch.fft.irfft`), these correspond to:
             
-            - ``"forward"`` - no normalization
-            - ``"backward"`` - normalize by ``1/n``
-            - ``"ortho"`` - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
+            - ``'forward'``  - no normalization
+            - ``'backward'`` - normalize by ``1/n``
+            - ``'ortho'``    - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
     """
     
     def __init__(
@@ -219,9 +219,9 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
         fft_norm: Normalization mode. For the backward transform
             (:func:`~torch.fft.irfft`), these correspond to:
             
-            - ``"forward"`` - no normalization
-            - ``"backward"`` - normalize by ``1/n``
-            - ``"ortho"`` - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
+            - ``'forward'``  - no normalization
+            - ``'backward'`` - normalize by ``1/n``
+            - ``'ortho'``    - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
     """
     
     def __init__(
@@ -321,9 +321,9 @@ class FastFourierConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
         fft_norm: Normalization mode. For the backward transform
             (:func:`~torch.fft.irfft`), these correspond to:
             
-            - ``"forward"`` - no normalization
-            - ``"backward"`` - normalize by ``1/n``
-            - ``"ortho"`` - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
+            - ``'forward'``  - no normalization
+            - ``'backward'`` - normalize by ``1/n``
+            - ``'ortho'``    - normalize by ``1/sqrt(n)`` (making the real IFFT orthonormal)
     """
     
     def __init__(

@@ -15,8 +15,14 @@ from mon.core import file, pathlib
 # region Config
 
 def load_config(config: dict | pathlib.Path | str) -> dict:
-    """Load a configuration dictionary from the given :param:`cfg`. If it is a
-    file, load its contents.
+    """Load a configuration as :class:`dict` from a given :param:`config`. If it
+    is a file, load its contents.
+    
+    Args:
+        config: Can be a configuration :class:`dict`, or a config file.
+    
+    Returns:
+        A :class:`dict` of configuration.
     """
     if isinstance(config, dict):
         data = config

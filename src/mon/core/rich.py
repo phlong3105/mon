@@ -164,12 +164,12 @@ def get_progress_bar() -> progress.Progress:
 
 
 class GPUMemoryUsageColumn(progress.ProgressColumn):
-    """A progress column showing current GPU memory usage, e.g. `33.1/48.0GB`.
+    """A progress column showing current GPU memory usage, e.g. ``33.1/48.0GB``.
     
     Args:
-        unit: The unit of memory. Default: “GB”.
+        unit: The unit of memory. Default: ``'GB'``.
         table_column: The column in the table to associate this field with.
-            Default: None.
+            Default: ``None``.
     """
     
     def __init__(
@@ -193,11 +193,12 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
 
 
 class ProcessedItemsColumn(progress.ProgressColumn):
-    """A progress column showing number of processed items, e.g. `1728/2025`.
+    """A progress column showing the number of processed items, e.g.
+    ``1728/2025``.
     
     Args:
         table_column: The column in the table to associate this field with.
-            Default: None.
+            Default: ``None``.
     """
     
     def __init__(self, table_column: table.Column | None = None):
@@ -235,7 +236,7 @@ class ProcessingSpeedColumn(progress.ProgressColumn):
 # region Print
 
 def print_dict(x: dict, title: str = ""):
-    """Print a dictionary with a title using the :class:`rich.pretty.Pretty`
+    """Print a :class:`dict` with a title using the :class:`rich.pretty.Pretty`
     format. For example:
     
     Title
@@ -258,8 +259,8 @@ def print_dict(x: dict, title: str = ""):
 
 @multipledispatch.dispatch(list)
 def print_table(x: list[dict]):
-    """Print a list of dictionaries in a :class:`rich.table.Table`. All
-    dictionaries in the given list must contain the same keys.
+    """Print a :class:`list` of :class:`dict` in a :class:`rich.table.Table`.
+    All :class:`dict` in the given list must contain the same keys.
     """
     assert isinstance(x, list) and all(isinstance(d, dict) for d in x)
     tab = table.Table(show_header=True, header_style="bold magenta")
@@ -273,7 +274,7 @@ def print_table(x: list[dict]):
 
 @multipledispatch.dispatch(dict)
 def print_table(x: dict):
-    """Print a dictionary in a :class:`rich.table.Table`."""
+    """Print a :class:`dict` in a :class:`rich.table.Table`."""
     assert isinstance(x, dict)
     tab = table.Table(show_header=True, header_style="bold magenta")
     tab.add_column("Key")

@@ -124,7 +124,7 @@ class Conv2dBn(base.ConvLayerParsingMixin, nn.Module):
 
 @LAYERS.register()
 class Conv2dSame(base.ConvLayerParsingMixin, nn.Conv2d):
-    """TensorFlow like `SAME` convolution wrapper for 2D convolutions."""
+    """TensorFlow like ``SAME`` convolution wrapper for 2D convolutions."""
     
     def __init__(
         self,
@@ -171,10 +171,10 @@ class Conv2dSame(base.ConvLayerParsingMixin, nn.Conv2d):
 @LAYERS.register()
 class Conv2dTF(base.ConvLayerParsingMixin, nn.Conv2d):
     """Implementation of 2D convolution in TensorFlow with :param:`padding` as
-    'same', which applies padding to input (if needed) so that input image gets
-    fully covered by filter and stride you specified. For stride of 1, this will
-    ensure that the output image size is the same as input. For stride of 2,
-    output dimensions will be half, for example.
+    ``'same'``, which applies padding to input (if needed) so that input image
+    gets fully covered by filter and stride you specified. For stride of ``1``,
+    this will ensure that the output image size is the same as input. For stride
+    of ``2``, output dimensions will be half, for example.
     """
     
     def __init__(

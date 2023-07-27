@@ -30,7 +30,7 @@ class PickleHandler(base.FileHandler):
         """Load content from a file.
 
         Args:
-            path: A filepath or an input stream object.
+            path: A file path or an input stream object.
 
         Returns:
             File's content.
@@ -48,14 +48,14 @@ class PickleHandler(base.FileHandler):
 
         Args:
             obj: A serializable object.
-            path: The filepath to dump :param:`obj` content.
+            path: The file path to dump :param:`obj` content.
         """
         path = pathlib.Path(path)
         kwargs.setdefault("protocol", 4)
         dump(obj, path, **kwargs)
     
     def write_to_string(self, obj: Any, **kwargs) -> str:
-        """Dump content from a serializable object to a string.
+        """Dump content from a serializable object to a :class:`str`.
 
         Args:
             obj: A serializable object.
@@ -72,8 +72,8 @@ class PickleHandler(base.FileHandler):
         """Load content from a file.
 
         Args:
-            path: A filepath.
-            mode: The mode to open the file. Default: “r” means read.
+            path: A file path.
+            mode: The mode to open the file. Default: ``'r'`` means read.
 
         Returns:
             File's content.
@@ -92,8 +92,8 @@ class PickleHandler(base.FileHandler):
 
         Args:
             obj: A serializable object.
-            path: A filepath.
-            mode: The mode to open the file. Default: “w” means write.
+            path: A file path.
+            mode: The mode to open the file. Default: ``'w'`` means write.
         """
         path = pathlib.Path(path)
         super().write_to_file(obj=obj, path=path, mode="wb", **kwargs)

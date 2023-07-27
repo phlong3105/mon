@@ -38,8 +38,8 @@ class OptimizerFactory(factory.Factory):
             net: A neural network.
             name: An optimizer's name.
             config: The optimizer's arguments.
-            to_dict: If True, return a dictionary of
-                {:param:`name`: attr:`instance`}. Default: False.
+            to_dict: If ``True``, return a :class:`dict` of {:param:`name`:
+                attr:`instance`}. Default: ``False``.
             **kwargs: Additional arguments that may be needed for the optimizer.
         
         Returns:
@@ -78,14 +78,14 @@ class OptimizerFactory(factory.Factory):
         
         Args:
             net: A neural network.
-            configs: A list of optimizers' arguments. Each item can be:
-                - A name (string)
-                - A dictionary of arguments containing the “name” key.
-            to_dict: If True, return a dictionary of
-                {:param:`name`: attr:`instance`}. Default: False.
+            configs: A :class:`list` of optimizers' arguments. Each item can be:
+                - A name (:class:`str`)
+                - A :class:`dict` of arguments containing the ``'name'`` key.
+            to_dict: If ``True``, return a :class:`dict` of {:param:`name`:
+                attr:`instance`}. Default: ``False``.
                 
         Returns:
-            A list, or dictionary of optimizers.
+            A :class:`list`, or :class:`dict` of optimizers.
         """
         if configs is None:
             return None
@@ -171,12 +171,12 @@ class LRSchedulerFactory(factory.Factory):
         
         Args:
             optimizer: An optimizer.
-            configs: A list of schedulers' arguments. Each item can be:
-                - A name (string)
-                - A dictionary of arguments containing the “name” key.
+            configs: A :class:`list` of schedulers' arguments. Each item can be:
+                - A name (:class:`str`)
+                - A :class:`dict` of arguments containing the ''`name`'' key.
         
         Returns:
-            A list of learning rate schedulers
+            A :class:`list` of learning rate schedulers
         """
         if configs is None:
             return None
