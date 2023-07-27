@@ -16,7 +16,6 @@ import mon.vision.enhance
 import mon.vision.feature
 import mon.vision.filter
 import mon.vision.geometry
-import mon.vision.image
 import mon.vision.io
 import mon.vision.loss
 import mon.vision.metric
@@ -31,7 +30,6 @@ from mon.vision.enhance import *
 from mon.vision.feature import *
 from mon.vision.filter import *
 from mon.vision.geometry import *
-from mon.vision.image import *
 from mon.vision.io import *
 from mon.vision.loss import *
 from mon.vision.metric import *
