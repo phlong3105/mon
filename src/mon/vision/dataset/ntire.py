@@ -208,11 +208,11 @@ class DenseHazeDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -263,11 +263,11 @@ class IHazeDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -318,11 +318,11 @@ class NHHazeDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -373,11 +373,11 @@ class OHazeDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

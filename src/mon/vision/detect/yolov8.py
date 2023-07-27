@@ -45,10 +45,10 @@ class YOLOv8(base.Detector):
         """Preprocessing step.
 
         Args:
-            images: Images of shape NHWC.
+            images: Images of shape :math:`[B, C, H, W]`.
 
         Returns:
-            Input tensor of shape NCHW.
+            Input tensor of shape :math:`[B, C, H, W]`.
         """
         input  = images.copy()
         ratio  = max(self.image_size) / max(
@@ -82,7 +82,7 @@ class YOLOv8(base.Detector):
         """Forward pass.
         
         Args:
-            input: Input tensor of shape NCHW.
+            input: Input tensor of shape :math:`[B, C, H, W]`.
         
         Returns:
             Predictions.
@@ -100,14 +100,14 @@ class YOLOv8(base.Detector):
         """Postprocessing step.
 
         Args:
-            indexes: A list of image indexes.
-            images: Images of shape NHWC.
-            input: Input tensor of shape NCHW.
-            pred: Prediction tensor of shape NCHW.
+            indexes: A :class:`list` of image indexes.
+            images: Images of shape :math:`[B, C, H, W]`.
+            input: Input tensor of shape :math:`[B, C, H, W]`.
+            pred: Prediction tensor of shape :math:`[B, C, H, W]`.
 
         Returns:
-            A 2-D list of :class:`data.Instance` objects. The outer list has N
-            items.
+            A 2-D :class:`list` of :class:`data.Instance` objects. The outer
+            :class:`list` has ``B`` items.
         """
         pred = ops.non_max_suppression(
             prediction = pred,

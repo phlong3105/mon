@@ -417,11 +417,11 @@ class Rain100DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -474,11 +474,11 @@ class Rain100HDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -531,11 +531,11 @@ class Rain100LDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -588,11 +588,11 @@ class Rain12DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -645,11 +645,11 @@ class Rain1200DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -700,11 +700,11 @@ class Rain13KDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -755,11 +755,11 @@ class Rain1400DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -812,11 +812,11 @@ class Rain2800DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -869,11 +869,11 @@ class Rain800DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:`val`.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

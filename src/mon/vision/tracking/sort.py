@@ -90,10 +90,10 @@ class SORTBBox(base.Tracker):
             - :meth:`assign_instances_to_tracks`
             - :meth:`update_matched_tracks`
             - :meth:`create_new_tracks`
-            - :meth`:delete_dead_tracks`
+            - :meth:`delete_dead_tracks`
         
         Args:
-            instances: A list of new instances. Default: ().
+            instances: A :class:`list` of new instances. Default: ``()``.
         """
         self.frame_count += 1  # Should be the same with VideoReader.index
 
@@ -150,15 +150,16 @@ class SORTBBox(base.Tracker):
         """Assigns new :param:`instances` to :param:`tracks`.
 
         Args:
-            instances: A list of new instances
-            tracks: A list of existing tracks.
+            instances: A :class:`list` of new instances
+            tracks: A :class:`list` of existing tracks.
 
         Returns:
-            A list of tracks' indexes that have been matched with new instances.
-            A list of new instances' indexes of that have NOT been matched with
-                any tracks.
-            A list of tracks' indexes that have NOT been matched with new
+            A :class:`list` of tracks' indexes that have been matched with new
                 instances.
+            A :class:`list` of new instances' indexes of that have NOT been
+                matched with any tracks.
+            A :class:`list` of tracks' indexes that have NOT been matched with
+                new instances.
         """
         if len(tracks) == 0:
             return \
@@ -213,9 +214,9 @@ class SORTBBox(base.Tracker):
         """Update existing tracks that have been matched with new instances.
 
         Args:
-            matched_indexes: A list of tracks' indexes that have been matched
-                with new instances.
-            instances: A list of new instances.
+            matched_indexes: A :class:`list` of tracks' indexes that have been
+                matched with new instances.
+            instances: A :class:`list` of new instances.
         """
         for m in matched_indexes:
             track_idx    = m[1]

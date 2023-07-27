@@ -583,7 +583,7 @@ class Model(lightning.LightningModule, ABC):
         return debug_dir
     
     @property
-    def debug_image_filepath(self) -> pathlib.Path:
+    def debug_image_file_path(self) -> pathlib.Path:
         """The debug image file path located at: <debug_dir>/"""
         save_dir = self.debug_subdir \
             if self.debug["save_to_subdir"] \
@@ -1226,7 +1226,7 @@ class Model(lightning.LightningModule, ABC):
                     input    = input,
                     target   = target,
                     pred     = pred,
-                    filepath = self.debug_image_filepath,
+                    file_path= self.debug_image_file_path,
                     **self.debug | {
                         "max_n": input[0],
                         "nrow" : input[0],
@@ -1312,7 +1312,7 @@ class Model(lightning.LightningModule, ABC):
                     input    = input,
                     target   = target,
                     pred     = pred,
-                    filepath = self.debug_image_filepath,
+                    file_path= self.debug_image_file_path,
                     **self.debug | {
                         "max_n": input[0],
                         "nrow" : input[0],
@@ -1343,7 +1343,7 @@ class Model(lightning.LightningModule, ABC):
                 to :attr:`root`. Default: ``None``.
             export_params: Should export parameters? Default: ``True``.
         """
-        # Check filepath
+        # Check file_path
         if file_path in [None, ""]:
             file_path = self.root / f"{self.fullname}.onnx"
         if ".onnx" not in str(file_path):
@@ -1375,7 +1375,7 @@ class Model(lightning.LightningModule, ABC):
             method: Whether to use TorchScript's `''script''` or ``'trace'``
                 method. Default: ``'script'``.
         """
-        # Check filepath
+        # Check file path
         if file_path in [None, ""]:
             file_path = self.root / f"{self.fullname}.pt"
         if ".pt" not in str(file_path):
@@ -1395,7 +1395,7 @@ class Model(lightning.LightningModule, ABC):
         input        : torch.Tensor | None = None,
         target       : torch.Tensor | None = None,
         pred         : torch.Tensor | None = None,
-        filepath     : pathlib.Path | None = None,
+        file_path    : pathlib.Path | None = None,
         image_quality: int                 = 95,
         max_n        : int | None          = 8,
         nrow         : int | None          = 8,
@@ -1410,7 +1410,7 @@ class Model(lightning.LightningModule, ABC):
             input: An input.
             target: A ground-truth.
             pred: A prediction.
-            filepath: A path to save the debug result.
+            file_path: A path to save the debug result.
             image_quality: The image quality to be saved. Default: ``95``.
             max_n: Show max ``n`` items if :param:`input` has a batch size of
                 more than :param:`max_n` items. Default: ``None`` means show

@@ -261,7 +261,7 @@ class CIFAR100(CIFAR10):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageClassificationDataset`.
     
     References:
-        `<https://www.cs.toronto.edu/~kriz/cifar.html>`_
+        `<https://www.cs.toronto.edu/~kriz/cifar.html>`__
     """
     
     base_folder = "cifar-100"
@@ -315,11 +315,11 @@ class CIFAR10DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:'val'.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -372,11 +372,11 @@ class CIFAR100DataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:`train` and :attr:'val'.
-                - "testing"  : prepares :attr:`test`.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

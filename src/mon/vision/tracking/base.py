@@ -79,14 +79,14 @@ class Tracker(ABC):
             1. :meth:`assign_instances_to_tracks`
             2. :meth:`update_matched_tracks`
             3. :meth:`create_new_tracks`
-            4. :meth`:delete_dead_tracks`
+            4. :meth:`delete_dead_tracks`
 
         Args:
-            instances: A list of new instances. Default: ().
+            instances: A :class:`list` of new instances. Default: ``()``.
 
         Requires:
             This method must be called once for each frame even with empty
-            instances, just call update with an empty list.
+            instances, just call update with an empty :class:`list`.
         """
         pass
 
@@ -103,15 +103,16 @@ class Tracker(ABC):
         """Assigns new :param:`instances` to :param:`tracks`.
 
         Args:
-            instances: A list of new instances
-            tracks: A list of existing tracks.
+            instances: A :class:`list` of new instances
+            tracks: A :class:`list` of existing tracks.
 
         Returns:
-            A list of tracks' indexes that have been matched with new instances.
-            A list of new instances' indexes of that have NOT been matched with
-                any tracks.
-            A list of tracks' indexes that have NOT been matched with new
+            A :class:`list` of tracks' indexes that have been matched with new
                 instances.
+            A :class:`list` of new instances' indexes of that have NOT been
+                matched with any tracks.
+            A :class:`list` of tracks' indexes that have NOT been matched with
+                new instances.
         """
         pass
 
@@ -124,9 +125,9 @@ class Tracker(ABC):
         """Update existing tracks that have been matched with new instances.
 
         Args:
-            matched_indexes: A list of tracks' indexes that have been matched
-                with new instances.
-            instances: A list of new instances.
+            matched_indexes: A :class:`list` of tracks' indexes that have been
+                matched with new instances.
+            instances: A :class:`list` of new instances.
         """
         pass
 
@@ -139,9 +140,9 @@ class Tracker(ABC):
         existing tracks.
 
         Args:
-            unmatched_inst_indexes: A list of new instances' indexes of that
-                haven't been matched with any tracks.
-            instances: A list of new instances.
+            unmatched_inst_indexes: A :class:`list` of new instances' indexes of
+                that haven't been matched with any tracks.
+            instances: A :class:`list` of new instances.
         """
         for i in unmatched_inst_indexes:
             new_trk = self.object_type(

@@ -215,11 +215,11 @@ class Snow100KDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -272,11 +272,11 @@ class Snow100KSDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -329,11 +329,11 @@ class Snow100KMDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -386,11 +386,11 @@ class Snow100KLDataModule(base.DataModule):
 
         Args:
             phase: The model phase. One of:
-                - "training" : prepares :attr:'train' and :attr:'val'.
-                - "testing"  : prepares :attr:'test'.
-                - "inference": prepares :attr:`predict`.
-                - None:      : prepares all.
-                Default: None.
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

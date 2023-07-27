@@ -38,21 +38,22 @@ def read_image(
     to_tensor: bool = False,
     normalize: bool = False,
 ) -> torch.Tensor | np.ndarray:
-    """Read an image from a filepath using :mod:`cv2`. Optionally, convert it to
-    RGB format, and :class:`torch.Tensor` type of shape 1CHW.
+    """Read an image from a file path using :mod:`cv2`. Optionally, convert it
+    to RGB format, and :class:`torch.Tensor` type of shape :math:`[1, C, H, W]`.
 
     Args:
-        path: An image filepath.
-        to_rgb: If True, convert the image from BGR to RGB. Default: True.
-        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default:
-            False.
+        path: An image file path.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``True``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``False``.
         
     Return:
-        A :class:`numpy.ndarray` image of shape HWC with value in range [0, 255]
-        or a :class:`torch.Tensor` image of shape 1CHW with value in range [0.0,
-        1.0].
+        A :class:`numpy.ndarray` image of shape0 :math:`[H, W, C]` with value in
+        range :math:`[0, 255]` or a :class:`torch.Tensor` image of shape
+        :math:`[1, C, H, W]` with value in range :math:`[0.0, 1.0]`.
     """
     image = cv2.imread(str(path))  # BGR
     if to_rgb:
@@ -70,21 +71,21 @@ def read_video_ffmpeg(
     normalize: bool = False,
 ) -> torch.Tensor | np.ndarray:
     """Read raw bytes from a video stream using :mod`ffmpeg`. Optionally,
-    convert it to :class:`torch.Tensor` type of shape 1CHW.
+    convert it to :class:`torch.Tensor` type of shape :math:`[1, C, H, W]`.
     
     Args:
         process: The subprocess that manages :mod:`ffmpeg` instance.
         height: The height of the video frame.
         width: The width of the video.
-        to_tensor: If True convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default:
-            False.
+        to_tensor: If ``True`` convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``False``.
     
     Return:
-        A :class:`numpy.ndarray` image of shape HCW with value in range [0, 255]
-        or a :class:`torch.Tensor` image of shape 1CHW with value in range
-        [0,1].
+        A :class:`numpy.ndarray` image of shape :math:`[H, W, C]` with value in
+        range :math:`[0, 255]` or a :class:`torch.Tensor` image of shape
+        :math:`[1, C, H, W]` with value in range :math:`[0, 1]`.
     """
     # RGB24 == 3 bytes per pixel.
     img_size = height * width * 3
@@ -115,14 +116,16 @@ class Loader(ABC):
         source: A data source. It can be a path to a single image file, a
             directory, a video file, or a stream. It can also be a path pattern.
         max_samples: The maximum number of datapoints from the given
-            :param:`source` to process. Default: None.
-        batch_size: The number of samples in a single forward pass. Default:
-            1.
-        to_rgb: If True, convert the image from BGR to RGB. Default: False.
-        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default: True.
-        verbose: Verbosity. Default: False.
+            :param:`source` to process. Default: ``None``.
+        batch_size: The number of samples in a single forward pass.
+            Default: ``1``.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``False``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``True``.
+        verbose: Verbosity. Default: ``False``.
     """
     
     def __init__(
@@ -149,7 +152,7 @@ class Loader(ABC):
         self.init()
     
     def __iter__(self):
-        """Return an iterator object starting at index 0."""
+        """Return an iterator object starting at index ``0``."""
         self.reset()
         return self
     
@@ -186,25 +189,27 @@ class Loader(ABC):
 
 
 class ImageLoader(Loader):
-    """An image loader that retrieves and loads image(s) from a filepath,
-    filepath pattern, or directory.
+    """An image loader that retrieves and loads image(s) from a file path,
+    file path pattern, or directory.
     
     Notes:
         We don't need to define the image shape since images in a directory can
         have different shapes.
     
     Args:
-        source: A data source. It can be a filepath, a filepath pattern, or a
+        source: A data source. It can be a file path, a file path pattern, or a
             directory.
         max_samples: The maximum number of datapoints from the given
-            :param:`source` to process. Default: None.
-        batch_size: The number of samples in a single forward pass. Default:
-            1.
-        to_rgb: If True, convert the image from BGR to RGB. Default: False.
-        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default: True.
-        verbose: Verbosity mode of video loader backend. Default: False.
+            :param:`source` to process. Default: ``None``.
+        batch_size: The number of samples in a single forward pass.
+            Default: ``1``.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``False``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``True``.
+        verbose: Verbosity mode of video loader backend. Default: ``False``.
     """
     
     def __init__(
@@ -237,10 +242,10 @@ class ImageLoader(Loader):
             >>> for index, image in enumerate(images):
         
         Return:
-            Images of shape HWC or NCHW.
-            A list of image indexes
-            A list of image files.
-            A list of images' relative paths corresponding to data.
+            Images of shape :math:`[H, W, C]` or :math:`[B, H, W, C]`.
+            A :class"`list` of image indexes
+            A :class:`list` of image files.
+            A :class:`list` of images' relative paths corresponding to data.
         """
         if self.index >= self.num_images:
             raise StopIteration
@@ -309,15 +314,16 @@ class VideoLoader(Loader, ABC):
         source: A data source. It can be a path to a single video file, a
             directory, or a stream. It can also be a path pattern.
         max_samples: The maximum number of datapoints from the given
-            :param:`source` to process. Default: None.
-        batch_size: The number of samples in a single forward pass. Default:
-            1.
-        to_rgb: If True, convert the image from BGR to RGB. Default: True.
-        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default:
-            False.
-        verbose: Verbosity mode of video loader backend. Default: False.
+            :param:`source` to process. Default: ``None``.
+        batch_size: The number of samples in a single forward pass.
+            Default: ``1``.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``True``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``False``.
+        verbose: Verbosity mode of video loader backend. Default: ``False``.
     """
     
     def __init__(
@@ -369,14 +375,16 @@ class VideoLoader(Loader, ABC):
     
     @property
     def is_stream(self) -> bool:
-        """Return True if it is a video stream, i.e, unknown
+        """Return ``True`` if it is a video stream, i.e., unknown
         :attr:`frame_count`.
         """
         return self.num_images == -1
     
     @property
     def shape(self) -> list[int]:
-        """Return the shape of the frames in the video stream in HWC format."""
+        """Return the shape of the frames in the video stream in
+        :math:`[H, W, C]` format.
+        """
         return [self.frame_height, self.frame_width, 3]
 
 
@@ -385,24 +393,24 @@ class VideoLoaderCV(VideoLoader):
     using :mod:`cv2`.
 
     Args:
-        source: A data source. It can be a filepath, a filepath pattern, or a
+        source: A data source. It can be a file path, a file path pattern, or a
             directory.
         max_samples: The maximum number of datapoints from the given
-            :param:`source` to process. Default: None.
-        batch_size: The number of samples in a single forward pass. Default:
-            1.
-        to_rgb: If True, convert the image from BGR to RGB. Default: True.
-        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default:
-            False.
+            :param:`source` to process. Default: ``None``.
+        batch_size: The number of samples in a single forward pass.
+            Default: ``1``.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``True``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``False``.
         api_preference: Preferred Capture API backends to use. It can be used to
             enforce a specific reader implementation. Two most used options are:
-            [cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900]. See more:
-            https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base
-            .htmlggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
-            Default: cv2.CAP_FFMPEG.
-        verbose: Verbosity mode of video loader backend. Default: False.
+            ``cv2.CAP_ANY=0``, ``cv2.CAP_FFMPEG=1900``. See more:
+            https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base.htmlggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
+            Default: ``cv2.CAP_FFMPEG``.
+        verbose: Verbosity mode of video loader backend. Default: ``False``.
     """
     
     def __init__(
@@ -434,10 +442,10 @@ class VideoLoaderCV(VideoLoader):
         """Load the next batch of frames in the video.
         
         Return:
-            Image of shape HWC or NCHW.
-            A list of frames indexes.
-            A list of frames files.
-            A list of frames' relative paths corresponding to data.
+            Image of shape HWC or :math:`[B, H, W, C]`.
+            A :class:`list` of frames indexes.
+            A :class:`list` of frames files.
+            A :class:`list` of frames' relative paths corresponding to data.
         """
         if not self.is_stream and self.index >= self.num_images:
             self.close()
@@ -530,8 +538,8 @@ class VideoLoaderCV(VideoLoader):
     
     @property
     def pos_avi_ratio(self) -> int:  # Flag=2
-        """Return the relative position of the video file: 0=start of the film,
-        1=end of the film.
+        """Return the relative position of the video file: ``0``=start of the
+        film, ``1``=end of the film.
         """
         return int(self.video_capture.get(cv2.CAP_PROP_POS_AVI_RATIO))
     
@@ -588,18 +596,19 @@ class VideoLoaderFFmpeg(VideoLoader):
     using :mod:`ffmpeg`.
     
     Args:
-        source: A data source. It can be a filepath, a filepath pattern, or a
+        source: A data source. It can be a file path, a file path pattern, or a
             directory.
         max_samples: The maximum number of datapoints from the given
-            :param:`source` to process. Default: None.
-        batch_size: The number of samples in a single forward pass. Default:
-            1.
-        to_rgb: If True, convert the image from BGR to RGB. Default: True.
-        to_tensor: If True, convert the image from :class:`numpy.ndarray` to
-            :class:`torch.Tensor`. Default: False.
-        normalize: If True, normalize the image to [0.0, 1.0]. Default:
-            False.
-        verbose: Verbosity mode of video loader backend. Default: False.
+            :param:`source` to process. Default: ``None``.
+        batch_size: The number of samples in a single forward pass.
+            Default: ``1``.
+        to_rgb: If ``True``, convert the image from BGR to RGB.
+            Default: ``True``.
+        to_tensor: If ``True``, convert the image from :class:`numpy.ndarray` to
+            :class:`torch.Tensor`. Default: ``False``.
+        normalize: If ``True``, normalize the image to :math:`[0.0, 1.0]`.
+            Default: ``False``.
+        verbose: Verbosity mode of video loader backend. Default: ``False``.
         kwargs: Any supplied kwargs are passed to :mod:`ffmpeg` verbatim.
         
     References:
@@ -636,10 +645,10 @@ class VideoLoaderFFmpeg(VideoLoader):
         """Load the next batch of frames in the video.
         
         Return:
-            Image of shape HWC or NCHW.
-            A list of frames indexes.
-            A list of frames files.
-            A list of frames' relative paths corresponding to data.
+            Image of shape :math:`[H, W, C]` or :math:`[B, H, W, C]`.
+            A :class:`list` of frames indexes.
+            A :class:`list` of frames files.
+            A :class:`list` of frames' relative paths corresponding to data.
         """
         if not self.is_stream and self.index >= self.frame_count:
             self.close()
@@ -716,7 +725,7 @@ class VideoLoaderFFmpeg(VideoLoader):
         return int(self.video_info["height"])
     
     def init(self):
-        """Initialize ffmpeg cmd."""
+        """Initialize ``ffmpeg`` cmd."""
         source = str(self.source)
         probe  = ffmpeg.probe(source, **self.ffmpeg_kwargs)
         self.video_info = next(
@@ -766,7 +775,7 @@ class VideoLoaderFFmpeg(VideoLoader):
 
 def write_image_cv(
     image      : torch.Tensor | np.ndarray,
-    dirpath    : pathlib.Path,
+    dir_path   : pathlib.Path,
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
@@ -776,11 +785,12 @@ def write_image_cv(
     
     Args:
         image: An image to write.
-        dirpath: A directory to write the image to.
+        dir_path: A directory to write the image to.
         name: An image's name.
         prefix: A prefix to add to the :param:`name`.
-        extension: An extension of the image file. Default: '.png'.
-        denormalize: If True, convert the image to [0, 255]. Default: False.
+        extension: An extension of the image file. Default: ``'.png'``.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
     """
     # Convert image
     if isinstance(image, torch.Tensor):
@@ -792,22 +802,22 @@ def write_image_cv(
             f"{image.ndim}."
         )
     # Write image
-    dirpath   = pathlib.Path(dirpath)
-    dirpath.mkdir(parents=True, exist_ok=True)
+    dir_path  = pathlib.Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
     name      = pathlib.Path(name)
     stem      = name.stem
     extension = extension  # name.suffix
     extension = f"{name.suffix}" if extension == "" else extension
-    extension = f".{extension}" if "." not in extension else extension
+    extension = f".{extension}"  if "." not in extension else extension
     stem      = f"{prefix}_{stem}" if prefix != "" else stem
     name      = f"{stem}{extension}"
-    filepath  = dirpath / name
-    cv2.imwrite(image, str(filepath))
+    file_path = dir_path / name
+    cv2.imwrite(image, str(file_path))
 
 
 def write_image_torch(
     image      : torch.Tensor | np.ndarray,
-    dirpath    : pathlib.Path,
+    dir_path   : pathlib.Path,
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
@@ -817,11 +827,12 @@ def write_image_torch(
     
     Args:
         image: An image to write.
-        dirpath: A directory to write the image to.
+        dir_path: A directory to write the image to.
         name: An image's name.
         prefix: A prefix to add to the :param:`name`.
-        extension: An extension of the image file. Default: '.png'.
-        denormalize: If True, convert the image to [0, 255]. Default: False.
+        extension: An extension of the image file. Default: ``'.png'``.
+        denormalize: If ``True``, convert the image to :math:`[0, 255]`.
+            Default: ``False``.
     """
     # Convert image
     if isinstance(image, np.ndarray):
@@ -836,8 +847,8 @@ def write_image_torch(
             f"{image.ndim}."
         )
     # Write image
-    dirpath   = pathlib.Path(dirpath)
-    dirpath.mkdir(parents=True, exist_ok=True)
+    dir_path  = pathlib.Path(dir_path)
+    dir_path.mkdir(parents=True, exist_ok=True)
     name      = pathlib.Path(name)
     stem      = name.stem
     extension = extension  # name.suffix
@@ -845,30 +856,31 @@ def write_image_torch(
     extension = f".{extension}" if "." not in extension else extension
     stem      = f"{prefix}_{stem}" if prefix != "" else stem
     name      = f"{stem}{extension}"
-    filepath  = dirpath / name
+    file_path = dir_path / name
     if extension in [".jpg", ".jpeg"]:
-        torchvision.io.image.write_jpeg(input=image, filename=str(filepath))
+        torchvision.io.image.write_jpeg(input=image, filename=str(file_path))
     elif extension in [".png"]:
-        torchvision.io.image.write_png(input=image, filename=str(filepath))
+        torchvision.io.image.write_png(input=image, filename=str(file_path))
 
 
 def write_images_cv(
     images     : list[torch.Tensor | np.ndarray],
-    dirpath    : pathlib.Path,
+    dir_path   : pathlib.Path,
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
     denormalize: bool      = False
 ):
-    """Write a list of images to a directory using :mod:`cv2`.
+    """Write a :class:`list` of images to a directory using :mod:`cv2`.
    
     Args:
-        images: A list of 3-D images.
-        dirpath: A directory to write the images to.
-        names: A list of images' names.
+        images: A :class:`list` of 3-D images.
+        dir_path: A directory to write the images to.
+        names: A :class:`list` of images' names.
         prefixes: A prefix to add to the :param:`names`.
-        extension: An extension of image files. Default: ".png".
-        denormalize: If True, convert image to [0, 255]. Default: False.
+        extension: An extension of image files. Default: ``'.png'``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
     """
     if isinstance(names, str):
         names = [names for _ in range(len(images))]
@@ -887,7 +899,7 @@ def write_images_cv(
     num_jobs = multiprocessing.cpu_count()
     joblib.Parallel(n_jobs=num_jobs)(
         joblib.delayed(write_image_cv)(
-            image, dirpath, names[i], prefixes[i], extension, denormalize
+            image, dir_path, names[i], prefixes[i], extension, denormalize
         )
         for i, image in enumerate(images)
     )
@@ -895,21 +907,22 @@ def write_images_cv(
 
 def write_images_torch(
     images     : Sequence[torch.Tensor | np.ndarray],
-    dirpath    : pathlib.Path,
+    dir_path   : pathlib.Path,
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
     denormalize: bool      = False
 ):
-    """Write a list of images to a directory using :mod:`torchvision`.
+    """Write a :class:`list` of images to a directory using :mod:`torchvision`.
    
     Args:
-        images: A list of 3-D images.
-        dirpath: A directory to write the images to.
-        names: A list of images' names.
+        images: A :class:`list` of 3-D images.
+        dir_path: A directory to write the images to.
+        names: A :class:`list` of images' names.
         prefixes: A prefix to add to the :param:`names`.
-        extension: An extension of image files. Default: ".png".
-        denormalize: If True, convert image to [0, 255]. Default: False.
+        extension: An extension of image files. Default: ``'.png'``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
     """
     if isinstance(names, str):
         names = [names for _ in range(len(images))]
@@ -928,7 +941,7 @@ def write_images_torch(
     num_jobs = multiprocessing.cpu_count()
     joblib.Parallel(n_jobs=num_jobs)(
         joblib.delayed(write_image_torch)(
-            image, dirpath, names[i], prefixes[i], extension, denormalize
+            image, dir_path, names[i], prefixes[i], extension, denormalize
         )
         for i, image in enumerate(images)
     )
@@ -942,9 +955,10 @@ def write_video_ffmpeg(
     """Write an image to a video file using :mod:`ffmpeg`.
 
     Args:
-        process: A subprocess that manages ffmpeg.
-        image: A frame/image of shape 1CHW.
-        denormalize: If True, convert image to [0, 255]. Default: False.
+        process: A subprocess that manages :mod:``ffmpeg``.
+        image: A frame/image of shape :math:`[1, C, H, W]`.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
     """
     if isinstance(image, np.ndarray):
         if core.is_normalized_image(image=image):
@@ -975,15 +989,17 @@ class Writer(ABC):
 
     Args:
         destination: A directory to save images.
-        image_size: An output image size of shape HW. Default: [480, 640].
-        denormalize: If True, convert image to [0, 255]. Default: False.
-        verbose: Verbosity. Default: False.
+        image_size: An output image size of shape :math:`[H, W]`.
+            Default: :math:`[480, 640]`.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+        verbose: Verbosity. Default: ``False``.
     """
     
     def __init__(
         self,
         destination: pathlib.Path,
-        image_size   : int | list[int] = [480, 640],
+        image_size : int | list[int] = [480, 640],
         denormalize: bool = False,
         verbose    : bool = False,
         *args, **kwargs
@@ -1025,8 +1041,9 @@ class Writer(ABC):
 
         Args:
             image: An image.
-            path: An image filepath with an extension. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            path: An image file path with an extension. Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         pass
     
@@ -1040,9 +1057,11 @@ class Writer(ABC):
         """Write a batch of images to :attr:`dst`.
 
         Args:
-            images: A list of images.
-            paths: A list of image filepaths with extensions. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            images: A :class:`list` of images.
+            paths: A :class:`list` of image file paths with extensions.
+                Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         pass
 
@@ -1052,12 +1071,12 @@ class ImageWriter(Writer):
 
     Args:
         destination: A directory to save images.
-        image_size: A desired output size of shape HW. This is used to
-        reshape the
-            input. Default: [480, 640].
-        denormalize: If True, convert image to [0, 255]. Default: False.
-        extension: The extension of the file to be saved. Default: '.png'.
-        verbose: Verbosity. Default: False.
+        image_size: A desired output size of shape :math:`[H, W]`. This is used
+            to reshape the input. Default: :math:`[480, 640]`.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+        extension: The extension of the file to be saved. Default: ``'.png'``.
+        verbose: Verbosity. Default: ``False``.
     """
     
     def __init__(
@@ -1080,7 +1099,7 @@ class ImageWriter(Writer):
     
     def __len__(self) -> int:
         """Return the number frames of already written frames (in other words,
-        the index of the last item in the list).
+        the index of the last item in the :class:`list`).
         """
         return self.index
     
@@ -1102,8 +1121,9 @@ class ImageWriter(Writer):
 
         Args:
             image: An image.
-            path: An image filepath with an extension. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            path: An image file path with an extension. Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         if isinstance(path, pathlib.Path):
             path = self.dst / f"{path.stem}{self.extension}"
@@ -1114,7 +1134,7 @@ class ImageWriter(Writer):
         path = pathlib.Path(path)
         write_image_cv(
             image       = image,
-            dirpath= path.parent,
+            dir_path= path.parent,
             name        = path.name,
             extension   = self.extension,
             denormalize = denormalize or self.denormalize
@@ -1130,9 +1150,11 @@ class ImageWriter(Writer):
         """Write a batch of images to :attr:`dst`.
 
         Args:
-            images: A list of 3-D images.
-            paths: A list of image filepaths with extensions. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            images: A :class:`list` of 3-D images.
+            paths: A :class:`list` of image file paths with extensions.
+                Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         if paths is None:
             paths = [None for _ in range(len(images))]
@@ -1149,13 +1171,13 @@ class VideoWriter(Writer, ABC):
 
     Args:
         destination: A directory to save images.
-        image_size: A desired output size of shape HW. This is used to
-        reshape the
-            input. Default: [480, 640].
-        frame_rate: A frame rate of the output video. Default: 10.
-        save_image: If True save each image separately. Default: False.
-        denormalize: If True, convert image to [0, 255]. Default: False.
-        verbose: Verbosity. Default: False.
+        image_size: A desired output size of shape :math:`[H, W]`. This is used
+            to reshape the input. Default: :math:`[480, 640]`.
+        frame_rate: A frame rate of the output video. Default: ``10``.
+        save_image: If ``True`` save each image separately. Default: ``False``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+        verbose: Verbosity. Default: ``False``.
     """
     
     def __init__(
@@ -1184,14 +1206,15 @@ class VideoWriterCV(VideoWriter):
 
     Args:
         destination: A destination directory to save images.
-        image_size: A desired output size of shape HW. This is used to reshape
-            the input. Default: [480, 640].
-        frame_rate: A frame rate of the output video. Default: 10.
-        fourcc: Video codec. One of: ['mp4v', 'xvid', 'mjpg', 'wmv']. Defaults
-            to ".mp4v".
-        save_image: If True, save each image separately. Default: False.
-        denormalize: If True, convert image to [0, 255]. Default: False.
-        verbose: Verbosity. Default: False.
+        image_size: A desired output size of shape :math:`[H, W]`. This is used
+            to reshape the input. Default: :math:`[480, 640]`.
+        frame_rate: A frame rate of the output video. Default: ``10``.
+        fourcc: Video codec. One of ``'mp4v'``, ``'xvid'``, ``'mjpg'``, or
+        ``'wmv'``. Default: ``'.mp4v'``.
+        save_image: If ``True``, save each image separately. Default: ``False``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+        verbose: Verbosity. Default: ``False``.
     """
     
     def __init__(
@@ -1254,13 +1277,14 @@ class VideoWriterCV(VideoWriter):
 
         Args:
             image: An image.
-            path: An image filepath with an extension. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            path: An image file path with an extension. Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         if self.save_image:
             write_image_cv(
                 image       = image,
-                dirpath     = self.dst,
+                dir_path= self.dst,
                 name        = f"{pathlib.Path(path).stem}.png",
                 prefix      = "",
                 extension   =".png",
@@ -1287,9 +1311,11 @@ class VideoWriterCV(VideoWriter):
         """Write a batch of images to :attr:`dst`.
 
         Args:
-            images: A list of images.
-            paths: A list of image filepaths with extensions. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            images: A :class:`list` of images.
+            paths: A :class:`list` of image file paths with extensions.
+                Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         if paths is None:
             paths = [None for _ in range(len(images))]
@@ -1302,13 +1328,14 @@ class VideoWriterFFmpeg(VideoWriter):
 
     Args:
         destination: A destination directory to save images.
-        image_size: A desired output size of shape HW. This is used to reshape
-            the input. Default: [480, 640].
-        frame_rate: A frame rate of the output video. Default: 10.
-        pix_fmt: A video codec. Default: 'yuv420p'.
-        save_image: If True save each image separately. Default: False.
-        denormalize: If True, convert image to [0, 255]. Default: False.
-        verbose: Verbosity. Default: False.
+        image_size: A desired output size of shape :math:`[H, W]`. This is used
+            to reshape the input. Default: :math:`[480, 640]`.
+        frame_rate: A frame rate of the output video. Default: ``10``.
+        pix_fmt: A video codec. Default: ``'yuv420p'``.
+        save_image: If ``True`` save each image separately. Default: ``False``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``False``.
+        verbose: Verbosity. Default: ``False``.
         kwargs: Any supplied kwargs are passed to :mod:`ffmpeg` verbatim.
     """
     
@@ -1398,14 +1425,15 @@ class VideoWriterFFmpeg(VideoWriter):
 
         Args:
             image: An image.
-            path: An image filepath with an extension. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            path: An image file path with an extension. Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         if self.save_image:
             assert isinstance(path, pathlib.Path)
             write_image_cv(
                 image       = image,
-                dirpath= self.dst,
+                dir_path= self.dst,
                 name        = f"{pathlib.Path(path).stem}.png",
                 prefix      = "",
                 extension   =".png",
@@ -1428,9 +1456,11 @@ class VideoWriterFFmpeg(VideoWriter):
         """Write a batch of images to :attr:`dst`.
 
         Args:
-            images: A list of images.
-            paths: A list of image filepaths with extensions. Default: None.
-            denormalize: If True, convert image to [0, 255]. Default: False.
+            images: A :class:`list` of images.
+            paths: A :class:`list` of image file paths with extensions.
+                Default: ``None``.
+            denormalize: If ``True``, convert image to :math:`[0, 255]`.
+                Default: ``False``.
         """
         if paths is None:
             paths = [None for _ in range(len(images))]

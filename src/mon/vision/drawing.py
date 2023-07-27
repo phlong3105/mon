@@ -31,26 +31,26 @@ def draw_bbox(
     
     Args:
         image: An image.
-        bbox: A bounding box in XYXY format.
+        bbox: A bounding box in :math:`[X, Y, X, Y]` format.
         label: A label or ID of the object inside the bounding box.
         color: A color of the bounding box.
         thickness: The thickness of the rectangle border line in px. Thickness
-            of -1 px will fill the rectangle shape by the specified color.
-            Default: 1.
+            of ``-1 px`` will fill the rectangle shape by the specified color.
+            Default: ``1``.
         line_type: The type of the line. One of:
-            - cv2.LINE_4 - 4-connected line.
-            - cv2.LINE_8 - 8-connected line (default).
-            - cv2.LINE_AA - antialiased line.
-            Default: cv2.LINE_8.
+            - ``'cv2.LINE_4'``  - 4-connected line.
+            - ``'cv2.LINE_8'``  - 8-connected line (default).
+            - ``'cv2.LINE_AA'`` - antialiased line.
+            Default: ``'cv2.LINE_8'``.
         font_face: The font of the label's text. Default:
-            cv2.FONT_HERSHEY_DUPLEX.
-        font_scale: The scale of the label's text. Default: 0.8.
-        shift: The number of fractional bits in the point coordinates. Defaults
-            to 0.
+            ``'cv2.FONT_HERSHEY_DUPLEX'``.
+        font_scale: The scale of the label's text. Default: ``0.8``.
+        shift: The number of fractional bits in the point coordinates.
+            Default: ``0``.
         fill: Fill the region inside the bounding box with transparent color. A
-            float value [0.0-1.0] indicates the transparency ratio. A True value
-            means 0.5. A value of 1.0 equals to :param:`thickness` = -1.
-            Default: False.
+            float value :math:``[0.0-1.0]`` indicates the transparency ratio. A
+            True value means ``0.5``. A value of ``1.0`` equals to
+            :param:`thickness` = -1. Default: ``False``.
     """
     drawing = image.copy()
     color   = color or [255, 255, 255]
@@ -131,30 +131,31 @@ def draw_segment(
     
     Args:
         image: An image.
-        segment: A segmentation mask in [(x1, y1), ...] format.
-        bbox: A bounding box of the segmentation. If True, generate the bounding
-            box using :meth:`cv2.boundingRect()`. If False or None, then skip.
+        segment: A segmentation mask in :math:`[(x1, y1), ...]` format.
+        bbox: A bounding box of the segmentation. If ``True``, generate the
+            bounding box using :meth:`cv2.boundingRect()`. If ``False`` or
+            ``None``, then skip.
         label: A label or ID of the object.
         color: A color of the bounding box.
         thickness: The thickness of the segmentation mask border line in px.
-            Thickness of -1 px will fill the rectangle shape by the specified
-            color. Default: 1.
+            Thickness of ``-1 px`` will fill the rectangle shape by the
+            specified color. Default: ``1``.
         line_type: The type of the line. One of:
-            - cv2.LINE_4 - 4-connected line.
-            - cv2.LINE_8 - 8-connected line (default).
-            - cv2.LINE_AA - antialiased line.
-            Default: cv2.LINE_8.
+            - ``'cv2.LINE_4'``  - 4-connected line.
+            - ``'cv2.LINE_8'``  - 8-connected line (default).
+            - ``'cv2.LINE_AA'`` - antialiased line.
+            Default: ``'cv2.LINE_8'``.
         font_face: The font of the label's text. Default:
-            cv2.FONT_HERSHEY_DUPLEX.
-        font_scale: The scale of the label's text. Default: 0.8.
-        shift: The number of fractional bits in the point coordinates. Defaults
-            to 0.
+            ``'cv2.FONT_HERSHEY_DUPLEX'``.
+        font_scale: The scale of the label's text. Default: ``0.8``.
+        shift: The number of fractional bits in the point coordinates.
+            Default: ``0``.
         fill: Fill the region inside the segment with transparent color. A float
-            value [0.0-1.0] indicates the transparency ratio. A True value means
-            0.5. Default: False.
-        point: If True, draw each point along the segment contour. Default:
-            False.
-        radius: The radius value of the point. Default: 3.
+            value :math:`[0.0-1.0]` indicates the transparency ratio. A ``True``
+            value means ``0.5``. Default: ``False``.
+        point: If ``True``, draw each point along the segment contour.
+            Default: ``False``.
+        radius: The radius value of the point. Default: ``3``.
     """
     drawing = image.copy()
     
@@ -274,17 +275,18 @@ def draw_trajectory(
     
     Args:
         image: An image.
-        trajectory: A 2-D array or list of points in [(x1, y1), ...] format.
+        trajectory: A 2-D array or list of points in :math:`[(x1, y1), ...]`
+            format.
         color: A color of the bounding box.
         thickness: The thickness of the path in px. Default: 1.
         line_type: The type of the line. One of:
-            - cv2.LINE_4 - 4-connected line.
-            - cv2.LINE_8 - 8-connected line (default).
-            - cv2.LINE_AA - antialiased line.
-            Default: cv2.LINE_8.
-        point: If True, draw each point along the trajectory path. Default:
-            False.
-        radius: The radius value of the point. Default: 3.
+            - ``'cv2.LINE_4'``  - 4-connected line.
+            - ``'cv2.LINE_8'``  - 8-connected line (default).
+            - ``'cv2.LINE_AA'`` - antialiased line.
+            Default:``' cv2.LINE_8'``.
+        point: If ``True``, draw each point along the trajectory path.
+            Default: ``False``.
+        radius: The radius value of the point. Default: ``3``.
     """
     drawing = image.copy()
     

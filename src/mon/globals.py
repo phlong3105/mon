@@ -290,7 +290,7 @@ class ModelPhase(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, ModelPhase]:
-        """Return a dictionary mapping strings to enum."""
+        """Return a :class:`dict` mapping :class:`str` to enum."""
         return {
             "training" : cls.TRAINING,
             "testing"  : cls.TESTING,
@@ -299,7 +299,7 @@ class ModelPhase(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, ModelPhase]:
-        """Return a dictionary mapping integers to enum."""
+        """Return a :class:`dict` mapping :class:`int` to enum."""
         return {
             0: cls.TRAINING,
             1: cls.TESTING,
@@ -308,7 +308,7 @@ class ModelPhase(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> ModelPhase:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -317,7 +317,7 @@ class ModelPhase(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> ModelPhase:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -346,7 +346,7 @@ class Reduction(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, Reduction]:
-        """Return a dictionary mapping strings to enum."""
+        """Return a :class:`dict` mapping :class:`str` to enum."""
         return {
             "none"        : cls.NONE,
             "mean"        : cls.MEAN,
@@ -356,7 +356,7 @@ class Reduction(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, Reduction]:
-        """Return a dictionary mapping integers to enum."""
+        """Return a :class:`dict` mapping :class:`int` to enum."""
         return {
             0: cls.NONE,
             1: cls.MEAN,
@@ -366,7 +366,7 @@ class Reduction(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> Reduction:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -375,7 +375,7 @@ class Reduction(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> Reduction:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -400,8 +400,8 @@ class BBoxFormat(enum.Enum):
     """Bounding box formats.
     
     CX, CY: refers to a center of bounding box.
-    W, H: refers to width and height of bounding box.
-    N: refers to the normalized value in the range [0.0, 1.0]:
+    W, H: refers to the width and height of bounding box.
+    N: refers to the normalized value in the range :math:`[0.0, 1.0]`:
         x_norm = absolute_x / image_width
         height_norm = absolute_height / image_height
     """
@@ -416,7 +416,7 @@ class BBoxFormat(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, BBoxFormat]:
-        """Returns a dictionary mapping strings to enum."""
+        """Returns a :class:`dict` mapping :class:`str` to enum."""
         return {
             "xyxy"          : cls.XYXY,
             "xywh"          : cls.XYWH,
@@ -429,7 +429,7 @@ class BBoxFormat(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, BBoxFormat]:
-        """Returns a dictionary mapping integers to enum."""
+        """Returns a :class:`dict` mapping :class:`int` to enum."""
         return {
             0: cls.XYXY,
             1: cls.XYWH,
@@ -442,7 +442,7 @@ class BBoxFormat(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> BBoxFormat:
-        """Converts a string to an enum."""
+        """Converts a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -451,7 +451,7 @@ class BBoxFormat(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> BBoxFormat:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -490,7 +490,7 @@ class ShapeCode(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, ShapeCode]:
-        """Returns a dictionary mapping strings to enum."""
+        """Returns a :class:`dict` mapping :class:`str` to enum."""
         return {
             "same"         : cls.SAME,
             "xyxy_to_xywh" : cls.XYXY2XYWH,
@@ -509,7 +509,7 @@ class ShapeCode(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, ShapeCode]:
-        """Returns a dictionary mapping integers to enum."""
+        """Returns a :class:`dict` mapping :class:`int` to enum."""
         return {
             0 : cls.SAME,
             1 : cls.XYXY2XYWH,
@@ -528,7 +528,7 @@ class ShapeCode(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> ShapeCode:
-        """Converts a string to an enum."""
+        """Converts a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             parts = value.split("_to_")
             if parts[0] == parts[1]:
@@ -541,7 +541,7 @@ class ShapeCode(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> ShapeCode:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -571,7 +571,7 @@ class BorderType(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, BorderType]:
-        """Return a dictionary mapping strings to enum."""
+        """Return a :class:`dict` mapping :class:`str` to enum."""
         return {
             "constant" : cls.CONSTANT,
             "circular" : cls.CIRCULAR,
@@ -581,7 +581,7 @@ class BorderType(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, BorderType]:
-        """Return a dictionary mapping integers to enum."""
+        """Return a :class:`dict` mapping :class:`int` to enum."""
         return {
             0: cls.CONSTANT,
             1: cls.CIRCULAR,
@@ -591,7 +591,7 @@ class BorderType(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> BorderType:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -600,7 +600,7 @@ class BorderType(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> BorderType:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -634,7 +634,7 @@ class InterpolationMode(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, InterpolationMode]:
-        """Return a dictionary mapping strings to enum."""
+        """Return a :class:`dict` mapping :class:`str` to enum."""
         return {
             "area"         : cls.AREA,
             "bicubic"      : cls.BICUBIC,
@@ -650,7 +650,7 @@ class InterpolationMode(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, InterpolationMode]:
-        """Return a dictionary mapping integers to enum."""
+        """Return a :class:`dict` mapping :class:`int` to enum."""
         return {
             0 : cls.AREA,
             1 : cls.BICUBIC,
@@ -666,7 +666,7 @@ class InterpolationMode(enum.Enum):
     
     @classmethod
     def cv_modes_mapping(cls) -> dict[InterpolationMode, int]:
-        """Returns a dictionary mapping cv2 interpolation mode to enum."""
+        """Returns a :class:`dict` mapping cv2 interpolation mode to enum."""
         return {
             cls.AREA         : cv2.INTER_AREA,
             cls.BICUBIC      : cv2.INTER_AREA,
@@ -682,7 +682,7 @@ class InterpolationMode(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> InterpolationMode:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -691,7 +691,7 @@ class InterpolationMode(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> InterpolationMode:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -730,7 +730,7 @@ class PaddingMode(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, PaddingMode]:
-        """Return a dictionary mapping strings to enum."""
+        """Return a :class:`dict` mapping :class:`str` to enum."""
         return {
             "constant"   : cls.CONSTANT,
             "circular"   : cls.CIRCULAR,
@@ -749,7 +749,7 @@ class PaddingMode(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, PaddingMode]:
-        """Return a dictionary mapping integers to enum."""
+        """Return a :class:`dict` mapping :class:`int` to enum."""
         return {
             0 : cls.CONSTANT,
             1 : cls.CIRCULAR,
@@ -768,7 +768,7 @@ class PaddingMode(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> PaddingMode:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -777,7 +777,7 @@ class PaddingMode(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> PaddingMode:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -812,7 +812,7 @@ class ImageFormat(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, ImageFormat]:
-        """Return a dictionary mapping strings to enums."""
+        """Return a :class:`dict` mapping :class:`str` to enums."""
         return {
             "arw" : cls.ARW,
             "bmp" : cls.BMP,
@@ -828,7 +828,7 @@ class ImageFormat(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, ImageFormat]:
-        """Return a dictionary mapping integers to enums."""
+        """Return a :class:`dict` mapping :class:`int` to enums."""
         return {
             0: cls.ARW,
             1: cls.BMP,
@@ -844,7 +844,7 @@ class ImageFormat(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> ImageFormat:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -853,7 +853,7 @@ class ImageFormat(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> ImageFormat:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -886,7 +886,7 @@ class VideoFormat(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, VideoFormat]:
-        """Return a dictionary mapping strings to enum."""
+        """Return a :class:`dict` mapping :class:`str` to enum."""
         return {
             ".avi" : cls.AVI,
             ".m4v" : cls.M4V,
@@ -914,7 +914,7 @@ class VideoFormat(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> VideoFormat:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -923,7 +923,7 @@ class VideoFormat(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> VideoFormat:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -956,7 +956,7 @@ class MemoryUnit(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict[str, MemoryUnit]:
-        """Return a dictionary mapping strings to enums."""
+        """Return a :class:`dict` mapping :class:`str` to enums."""
         return {
             "b" : cls.B,
             "kb": cls.KB,
@@ -968,7 +968,7 @@ class MemoryUnit(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict[int, MemoryUnit]:
-        """Return a dictionary mapping integers to enums."""
+        """Return a :class:`dict` mapping :class:`int` to enums."""
         return {
             0: cls.B,
             1: cls.KB,
@@ -980,7 +980,7 @@ class MemoryUnit(enum.Enum):
     
     @classmethod
     def byte_conversion_mapping(cls) -> dict[MemoryUnit, int]:
-        """Return a dictionary mapping number of bytes to enums."""
+        """Return a :class:`dict` mapping number of bytes to enums."""
         return {
             cls.B : 1024 ** 0,
             cls.KB: 1024 ** 1,
@@ -992,7 +992,7 @@ class MemoryUnit(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> MemoryUnit:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -1001,7 +1001,7 @@ class MemoryUnit(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> MemoryUnit:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."
@@ -1034,7 +1034,7 @@ class MovingState(enum.Enum):
     
     @classmethod
     def str_mapping(cls) -> dict:
-        """Return a dictionary mapping strings to enums."""
+        """Return a :class:`dict` mapping :class:`str` to enums."""
         return {
             "candidate"    : cls.CANDIDATE,
             "confirmed"    : cls.CONFIRMED,
@@ -1046,7 +1046,7 @@ class MovingState(enum.Enum):
     
     @classmethod
     def int_mapping(cls) -> dict:
-        """Return a dictionary mapping integers to enums."""
+        """Return a :class:`dict` mapping :class:`int` to enums."""
         return {
             0: cls.CANDIDATE,
             1: cls.CONFIRMED,
@@ -1058,7 +1058,7 @@ class MovingState(enum.Enum):
     
     @classmethod
     def from_str(cls, value: str) -> MovingState:
-        """Convert a string to an enum."""
+        """Convert a :class:`str` to an enum."""
         if value.lower() not in cls.str_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value.lower()}."
@@ -1067,7 +1067,7 @@ class MovingState(enum.Enum):
     
     @classmethod
     def from_int(cls, value: int) -> MovingState:
-        """Convert an integer to an enum."""
+        """Convert an :class:`int` to an enum."""
         if value not in cls.int_mapping():
             raise ValueError(
                 f"value must be a valid enum key, but got {value}."

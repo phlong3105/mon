@@ -40,12 +40,12 @@ class Motion(ABC):
     position of the tracking object.
 
     Args:
-        hits: A number of frames having that track appear. Default: 0.
+        hits: A number of frames having that track appear. Default: ``0``.
         hit_streak: A number of consecutive frames having that track appear.
-            Default: 0.
-        age: A number of frames while the track is alive. Default: 0.
+            Default: ``0``.
+        age: A number of frames while the track is alive. Default: ``0``.
         time_since_update: A number of consecutive frames having that track
-            disappear. Default: 0.
+            disappear. Default: ``0``.
     """
     
     def __init__(

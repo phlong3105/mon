@@ -29,16 +29,18 @@ class Detector(ABC):
     Args:
         config: A detector model's config.
         weights: A path to a pretrained weights file.
-        classlabels: A list of all the class-labels defined in a dataset.
-        image_size: The desired model's input size in HW format. Default:
-            640.
-        conf_threshold: An object confidence threshold. Default: 0.5.
-        iou_threshold: An IOU threshold for NMS. Default: 0.4.
-        max_detections: Maximum number of detections/image. Default: 300.
-        device: Cuda device, i.e. 0 or 0,1,2,3 or cpu. Default: 'cpu'.
-        to_instance: If True, wrap the predictions to a list of
+        classlabels: A :class:`list` of all the class-labels defined in a
+            dataset.
+        image_size: The desired model's input size in :math:`[H, W]` format.
+            Default: ``640``.
+        conf_threshold: An object confidence threshold. Default: ``0.5``.
+        iou_threshold: An IOU threshold for NMS. Default: ``0.4``.
+        max_detections: Maximum number of detections/image. Default: ``300``.
+        device: Cuda device, i.e. ``'0'`` or ``'0,1,2,3'`` or ``'cpu'``.
+            Default: ``'cpu'``.
+        to_instance: If ``True``, wrap the predictions to a :class:`list` of
             :class:`supr.data.instance.Instance` object. Else, return raw
-            predictions. Default: True.
+            predictions. Default: ``True``.
     """
     
     def __init__(
@@ -103,12 +105,12 @@ class Detector(ABC):
         """Detect objects in the images.
 
         Args:
-            indexes: A list of image indexes.
-            images: Images of shape NHWC.
+            indexes: A :class:`list` of image indexes.
+            images: Images of shape :math:`[B, H, W, C]`.
 
         Returns:
-            A 2-D list of :class:`supr.data.Instance` objects. The outer list
-            has N items.
+            A 2-D :class:`list` of :class:`supr.data.Instance` objects. The
+            outer :class:`list` has ``B`` items.
         """
         if self.model is None:
             raise ValueError(f"Model has not been defined yet!")
@@ -127,10 +129,10 @@ class Detector(ABC):
         """Preprocessing step.
 
         Args:
-            images: Images of shape NHWC.
+            images: Images of shape :math:`[B, H, W, C]`.
 
         Returns:
-            Input tensor of shape NCHW.
+            Input tensor of shape :math:`[B, C, H, W]`.
         """
         pass
     
@@ -139,7 +141,7 @@ class Detector(ABC):
         """Forward pass.
 
         Args:
-            input: Input tensor of shape NCHW.
+            input: Input tensor of shape :math:`[B, C, H, W]`.
 
         Returns:
             Predictions.
@@ -158,14 +160,14 @@ class Detector(ABC):
         """Postprocessing step.
 
         Args:
-            indexes: A list of image indexes.
-            images: Images of shape NHWC.
-            input: Input tensor of shape NCHW.
-            pred: Prediction tensor of shape NCHW.
+            indexes: A :class:`list` of image indexes.
+            images: Images of shape :math:`[B, H, W, C]`.
+            input: Input tensor of shape :math:`[B, H, W, C]`.
+            pred: Prediction tensor of shape :math:`[B, H, W, C]`.
 
         Returns:
-            A 2-D list of :class:`data.Instance` objects. The outer list has N
-            items.
+            A 2-D :class:`list` of :class:`data.Instance` objects. The outer
+            :class:`list` has ``B`` items.
         """
         pass
     

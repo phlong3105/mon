@@ -47,7 +47,7 @@ class ORBEmbedder(base.Embedder):
         patch_size: The size of the patch used by the oriented BRIEF descriptor.
             Of course, on smaller pyramid layers, the perceived image area
             covered by a feature will be larger.
-        fast_threshold: The fast threshold
+        fast_threshold: The fast threshold.
     
     See Also:
         - :class:`mon.vision.model.embedding.base.Embedder`.
@@ -84,11 +84,11 @@ class ORBEmbedder(base.Embedder):
         """Extract features in the images.
 
         Args:
-            indexes: A list of image indexes.
-            images: Images of shape NHWC.
+            indexes: A :class:`list` of image indexes.
+            images: Images of shape :math:`[N, H, W, C]`.
 
         Returns:
-           A 2-D list of feature vectors.
+           A 2-D :class:`list` of feature vectors.
         """
         features = []
         for image in images:

@@ -39,12 +39,12 @@ def get_grid_size(n: int, nrow: int | None = 4) -> list[int]:
     Args:
         n: The number of items.
         nrow: The number of items in a row. The final grid size is
-            (:param:`n` / :param:`nrow`, :param:`nrow`). If None, put all items
-            in a single row. Default: 4.
+            :math:`(n / nrow, nrow)`. If ``None``, put all items in a single
+            row. Default: ``4``.
     
     Returns:
-        A tuple (nrows, ncols), where nrows is the number of rows and ncols is
-        the number of columns.
+        A :class:`tuple` of :math:`(nrows, ncols)`, where nrows is the number of
+        rows and ncols is the number of columns.
     """
     if isinstance(nrow, int) and nrow > 0:
         ncols = nrow
@@ -56,7 +56,7 @@ def get_grid_size(n: int, nrow: int | None = 4) -> list[int]:
 
 def move_figure(x: int, y: int):
     """Move the matplotlib figure around the window. The upper-left corner to
-    the location specified by :param:`(x,  y)`.
+    the location specified by :math:`(x, y)`.
     """
     mngr = plt.get_current_fig_manager()
     fig  = plt.gcf()
@@ -89,19 +89,22 @@ def imshow(
     
     Args:
         winname: The name of the window to display the image in.
-        image: The images to be displayed. Can be a 3-D or 4-D image, or a list
-            of 3-D images.
-        label: Sequence of images' labels string. Default: None.
-        denormalize: If True, convert image to [0, 255]. Default: True.
-        scale: Scale the size of matplotlib figure. Default: 1 mean size x 1.
-        save_config: Save figure config. Default: None.
+        image: The images to be displayed. Can be a 3-D or 4-D image, or a
+            :class:`list` of 3-D images.
+        label: Sequence of images' labels string. Default: ``None``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``True``.
+        scale: Scale the size of matplotlib figure. Default: ``1`` means
+            :math:`size x 1`.
+        save_config: Save figure config. Default: ``None``.
         max_n: Show max n images if :param:`image` has a batch size of more than
-            :param:`max_n` images. Default: None mean show all.
+            :param:`max_n` images. Default: ``None`` means show all.
         nrow: The maximum number of items to display in a row. The final grid
-            size is (n / nrow, nrow). If None, then the number of items in a row
-            will be the same as the number of items in the list. Default: 8.
+            size is :math:`(n / nrow, nrow)`. If ``None``, then the number of
+            items in a row will be the same as the number of items in the
+            :class:`list`. Default: ``8``.
         wait_time: Wait for some time (in seconds) to display the figure then
-            reset. Default: 0.01.
+            reset. Default: ``0.01``.
     """
     # Prepare image and label
     image = core.to_list_of_3d_image(image)
@@ -170,27 +173,30 @@ def imshow_classification(
     
     Args:
         winname: The name of the window to display the image in.
-        image: The images to be displayed. Can be a 3-D or 4-D image, or a list
-            of 3-D images.
-        pred: Predicted classes probabilities. Can be a tensor of shape [B, N]
-            where N is the total number of all classes in the dataset. Defaults
-            to None.
-        target: A sequence of ground-truths ID. Default: None.
-        label: A sequence of images' labels strings. Default: None.
-        classlabels: ClassLabels objects that contain all class labels in the
-            datasets. Default: None.
-        top_k: Show only the top k classes' probabilities. If None then shows
-            all. Default: 5.
-        denormalize: If True, denormalize the image [0, 255]. Default: True.
-        scale: Scale the size of matplotlib figure. Default: 1 mean size x 1.
-        save_config: Save figure config. Default: None.
+        image: The images to be displayed. Can be a 3-D or 4-D image, or a
+            :class:`list` of 3-D images.
+        pred: Predicted classes probabilities. Can be a tensor of shape
+            :math:`[B, N]` where ``N`` is the total number of all classes in the
+            dataset. Defaults to ``None``.
+        target: A sequence of ground-truths ID. Default: ``None``.
+        label: A sequence of images' labels strings. Default: ``None``.
+        classlabels: :class:`mon.nn.ClassLabels` objects that contain all class
+            labels in the datasets. Default: ``None``.
+        top_k: Show only the top k classes' probabilities. If ``None`` then
+            shows all. Default: ``5``.
+        denormalize: If ``True``, denormalize the image :math:`[0, 255]`.
+            Default: ``True``.
+        scale: Scale the size of matplotlib figure. Default: ``1`` means
+            :math:`size x 1`.
+        save_config: Save figure config. Default: ``None``.
         max_n: Show max n images if :param:`image` has a batch size of more than
-            :param:`max_n` images. Default: None mean show all.
+            :param:`max_n` images. Default: ``None`` means show all.
         nrow: The maximum number of items to display in a row. The final grid
-            size is (n / nrow, nrow). If None, then the number of items in a row
-            will be the same as the number of items in the list. Default: 8.
+            size is :math:`(n / nrow, nrow)`. If ``None``, then the number of
+            items in a row will be the same as the number of items in the
+            :class:`list`. Default: ``8``.
         wait_time: Wait for some time (in seconds) to display the figure then
-            reset. Default: 0.
+            reset. Default: ``0``.
     """
     # Prepare image and label
     image = core.to_list_of_3d_image(image)
@@ -311,20 +317,23 @@ def imshow_enhancement(
     Args:
         winname: The name of the window to display the image in.
         image: A collection of images to be displayed. Each item is a 4D tensor
-            of shape [B, C, H, W] represented an image type (i.e, input, pred,
-            target, enhanced image, ...). If given a dictionary, the key will be
-            used as the column label.
-        label: A sequence of images' labels string. Default: None.
-        denormalize: If True, convert image to [0, 255]. Default: True.
-        scale: Scale the size of matplotlib figure. Default: 1 mean size x 1.
-        save_config: Save figure config. Default: None.
+            of shape :math:`[B, C, H, W]` represented an image type (i.e.,
+            input, pred, target, enhanced image, ...). If given a dictionary,
+            the key will be used as the column label.
+        label: A sequence of images' labels :class:`str`. Default: ``None``.
+        denormalize: If ``True``, convert image to :math:`[0, 255]`.
+            Default: ``True``.
+        scale: Scale the size of matplotlib figure. Default: ``1`` means
+            :math:`size x 1`.
+        save_config: Save figure config. Default: ``None``.
         max_n: Show max n images if :param:`image` has a batch size of more than
-            :param:`max_n` images. Default: None mean show all.
+            :param:`max_n` images. Default: ``None`` means show all.
         nrow: The maximum number of items to display in a row. The final grid
-            size is (n / nrow, nrow). If None, then the number of items in a row
-            will be the same as the number of items in the list. Default: 8.
+            size is :math:`(n / nrow, nrow)`. If ``None``, then the number of
+            items in a row will be the same as the number of items in the
+            :class:`list`. Default: ``8``.
         wait_time: Wait for some time (in seconds) to display the figure then
-            reset. Default: 0.
+            reset. Default: ``0``.
     """
     # Prepare image and label
     header = list(image.keys())

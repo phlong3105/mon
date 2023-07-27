@@ -55,7 +55,6 @@ class Label(ABC):
             data = torch.Tensor([i for i in data if isinstance(i, int | float)])
         return data
 
-
 # endregion
 
 
