@@ -30,9 +30,9 @@ class RegionOfInterest:
     """The Region of Interest.
     
     Args:
-        id_: An unique ID. Defaults to None.
-        points: A list of points defining the ROI. Defaults to None.
-        shape_type: The ROI type. Defaults to None.
+        id_: An unique ID. Default: None.
+        points: A list of points defining the ROI. Default: None.
+        shape_type: The ROI type. Default: None.
     """
     
     def __init__(self, id_: int | str, points: np.ndarray, shape_type: str):
@@ -143,7 +143,7 @@ class RegionOfInterest:
         Args:
             bbox: Bounding boxes in XYXY format.
             compute_distance: If True, calculate the distance from bbox
-                coordinates to the ROI? Defaults to False.
+                coordinates to the ROI? Default: False.
         
         Returns:
             Positive (inside), negative (outside), or zero (on an edge).
@@ -165,7 +165,7 @@ class RegionOfInterest:
         Args:
             bbox: Bounding boxes in XYXY format.
             compute_distance: If True, calculate the distance from bbox
-                coordinates to the ROI? Defaults to False.
+                coordinates to the ROI? Default: False.
         
         Returns:
             Positive (inside), negative (outside), or zero (on an edge).
@@ -210,7 +210,7 @@ def get_roi_for_box(
         bbox: Bounding boxes in XYXY format.
         rois: A list of :class:`ROI` objects.
         threshold: A threshold value determining whether if the bbox is in a
-            ROI. Defaults to -50.
+            ROI. Default: -50.
         
     Returns:
         The matching ROI's id.
@@ -242,16 +242,16 @@ class MovementOfInterest:
     """The Movement of Interest
     
     Args:
-        id_: An unique ID. Defaults to None.
-        points: A list of points defining the MOI. Defaults to None.
-        shape_type: The MOI type. Defaults to None.
-        offset: Defaults to None.
-        distance_function: A distance function. Defaults to 'hausdorff'.
+        id_: An unique ID. Default: None.
+        points: A list of points defining the MOI. Default: None.
+        shape_type: The MOI type. Default: None.
+        offset: Default: None.
+        distance_function: A distance function. Default: 'hausdorff'.
         distance_threshold: The maximum distance for counting a track. Defaults
             to 300.0.
-        angle_threshold: The maximum angle for counting a track. Defaults to
+        angle_threshold: The maximum angle for counting a track. Default:
             45.0.
-        color: The color of the MOI. Defaults to [255, 255, 255].
+        color: The color of the MOI. Default: [255, 255, 255].
     """
     
     def __init__(
@@ -379,7 +379,7 @@ class MovementOfInterest:
         Args:
             bbox: Bounding boxes in XYXY format.
             compute_distance: If True, calculate the distance from bbox
-                coordinates to the ROI? Defaults to False.
+                coordinates to the ROI? Default: False.
         
         Returns:
             Positive (inside), negative (outside), or zero (on an edge).
@@ -459,7 +459,7 @@ def get_moi_for_box(
         bbox: Bounding boxes in XYXY format.
         mois: A list of :class:`MOI` objects.
         threshold: A threshold value determining whether if the bbox is in a
-            ROI. Defaults to -50.
+            ROI. Default: -50.
             
     Returns:
         The matching MOI's id.
@@ -519,7 +519,7 @@ def assign_moving_objects_to_mois(
         objects: A list of objects.
         mois: A list of :class:`MOI` objects.
         shape_type: The shape of MOI to check. One of: ['polygon', 'line'].
-            Defaults to 'line'.
+            Default: 'line'.
     """
     if len(objects) <= 0:
         return

@@ -9,6 +9,7 @@ import click
 import ffmpeg
 
 import mon
+import mon.vision.core.image
 
 
 # region Function
@@ -39,7 +40,7 @@ def convert_video(
         destination = [s.parent / f"{s.stem}-convert" for s in source]
     
     if size is not None:
-        size = mon.get_hw(size=size)
+        size = mon.vision.core.image.get_hw(size=size)
     
     for src, dst in zip(source, destination):
         dst.mkdir(parents=True, exist_ok=True)

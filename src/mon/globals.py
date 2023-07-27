@@ -28,7 +28,7 @@ from typing import Any
 
 import cv2
 
-from mon.foundation import enum, factory, pathlib
+from mon.core import enum, factory, pathlib
 
 # region Directory
 

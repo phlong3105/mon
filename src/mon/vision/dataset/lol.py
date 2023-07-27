@@ -14,7 +14,7 @@ __all__ = [
 
 from torch.utils.data import random_split
 
-from mon.foundation import console, pathlib, rich
+from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
 
@@ -281,7 +281,7 @@ class VV(base.UnlabeledImageDataset):
 class DCIMDataModule(base.DataModule):
     """DCIM datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -307,7 +307,7 @@ class DCIMDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -338,7 +338,7 @@ class DCIMDataModule(base.DataModule):
 class LIMEDataModule(base.DataModule):
     """LIME datamodule.
      
-     See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
      """
     
     def prepare_data(self, *args, **kwargs):
@@ -364,7 +364,7 @@ class LIMEDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -395,7 +395,7 @@ class LIMEDataModule(base.DataModule):
 class LOLDataModule(base.DataModule):
     """LOL datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -421,7 +421,7 @@ class LOLDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -450,7 +450,7 @@ class LOLDataModule(base.DataModule):
 class LOL226DataModule(base.DataModule):
     """LOL226 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -476,7 +476,7 @@ class LOL226DataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -507,7 +507,7 @@ class LOL226DataModule(base.DataModule):
 class LOL4KDataModule(base.DataModule):
     """LOL4K datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -533,7 +533,7 @@ class LOL4KDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -564,7 +564,7 @@ class LOL4KDataModule(base.DataModule):
 class MEFDataModule(base.DataModule):
     """MEF datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -590,7 +590,7 @@ class MEFDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -621,7 +621,7 @@ class MEFDataModule(base.DataModule):
 class NPEDataModule(base.DataModule):
     """NPE datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -647,7 +647,7 @@ class NPEDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -678,7 +678,7 @@ class NPEDataModule(base.DataModule):
 class VIPDataModule(base.DataModule):
     """VIP datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -704,7 +704,7 @@ class VIPDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -735,7 +735,7 @@ class VIPDataModule(base.DataModule):
 class VVDataModule(base.DataModule):
     """VV datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -761,7 +761,7 @@ class VVDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

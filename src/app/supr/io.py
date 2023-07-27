@@ -31,7 +31,7 @@ class AICAutoCheckoutWriter(ABC):
         camera_name: A camera name.
         start_time: The moment when the TexIO is initialized.
         subset: A subset name. One of: ['testA', 'testB'].
-        exclude: A list of class ID to exclude from writing. Defaults to [116].
+        exclude: A list of class ID to exclude from writing. Default: [116].
     """
     
     video_map = {}
@@ -123,7 +123,7 @@ class AICAutoCheckoutWriter(ABC):
         
         Args:
             output_dir: A directory to store the :attr:`output_name`.
-            output_name: A result file name. Defaults to 'track4.txt'.
+            output_name: A result file name. Default: 'track4.txt'.
             subset: A subset name. One of: ['testA', 'testB'].
         """
         if subset not in cls.video_map:

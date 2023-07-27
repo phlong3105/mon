@@ -17,15 +17,15 @@ The sub-packages abstraction hierarchy is as follows:
 from __future__ import annotations
 
 # Order-specific import. DO NOT CHANGE!!!
-import mon.foundation
-import mon.coreml
+import mon.core
+import mon.nn
 import mon.globals
 import mon.vision
 import mon.createml
-from mon.foundation import *
-from mon.coreml import *
+from mon.core import *
+from mon.nn import *
 from mon.globals import *
 from mon.vision import *
 from mon.createml import *
 
-__version__ = "1.2.5"
+__version__ = "1.2.6"

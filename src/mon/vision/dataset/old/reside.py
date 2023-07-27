@@ -34,7 +34,7 @@ from mon.vision.typing import (
 from torch.utils.data import random_split
 
 from mon import core
-from mon.vision import constant, visualize
+from mon.vision import constant
 from mon.vision.dataset import base
 
 
@@ -58,20 +58,20 @@ class RESIDEHSTS(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -159,20 +159,20 @@ class RESIDEITS(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -260,20 +260,20 @@ class RESIDEITSv2(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -362,20 +362,20 @@ class RESIDEOTS(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -463,20 +463,20 @@ class RESIDESOTS(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -564,20 +564,20 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -665,20 +665,20 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -759,17 +759,17 @@ class RESIDEHSTSDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -823,7 +823,7 @@ class RESIDEHSTSDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -882,17 +882,17 @@ class RESIDEITSDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -946,7 +946,7 @@ class RESIDEITSDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1010,17 +1010,17 @@ class RESIDEITSv2DataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1074,7 +1074,7 @@ class RESIDEITSv2DataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1118,17 +1118,17 @@ class RESIDEOTSDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1182,7 +1182,7 @@ class RESIDEOTSDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1226,17 +1226,17 @@ class RESIDESOTSDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1290,7 +1290,7 @@ class RESIDESOTSDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1349,17 +1349,17 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1413,7 +1413,7 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1472,17 +1472,17 @@ class RESIDESOTSOutdoorDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1536,7 +1536,7 @@ class RESIDESOTSOutdoorDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1601,7 +1601,7 @@ def test_reside_hsts():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1612,21 +1612,21 @@ def test_reside_hsts():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDEHSTSDataModule(**cfg)
     dm.setup()
@@ -1654,7 +1654,7 @@ def test_reside_its():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1665,21 +1665,21 @@ def test_reside_its():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDEITSDataModule(**cfg)
     dm.setup()
@@ -1707,7 +1707,7 @@ def test_reside_its_v2():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1718,21 +1718,21 @@ def test_reside_its_v2():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDEITSv2DataModule(**cfg)
     dm.setup()
@@ -1760,7 +1760,7 @@ def test_reside_ots():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1771,21 +1771,21 @@ def test_reside_ots():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDEOTSDataModule(**cfg)
     dm.setup()
@@ -1813,7 +1813,7 @@ def test_reside_sots():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1824,21 +1824,21 @@ def test_reside_sots():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDESOTSDataModule(**cfg)
     dm.setup()
@@ -1866,7 +1866,7 @@ def test_reside_sots_indoor():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1877,21 +1877,21 @@ def test_reside_sots_indoor():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDESOTSIndoorDataModule(**cfg)
     dm.setup()
@@ -1919,7 +1919,7 @@ def test_reside_sots_outdoor():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1930,21 +1930,21 @@ def test_reside_sots_outdoor():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = RESIDESOTSOutdoorDataModule(**cfg)
     dm.setup()

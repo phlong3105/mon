@@ -13,7 +13,7 @@ __all__ = [
 
 from torch.utils.data import random_split
 
-from mon.foundation import console, pathlib, rich
+from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
 
@@ -386,7 +386,7 @@ class SICEPart2_900_Low(base.ImageEnhancementDataset):
 class SICEDataModule(base.DataModule):
     """SICE datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -412,7 +412,7 @@ class SICEDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -444,7 +444,7 @@ class SICEDataModule(base.DataModule):
 class SICEUDataModule(base.DataModule):
     """SICE-Unsupervised datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -470,7 +470,7 @@ class SICEUDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

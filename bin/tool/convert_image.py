@@ -9,6 +9,7 @@ import click
 import cv2
 
 import mon
+import mon.vision.core.image
 
 
 # region Function
@@ -49,7 +50,7 @@ def visualize_image(
         destination = [d.parent / f"{d.stem}.mp4" for d in destination]
     
     if size is not None:
-        size = mon.get_hw(size=size)
+        size = mon.vision.core.image.get_hw(size=size)
 
     skip = skip or 1
     

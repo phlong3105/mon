@@ -28,7 +28,7 @@ class Hands:
             hand's approximate geometric center.
         multi_handedness: Handedness (left v.s. right hand) of the detected
             hand.
-        frame_index: Index of frame when the Detection is created. Defaults to
+        frame_index: Index of frame when the Detection is created. Default:
             None.
 	"""
 	
@@ -93,23 +93,23 @@ class HandsEstimator:
 		static_image_mode: Whether to treat the input images as a batch of
 			static and possibly unrelated images, or a video stream. See details
 			in https://solutions.mediapipe.dev/hands#static_image_mode.
-			Defaults to False.
+			Default: False.
         max_num_hands: Maximum number of hands to detect. See details in
             https://solutions.mediapipe.dev/hands#max_num_hands.
-            Defaults to 2.
+            Default: 2.
         model_complexity: Complexity of the hand landmark model: 0 or 1.
             Landmark accuracy as well as inference latency generally goes up
             with the model complexity. See details in
             https://solutions.mediapipe.dev/hands#model_complexity.
-	        Defaults to 1.
+	        Default: 1.
         min_detection_confidence: Minimum confidence value ([0.0, 1.0]) for hand
             measurement to be considered successful. See details in
             https://solutions.mediapipe.dev/hands#min_detection_confidence.
-            Defaults to 0.5.
+            Default: 0.5.
         min_tracking_confidence: Minimum confidence value ([0.0, 1.0]) for the
             hand landmarks to be considered tracked successfully. See details in
             https://solutions.mediapipe.dev/hands#min_tracking_confidence.
-            Defaults to 0.5.
+            Default: 0.5.
         hand_tracker: MediaPipe Hand object.
 	"""
 	

@@ -28,11 +28,11 @@ class HOGEmbedder(base.Embedder):
         win_size: The window size should be chosen based on the size of the
             objects being tracked. A smaller window size is suitable for
             tracking small objects, while a larger window size is suitable for
-            larger objects. Defaults to (64, 128).
+            larger objects. Default: (64, 128).
         block_size: The block size should be chosen based on the level of detail
             required for tracking. A larger block size can capture more global
             features, while a smaller block size can capture more local
-            features. Defaults to (16, 16).
+            features. Default: (16, 16).
         block_stride: The block stride should be chosen based on the speed of
             the objects being tracked. A smaller block stride can provide more
             accurate tracking, but may also require more computation. Defaults
@@ -40,12 +40,12 @@ class HOGEmbedder(base.Embedder):
         cell_size: The cell size should be chosen based on the texture and
             structure of the objects being tracked. A smaller cell size can
             capture more detailed features, while a larger cell size can capture
-            more general features. Defaults to (8, 8).
+            more general features. Default: (8, 8).
         nbins: The number of orientation bins should be chosen based on the
             complexity of the gradient orientations in the images. More
             orientation bins can provide more detailed information about the
             orientations, but may also increase the dimensionality of the
-            feature vector and require more computation. Defaults to 9.
+            feature vector and require more computation. Default: 9.
         
     See Also:
         - :class:`mon.vision.model.embedding.base.Embedder`.

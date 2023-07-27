@@ -21,8 +21,9 @@ __all__ = [
 import numpy as np
 import torch
 
+from mon import nn
 from mon.globals import ShapeCode
-from mon.vision import image
+from mon.vision import core
 
 
 # region Property
@@ -127,7 +128,7 @@ def get_bbox_intersection_union(
     area2 = get_bbox_area(bbox=bbox2)
     lt    = np.max(bbox1[:, None, :2], bbox2[:, :2])  # [N, M, 2]
     rb    = np.min(bbox1[:, None, 2:], bbox2[:, 2:])  # [N, M, 2]
-    wh    = image.upcast(rb - lt).clamp(min=0)  # [N, M, 2]
+    wh    = nn.upcast(rb - lt).clamp(min=0)  # [N, M, 2]
     inter = wh[:, :, 0] * wh[:, :, 1]  # [N, M]
     union = area1[:, None] + area2 - inter
     return inter, union
@@ -425,12 +426,12 @@ def clip_bbox(
         drop_ratio: If the fraction of a bounding box left in the image after
             being clipped is less than :param:`drop_ratio` the bounding box is
             dropped. If :param:`drop_ratio` == 0, don't drop any bounding boxes.
-            Defaults to 0.0.
+            Default: 0.0.
         
     Returns:
         Clipped bounding boxes of shape [N, 4].
     """
-    h, w       = image.get_hw(size=image_size)
+    h, w       = core.get_hw(size=image_size)
     area       = get_bbox_area(bbox=bbox)
     bbox[:, 0] = np.clip(0, w)  # x1
     bbox[:, 1] = np.clip(0, h)  # y1

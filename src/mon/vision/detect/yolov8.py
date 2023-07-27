@@ -11,14 +11,13 @@ __all__ = [
 
 import numpy as np
 import torch
+
+from mon.globals import DETECTORS
+from mon.vision import core, tracking
+from mon.vision.detect import base
 from ultralytics.nn import tasks
 from ultralytics.yolo.data import augment
 from ultralytics.yolo.utils import checks, ops
-
-from mon.globals import DETECTORS
-from mon.vision import image as mimage
-from mon.vision.detect import base
-from mon.vision import tracking
 
 
 # region YOLOv8
@@ -52,7 +51,8 @@ class YOLOv8(base.Detector):
             Input tensor of shape NCHW.
         """
         input  = images.copy()
-        ratio  = max(self.image_size) / max(mimage.get_image_size(image=input))
+        ratio  = max(self.image_size) / max(
+            core.get_image_size(image=input))
         stride = self.model.stride
         stride = int(stride.max() if isinstance(stride, torch.Tensor) else stride)
         
@@ -70,7 +70,7 @@ class YOLOv8(base.Detector):
                 raise ValueError
             input = np.ascontiguousarray(input)
 
-        input = mimage.to_tensor(
+        input = core.to_image_tensor(
             image     = input,
             keepdim   = False,
             normalize = True,
@@ -117,8 +117,8 @@ class YOLOv8(base.Detector):
             max_det    = self.max_detections,
             classes    = self.allowed_ids
         )
-        h0, w0 = mimage.get_image_size(image=images)
-        h1, w1 = mimage.get_image_size(image=input)
+        h0, w0 = core.get_image_size(image=images)
+        h1, w1 = core.get_image_size(image=input)
         for i, p in enumerate(pred):
             p[:, :4]  = ops.scale_boxes((h1, w1), p[:, :4], (h0, w0)).round()
             p         = p.detach().cpu().numpy()

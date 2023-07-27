@@ -510,7 +510,7 @@ def directed_hausdorff(
     Args:
         u: An [M, N] array-like input.
         v: An [M, N] array-like input.
-        seed: Defaults to 0, a random shuffling of :param:`u` and :param:`v`
+        seed: Default: 0, a random shuffling of :param:`u` and :param:`v`
             that guarantees reproducibility.
 
     Returns:

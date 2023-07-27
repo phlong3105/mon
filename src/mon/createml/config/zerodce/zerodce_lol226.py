@@ -8,7 +8,7 @@ from __future__ import annotations
 import albumentations as A
 
 from mon.createml.config import default
-from mon.globals import RUN_DIR, DATA_DIR
+from mon.globals import DATA_DIR, RUN_DIR
 
 # region Basic
 
@@ -31,7 +31,7 @@ model = {
 	"hparams"    : None,           # Model's hyperparameters.
 	"channels"   : 3,              # The first layer's input channel.
 	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
-	"classlabels": None,           # A :class:`mon.coreml.data.label.ClassLabels` object that contains all labels in the dataset.
+	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"    : None,           # The model's weights.
 	"name"       : model_name,     # The model's name.
 	"variant"    : None,           # The model's variant.
@@ -76,7 +76,7 @@ datamodule = {
     "cache_data"  : False,        # If True, cache data to disk for faster loading next time.
     "cache_images": False,        # If True, cache images into memory for faster training.
     "batch_size"  : 8,            # The number of samples in one forward pass.
-    "devices"     : 0,            # A list of devices to use. Defaults to 0.
+    "devices"     : 0,            # A list of devices to use. Default: 0.
     "shuffle"     : True,         # If True, reshuffle the datapoints at the beginning of every epoch.
     "verbose"     : True,         # Verbosity.
 }

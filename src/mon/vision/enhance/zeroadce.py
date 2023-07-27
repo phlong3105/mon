@@ -14,10 +14,11 @@ from typing import Any, Callable
 
 import torch
 
-from mon.coreml.layer.typing import _size_2_t
-from mon.foundation import pathlib
+from mon import nn
+from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.vision import nn
+from mon.nn import _size_2_t
+from mon.vision import loss
 from mon.vision.enhance import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
@@ -187,16 +188,16 @@ class CombinedLoss(nn.Loss):
         self.channel_weight = channel_weight
         self.edge_weight    = edge_weight
         
-        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = nn.ExposureControlLoss(
+        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = loss.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
-        self.loss_edge    = nn.EdgeLoss(reduction=reduction)
+        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_edge    = loss.EdgeLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -278,7 +279,7 @@ class ZeroADCE(base.ImageEnhancementModel):
 
         Args:
             input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Defaults to None.
+            target: A ground-truth of shape NCHW. Default: None.
             
         Return:
             Predictions and loss value.
@@ -455,7 +456,7 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
 
         Args:
             input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Defaults to None.
+            target: A ground-truth of shape NCHW. Default: None.
             
         Return:
             Predictions and loss value.

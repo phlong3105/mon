@@ -22,9 +22,9 @@ from torchvision.datasets.utils import (
     download_and_extract_archive,
 )
 
-from mon.coreml import data as md
-from mon.foundation import console, pathlib
+from mon.core import console, pathlib
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
+from mon.nn import data as md
 from mon.vision.dataset import base
 
 # region ClassLabels
@@ -209,7 +209,7 @@ class FashionMNIST(MNIST):
 class MNISTDataModule(base.DataModule):
     """MNIST datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     @property
@@ -242,7 +242,7 @@ class MNISTDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -273,7 +273,7 @@ class MNISTDataModule(base.DataModule):
 class FashionMNISTDataModule(base.DataModule):
     """Fashion-MNIST datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     @property
@@ -306,7 +306,7 @@ class FashionMNISTDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

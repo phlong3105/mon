@@ -13,8 +13,8 @@ from abc import ABC
 
 import torch
 
-from mon.foundation import pathlib
-from mon.vision import nn, visualize
+from mon import nn
+from mon.core import pathlib
 
 
 # region Model
@@ -22,7 +22,7 @@ from mon.vision import nn, visualize
 class ImageEnhancementModel(nn.Model, ABC):
     """The base class for all image enhancement models.
     
-    See Also: :class:`mon.coreml.model.Model`.
+    See Also: :class:`mon.nn.model.Model`.
     """
     
     @property
@@ -48,10 +48,10 @@ class ImageEnhancementModel(nn.Model, ABC):
 
         Args:
             input: An input of shape [B, C, H, W].
-            augment: If True, perform test-time augmentation. Defaults to False.
-            profile: If True, Measure processing time. Defaults to False.
+            augment: If True, perform test-time augmentation. Default: False.
+            profile: If True, Measure processing time. Default: False.
             out_index: Return specific layer's output from :param:`out_index`.
-                Defaults to -1 means the last layer.
+                Default: -1 means the last layer.
             
         Return:
             Predictions.
@@ -92,17 +92,17 @@ class ImageEnhancementModel(nn.Model, ABC):
             target: A ground-truth.
             pred: A prediction.
             filepath: A path to save the debug result.
-            image_quality: The image quality to be saved. Defaults to 95.
+            image_quality: The image quality to be saved. Default: 95.
             max_n: Show max n items if :param:`input` has a batch size of more
-                than :param:`max_n` items. Defaults to None means show all.
+                than :param:`max_n` items. Default: None means show all.
             nrow: The maximum number of items to display in a row. The final
                 grid size is (n / nrow, nrow). If None, then the number of items
                 in a row will be the same as the number of items in the list.
-                Defaults to 8.
+                Default: 8.
             wait_time: Wait for some time (in seconds) to display the figure
-                then reset. Defaults to 0.01.
-            save: Save debug image. Defaults to False.
-            verbose: If True shows the results on the screen. Defaults to False.
+                then reset. Default: 0.01.
+            save: Save debug image. Default: False.
+            verbose: If True shows the results on the screen. Default: False.
         """
         result = {}
         if input is not None:

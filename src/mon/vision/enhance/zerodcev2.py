@@ -14,11 +14,12 @@ from typing import Any
 
 import torch
 
-from mon.foundation import pathlib
+from mon import nn
+from mon.core import pathlib
 from mon.globals import MODELS
-from mon.vision import image, nn
-from mon.vision.enhance import base
-from mon.vision.nn import functional as F
+from mon.nn import functional as F
+from mon.vision import loss
+from mon.vision.enhance import base, zerodce
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -52,15 +53,15 @@ class CombinedLoss(nn.Loss):
         self.tv_weight      = tv_weight
         self.channel_weight = channel_weight
         
-        self.loss_spa     = nn.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp     = nn.ExposureControlLoss(
+        self.loss_spa     = loss.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp     = loss.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -142,7 +143,7 @@ class ZeroDCEv2(base.ImageEnhancementModel, ABC):
 
         Args:
             input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Defaults to None.
+            target: A ground-truth of shape NCHW. Default: None.
             
         Return:
             Predictions and loss value.
@@ -181,7 +182,7 @@ class ZeroDCEv2A(ZeroDCEv2):
         self.conv5    = nn.DSConv2d(self.num_channels,                          self.num_channels, 3, dw_stride=1, dw_padding=1)
         self.conv6    = nn.DSConv2d(self.num_channels + self.num_channels // 2, self.num_channels, 3, dw_stride=1, dw_padding=1)
         self.conv7    = nn.DSConv2d(self.num_channels + self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
-        self.le_curve = image.PixelwiseHigherOrderLECurve(n=8)
+        self.le_curve = zerodce.PixelwiseHigherOrderLECurve(n=8)
         
     def forward(
         self,
@@ -247,7 +248,7 @@ class ZeroDCEv2B(ZeroDCEv2):
         self.conv6    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
         self.conv7    = nn.FFConv2dNormAct(self.num_channels,     self.num_channels, 1, self.ratio, self.ratio, stride=1, padding=0, dilation=1, padding_mode="reflect", norm_layer=nn.BatchNorm2d, act_layer=nn.ReLU)
         self.conv8    = nn.DSConv2d(self.num_channels // 2, 3, 3, dw_stride=1, dw_padding=1)
-        self.le_curve = image.PixelwiseHigherOrderLECurve(n=8)
+        self.le_curve = zerodce.PixelwiseHigherOrderLECurve(n=8)
         
     def forward(
         self,

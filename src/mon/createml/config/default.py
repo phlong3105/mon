@@ -13,7 +13,7 @@ __all__ = [
 
 import albumentations as A
 
-from mon.foundation import pathlib
+from mon.core import pathlib
 from mon.globals import DATA_DIR
 
 # region Callback
@@ -92,7 +92,7 @@ dataset = {
     "verbose"     : True,        # Verbosity.
 }
 """
-See Also: :class:`mon.coreml.data.dataset.Dataset`
+See Also: :class:`mon.nn.data.dataset.Dataset`
 """
 
 datamodule = {
@@ -112,8 +112,8 @@ datamodule = {
 }
 """
 See Also:
-    :class:`mon.coreml.data.datamodule.DataModule` and
-    :class:`mon.coreml.data.dataset.Dataset`
+    :class:`mon.nn.data.datamodule.DataModule` and
+    :class:`mon.nn.data.dataset.Dataset`
 """
 
 # endregion

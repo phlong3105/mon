@@ -13,9 +13,9 @@ from abc import ABC
 
 import torch
 
-from mon.foundation import pathlib
+from mon import nn
+from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.vision import nn
 from mon.vision.classify import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent

@@ -17,7 +17,7 @@ import glob
 
 from torch.utils.data import random_split
 
-from mon.foundation import console, pathlib, rich
+from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
 
@@ -395,7 +395,7 @@ class Rain800(base.ImageEnhancementDataset):
 class Rain100DataModule(base.DataModule):
     """Rain100 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -421,7 +421,7 @@ class Rain100DataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -452,7 +452,7 @@ class Rain100DataModule(base.DataModule):
 class Rain100HDataModule(base.DataModule):
     """Rain100H datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -478,7 +478,7 @@ class Rain100HDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -509,7 +509,7 @@ class Rain100HDataModule(base.DataModule):
 class Rain100LDataModule(base.DataModule):
     """Rain100L datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -535,7 +535,7 @@ class Rain100LDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -566,7 +566,7 @@ class Rain100LDataModule(base.DataModule):
 class Rain12DataModule(base.DataModule):
     """Rain12 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -592,7 +592,7 @@ class Rain12DataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -623,7 +623,7 @@ class Rain12DataModule(base.DataModule):
 class Rain1200DataModule(base.DataModule):
     """Rain1200 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -649,7 +649,7 @@ class Rain1200DataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -678,7 +678,7 @@ class Rain1200DataModule(base.DataModule):
 class Rain13KDataModule(base.DataModule):
     """Rain13K datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -704,7 +704,7 @@ class Rain13KDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -733,7 +733,7 @@ class Rain13KDataModule(base.DataModule):
 class Rain1400DataModule(base.DataModule):
     """Rain1400 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -759,7 +759,7 @@ class Rain1400DataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -790,7 +790,7 @@ class Rain1400DataModule(base.DataModule):
 class Rain2800DataModule(base.DataModule):
     """Rain2800 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -816,7 +816,7 @@ class Rain2800DataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -847,7 +847,7 @@ class Rain2800DataModule(base.DataModule):
 class Rain800DataModule(base.DataModule):
     """Rain800 datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -873,7 +873,7 @@ class Rain800DataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

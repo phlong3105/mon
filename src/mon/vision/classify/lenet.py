@@ -9,7 +9,7 @@ __all__ = [
     "LeNet",
 ]
 
-from mon.foundation import pathlib
+from mon.core import pathlib
 from mon.globals import MODELS
 from mon.vision.classify import base
 

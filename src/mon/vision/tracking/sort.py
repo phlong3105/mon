@@ -11,7 +11,7 @@ __all__ = [
 
 import numpy as np
 
-from mon.foundation import console
+from mon.core import console
 from mon.globals import TRACKERS
 from mon.vision import geometry
 from mon.vision.tracking import base, motion as mmotion
@@ -93,7 +93,7 @@ class SORTBBox(base.Tracker):
             - :meth`:delete_dead_tracks`
         
         Args:
-            instances: A list of new instances. Defaults to ().
+            instances: A list of new instances. Default: ().
         """
         self.frame_count += 1  # Should be the same with VideoReader.index
 

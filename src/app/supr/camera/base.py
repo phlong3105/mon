@@ -30,9 +30,9 @@ class Camera(ABC):
         name: Camera name = data name.
         image_loader: Image loader to load the input images.
         image_writer: Image writer to write the processing images.
-        save_image: If True, save processing images. Defaults to False.
-        save_video: If True, save processing video. Defaults to False.
-        save_result : If True, save result. Defaults to False.
+        save_image: If True, save processing images. Default: False.
+        save_video: If True, save processing video. Default: False.
+        save_result : If True, save result. Default: False.
         verbose: Verbosity.
     """
     

@@ -9,8 +9,8 @@ import unittest
 
 import albumentations as A
 
+import mon
 from mon.globals import DATA_DIR, DATAMODULES
-from mon.vision import visualize
 
 
 # region Helper Function
@@ -24,13 +24,13 @@ def load_image_enhancement_dataset(config):
     input, target, meta = next(data_iter)
     result = {"image": input, "target": target}
     label  = [(m["name"]) for m in meta]
-    visualize.imshow_enhancement(
+    mon.imshow_enhancement(
         winname     = "image",
         image       = result,
         label       = label,
         denormalize = config["to_tensor"],
     )
-    visualize.plt.show(block=True)
+    mon.plt.show(block=True)
 
 # endregion
 

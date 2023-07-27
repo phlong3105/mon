@@ -37,19 +37,17 @@ from typing import Callable
 import numpy as np
 import torch
 
-from mon import coreml as nn
-from mon.coreml import functional as F
-from mon.coreml.layer.typing import _size_2_t
-from mon.foundation import math
+from mon import nn
+from mon.core import math
 from mon.globals import LAYERS
+from mon.nn import _size_2_t, functional as F
 
 
 # region Filter
 
 @LAYERS.register()
 class BoxFilter(nn.Module):
-    """Box Filter layer from: "`DeepGuidedFilter
-    <https://github.com/wuhuikai/DeepGuidedFilter>`__"
+    """2D Box filter from: "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
     
     Args:
         kernel_size: Blurring kernel size.
@@ -95,6 +93,51 @@ class BoxFilter(nn.Module):
         y      = torch.cat([left, middle, right], dim=3)
         return y
 
+
+@LAYERS.register()
+class GaussFilter(nn.Module):
+    """2D Gaussian filter from: "`BeyondFilter
+    <https://github.com/delldu/BeyondFilter>`__"
+    
+    Args:
+        kernel_size: Blurring kernel size.
+        radius: kernel_size = 2 * radius + 1.
+    """
+
+    def __init__(
+        self,
+        kernel_size: int | None = None,
+        radius     : int | None = None,
+    ):
+        super().__init__()
+        assert kernel_size is not None and radius is not None
+        if kernel_size is not None:
+            self.kernel_size = kernel_size
+            self.radius      = int((kernel_size - 1) / 2)
+        else:
+            self.kernel_size = radius * 2 + 1
+            self.radius      = radius
+        self.conv = nn.Conv2d(
+            in_channels  = 3,
+            out_channels = 3,
+            kernel_size  = self.kernel_size,
+            padding      = 1,
+            groups       = 3,
+            bias         = False,
+        )
+        # self.conv.bias.data.fill_(0.0)
+        self.conv.weight.data.fill_(0.0625)
+        self.conv.weight.data[:, :, 0, 1] = 0.125
+        self.conv.weight.data[:, :, 1, 0] = 0.125
+        self.conv.weight.data[:, :, 1, 2] = 0.125
+        self.conv.weight.data[:, :, 2, 1] = 0.125
+        self.conv.weight.data[:, :, 1, 1] = 0.25
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.conv(x)
+        return y
+    
 # endregion
 
 
@@ -102,8 +145,8 @@ class BoxFilter(nn.Module):
 
 @LAYERS.register()
 class GuidedFilter(nn.Module):
-    """Guided Filter layer proposed in the paper: "`Fast End-to-End Trainable
-    Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
+    """Guided filter proposed in the paper: "`Fast End-to-End Trainable Guided
+    Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
     
     The code is from "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
     
@@ -173,8 +216,8 @@ class GuidedFilter(nn.Module):
 
 @LAYERS.register()
 class FastGuidedFilter(nn.Module):
-    """Fast Guided Filter layer proposed in the paper: "`Fast End-to-End
-    Trainable Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
+    """Fast guided filter proposed in the paper: "`Fast End-to-End Trainable
+    Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
      
     The code is from "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
     
@@ -252,7 +295,7 @@ class FastGuidedFilter(nn.Module):
 
 @LAYERS.register()
 class GuidedFilterConv2d(nn.Module):
-    """Guided Filter layer using 2d convolution layers proposed in the paper:
+    """2D Guided filter using convolution layers proposed in the paper:
     "`Fast End-to-End Trainable Guided Filter <https://arxiv.org/pdf/1803.05619.pdf>`__"
     
     The code is from "`DeepGuidedFilter <https://github.com/wuhuikai/DeepGuidedFilter>`__"
@@ -339,6 +382,50 @@ class GuidedFilterConv2d(nn.Module):
         y      = mean_A * x_hr + mean_b
         
         return y
+
+# endregion
+
+
+# region Laplacian Filter
+
+def get_laplacian_kernel_2d(
+    kernel_size: _size_2_t,
+    *,
+    device     : Any = None,
+    dtype      : Any = None,
+) -> Tensor:
+    r"""Function that returns Gaussian filter matrix coefficients.
+
+    Args:
+        kernel_size: Filter size should be odd.
+        device: Tensor device desired to create the kernel.
+        dtype: Tensor dtype desired to create the kernel.
+
+    Returns:
+        2D tensor with laplacian filter matrix coefficients.
+
+    Shape:
+        - Output: :math:`(\text{kernel_size}_x, \text{kernel_size}_y)`
+
+    Examples:
+        >>> get_laplacian_kernel2d(3)
+        tensor([[ 1.,  1.,  1.],
+                [ 1., -8.,  1.],
+                [ 1.,  1.,  1.]])
+        >>> get_laplacian_kernel2d(5)
+        tensor([[  1.,   1.,   1.,   1.,   1.],
+                [  1.,   1.,   1.,   1.,   1.],
+                [  1.,   1., -24.,   1.,   1.],
+                [  1.,   1.,   1.,   1.,   1.],
+                [  1.,   1.,   1.,   1.,   1.]])
+    """
+    ky, kx = _unpack_2d_ks(kernel_size)
+    _check_kernel_size((ky, kx))
+    kernel = torch.ones((ky, kx), device=device, dtype=dtype)
+    mid_x  = kx // 2
+    mid_y  = ky // 2
+    kernel[mid_y, mid_x] = 1 - kernel.sum()
+    return kernel
 
 # endregion
 

@@ -77,12 +77,12 @@ class KFBBoxMotion(base.Motion):
     Args:
         instance: An initial instance of the tracking object to initialize the
             Kalman Filter.
-        hits: A number of frames having that track appear. Defaults to 0.
+        hits: A number of frames having that track appear. Default: 0.
         hit_streak: A number of consecutive frames having that track appear.
-            Defaults to 0.
-        age: A number of frames while the track is alive. Defaults to 0.
+            Default: 0.
+        age: A number of frames while the track is alive. Default: 0.
         time_since_update: A number of consecutive frames having that track
-            disappear. Defaults to 0.
+            disappear. Default: 0.
     
     See more: :class:`mon.vision.tracking.motion.base.Motion`.
     """

@@ -9,7 +9,7 @@ import click
 import cv2
 
 import mon
-from mon.foundation.file import json
+from mon.core.file import json
 
 
 # region Function

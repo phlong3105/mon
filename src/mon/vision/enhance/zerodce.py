@@ -6,20 +6,20 @@
 from __future__ import annotations
 
 __all__ = [
-    "DCE", "ZeroDCE", "ZeroDCEPP", "ZeroDCEPPVanilla", "ZeroDCETiny",
-    "ZeroDCEVanilla",
+    "DCE", "PixelwiseHigherOrderLECurve", "ZeroDCE", "ZeroDCEPP",
+    "ZeroDCEPPVanilla", "ZeroDCETiny", "ZeroDCEVanilla",
 ]
 
 from typing import Any
 
 import torch
 
-from mon.coreml.layer.typing import _size_2_t
-from mon.foundation import pathlib
+from mon import nn
+from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.vision import nn
+from mon.nn import _size_2_t, functional as F
+from mon.vision import loss
 from mon.vision.enhance import base
-from mon.vision.nn import functional as F
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -149,6 +149,59 @@ class DCE(nn.ConvLayerParsingMixin, nn.Module):
         y  = torch.tanh(self.conv7(torch.cat([y1, y6], dim=1)))
         return y
 
+
+@LAYERS.register()
+class PixelwiseHigherOrderLECurve(nn.MergingLayerParsingMixin, nn.Module):
+    """Pixelwise Light-Enhancement Curve is a higher-order curves that can be
+    applied iteratively to enable more versatile adjustment to cope with
+    challenging low-light conditions:
+        LE_{n}(x) = LE_{n−1}(x) + A_{n}(x) * LE_{n−1}(x)(1 − LE_{n−1}(x)),
+        
+        where `A` is a parameter map with the same size as the given image, and
+        `n` is the number of iterations, which controls the curvature.
+    
+    This module is designed to go with:
+        - Zero-DCE (estimate 3 * n curve parameter maps)
+        - Zero-DCE++, Zero-DCE-Tiny (estimate 3 curve parameter maps)
+    
+    Args:
+        n: Number of iterations.
+    """
+    
+    def __init__(self, n: int):
+        super().__init__()
+        self.n = n
+    
+    def forward(self, input: list[torch.Tensor]) -> tuple[torch.Tensor, torch.Tensor]:
+        # Split
+        y = input[0]  # Trainable curve parameters learned from the previous layer
+        x = input[1]  # Original input image
+        
+        # Prepare curve parameter
+        _, c1, _, _ = x.shape  # Should be 3
+        _, c2, _, _ = y.shape  # Should be 3 * n
+        single_map = True
+        
+        if c2 == c1 * self.n:
+            single_map = False
+            y = torch.split(y, c1, dim=1)
+        elif c2 == 3:
+            pass
+        else:
+            raise ValueError(
+                f"Curve parameter maps 'c2' must be '3' or '3 * {self.n}'. "
+                f"But got: {c2}."
+            )
+        
+        # Estimate curve parameter
+        for i in range(self.n):
+            y_i = y if single_map else y[i]
+            x   = x + y_i * (torch.pow(x, 2) - x)
+        
+        y = list(y) if isinstance(y, tuple) else y
+        y = torch.cat(y, dim=1) if isinstance(y, list) else y
+        return y, x
+    
 # endregion
 
 
@@ -178,14 +231,14 @@ class CombinedLoss01(nn.Loss):
         self.col_weight = col_weight
         self.tv_weight  = tv_weight
         
-        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = nn.ExposureControlLoss(
+        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = loss.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv  = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_col = loss.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv  = loss.IlluminationSmoothnessLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -239,15 +292,15 @@ class CombinedLoss02(nn.Loss):
         self.tv_weight      = tv_weight
         self.channel_weight = channel_weight
         
-        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = nn.ExposureControlLoss(
+        self.loss_spa     = loss.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp     = loss.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -384,7 +437,7 @@ class ZeroDCE(base.ImageEnhancementModel):
 
         Args:
             input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Defaults to None.
+            target: A ground-truth of shape NCHW. Default: None.
             
         Return:
             Predictions and loss value.
@@ -570,7 +623,7 @@ class ZeroDCEPP(base.ImageEnhancementModel):
 
         Args:
             input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Defaults to None.
+            target: A ground-truth of shape NCHW. Default: None.
             
         Return:
             Predictions and loss value.
@@ -674,7 +727,7 @@ class ZeroDCETiny(base.ImageEnhancementModel):
 
         Args:
             input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Defaults to None.
+            target: A ground-truth of shape NCHW. Default: None.
             
         Return:
             Predictions and loss value.

@@ -9,6 +9,7 @@ import click
 import cv2
 
 import mon
+import mon.vision.core.image
 
 
 # region Function
@@ -52,7 +53,7 @@ def convert_video(
         destination = [d.parent / d.stem for d in destination]
     
     if size is not None:
-        size = mon.get_hw(size=size)
+        size = mon.vision.core.image.get_hw(size=size)
     
     skip = skip or 1
     

@@ -82,7 +82,7 @@ class Tracker(ABC):
             4. :meth`:delete_dead_tracks`
 
         Args:
-            instances: A list of new instances. Defaults to ().
+            instances: A list of new instances. Default: ().
 
         Requires:
             This method must be called once for each frame even with empty

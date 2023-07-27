@@ -12,7 +12,7 @@ __all__ = [
 
 from torch.utils.data import random_split
 
-from mon.foundation import console, pathlib, rich
+from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
 
@@ -193,7 +193,7 @@ class Snow100KL(base.ImageEnhancementDataset):
 class Snow100KDataModule(base.DataModule):
     """Snow100K datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -219,7 +219,7 @@ class Snow100KDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -250,7 +250,7 @@ class Snow100KDataModule(base.DataModule):
 class Snow100KSDataModule(base.DataModule):
     """Snow100K-S datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -276,7 +276,7 @@ class Snow100KSDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -307,7 +307,7 @@ class Snow100KSDataModule(base.DataModule):
 class Snow100KMDataModule(base.DataModule):
     """Snow100K-M datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -333,7 +333,7 @@ class Snow100KMDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -364,7 +364,7 @@ class Snow100KMDataModule(base.DataModule):
 class Snow100KLDataModule(base.DataModule):
     """Snow100K-L datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -390,7 +390,7 @@ class Snow100KLDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

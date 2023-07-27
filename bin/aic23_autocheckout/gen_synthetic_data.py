@@ -5,17 +5,15 @@
 
 from __future__ import annotations
 
-import os
 import random
 from typing import Any
 
 import click
 import cv2
 import numpy as np
-from joblib import delayed, Parallel
 
 import mon
-from mon.foundation import math
+from mon.core import math
 
 random.seed(0)
 
@@ -99,7 +97,7 @@ def random_patch_image_box(
     for i, p in enumerate(patches):
         # Random scale
         s          = random.uniform(*scale)
-        p_h0, p_w0 = mon.get_image_size(p)
+        p_h0, p_w0 = mon.vision.core.image.get_image_size(p)
         p_h1, p_w1 = (int(p_h0 * s), int(p_w0 * s))
         p          = cv2.resize(p, (p_h1, p_w1))
         # Random rotate

@@ -6,14 +6,13 @@
 from __future__ import annotations
 
 import importlib
-import shutil
 import socket
 from typing import Any
 
 import click
 from lightning.pytorch import callbacks as lcallbacks
 
-from mon import coreml, foundation as mf
+from mon import core as mf, nn
 from mon.globals import CALLBACKS, DATAMODULES, MODELS, RUN_DIR
 
 console = mf.console
@@ -191,12 +190,12 @@ def _train(args: dict):
     console.rule("[bold red]1. INITIALIZATION")
     console.log(f"Machine: {args['hostname']}")
     
-    datamodule: coreml.DataModule = DATAMODULES.build(config=args["datamodule"])
+    datamodule: nn.DataModule = DATAMODULES.build(config=args["datamodule"])
     datamodule.prepare_data()
     datamodule.setup(phase="training")
     
     args["model"]["classlabels"] = datamodule.classlabels
-    model: coreml.Model          = MODELS.build(config=args["model"])
+    model: nn.Model          = MODELS.build(config=args["model"])
     model.phase                  = "training"
 
     mf.print_dict(args, title=model.fullname)
@@ -206,14 +205,14 @@ def _train(args: dict):
     console.rule("[bold red]2. SETUP TRAINER")
     mf.copy_file(src=args["config_file"], dst=model.root/"config.py")
     
-    ckpt      = coreml.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
+    ckpt      = nn.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
     callbacks = CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])
 
     logger = []
     for k, v in args["trainer"]["logger"].items():
         if k == "tensorboard":
             v |= {"save_dir": model.root}
-            logger.append(coreml.TensorBoardLogger(**v))
+            logger.append(nn.TensorBoardLogger(**v))
     
     args["trainer"]["callbacks"]            = callbacks
     args["trainer"]["default_root_dir"]     = model.root
@@ -221,9 +220,9 @@ def _train(args: dict):
     args["trainer"]["logger"]               = logger
     args["trainer"]["num_sanity_val_steps"] = (0 if (ckpt is not None) else args["trainer"]["num_sanity_val_steps"])
     
-    trainer               = coreml.Trainer(**args["trainer"])
-    trainer.current_epoch = coreml.get_epoch(ckpt=ckpt)
-    trainer.global_step   = coreml.get_global_step(ckpt=ckpt)
+    trainer               = nn.Trainer(**args["trainer"])
+    trainer.current_epoch = nn.get_epoch(ckpt=ckpt)
+    trainer.global_step   = nn.get_global_step(ckpt=ckpt)
     console.log("[green]Done")
     
     # Training

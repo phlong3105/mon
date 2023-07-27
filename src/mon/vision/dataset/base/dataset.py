@@ -30,11 +30,11 @@ import cv2
 import numpy as np
 import torch
 
-from mon.foundation import console, file, pathlib, rich
+from mon.core import console, file, pathlib, rich
 from mon.globals import BBoxFormat
-from mon.vision import image as mi
+from mon.nn import data
+from mon.vision import core
 from mon.vision.dataset.base import label
-from mon.vision.nn import data
 
 DataModule = data.DataModule
 
@@ -45,23 +45,23 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     images. This is mainly used for unsupervised learning tasks.
     
-    See Also: :class:`mon.coreml.data.dataset.UnlabeledDataset`.
+    See Also: :class:`mon.nn.data.dataset.UnlabeledDataset`.
     
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Defaults to 'train'.
-        image_size: The desired image size in HW format. Defaults to 256.
-        classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
+            'predict']. Default: 'train'.
+        image_size: The desired image size in HW format. Default: 256.
+        classlabels: :class:`mon.nn.ClassLabels` object. Default: None.
         transform: Transformations performing on both the input and target. We
             use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`_
         to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Defaults to False.
+            Default: False.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster loading
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -85,7 +85,7 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
             verbose   = verbose,
             *args, **kwargs
         )
-        self.image_size  = mi.get_hw(size=image_size)
+        self.image_size  = core.get_hw(size=image_size)
         self.classlabels = data.ClassLabels.from_value(value=classlabels)
         self.images: list[label.ImageLabel] = []
         
@@ -122,7 +122,7 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
             transformed = self.transform(image=image)
             image = transformed["image"]
         if self.to_tensor:
-            image = mi.to_tensor(image=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
             
         return image, None, meta
         
@@ -202,26 +202,26 @@ class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     videos. This is mainly used for unsupervised learning tasks.
     
-    See Also: :class:`mon.coreml.data.dataset.UnlabeledDataset`.
+    See Also: :class:`mon.nn.data.dataset.UnlabeledDataset`.
     
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Defaults to 'train'.
-        image_size: The desired image size in HW format. Defaults to 256.
-        classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
-        max_samples: Only process a certain number of samples. Defaults to None.
+            'predict']. Default: 'train'.
+        image_size: The desired image size in HW format. Default: 256.
+        classlabels: :class:`mon.nn.ClassLabels` object. Default: None.
+        max_samples: Only process a certain number of samples. Default: None.
         transform: Transformations performing on both the input and target. We
             use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`_
         to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Defaults to False.
+            Default: False.
         api_preference: Preferred Capture API backends to use. Can be used to
             enforce a specific reader implementation. Two most used options are:
             [cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900]. See more:
             https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base
             .htmlggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
-            Defaults to cv2.CAP_FFMPEG.
-        verbose: Verbosity. Defaults to True.
+            Default: cv2.CAP_FFMPEG.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -246,7 +246,7 @@ class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
             verbose     = verbose,
             *args, **kwargs
         )
-        self.image_size     = mi.get_hw(size=image_size)
+        self.image_size     = core.get_hw(size=image_size)
         self.api_preference = api_preference
         self.source         = pathlib.Path("")
         self.video_capture  = None
@@ -291,7 +291,7 @@ class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
                 transformed = self.transform(image=image)
                 image = transformed["image"]
             if self.to_tensor:
-                image = mi.to_tensor(image=image, keepdim=False, normalize=True)
+                image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
             
             return image, None, meta
     
@@ -435,22 +435,22 @@ class LabeledImageDataset(data.LabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     images.
     
-    See Also: :class:`mon.coreml.data.dataset.LabeledDataset`.
+    See Also: :class:`mon.nn.data.dataset.LabeledDataset`.
     
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Defaults to 'train'.
-        image_size: The desired image size in HW format. Defaults to 256.
-        classlabels: :class:`mon.coreml.ClassLabels` object. Defaults to None.
+            'predict']. Default: 'train'.
+        image_size: The desired image size in HW format. Default: 256.
+        classlabels: :class:`mon.nn.ClassLabels` object. Default: None.
         transform: Transformations performing on both the input and target.
         to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Defaults to False.
+            Default: False.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -474,7 +474,7 @@ class LabeledImageDataset(data.LabeledDataset, ABC):
             verbose   = verbose,
             *args, **kwargs
         )
-        self.image_size  = mi.get_hw(size=image_size)
+        self.image_size  = core.get_hw(size=image_size)
         self.classlabels = data.ClassLabels.from_value(value=classlabels)
         self.images: list[label.ImageLabel] = []
         if not hasattr(self, "labels"):
@@ -566,7 +566,7 @@ class LabeledVideoDataset(data.LabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     videos.
     
-    See Also: :class:`mon.coreml.data.dataset.LabeledDataset`.
+    See Also: :class:`mon.nn.data.dataset.LabeledDataset`.
     """
     pass
 
@@ -625,7 +625,7 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
             transformed = self.transform(image=image)
             image = transformed["image"]
         if self.to_tensor:
-            image = mi.to_tensor(image=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
             label = torch.Tensor(label)
             
         return image, label, meta
@@ -770,7 +770,7 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             bboxes      = transformed["bboxes"]
         if self.to_tensor:
-            image  = mi.to_tensor(image=image, keepdim=False, normalize=True)
+            image  = core.to_image_tensor(image=image, keepdim=False, normalize=True)
             bboxes = torch.Tensor(bboxes)
             
         return image, bboxes, meta
@@ -1115,8 +1115,8 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             label       = transformed["mask"]
         if self.to_tensor:
-            image = mi.to_tensor(image=image, keepdim=False, normalize=True)
-            label = mi.to_tensor(image=label, keepdim=False, normalize=True)
+            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(image=label, keepdim=False, normalize=True)
             
         return image, label, meta
         
@@ -1248,8 +1248,8 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             label       = transformed["mask"]
         if self.to_tensor:
-            image = mi.to_tensor(image=image, keepdim=False, normalize=True)
-            label = mi.to_tensor(image=label, keepdim=False, normalize=True)
+            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(image=label, keepdim=False, normalize=True)
             
         return image, label, meta
     

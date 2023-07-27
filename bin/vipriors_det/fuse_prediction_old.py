@@ -8,7 +8,7 @@ from __future__ import annotations
 import click
 
 import mon
-from mon.foundation.file import json
+from mon.core.file import json
 
 
 # region Function

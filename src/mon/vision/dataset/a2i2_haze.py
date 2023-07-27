@@ -11,7 +11,7 @@ __all__ = [
 
 from torch.utils.data import random_split
 
-from mon.foundation import console, pathlib, rich
+from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
 
@@ -72,20 +72,20 @@ class A2I2HazeDet(base.ImageDetectionDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -214,7 +214,7 @@ class A2I2HazeDet(base.ImageDetectionDataset):
 class A2I2HazeDataModule(base.DataModule):
     """A2I2-Haze datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -240,7 +240,7 @@ class A2I2HazeDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

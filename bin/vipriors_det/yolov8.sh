@@ -54,13 +54,13 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "vsw-ws03" ]; then
     python train.py \
       --task "detect" \
-      --model "yolov8x6.yaml" \
+      --model "yolov8l.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8x6-delftbikes-2160" \
+      --name "yolov8l-delftbikes-1920" \
       --epochs 500 \
       --batch 4 \
-      --imgsz 2160 \
+      --imgsz 1920 \
       --workers 8 \
       --device 0 \
       --save \

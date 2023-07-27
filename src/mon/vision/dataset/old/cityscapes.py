@@ -15,6 +15,7 @@ __all__ = [
 import argparse
 import glob
 
+from mon.vision.transform import transform as t
 from mon.vision.typing import (
     CallableType, ClassLabelsType, Ints,
     ModelPhaseType, PathType, Strs, TransformType, VisionBackendType,
@@ -22,9 +23,8 @@ from mon.vision.typing import (
 from torch.utils.data import random_split
 
 from mon import core
-from mon.vision import constant, visualize
+from mon.vision import constant
 from mon.vision.dataset import base
-from mon.vision.transform import transform as t
 
 # region ClassLabels
 
@@ -219,24 +219,24 @@ class CityscapesFog(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         beta: Additional information on the attenuation coefficient. One of the
             values in :attr:`betas`. Can be a list to include multiple beta
             values. When "all", "*", or None, all beta values will be included.
-            Defaults to "*".
+            Default: "*".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     betas = [0.005, 0.01, 0.02]
@@ -347,20 +347,20 @@ class CityscapesLOL(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -435,33 +435,33 @@ class CityscapesRain(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         alpha: One of the values in :attr:`alphas`. Can be a list to include
             multiple alpha values. When "all", "*", or None, all alpha values
-            will be included. Defaults to "*".
+            will be included. Default: "*".
         beta: Additional information on the attenuation coefficient. One of the
             values in :attr:`betas`. Can be a list to include multiple beta
             values. When "all", "*", or None, all beta values will be included.
-            Defaults to "*".
+            Default: "*".
         drop_size: One of the values in :attr:`drop_sizes`. Can be a list to
             include multiple drop sizes. When "all", "*", or None, all drop
-            sizes will be included. Defaults to "*".
+            sizes will be included. Default: "*".
         pattern: Rain pattern. One of the values in :attr:`patterns`. Can be a
             list to include multiple pattern values. When "all", "*", or None,
-            all drop sizes will be included. Defaults to "*".
+            all drop sizes will be included. Default: "*".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     alphas = [0.01, 0.02, 0.03]
@@ -628,20 +628,20 @@ class CityscapesSnow(base.ImageEnhancementDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -718,26 +718,26 @@ class CityscapesSemantic(base.ImageSegmentationDataset):
     Args:
         root: A root directory where the data is stored.
         split: The data split to use. One of: ["train", "val", "test"].
-            Defaults to "train".
+            Default: "train".
         quality: The quality of the semantic segmentation mask to use. One of
-            the values in :attr:`qualities`. Defaults to "gtFine".
+            the values in :attr:`qualities`. Default: "gtFine".
         encoding: The format to use when creating the semantic segmentation
-            mask. One of the values in :attr:`encodings`. Defaults to "id".
+            mask. One of the values in :attr:`encodings`. Default: "id".
         extra: Should use extra data? Those in the `train_extra` split
-            are only available for `quality=gtCoarse`. Defaults to False.
+            are only available for `quality=gtCoarse`. Default: False.
         image_size: The desired datapoint shape preferably in a channel-last
         format.
-            Defaults to (3, 256, 256).
-        classlabels: A :class:`ClassLabels` object. Defaults to None.
+            Default: (3, 256, 256).
+        classlabels: A :class:`ClassLabels` object. Default: None.
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
         cache_data: If True, cache data to disk for faster loading next time.
-            Defaults to False.
+            Default: False.
         cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Defaults to False.
-        backend: The image processing backend. Defaults to VISION_BACKEND.
-        verbose: Verbosity. Defaults to True.
+            (WARNING: large datasets may exceed system RAM). Default: False.
+        backend: The image processing backend. Default: VISION_BACKEND.
+        verbose: Verbosity. Default: True.
     """
     
     qualities = ["gtFine", "gtCoarse"]
@@ -856,17 +856,17 @@ class CityscapesFogDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -920,7 +920,7 @@ class CityscapesFogDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -986,17 +986,17 @@ class CityscapesLOLDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1050,7 +1050,7 @@ class CityscapesLOLDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1116,17 +1116,17 @@ class CityscapesRainDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1180,7 +1180,7 @@ class CityscapesRainDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1246,17 +1246,17 @@ class CityscapesSnowDataModule(base.DataModule):
     Args:
         root: A root directory where the data is stored.
         shape: The desired datapoint shape preferably in a channel-last format.
-            Defaults to (3, 256, 256).
+            Default: (3, 256, 256).
         transform: Transformations performing on the input.
         target_transform: Transformations performing on the target.
         transforms: Transformations performing on both the input and target.
-        batch_size: The number of samples in one forward pass. Defaults to 1.
-        devices: A list of devices to use. Defaults to 0.
+        batch_size: The number of samples in one forward pass. Default: 1.
+        devices: A list of devices to use. Default: 0.
         shuffle: If True, reshuffle the datapoints at the beginning of every
-            epoch. Defaults to True.
+            epoch. Default: True.
         collate_fn: The function used to fused datapoint together when using
             :param:`batch_size` > 1.
-        verbose: Verbosity. Defaults to True.
+        verbose: Verbosity. Default: True.
     """
     
     def __init__(
@@ -1310,7 +1310,7 @@ class CityscapesSnowDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         core.console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = constant.ModelPhase.from_value(
@@ -1379,10 +1379,10 @@ def test_cityscapes_fog():
         # Additional information on the attenuation coefficient. One of the
         # values in :attr:`betas`. Can be a list to include multiple beta
         # values. When "all", "*", or None, all betas will be included.
-        # Defaults to "*".
+        # Default: "*".
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1393,21 +1393,21 @@ def test_cityscapes_fog():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = CityscapesFogDataModule(**cfg)
     dm.setup()
@@ -1435,7 +1435,7 @@ def test_cityscapes_lol():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1446,21 +1446,21 @@ def test_cityscapes_lol():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = CityscapesLOLDataModule(**cfg)
     dm.setup()
@@ -1489,23 +1489,23 @@ def test_cityscapes_rain():
         "alpha"           : "*",
         # One of: [0.01, 0.02, 0.03]. Can be a list to include multiple
         # alpha values. When "all", "*", or None, all alpha values will be
-        # included. Defaults to "*".
+        # included. Default: "*".
         "beta"            : "*",
         # Additional information on the attenuation coefficient. One of:
         # [0.005, 0.01, 0.02]. Can be a list to include multiple beta
         # values. When "all", "*", or None, all beta values will be
-        # included. Defaults to "*".
+        # included. Default: "*".
         "drop_size"       : "*",
         # One of: [0.002, 0.005, 0.01]. Can also be a list to include
         # multiple drop sizes. When "all", "*", or None, all drop sizes
-        # will be included. Defaults to "*".
+        # will be included. Default: "*".
         "pattern"         : "*",
         # Rain pattern. One of: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].
         # Can be a list to include multiple patterns. When "all", "*",
-        # or None, all drop sizes will be included. Defaults to "*".
+        # or None, all drop sizes will be included. Default: "*".
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1516,21 +1516,21 @@ def test_cityscapes_rain():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = CityscapesRainDataModule(**cfg)
     dm.setup()
@@ -1558,7 +1558,7 @@ def test_cityscapes_snow():
         # A root directory where the data is stored.
         "shape"           : [3, 256, 256],
         # The desired datapoint shape preferably in a channel-last format.
-        # Defaults to (3, 256, 256).
+        # Default: (3, 256, 256).
         "transform"       : None,
         # Transformations performing on the input.
         "target_transform": None,
@@ -1569,21 +1569,21 @@ def test_cityscapes_snow():
         # Transformations performing on both the input and target.
         "cache_data"      : False,
         # If True, cache data to disk for faster loading next time.
-        # Defaults to False.
+        # Default: False.
         "cache_images"    : False,
         # If True, cache images into memory for faster training (WARNING:
-        # large datasets may exceed system RAM). Defaults to False.
+        # large datasets may exceed system RAM). Default: False.
         "backend"         : constant.VISION_BACKEND,
-        # The image processing backend. Defaults to VISION_BACKEND.
+        # The image processing backend. Default: VISION_BACKEND.
         "batch_size"      : 8,
-        # The number of samples in one forward pass. Defaults to 1.
+        # The number of samples in one forward pass. Default: 1.
         "devices"         : 0,
-        # A list of devices to use. Defaults to 0.
+        # A list of devices to use. Default: 0.
         "shuffle"         : True,
         # If True, reshuffle the datapoints at the beginning of every epoch.
-        # Defaults to True.
+        # Default: True.
         "verbose"         : True,
-        # Verbosity. Defaults to True.
+        # Verbosity. Default: True.
     }
     dm = CityscapesRainDataModule(**cfg)
     dm.setup()

@@ -6,7 +6,7 @@
 
 from __future__ import annotations
 
-from mon.foundation import console, pathlib, rich
+from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
 
@@ -186,7 +186,7 @@ class OHaze(base.ImageEnhancementDataset):
 class DenseHazeDataModule(base.DataModule):
     """Dense-Haze datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -212,7 +212,7 @@ class DenseHazeDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -241,7 +241,7 @@ class DenseHazeDataModule(base.DataModule):
 class IHazeDataModule(base.DataModule):
     """I-Haze datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -267,7 +267,7 @@ class IHazeDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -296,7 +296,7 @@ class IHazeDataModule(base.DataModule):
 class NHHazeDataModule(base.DataModule):
     """NH-Haze datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -322,7 +322,7 @@ class NHHazeDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
@@ -351,7 +351,7 @@ class NHHazeDataModule(base.DataModule):
 class OHazeDataModule(base.DataModule):
     """O-Haze datamodule.
     
-    See Also: :class:`mon.coreml.data.datamodule.DataModule`.
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
     
     def prepare_data(self, *args, **kwargs):
@@ -377,7 +377,7 @@ class OHazeDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Defaults to None.
+                Default: None.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
