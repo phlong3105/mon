@@ -25,9 +25,9 @@ if [ "$task" == "train" ]; then
     python train.py \
       --task "detect" \
       --model "${root_dir}/zoo/yolov8/yolov8x6-det-coco.pt" \
-      --data "data/aic23-autocheckout-mix-01-117.yaml" \
+      --data "data/aic23-autocheckout-mix-117.yaml" \
       --project "${root_dir}/run/train/aic23/ablation" \
-      --name "yolov8x6-aic23-autocheckout-mix-01-117-640" \
+      --name "yolov8x6-aic23-autocheckout-mix-117-640" \
       --epochs 50 \
       --batch 16 \
       --imgsz 640 \

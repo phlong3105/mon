@@ -59,7 +59,8 @@ def read_image(
     if to_rgb:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     if to_tensor:
-        image = core.to_image_tensor(image=image, keepdim=False, normalize=normalize)
+        image = core.to_image_tensor(
+            input=image, keepdim=False, normalize=normalize)
     return image
 
 
@@ -102,7 +103,7 @@ def read_video_ffmpeg(
         )  # Numpy
         if to_tensor:
             image = core.to_image_tensor(
-                image     = image,
+                input= image,
                 keepdim   = False,
                 normalize = normalize
             )
@@ -474,7 +475,7 @@ class VideoLoaderCV(VideoLoader):
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 if self.to_tensor:
                     image = core.to_image_tensor(
-                        image     = image,
+                        input= image,
                         keepdim   = False,
                         normalize = self.normalize
                     )
@@ -679,7 +680,7 @@ class VideoLoaderFFmpeg(VideoLoader):
                     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 if self.to_tensor:
                     image = core.to_image_tensor(
-                        image     = image,
+                        input= image,
                         keepdim   = False,
                         normalize = self.normalize
                     )
@@ -794,8 +795,9 @@ def write_image_cv(
     """
     # Convert image
     if isinstance(image, torch.Tensor):
-        image = core.to_image_nparray(image=image, keepdim=True, denormalize=denormalize)
-    image = core.to_channel_last_image(image=image)
+        image = core.to_image_nparray(
+            input=image, keepdim=True, denormalize=denormalize)
+    image = core.to_channel_last_image(input=image)
     if 2 <= image.ndim <= 3:
         raise ValueError(
             f"img's number of dimensions must be between 2 and 3, but got "
@@ -837,7 +839,7 @@ def write_image_torch(
     # Convert image
     if isinstance(image, np.ndarray):
         image = torch.from_numpy(image)
-        image = core.to_channel_first_image(image=image)
+        image = core.to_channel_first_image(input=image)
     image = core.denormalize_image(image=image) if denormalize else image
     image = image.to(torch.uint8)
     image = image.cpu()
@@ -961,13 +963,13 @@ def write_video_ffmpeg(
             Default: ``False``.
     """
     if isinstance(image, np.ndarray):
-        if core.is_normalized_image(image=image):
+        if core.is_normalized_image(input=image):
             image = core.denormalize_image(image=image)
-        if core.is_channel_first_image(image=image):
-            image = core.to_channel_last_image(image=image)
+        if core.is_channel_first_image(input=image):
+            image = core.to_channel_last_image(input=image)
     elif isinstance(image, torch.Tensor):
         image = core.to_image_nparray(
-            image       = image,
+            input= image,
             keepdim     = False,
             denormalize = denormalize
         )
@@ -1292,7 +1294,7 @@ class VideoWriterCV(VideoWriter):
             )
         
         image = core.to_image_nparray(
-            image       = image,
+            input= image,
             keepdim     = True,
             denormalize = denormalize or self.denormalize,
         )

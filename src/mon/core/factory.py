@@ -70,8 +70,8 @@ class Factory(dict):
             name: A module/class name. If ``None``, automatically infer from the
                 given :param:`module`.
             module: The registering module.
-            replace: If ``True``, overwrite the existing module. Default:
-                ``False``.
+            replace: If ``True``, overwrite the existing module.
+                Default: ``False``.
         
         Example:
             # >>> backbones = Factory("backbone")
@@ -123,8 +123,8 @@ class Factory(dict):
             module_cls: The registering module/class.
             module_name: A module/class name. If None, automatically infer from
                 the given :param:`module`.
-            replace: If ``True``, overwrite the existing module. Default:
-                ``False``.
+            replace: If ``True``, overwrite the existing module.
+                Default: ``False``.
         """
         if not inspect.isclass(module_cls):
             raise ValueError(
@@ -162,8 +162,8 @@ class Factory(dict):
         Args:
             name: A class name.
             config: The class's arguments.
-            to_dict: If ``True``, return a :class:`dict` of {:param:`name`:
-                attr:`instance`}. Default: ``False``.
+            to_dict: If ``True``, return a :class:`dict` of
+                {:param:`name` : attr:`instance`}. Default: ``False``.
             
         Returns:
             An instance of the registered class.
@@ -203,8 +203,8 @@ class Factory(dict):
             configs: A list of classes' arguments. Each item can be:
                 - A name (:class:`str`).
                 - A dictionary of arguments containing the ``'name'`` key.
-            to_dict: If ``True``, return a :class:`dict` of {:param:`name`: attr:`instance`}.
-                Default: ``False``.
+            to_dict: If ``True``, return a :class:`dict` of
+                {:param:`name`: attr:`instance`}. Default: ``False``.
                 
         Returns:
             A list, or a dictionary of instances.

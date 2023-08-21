@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module extends the :mod:`rich` package.
-
-It provides rich text and beautiful formatting in the terminal, console, and
-logging throughout the :mod:`mon` framework.
+"""This module extends the :mod:`rich` package.It provides rich text and
+beautiful formatting in the terminal, console, and logging throughout the
+:mod:`mon` framework.
 """
 
 from __future__ import annotations

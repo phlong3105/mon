@@ -15,7 +15,7 @@ def get_device_memory(
     unit  : MemoryUnit = MemoryUnit.GB
 ) -> list[int]:
     """Return the GPU memory status as a :class:`tuple` of
-    (total, used, and free).
+    :math:`(total, used, free)`.
     
     Args:
         device: The index of the GPU device. Default: ``0``.

@@ -39,13 +39,13 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "vsw-ws02" ]; then
     python train.py \
       --task "detect" \
-      --model "yolov8l.yaml" \
+      --model "yolov8m.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8l-delftbikes-2160" \
-      --epochs 500 \
+      --name "yolov8m-delftbikes-2560" \
+      --epochs 300 \
       --batch 4 \
-      --imgsz 2160 \
+      --imgsz 2560 \
       --workers 8 \
       --device 0 \
       --save \
@@ -54,13 +54,13 @@ if [ "$task" == "train" ]; then
   elif [ "$machine" == "vsw-ws03" ]; then
     python train.py \
       --task "detect" \
-      --model "yolov8l.yaml" \
+      --model "yolov8s.yaml" \
       --data "data/delftbikes.yaml" \
       --project "${root_dir}/run/train/delftbikes" \
-      --name "yolov8l-delftbikes-1920" \
+      --name "yolov8s-delftbikes-2160" \
       --epochs 500 \
-      --batch 4 \
-      --imgsz 1920 \
+      --batch 8 \
+      --imgsz 2160 \
       --workers 8 \
       --device 0 \
       --save \
@@ -102,14 +102,18 @@ if [ "$task" == "ensemble" ]; then
   echo -e "\nPredicting"
   python ensemble.py \
   	--task "detect" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-2160/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-2160/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8m-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1920/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-1920/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
+    --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1280/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-1280/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-1280/weights/best.pt" \
   	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1280/weights/best.pt" \
   	--data "data/delftbikes.yaml" \
@@ -119,7 +123,7 @@ if [ "$task" == "ensemble" ]; then
   	--imgsz 3440 \
   	--conf 0.00001 \
   	--iou 0.5 \
-  	--max-det 2000 \
+  	--max-det 5000 \
   	--augment \
   	--device 0 \
   	--exist-ok \
@@ -130,3 +134,16 @@ if [ "$task" == "ensemble" ]; then
 fi
 
 cd "${root_dir}" || exit
+
+  	# --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-2160/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-2160/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-2160/weights/best.pt" \
+    # --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1920/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-1920/weights/best.pt" \
+    # --model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1280/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-1280/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-1280/weights/best.pt" \
+  	# --model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1280/weights/best.pt" \

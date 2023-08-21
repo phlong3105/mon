@@ -28,9 +28,9 @@ import multipledispatch
 # region Object
 
 def copy_attr(src: Any, dst: Any, include: list = [], exclude: list = []):
-    """Copy all attributes from object :param:`x` to object :param:`y`, except
+    """Copy all attributes from object :obj:`x` to object :obj:`y`, except
     for those that start with an underscore, or are in the :param:`exclude`
-    list.
+    :class:`list`.
 
     Args:
         src: An object to copy from.
@@ -93,8 +93,8 @@ def intersect_dicts(x: dict, y: dict, exclude: list = []) -> dict:
         exclude: A :class:`list` of excluding keys.
     
     Returns:
-        A :class:`dict` that contains only the keys that are in both
-        :param:`x` and :param:`y`, and whose values are equal.
+        A :class:`dict` that contains only the keys that are in both :param:`x`
+        and :param:`y`, and whose values are equal.
     """
     return {
         k: v for k, v in x.items()
@@ -139,23 +139,23 @@ def shuffle_dict(x: dict) -> dict:
 # region Sequence
 
 def concat_lists(x: list[list]) -> list:
-    """Concatenate a :class:`list` of lists into a flattened list."""
+    """Concatenate a :class:`list` of lists into a flattened :class:`list`."""
     x = list(itertools.chain(*x))
     return x
 
 
 def iter_to_iter(x: Iterable, item_type: type, return_type: type | None = None):
-    """Convert an iterable object to a desired sequence type specified by the
-    :param:`return_type`. Also, cast each item into the desired
+    """Convert an :class:`Iterable` object to a desired sequence type specified
+    by the :param:`return_type`. Also, cast each item into the desired
     :param:`item_type`.
     
     Args:
-        x: An iterable object.
+        x: An :class:`Iterable` object.
         item_type: The item type.
         return_type: The desired iterable type. Default: ``None``.
     
     Returns:
-        An iterable object cast to the desired type.
+        An :class:`Iterable` object cast to the desired type.
     """
     if not isinstance(x, list | tuple | dict):
         raise TypeError(f"x must be a list, tuple, or dict, but got {type(x)}.")

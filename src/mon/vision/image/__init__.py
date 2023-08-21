@@ -8,9 +8,5 @@ processing module.
 
 from __future__ import annotations
 
-import mon.vision.image.channel
 import mon.vision.image.filter
-import mon.vision.image.intensity
-from mon.vision.image.channel import *
 from mon.vision.image.filter import *
-from mon.vision.image.intensity import *

@@ -41,7 +41,7 @@ class Path(type(pathlib.Path())):
         return str(self) == self.name
     
     def is_bmp_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is a bitmap file. Otherwise,
+        """Return ``True`` if the current path is a ``.bmp`` file. Otherwise,
         return ``False``.
         """
         return (self.is_file() if exist else True) and self.suffix.lower() in [".bmp"]
@@ -146,7 +146,7 @@ class Path(type(pathlib.Path())):
         return "rtsp" in str(self).lower()
     
     def is_weights_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is a ```.pt``` or ``.pth`` file.
+        """Return ``True`` if the current path is an ```.pt``` or ``.pth`` file.
         Otherwise, return ``False``.
         """
         return (self.is_file() if exist else True) and self.suffix.lower() in [".pt", ".pth"]
@@ -158,7 +158,7 @@ class Path(type(pathlib.Path())):
         return (self.is_file() if exist else True) and self.suffix.lower() in [".xml"]
     
     def is_yaml_file(self, exist: bool = True) -> bool:
-        """Return ``True`` if the current path is a ``.yaml`` or ``.yml`` file.
+        """Return ``True`` if the current path is an ``.yaml`` or ``.yml`` file.
         Otherwise, return ``False``.
         """
         return (self.is_file() if exist else True) and self.suffix.lower() in [".yaml", ".yml"]
@@ -227,8 +227,8 @@ def get_files(regex: str, recursive: bool = False) -> list[Path]:
     
     Args:
         regex: A file path patterns.
-        recursive: If ``True``, look for file in subdirectories. Default:
-            ``False``.
+        recursive: If ``True``, look for file in subdirectories.
+            Default: ``False``.
         
     Returns:
         A :class:`list` of unique file paths.
@@ -325,8 +325,8 @@ def delete_files(
     Args:
         regex: A file path patterns.
         path: A path to a directory to search for the files to delete.
-        recursive: If ``True``, look for file in subdirectories. Default:
-            ``False``.
+        recursive: If ``True``, look for file in subdirectories.
+            Default: ``False``.
     """
     path  = Path(path)
     files = []
@@ -367,8 +367,8 @@ def mkdirs(
             if the last path component isn't an existing non-directory file.
             - If ``False``, ``FileExistsError`` is raised if the target
               directory already exists.
-        replace: If ``True``, delete existing directories and recreate. Default:
-            ``False``.
+        replace: If ``True``, delete existing directories and recreate.
+            Default: ``False``.
     """
     paths = builtins.to_list(paths)
     paths = builtins.unique(paths)

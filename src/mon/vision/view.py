@@ -137,7 +137,8 @@ def imshow(
     for idx, img in enumerate(image):
         i   = int(idx / nrow)
         j   = int(idx % nrow)
-        img = core.to_image_nparray(image=img, keepdim=False, denormalize=denormalize)
+        img = core.to_image_nparray(
+            input=img, keepdim=False, denormalize=denormalize)
         axs[i, j].imshow(np.asarray(img), aspect="auto")
         axs[i, j].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         if label is not None:
@@ -273,7 +274,8 @@ def imshow_classification(
             ax.tick_params(axis="x", direction="in", pad=-10)
             ax.tick_params(axis="y", direction="in", pad=-10)
         # Image
-        img = core.to_image_nparray(image=img, keepdim=False, denormalize=denormalize)
+        img = core.to_image_nparray(
+            input=img, keepdim=False, denormalize=denormalize)
         axs[0].imshow(np.asarray(img), aspect="auto")
         # Classlabels
         pps = axs[1].barh(y_pos, scores, align="center", color="deepskyblue")
@@ -364,7 +366,8 @@ def imshow_enhancement(
     [ax.set_title(l) for ax, l in zip(axs[0], header)]
     for i, img in enumerate(image):
         for j, im in enumerate(img):
-            im = core.to_image_nparray(image=im, keepdim=False, denormalize=denormalize)
+            im = core.to_image_nparray(
+                input=im, keepdim=False, denormalize=denormalize)
             axs[j, i].imshow(np.asarray(im), aspect="auto")
             axs[j, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
         # if label is not None:

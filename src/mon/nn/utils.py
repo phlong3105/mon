@@ -28,13 +28,71 @@ def check_kernel_size(
 ):
     if isinstance(kernel_size, int):
         kernel_size = (kernel_size,)
-
+    
     fmt = "even or odd" if allow_even else "odd"
     for size in kernel_size:
         assert isinstance(size, int) and (((size % 2 == 1) or allow_even) and size > min_value), \
             f"`kernel_size` must be an {fmt} integer bigger than {min_value}. " \
             f"Gotcha {size} on {kernel_size}."
-        
+
+
+def check_same_device(
+    x     : torch.Tensor,
+    y     : torch.Tensor,
+    raises: bool = True
+) -> bool:
+    """Check whether two tensors in the same device.
+
+    Args:
+        x: First tensor to evaluate.
+        y: Sencod tensor to evaluate.
+        raises: Whether an exception should be raised upon failure.
+
+    Raises:
+        TypeException: If the two tensors are not in the same device and raises
+            is ``True``.
+
+    Example:
+        >>> x1 = torch.rand(2, 3, 3)
+        >>> x2 = torch.rand(1, 3, 1)
+        >>> check_same_device(x1, x2)
+        True
+    """
+    if x.device != y.device:
+        if raises:
+            raise TypeError(
+                f"Not same device for tensors, but got: {x.device} != {y.device}"
+            )
+        return False
+    return True
+
+
+def check_same_devices(input: list[torch.Tensor], raises: bool = True) -> bool:
+    """Check whether a :class:`list` provided tensors live in the same device.
+
+    Args:
+        input: A :class:`list` of tensors.
+        raises: Whether an exception should be raised upon failure.
+
+    Raises:
+        Exception: If all the tensors are not in the same device and raises is
+            ``True``.
+
+    Example:
+        >>> x1 = torch.rand(2, 3, 3)
+        >>> x2 = torch.rand(1, 3, 1)
+        >>> check_same_devices([x1, x2], "Tensors not in the same device")
+        True
+    """
+    assert isinstance(input, list) and len(input) >= 1
+    if not all(input[0].device == x.device for x in tensors):
+        if raises:
+            raise Exception(
+                f"Not same device for tensors, but got: "
+                f"{[x.device for x in tensors]}.\n{msg}"
+            )
+        return False
+    return True
 
 def check_shape(
     input : torch.Tensor | np.ndarray,
@@ -78,7 +136,7 @@ def check_shape(
 
     if len(x_shape_to_check) != len(shape_to_check):
         if raises:
-            raise TypeError(f"{x} shape must be [{shape}]. Got {x.shape}.")
+            raise TypeError(f"{x} shape must be [{shape}], but got {x.shape}.")
         else:
             return False
 
@@ -89,7 +147,9 @@ def check_shape(
         dim = int(dim_)
         if x_shape_to_check[i] != dim:
             if raises:
-                raise TypeError(f"{x} shape must be [{shape}]. Got {x.shape}.")
+                raise TypeError(
+                    f"{x} shape must be [{shape}], but got {x.shape}."
+                )
             else:
                 return False
     return True
@@ -99,10 +159,13 @@ def check_shape(
 
 # region Convert
 
-def get_padding(kernel_size: tuple[int]) -> tuple[int, ...]:
-    """Compute padding tuple."""
-    # 4 or 6 ints: (padding_left, padding_right, padding_top, padding_bottom)
-    # https://pytorch.org/docs/stable/nn.html#torch.nn.functional.pad
+def get_padding(kernel_size: list[int] | tuple[int, ...]) -> tuple[int, ...]:
+    """Compute padding as a :class:`tuple` of 4 or 6 :class:`int`:
+    ``(padding_left, padding_right, padding_top, padding_bottom)``.
+    
+    References:
+        `<https://pytorch.org/docs/stable/nn.html#torch.nn.functional.pad>`__
+    """
     if len(kernel_size) < 2:
         raise AssertionError(kernel_size)
     computed = [k - 1 for k in kernel_size]
@@ -120,29 +183,63 @@ def get_padding(kernel_size: tuple[int]) -> tuple[int, ...]:
     return tuple(padding)
 
 
-def to_2d_kernel_size(kernel_size: _size_2_t) -> tuple[int, int]:
+def to_2d_kernel_size(
+    kernel_size: _size_2_t,
+    behaviour  : str  = "corr",
+) -> tuple[int, int]:
+    """Return a 2-D kernel size.
+    
+    Args:
+        kernel_size: The kernel size.
+        behaviour: Defines the convolution mode -- correlation (default), using
+            PyTorch :class:`torch.nn.Conv2d`, or true convolution (kernel is
+            flipped). 2 modes available ``'corr'`` or ``'conv'``.
+    """
     if isinstance(kernel_size, int):
         ky = kx = kernel_size
     else:
-        assert len(kernel_size) == 2
-        console.log(f"2D Kernel size should have a length of 2.")
+        assert len(kernel_size) == 2, \
+            (f"2-D kernel size should have a length of 2, "
+             f"but got: { len(kernel_size)}.")
         ky, kx = kernel_size
+    
     ky = int(ky)
     kx = int(kx)
-    return ky, kx
+    
+    if str(behaviour).lower() == "corr":
+        return kx, ky
+    else:
+        return ky, kx
 
 
-def to_3d_kernel_size(kernel_size: _size_3_t) -> tuple[int, int, int]:
+def to_3d_kernel_size(
+    kernel_size: _size_3_t,
+    behaviour  : str  = "corr",
+) -> tuple[int, int, int]:
+    """Return a 3-D kernel size.
+    
+    Args:
+        kernel_size: The kernel size.
+        behaviour: Defines the convolution mode -- correlation (default), using
+            PyTorch :class:`torch.nn.Conv2d`, or true convolution (kernel is
+            flipped). 2 modes available ``'corr'`` or ``'conv'``.
+    """
     if isinstance(kernel_size, int):
         kz = ky = kx = kernel_size
     else:
-        assert len(kernel_size) == 3
-        console.log(f"3D Kernel size should have a length of 3.")
+        assert len(kernel_size) == 3, \
+            (f"2-D kernel size should have a length of 3, "
+             f"but got: { len(kernel_size)}.")
         kz, ky, kx = kernel_size
+    
     kz = int(kz)
     ky = int(ky)
     kx = int(kx)
-    return kz, ky, kx
+    
+    if str(behaviour).lower() == "corr":
+        return kx, ky, kz
+    else:
+        return kz, ky, kx
 
 
 def upcast(
@@ -154,7 +251,7 @@ def upcast(
     
     Args:
         input: An input of type :class:`numpy.ndarray` or :class:`torch.Tensor`.
-        keep_type: If True, keep the same type (int32 -> int64). Else upcast to
+        keep_type: If True, keep the same type (int32  -> int64). Else upcast to
             a higher type (int32 -> float32).
             
     Return:
@@ -211,7 +308,7 @@ def eye_like(n: int, input: torch.Tensor) -> torch.Tensor:
 @multipledispatch.dispatch(int, torch.Tensor)
 def vec_like(n: int, input: torch.Tensor) -> torch.Tensor:
     """Create a vector of zeros with the same shape as the input.
-
+    
     Args:
         n: The number of elements in the vector.
         input: An input tensor.

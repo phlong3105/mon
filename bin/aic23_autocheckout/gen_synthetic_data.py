@@ -92,7 +92,7 @@ def random_patch_image_box(
             )
     
     # canvas = mon.adjust_gamma(image=canvas, gamma=0.5)
-    h, w   = mon.get_image_size(image=canvas)
+    h, w   = mon.get_image_size(input=canvas)
     box    = np.zeros(shape=[len(patches), 5], dtype=np.float64)
     for i, p in enumerate(patches):
         # Random scale
@@ -240,7 +240,7 @@ def gen_synthetic_image(
             synthetic_file = str(synthetic_image_dir / f"{i:06}.jpg")
             cv2.imwrite(synthetic_file, synthetic)
             
-            h, w = mon.get_image_size(image=synthetic)
+            h, w = mon.get_image_size(input=synthetic)
             if bbox_format in ["coco"]:
                 boxes[:, 1:5] = mon.bbox_xyxy_to_xywh(boxes[:, 1:5])
             elif bbox_format in ["yolo"]:

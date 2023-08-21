@@ -122,7 +122,8 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
             transformed = self.transform(image=image)
             image = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(
+                input=image, keepdim=False, normalize=True)
             
         return image, None, meta
         
@@ -291,7 +292,8 @@ class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
                 transformed = self.transform(image=image)
                 image = transformed["image"]
             if self.to_tensor:
-                image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
+                image = core.to_image_tensor(
+                    input=image, keepdim=False, normalize=True)
             
             return image, None, meta
     
@@ -625,7 +627,8 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
             transformed = self.transform(image=image)
             image = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(
+                input=image, keepdim=False, normalize=True)
             label = torch.Tensor(label)
             
         return image, label, meta
@@ -770,7 +773,8 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             bboxes      = transformed["bboxes"]
         if self.to_tensor:
-            image  = core.to_image_tensor(image=image, keepdim=False, normalize=True)
+            image  = core.to_image_tensor(
+                input=image, keepdim=False, normalize=True)
             bboxes = torch.Tensor(bboxes)
             
         return image, bboxes, meta
@@ -1115,8 +1119,10 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             label       = transformed["mask"]
         if self.to_tensor:
-            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(image=label, keepdim=False, normalize=True)
+            image = core.to_image_tensor(
+                input=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(
+                input=label, keepdim=False, normalize=True)
             
         return image, label, meta
         
@@ -1248,8 +1254,10 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             label       = transformed["mask"]
         if self.to_tensor:
-            image = core.to_image_tensor(image=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(image=label, keepdim=False, normalize=True)
+            image = core.to_image_tensor(
+                input=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(
+                input=label, keepdim=False, normalize=True)
             
         return image, label, meta
     

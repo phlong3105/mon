@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base model class for enhancement models."""
+"""This module implements the base class for enhancement models."""
 
 from __future__ import annotations
 
