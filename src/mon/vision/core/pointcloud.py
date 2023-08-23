@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the basic functionalities of point cloud data.
-"""
+"""This module implements the basic functionalities of point cloud data."""
 
 from __future__ import annotations
 

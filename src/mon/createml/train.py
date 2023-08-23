@@ -12,10 +12,11 @@ from typing import Any
 import click
 from lightning.pytorch import callbacks as lcallbacks
 
-from mon import core as mf, nn
+from mon import core , nn
 from mon.globals import CALLBACKS, DATAMODULES, MODELS, RUN_DIR
 
-console = mf.console
+console = core.console
+
 
 # region Host
 
@@ -117,8 +118,8 @@ hosts = {
 @click.option("--strategy",    default="auto", type=str,  help="Supports different training strategies with aliases as well custom strategies.")
 @click.option("--exist-ok",    is_flag=True,   help="Whether to overwrite existing experiment.")
 def train(
-    config     : mf.Path | str,
-    root       : mf.Path,
+    config     : core.Path | str,
+    root       : core.Path,
     project    : str,
     name       : str,
     weights    : Any,
@@ -158,7 +159,7 @@ def train(
     exist_ok    = exist_ok    or host_args.get("exist_ok",    False)
     
     # Update arguments
-    args = mf.get_module_vars(config_args)
+    args = core.get_module_vars(config_args)
     args["hostname"]     = hostname
     args["config_file"]  = config_args.__file__
     args["datamodule"]  |= {
@@ -180,7 +181,7 @@ def train(
     }
    
     if not exist_ok:
-        mf.delete_dir(paths=mf.Path(root)/project/name)
+        core.delete_dir(paths=core.Path(root)/project/name)
         
     _train(args=args)
 
@@ -196,14 +197,14 @@ def _train(args: dict):
     
     args["model"]["classlabels"] = datamodule.classlabels
     model: nn.Model          = MODELS.build(config=args["model"])
-    model.phase                  = "training"
+    model.phase              = "training"
 
-    mf.print_dict(args, title=model.fullname)
+    core.print_dict(args, title=model.fullname)
     console.log("[green]Done")
 
     # Trainer
     console.rule("[bold red]2. SETUP TRAINER")
-    mf.copy_file(src=args["config_file"], dst=model.root/"config.py")
+    core.copy_file(src=args["config_file"], dst=model.root/"config.py")
     
     ckpt      = nn.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
     callbacks = CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])

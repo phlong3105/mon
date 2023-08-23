@@ -3,6 +3,10 @@
 
 """This package implements datasets, transforms, and models specific to computer
 vision.
+
+We seamlessly integrate commonly used vision libraries such as
+:mod:`torchvision`, :mod:`kornia`, :mod:`cv2`. The goal is to provide an unified
+interface to all vision functions.
 """
 
 from __future__ import annotations

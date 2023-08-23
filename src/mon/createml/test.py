@@ -12,10 +12,10 @@ from typing import Any
 import click
 from lightning.pytorch import callbacks as lcallbacks
 
-from mon import core as mf, nn
+from mon import core, nn
 from mon.globals import CALLBACKS, DATAMODULES, MODELS, RUN_DIR
 
-console = mf.console
+console = core.console
 
 
 # region Host
@@ -84,8 +84,8 @@ hosts = {
 @click.option("--max-steps",   default=None,  type=int, help="Stop training once this number of steps is reached.")
 @click.option("--strategy",    default=None,  type=int, help="Supports different training strategies with aliases as well custom strategies.")
 def test(
-    config     : mf.Path | str,
-    root       : mf.Path,
+    config     : core.Path | str,
+    root       : core.Path,
     project    : str,
     name       : str,
     weights    : Any,
@@ -123,7 +123,7 @@ def test(
     strategy    = strategy    or host_args.get("strategy",    None) or config_args.trainer["strategy"]
     
     # Update arguments
-    args = mf.get_module_vars(config_args)
+    args = core.get_module_vars(config_args)
     args["hostname"]     = hostname
     args["config_file"]  = config_args.__file__,
     args["data"]        |= {
@@ -155,14 +155,14 @@ def _test(args: dict):
     datamodule.setup(phase="testing")
     
     args["model"]["classlabels"] = datamodule.classlabels
-    model: nn.Model          = MODELS.build(config=args["model"])
+    model: nn.Model              = MODELS.build(config=args["model"])
     
-    mf.print_dict(args, title=model.fullname)
+    core.print_dict(args, title=model.fullname)
     console.log("[green]Done")
     
     # Trainer
     console.rule("[bold red]2. SETUP TRAINER")
-    mf.copy_file(src=args["config_file"], dst=model.root)
+    core.copy_file(src=args["config_file"], dst=model.root)
     
     ckpt      = nn.get_latest_checkpoint(dirpath=model.weights_dir)
     callbacks = CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])
