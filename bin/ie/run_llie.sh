@@ -13,12 +13,14 @@ model=${1:-"zerodce"}
 task=${2:-"predict"}
 train_data=${3:-"lol"}
 predict_data=${4:-"all"}
-epoch=${5:-"100"}
+project=${5:-"ie/llie"}
+epoch=${6:-"100"}
 
 read -e -i "$model"        -p "Model [${models[*]}]: " model
 read -e -i "$task"         -p "Task [train, predict]: " task
 read -e -i "$train_data"   -p "Train data [${train_datasets[*]}]: " train_data
 read -e -i "$predict_data" -p "Predict data [all ${predict_datasets[*]}]: " predict_data
+read -e -i "$project"      -p "Project: " project
 read -e -i "$epoch"        -p "Epoch: " epoch
 
 machine=$(echo $machine | tr '[:upper:]' '[:lower:]')
@@ -26,6 +28,7 @@ model=$(echo $model | tr '[:upper:]' '[:lower:]')
 task=$(echo $task | tr '[:upper:]' '[:lower:]')
 train_data=$(echo $train_data | tr '[:upper:]' '[:lower:]')
 predict_data=$(echo $predict_data | tr '[:upper:]' '[:lower:]')
+project=$(echo $project | tr '[:upper:]' '[:lower:]')
 epoch=$(($epoch))
 
 # Check Input
@@ -107,8 +110,8 @@ elif [ "$task" == "predict" ]; then
 fi
 # echo "${low_data_dirs[*]}"
 
-train_dir="${root_dir}/run/train/ielibrary/${model}-${train_data}"
-train_weights="${root_dir}/run/train/ielibrary/${model}-${train_data}/best.pt"
+train_dir="${root_dir}/run/train/${project}/${model}-${train_data}"
+train_weights="${root_dir}/run/train/${project}/${model}-${train_data}/best.pt"
 zoo_weights="${root_dir}/zoo/${model}/${model}-${train_data}.pth"
 if [ -f "$train_weights" ]; then
     weights=${train_weights}
@@ -157,7 +160,7 @@ fi
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   for (( i=0; i<${#predict_data[@]}; i++ )); do
-    predict_dir="${root_dir}/run/predict/ielibrary/${model}/${predict_data[$i]}"
+    predict_dir="${root_dir}/run/predict/${project}/${model}/${predict_data[$i]}"
     # echo -e "${low_data_dirs[$i]}"
     if [ "$model" == "zerodce" ]; then
       python lowlight_test.py \
