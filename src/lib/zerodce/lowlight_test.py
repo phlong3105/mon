@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import argparse
-import glob
 import os
-import pathlib
 import time
 
 import numpy as np
@@ -16,6 +14,7 @@ import torchvision
 from PIL import Image
 
 import model
+import mon
 
 
 def predict(image_path):
@@ -49,23 +48,23 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=str, default="predict/")
     config = parser.parse_args()
     
-    if not os.path.exists(config.output_dir):
-        os.mkdir(config.output_dir)
-        
+    config.output_dir = mon.Path(config.output_dir)
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+    
     # Test_images
     with torch.no_grad():
-        file_list  = os.listdir(config.data)
-        sum_time   = 0
-        num_images = 0
-        for file_name in file_list:
-            image_paths = glob.glob(config.data + file_name + "/*")
-            for image_path in image_paths:
-                print(image_path)
-                enhanced_image, end_time = predict(image_path)
-                image_path     = pathlib.Path(image_path)
-                result_path    = pathlib.Path(config.output_dir) / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
-                sum_time    = sum_time + end_time
-                num_images += 1
+        config.data = mon.Path(config.data)
+        image_paths = list(config.data.rglob("*"))
+        image_paths = [path for path in image_paths if path.is_image_file()]
+        sum_time    = 0
+        num_images  = 0
+        for image_path in image_paths:
+            print(image_path)
+            enhanced_image, end_time = predict(image_path)
+            image_path   = mon.Path(image_path)
+            result_path  = config.output_dir / image_path.name
+            torchvision.utils.save_image(enhanced_image, str(result_path))
+            sum_time    += end_time
+            num_images  += 1
         avg_time = float(sum_time / num_images)
         print(f"Average time: {avg_time}")

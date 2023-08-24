@@ -105,7 +105,7 @@ elif [ "$task" == "predict" ]; then
     fi
   done
 fi
-# echo "${low_data_dirs[*]}"
+echo "${low_data_dirs[*]}"
 
 train_dir="${root_dir}/run/train/ielibrary/${model}-${train_data}"
 train_weights="${root_dir}/run/train/ielibrary/${model}-${train_data}/best.pt"
