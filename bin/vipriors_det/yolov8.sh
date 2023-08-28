@@ -26,7 +26,7 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --model "yolov8s.yaml" \
       --data "data/delftbikes.yaml" \
-      --project "${root_dir}/run/train/delftbikes" \
+      --project "${root_dir}/run/train/vipriors_det" \
       --name "yolov8s-delftbikes-1920" \
       --epochs 500 \
       --batch 4 \
@@ -41,7 +41,7 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --model "yolov8m.yaml" \
       --data "data/delftbikes.yaml" \
-      --project "${root_dir}/run/train/delftbikes" \
+      --project "${root_dir}/run/train/vipriors_det" \
       --name "yolov8m-delftbikes-2560" \
       --epochs 300 \
       --batch 4 \
@@ -56,7 +56,7 @@ if [ "$task" == "train" ]; then
       --task "detect" \
       --model "yolov8s.yaml" \
       --data "data/delftbikes.yaml" \
-      --project "${root_dir}/run/train/delftbikes" \
+      --project "${root_dir}/run/train/vipriors_det" \
       --name "yolov8s-delftbikes-2160" \
       --epochs 500 \
       --batch 8 \
@@ -79,9 +79,9 @@ if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python predict.py \
   	--task "detect" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8x6-delftbikes-1920/weights/best.pt" \
   	--data "data/delftbikes.yaml" \
-  	--project "${root_dir}/run/predict/delftbikes/" \
+  	--project "${root_dir}/run/predict/vipriors_det/" \
   	--name "submission" \
   	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
   	--imgsz 2560 \
@@ -102,22 +102,22 @@ if [ "$task" == "ensemble" ]; then
   echo -e "\nPredicting"
   python ensemble.py \
   	--task "detect" \
-    --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-2160/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-2160/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-2160/weights/best.pt" \
-    --model "${root_dir}/run/train/delftbikes/yolov8m-delftbikes-2160/weights/best.pt" \
-    --model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-2160/weights/best.pt" \
-    --model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-2160/weights/best.pt" \
-    --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1920/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1920/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8l-delftbikes-1920/weights/best.pt" \
-    --model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1920/weights/best.pt" \
-    --model "${root_dir}/run/train/delftbikes/yolov8x6-delftbikes-1280/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8x-delftbikes-1280/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8s-delftbikes-1280/weights/best.pt" \
-  	--model "${root_dir}/run/train/delftbikes/yolov8n-delftbikes-1280/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8x6-delftbikes-2160/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8x-delftbikes-2160/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8l-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8m-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8s-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8n-delftbikes-2160/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8x6-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8x-delftbikes-1920/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8l-delftbikes-1920/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8n-delftbikes-1920/weights/best.pt" \
+    --model "${root_dir}/run/train/vipriors_det/yolov8x6-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8x-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8s-delftbikes-1280/weights/best.pt" \
+  	--model "${root_dir}/run/train/vipriors_det/yolov8n-delftbikes-1280/weights/best.pt" \
   	--data "data/delftbikes.yaml" \
-  	--project "${root_dir}/run/predict/delftbikes/" \
+  	--project "${root_dir}/run/predict/vipriors_det/" \
   	--name "submission" \
   	--source "${root_dir}/data/vipriors/delftbikes/test/images" \
   	--imgsz 3440 \

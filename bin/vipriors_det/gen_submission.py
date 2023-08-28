@@ -16,8 +16,8 @@ from mon.core.file import json
 
 @click.command()
 @click.option("--image-dir",   default=mon.DATA_DIR/"vipriors/delftbikes/test/images", type=click.Path(exists=True),  help="Image directory.")
-@click.option("--label-dir",   default=mon.RUN_DIR/"predict/delftbikes/submission/labels", type=click.Path(exists=True), help="Inference label directory.")
-@click.option("--output-file", default=mon.RUN_DIR/"predict/delftbikes/submission/submission.json", type=click.Path(exists=False), help="Output JSON file.")
+@click.option("--label-dir",   default=mon.RUN_DIR/"predict/vipriors_det/submission/labels", type=click.Path(exists=True), help="Inference label directory.")
+@click.option("--output-file", default=mon.RUN_DIR/"predict/vipriors_det/submission/submission.json", type=click.Path(exists=False), help="Output JSON file.")
 @click.option("--verbose",     is_flag=True)
 def generate_submission(
     image_dir  : mon.Path,

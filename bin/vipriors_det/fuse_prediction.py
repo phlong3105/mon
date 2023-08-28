@@ -16,8 +16,8 @@ from ensemble_boxes import *
 
 @click.command()
 @click.option("--image-dir",  default=mon.DATA_DIR/"vipriors/delftbikes/test/images", type=click.Path(exists=True),  help="Image directory.")
-@click.option("--input-dir",  default=mon.RUN_DIR/"predict/delftbikes/prediction/", type=click.Path(exists=True),  help="Prediction directory.")
-@click.option("--output-dir", default=mon.RUN_DIR/"predict/delftbikes/submission/labels/", type=click.Path(exists=False), help="Submission directory.")
+@click.option("--input-dir",  default=mon.RUN_DIR/"predict/vipriors_det/prediction/", type=click.Path(exists=True),  help="Prediction directory.")
+@click.option("--output-dir", default=mon.RUN_DIR/"predict/vipriors_det/submission/labels/", type=click.Path(exists=False), help="Submission directory.")
 @click.option("--fuse",       default="wbf", type=click.Choice(["nms", "soft-nms", "nmw", "wbf"], case_sensitive=False), help="Fusion option.")
 @click.option("--verbose",    is_flag=True)
 def fuse_prediction(

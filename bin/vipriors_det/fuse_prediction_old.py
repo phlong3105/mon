@@ -14,8 +14,8 @@ from mon.core.file import json
 # region Function
 
 @click.command()
-@click.option("--input-dir",  default=mon.RUN_DIR/"predict/delftbikes/prediction/", type=click.Path(exists=True),  help="Prediction directory.")
-@click.option("--output-dir", default=mon.RUN_DIR/"predict/delftbikes/submission/labels/", type=click.Path(exists=False), help="Submission directory.")
+@click.option("--input-dir",  default=mon.RUN_DIR/"predict/vipriors_det/prediction/", type=click.Path(exists=True),  help="Prediction directory.")
+@click.option("--output-dir", default=mon.RUN_DIR/"predict/vipriors_det/submission/labels/", type=click.Path(exists=False), help="Submission directory.")
 @click.option("--verbose",    is_flag=True)
 def fuse_prediction(
     input_dir : mon.Path,

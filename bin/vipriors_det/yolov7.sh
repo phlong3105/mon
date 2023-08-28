@@ -44,7 +44,7 @@ if [ "$task" == "train" ]; then
       --device 0 \
       --sync-bn \
       --exist-ok \
-      --project "${root_dir}/run/train/delftbikes" \
+      --project "${root_dir}/run/train/vipriors_det" \
       --name "yolov7-d6-delftbikes-1280" \
       # --resume
   elif [ "$machine" == "cc6e0b2cc23d" ]; then
@@ -60,7 +60,7 @@ if [ "$task" == "train" ]; then
       --device 0,1  \
       --sync-bn \
       --exist-ok \
-      --project "${root_dir}/run/train/delftbikes" \
+      --project "${root_dir}/run/train/vipriors_det" \
       --name "yolov7-e6e-delftbikes-1920" \
       # --resume
   elif [ "$machine" == "db2c052f922d" ]; then
@@ -76,7 +76,7 @@ if [ "$task" == "train" ]; then
       --device 0,1 \
       --sync-bn \
       --exist-ok \
-      --project "${root_dir}/run/train/delftbikes" \
+      --project "${root_dir}/run/train/vipriors_det" \
       --name "yolov7-w6-delftbikes-1920" \
       # --resume
   fi
@@ -86,7 +86,7 @@ fi
 if [ "$task" == "test" ]; then
   echo -e "\nTesting"
   python test.py \
-    --weights "run/train/delftbikes/yolov7-e6e-delftbikes-640/weights/best.pt" \
+    --weights "run/train/vipriors_det/yolov7-e6e-delftbikes-640/weights/best.pt" \
     --data "data/delftbikes.yaml" \
     --batch-size 8 \
     --img-size 640 \
@@ -103,9 +103,9 @@ if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   python detect.py \
     --weights \
-    "${root_dir}/run/train/delftbikes/yolov7-d6-delftbikes-1280/weights/best.pt" \
-    "${root_dir}/run/train/delftbikes/yolov7-e6-delftbikes-1920/weights/best.pt" \
-    "${root_dir}/run/train/delftbikes/yolov7-e6e-delftbikes-1920/weights/best.pt" \
+    "${root_dir}/run/train/vipriors_det/yolov7-d6-delftbikes-1280/weights/best.pt" \
+    "${root_dir}/run/train/vipriors_det/yolov7-e6-delftbikes-1920/weights/best.pt" \
+    "${root_dir}/run/train/vipriors_det/yolov7-e6e-delftbikes-1920/weights/best.pt" \
     --source "${root_dir}/data/vipriors/delftbikes/test/images" \
     --img-size 2160 \
     --conf-thres 0.0001 \
@@ -116,7 +116,7 @@ if [ "$task" == "predict" ]; then
     --nosave \
     --agnostic-nms \
     --augment \
-    --project "${root_dir}/run/predict/delftbikes/prediction" \
+    --project "${root_dir}/run/predict/vipriors_det/prediction" \
     --name "yolov7-ensemble" \
     --exist-ok \
     --no-trace
