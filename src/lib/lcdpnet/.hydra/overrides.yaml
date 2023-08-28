@@ -1,0 +1,4 @@
+- name=lcdpnet-lol
+- num_epoch=1000
+- log_every=2000
+- valid_every=20

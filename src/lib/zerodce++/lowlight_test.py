@@ -19,7 +19,7 @@ import model
 import mon
 
 
-def predict(image_path):
+def predict(image_path: str):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     scale_factor  = 12
     data_lowlight = Image.open(image_path)
@@ -35,8 +35,8 @@ def predict(image_path):
     DCE_net.load_state_dict(torch.load(config.weights))
     start    = time.time()
     enhanced_image, params_maps = DCE_net(data_lowlight)
-    end_time = (time.time() - start)
-    print(end_time)
+    run_time = (time.time() - start)
+    # print(run_time)
     '''
     image_path  = image_path.replace("test_data", "result_Zero_DCE++")
     result_path = image_path
@@ -45,7 +45,7 @@ def predict(image_path):
     # import pdb;pdb.set_trace()
     torchvision.utils.save_image(enhanced_image, result_path)
     '''
-    return enhanced_image, end_time
+    return enhanced_image, run_time
 
 
 if __name__ == "__main__":
@@ -67,11 +67,11 @@ if __name__ == "__main__":
         num_images  = 0
         for image_path in image_paths:
             print(image_path)
-            enhanced_image, end_time = predict(image_path)
+            enhanced_image, run_time = predict(image_path)
             image_path   = pathlib.Path(image_path)
             result_path  = pathlib.Path(config.output_dir) / image_path.name
             torchvision.utils.save_image(enhanced_image, str(result_path))
-            sum_time    += end_time
+            sum_time    += run_time
             num_images  += 1
         avg_time = float(sum_time / num_images)
         print(f"Average time: {avg_time}")

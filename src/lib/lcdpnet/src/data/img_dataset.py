@@ -150,7 +150,7 @@ class ImagesDataset(torch.utils.data.Dataset):
 class DataModule(LightningDataModule):
     def __init__(self, opt, apply_test_transform=False, apply_valid_transform=False):
         super().__init__()
-        self.opt = opt
+        self.opt       = opt
         self.transform = parseAugmentation(opt)
         # self.transform = None
         if apply_test_transform:
@@ -164,8 +164,8 @@ class DataModule(LightningDataModule):
             self.valid_transform = torchvision.transforms.ToTensor()
 
         self.training_dataset = None
-        self.valid_dataset = None
-        self.test_dataset = None
+        self.valid_dataset    = None
+        self.test_dataset     = None
 
     def prepare_data(self):
         # download, split, etc...
@@ -190,11 +190,8 @@ class DataModule(LightningDataModule):
                 valid_size = int(opt[VALID_RATIO] * len(self.training_dataset))
                 train_size = len(self.training_dataset) - valid_size
                 torch.manual_seed(233)
-                self.training_dataset, self.valid_dataset = torch.utils.data.random_split(self.training_dataset, [
-                    train_size, valid_size
-                ])
-                print(
-                    f'Update - training data: {len(self.training_dataset)}; valid data: {len(self.valid_dataset)}')
+                self.training_dataset, self.valid_dataset = torch.utils.data.random_split(self.training_dataset, [train_size, valid_size])
+                print(f'Update - training data: {len(self.training_dataset)}; valid data: {len(self.valid_dataset)}')
 
         # testing phase
         # if stage == 'test':

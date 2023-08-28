@@ -3,7 +3,12 @@
 echo "$HOSTNAME"
 
 # Constant
-models=("zerodce" "zerodce++")
+models=(
+  "lcdpnet"     # https://github.com/onpix/LCDPNet
+  "retinexdip"  # https://github.com/zhaozunjin/RetinexDIP
+  "zerodce"
+  "zerodce++"
+)
 train_datasets=("lol")
 predict_datasets=("dcim" "fusion" "lime" "lol" "mef" "npe" "sice" "vip" "vv")
 
@@ -122,7 +127,20 @@ fi
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
-  if [ "$model" == "zerodce" ]; then
+  if [ "$model" == "lcdpnet" ]; then
+    python src/train.py \
+      name="lcdpnet-lol" \
+      num_epoch=${epoch} \
+      log_every=2000 \
+      valid_every=20 
+      # log_dirpath="${train_dir}"
+  elif [ "$model" == "retinexdip" ]; then
+    echo -e "\nRetinexNet should be run in online mode"
+    python retinexdip.py \
+      --data "${low_data_dirs[i]}" \
+      --weights "${zoo_weights}" \
+      --output-dir "${train_dir}"
+  elif [ "$model" == "zerodce" ]; then
     python lowlight_train.py \
       --data "${low_data_dirs[i]}" \
       --lr 0.0001 \
@@ -162,7 +180,16 @@ if [ "$task" == "predict" ]; then
   for (( i=0; i<${#predict_data[@]}; i++ )); do
     predict_dir="${root_dir}/run/predict/${project}/${model}/${predict_data[$i]}"
     # echo -e "${low_data_dirs[$i]}"
-    if [ "$model" == "zerodce" ]; then
+    if [ "$model" == "lcdpnet" ]; then
+      python src/test.py \
+        checkpoint_path="${root_dir}/run/train/${project}/${model}-${train_data}/log/lcdpnet/lcdpnet:lcdpnet-lol@lcdp_data.train/last.ckpt"
+        # checkpoint_path="${weights}"
+    elif [ "$model" == "retinexdip" ]; then
+      python retinexdip.py \
+        --data "${low_data_dirs[i]}" \
+        --weights "${weights}" \
+        --output-dir "${predict_dir}"
+    elif [ "$model" == "zerodce" ]; then
       python lowlight_test.py \
         --data "${low_data_dirs[$i]}" \
         --weights "${weights}" \
