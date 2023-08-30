@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# # https://github.com/zhaozunjin/RetinexDIP
+
 from __future__ import annotations
 
 import argparse
@@ -17,6 +19,8 @@ from net.downsampler import *
 from net.losses import ExclusionLoss, GradientLoss, TVLoss
 from net.noise import get_noise
 from utils.image_io import *
+
+console = mon.console
 
 EnhancementResult = namedtuple("EnhancementResult", ["reflection", "illumination"])
 
@@ -228,7 +232,7 @@ class Enhancement(object):
         self.total_loss += self.mse_loss(self.illumination_out*self.reflection_out, self.image_torch)
         self.total_loss.requires_grad = True
         self.total_loss.backward()
-
+    
     def _obtain_current_result(self, step):
         """Puts in self.current result the current result.
         Also updates the best result.
@@ -241,9 +245,9 @@ class Enhancement(object):
             self.current_result = EnhancementResult(reflection=reflection_out_np, illumination=illumination_out_np)
             # if self.best_result is None or self.best_result.psnr < self.current_result.psnr:
             #     self.best_result = self.current_result
-
+    
     def _plot_closure(self, step):
-        print("Iteration {:5d}    Loss {:5f}".format(step, self.total_loss.item()))
+        # print("Iteration {:5d}    Loss {:5f}".format(step, self.total_loss.item()))
         if step % self.show_every == self.show_every - 1:
             # plot_image_grid("left_right_{}".format(step),
             #                 [self.current_result.reflection, self.current_result.illumination])
@@ -255,7 +259,7 @@ class Enhancement(object):
             #     misc.imresize(torch_to_np(self.reflection_out).transpose(1, 2, 0), (self.size[1], self.size[0]))
             # )
             self.get_enhanced(step, flag=False)
-
+        
     def gamma_trans(self, image, gamma):
         gamma_table = [np.power(x / 255.0, gamma) * 255.0 for x in range(256)]
         gamma_table = np.round(np.array(gamma_table)).astype(np.uint8)
@@ -288,7 +292,36 @@ class Enhancement(object):
         B = B / ini_illumination
         self.best_result = np.clip(cv2.merge([B, G, R]) * 255, 0.02, 255).astype(np.uint8)
         cv2.imwrite(str(self.image_name), self.best_result)
-
+    
+    def calculate_efficiency_score(
+        self,
+        image_size: int | list[int] = 512,
+        channels  : int             = 8,
+        runs      : int             = 100,
+    ):
+        flops_1, params_1, avg_time_1 = mon.calculate_efficiency_score(
+            model      = self.illumination_net,
+            image_size = image_size,
+            channels   = channels,
+            runs       = runs,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        flops_2, params_2, avg_time_2 = mon.calculate_efficiency_score(
+            model      = self.reflection_net,
+            image_size = image_size,
+            channels   = channels,
+            runs       = runs,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        flops    = flops_1 + flops_2
+        params   = params_1 + params_2
+        avg_time = (avg_time_1 + avg_time_2) / 2
+        console.log(f"FLOPs (G)  = {flops:.4f}")
+        console.log(f"Params (M) = {params:.4f}")
+        console.log(f"Time (s)   = {avg_time:.4f}")
+    
 
 def lowlight_enhancer(image_name, image):
     s = Enhancement(
@@ -303,32 +336,50 @@ def lowlight_enhancer(image_name, image):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test/")
-    parser.add_argument("--weights",    type=str, default="weights/Epoch99.pth")
-    parser.add_argument("--output-dir", type=str, default="predict/")
-    config = parser.parse_args()
+    parser.add_argument("--data",       type=str, default=mon.DATA_DIR)
+    parser.add_argument("--weights",    type=str, default=mon.ZOO_DIR/"retinexdip/retinexdip-lol.pt")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/ruas")
+    args = parser.parse_args()
     
-    config.output_dir = mon.Path(config.output_dir)
-    config.output_dir.mkdir(parents=True, exist_ok=True)
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     
+    #
     with torch.no_grad():
-        config.data = mon.Path(config.data)
-        image_paths = list(config.data.rglob("*"))
+        args.data = mon.Path(args.data)
+        image_paths = list(args.data.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         num_images  = 0
-        for image_path in image_paths:
-            print(image_path)
+        for i, image_path in enumerate(image_paths):
+            # print(image_path)
             image_path   = mon.Path(image_path)
-            result_path  = config.output_dir / image_path.name
+            result_path  = args.output_dir / image_path.name
             image        = Image.open(image_path).convert("RGB")
             enhanced_image, run_time = lowlight_enhancer(result_path, image)
             # torchvision.utils.save_image(enhanced_image, str(result_path))
             cv2.imwrite(str(result_path), enhanced_image)
             sum_time    += run_time
             num_images  += 1
+            
+            # Measure efficiency score
+            if i == 0:
+                s = Enhancement(
+                    image_name           = result_path,
+                    image                = image,
+                    plot_during_training = True,
+                    show_every           = 10,
+                    num_iter             = 500,
+                )
+                s.calculate_efficiency_score(
+                    image_size = args.image_size,
+                    channels   = 8,
+                    runs       = 100,
+                )
+        
         avg_time = float(sum_time / num_images)
-        print(f"Average time: {avg_time}")
+        console.log(f"Average time: {avg_time}")
     
     """
     parser = argparse.ArgumentParser()
@@ -354,7 +405,7 @@ if __name__ == "__main__":
             img_path_out = os.path.join(output_folder, filename)
             img = Image.open(img_path).convert("RGB")  # LOLdataset/eval15/low/1.png
             lowlight_enhancer(img_path_out, img)
-    """
+    
     # input_folder = 'data/images-for-computing-time'
     # output_folder = './result'
     # filename = "BladeImg048_LT.BMP"
@@ -362,3 +413,4 @@ if __name__ == "__main__":
     # img_path_out = os.path.join(output_folder, filename)
     # img = Image.open(img_path).convert('RGB')  # LOLdataset/eval15/low/1.png
     # lowlight_enhancer(img_path_out, img)
+    """

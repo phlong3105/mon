@@ -1,6 +1,7 @@
 import numpy as np
-from PIL import Image
 import torch
+from PIL import Image
+
 
 def image_from_path(image_path):
     data_lowlight = Image.open(image_path)

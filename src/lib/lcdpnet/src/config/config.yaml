@@ -18,7 +18,7 @@ valid_every: 10           # validate every N EPOCHS
 savemodel_every: 4        # run ModelCheckpoint every N EPOCHS
 log_every: 100            # log your message, curve or images every N STEPS
 # batchsize: 16
-batchsize: 8
+batchsize: 1
 valid_batchsize: 1
 lr: 1e-4
 checkpoint_path: null

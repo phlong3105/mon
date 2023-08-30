@@ -67,10 +67,10 @@ class ImagesDataset(torch.utils.data.Dataset):
         transform: PyTorch image transformations to apply to the images
         """
         self.transform = transform
-        self.opt = opt
-
-        gt_globs = opt[ds_type][GT]
-        input_globs = opt[ds_type][INPUT]
+        self.opt       = opt
+        
+        gt_globs     = opt[ds_type][GT] if GT in opt[ds_type] else False
+        input_globs  = opt[ds_type][INPUT]
         self.have_gt = True if gt_globs else False
 
         print(f'{ds_type} - GT Directory path: [yellow]{gt_globs}[/yellow]')

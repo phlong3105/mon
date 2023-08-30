@@ -4,9 +4,7 @@
 from __future__ import annotations
 
 import argparse
-import glob
 import os
-import pathlib
 import time
 
 import numpy as np
@@ -17,6 +15,8 @@ from PIL import Image
 
 import model
 import mon
+
+console = mon.console
 
 
 def predict(image_path: str):
@@ -31,11 +31,11 @@ def predict(image_path: str):
     data_lowlight = data_lowlight.permute(2, 0, 1)
     data_lowlight = data_lowlight.cuda().unsqueeze(0)
 
-    DCE_net  = model.enhance_net_nopool(scale_factor).cuda()
-    DCE_net.load_state_dict(torch.load(config.weights))
-    start    = time.time()
+    DCE_net    = model.enhance_net_nopool(scale_factor).cuda()
+    DCE_net.load_state_dict(torch.load(args.weights))
+    start_time = time.time()
     enhanced_image, params_maps = DCE_net(data_lowlight)
-    run_time = (time.time() - start)
+    run_time   = (time.time() - start_time)
     # print(run_time)
     '''
     image_path  = image_path.replace("test_data", "result_Zero_DCE++")
@@ -52,26 +52,42 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default="data/test_data/")
     parser.add_argument("--weights",    type=str, default="weights/Epoch99.pth")
-    parser.add_argument("--output-dir", type=str, default="predict/")
-    config = parser.parse_args()
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/zerodce++")
+    args = parser.parse_args()
     
-    config.output_dir = mon.Path(config.output_dir)
-    config.output_dir.mkdir(parents=True, exist_ok=True)
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Test_images
+    # Measure efficiency score
+    scale_factor = 12
+    h = (args.image_size // scale_factor) * scale_factor
+    w = (args.image_size // scale_factor) * scale_factor
+    DCE_net      = model.enhance_net_nopool(scale_factor).cuda()
+    DCE_net.load_state_dict(torch.load(args.weights))
+    flops, params, avg_time = mon.calculate_efficiency_score(
+        model      = DCE_net,
+        image_size = [h, w],
+        channels   = 3,
+        runs       = 100,
+        use_cuda   = True,
+        verbose    = False,
+    )
+    console.log(f"FLOPs (G)  = {flops:.4f}")
+    console.log(f"Params (M) = {params:.4f}")
+    console.log(f"Time (s)   = {avg_time:.4f}")
+    
+    #
     with torch.no_grad():
-        config.data = mon.Path(config.data)
-        image_paths = list(config.data.rglob("*"))
+        args.data   = mon.Path(args.data)
+        image_paths = list(args.data.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
-        num_images  = 0
         for image_path in image_paths:
-            print(image_path)
+            # print(image_path)
             enhanced_image, run_time = predict(image_path)
-            image_path   = pathlib.Path(image_path)
-            result_path  = pathlib.Path(config.output_dir) / image_path.name
+            result_path = args.output_dir / image_path.name
             torchvision.utils.save_image(enhanced_image, str(result_path))
-            sum_time    += run_time
-            num_images  += 1
-        avg_time = float(sum_time / num_images)
-        print(f"Average time: {avg_time}")
+            sum_time += run_time
+        avg_time = float(sum_time / len(image_paths))
+        console.log(f"Average time: {avg_time}")

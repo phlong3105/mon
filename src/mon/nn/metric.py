@@ -8,29 +8,22 @@ package.
 from __future__ import annotations
 
 __all__ = [
-    "AUROC", "Accuracy", "AveragePrecision", "BLEUScore", "BootStrapper",
-    "CHRFScore", "CalibrationError", "CatMetric", "CharErrorRate",
-    "ClasswiseWrapper", "CohenKappa", "ConcordanceCorrCoef", "ConfusionMatrix",
-    "CosineSimilarity", "Dice", "ErrorRelativeGlobalDimensionlessSynthesis",
-    "ExactMatch", "ExplainedVariance", "ExtendedEditDistance", "F1Score",
-    "FBetaScore", "HammingDistance", "HingeLoss", "JaccardIndex",
-    "KLDivergence", "KendallRankCorrCoef", "LogCoshError", "MatchErrorRate",
-    "MatthewsCorrCoef", "MaxMetric", "MeanAbsoluteError",
+    "AUROC", "Accuracy", "AveragePrecision", "BootStrapper", "CalibrationError",
+    "CatMetric", "ClasswiseWrapper", "CohenKappa", "ConcordanceCorrCoef",
+    "ConfusionMatrix", "CosineSimilarity", "Dice", "ExactMatch",
+    "ExplainedVariance", "F1Score", "FBetaScore", "HammingDistance",
+    "HingeLoss", "JaccardIndex", "KLDivergence", "KendallRankCorrCoef",
+    "LogCoshError", "MatthewsCorrCoef", "MaxMetric", "MeanAbsoluteError",
     "MeanAbsolutePercentageError", "MeanMetric", "MeanSquaredError",
     "MeanSquaredLogError", "Metric", "MetricCollection", "MetricTracker",
-    "MinMaxMetric", "MinMetric", "MultiScaleStructuralSimilarityIndexMeasure",
-    "MultioutputWrapper", "PeakSignalNoiseRatio", "PearsonCorrCoef",
-    "Perplexity", "Precision", "PrecisionRecallCurve", "R2Score", "ROC",
-    "Recall", "RetrievalFallOut", "RetrievalHitRate", "RetrievalMAP",
-    "RetrievalMRR", "RetrievalNormalizedDCG", "RetrievalPrecision",
+    "MinMaxMetric", "MinMetric", "MultioutputWrapper", "PearsonCorrCoef",
+    "Precision", "PrecisionRecallCurve", "R2Score", "ROC", "Recall",
+    "RetrievalFallOut", "RetrievalHitRate", "RetrievalMAP", "RetrievalMRR",
+    "RetrievalNormalizedDCG", "RetrievalPrecision",
     "RetrievalPrecisionRecallCurve", "RetrievalRPrecision", "RetrievalRecall",
-    "RetrievalRecallAtFixedPrecision", "SQuAD", "SacreBLEUScore",
-    "SpearmanCorrCoef", "Specificity", "SpectralAngleMapper",
-    "SpectralDistortionIndex", "StatScores", "StructuralSimilarityIndexMeasure",
-    "SumMetric", "SymmetricMeanAbsolutePercentageError", "TotalVariation",
-    "TranslationEditRate", "TweedieDevianceScore", "UniversalImageQualityIndex",
-    "WeightedMeanAbsolutePercentageError", "WordErrorRate", "WordInfoLost",
-    "WordInfoPreserved",
+    "RetrievalRecallAtFixedPrecision", "SpearmanCorrCoef", "Specificity",
+    "StatScores", "SumMetric", "SymmetricMeanAbsolutePercentageError",
+    "TweedieDevianceScore", "WeightedMeanAbsolutePercentageError",
 ]
 
 import torchmetrics
@@ -110,32 +103,6 @@ METRICS.register(name="stat_scores",            module=StatScores)
 # endregion
 
 
-# region Image Metric
-
-ErrorRelativeGlobalDimensionlessSynthesis  = torchmetrics.ErrorRelativeGlobalDimensionlessSynthesis
-MultiScaleStructuralSimilarityIndexMeasure = torchmetrics.MultiScaleStructuralSimilarityIndexMeasure
-PeakSignalNoiseRatio                       = torchmetrics.PeakSignalNoiseRatio
-SpectralAngleMapper                        = torchmetrics.SpectralAngleMapper
-SpectralDistortionIndex                    = torchmetrics.SpectralDistortionIndex
-StructuralSimilarityIndexMeasure           = torchmetrics.StructuralSimilarityIndexMeasure
-TotalVariation                             = torchmetrics.TotalVariation
-UniversalImageQualityIndex                 = torchmetrics.UniversalImageQualityIndex
-
-METRICS.register(name="error_relative_global_dimensionless_synthesis",  module=ErrorRelativeGlobalDimensionlessSynthesis)
-METRICS.register(name="multiscale_structural_similarity_index_measure", module=MultiScaleStructuralSimilarityIndexMeasure)
-METRICS.register(name="multiscale_ssim",                                module=MultiScaleStructuralSimilarityIndexMeasure)
-METRICS.register(name="peak_signal_noise_ratio",                        module=PeakSignalNoiseRatio)
-METRICS.register(name="psnr",                                           module=PeakSignalNoiseRatio)
-METRICS.register(name="spectral_angle_mapper",                          module=SpectralAngleMapper)
-METRICS.register(name="spectral_distortion_index",                      module=SpectralDistortionIndex)
-METRICS.register(name="structural_similarity_index_measure",            module=StructuralSimilarityIndexMeasure)
-METRICS.register(name="ssim",                                           module=StructuralSimilarityIndexMeasure)
-METRICS.register(name="total_variation",                                module=TotalVariation)
-METRICS.register(name="universal_image_quality_index",                  module=UniversalImageQualityIndex)
-
-# endregion
-
-
 # region Regression Metric
 
 ConcordanceCorrCoef                  = torchmetrics.ConcordanceCorrCoef
@@ -200,36 +167,5 @@ METRICS.register(name="retrieval_precision_recall_curve",    module=RetrievalPre
 METRICS.register(name="retrieval_recall",                    module=RetrievalRecall)
 METRICS.register(name="retrieval_recall_at_fixed_precision", module=RetrievalRecallAtFixedPrecision)
 METRICS.register(name="retrieval_r_precision",               module=RetrievalRPrecision)
-
-# endregion
-
-
-# region Text Metric
-
-BLEUScore            = torchmetrics.BLEUScore
-CharErrorRate        = torchmetrics.CharErrorRate
-CHRFScore            = torchmetrics.CHRFScore
-ExtendedEditDistance = torchmetrics.ExtendedEditDistance
-MatchErrorRate       = torchmetrics.MatchErrorRate
-Perplexity           = torchmetrics.Perplexity
-SacreBLEUScore       = torchmetrics.SacreBLEUScore
-SQuAD                = torchmetrics.SQuAD
-TranslationEditRate  = torchmetrics.TranslationEditRate
-WordErrorRate        = torchmetrics.WordErrorRate
-WordInfoLost         = torchmetrics.WordInfoLost
-WordInfoPreserved    = torchmetrics.WordInfoPreserved
-
-METRICS.register(name="blue_score",              module=BLEUScore)
-METRICS.register(name="char_error_rate",         module=CharErrorRate)
-METRICS.register(name="chrf_score",              module=CHRFScore)
-METRICS.register(name="extended_edit_distance",  module=ExtendedEditDistance)
-METRICS.register(name="match_error_rate",        module=MatchErrorRate)
-METRICS.register(name="perplexity",              module=Perplexity)
-METRICS.register(name="pacre_blue_score",        module=SacreBLEUScore)
-METRICS.register(name="squad",                   module=SQuAD)
-METRICS.register(name="translation_edit_rate",   module=TranslationEditRate)
-METRICS.register(name="word_error_rate",         module=WordErrorRate)
-METRICS.register(name="word_info_lost",          module=WordInfoLost)
-METRICS.register(name="word_info_preserved",     module=WordInfoPreserved)
 
 # endregion

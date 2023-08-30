@@ -24,7 +24,6 @@ class TC(nn.Module):
         return out
 
 
-
 # Depthwise Separable Convolution
 class DSC(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -131,5 +130,3 @@ class enhance_net_nopool(nn.Module):
         #plt.savefig('test.svg')
 
         #sys.exit(0)
-
-

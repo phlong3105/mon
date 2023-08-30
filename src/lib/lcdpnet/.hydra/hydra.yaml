@@ -1,6 +1,6 @@
 hydra:
   run:
-    dir: /home/longpham/10-workspace/11-code/mon/src/lib/lcdpnet
+    dir: ./
   sweep:
     dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
     subdir: ${hydra.job.num}
@@ -110,18 +110,14 @@ hydra:
   output_subdir: .hydra
   overrides:
     hydra:
-    - hydra.run.dir="/home/longpham/10-workspace/11-code/mon/src/lib/lcdpnet"
-    - hydra.job.name=train_ddp_process_1
     - hydra.mode=RUN
     task:
-    - name=lcdpnet-lol
-    - num_epoch=1000
-    - log_every=2000
-    - valid_every=20
+    - checkpoint_path=/mnt/10-workspace/11-code/mon/run/train/ie/llie/lcdpnet-lol/best.ckpt
+    - +image_size=512
   job:
-    name: train_ddp_process_1
+    name: test
     chdir: null
-    override_dirname: log_every=2000,name=lcdpnet-lol,num_epoch=1000,valid_every=20
+    override_dirname: +image_size=512,checkpoint_path=/mnt/10-workspace/11-code/mon/run/train/ie/llie/lcdpnet-lol/best.ckpt
     id: ???
     num: ???
     config_name: config
@@ -135,20 +131,21 @@ hydra:
   runtime:
     version: 1.3.2
     version_base: '1.1'
-    cwd: /home/longpham/10-workspace/11-code/mon/src/lib/lcdpnet
+    cwd: /mnt/10-workspace/11-code/mon/src/lib/lcdpnet
     config_sources:
     - path: hydra.conf
       schema: pkg
       provider: hydra
-    - path: /home/longpham/10-workspace/11-code/mon/src/lib/lcdpnet/src/config
+    - path: /mnt/10-workspace/11-code/mon/src/lib/lcdpnet/src/config
       schema: file
       provider: main
     - path: ''
       schema: structured
       provider: schema
-    output_dir: /home/longpham/10-workspace/11-code/mon/src/lib/lcdpnet
+    output_dir: /mnt/10-workspace/11-code/mon/src/lib/lcdpnet
     choices:
       runtime: lcdpnet.release
+      ds@predict_ds: predict
       ds@valid_ds: valid
       ds@test_ds: test
       ds@train_ds: train

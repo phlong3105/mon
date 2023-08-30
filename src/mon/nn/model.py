@@ -373,7 +373,6 @@ def load_state_dict_from_path(
         state_dict = state_dict["state_dict"]
     return state_dict
 
-
 # endregion
 
 
@@ -397,7 +396,6 @@ def sparsity(model: nn.Module) -> float:
         a += p.numel()
         b += (p == 0).sum()
     return b / a
-
 
 # endregion
 

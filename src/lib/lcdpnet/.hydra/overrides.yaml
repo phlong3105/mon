@@ -1,4 +1,2 @@
-- name=lcdpnet-lol
-- num_epoch=1000
-- log_every=2000
-- valid_every=20
+- checkpoint_path=/mnt/10-workspace/11-code/mon/run/train/ie/llie/lcdpnet-lol/best.ckpt
+- +image_size=512

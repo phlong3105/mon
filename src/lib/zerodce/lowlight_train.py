@@ -11,6 +11,7 @@ import torch.optim
 
 import dataloader
 import model
+import mon
 import Myloss
 
 
@@ -23,20 +24,20 @@ def weights_init(m):
         m.bias.data.fill_(0)
 
 
-def train(config):
+def train(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     DCE_net = model.enhance_net_nopool().cuda()
     DCE_net.apply(weights_init)
-    if config.load_pretrain:
-        DCE_net.load_state_dict(torch.load(config.weights))
+    if args.load_pretrain:
+        DCE_net.load_state_dict(torch.load(args.weights))
    
-    train_dataset = dataloader.lowlight_loader(config.data)
+    train_dataset = dataloader.lowlight_loader(args.data)
     train_loader  = torch.utils.data.DataLoader(
 	    train_dataset,
-	    batch_size  = config.train_batch_size,
+	    batch_size  = args.train_batch_size,
 	    shuffle     = True,
-	    num_workers = config.num_workers,
+	    num_workers = args.num_workers,
 	    pin_memory  = True
     )
 
@@ -46,16 +47,16 @@ def train(config):
     L_tv      = Myloss.L_TV()
     optimizer = torch.optim.Adam(
 	    DCE_net.parameters(),
-	    lr           = config.lr,
-	    weight_decay = config.weight_decay
+	    lr           = args.lr,
+	    weight_decay = args.weight_decay
     )
     DCE_net.train()
 
-    for epoch in range(config.epochs):
+    for epoch in range(args.epochs):
         for iteration, img_lowlight in enumerate(train_loader):
             img_lowlight = img_lowlight.cuda()
             enhanced_image_1, enhanced_image, A = DCE_net(img_lowlight)
-
+            
             loss_tv  = 200 * L_tv(A)
             loss_spa = torch.mean(L_spa(enhanced_image, img_lowlight))
             loss_col = 5   * torch.mean(L_color(enhanced_image))
@@ -64,22 +65,20 @@ def train(config):
 
             optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm(DCE_net.parameters(), config.grad_clip_norm)
+            torch.nn.utils.clip_grad_norm(DCE_net.parameters(), args.grad_clip_norm)
             optimizer.step()
 
-            if ((iteration + 1) % config.display_iter) == 0:
+            if ((iteration + 1) % args.display_iter) == 0:
                 print("Loss at iteration", iteration + 1, ":", loss.item())
-            if ((iteration + 1) % config.checkpoint_iter) == 0:
-                torch.save(
-	                DCE_net.state_dict(),
-	                config.checkpoints_dir + "best.pth"
-                )
+            if ((iteration + 1) % args.checkpoint_iter) == 0:
+                torch.save(DCE_net.state_dict(), args.checkpoints_dir / "best.pt")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # Input Parameters
     parser.add_argument("--data",             type=str,   default="data/train_data/")
+    parser.add_argument("--weights",          type=str,   default="weights/Epoch99.pth")
+    parser.add_argument("--load-pretrain",    type=bool,  default=False)
     parser.add_argument("--lr",               type=float, default=0.0001)
     parser.add_argument("--weight-decay",     type=float, default=0.0001)
     parser.add_argument("--grad-clip-norm",   type=float, default=0.1)
@@ -89,12 +88,10 @@ if __name__ == "__main__":
     parser.add_argument("--num-workers",      type=int,   default=4)
     parser.add_argument("--display-iter",     type=int,   default=10)
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
-    parser.add_argument("--checkpoints-dir",  type=str,   default="weights/")
-    parser.add_argument("--weights",          type=str,   default="weights/Epoch99.pth")
-    parser.add_argument("--load-pretrain",    type=bool,  default=False)
-    config = parser.parse_args()
+    parser.add_argument("--checkpoints-dir",  type=str,   default=mon.RUN_DIR/"train/zerodce")
+    args = parser.parse_args()
 	
-    if not os.path.exists(config.checkpoints_dir):
-        os.mkdir(config.checkpoints_dir)
+    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
+    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
 
-    train(config)
+    train(args)
