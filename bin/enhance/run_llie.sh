@@ -54,7 +54,7 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
-model_dir="${root_dir}/src/lib/${model}"
+model_dir="${root_dir}/src/lib/vision/enhance/${model}"
 cd "${model_dir}" || exit
 
 if [ "$predict_data" == "all" ]; then

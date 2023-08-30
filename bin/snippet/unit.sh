@@ -11,7 +11,7 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
-unit_dir="${root_dir}/src/lib/unit"
+unit_dir="${root_dir}/src/lib/vision/synthesis/unit"
 
 cd "${unit_dir}" || exit
 

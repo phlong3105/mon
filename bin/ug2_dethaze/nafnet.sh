@@ -14,7 +14,7 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
-nafnet_dir="${root_dir}/src/lib/nafnet"
+nafnet_dir="${root_dir}/src/lib/vision/enhance/nafnet"
 
 # Train
 if [ "$task" == "train" ]; then

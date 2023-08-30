@@ -7,7 +7,7 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
-zid_dir="${root_dir}/src/lib/zid"
+zid_dir="${root_dir}/src/lib/vision/enhance/zid"
 
 cd "${zid_dir}" || exit
 

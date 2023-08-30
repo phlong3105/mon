@@ -28,9 +28,9 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
-yolov8_dir="${root_dir}/src/lib/yolov8"
-lama_dir="${root_dir}/src/lib/lama"
-nafnet_dir="${root_dir}/src/lib/nafnet"
+yolov8_dir="${root_dir}/src/lib/vision/detect/yolov8"
+lama_dir="${root_dir}/src/lib/vision/enhance/lama"
+nafnet_dir="${root_dir}/src/lib/vision/enhance/nafnet"
 
 video_list=()
 if [ "$video" == "all" ]; then

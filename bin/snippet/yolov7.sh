@@ -23,7 +23,7 @@ if [ "$task" == "install" ]; then
   pip install seaborn thop
 fi
 
-cd "${root_dir}/src/lib/yolov7" || exit
+cd "${root_dir}/src/lib/vision/detect/yolov7" || exit
 
 # Train
 if [ "$task" == "train" ]; then
