@@ -4,10 +4,11 @@ echo "$HOSTNAME"
 
 # Constant
 models=(
-  "lcdpnet"     # https://github.com/onpix/LCDPNet
-  "retinexdip"  # https://github.com/zhaozunjin/RetinexDIP
-  "ruas"        # https://github.com/KarelZhang/RUAS
+  "lcdpnet"      # https://github.com/onpix/LCDPNet
+  "retinexdip"   # https://github.com/zhaozunjin/RetinexDIP
+  "ruas"         # https://github.com/KarelZhang/RUAS
   "sgz"
+  "uretinexnet"  # https://github.com/AndersonYong/URetinex-Net
   "zerodce"
   "zerodce++"
 )
@@ -121,9 +122,9 @@ train_dir="${root_dir}/run/train/${project}/${model}-${train_data}"
 train_weights_pt="${root_dir}/run/train/${project}/${model}-${train_data}/best.pt"
 train_weights_pth="${root_dir}/run/train/${project}/${model}-${train_data}/best.pth"
 train_weights_ckpt="${root_dir}/run/train/${project}/${model}-${train_data}/best.ckpt"
-zoo_weights_pt="${root_dir}/zoo/${model}/${model}-${train_data}.pt"
-zoo_weights_pth="${root_dir}/zoo/${model}/${model}-${train_data}.pth"
-zoo_weights_ckpt="${root_dir}/zoo/${model}/${model}-${train_data}.ckpt"
+zoo_weights_pt="${root_dir}/zoo/vision/enhance/${model}/${model}-${train_data}.pt"
+zoo_weights_pth="${root_dir}/zoo/vision/enhance/${model}/${model}-${train_data}.pth"
+zoo_weights_ckpt="${root_dir}/zoo/vision/enhance/${model}/${model}-${train_data}.ckpt"
 if [ -f "$train_weights_pt" ]; then
   weights=${train_weights_pt}
 elif [ -f "$train_weights_pth" ]; then
@@ -198,6 +199,9 @@ if [ "$task" == "train" ]; then
       --exp-level 0.6 \
       --checkpoints-iter 10 \
       --checkpoints-dir "${train_dir}"
+  # URetinex-Net
+  elif [ "$model" == "uretinexnet" ]; then
+    echo -e "\nURetinex-Net does not have training script."
   # Zero-DCE
   elif [ "$model" == "zerodce" ]; then
     python lowlight_train.py \
@@ -267,6 +271,16 @@ if [ "$task" == "predict" ]; then
           --data "${low_data_dirs[i]}" \
           --weights "${zoo_weights}" \
           --image-size 512 \
+          --output-dir "${predict_dir}"
+      # URetinex-Net
+      elif [ "$model" == "uretinexnet" ]; then
+        python test.py \
+          --data "${low_data_dirs[i]}" \
+          --decom-model-low-weights "${root_dir}/zoo/vision/enhance/${model}/${train_data}/init_low-lol.pth" \
+          --unfolding-model-weights "${root_dir}/zoo/vision/enhance/${model}/${train_data}/unfolding-lol.pth" \
+          --adjust-model-weights "${root_dir}/zoo/vision/enhance/${model}/${train_data}/L_adjust-lol.pth" \
+          --image-size 512 \
+          --ratio 5 \
           --output-dir "${predict_dir}"
       # Zero-DCE
       elif [ "$model" == "zerodce" ]; then

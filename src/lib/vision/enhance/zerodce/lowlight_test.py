@@ -51,6 +51,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/zerodce")
     args = parser.parse_args()
     
+    args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -73,7 +74,6 @@ if __name__ == "__main__":
     
     #
     with torch.no_grad():
-        args.data = mon.Path(args.data)
         image_paths = list(args.data.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
