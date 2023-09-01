@@ -72,11 +72,16 @@ class Tester:
         console.log(f"Time (s)   = {avg_time:.4f}")
         
         sum_time = 0
-        for image_path in image_paths:
-            enhanced_image, run_time = self.inference(image_path)
-            sum_time += run_time
-            result_path = args.output_dir / image_path.name
-            torchvision.utils.save_image(enhanced_image, str(result_path))
+        with mon.get_progress_bar() as pbar:
+            for _, image_path in pbar.track(
+                sequence    = enumerate(image_paths),
+                total       = len(image_paths),
+                description = f"[bright_yellow] Inferring"
+            ):
+                enhanced_image, run_time = self.inference(image_path)
+                sum_time    += run_time
+                result_path  = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(result_path))
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
 

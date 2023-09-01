@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import argparse
-import glob
 import time
 
 import torch.nn as nn
@@ -99,13 +98,18 @@ class Inference(nn.Module):
     def evaluate(self):
         low_image_paths = list(self.opts.data_low.rglob("*"))
         low_image_paths = [path for path in low_image_paths if path.is_image_file()]
-        for low_image_path in low_image_paths:
-            high_image_path   = self.opts.data_high / low_image_path.name
-            low_image         = self.transform(Image.open(low_image_path)).unsqueeze(0)
-            high_image        = self.transform(Image.open(high_image_path)).unsqueeze(0)
-            enhance, run_time = self.forward(low_image, high_image)
-            result_path       = self.opts.output_dir / low_image_path.name
-            torchvision.utils.save_image(enhance, str(result_path))
+        with mon.get_progress_bar() as pbar:
+            for _, low_image_path in pbar.track(
+                sequence    = enumerate(low_image_paths),
+                total       = len(low_image_paths),
+                description = f"[bright_yellow] Inferring"
+            ):
+                high_image_path   = self.opts.data_high / low_image_path.name
+                low_image         = self.transform(Image.open(low_image_path)).unsqueeze(0)
+                high_image        = self.transform(Image.open(high_image_path)).unsqueeze(0)
+                enhance, run_time = self.forward(low_image, high_image)
+                result_path       = self.opts.output_dir / low_image_path.name
+                torchvision.utils.save_image(enhance, str(result_path))
             """
             if not os.path.exists(self.opts.output):
                 os.makedirs(self.opts.output)
@@ -124,11 +128,11 @@ if __name__ == "__main__":
     parser.add_argument("--decom-model-high-weights", type=str, default="./ckpt/init_high.pth")
     parser.add_argument("--unfolding-model-weights",  type=str, default="./ckpt/unfolding.pth")
     parser.add_argument("--adjust-model-weights",     type=str, default="./ckpt/L_adjust.pth")
-    parser.add_argument("--gpu-id",                   type=int, default=0)
+    parser.add_argument("--gpu",                      type=int, default=0)
     parser.add_argument("--output-dir",               type=str, default="./demo/output/LOL")
     args = parser.parse_args()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     
     args.data_low   = mon.Path(args.data_low)
     args.data_high  = mon.Path(args.data_high)

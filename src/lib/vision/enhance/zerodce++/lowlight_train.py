@@ -55,27 +55,32 @@ def train(args):
     )
     DCE_net.train()
 
-    for epoch in range(args.epochs):
-        for iteration, img_lowlight in enumerate(train_loader):
-            img_lowlight      = img_lowlight.cuda()
-            enhanced_image, A = DCE_net(img_lowlight)
-            
-            # loss_tv = 200 * L_tv(A)
-            loss_tv  = 1600 * L_tv(A)
-            loss_spa = torch.mean(L_spa(enhanced_image, img_lowlight))
-            loss_col =  5 * torch.mean(L_color(enhanced_image))
-            loss_exp = 10 * torch.mean(L_exp(enhanced_image, 0.6))
-            loss     = loss_tv + loss_spa + loss_col + loss_exp
-
-            optimizer.zero_grad()
-            loss.backward()
-            torch.nn.utils.clip_grad_norm(DCE_net.parameters(), args.grad_clip_norm)
-            optimizer.step()
-
-            if ((iteration + 1) % args.display_iter) == 0:
-                print("Loss at iteration", iteration + 1, ":", loss.item())
-            if ((iteration + 1) % args.checkpoint_iter) == 0:
-                torch.save(DCE_net.state_dict(), args.checkpoints_dir / "best.pt")
+    with mon.get_progress_bar() as pbar:
+        for _ in pbar.track(
+            sequence    = range(args.epochs),
+            total       = args.epochs,
+            description = f"[bright_yellow] Inferring"
+        ):
+            for iteration, img_lowlight in enumerate(train_loader):
+                img_lowlight      = img_lowlight.cuda()
+                enhanced_image, A = DCE_net(img_lowlight)
+                
+                # loss_tv = 200 * L_tv(A)
+                loss_tv  = 1600 * L_tv(A)
+                loss_spa = torch.mean(L_spa(enhanced_image, img_lowlight))
+                loss_col =  5 * torch.mean(L_color(enhanced_image))
+                loss_exp = 10 * torch.mean(L_exp(enhanced_image, 0.6))
+                loss     = loss_tv + loss_spa + loss_col + loss_exp
+    
+                optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm(DCE_net.parameters(), args.grad_clip_norm)
+                optimizer.step()
+    
+                if ((iteration + 1) % args.display_iter) == 0:
+                    print("Loss at iteration", iteration + 1, ":", loss.item())
+                if ((iteration + 1) % args.checkpoint_iter) == 0:
+                    torch.save(DCE_net.state_dict(), args.checkpoints_dir / "best.pt")
 
 
 if __name__ == "__main__":

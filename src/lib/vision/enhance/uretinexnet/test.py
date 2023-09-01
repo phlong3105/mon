@@ -11,10 +11,10 @@ import time
 import torch.nn as nn
 import torchvision.transforms as transforms
 
+import mon
 from network.decom import Decom
 from network.Math_Module import P, Q
 from utils import *
-import mon
 
 console = mon.console
 
@@ -39,6 +39,7 @@ class Inference(nn.Module):
         self.Q = Q()
         transform = [
             transforms.ToTensor(),
+            # transforms.Resize(1280),
         ]
         self.transform = transforms.Compose(transform)
         # console.log(self.model_Decom_low)
@@ -98,11 +99,11 @@ if __name__ == "__main__":
     parser.add_argument("--adjust-model-weights",    type=str, default="./ckpt/L_adjust.pth")
     parser.add_argument("--image-size",              type=int, default=512)
     parser.add_argument("--ratio",                   type=int, default=5)  # ratio are recommended to be 3-5, bigger ratio will lead to over-exposure
-    parser.add_argument("--gpu-id",                  type=int, default=0)
+    parser.add_argument("--gpu",                     type=int, default=0)
     parser.add_argument("--output-dir",              type=str, default="./demo/output")
     args = parser.parse_args()
     
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
@@ -130,11 +131,16 @@ if __name__ == "__main__":
         image_paths = list(args.data.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
-        for image_path in image_paths:
-            # console.log(image_path)
-            enhanced_image, run_time = model.run(image_path)
-            result_path  = args.output_dir / image_path.name
-            torchvision.utils.save_image(enhanced_image, str(result_path))
-            sum_time    += run_time
+        with mon.get_progress_bar() as pbar:
+            for _, image_path in pbar.track(
+                sequence    = enumerate(image_paths),
+                total       = len(image_paths),
+                description = f"[bright_yellow] Inferring"
+            ):
+                # console.log(image_path)
+                enhanced_image, run_time = model.run(image_path)
+                result_path  = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(result_path))
+                sum_time    += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")

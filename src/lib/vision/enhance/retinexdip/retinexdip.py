@@ -342,43 +342,46 @@ if __name__ == "__main__":
     parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/ruas")
     args = parser.parse_args()
     
+    args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
     #
     with torch.no_grad():
-        args.data = mon.Path(args.data)
         image_paths = list(args.data.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
-        num_images  = 0
-        for i, image_path in enumerate(image_paths):
-            # print(image_path)
-            image_path   = mon.Path(image_path)
-            result_path  = args.output_dir / image_path.name
-            image        = Image.open(image_path).convert("RGB")
-            enhanced_image, run_time = lowlight_enhancer(result_path, image)
-            # torchvision.utils.save_image(enhanced_image, str(result_path))
-            cv2.imwrite(str(result_path), enhanced_image)
-            sum_time    += run_time
-            num_images  += 1
-            
-            # Measure efficiency score
-            if i == 0:
-                s = Enhancement(
-                    image_name           = result_path,
-                    image                = image,
-                    plot_during_training = True,
-                    show_every           = 10,
-                    num_iter             = 500,
-                )
-                s.calculate_efficiency_score(
-                    image_size = args.image_size,
-                    channels   = 8,
-                    runs       = 100,
-                )
+        with mon.get_progress_bar() as pbar:
+            for i, image_path in pbar.track(
+                sequence    = enumerate(image_paths),
+                total       = len(image_paths),
+                description = f"[bright_yellow] Inferring"
+            ):
+                # print(image_path)
+                image_path   = mon.Path(image_path)
+                result_path  = args.output_dir / image_path.name
+                image        = Image.open(image_path).convert("RGB")
+                enhanced_image, run_time = lowlight_enhancer(result_path, image)
+                # torchvision.utils.save_image(enhanced_image, str(result_path))
+                cv2.imwrite(str(result_path), enhanced_image)
+                sum_time    += run_time
+                
+                # Measure efficiency score
+                if i == 0:
+                    s = Enhancement(
+                        image_name           = result_path,
+                        image                = image,
+                        plot_during_training = True,
+                        show_every           = 10,
+                        num_iter             = 500,
+                    )
+                    s.calculate_efficiency_score(
+                        image_size = args.image_size,
+                        channels   = 8,
+                        runs       = 100,
+                    )
         
-        avg_time = float(sum_time / num_images)
+        avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
     
     """

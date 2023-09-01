@@ -21,7 +21,7 @@ model=${1:-"zerodce"}
 task=${2:-"predict"}
 train_data=${3:-"lol"}
 predict_data=${4:-"all"}
-project=${5:-"ie/llie"}
+project=${5:-"enhance/llie"}
 epoch=${6:-"100"}
 
 read -e -i "$model"        -p "Model [${models[*]}]: " model
@@ -64,8 +64,7 @@ if [ "$predict_data" == "all" ]; then
     predict_data[$i]="${predict_datasets[$i]}"
   done
 else
-  declare -a predict_data=()
-  predict_data+=($predict_data)
+  declare -a predict_data=($predict_data)
 fi
 # echo "${predict_data[*]}"
 
@@ -284,7 +283,7 @@ if [ "$task" == "predict" ]; then
           --output-dir "${predict_dir}"
       # Zero-DCE
       elif [ "$model" == "zerodce" ]; then
-        python test.py \
+        python lowlight_test.py \
           --data "${low_data_dirs[$i]}" \
           --weights "${weights}" \
           --image-size 512 \

@@ -12,7 +12,6 @@ import pytorch_lightning as pl
 from omegaconf import open_dict
 from pytorch_lightning import Trainer
 
-import mon
 from globalenv import *
 from utils.util import parse_config
 
