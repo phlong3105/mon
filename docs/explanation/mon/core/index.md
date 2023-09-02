@@ -1,0 +1,3 @@
+# foundation
+
+::: src.mon.core
