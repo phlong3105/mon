@@ -4,9 +4,11 @@ echo "$HOSTNAME"
 
 # Constant
 models=(
+  "iat"          # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
   "lcdpnet"      # https://github.com/onpix/LCDPNet
   "retinexdip"   # https://github.com/zhaozunjin/RetinexDIP
   "ruas"         # https://github.com/KarelZhang/RUAS
+  "sci"          # # https://github.com/vis-opt-group/SCI
   "sgz"
   "uretinexnet"  # https://github.com/AndersonYong/URetinex-Net
   "zerodce"
@@ -149,8 +151,11 @@ fi
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
+  # IAT
+  if [ "$model" == "iat" ]; then
+    echo -e "\nIAT should be run in prediction mode only"
   # LCDPNet
-  if [ "$model" == "lcdpnet" ]; then
+  elif [ "$model" == "lcdpnet" ]; then
     python src/train.py \
       name="lcdpnet-lol" \
       num_epoch=${epoch} \
@@ -158,7 +163,7 @@ if [ "$task" == "train" ]; then
       valid_every=20
   # RetinexDIP
   elif [ "$model" == "retinexdip" ]; then
-    echo -e "\nRetinexNet should be run in online mode"
+    echo -e "\nRetinexNet should be run in prediction mode only"
     python retinexdip.py \
       --data "${low_data_dirs[i]}" \
       --weights "${zoo_weights}" \
@@ -173,6 +178,20 @@ if [ "$task" == "train" ]; then
       --epoch "${epoch}" \
       --batch-size 1 \
       --report-freq 50 \
+      --gpu 0 \
+      --seed 2 \
+      --checkpoints-dir "${train_dir}"
+  # SCI
+  elif [ "$model" == "sci" ]; then
+    python train.py \
+      --data "${low_data_dirs[i]}" \
+      --weights "${zoo_weights}" \
+      --load-pretrain false \
+      --batch-size 1 \
+      --epochs "${epoch}" \
+      --lr 0.0003 \
+      --stage 3 \
+      --cuda true \
       --gpu 0 \
       --seed 2 \
       --checkpoints-dir "${train_dir}"
@@ -248,8 +267,18 @@ if [ "$task" == "predict" ]; then
   else
     for (( i=0; i<${#predict_data[@]}; i++ )); do
       predict_dir="${root_dir}/run/predict/${project}/${model}/${predict_data[$i]}"
+      # IAT
+      if [ "$model" == "iat" ]; then
+          python IAT_enhance/predict.py \
+            --data "${low_data_dirs[i]}" \
+            --exposure-weights "${root_dir}/zoo/vision/enhance/${model}/iat-exposure.pth" \
+            --enhance-weights "${root_dir}/zoo/vision/enhance/${model}/iat-lol.pth" \
+            --image-size 512 \
+            --normalize \
+            --task "enhance" \
+            --output-dir "${predict_dir}"
       # RetinexDIP
-      if [ "$model" == "retinexdip" ]; then
+      elif [ "$model" == "retinexdip" ]; then
         python retinexdip.py \
           --data "${low_data_dirs[i]}" \
           --weights "${weights}" \
@@ -260,6 +289,15 @@ if [ "$task" == "predict" ]; then
         python test.py \
           --data "${low_data_dirs[$i]}" \
           --weights "${weights}" \
+          --image-size 512 \
+          --gpu 0 \
+          --seed 2 \
+          --output-dir "${predict_dir}"
+      # SCI
+      elif [ "$model" == "sci" ]; then
+        python test.py \
+          --data "${low_data_dirs[i]}" \
+          --weights "${zoo_weights}" \
           --image-size 512 \
           --gpu 0 \
           --seed 2 \
