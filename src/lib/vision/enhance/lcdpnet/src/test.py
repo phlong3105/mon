@@ -45,7 +45,6 @@ def main(opt):
     )
     
     # Measure efficiency score
-    '''
     flops, params, avg_time = mon.calculate_efficiency_score(
         model      = model,
         image_size = opt["image_size"],
@@ -57,7 +56,6 @@ def main(opt):
     console.log(f"FLOPs (G)  = {flops:.4f}")
     console.log(f"Params (M) = {params:.4f}")
     console.log(f"Time (s)   = {avg_time:.4f}")
-    '''
     
     #
     start_time = time.time()

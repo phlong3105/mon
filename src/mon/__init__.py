@@ -5,12 +5,12 @@
 
 The sub-packages abstraction hierarchy is as follows:
 
-- :mod:`foundation` implements the most ATOMIC, self-contained modules. As the
+- :mod:`core` implements the most ATOMIC, self-contained modules. As the
   name suggests, it is the foundation to build the core components on top.
 - :mod:`core` implements core components including custom data types, creation
   patterns, data storage and persistence, networking, etc.
-- :mod:`coreimage`
-- :mod:`coreml`
+- :mod:`createml`
+- :mod:`nn`
 - :mod:`vision`
 """
 
@@ -28,4 +28,4 @@ from mon.nn import *
 from mon.vision import *
 from mon.createml import *
 
-__version__ = "1.2.6"
+__version__ = "1.2.7"

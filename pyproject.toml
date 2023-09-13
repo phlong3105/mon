@@ -9,7 +9,7 @@
 #
 [tool.poetry]
 name          = "mon"
-version       = "1.2.6"
+version       = "1.2.7"
 description   = "MON covers a wide range of research topics in computer vision, machine learning, and deep learning."
 license       = "MIT"
 authors       = [
@@ -82,3 +82,9 @@ aic = [
 requires      = ["poetry-core>=1.2.0"]
 build-backend = "poetry.core.masonry.api"
 # build-backend = "setuptools.build_meta"
+
+
+# Comments
+#
+# 1. Fix thop error: AttributeError: 'some_object' object has no attribute 'total_ops'
+# pip3 install --upgrade git+https://github.com/sile/pytorch-OpCounter.git@8f115d4aeaee787d7347b75f30be28164b02ccaa

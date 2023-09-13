@@ -6,13 +6,14 @@ echo "$HOSTNAME"
 models=(
   "iat"          # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
   "lcdpnet"      # https://github.com/onpix/LCDPNet
+  "llflow"       # https://github.com/wyf0912/LLFlow
   "retinexdip"   # https://github.com/zhaozunjin/RetinexDIP
   "ruas"         # https://github.com/KarelZhang/RUAS
-  "sci"          # # https://github.com/vis-opt-group/SCI
-  "sgz"
+  "sci"          # https://github.com/vis-opt-group/SCI
+  "sgz"          #
   "uretinexnet"  # https://github.com/AndersonYong/URetinex-Net
-  "zerodce"
-  "zerodce++"
+  "zerodce"      #
+  "zerodce++"    #
 )
 train_datasets=("lol")
 predict_datasets=("dcim" "fusion" "lime" "lol" "mef" "npe" "sice" "vip" "vv")
@@ -161,6 +162,9 @@ if [ "$task" == "train" ]; then
       num_epoch=${epoch} \
       log_every=2000 \
       valid_every=20
+  # LLFlow
+  elif [ "$model" == "llflow" ]; then
+    echo -e "\nLLFlow should be run in prediction mode only"
   # RetinexDIP
   elif [ "$model" == "retinexdip" ]; then
     echo -e "\nRetinexNet should be run in prediction mode only"
@@ -277,6 +281,15 @@ if [ "$task" == "predict" ]; then
             --normalize \
             --task "enhance" \
             --output-dir "${predict_dir}"
+      # LLFlow
+      elif [ "$model" == "llflow" ]; then
+        python code/test_unpaired_v2.py \
+          --data "${low_data_dirs[i]}" \
+          --weights "${root_dir}/zoo/vision/enhance/${model}/llflow-lol-smallnet.pth" \
+          --image-size 512 \
+          --output-dir "${predict_dir}" \
+          --opt "code/confs/LOL_smallNet.yml" \
+          --name "unpaired"
       # RetinexDIP
       elif [ "$model" == "retinexdip" ]; then
         python retinexdip.py \

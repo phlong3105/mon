@@ -2,6 +2,6 @@
 class: img_dataset
 name: lcdp_data.train
 input:
-  - ../../../data/lol/train/low/lol/*
+  - ../../../../data/lol/train/low/lol/*
 GT:
-  - ../../../data/lol/train/high/lol/*
+  - ../../../../data/lol/train/high/lol/*

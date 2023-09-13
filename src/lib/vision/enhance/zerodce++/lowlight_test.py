@@ -62,12 +62,13 @@ if __name__ == "__main__":
    
     console.log(f"Data: {args.data}")
     
+    DCE_net = model.enhance_net_nopool(scale_factor).cuda()
+    DCE_net.load_state_dict(torch.load(args.weights))
+    
     # Measure efficiency score
     scale_factor = 12
     h = (args.image_size // scale_factor) * scale_factor
     w = (args.image_size // scale_factor) * scale_factor
-    DCE_net      = model.enhance_net_nopool(scale_factor).cuda()
-    DCE_net.load_state_dict(torch.load(args.weights))
     flops, params, avg_time = mon.calculate_efficiency_score(
         model      = DCE_net,
         image_size = [h, w],

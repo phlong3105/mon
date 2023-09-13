@@ -9,7 +9,7 @@
 echo "$HOSTNAME"
 
 machine="desktop"
-read -e -i "$machine" -p "Task [desktop, server]: " machine
+read -e -i "$machine" -p "Machine Type [desktop, server]: " machine
 
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")

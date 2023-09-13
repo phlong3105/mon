@@ -54,8 +54,6 @@ DfsrPrivate
 *.cache
 *.lock
 /data
-/zoo
 \data
-\zoo
 poetry.lock
 pycharm.env
