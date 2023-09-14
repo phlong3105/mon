@@ -1,22 +1,33 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import annotations
+
 import logging
+import time
 from collections import OrderedDict
 
+import models.lr_scheduler as lr_scheduler
+import models.networks as networks
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.nn.parallel import DataParallel, DistributedDataParallel
-import models.networks as networks
-import models.lr_scheduler as lr_scheduler
-from .base_model import BaseModel
 from models.loss import CharbonnierLoss, VGGLoss
+from thop import profile
+from torch.nn.parallel import DataParallel, DistributedDataParallel
+
+import mon
+from .base_model import BaseModel
 
 logger = logging.getLogger('base')
 
 
 class VideoBaseModel(BaseModel):
+    
     def __init__(self, opt):
         super(VideoBaseModel, self).__init__(opt)
-
+        
+        self.training = False
+        
         if opt['dist']:
             self.rank = torch.distributed.get_rank()
         else:
@@ -24,15 +35,17 @@ class VideoBaseModel(BaseModel):
         train_opt = opt['train']
 
         # define network and load pretrained models
-        self.netG = networks.define_G(opt).to(self.device)
-        if opt['dist']:
-            self.netG = DistributedDataParallel(self.netG, device_ids=[torch.cuda.current_device()])
-        else:
-            self.netG = DataParallel(self.netG)
+        # self.netG = networks.define_G(opt).to(self.device)
+        self.netG = networks.define_G(opt).cuda()
+        # if opt['dist']:
+        #     self.netG = DistributedDataParallel(self.netG, device_ids=[torch.cuda.current_device()])
+        # else:
+        #     self.netG = DataParallel(self.netG)
         # print network
-        self.print_network()
+        # self.print_network()
         self.load()
-
+        self.netG = self.netG.cuda()
+        
         if self.is_train:
             self.netG.train()
 
@@ -111,10 +124,15 @@ class VideoBaseModel(BaseModel):
             self.log_dict = OrderedDict()
 
     def feed_data(self, data, need_GT=True):
-        self.var_L = data['LQs'].to(self.device)
-        self.nf = data['nf'].to(self.device)
+        # print(data['LQs'].shape)
+        # self.var_L = data["LQs"].to(self.device)
+        # self.nf    = data["nf"].to(self.device)
+        # if need_GT:
+        #    self.real_H = data["GT"].to(self.device)
+        self.var_L = data["LQs"].cuda()
+        self.nf    = data["nf"].cuda()
         if need_GT:
-            self.real_H = data['GT'].to(self.device)
+            self.real_H = data["GT"].cuda()
 
     def set_params_lr_zero(self):
         # fix normal module
@@ -157,26 +175,24 @@ class VideoBaseModel(BaseModel):
     def test(self):
         self.netG.eval()
         with torch.no_grad():
-
-            dark = self.var_L
+            dark = self.var_L.cuda()
             dark = dark[:, 0:1, :, :] * 0.299 + dark[:, 1:2, :, :] * 0.587 + dark[:, 2:3, :, :] * 0.114
             if not (len(self.nf.shape) == 4):
                 self.nf = self.nf.unsqueeze(dim=0)
-            light = self.nf
-            light = light[:, 0:1, :, :] * 0.299 + light[:, 1:2, :, :] * 0.587 + light[:, 2:3, :, :] * 0.114
-            noise = torch.abs(dark - light)
-            mask = torch.div(light, noise + 0.0001)
-
-            batch_size = mask.shape[0]
-            height = mask.shape[2]
-            width = mask.shape[3]
-            mask_max = torch.max(mask.view(batch_size, -1), dim=1)[0]
-            mask_max = mask_max.view(batch_size, 1, 1, 1)
-            mask_max = mask_max.repeat(1, 1, height, width)
-            mask = mask * 1.0 / (mask_max + 0.0001)
-
-            mask = torch.clamp(mask, min=0, max=1.0)
-            mask = mask.float()
+            light       = self.nf
+            light       = light[:, 0:1, :, :] * 0.299 + light[:, 1:2, :, :] * 0.587 + light[:, 2:3, :, :] * 0.114
+            noise       = torch.abs(dark - light)
+            mask        = torch.div(light, noise + 0.0001)
+            batch_size  = mask.shape[0]
+            height      = mask.shape[2]
+            width       = mask.shape[3]
+            mask_max    = torch.max(mask.view(batch_size, -1), dim=1)[0]
+            mask_max    = mask_max.view(batch_size, 1, 1, 1)
+            mask_max    = mask_max.repeat(1, 1, height, width)
+            mask        = mask * 1.0 / (mask_max + 0.0001)
+            mask        = torch.clamp(mask, min=0, max=1.0)
+            mask        = mask.float()
+            mask        = mask.cuda()
             self.fake_H = self.netG(self.var_L, mask)
         self.netG.train()
 
@@ -245,3 +261,27 @@ class VideoBaseModel(BaseModel):
 
     def save(self, iter_label):
         self.save_network(self.netG, 'G', iter_label)
+    
+    # My modification
+    
+    def forward(self):
+        self.test()
+    
+    def measure_efficiency_score(self, image_size=512, channels=3, runs=100):
+        h, w  = mon.get_hw(image_size)
+        input = torch.rand(1, channels, h, w).cuda()
+        data  = {
+            "idx": 0,
+            "LQs": input,
+            "nf" : input,
+        }
+        self.feed_data(data, need_GT=False)
+        flops, params = profile(self, inputs=(), verbose=False)
+        g_flops       = flops  * 1e-9
+        m_params      = params * 1e-6
+        start_time    = time.time()
+        # for i in range(runs):
+        #    _ = self.get_sr(input)
+        runtime  = time.time() - start_time
+        avg_time = runtime / runs
+        return flops, params, avg_time

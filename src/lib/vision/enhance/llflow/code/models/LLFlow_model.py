@@ -371,6 +371,7 @@ class LLFlowModel(BaseModel):
         self.save_network(self.netG, 'G', iter_label)
     
     # My modification
+    
     def forward(self, lq, heat=None, seed=None, z=None, epses=None):
         return self.get_sr(lq, heat, seed, z, epses)[0]
     

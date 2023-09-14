@@ -11,6 +11,7 @@ models=(
   "ruas"         # https://github.com/KarelZhang/RUAS
   "sci"          # https://github.com/vis-opt-group/SCI
   "sgz"          #
+  "snr"          # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
   "uretinexnet"  # https://github.com/AndersonYong/URetinex-Net
   "zerodce"      #
   "zerodce++"    #
@@ -154,7 +155,7 @@ if [ "$task" == "train" ]; then
   echo -e "\nTraining"
   # IAT
   if [ "$model" == "iat" ]; then
-    echo -e "\nIAT should be run in prediction mode only"
+    echo -e "\nI have not implemented training script for IAT."
   # LCDPNet
   elif [ "$model" == "lcdpnet" ]; then
     python src/train.py \
@@ -164,7 +165,7 @@ if [ "$task" == "train" ]; then
       valid_every=20
   # LLFlow
   elif [ "$model" == "llflow" ]; then
-    echo -e "\nLLFlow should be run in prediction mode only"
+    echo -e "\nI have not implemented training script for LLFlow."
   # RetinexDIP
   elif [ "$model" == "retinexdip" ]; then
     echo -e "\nRetinexNet should be run in prediction mode only"
@@ -221,9 +222,12 @@ if [ "$task" == "train" ]; then
       --exp-level 0.6 \
       --checkpoints-iter 10 \
       --checkpoints-dir "${train_dir}"
+  # SGZ
+  elif [ "$model" == "snr" ]; then
+    echo -e "\nI have not implemented training script for SNR-Aware."
   # URetinex-Net
   elif [ "$model" == "uretinexnet" ]; then
-    echo -e "\nURetinex-Net does not have training script."
+    echo -e "\nI have not implemented training script for URetinex-Net."
   # Zero-DCE
   elif [ "$model" == "zerodce" ]; then
     python lowlight_train.py \
@@ -320,6 +324,14 @@ if [ "$task" == "predict" ]; then
         python test.py \
           --data "${low_data_dirs[i]}" \
           --weights "${zoo_weights}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}"
+      # SGZ
+      elif [ "$model" == "snr" ]; then
+        python predict.py \
+          --data "${low_data_dirs[i]}" \
+          --weights "${root_dir}/zoo/vision/enhance/${model}/snr-lolv1.pth" \
+          --opt "./options/test/LOLv1.yml" \
           --image-size 512 \
           --output-dir "${predict_dir}"
       # URetinex-Net

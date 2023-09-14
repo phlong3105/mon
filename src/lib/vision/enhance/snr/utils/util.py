@@ -136,7 +136,6 @@ def tensor2img(tensor, out_type=np.uint8, min_max=(0, 1)):
         # Important. Unlike matlab, numpy.unit8() WILL NOT round by default.
 
     # img_np = img_np[:, ::-1, :]
-
     # img_np = cv2.blur(img_np, (2,2))
     # img_np = cv2.fastNlMeansDenoisingColored(img_np.astype(np.uint8), None, 10, 10, 7, 21)
     # img_np = img_np * 1.2

@@ -1,17 +1,14 @@
 import os.path as osp
+import random
+
+import cv2
+import data.util as util
 import torch
 import torch.utils.data as data
-import data.util as util
-import torch.nn.functional as F
-import random
-import cv2
-import numpy as np
-import glob
-import os
-import functools
 
 
 class VideoSameSizeDataset(data.Dataset):
+    
     def __init__(self, opt):
         super(VideoSameSizeDataset, self).__init__()
         self.opt = opt
@@ -65,14 +62,14 @@ class VideoSameSizeDataset(data.Dataset):
 
             _, H, W = img_GT.shape  # real img size
 
-            rnd_h = random.randint(0, max(0, H - GT_size))
-            rnd_w = random.randint(0, max(0, W - GT_size))
+            rnd_h  = random.randint(0, max(0, H - GT_size))
+            rnd_w  = random.randint(0, max(0, W - GT_size))
             img_LQ = img_LQ[:, rnd_h:rnd_h + GT_size, rnd_w:rnd_w + GT_size]
             img_GT = img_GT[:, rnd_h:rnd_h + GT_size, rnd_w:rnd_w + GT_size]
 
             img_LQ_l = [img_LQ]
             img_LQ_l.append(img_GT)
-            rlt = util.augment_torch(img_LQ_l, self.opt['use_flip'], self.opt['use_rot'])
+            rlt    = util.augment_torch(img_LQ_l, self.opt['use_flip'], self.opt['use_rot'])
             img_LQ = rlt[0]
             img_GT = rlt[1]
 
@@ -92,8 +89,7 @@ class VideoSameSizeDataset(data.Dataset):
         img_nf = cv2.blur(img_nf, (5, 5))
         img_nf = img_nf * 1.0 / 255.0
         img_nf = torch.Tensor(img_nf).float().permute(2, 0, 1)
-
-
+        
         return {
             'LQs': img_LQ,
             'GT': img_GT,

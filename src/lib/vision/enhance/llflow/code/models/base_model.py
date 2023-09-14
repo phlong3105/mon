@@ -11,6 +11,7 @@ import glob
 
 
 class BaseModel(nn.Module):
+    
     def __init__(self, opt):
         super().__init__()
         self.opt = opt

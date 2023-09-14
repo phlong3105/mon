@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# https://github.com/wyf0912/LLFlow
+
 from __future__ import annotations
 
 import argparse
@@ -116,9 +118,9 @@ def main():
 
     # Measure efficiency score
     flops, params, avg_time = model.measure_efficiency_score(image_size=args.image_size)
-    console.log(f"FLOPs (G)  = {flops:.4f}")
-    console.log(f"Params (M) = {params:.4f}")
-    console.log(f"Time (s)   = {avg_time:.4f}")
+    console.log(f"FLOPs  = {flops:.4f}")
+    console.log(f"Params = {params:.4f}")
+    console.log(f"Time   = {avg_time:.4f}")
 
     #
     with torch.no_grad():

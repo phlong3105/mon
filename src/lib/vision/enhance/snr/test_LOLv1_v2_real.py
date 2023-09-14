@@ -1,15 +1,25 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
+
+from __future__ import annotations
+
 import argparse
 import logging
 import os.path as osp
 
 import cv2
 
+import mon
 import options.options as option
 import utils.util as util
-from data import create_dataset, create_dataloader
+from data import create_dataloader, create_dataset
 from models import create_model
 
-#### options
+console = mon.console
+
+# options
 parser = argparse.ArgumentParser()
 parser.add_argument('-opt', type=str, required=True, help='Path to options YMAL file.')
 opt = option.parse(parser.parse_args().opt, is_train=False)
@@ -60,9 +70,9 @@ def main():
             model.test4()
             visuals = model.get_current_visuals()
             rlt_img = util.tensor2img(visuals['rlt'])  # uint8
-            gt_img = util.tensor2img(visuals['GT'])  # uint8
+            gt_img  = util.tensor2img(visuals['GT'])  # uint8
 
-            mid_ix = dataset_opt['N_frames'] // 2
+            mid_ix  = dataset_opt['N_frames'] // 2
             input_img = util.tensor2img(visuals['LQ'][mid_ix])
             if save_imgs:
                 try:
@@ -70,7 +80,6 @@ def main():
                     print(osp.join(output_folder, '{}.png'.format(tag)))
                     cv2.imwrite(osp.join(output_folder, '{}.png'.format(tag)), rlt_img)
                     cv2.imwrite(osp.join(GT_folder, '{}.png'.format(tag)), gt_img)
-
                     cv2.imwrite(osp.join(input_folder, '{}.png'.format(tag)), input_img)
 
                 except Exception as e:
@@ -81,7 +90,7 @@ def main():
             psnr = util.calculate_psnr(rlt_img, gt_img)
             psnr_rlt[folder].append(psnr)
 
-            ## ssim = util.calculate_ssim(rlt_img, gt_img)
+            # ssim = util.calculate_ssim(rlt_img, gt_img)
             ssim = 0
             ssim_rlt[folder].append(ssim)
 

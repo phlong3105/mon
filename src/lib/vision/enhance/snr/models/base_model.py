@@ -1,18 +1,26 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import annotations
+
 import os
 from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 from torch.nn.parallel import DistributedDataParallel
 
 
-class BaseModel():
+class BaseModel(nn.Module):
+    
     def __init__(self, opt):
-        self.opt = opt
-        self.device = torch.device('cuda' if opt['gpu_ids'] is not None else 'cpu')
-        self.is_train = opt['is_train']
+        super().__init__()
+        self.opt        = opt
+        self.device     = torch.device("cuda" if opt["gpu_ids"] is not None else "cpu")
+        self.is_train   = opt["is_train"]
         self.schedulers = []
         self.optimizers = []
-
+    
     def feed_data(self, data):
         pass
 
