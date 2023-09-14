@@ -318,9 +318,9 @@ class Enhancement(object):
         flops    = flops_1 + flops_2
         params   = params_1 + params_2
         avg_time = (avg_time_1 + avg_time_2) / 2
-        console.log(f"FLOPs (G)  = {flops:.4f}")
-        console.log(f"Params (M) = {params:.4f}")
-        console.log(f"Time (s)   = {avg_time:.4f}")
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
 
 def lowlight_enhancer(image_name, image):
@@ -357,7 +357,7 @@ if __name__ == "__main__":
                 total       = len(image_paths),
                 description = f"[bright_yellow] Inferring"
             ):
-                # print(image_path)
+                # console.log(image_path)
                 image_path   = mon.Path(image_path)
                 result_path  = args.output_dir / image_path.name
                 image        = Image.open(image_path).convert("RGB")

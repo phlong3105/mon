@@ -43,9 +43,9 @@ def predict(args):
         use_cuda   = True,
         verbose    = False,
     )
-    console.log(f"FLOPs (G)  = {flops:.4f}")
-    console.log(f"Params (M) = {params:.4f}")
-    console.log(f"Time (s)   = {avg_time:.4f}")
+    console.log(f"FLOPs  = {flops:.4f}")
+    console.log(f"Params = {params:.4f}")
+    console.log(f"Time   = {avg_time:.4f}")
     
     #
     normalize_process = Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
@@ -59,7 +59,7 @@ def predict(args):
             total       = len(image_paths),
             description = f"[bright_yellow] Inferring"
         ):
-            # print(image_path)
+            # console.log(image_path)
             image = Image.open(image_path)
             image = (np.asarray(image) / 255.0)
             if image.shape[2] == 4:
@@ -72,7 +72,7 @@ def predict(args):
             start_time = time.time()
             _, _ , enhanced_image = model(input)
             run_time = (time.time() - start_time)
-            # print(run_time)
+            # console.log(run_time)
             result_path = args.output_dir / image_path.name
             torchvision.utils.save_image(enhanced_image, str(result_path))
             sum_time += run_time

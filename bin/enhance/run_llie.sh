@@ -12,7 +12,9 @@ models=(
   "sci"          # https://github.com/vis-opt-group/SCI
   "sgz"          #
   "snr"          # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
+  "stablellve"   # https://github.com/zkawfanx/StableLLVE
   "uretinexnet"  # https://github.com/AndersonYong/URetinex-Net
+  "utvnet"       # https://github.com/CharlieZCJ/UTVNet
   "zerodce"      #
   "zerodce++"    #
 )
@@ -222,12 +224,18 @@ if [ "$task" == "train" ]; then
       --exp-level 0.6 \
       --checkpoints-iter 10 \
       --checkpoints-dir "${train_dir}"
-  # SGZ
+  # SNR-Aware
   elif [ "$model" == "snr" ]; then
     echo -e "\nI have not implemented training script for SNR-Aware."
+  # StableLLVE
+  elif [ "$model" == "stablellve" ]; then
+    echo -e "\nI have not implemented training script for StableLLVE."
   # URetinex-Net
   elif [ "$model" == "uretinexnet" ]; then
     echo -e "\nI have not implemented training script for URetinex-Net."
+  # UTVNet
+  elif [ "$model" == "utvnet" ]; then
+    echo -e "\nI have not implemented training script for UTVNet."
   # Zero-DCE
   elif [ "$model" == "zerodce" ]; then
     python lowlight_train.py \
@@ -334,6 +342,13 @@ if [ "$task" == "predict" ]; then
           --opt "./options/test/LOLv1.yml" \
           --image-size 512 \
           --output-dir "${predict_dir}"
+      # StableLLVE
+      elif [ "$model" == "stablellve" ]; then
+        python test.py \
+          --data "${low_data_dirs[i]}" \
+          --weights "./checkpoint.pth" \
+          --image-size 512 \
+          --output-dir "${predict_dir}"
       # URetinex-Net
       elif [ "$model" == "uretinexnet" ]; then
         python test.py \
@@ -343,6 +358,12 @@ if [ "$task" == "predict" ]; then
           --adjust-model-weights "${root_dir}/zoo/vision/enhance/${model}/${train_data}/L_adjust-lol.pth" \
           --image-size 512 \
           --ratio 5 \
+          --output-dir "${predict_dir}"
+      # UTVNet
+      elif [ "$model" == "utvnet" ]; then
+        python test.py \
+          --data "${low_data_dirs[$i]}" \
+          --image-size 512 \
           --output-dir "${predict_dir}"
       # Zero-DCE
       elif [ "$model" == "zerodce" ]; then

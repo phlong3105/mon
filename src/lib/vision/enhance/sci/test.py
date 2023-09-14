@@ -59,9 +59,9 @@ def test(args):
         use_cuda   = True,
         verbose    = False,
     )
-    console.log(f"FLOPs (G)  = {flops:.4f}")
-    console.log(f"Params (M) = {params:.4f}")
-    console.log(f"Time (s)   = {avg_time:.4f}")
+    console.log(f"FLOPs  = {flops:.4f}")
+    console.log(f"Params = {params:.4f}")
+    console.log(f"Time   = {avg_time:.4f}")
     
     #
     model.eval()
@@ -80,7 +80,6 @@ def test(args):
                 sum_time   += run_time
                 image_name  = mon.Path(image_name[0])
                 result_path = args.output_dir / image_name.name
-                # print(result_path)
                 torchvision.utils.save_image(r, str(result_path))
             avg_time = float(sum_time / len(test_queue))
             console.log(f"Average time: {avg_time}")

@@ -10,7 +10,6 @@ import pytorch_lightning as pl
 from omegaconf import open_dict
 from pytorch_lightning import Trainer
 
-import mon
 from globalenv import *
 from utils.util import parse_config
 
@@ -37,16 +36,16 @@ def main(opt):
     
     # Measure efficiency score
     flops, params, avg_time = mon.calculate_efficiency_score(
-        model=model,
-        image_size=512,
-        channels=3,
-        runs=100,
-        use_cuda=True,
-        verbose=False,
+        model      = model,
+        image_size = 512,
+        channels   = 3,
+        runs       = 100,
+        use_cuda   = True,
+        verbose    = False,
     )
-    console.log(f"FLOPs (G)  = {flops:.4f}")
-    console.log(f"Params (M) = {params:.4f}")
-    console.log(f"Time (s)   = {avg_time:.4f}")
+    console.log(f"FLOPs  = {flops:.4f}")
+    console.log(f"Params = {params:.4f}")
+    console.log(f"Time   = {avg_time:.4f}")
     
     from data.img_dataset import DataModule
     datamodule = DataModule(opt)

@@ -133,7 +133,7 @@ def main():
                 total       = len(image_paths),
                 description = f"[bright_yellow] Inferring"
             ):
-                # print(image_path)
+                # console.log(image_path)
                 lr        = imread(str(image_path))
                 raw_shape = lr.shape
                 

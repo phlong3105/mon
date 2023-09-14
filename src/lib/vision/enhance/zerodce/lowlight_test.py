@@ -84,7 +84,7 @@ if __name__ == "__main__":
                 total       = len(image_paths),
                 description = f"[bright_yellow] Inferring"
             ):
-                # print(image_path)
+                # console.log(image_path)
                 enhanced_image, run_time = predict(image_path)
                 result_path = args.output_dir / image_path.name
                 torchvision.utils.save_image(enhanced_image, str(result_path))

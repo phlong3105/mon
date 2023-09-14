@@ -61,9 +61,9 @@ def test(args):
         use_cuda   = True,
         verbose    = False,
     )
-    console.log(f"FLOPs (G)  = {flops:.4f}")
-    console.log(f"Params (M) = {params:.4f}")
-    console.log(f"Time (s)   = {avg_time:.4f}")
+    console.log(f"FLOPs  = {flops:.4f}")
+    console.log(f"Params = {params:.4f}")
+    console.log(f"Time   = {avg_time:.4f}")
     
     # Prepare DataLoader
     # test_low_data_names = r"H:\CVPR2021\LOL-700\input-100/*.png"
