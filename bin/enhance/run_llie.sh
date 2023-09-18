@@ -4,19 +4,25 @@ echo "$HOSTNAME"
 
 # Constant
 models=(
-  "iat"          # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
-  "lcdpnet"      # https://github.com/onpix/LCDPNet
-  "llflow"       # https://github.com/wyf0912/LLFlow
-  "retinexdip"   # https://github.com/zhaozunjin/RetinexDIP
-  "ruas"         # https://github.com/KarelZhang/RUAS
-  "sci"          # https://github.com/vis-opt-group/SCI
-  "sgz"          #
-  "snr"          # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
-  "stablellve"   # https://github.com/zkawfanx/StableLLVE
-  "uretinexnet"  # https://github.com/AndersonYong/URetinex-Net
-  "utvnet"       # https://github.com/CharlieZCJ/UTVNet
-  "zerodce"      #
-  "zerodce++"    #
+  "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
+  "iat"           # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
+  "kind"          # https://github.com/zhangyhuaee/KinD
+  "kind++"        # https://github.com/zhangyhuaee/KinD_plus
+  "lcdpnet"       # https://github.com/onpix/LCDPNet
+  "llflow"        # https://github.com/wyf0912/LLFlow
+  "lime"          # https://github.com/pvnieo/Low-light-Image-Enhancement
+  "mbllen"        # https://github.com/Lvfeifan/MBLLEN
+  "pie"           # https://github.com/DavidQiuChao/PIE
+  "retinexdip"    # https://github.com/zhaozunjin/RetinexDIP
+  "ruas"          # https://github.com/KarelZhang/RUAS
+  "sci"           # https://github.com/vis-opt-group/SCI
+  "sgz"           #
+  "snr"           # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
+  "stablellve"    # https://github.com/zkawfanx/StableLLVE
+  "uretinexnet"   # https://github.com/AndersonYong/URetinex-Net
+  "utvnet"        # https://github.com/CharlieZCJ/UTVNet
+  "zerodce"       #
+  "zerodce++"     #
 )
 train_datasets=("lol")
 predict_datasets=("dcim" "fusion" "lime" "lol" "mef" "npe" "sice" "vip" "vv")
@@ -155,9 +161,18 @@ fi
 # Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
+  # EnlightenGAN
+  if [ "$model" == "enlightengan" ]; then
+    echo -e "\nI have not prepared the training script for EnlightenGAN."
   # IAT
-  if [ "$model" == "iat" ]; then
+  elif [ "$model" == "iat" ]; then
     echo -e "\nI have not implemented training script for IAT."
+  # KinD
+  elif [ "$model" == "kind" ]; then
+    echo -e "\nI have not prepared the training script for KinD."
+  # KinD++
+  elif [ "$model" == "kind++" ]; then
+    echo -e "\nI have not prepared the training script for KinD++."
   # LCDPNet
   elif [ "$model" == "lcdpnet" ]; then
     python src/train.py \
@@ -167,7 +182,16 @@ if [ "$task" == "train" ]; then
       valid_every=20
   # LLFlow
   elif [ "$model" == "llflow" ]; then
-    echo -e "\nI have not implemented training script for LLFlow."
+    echo -e "\nI have not prepared the training script for LLFlow."
+  # LIME
+  elif [ "$model" == "lime" ]; then
+    echo -e "\nI have not prepared the training script for LIME."
+  # MBLLEN
+  elif [ "$model" == "mbllen" ]; then
+    echo -e "\nI have not prepared the training script for MBLLEN."
+  # PIE
+  elif [ "$model" == "pie" ]; then
+    echo -e "\nI have not prepared the training script for PIE."
   # RetinexDIP
   elif [ "$model" == "retinexdip" ]; then
     echo -e "\nRetinexNet should be run in prediction mode only"
@@ -226,16 +250,16 @@ if [ "$task" == "train" ]; then
       --checkpoints-dir "${train_dir}"
   # SNR-Aware
   elif [ "$model" == "snr" ]; then
-    echo -e "\nI have not implemented training script for SNR-Aware."
+    echo -e "\nI have not prepared the training script for SNR-Aware."
   # StableLLVE
   elif [ "$model" == "stablellve" ]; then
-    echo -e "\nI have not implemented training script for StableLLVE."
+    echo -e "\nI have not prepared the training script for StableLLVE."
   # URetinex-Net
   elif [ "$model" == "uretinexnet" ]; then
-    echo -e "\nI have not implemented training script for URetinex-Net."
+    echo -e "\nI have not prepared the training script for URetinex-Net."
   # UTVNet
   elif [ "$model" == "utvnet" ]; then
-    echo -e "\nI have not implemented training script for UTVNet."
+    echo -e "\nI have not prepared the training script for UTVNet."
   # Zero-DCE
   elif [ "$model" == "zerodce" ]; then
     python lowlight_train.py \
@@ -283,16 +307,34 @@ if [ "$task" == "predict" ]; then
   else
     for (( i=0; i<${#predict_data[@]}; i++ )); do
       predict_dir="${root_dir}/run/predict/${project}/${model}/${predict_data[$i]}"
+      # EnlightenGAN
+      if [ "$model" == "enlightengan" ]; then
+        python infer/predict.py \
+          --data "${low_data_dirs[i]}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}"
       # IAT
-      if [ "$model" == "iat" ]; then
-          python IAT_enhance/predict.py \
-            --data "${low_data_dirs[i]}" \
-            --exposure-weights "${root_dir}/zoo/vision/enhance/${model}/iat-exposure.pth" \
-            --enhance-weights "${root_dir}/zoo/vision/enhance/${model}/iat-lol.pth" \
-            --image-size 512 \
-            --normalize \
-            --task "enhance" \
-            --output-dir "${predict_dir}"
+      elif [ "$model" == "iat" ]; then
+        python IAT_enhance/predict.py \
+          --data "${low_data_dirs[i]}" \
+          --exposure-weights "${root_dir}/zoo/vision/enhance/${model}/iat-exposure.pth" \
+          --enhance-weights "${root_dir}/zoo/vision/enhance/${model}/iat-lol.pth" \
+          --image-size 512 \
+          --normalize \
+          --task "enhance" \
+          --output-dir "${predict_dir}"
+      # KinD
+      elif [ "$model" == "kind" ]; then
+        python test.py \
+          --data "${low_data_dirs[i]}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}"
+      # KinD++
+      elif [ "$model" == "kind++" ]; then
+        python test.py \
+          --data "${low_data_dirs[i]}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}"
       # LLFlow
       elif [ "$model" == "llflow" ]; then
         python code/test_unpaired_v2.py \
@@ -302,6 +344,24 @@ if [ "$task" == "predict" ]; then
           --output-dir "${predict_dir}" \
           --opt "code/confs/LOL_smallNet.yml" \
           --name "unpaired"
+      # LIME
+      elif [ "$model" == "lime" ]; then
+        python demo.py \
+          --data "${low_data_dirs[i]}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}" \
+      # MBLLEN
+      elif [ "$model" == "mbllen" ]; then
+        python main/test.py \
+          --data "${low_data_dirs[i]}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}" \
+      # PIE
+      elif [ "$model" == "pie" ]; then
+        python main.py \
+          --data "${low_data_dirs[i]}" \
+          --image-size 512 \
+          --output-dir "${predict_dir}" \
       # RetinexDIP
       elif [ "$model" == "retinexdip" ]; then
         python retinexdip.py \
@@ -334,7 +394,7 @@ if [ "$task" == "predict" ]; then
           --weights "${zoo_weights}" \
           --image-size 512 \
           --output-dir "${predict_dir}"
-      # SGZ
+      # SNR-Aware
       elif [ "$model" == "snr" ]; then
         python predict.py \
           --data "${low_data_dirs[i]}" \

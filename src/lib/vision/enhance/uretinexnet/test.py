@@ -77,7 +77,7 @@ class Inference(nn.Module):
         return I_enhance, run_time
 
     def run(self, low_img_path):
-        low_img           = self.transform(Image.open(str(low_img_path))).unsqueeze(0)
+        low_img           = self.transform(Image.open(str(low_img_path)).convert("RGB")).unsqueeze(0)
         enhance, run_time = self.forward(input_low_img=low_img)
         """
         file_name = os.path.basename(self.opts.img_path)

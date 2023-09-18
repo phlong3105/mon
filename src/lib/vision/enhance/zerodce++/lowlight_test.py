@@ -22,8 +22,8 @@ console = mon.console
 def predict(image_path: str):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     scale_factor  = 12
-    data_lowlight = Image.open(image_path)
-    data_lowlight = (np.asarray(data_lowlight)/255.0)
+    data_lowlight = Image.open(image_path).convert("RGB")
+    data_lowlight = (np.asarray(data_lowlight) / 255.0)
     data_lowlight = torch.from_numpy(data_lowlight).float()
     h = (data_lowlight.shape[0] // scale_factor) * scale_factor
     w = (data_lowlight.shape[1] // scale_factor) * scale_factor

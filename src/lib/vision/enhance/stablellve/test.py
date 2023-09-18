@@ -63,7 +63,7 @@ def test():
                 description = f"[bright_yellow] Inferring"
             ):
                 # console.log(image_path)
-                image          = Image.open(image_path)
+                image          = Image.open(image_path).convert("RGB")
                 image          = (np.asarray(image) / 255.0)
                 image          = torch.from_numpy(image).float()
                 image          = image.permute(2, 0, 1)
