@@ -67,7 +67,7 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
-model_dir="${root_dir}/src/lib/vision/enhance/${model}"
+model_dir="${root_dir}/src/lib/vision/enhance/llie/${model}"
 cd "${model_dir}" || exit
 
 if [ "$predict_data" == "all" ]; then
@@ -166,7 +166,7 @@ if [ "$task" == "train" ]; then
     echo -e "\nI have not prepared the training script for EnlightenGAN."
   # IAT
   elif [ "$model" == "iat" ]; then
-    echo -e "\nI have not implemented training script for IAT."
+    echo -e "\nI have not prepared the training script for IAT."
   # KinD
   elif [ "$model" == "kind" ]; then
     echo -e "\nI have not prepared the training script for KinD."
@@ -185,13 +185,13 @@ if [ "$task" == "train" ]; then
     echo -e "\nI have not prepared the training script for LLFlow."
   # LIME
   elif [ "$model" == "lime" ]; then
-    echo -e "\nI have not prepared the training script for LIME."
+    echo -e "\nLIME does not need any training."
   # MBLLEN
   elif [ "$model" == "mbllen" ]; then
     echo -e "\nI have not prepared the training script for MBLLEN."
   # PIE
   elif [ "$model" == "pie" ]; then
-    echo -e "\nI have not prepared the training script for PIE."
+    echo -e "\nPIE does not need any training."
   # RetinexDIP
   elif [ "$model" == "retinexdip" ]; then
     echo -e "\nRetinexNet should be run in prediction mode only"
@@ -349,6 +349,7 @@ if [ "$task" == "predict" ]; then
         python demo.py \
           --data "${low_data_dirs[i]}" \
           --image-size 512 \
+          --lime \
           --output-dir "${predict_dir}" \
       # MBLLEN
       elif [ "$model" == "mbllen" ]; then

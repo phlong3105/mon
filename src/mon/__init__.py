@@ -1,18 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""The MON package.
-
-The sub-packages abstraction hierarchy is as follows:
-
-- :mod:`core` implements the most ATOMIC, self-contained modules. As the
-  name suggests, it is the foundation to build the core components on top.
-- :mod:`core` implements core components including custom data types, creation
-  patterns, data storage and persistence, networking, etc.
-- :mod:`createml`
-- :mod:`nn`
-- :mod:`vision`
-"""
+"""The MON package."""
 
 from __future__ import annotations
 
@@ -28,4 +17,4 @@ from mon.nn import *
 from mon.vision import *
 from mon.createml import *
 
-__version__ = "1.2.7"
+__version__ = "1.2.8"
