@@ -20,7 +20,7 @@ from typing import Any
 
 import humps
 import lightning.pytorch.utilities.types
-import torch
+from thop.profile import *
 from torch import nn
 from torch.nn import parallel
 
@@ -30,7 +30,7 @@ from mon.core import (
 from mon.globals import (
     LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS, ZOO_DIR,
 )
-from mon.nn import data as mdata, layer, loss as mloss, metric as mmetric
+from mon.nn import data as mdata, loss as mloss, metric as mmetric, parsing
 
 StepOutput  = lightning.pytorch.utilities.types.STEP_OUTPUT
 EpochOutput = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
@@ -114,7 +114,6 @@ def get_latest_checkpoint(dirpath: pathlib.Path) -> str | None:
         error_console.log(f"[red]Cannot find checkpoint file {dirpath}.")
     return ckpt
 
-
 # endregion
 
 
@@ -195,7 +194,6 @@ def strip_optimizer(weight_file: str, new_file: str | None = None):
         "Optimizer stripped from %s,%s %.1fMB"
         % (weight_file, (" saved as %s," % new_file) if new_file else "", mb)
     )
-
 
 # endregion
 
@@ -499,14 +497,23 @@ class Model(lightning.LightningModule, ABC):
         self.debug         = debug
         self.verbose       = verbose
         self.epoch_step    = 0
+        
         # Define model
-        self.model, self.save, self.info = self.parse_model()
-        # Load weights
-        if self.weights:
-            self.load_weights()
+        if self.config is None:
+            console.log(f"No `config` has been provided. Model must be manually defined.")
+            self.model            = None
+            self.save: list[int]  = []
+            self.info: list[dict] = []
         else:
-            self.apply(self.init_weights)
-        self.print_info()
+            self.model, self.save, self.info = self.parse_model()
+            # Load weights
+            if self.weights:
+                self.load_weights()
+            else:
+                self.apply(self.init_weights)
+            if verbose:
+                self.print_info()
+        
         # Set phase to freeze or unfreeze layers
         self.phase = phase
 
@@ -618,8 +625,8 @@ class Model(lightning.LightningModule, ABC):
             raise TypeError
             
         self._config  = mconfig.load_config(config=config) if config is not None else None
-        self.channels = self._config.get("channels", None)
-        self.name     = self._config.get("name",     None)
+        self.channels = self._config.get("channels", None) if config is not None else None
+        self.name     = self._config.get("name",     None) if config is not None else None
         self.variant  = variant
         
     @property
@@ -797,7 +804,10 @@ class Model(lightning.LightningModule, ABC):
         for path in [self.root, self.ckpt_dir, self.debug_dir]:
             path.mkdir(parents=True, exist_ok=True)
     
-    def parse_model(self) -> tuple[nn.Sequential, list[int], list[dict]]:
+    def parse_model(self) -> (
+        tuple[nn.Sequential, list[int], list[dict]] |
+        tuple[None, None, None]
+    ):
         """Build the model. You have 2 options for building a model: (1) define
         each layer manually, or (2) build model automatically from a config
         :class:`dict`.
@@ -819,6 +829,9 @@ class Model(lightning.LightningModule, ABC):
                 pass.
             A :class:`list` of layer's info for debugging.
         """
+        if self.config is None:
+            console.log(f"No `config` has been provided. Model must be manually defined.")
+            return None, None, None
         if not isinstance(self.config, dict):
             raise TypeError(f"config must be a dictionary, but got {self.config}.")
         if "backbone" not in self.config and "head" not in self.config:
@@ -864,7 +877,7 @@ class Model(lightning.LightningModule, ABC):
             self.config["num_classes"] = num_classes
         
         # Parsing
-        model, save, info = layer.parse_model(
+        model, save, info = parsing.parse_model(
             d       = self.config,
             ch      = [self.channels],
             hparams = self.hyperparams,
@@ -1047,7 +1060,7 @@ class Model(lightning.LightningModule, ABC):
                     x = [x if j == -1 else y[j] for j in m.f]  # From earlier layers
             x = m(x)  # pass features through current layer
             y.append(x if m.i in self.save else None)
-
+        
         if out_index > -1 and out_index in self.save:
             output = y[out_index]
         else:
@@ -1428,5 +1441,5 @@ class Model(lightning.LightningModule, ABC):
             console.log(f"[red]{self.fullname}")
             rich.print_table(self.info)
             console.log(f"Save indexes: {self.save}")
-
+    
 # endregion

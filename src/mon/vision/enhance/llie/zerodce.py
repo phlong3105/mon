@@ -19,7 +19,7 @@ from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
 from mon.nn import _size_2_t, functional as F
 from mon.vision import loss
-from mon.vision.enhance import base
+from mon.vision.enhance.llie import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -334,10 +334,10 @@ class CombinedLoss02(nn.Loss):
 # region Zero-DCE
 
 @MODELS.register(name="zerodce")
-class ZeroDCE(base.ImageEnhancementModel):
+class ZeroDCE(base.LowLightImageEnhancementModel):
     """Zero-DCE (Zero-Reference Deep Curve Estimation) model.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
     
     configs     = {}
@@ -505,10 +505,10 @@ class ZeroDCEVanilla(nn.Module):
 # region Zero-DCE++
 
 @MODELS.register(name="zerodce++")
-class ZeroDCEPP(base.ImageEnhancementModel):
+class ZeroDCEPP(base.LowLightImageEnhancementModel):
     """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
     
     configs     = {}
@@ -693,10 +693,10 @@ class ZeroDCEPPVanilla(nn.Module):
 # region Zero-DCE-Tiny
 
 @MODELS.register(name="zerodce-tiny")
-class ZeroDCETiny(base.ImageEnhancementModel):
+class ZeroDCETiny(base.LowLightImageEnhancementModel):
     """Zero-DCE-Tiny (Zero-Reference Deep Curve Estimation) model.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
     
     configs     = {}

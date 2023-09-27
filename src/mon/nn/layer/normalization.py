@@ -530,7 +530,6 @@ class GroupNormAct(GroupNorm):
         y = self.act(y)
         return y
 
-
 # endregion
 
 
@@ -571,7 +570,6 @@ class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
             eps              = self.eps
         ).permute(0, 3, 1, 2)
         return y
-
 
 # endregion
 

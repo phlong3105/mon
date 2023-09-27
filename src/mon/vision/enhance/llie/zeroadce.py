@@ -19,7 +19,7 @@ from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
 from mon.nn import _size_2_t
 from mon.vision import loss
-from mon.vision.enhance import base
+from mon.vision.enhance.llie import base, zerodce
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -233,7 +233,7 @@ class CombinedLoss(nn.Loss):
 # region Model
 
 @MODELS.register(name="zeroadce")
-class ZeroADCE(base.ImageEnhancementModel):
+class ZeroADCE(base.LowLightImageEnhancementModel):
     """Zero-ADCE (Zero-Reference Attention Deep Curve Estimation) model.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
@@ -254,6 +254,10 @@ class ZeroADCE(base.ImageEnhancementModel):
             loss   = loss,
             *args, **kwargs
         )
+    
+    @property
+    def config_dir(self) -> pathlib.Path:
+        return pathlib.Path(__file__).absolute().parent / "config"
     
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
@@ -298,7 +302,7 @@ class ZeroADCE(base.ImageEnhancementModel):
 
 
 @MODELS.register(name="zeroadce-jit")
-class ZeroADCEJIT(base.ImageEnhancementModel):
+class ZeroADCEJIT(nn.Module):
     """Zero-ADCE (Zero-Reference Attention Deep Curve Estimation) model.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
@@ -314,23 +318,19 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
         loss  : Any = CombinedLoss(),
         *args, **kwargs
     ):
-        super().__init__(
-            config = config,
-            loss   = loss,
-            *args, **kwargs
-        )
-        if config in ["zero-adce-a"]:
+        super().__init__(*args, **kwargs)
+        if config in ["zeroadce-a"]:
             conv       = partial(nn.ABSConv2dS, act2=nn.HalfInstanceNorm2d)
             final_conv = nn.Conv2d
-        elif config in ["zero-adce-b"]:
+        elif config in ["zeroadce-b"]:
             conv       = partial(nn.ABSConv2dS, ac1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
             final_conv = nn.Conv2d
-        elif config in ["zero-adce-c"]:
+        elif config in ["zeroadce-c"]:
             conv       = partial(nn.ABSConv2dS, ac1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
             final_conv = partial(nn.ABSConv2dS, ac1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
         else:
             raise ValueError(
-                f"config must be one of: `zero-adce-[a, b, c, d, e]`. "
+                f"config must be one of: `zeroadce-[a, b, c, d, e]`. "
                 f"But got: {config}."
             )
            
@@ -426,11 +426,13 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
             device       = None,
             dtype        = None,
         )
+        self.loss = loss
+        
         # Load pretrained
-        if self.pretrained:
-            self.load_pretrained()
-        else:
-            self.apply(self.init_weights)
+        # if self.pretrained:
+        #     self.load_pretrained()
+        # else:
+        #     self.apply(self.init_weights)
     
     def init_weights(self, m: torch.nn.Module):
         classname = m.__class__.__name__
@@ -443,6 +445,42 @@ class ZeroADCEJIT(base.ImageEnhancementModel):
                 m.pw_conv.weight.data.normal_(0.0, 0.02)
             else:
                 m.weight.data.normal_(0.0, 0.02)
+    
+    def forward(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int = -1,
+        *args, **kwargs
+    ) -> torch.Tensor:
+        """Forward pass once. Implement the logic for a single forward pass.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            profile: Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: ``-1`` means the last layer.
+                
+        Return:
+            Predictions.
+        """
+        x  = input
+        x1 = self.relu(self.conv1(x))
+        x2 = self.relu(self.conv2(x1))
+        x3 = self.relu(self.conv3(x2))
+        x4 = self.relu(self.conv4(x3))
+        x5 = self.relu(self.conv5(torch.cat([x4, x3], 1)))
+        x6 = self.relu(self.conv6(torch.cat([x5, x2], 1)))
+        a  = torch.tanh(self.conv7(torch.cat([x6, x1], 1)))
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        x  = x + a * (torch.pow(x, 2) - x)
+        return x
     
     def forward_loss(
         self,

@@ -17,7 +17,7 @@ import torch
 from mon import nn
 from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.vision.enhance import base
+from mon.vision.enhance.multitask import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -372,7 +372,7 @@ class FINetGhostUpBlock(nn.ConvLayerParsingMixin, nn.Module):
 # region Model
 
 @MODELS.register(name="finet")
-class FINet(base.ImageEnhancementModel):
+class FINet(base.MultitaskImageEnhancementModel):
     """Fractional-Instance Normalization Network.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`

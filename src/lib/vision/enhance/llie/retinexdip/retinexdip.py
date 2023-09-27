@@ -199,6 +199,7 @@ class Enhancement(object):
         run_time = end - start
         # print("time:%.4f" % (end - start))
         # cv2.imwrite(str(self.image_name), self.best_result)
+        self.get_enhanced(self.num_iter - 1, flag=True)
         return self.best_result, run_time
     
     def _get_augmentation(self, iteration):

@@ -2,9 +2,7 @@
 class: img_dataset
 name: lcdp_data.test
 input:
-  - ../../../../data/lol/train/low/npe/*
-
-# input:
-#   - ../../../../data/lol/val/low/lol/*
-# GT:
-#   - ../../../../data/lol/val/high/lol/*
+  - ../../../../../../data/lol/val/low/lol/*
+#   - ../../../../../../data/lol/val/low/lol/*
+GT:
+  - ../../../../../../data/lol/val/high/lol/*

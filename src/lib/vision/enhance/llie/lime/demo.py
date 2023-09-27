@@ -24,7 +24,7 @@ def main():
     parser.add_argument("--image-size", type=int,   default=512)
     parser.add_argument("--gamma",      type=float, default=0.6,       help="Gamma correction parameter.")
     parser.add_argument("--lambda_",    type=float, default=0.15,      help="The weight for balancing the two terms in the illumination refinement optimization objective.")
-    parser.add_argument("--lime",       action="store_true",           help="Use the LIME method. By default, the DUAL method is used.")
+    parser.add_argument("--lime",       action="store_true", default=True, help="Use the LIME method. By default, the DUAL method is used.")
     parser.add_argument("--resize",     action="store_true")
     parser.add_argument("--sigma",      type=int,   default=3,         help="Spatial standard deviation for spatial affinity based Gaussian weights.")
     parser.add_argument("--bc",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's contrast measure.")
@@ -51,8 +51,8 @@ def main():
             description = f"[bright_yellow] Inferring"
         ):
             # console.log(image_path)
-            image          = cv2.imread(str(image_path))
-            h, w, c        = image.shape
+            image   = cv2.imread(str(image_path))
+            h, w, c = image.shape
             if args.resize:
                 image = cv2.resize(image, (args.image_size, args.image_size))
             start_time     = time.time()
@@ -67,7 +67,7 @@ def main():
                 be      = args.be,
                 eps     = args.eps
             )
-            run_time       = (time.time() - start_time)
+            run_time = (time.time() - start_time)
             if args.resize:
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
             result_path    = args.output_dir / image_path.name

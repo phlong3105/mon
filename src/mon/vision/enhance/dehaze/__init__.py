@@ -5,5 +5,7 @@
 
 from __future__ import annotations
 
+import mon.vision.enhance.dehaze.base
 import mon.vision.enhance.dehaze.ffanet
+from mon.vision.enhance.dehaze.base import *
 from mon.vision.enhance.dehaze.ffanet import *

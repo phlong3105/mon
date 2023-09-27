@@ -33,7 +33,7 @@ def train(args):
     # DCE_net.apply(weights_init)
     if args.load_pretrain:
         DCE_net.load_state_dict(torch.load(args.weights))
-
+    
     train_dataset = dataloader.lowlight_loader(args.data)
     train_loader  = torch.utils.data.DataLoader(
 	    train_dataset,

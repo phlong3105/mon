@@ -17,7 +17,7 @@ from mon import nn
 from mon.core import builtins, pathlib
 from mon.globals import LAYERS, MODELS
 from mon.nn import _size_2_t
-from mon.vision.enhance import base
+from mon.vision.enhance.dehaze import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -235,7 +235,7 @@ class FFAPreProcess(nn.ConvLayerParsingMixin, nn.Module):
 # region Model
 
 @MODELS.register(name="ffanet")
-class FFANet(base.ImageEnhancementModel):
+class FFANet(base.DehazingModel):
     """Half-Instance Normalization Network.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`

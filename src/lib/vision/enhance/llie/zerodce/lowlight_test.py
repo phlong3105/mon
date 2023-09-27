@@ -77,6 +77,7 @@ if __name__ == "__main__":
     with torch.no_grad():
         image_paths = list(args.data.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
+        image_paths.sort()
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
             for _, image_path in pbar.track(

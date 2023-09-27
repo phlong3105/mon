@@ -32,7 +32,7 @@ def save_images(tensor, path):
 
 def test(args):
     if not torch.cuda.is_available():
-        print("No gpu device available")
+        console.log("No gpu device available")
         sys.exit(1)
 
     np.random.seed(args.seed)
@@ -95,8 +95,9 @@ def test(args):
                 run_time       = (time.time() - start_time)
                 sum_time      += run_time
                 
-                save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
-                save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
+                save_images(u_list[-1], str(args.output_dir / u_name))
+                # save_images(u_list[-1], str(args.output_dir / "lol" / u_name))
+                # save_images(u_list[-2], str(args.output_dir / "dark" / u_name))
                 """
                 if args.model == "lol":
                     save_images(u_list[-1], u_path)
@@ -120,7 +121,7 @@ if __name__ == "__main__":
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    (args.output_dir / "lol").mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "dark").mkdir(parents=True, exist_ok=True)
+    # (args.output_dir / "lol").mkdir(parents=True, exist_ok=True)
+    # (args.output_dir / "dark").mkdir(parents=True, exist_ok=True)
     
     test(args)

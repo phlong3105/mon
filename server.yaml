@@ -45,16 +45,20 @@ dependencies:
       - tensorboard       # TensorFlow's Visualization Toolkit.
       # PyTorch           
       - einops            # A new flavour of deep learning operations.
-      # - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
       - lightning>=2.0.2  #
       # - pytorch-lightning==1.9.2
-      - piqa              # PyTorch Image Quality Assessment package.
-      - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
-      - thop              # Count the MACs / FLOPs of your PyTorch model.
       - torch>=2.0.1      # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio        # Simple audio I/O for pytorch.
-      - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
       - torchvision       # Image and video datasets and models for torch deep learning.
+      # Metric
+      # - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
+      - image-quality
+      - lpips
+      - thop              # Count the MACs / FLOPs of your PyTorch model.
+      - piq               # A collection of measures and metrics for image quality assessment.
+      - piqa              # PyTorch Image Quality Assessment package.
+      - pyiqa             # PyTorch Toolbox for Image Quality Assessment.
+      - torchmetrics      # Collection of PyTorch native metrics for easy evaluating machine learning models.
       # Ray               
       - ray[tune]         # Ray is a fast and simple framework for building and running distributed applications.
       # Scientific        

@@ -18,10 +18,11 @@ __all__ = [
 ]
 
 import time
+from copy import deepcopy
 
+import thop
 import torch
 import torchmetrics
-from thop import profile
 
 from mon import nn
 from mon.core import console
@@ -29,7 +30,6 @@ from mon.globals import METRICS
 # noinspection PyUnresolvedReferences
 from mon.nn.metric import *
 from mon.vision import core
-
 
 # region Image Metric
 
@@ -60,7 +60,7 @@ METRICS.register(name="universal_image_quality_index",                  module=U
 # region Parameters
 
 def calculate_efficiency_score(
-    model     : nn.Module,
+    model     : nn.Module | nn.Model,
     image_size: int | list[int] = 512,
     channels  : int             = 3,
     runs      : int             = 100,
@@ -77,9 +77,9 @@ def calculate_efficiency_score(
         model = model.cuda()
      
     # Get FLOPs and Params
-    flops, params = profile(model, inputs=(input, ), verbose=verbose)
-    g_flops  = flops  * 1e-9
-    m_params = params * 1e-6
+    flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=verbose)
+    g_flops       = flops  * 1e-9
+    m_params      = params * 1e-6
     
     # Get time
     start_time = time.time()

@@ -15,6 +15,7 @@ from .single_net_basemodel import SingleNetBaseModel
 
 
 class tanh_L1Loss(nn.Module):
+    
     def __init__(self):
         super(tanh_L1Loss, self).__init__()
 
@@ -24,6 +25,7 @@ class tanh_L1Loss(nn.Module):
 
 
 class LitModel(SingleNetBaseModel):
+    
     def __init__(self, opt):
         super().__init__(opt, DeepWBNet(opt[RUNTIME]), [TRAIN, VALID])
         # self.pixel_loss = torch.nn.MSELoss()

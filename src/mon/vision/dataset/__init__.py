@@ -12,24 +12,22 @@ import mon.vision.dataset.base
 import mon.vision.dataset.cifar
 import mon.vision.dataset.gt_rain
 import mon.vision.dataset.kodas
-import mon.vision.dataset.lol
+import mon.vision.dataset.llie
 import mon.vision.dataset.mnist
 import mon.vision.dataset.ntire
 import mon.vision.dataset.rain13k
 import mon.vision.dataset.satehaze1k
-import mon.vision.dataset.sice
 import mon.vision.dataset.snow100k
 from mon.vision.dataset.a2i2_haze import *
 from mon.vision.dataset.base import *
 from mon.vision.dataset.cifar import *
 from mon.vision.dataset.gt_rain import *
 from mon.vision.dataset.kodas import *
-from mon.vision.dataset.lol import *
+from mon.vision.dataset.llie import *
 from mon.vision.dataset.mnist import *
 from mon.vision.dataset.ntire import *
 from mon.vision.dataset.rain13k import *
 from mon.vision.dataset.satehaze1k import *
-from mon.vision.dataset.sice import *
 from mon.vision.dataset.snow100k import *
 
 """

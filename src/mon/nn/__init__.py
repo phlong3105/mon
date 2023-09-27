@@ -39,6 +39,7 @@ import mon.nn.loss
 import mon.nn.metric
 import mon.nn.model
 import mon.nn.optimizer
+import mon.nn.parsing
 import mon.nn.strategy
 import mon.nn.typing
 import mon.nn.utils
@@ -53,6 +54,7 @@ from mon.nn.loss import *
 from mon.nn.metric import *
 from mon.nn.model import *
 from mon.nn.optimizer import *
+from mon.nn.parsing import *
 from mon.nn.strategy import *
 from mon.nn.typing import (
     _ratio_2_t, _ratio_3_t, _ratio_any_t, _scalar_or_tuple_1_t,

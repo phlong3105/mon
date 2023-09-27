@@ -2,4 +2,4 @@
 class: img_dataset
 name: lcdp_data.predict
 input:
-  - ../../../../data/lol/train/low/*
+  - ../../../../../../data/lol/val/low/*

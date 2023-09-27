@@ -190,7 +190,6 @@ class FastAdaptiveAvgPool2d(base.PassThroughLayerParsingMixin, nn.Module):
         y = x.mean((2, 3), keepdim=not self.flatten)
         return y
 
-
 # endregion
 
 
@@ -275,7 +274,6 @@ class AvgPool2d(base.PassThroughLayerParsingMixin, nn.AvgPool2d):
 class AvgPool3d(base.PassThroughLayerParsingMixin, nn.AvgPool3d):
     pass
 
-
 # endregion
 
 
@@ -294,7 +292,6 @@ class ChannelPool(base.PassThroughLayerParsingMixin, nn.Module):
         )
         return y
 
-
 # endregion
 
 
@@ -308,7 +305,6 @@ class LPPool1d(base.PassThroughLayerParsingMixin, nn.LPPool1d):
 @LAYERS.register()
 class LPPool2d(base.PassThroughLayerParsingMixin, nn.LPPool2d):
     pass
-
 
 # endregion
 
@@ -326,7 +322,6 @@ def lse_pool2d(input: torch.Tensor) -> torch.Tensor:
     y        = x_flat - x_max
     y        = x_max + y.exp().sum(dim=2, keepdim=True).log()
     return y
-
 
 # endregion
 
@@ -439,7 +434,6 @@ class MaxUnpool2d(base.PassThroughLayerParsingMixin, nn.MaxUnpool2d):
 @LAYERS.register()
 class MaxUnpool3d(base.PassThroughLayerParsingMixin, nn.MaxUnpool3d):
     pass
-
 
 # endregion
 

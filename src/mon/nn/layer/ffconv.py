@@ -426,8 +426,8 @@ class FastFourierConv2dSE(base.ConvLayerParsingMixin, nn.Module):
 FFConv2d        = FastFourierConv2d
 FFConv2dNormAct = FastFourierConv2dNormActivation
 FFConv2dSE      = FastFourierConv2dSE
-LAYERS.register(module=FFConv2d)
-LAYERS.register(module=FFConv2dNormAct)
-LAYERS.register(module=FFConv2dSE)
+LAYERS.register(name="FFConv2d",        module=FFConv2d)
+LAYERS.register(name="FFConv2dNormAct", module=FFConv2dNormAct)
+LAYERS.register(name="FFConv2dSE",      module=FFConv2dSE)
 
 # endregion

@@ -192,7 +192,7 @@ class SimplifiedChannelAttention(base.PassThroughLayerParsingMixin, nn.Module):
     
 
 ChannelAttention = SqueezeExciteC
-LAYERS.register(module=ChannelAttention)
+LAYERS.register(name="ChannelAttention", module=ChannelAttention)
 
 # endregion
 
@@ -819,7 +819,7 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
 
 GhostSAM = GhostSupervisedAttentionModule
 SAM      = SupervisedAttentionModule
-LAYERS.register(module=GhostSAM)
-LAYERS.register(module=SAM)
+LAYERS.register(name="GhostSAM", module=GhostSAM)
+LAYERS.register(name="SAM",      module=SAM)
 
 # endregion

@@ -712,7 +712,7 @@ def to_image_nparray(
     if isinstance(input, torch.Tensor):
         input = input.detach()
         input = input.cpu().numpy()
-    input = denormalize_image(image=input).astype(np.uint) if denormalize else input
+    input = denormalize_image(input=input).astype(np.uint) if denormalize else input
     input = to_channel_last_image(input=input)
     if not keepdim:
         input = to_3d_image(image=input)
@@ -753,7 +753,7 @@ def to_image_tensor(
     input = to_channel_first_image(input=input)
     if not keepdim:
         input = to_4d_image(input=input)
-    input = normalize_image(image=input) if normalize else input
+    input = normalize_image(input=input) if normalize else input
     # Place in memory
     input = input.contiguous()
     if device is not None:

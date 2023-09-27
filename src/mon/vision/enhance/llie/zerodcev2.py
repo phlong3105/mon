@@ -19,8 +19,7 @@ from mon.core import pathlib
 from mon.globals import MODELS
 from mon.nn import functional as F
 from mon.vision import loss
-from mon.vision.enhance import base
-from mon.vision.enhance.llie import zerodce
+from mon.vision.enhance.llie import base, zerodce
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -98,7 +97,7 @@ class CombinedLoss(nn.Loss):
 # region Model
 
 @MODELS.register(name="zerodcev2")
-class ZeroDCEv2(base.ImageEnhancementModel, ABC):
+class ZeroDCEv2(base.LowLightImageEnhancementModel, ABC):
     """Zero-DCEv2 model.
     
     Improvements over :class:`mon.vision.enhance.zerodce.ZeroDCE` model are:

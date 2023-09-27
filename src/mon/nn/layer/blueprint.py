@@ -203,8 +203,8 @@ class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Modul
 
 BSConv2dS = SubspaceBlueprintSeparableConv2d
 BSConv2dU = UnconstrainedBlueprintSeparableConv2d
-LAYERS.register(module=BSConv2dS)
-LAYERS.register(module=BSConv2dU)
+LAYERS.register(name="BSConv2dS", module=BSConv2dS)
+LAYERS.register(name="BSConv2dU", module=BSConv2dU)
 
 # endregion
 
@@ -631,20 +631,20 @@ ABSConv2dS11 = AttentionSubspaceBlueprintSeparableConv2d11
 ABSConv2dS12 = AttentionSubspaceBlueprintSeparableConv2d12
 ABSConv2dS13 = AttentionSubspaceBlueprintSeparableConv2d13
 
-LAYERS.register(module=ABSConv2dS)
-LAYERS.register(module=ABSConv2dU)
-LAYERS.register(module=ABSConv2dS1)
-LAYERS.register(module=ABSConv2dS2)
-LAYERS.register(module=ABSConv2dS3)
-LAYERS.register(module=ABSConv2dS4)
-LAYERS.register(module=ABSConv2dS5)
-LAYERS.register(module=ABSConv2dS6)
-LAYERS.register(module=ABSConv2dS7)
-LAYERS.register(module=ABSConv2dS8)
-LAYERS.register(module=ABSConv2dS9)
-LAYERS.register(module=ABSConv2dS10)
-LAYERS.register(module=ABSConv2dS11)
-LAYERS.register(module=ABSConv2dS12)
-LAYERS.register(module=ABSConv2dS13)
+LAYERS.register(name="ABSConv2dS",   module=ABSConv2dS)
+LAYERS.register(name="ABSConv2dU",   module=ABSConv2dU)
+LAYERS.register(name="ABSConv2dS1",  module=ABSConv2dS1)
+LAYERS.register(name="ABSConv2dS2",  module=ABSConv2dS2)
+LAYERS.register(name="ABSConv2dS3",  module=ABSConv2dS3)
+LAYERS.register(name="ABSConv2dS4",  module=ABSConv2dS4)
+LAYERS.register(name="ABSConv2dS5",  module=ABSConv2dS5)
+LAYERS.register(name="ABSConv2dS6",  module=ABSConv2dS6)
+LAYERS.register(name="ABSConv2dS7",  module=ABSConv2dS7)
+LAYERS.register(name="ABSConv2dS8",  module=ABSConv2dS8)
+LAYERS.register(name="ABSConv2dS9",  module=ABSConv2dS9)
+LAYERS.register(name="ABSConv2dS10", module=ABSConv2dS10)
+LAYERS.register(name="ABSConv2dS11", module=ABSConv2dS11)
+LAYERS.register(name="ABSConv2dS12", module=ABSConv2dS12)
+LAYERS.register(name="ABSConv2dS13", module=ABSConv2dS13)
 
 # endregion

@@ -26,7 +26,6 @@ import mon.nn.layer.mobileone
 import mon.nn.layer.mutating
 import mon.nn.layer.normalization
 import mon.nn.layer.padding
-import mon.nn.layer.parsing
 import mon.nn.layer.pooling
 import mon.nn.layer.sampling
 from mon.nn.layer.activation import *
@@ -44,6 +43,5 @@ from mon.nn.layer.mobileone import *
 from mon.nn.layer.mutating import *
 from mon.nn.layer.normalization import *
 from mon.nn.layer.padding import *
-from mon.nn.layer.parsing import *
 from mon.nn.layer.pooling import *
 from mon.nn.layer.sampling import *

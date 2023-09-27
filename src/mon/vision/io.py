@@ -59,8 +59,7 @@ def read_image(
     if to_rgb:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     if to_tensor:
-        image = core.to_image_tensor(
-            input=image, keepdim=False, normalize=normalize)
+        image = core.to_image_tensor(input=image, keepdim=False, normalize=normalize)
     return image
 
 

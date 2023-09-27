@@ -90,7 +90,7 @@ class Factory(dict):
         """
         if not (name is None or isinstance(name, str)):
             raise TypeError(f"name must be a str, but got {type(name)}.")
-        
+            
         # Use it as a normal method: x.register(module=SomeClass)
         if module is not None:
             self.register_module(

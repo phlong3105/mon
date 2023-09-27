@@ -17,7 +17,7 @@ from typing import Any
 from torch.utils.data import dataset
 from torch.utils.data.dataset import *
 
-from mon.core import pathlib
+from mon.core import console, pathlib
 
 
 # region Dataset
@@ -37,6 +37,8 @@ class Dataset(dataset.Dataset, ABC):
             :class:`torch.Tensor`. Default: ``False``.
         verbose: Verbosity. Default: ``True``.
     """
+    
+    splits = ["train", "val", "test"]
     
     def __init__(
         self,
@@ -82,6 +84,18 @@ class Dataset(dataset.Dataset, ABC):
     def __del__(self):
         self.close()
     
+    @property
+    def split(self) -> str:
+        return self._split
+    
+    @split.setter
+    def split(self, split: str):
+        if split in self.splits:
+            self._split = split
+        else:
+            console.log(f"``split`` must be one of {self.splits}, but got {self.split}.")
+            raise ValueError
+            
     @abstractmethod
     def reset(self):
         """Resets and starts over."""

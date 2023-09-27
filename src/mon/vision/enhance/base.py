@@ -33,7 +33,7 @@ class ImageEnhancementModel(nn.Model, ABC):
     
     @property
     def zoo_dir(self) -> pathlib.Path:
-        return ZOO_DIR / "vision" / "classify" / self.name
+        return ZOO_DIR / "vision" / "enhance" / self.name
     
     def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""

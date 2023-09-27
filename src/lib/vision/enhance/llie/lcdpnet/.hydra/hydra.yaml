@@ -131,18 +131,18 @@ hydra:
   runtime:
     version: 1.3.2
     version_base: '1.1'
-    cwd: /home/longpham/10-workspace/11-code/mon/src/lib/vision/enhance/lcdpnet
+    cwd: /home/longpham/10-workspace/11-code/mon/src/lib/vision/enhance/llie/lcdpnet
     config_sources:
     - path: hydra.conf
       schema: pkg
       provider: hydra
-    - path: /home/longpham/10-workspace/11-code/mon/src/lib/vision/enhance/lcdpnet/src/config
+    - path: /home/longpham/10-workspace/11-code/mon/src/lib/vision/enhance/llie/lcdpnet/src/config
       schema: file
       provider: main
     - path: ''
       schema: structured
       provider: schema
-    output_dir: /home/longpham/10-workspace/11-code/mon/src/lib/vision/enhance/lcdpnet
+    output_dir: /home/longpham/10-workspace/11-code/mon/src/lib/vision/enhance/llie/lcdpnet
     choices:
       runtime: lcdpnet.release
       ds@predict_ds: predict

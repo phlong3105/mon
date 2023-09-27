@@ -9,7 +9,7 @@
 #
 [tool.poetry]
 name          = "mon"
-version       = "1.2.8"
+version       = "1.2.9"
 description   = "MON covers a wide range of research topics in computer vision, machine learning, and deep learning."
 license       = "MIT"
 authors       = [
@@ -52,7 +52,7 @@ include = [
 exclude = []
 
 [tool.poetry.dependencies]
-python         = ">=3.10, <3.12"
+python         = ">=3.8, <3.12"
 addict         = {version="*", optional=true}
 cog            = {version="*", optional=true}
 easydict       = {version="*", optional=true}
@@ -62,7 +62,7 @@ pandas         = {version="*", optional=true}
 tensorflow     = {version="*", optional=true}
 torchfile      = {version="*", optional=true}
 webdataset     = {version="*", optional=true}
-saicinpainting = {path="src/lib/vision/enhance/lama" , develop=true}
+saicinpainting = {path="src/lib/vision/enhance/inpaint/lama", develop=true}
 ultralytics    = {path="src/lib/vision/detect/yolov8", develop=true}
 
 [tool.poetry.extras]
@@ -87,4 +87,4 @@ build-backend = "poetry.core.masonry.api"
 # Comments
 #
 # 1. Fix thop error: AttributeError: 'some_object' object has no attribute 'total_ops'
-# pip3 install --upgrade git+https://github.com/sile/pytorch-OpCounter.git@8f115d4aeaee787d7347b75f30be28164b02ccaa
+# pip install --upgrade git+https://github.com/sile/pytorch-OpCounter.git@8f115d4aeaee787d7347b75f30be28164b02ccaa

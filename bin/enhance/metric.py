@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import click
+import piqa
 import pyiqa
+import torch
 
 import mon
 
@@ -14,37 +16,35 @@ console = mon.console
 
 
 # region Function
-_FULL_REFERENCE_METRICS = ["lpips", "psnr", "ssim"]
-_NON_REFERENCE_METRICS  = ["brisque", "nique", "unique"]
-_METRICS                = _FULL_REFERENCE_METRICS + _NON_REFERENCE_METRICS
 
-
-@click.command()
-@click.option("--image-dir",   default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
-@click.option("--target-dir",  default=mon.DATA_DIR/"", type=click.Path(exists=False), help="Ground-truth directory.")
-@click.option("--result-file", default=None,            type=str, help="Result file.")
-@click.option("--img-size", "-image_size", default=512, type=int)
-@click.option(
-    "--metric", "-m",
-    multiple = True,
-    default  = ["psnr", "ssim"],
-    type     = click.Choice(["all", "*"] + _METRICS, case_sensitive = False),
-    help     = "Measuring metric."
-)
-@click.option("--test-y-channel", is_flag=True)
-@click.option("--color-space",    default="ycrcb", type=str)
-@click.option("--verbose",        is_flag=True)
-def measure_metric(
+def measure_metric_piqa(
     image_dir     : mon.Path,
     target_dir    : mon.Path,
     result_file   : mon.Path | str,
-    img_size      : int,
+    model_name    : str,
+    image_size    : int,
+    resize        : bool,
     metric        : list[str],
     test_y_channel: bool,
-    color_space   : str,
+    save_txt      : bool,
     verbose       : bool,
 ):
-    console.rule("[bold red]1. INITIALIZATION")
+    """Measure metrics."""
+    _METRICS = {
+        "fid"    : {"module": piqa.FID,     "metric_mode": "NR", },
+        "fsim"   : {"module": piqa.FSIM,    "metric_mode": "FR", },
+        "haarpsi": {"module": piqa.HaarPSI, "metric_mode": "FR", },
+        "lpips"  : {"module": piqa.LPIPS,   "metric_mode": "FR", },
+        "mdsi"   : {"module": piqa.MDSI,    "metric_mode": "FR", },
+        "ms-gmsd": {"module": piqa.MS_GMSD, "metric_mode": "FR", },
+        "ms-ssim": {"module": piqa.MS_SSIM, "metric_mode": "FR", },
+        "psnr"   : {"module": piqa.PSNR,    "metric_mode": "FR", },
+        "ssim"   : {"module": piqa.SSIM,    "metric_mode": "FR", },
+        "tv"     : {"module": piqa.TV,      "metric_mode": "NR", },
+        "vsi"    : {"module": piqa.VSI,     "metric_mode": "FR", },
+    }
+    
+    console.rule(f"[bold red] {model_name}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     if target_dir is not None:
         assert mon.Path(target_dir).is_dir()
@@ -57,56 +57,251 @@ def measure_metric(
     target_dir  = mon.Path(target_dir)  if target_dir  is not None else None
     
     result_file = mon.Path(result_file) if result_file is not None else None
-    if result_file is not None and result_file.is_dir():
-        result_file /= "metric.csv"
-    result_file.mkdir(parents=True, exist_ok=True)
+    if save_txt and result_file is not None and result_file.is_dir():
+        result_file /= "metric.txt"
+        result_file.parent.mkdir(parents=True, exist_ok=True)
     
-    image_files = list(image_dir.rglob("*"))
-    image_files = [f for f in image_files if f.is_image_file()]
-    image_files = sorted(image_files)
-    num_items   = len(image_files)
+    image_files  = list(image_dir.rglob("*"))
+    image_files  = [f for f in image_files if f.is_image_file()]
+    image_files  = sorted(image_files)
+    num_items    = len(image_files)
     
-    metric      = _METRICS if ("all" in metric or "*" in metric) else metric
-    metric      = [m.lower() for m in metric]
-    values      = {m: []     for m in metric}
-    metric_f    = {}
+    device       = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    metric       = _METRICS if ("all" in metric or "*" in metric) else metric
+    metric       = [m.lower() for m in metric]
+    values       = {m: []     for m in metric}
+    metric_f     = {}
     for i, m in enumerate(metric):
-        metric_f[m] = pyiqa.create_metric(
-            metric_name    = m,
-            test_y_channel = test_y_channel,
-            color_space    = color_space,
-        )
+        if m in _METRICS:
+            metric_f[m] = _METRICS[m]["module"]().to(device=device)
         
-    need_target = any(m in _FULL_REFERENCE_METRICS for m in metric)
+    need_target = any(m in _METRICS and _METRICS[m]["metric_mode"] == "FR" for m in metric)
     if need_target and target_dir is None:
         raise ValueError(f"Require target images.")
-    console.log("[green]Done")
     
-    console.rule("[bold red]2. MEASURING")
+   # Measuring
+    h, w = mon.get_hw(image_size)
     with mon.get_progress_bar() as pbar:
         for image_file in pbar.track(
             sequence    = image_files,
             total       = len(image_files),
             description = f"[bright_yellow] Measuring"
         ):
-            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True)
-            image = mon.resize(input=image, size=img_size)
-            if need_target:
-                target_file = target_dir / image_file.name
-                target      = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True)
-                target      = mon.resize(input=target, size=img_size)
+            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+            if torch.any(image.isnan()):
+                continue
+            if resize:
+                image = mon.resize(input=image, size=[h, w])
+            
+            has_target  = need_target
+            target_file = target_dir / image_file.name
+            if target_file.exists():
+                target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+                if resize:
+                    target = mon.resize(input=target, size=[h, w])
+            else:
+                has_target = False
+            
             for m in metric:
-                if need_target:
-                    values[m].append(metric_f[m](image, target))
+                if m not in _METRICS:
+                    continue
+                if not has_target and _METRICS[m]["metric_mode"] == "FR":
+                    continue
+                elif has_target and _METRICS[m]["metric_mode"] == "FR":
+                    values[m].append(float(metric_f[m](image, target)))
                 else:
-                    values[m].append(metric_f[m](image))
-    console.log("[green]Done")
+                    values[m].append(float(metric_f[m](image)))
     
-    console.rule("[bold red]3. DISPLAY")
+    # Show results
+    console.log(f"{model_name}")
+    console.log(f"{image_dir.name}")
+    console.log(f"backend: custom")
     for m, v in values.items():
         avg = float(sum(v) / num_items)
         console.log(f"{m:<10}: {avg:.9f}")
-    console.log("[green]Done")
+    
+    # Save results
+    if save_txt:
+        with open(str(result_file), "w") as f:
+            f.write(f"{model_name}\n")
+            f.write(f"{image_dir.name}\n")
+            for m, v in values.items():
+                avg = float(sum(v) / num_items)
+                f.write(f"{m:<10}: {avg:.9f}\n")
+
+
+def measure_metric_pyiqa(
+    image_dir     : mon.Path,
+    target_dir    : mon.Path,
+    result_file   : mon.Path | str,
+    model_name    : str,
+    image_size    : int,
+    resize        : bool,
+    metric        : list[str],
+    test_y_channel: bool,
+    save_txt      : bool,
+    verbose       : bool,
+):
+    """Measure metrics using :mod:`pyiqa` package."""
+    _FULL_REFERENCE_METRICS = [
+        "ahiq", "ckdn", "cw-ssim", "dists", "fsim", "gmsd", "lpips", "mad",
+        "ms-ssim", "nlpd", "pieapp", "psnr", "ssim", "vif", "vsi", "wadiqam",
+    ]
+    _NON_REFERENCE_METRICS  = [
+        "brisque", "clipiqa", "cnniqa", "fid", "hyperiqa", "ilniqe", "maniqa",
+        "musiq", "nima", "niqe", "nrqm", "paq2piq", "pi", "wadiqam",
+    ]
+    _METRICS = _FULL_REFERENCE_METRICS + _NON_REFERENCE_METRICS
+    
+    console.rule(f"[bold red] {model_name}")
+    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    if target_dir is not None:
+        assert mon.Path(target_dir).is_dir()
+    if result_file is not None:
+        assert (mon.Path(result_file).is_dir()
+                or mon.Path(result_file).is_file()
+                or isinstance(result_file, str))
+    
+    image_dir   = mon.Path(image_dir)
+    target_dir  = mon.Path(target_dir)  if target_dir  is not None else None
+    
+    result_file = mon.Path(result_file) if result_file is not None else None
+    if save_txt and result_file is not None and result_file.is_dir():
+        result_file /= "metric.txt"
+        result_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    image_files = list(image_dir.rglob("*"))
+    image_files = [f for f in image_files if f.is_image_file()]
+    image_files = sorted(image_files)
+    num_items   = len(image_files)
+    
+    device      = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    metric      = _METRICS if ("all" in metric or "*" in metric) else metric
+    metric      = [m.lower() for m in metric]
+    values      = {m: []     for m in metric}
+    metric_f    = {}
+    for i, m in enumerate(metric):
+        metric_config = pyiqa.DEFAULT_CONFIGS[m]
+        if "test_y_channel" in metric_config["metric_opts"]:
+            metric_f[m] = pyiqa.create_metric(
+                metric_name    = m,
+                as_loss        = False,
+                test_y_channel = test_y_channel,
+                device         = device,
+            )
+        else:
+            metric_f[m] = pyiqa.create_metric(
+                metric_name = m,
+                as_loss     = False,
+                device      = device,
+            )
+        
+    need_target = any(m in _FULL_REFERENCE_METRICS for m in metric)
+    if need_target and target_dir is None:
+        raise ValueError(f"Require target images.")
+    
+   # Measuring
+    h, w = mon.get_hw(image_size)
+    with mon.get_progress_bar() as pbar:
+        for image_file in pbar.track(
+            sequence    = image_files,
+            total       = len(image_files),
+            description = f"[bright_yellow] Measuring"
+        ):
+            image = mon.read_image(path=image_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+            if torch.any(image.isnan()):
+                continue
+            if resize:
+                image = mon.resize(input=image, size=[h, w])
+            
+            has_target  = need_target
+            target_file = target_dir / image_file.name
+            if target_file.exists():
+                target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
+                if resize:
+                    target = mon.resize(input=target, size=[h, w])
+            else:
+                has_target = False
+            
+            for m in metric:
+                metric_config = pyiqa.DEFAULT_CONFIGS[m]
+                if not has_target and metric_config["metric_mode"] == "FR":
+                    continue
+                elif has_target and metric_config["metric_mode"] == "FR":
+                    values[m].append(metric_f[m](image, target))
+                else:
+                    values[m].append(metric_f[m](image))
+    
+    # Show results
+    console.log(f"{model_name}")
+    console.log(f"{image_dir.name}")
+    console.log(f"backend: pyiqa")
+    for m, v in values.items():
+        avg = float(sum(v) / num_items)
+        console.log(f"{m:<10}: {avg:.9f}")
+    
+    # Save results
+    if save_txt:
+        with open(str(result_file), "w") as f:
+            f.write(f"{model_name}\n")
+            for m, v in values.items():
+                avg = float(sum(v) / num_items)
+                f.write(f"{m:<10}: {avg:.9f}\n")
+                
+
+@click.command()
+@click.option("--image-dir",      default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
+@click.option("--target-dir",     default=mon.DATA_DIR/"", type=click.Path(exists=False), help="Ground-truth directory.")
+@click.option("--result-file",    default=None,            type=str, help="Result file.")
+@click.option("--model-name",     default=None,            type=str, help="Model name.")
+@click.option("--image-size",     default=512, type=int)
+@click.option("--resize",         is_flag=True)
+@click.option("--metric",         multiple=True, type=str, help="Measuring metric.")
+@click.option("--test-y-channel", is_flag=True)
+@click.option("--backend",        default="pyiqa", type=click.Choice(["piqa", "pyiqa"], case_sensitive=False))
+@click.option("--save-txt",       is_flag=True)
+@click.option("--verbose",        is_flag=True)
+def measure_metric(
+    image_dir     : mon.Path,
+    target_dir    : mon.Path,
+    result_file   : mon.Path | str,
+    model_name    : str,
+    image_size    : int,
+    resize        : bool,
+    metric        : list[str],
+    test_y_channel: bool,
+    backend       : str,
+    save_txt      : bool,
+    verbose       : bool,
+):
+    if backend in ["piqa"]:
+        measure_metric_piqa(
+            image_dir      = image_dir,
+            target_dir     = target_dir,
+            result_file    = result_file,
+            model_name     = model_name,
+            image_size     = image_size,
+            resize         = resize,
+            metric         = metric,
+            test_y_channel = test_y_channel,
+            save_txt       = save_txt,
+            verbose        = verbose,
+        )
+    elif backend in ["pyiqa"]:
+        measure_metric_pyiqa(
+            image_dir      = image_dir,
+            target_dir     = target_dir,
+            result_file    = result_file,
+            model_name     = model_name,
+            image_size     = image_size,
+            resize         = resize,
+            metric         = metric,
+            test_y_channel = test_y_channel,
+            save_txt       = save_txt,
+            verbose        = verbose,
+        )
+    else:
+        console.log(f"`{backend}` is not supported!")
     
 # endregion
 

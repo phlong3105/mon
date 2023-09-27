@@ -216,7 +216,6 @@ class Path(type(pathlib.Path())):
             dst.unlink(missing_ok=True)
         shutil.copyfile(src=str(self), dst=str(dst))
 
-
 # endregion
 
 
@@ -272,7 +271,6 @@ def hash_files(paths: list[Path | str]) -> int:
     paths = [Path(f) for f in paths if f is not None]
     return sum(f.stat().st_size for f in paths if f.is_file())
 
-
 # endregion
 
 
@@ -287,7 +285,6 @@ def copy_file(src: Path | str, dst: Path | str):
     """
     Path(dst).parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src=str(src), dst=str(dst))
-
 
 # endregion
 

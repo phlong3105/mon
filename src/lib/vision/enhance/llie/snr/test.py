@@ -43,7 +43,6 @@ def main():
     util.setup_logger('base', save_folder, 'test', level=logging.INFO, screen=True, tofile=True)
     logger = logging.getLogger('base')
 
-
     for phase, dataset_opt in opt['datasets'].items():
         val_set = create_dataset(dataset_opt)
         val_loader = create_dataloader(val_set, dataset_opt, opt, None)

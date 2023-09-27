@@ -94,10 +94,11 @@ class IEM(nn.Module):
 
 
 class EnhanceNetwork(nn.Module):
+    
     def __init__(self, iteratioin, channel, genotype):
         super(EnhanceNetwork, self).__init__()
         self.iem_nums = iteratioin
-        self.channel = channel
+        self.channel  = channel
         self.genotype = genotype
 
         self.iems = nn.ModuleList()
@@ -128,10 +129,10 @@ class DenoiseNetwork(nn.Module):
         super(DenoiseNetwork, self).__init__()
 
         self.nrm_nums = layers
-        self.channel = channel
+        self.channel  = channel
         self.genotype = genotype
-        self.stem = conv_layer(3, self.channel, 3)
-        self.nrms = nn.ModuleList()
+        self.stem     = conv_layer(3, self.channel, 3)
+        self.nrms     = nn.ModuleList()
         for i in range(self.nrm_nums):
             self.nrms.append(SearchBlock(self.channel, genotype))
         self.activate = nn.Sequential(conv_layer(self.channel, 3, 3))
@@ -156,30 +157,39 @@ class Network(nn.Module):
         self.enhance_channel = 3
         self.denoise_channel = 6
 
-        self._criterion = LossFunction()
+        self._criterion         = LossFunction()
         self._denoise_criterion = DenoiseLossFunction()
 
-        enhance_genname = 'IEM'
+        enhance_genname  = 'IEM'
         enhance_genotype = eval("genotypes.%s" % enhance_genname)
 
-        denoise_genname = 'NRM'
+        denoise_genname  = 'NRM'
         denoise_genotype = eval("genotypes.%s" % denoise_genname)
 
-        self.enhance_net = EnhanceNetwork(iteratioin=self.iem_nums, channel=self.enhance_channel,
-                                          genotype=enhance_genotype)
-        self.denoise_net = DenoiseNetwork(layers=self.nrm_nums, channel=self.denoise_channel, genotype=denoise_genotype)
+        self.enhance_net = EnhanceNetwork(
+            iteratioin = self.iem_nums,
+            channel    = self.enhance_channel,
+            genotype   = enhance_genotype
+        )
+        self.denoise_net = DenoiseNetwork(
+            layers   = self.nrm_nums,
+            channel  = self.denoise_channel,
+            genotype = denoise_genotype
+        )
 
         self.enhancement_optimizer = torch.optim.SGD(
             self.enhance_net.parameters(),
-            lr=0.015,
-            momentum=0.9,
-            weight_decay=3e-4)
+            lr           = 0.015,
+            momentum     = 0.9,
+            weight_decay = 3e-4
+        )
 
         self.denoise_optimizer = torch.optim.SGD(
             self.denoise_net.parameters(),
-            lr=0.001,
-            momentum=0.9,
-            weight_decay=3e-4)
+            lr           = 0.001,
+            momentum     = 0.9,
+            weight_decay = 3e-4
+        )
 
         self._init_weights()
 

@@ -109,9 +109,9 @@ class ChannelConsistencyLoss(Loss):
         d_gb1 = g1 - b1
         d_gb2 = g2 - b2
         
-        kl_rb = F.kl_div(d_rb1, d_rb2, reduction="mean", log_target=self.log_target)
-        kl_rg = F.kl_div(d_rg1, d_rg2, reduction="mean", log_target=self.log_target)
-        kl_gb = F.kl_div(d_gb1, d_gb2, reduction="mean", log_target=self.log_target)
+        kl_rb = F.kl_div(d_rb1, d_rb2, reduction="batchmean", log_target=self.log_target)
+        kl_rg = F.kl_div(d_rg1, d_rg2, reduction="batchmean", log_target=self.log_target)
+        kl_gb = F.kl_div(d_gb1, d_gb2, reduction="batchmean", log_target=self.log_target)
         
         loss = kl_rb + kl_rg + kl_gb
         loss = reduce_loss(loss=loss, reduction=self.reduction)
@@ -204,7 +204,7 @@ class EdgeLoss(Loss):
         return loss
     
     def conv_gauss(self, image: torch.Tensor) -> torch.Tensor:
-        if self.kernel.devices != image.device:
+        if self.kernel.device != image.device:
             self.kernel = self.kernel.to(image.device)
         n_channels, _, kw, kh = self.kernel.shape
         image = F.pad(
@@ -524,8 +524,8 @@ class PerceptualLoss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        if self.vgg.device != input[0].devices:
-            self.vgg = self.vgg.to(input[0].devices)
+        if self.vgg.device != input[0].device:
+            self.vgg = self.vgg.to(input[0].device)
         input_feats  = self.vgg(input)
         target_feats = self.vgg(target)
         loss = self.mse(input=input_feats, target=target_feats)
@@ -681,10 +681,10 @@ class StdLoss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        if self.blur.device != input[0].devices:
-            self.blur = self.blur.to(input[0].devices)
-        if self.image.device != input[0].devices:
-            self.image = self.image.to(input[0].devices)
+        if self.blur.device != input[0].device:
+            self.blur = self.blur.to(input[0].device)
+        if self.image.device != input[0].device:
+            self.image = self.image.to(input[0].device)
         
         input_mean = torch.mean(input, 1, keepdim=True)
         loss = self.mse(

@@ -270,9 +270,9 @@ class LazyConv3d(base.ConvLayerParsingMixin, nn.LazyConv3d):
 ConvNormAct   = ConvNormActivation
 Conv2dNormAct = Conv2dNormActivation
 Conv3dNormAct = Conv3dNormActivation
-LAYERS.register(module=ConvNormAct)
-LAYERS.register(module=Conv2dNormAct)
-LAYERS.register(module=Conv3dNormAct)
+LAYERS.register(name="ConvNormAct",   module=ConvNormAct)
+LAYERS.register(name="Conv2dNormAct", module=Conv2dNormAct)
+LAYERS.register(name="Conv3dNormAct", module=Conv3dNormAct)
 
 # endregion
 
@@ -381,8 +381,8 @@ class DepthwiseSeparableConv2dReLU(base.ConvLayerParsingMixin, nn.Module):
 
 DSConv2d     = DepthwiseSeparableConv2d
 DSConv2dReLU = DepthwiseSeparableConv2dReLU
-LAYERS.register(module=DSConv2d)
-LAYERS.register(module=DSConv2dReLU)
+LAYERS.register(name="DSConv2d",     module=DSConv2d)
+LAYERS.register(name="DSConv2dReLU", module=DSConv2dReLU)
 
 # endregion
 
