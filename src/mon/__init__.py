@@ -10,11 +10,9 @@ import mon.core
 import mon.globals
 import mon.nn
 import mon.vision
-import mon.config
 from mon.core import *
 from mon.globals import *
 from mon.nn import *
 from mon.vision import *
-from mon.config import *
 
 __version__ = "1.2.9"

@@ -35,6 +35,7 @@ def predict(args):
     model.eval()
     
     # Measure efficiency score
+    '''
     flops, params, avg_time = mon.calculate_efficiency_score(
         model      = model,
         image_size = args.image_size,
@@ -46,6 +47,7 @@ def predict(args):
     console.log(f"FLOPs  = {flops:.4f}")
     console.log(f"Params = {params:.4f}")
     console.log(f"Time   = {avg_time:.4f}")
+    '''
     
     #
     normalize_process = Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))

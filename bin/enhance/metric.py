@@ -19,7 +19,7 @@ console = mon.console
 
 def measure_metric_piqa(
     image_dir     : mon.Path,
-    target_dir    : mon.Path,
+    target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     model_name    : str,
     image_size    : int,
@@ -31,7 +31,7 @@ def measure_metric_piqa(
 ):
     """Measure metrics."""
     _METRICS = {
-        "fid"    : {"module": piqa.FID,     "metric_mode": "NR", },
+        # "fid"    : {"module": piqa.FID,     "metric_mode": "FR", },
         "fsim"   : {"module": piqa.FSIM,    "metric_mode": "FR", },
         "haarpsi": {"module": piqa.HaarPSI, "metric_mode": "FR", },
         "lpips"  : {"module": piqa.LPIPS,   "metric_mode": "FR", },
@@ -54,7 +54,9 @@ def measure_metric_piqa(
                 or isinstance(result_file, str))
     
     image_dir   = mon.Path(image_dir)
-    target_dir  = mon.Path(target_dir)  if target_dir  is not None else None
+    target_dir  = mon.Path(target_dir) \
+        if target_dir is not None \
+        else mon.Path(str(image_dir).replace("low", "high"))
     
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
@@ -76,9 +78,7 @@ def measure_metric_piqa(
             metric_f[m] = _METRICS[m]["module"]().to(device=device)
         
     need_target = any(m in _METRICS and _METRICS[m]["metric_mode"] == "FR" for m in metric)
-    if need_target and target_dir is None:
-        raise ValueError(f"Require target images.")
-    
+   
    # Measuring
     h, w = mon.get_hw(image_size)
     with mon.get_progress_bar() as pbar:
@@ -94,8 +94,12 @@ def measure_metric_piqa(
                 image = mon.resize(input=image, size=[h, w])
             
             has_target  = need_target
-            target_file = target_dir / image_file.name
-            if target_file.exists():
+            target_file = None
+            for ext in mon.ImageFormat.values():
+                temp = target_dir / f"{image_file.stem}{ext}"
+                if temp.exists():
+                    target_file = temp
+            if target_file is not None and target_file.exists():
                 target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
                 if resize:
                     target = mon.resize(input=target, size=[h, w])
@@ -115,7 +119,7 @@ def measure_metric_piqa(
     # Show results
     console.log(f"{model_name}")
     console.log(f"{image_dir.name}")
-    console.log(f"backend: custom")
+    console.log(f"backend: piqa")
     for m, v in values.items():
         avg = float(sum(v) / num_items)
         console.log(f"{m:<10}: {avg:.9f}")
@@ -132,7 +136,7 @@ def measure_metric_piqa(
 
 def measure_metric_pyiqa(
     image_dir     : mon.Path,
-    target_dir    : mon.Path,
+    target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     model_name    : str,
     image_size    : int,
@@ -163,7 +167,9 @@ def measure_metric_pyiqa(
                 or isinstance(result_file, str))
     
     image_dir   = mon.Path(image_dir)
-    target_dir  = mon.Path(target_dir)  if target_dir  is not None else None
+    target_dir  = mon.Path(target_dir) \
+        if target_dir is not None \
+        else mon.Path(str(image_dir).replace("low", "high"))
     
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
@@ -197,10 +203,8 @@ def measure_metric_pyiqa(
             )
         
     need_target = any(m in _FULL_REFERENCE_METRICS for m in metric)
-    if need_target and target_dir is None:
-        raise ValueError(f"Require target images.")
     
-   # Measuring
+    # Measuring
     h, w = mon.get_hw(image_size)
     with mon.get_progress_bar() as pbar:
         for image_file in pbar.track(
@@ -215,8 +219,12 @@ def measure_metric_pyiqa(
                 image = mon.resize(input=image, size=[h, w])
             
             has_target  = need_target
-            target_file = target_dir / image_file.name
-            if target_file.exists():
+            target_file = None
+            for ext in mon.ImageFormat.values():
+                temp = target_dir / f"{image_file.stem}{ext}"
+                if temp.exists():
+                    target_file = temp
+            if target_file is not None and target_file.exists():
                 target = mon.read_image(path=target_file, to_rgb=True, to_tensor=True, normalize=True).to(device=device)
                 if resize:
                     target = mon.resize(input=target, size=[h, w])
@@ -251,7 +259,7 @@ def measure_metric_pyiqa(
 
 @click.command()
 @click.option("--image-dir",      default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
-@click.option("--target-dir",     default=mon.DATA_DIR/"", type=click.Path(exists=False), help="Ground-truth directory.")
+@click.option("--target-dir",     default=None,            type=click.Path(exists=False), help="Ground-truth directory.")
 @click.option("--result-file",    default=None,            type=str, help="Result file.")
 @click.option("--model-name",     default=None,            type=str, help="Model name.")
 @click.option("--image-size",     default=512, type=int)
@@ -263,7 +271,7 @@ def measure_metric_pyiqa(
 @click.option("--verbose",        is_flag=True)
 def measure_metric(
     image_dir     : mon.Path,
-    target_dir    : mon.Path,
+    target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     model_name    : str,
     image_size    : int,

@@ -151,9 +151,10 @@ def main(
     project   = project or host_args.get("project", None)
     
     if project is not None and project != "":
-        config_args = importlib.import_module(f"mon.config.{project}.{config}")
+        project_module = project.replace("/", ".")
+        config_args    = importlib.import_module(f"config.{project_module}.{config}")
     else:
-        config_args = importlib.import_module(f"mon.config.{config}")
+        config_args    = importlib.import_module(f"config.{config}")
     
     # Prioritize input args --> predefined args --> config file args
     project     = project or config_args.model["project"]

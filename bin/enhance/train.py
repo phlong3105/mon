@@ -21,10 +21,10 @@ console = mon.console
 
 hosts = {
 	"lp-labdesktop-01": {
-        "config"     : "zerodace_lolsice",
+        "config"     : "zerodace_sice_zerodce",
         "root"       : mon.RUN_DIR/"train",
-        "project"    : "zerodace",
-        "name"       : "zerodace-lolsice",
+        "project"    : "vision/enhance/llie/zerodace",
+        "name"       : "zerodace-sice-zerodce",
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
@@ -36,10 +36,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "lp-labdesktop-02": {
-        "config"     : "zerodace",
+        "config"     : "zerodace_sice_zerodce",
         "root"       : mon.RUN_DIR/"train",
-        "project"    : "zerodace",
-        "name"       : "zerodace-lol",
+        "project"    : "vision/enhance/llie/zerodace",
+        "name"       : "zerodace-sice-zerodce",
         "weights"    : None,
         "batch_size" : 4,
         "image_size" : (512, 512),
@@ -53,7 +53,7 @@ hosts = {
     "vsw-ws01": {
         "config"     : "hinet_gt_rain",
         "root"       : mon.RUN_DIR/"train",
-        "project"    : "hinet",
+        "project"    : "vision/enhance/llie/hinet",
         "name"       : "hinet-gt-rain",
         "weights"    : None,
         "batch_size" : 4,
@@ -66,10 +66,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "vsw-ws03": {
-        "config"     : "zerodce_lolsice",
+        "config"     : "zerodce_sice_zerodce",
         "root"       : mon.RUN_DIR/"train",
-        "project"    : "zerodce",
-        "name"       : "zerodce-lolsice",
+        "project"    : "vision/enhance/llie/zerodce",
+        "name"       : "zerodce-sice-zerodce",
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (256, 256),
@@ -81,10 +81,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "vsw-ws02": {
-        "config"     : "zerodcepp_lolsice",
+        "config"     : "zerodcepp_sice_zerodce",
         "root"       : mon.RUN_DIR/"train",
-        "project"    : "zerodcepp",
-        "name"       : "zerodcepp-lolsice",
+        "project"    : "vision/enhance/llie/zerodcepp",
+        "name"       : "zerodcepp-sice-zerodce",
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
@@ -189,9 +189,10 @@ def main(
     project   = project or host_args.get("project", None)
     
     if project is not None and project != "":
-        config_args = importlib.import_module(f"config.{project}.{config}")
+        project_module = project.replace("/", ".")
+        config_args    = importlib.import_module(f"config.{project_module}.{config}")
     else:
-        config_args = importlib.import_module(f"config.{config}")
+        config_args    = importlib.import_module(f"config.{config}")
     
     # Prioritize input args --> predefined args --> config file args
     project     = project or config_args.model["project"]

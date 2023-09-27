@@ -118,7 +118,7 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             loss   = loss,
             *args, **kwargs
         )
-        self.variant      = 10
+        self.variant      = 1
         self.num_channels = 32
         self.scale_factor = 1.0
         self.num_iters    = 8
@@ -136,82 +136,6 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
         elif self.variant == 1:
             self.act      = nn.LeakyReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv0    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
-            self.conv1    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-        elif self.variant == 2:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv0    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
-            self.conv1    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
-        elif self.variant == 3:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv0    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
-            self.conv1    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-        elif self.variant == 4:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv0    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
-            self.conv1    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
-        elif self.variant == 5:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv0    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
-            self.conv1    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-        elif self.variant == 6:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv0    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
-            self.conv1    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d, act2=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
-        elif self.variant == 7:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-            self.conv1    = nn.ABSConv2dS(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act1=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
-        elif self.variant == 8:
-            self.act      = nn.LeakyReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
             self.conv1    = nn.ABSConv2dS(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv2    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv3    = nn.ABSConv2dS(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
@@ -219,7 +143,7 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv7    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-        elif self.variant == 9:
+        elif self.variant == 2:
             self.act      = nn.LeakyReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
             self.conv1    = nn.Conv2d(    in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
@@ -229,7 +153,7 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv7    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-        elif self.variant == 10:
+        elif self.variant == 3:
             self.act      = nn.LeakyReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
             self.conv1    = nn.ABSConv2dS(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
@@ -239,7 +163,7 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             self.conv5    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1)
             self.conv6    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1)
             self.conv7    = nn.Conv2d(    in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
-        elif self.variant == 11:
+        elif self.variant == 4:
             self.act      = nn.LeakyReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
             self.conv1    = nn.DSConv2d(  in_channels=3,                     out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1)
@@ -249,7 +173,7 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             self.conv5    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv6    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=32,                kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
             self.conv7    = nn.ABSConv2dS(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
-        elif self.variant == 12:
+        elif self.variant == 5:
             self.act      = nn.LeakyReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
             self.conv1    = nn.ABSConv2dS(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1, p=0.25, act2=nn.HalfInstanceNorm2d)
@@ -317,9 +241,8 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             Predictions.
         """
         x = input
-        
         #
-        if self.variant in [0, 7, 8, 9, 10, 11, 12]:
+        if self.variant in [0, 1, 2, 3, 4, 5]:
             if self.scale_factor == 1:
                 x_down = x
             else:
@@ -331,38 +254,16 @@ class ZeroDACE(base.LowLightImageEnhancementModel):
             f4  = self.act(self.conv4(f3))
             f5  = self.act(self.conv5(torch.cat([f3, f4], 1)))
             f6  = self.act(self.conv6(torch.cat([f2, f5], 1)))
-            a   = F.tanh(self.conv7(torch.cat([f1, f6], 1)))
+            f7  = F.tanh(self.conv7(torch.cat([f1, f6], 1)))
             if self.scale_factor == 1:
-                a = a
+                f7 = f7
             else:
-                a = self.upsample(a)
-            y = x + a * (torch.pow(x, 2) - x)
+                f7 = self.upsample(f7)
+            y = x + f7 * (torch.pow(x, 2) - x)
             for i in range(self.num_iters - 1):
-                y = y + a * (torch.pow(y, 2) - y)
+                y = y + f7 * (torch.pow(y, 2) - y)
         #
-        elif self.variant in [1, 2, 3, 4, 5, 6]:
-            if self.scale_factor == 1:
-                x_down = x
-            else:
-                scale_factor = 1 / self.scale_factor
-                x_down       = F.interpolate(x, scale_factor=scale_factor, mode="bilinear")
-            f0  = self.conv0(x_down)
-            f1  = self.act(self.conv1(f0))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
-            f5  = self.act(self.conv5(torch.cat([f3, f4], 1)))
-            f6  = self.act(self.conv6(torch.cat([f2, f5], 1)))
-            a   = F.tanh(self.conv7(torch.cat([f1, f6], 1)))
-            if self.scale_factor == 1:
-                a = a
-            else:
-                a = self.upsample(a)
-            y = x + a * (torch.pow(x, 2) - x)
-            for i in range(self.num_iters - 1):
-                y = y + a * (torch.pow(y, 2) - y)
-        
-        return a, y
+        return f7, y
         
     def regularization_loss(self, alpha: float = 0.1):
         loss = 0.0

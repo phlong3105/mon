@@ -535,7 +535,7 @@ class Model(lightning.LightningModule, ABC):
     def fullname(self, fullname: str | None = None):
         if fullname is None or fullname == "":
             if self.variant is not None:
-                if self.name in self.variant:
+                if self.name in str(self.variant):
                     fullname = self.variant
                 else:
                     fullname = f"{self.name}-{self.variant}"
@@ -556,9 +556,9 @@ class Model(lightning.LightningModule, ABC):
         self._root = root
         
         if self.project is not None and self.project != "":
-            self._root = self._root / self.project
+            self._root /= self.project
         if self._root.name != self.fullname:
-            self._root = self._root / self.fullname
+            self._root /= self.fullname
         
         self._debug_dir = self._root / "debug"
         self._ckpt_dir  = self._root / "weights"

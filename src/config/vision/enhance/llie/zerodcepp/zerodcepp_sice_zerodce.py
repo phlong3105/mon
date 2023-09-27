@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DCE++ model trained on LOLSICE dataset."""
+"""Zero-DCE++ model trained on SICEZeroDCE dataset."""
 
 from __future__ import annotations
 
