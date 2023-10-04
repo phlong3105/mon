@@ -1118,11 +1118,9 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             image       = transformed["image"]
             label       = transformed["mask"]
         if self.to_tensor:
-            image = core.to_image_tensor(
-                input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(
-                input=label, keepdim=False, normalize=True)
-            
+            image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
+           
         return image, label, meta
         
     def cache_images(self):

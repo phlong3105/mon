@@ -17,6 +17,8 @@ __all__ = [
     "GLADNet",
     "LIME",
     "LIMEDataModule",
+    "LLIE",
+    "LLIEDataModule",
     "LOL",
     "LOL123",
     "LOL123DataModule",
@@ -37,10 +39,8 @@ __all__ = [
     "VVDataModule",
 ]
 
-from torch.utils.data import random_split
-
 from mon.core import console, pathlib, rich
-from mon.globals import DATAMODULES, DATASETS, ModelPhase
+from mon.globals import DATAMODULES, DATASETS, ImageFormat, ModelPhase
 from mon.vision.dataset import base
 
 
@@ -101,6 +101,11 @@ class DeepUPE(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -207,6 +212,11 @@ class GLADNet(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -236,6 +246,42 @@ class LIME(base.UnlabeledImageDataset):
                     image = base.ImageLabel(path=path)
                     self.images.append(image)
 
+
+@DATASETS.register(name="llie")
+class LLIE(base.UnlabeledImageDataset):
+    """LLIE dataset consists of all low-light images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        subdirs = [
+            self.root / "test/deepupe/low",
+            self.root / "test/dicm/low",
+            self.root / "test/lime/low",
+            self.root / "test/mef/low",
+            self.root / "test/npe/low",
+            self.root / "test/vv/low",
+            self.root / "train/gladnet/low",
+            self.root / "train/lol/low",
+            self.root / "train/sice-mix/low",
+            self.root / "train/sice-zerodce/low",
+            self.root / "train/ve-lol/low",
+        ]
+        self.images: list[base.ImageLabel] = []
+        with rich.get_progress_bar() as pbar:
+            for subdir in subdirs:
+                for path in pbar.track(
+                    list(subdir.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+                
 
 @DATASETS.register(name="lol")
 class LOL(base.ImageEnhancementDataset):
@@ -272,6 +318,11 @@ class LOL(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -379,6 +430,11 @@ class SICEGrad(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -413,8 +469,13 @@ class SICEMix(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path = str(img.path).replace("low", "high")
+                path = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -479,6 +540,11 @@ class VELOL(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -519,6 +585,11 @@ class VELOLSyn(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = pathlib.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -586,16 +657,10 @@ class DarkFaceDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = DarkFace(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset  = DarkFace(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = DarkFace(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = DarkFace(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -643,16 +708,10 @@ class DeepUPEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = DeepUPE(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = DeepUPE(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = DeepUPE(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = DeepUPE(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -700,16 +759,10 @@ class DICMDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = DICM(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = DICM(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = DICM(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = DICM(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -757,16 +810,10 @@ class ExDarkDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = ExDark(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = ExDark(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = ExDark(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = ExDark(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -814,16 +861,10 @@ class FusionDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = Fusion(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = Fusion(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = Fusion(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = Fusion(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -871,16 +912,10 @@ class LIMEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = LIME(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = LIME(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = LIME(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = LIME(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -891,6 +926,57 @@ class LIMEDataModule(base.DataModule):
         """Load all the class-labels of the dataset."""
         pass
 
+
+@DATAMODULES.register(name="llie")
+class LLIEDataModule(base.DataModule):
+    """LLIE datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = LLIE(split="train", **self.dataset_kwargs)
+            self.val   = LOL(split="test",   **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = LOL(split="test", **self.dataset_kwargs)
+            
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+    
 
 @DATAMODULES.register(name="lol")
 class LOLDataModule(base.DataModule):
@@ -928,14 +1014,10 @@ class LOLDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = LOL(split="train", **self.dataset_kwargs)
-            self.val         = LOL(split="test",  **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = LOL(split="train", **self.dataset_kwargs)
+            self.val   = LOL(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = LOL(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = LOL(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -983,16 +1065,10 @@ class LOL123DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = LOL123(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = LOL123(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = LOL123(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = LOL123(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1040,16 +1116,10 @@ class MEFDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = MEF(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = MEF(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = MEF(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = MEF(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1097,16 +1167,10 @@ class NPEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = NPE(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = NPE(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = NPE(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = NPE(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1154,16 +1218,10 @@ class SICEGradDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = SICEGrad(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = SICEGrad(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = SICEGrad(split="train", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = SICEGrad(split="train", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1211,17 +1269,11 @@ class SICEMixDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = SICEMix(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = SICEMix(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = SICEMix(split="train", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
-
+            self.test = SICEMix(split="train", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
@@ -1268,17 +1320,11 @@ class SICEZeroDCEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = SICEZeroDCE(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            self.train = SICEZeroDCE(split="train", **self.dataset_kwargs)
+            self.val   = LOL(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = SICEZeroDCE(split="train", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
-
+            self.test  = LOL(split="test", **self.dataset_kwargs)
+            
         if self.classlabels is None:
             self.get_classlabels()
         
@@ -1325,16 +1371,10 @@ class VVDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = VV(split="test", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = VV(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = VV(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = VV(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

@@ -95,12 +95,12 @@ class ChannelConsistencyLoss(Loss):
         target: torch.Tensor = None
     ) -> torch.Tensor:
         assert input.shape == target.shape
-        r1 = input[:, 0, :, :]
-        g1 = input[:, 1, :, :]
-        b1 = input[:, 2, :, :]
-        r2 = target[:, 0, :, :]
-        g2 = target[:, 1, :, :]
-        b2 = target[:, 2, :, :]
+        r1    = input[:, 0, :, :]
+        g1    = input[:, 1, :, :]
+        b1    = input[:, 2, :, :]
+        r2    = target[:, 0, :, :]
+        g2    = target[:, 1, :, :]
+        b2    = target[:, 2, :, :]
         
         d_rb1 = r1 - b1
         d_rb2 = r2 - b2
@@ -109,12 +109,12 @@ class ChannelConsistencyLoss(Loss):
         d_gb1 = g1 - b1
         d_gb2 = g2 - b2
         
-        kl_rb = F.kl_div(d_rb1, d_rb2, reduction="batchmean", log_target=self.log_target)
-        kl_rg = F.kl_div(d_rg1, d_rg2, reduction="batchmean", log_target=self.log_target)
-        kl_gb = F.kl_div(d_gb1, d_gb2, reduction="batchmean", log_target=self.log_target)
+        kl_rb = F.kl_div(d_rb1, d_rb2, reduction="mean", log_target=self.log_target)
+        kl_rg = F.kl_div(d_rg1, d_rg2, reduction="mean", log_target=self.log_target)
+        kl_gb = F.kl_div(d_gb1, d_gb2, reduction="mean", log_target=self.log_target)
         
-        loss = kl_rb + kl_rg + kl_gb
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss  = kl_rb + kl_rg + kl_gb
+        loss  = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 

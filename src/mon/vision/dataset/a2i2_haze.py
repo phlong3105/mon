@@ -246,16 +246,10 @@ class A2I2HazeDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = A2I2Haze(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = A2I2Haze(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = A2I2Haze(split="train", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = A2I2Haze(split="train", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

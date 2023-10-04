@@ -81,7 +81,7 @@ class ResNet(nn.Module):
         #         nn.Conv2d(num_channels, num_channels *
         #                   factor ** 2, 3, 1),
         #         nn.PixelShuffle(factor),
-        #         act(act_fun)
+        #         norm(act_fun)
         #     ]
         layers += [
             conv(num_channels, num_output_channels, 3, 1, bias=True, pad=pad),

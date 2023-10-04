@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import os
+
 import click
 import piqa
 import pyiqa
@@ -27,6 +29,7 @@ def measure_metric_piqa(
     metric        : list[str],
     test_y_channel: bool,
     save_txt      : bool,
+    append_results: bool,
     verbose       : bool,
 ):
     """Measure metrics."""
@@ -46,13 +49,14 @@ def measure_metric_piqa(
     
     console.rule(f"[bold red] {model_name}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
-    if target_dir is not None:
-        assert mon.Path(target_dir).is_dir()
+    # if target_dir is not None:
+    #     assert mon.Path(target_dir).is_dir()
     if result_file is not None:
         assert (mon.Path(result_file).is_dir()
                 or mon.Path(result_file).is_file()
                 or isinstance(result_file, str))
-    
+        result_file = mon.Path(result_file)
+        
     image_dir   = mon.Path(image_dir)
     target_dir  = mon.Path(target_dir) \
         if target_dir is not None \
@@ -117,21 +121,47 @@ def measure_metric_piqa(
                     values[m].append(float(metric_f[m](image)))
     
     # Show results
-    console.log(f"{model_name}")
-    console.log(f"{image_dir.name}")
-    console.log(f"backend: piqa")
-    for m, v in values.items():
-        avg = float(sum(v) / num_items)
-        console.log(f"{m:<10}: {avg:.9f}")
+    if append_results:
+        console.log(f"{model_name}")
+        console.log(f"{image_dir.name}")
+        console.log(f"backend: pyiqa")
+        message = ""
+        for m, v in values.items():
+            message += f"{f'{m}':<10}\t"
+        message += "\n"
+        for m, v in values.items():
+            avg = float(sum(v) / num_items)
+            message += f"{avg:.10f}\t"
+        console.log(f"{message}")
+        print(f"COPY THIS:")
+        print(message)
+    else:
+        console.log(f"{model_name}")
+        console.log(f"{image_dir.name}")
+        console.log(f"backend: pyiqa")
+        for m, v in values.items():
+            avg = float(sum(v) / num_items)
+            console.log(f"{m:<10}: {avg:.10f}")
     
     # Save results
     if save_txt:
-        with open(str(result_file), "w") as f:
-            f.write(f"{model_name}\n")
-            f.write(f"{image_dir.name}\n")
+        if not append_results:
+            mon.delete_files(regex=result_file.name, path=result_file.parent)
+        with open(str(result_file), "a") as f:
+            if os.stat(str(result_file)).st_size == 0:
+                f.write(f"{'model':<10}\t{'data':<10}\t")
+                for m, v in values.items():
+                    f.write(f"{f'{m}':<10}\t")
+            f.write(f"{f'{model_name}':<10}\t{f'{image_dir.name}':<10}\t")
             for m, v in values.items():
                 avg = float(sum(v) / num_items)
-                f.write(f"{m:<10}: {avg:.9f}\n")
+                f.write(f"{avg:.10f}\t")
+            f.write(f"\n")
+            # f.write(f"{model_name}\n")
+            # f.write(f"{image_dir.name}\n")
+            # for m, v in values.items():
+            #     avg = float(sum(v) / num_items)
+            #     f.write(f"{m:<10}: {avg:.9f}\n")
 
 
 def measure_metric_pyiqa(
@@ -144,6 +174,7 @@ def measure_metric_pyiqa(
     metric        : list[str],
     test_y_channel: bool,
     save_txt      : bool,
+    append_results: bool,
     verbose       : bool,
 ):
     """Measure metrics using :mod:`pyiqa` package."""
@@ -155,17 +186,18 @@ def measure_metric_pyiqa(
         "brisque", "clipiqa", "cnniqa", "fid", "hyperiqa", "ilniqe", "maniqa",
         "musiq", "nima", "niqe", "nrqm", "paq2piq", "pi", "wadiqam",
     ]
-    _METRICS = _FULL_REFERENCE_METRICS + _NON_REFERENCE_METRICS
+    _METRICS = _NON_REFERENCE_METRICS  # + _FULL_REFERENCE_METRICS
     
     console.rule(f"[bold red] {model_name}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
-    if target_dir is not None:
-        assert mon.Path(target_dir).is_dir()
+    # if target_dir is not None:
+    #     assert mon.Path(target_dir).is_dir()
     if result_file is not None:
         assert (mon.Path(result_file).is_dir()
                 or mon.Path(result_file).is_file()
                 or isinstance(result_file, str))
-    
+        result_file = mon.Path(result_file)
+        
     image_dir   = mon.Path(image_dir)
     target_dir  = mon.Path(target_dir) \
         if target_dir is not None \
@@ -187,6 +219,8 @@ def measure_metric_pyiqa(
     values      = {m: []     for m in metric}
     metric_f    = {}
     for i, m in enumerate(metric):
+        if m not in _METRICS:
+            continue
         metric_config = pyiqa.DEFAULT_CONFIGS[m]
         if "test_y_channel" in metric_config["metric_opts"]:
             metric_f[m] = pyiqa.create_metric(
@@ -232,6 +266,8 @@ def measure_metric_pyiqa(
                 has_target = False
             
             for m in metric:
+                if m not in _METRICS:
+                    continue
                 metric_config = pyiqa.DEFAULT_CONFIGS[m]
                 if not has_target and metric_config["metric_mode"] == "FR":
                     continue
@@ -241,20 +277,42 @@ def measure_metric_pyiqa(
                     values[m].append(metric_f[m](image))
     
     # Show results
-    console.log(f"{model_name}")
-    console.log(f"{image_dir.name}")
-    console.log(f"backend: pyiqa")
-    for m, v in values.items():
-        avg = float(sum(v) / num_items)
-        console.log(f"{m:<10}: {avg:.9f}")
+    if append_results:
+        console.log(f"{model_name}")
+        console.log(f"{image_dir.name}")
+        console.log(f"backend: pyiqa")
+        message = ""
+        for m, v in values.items():
+            message += f"{f'{m}':<10}\t"
+        message += "\n"
+        for m, v in values.items():
+            avg  = float(sum(v) / num_items)
+            message += f"{avg:.10f}\t"
+        console.log(f"{message}")
+        print("COPY THIS:")
+        print(message)
+    else:
+        console.log(f"{model_name}")
+        console.log(f"{image_dir.name}")
+        console.log(f"backend: pyiqa")
+        for m, v in values.items():
+            avg = float(sum(v) / num_items)
+            console.log(f"{m:<10}: {avg:.10f}")
     
     # Save results
     if save_txt:
-        with open(str(result_file), "w") as f:
-            f.write(f"{model_name}\n")
+        if not append_results:
+            mon.delete_files(regex=result_file.name, path=result_file.parent)
+        with open(str(result_file), "a") as f:
+            if os.stat(str(result_file)).st_size == 0:
+                f.write(f"{'model':<10}\t{'data':<10}\t")
+                for m, v in values.items():
+                    f.write(f"{f'{m}':<10}\t")
+            f.write(f"{f'{model_name}':<10}\t{f'{image_dir.name}':<10}\t")
             for m, v in values.items():
                 avg = float(sum(v) / num_items)
-                f.write(f"{m:<10}: {avg:.9f}\n")
+                f.write(f"{avg:.10f}\t")
+            f.write(f"\n")
                 
 
 @click.command()
@@ -268,6 +326,7 @@ def measure_metric_pyiqa(
 @click.option("--test-y-channel", is_flag=True)
 @click.option("--backend",        default="pyiqa", type=click.Choice(["piqa", "pyiqa"], case_sensitive=False))
 @click.option("--save-txt",       is_flag=True)
+@click.option("--append-results", is_flag=True)
 @click.option("--verbose",        is_flag=True)
 def measure_metric(
     image_dir     : mon.Path,
@@ -280,6 +339,7 @@ def measure_metric(
     test_y_channel: bool,
     backend       : str,
     save_txt      : bool,
+    append_results: bool,
     verbose       : bool,
 ):
     if backend in ["piqa"]:
@@ -293,6 +353,7 @@ def measure_metric(
             metric         = metric,
             test_y_channel = test_y_channel,
             save_txt       = save_txt,
+            append_results = append_results,
             verbose        = verbose,
         )
     elif backend in ["pyiqa"]:
@@ -306,6 +367,7 @@ def measure_metric(
             metric         = metric,
             test_y_channel = test_y_channel,
             save_txt       = save_txt,
+            append_results = append_results,
             verbose        = verbose,
         )
     else:

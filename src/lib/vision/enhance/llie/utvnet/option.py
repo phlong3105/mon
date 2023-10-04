@@ -55,7 +55,7 @@ parser.add_argument('--blocks', default='5', type=int,
 parser.add_argument('--model', default='FFA',
                     help='model name')
 
-parser.add_argument('--act', type=str, default='relu',
+parser.add_argument('--norm', type=str, default='relu',
                     help='activation function')
 parser.add_argument('--pre_train', type=str, default='',
                     help='pre-trained model directory')

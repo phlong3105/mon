@@ -405,7 +405,7 @@ class AutoCheckoutCameraMultithread(AutoCheckoutCamera):
             # Push frame index and images to queue
             self.frames_queue.put([indexes, images, files, rel_paths])
         
-        # Push None to queue to act as a stopping condition for next thread
+        # Push None to queue to norm as a stopping condition for next thread
         self.frames_queue.put([None, None, None, None])
     
     def run_detector(self):
@@ -431,7 +431,7 @@ class AutoCheckoutCameraMultithread(AutoCheckoutCamera):
             # Push detections to queue
             self.detections_queue.put([indexes, images, files, rel_paths, batch_trays, batch_instances])
         
-        # Push None to queue to act as a stopping condition for next thread
+        # Push None to queue to norm as a stopping condition for next thread
         self.detections_queue.put([None, None, None, None, None, None])
     
     def run_tracker(self):
@@ -478,7 +478,7 @@ class AutoCheckoutCameraMultithread(AutoCheckoutCamera):
             
             self.pbar.update(len(batch_instances))
             
-        # Push None to queue to act as a stopping condition for next thread
+        # Push None to queue to norm as a stopping condition for next thread
         self.counting_queue.put([None, None, None, None, None])
                 
     def run_counter(self):

@@ -599,7 +599,7 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
 
     # Args
     max_channels = float('inf')
-    nc, act, scales = (d.get(x) for x in ('nc', 'act', 'scales'))
+    nc, act, scales = (d.get(x) for x in ('nc', 'norm', 'scales'))
     depth, width, kpt_shape = (d.get(x, 1.0) for x in ('depth_multiple', 'width_multiple', 'kpt_shape'))
     if scales:
         scale = d.get('scale')

@@ -462,7 +462,7 @@ class Model(lightning.LightningModule, ABC):
         weights    : Any                      = None,
         # For saving/loading
         name       : str  | None              = None,
-        variant    : str  | None              = None,
+        variant    : int  | str | None        = None,
         fullname   : str  | None              = None,
         root       : pathlib.Path             = pathlib.Path(),
         project    : str  | None              = None,

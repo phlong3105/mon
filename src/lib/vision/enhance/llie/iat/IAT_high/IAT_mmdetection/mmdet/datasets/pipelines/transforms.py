@@ -1542,7 +1542,7 @@ class RandomCenterCropPad:
       center range is computed by ``border`` and original image's shape
       to avoid our random center is too close to original image's border.
 
-    Also this operation act differently in train and test mode, the summary
+    Also this operation norm differently in train and test mode, the summary
     pipeline is listed below.
 
     Train pipeline:

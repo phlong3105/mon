@@ -41,9 +41,9 @@ model = {
 	"phase"      : "training",     # The model's running phase.
 	# "loss"       : None,           # Loss function for training the model.
 	"metrics"    : {
-	    "train": None,  # [{"name": "psnr"}],
-		"val"  : None,  # [{"name": "psnr"}],
-		"test" : None,  # [{"name": "psnr"}],
+	    "train": [{"name": "psnr"}],
+		"val"  : [{"name": "psnr"}],
+		"test" : [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{
@@ -67,7 +67,7 @@ model = {
 
 datamodule = {
     "name"        : data_name,
-    "root"        : DATA_DIR / "lol",  # A root directory where the data is stored.
+    "root"        : DATA_DIR / "llie",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
@@ -89,8 +89,8 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
-		    "monitor": "train/loss",  # Quantity to monitor.
-			"mode"   : "min",         # 'min' or 'max'.
+		    "monitor": "val/psne",  # Quantity to monitor.
+			"mode"   : "max",       # 'min' or 'max'.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,

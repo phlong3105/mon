@@ -58,10 +58,10 @@ if __name__ == '__main__':
     for k, m in model.named_modules():
         m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatibility
         if isinstance(m, models.common.Conv):  # assign export-friendly activations
-            if isinstance(m.act, nn.Hardswish):
-                m.act = Hardswish()
-            elif isinstance(m.act, nn.SiLU):
-                m.act = SiLU()
+            if isinstance(m.norm, nn.Hardswish):
+                m.norm = Hardswish()
+            elif isinstance(m.norm, nn.SiLU):
+                m.norm = SiLU()
         # elif isinstance(m, models.yolo.Detect):
         #     m.forward = m.forward_export  # assign forward (optional)
     model.model[-1].export = not opt.grid  # set Detect() layer grid export

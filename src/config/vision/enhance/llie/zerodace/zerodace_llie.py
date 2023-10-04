@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DCE model trained on SICEZeroDCE dataset."""
+"""Zero-DACE model trained on LLIE dataset."""
 
 from __future__ import annotations
 
@@ -13,13 +13,13 @@ from mon import DATA_DIR, RUN_DIR
 # region Basic
 
 root         = RUN_DIR / "train"
-project      = "zerodce"
-model_name   = "zerodce"
-model_config = "zerodce.yaml"
-data_name    = "sice-zerodce"
+project      = "zerodace"
+model_name   = "zerodace"
+model_config = None
+data_name    = "llie"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
-image_size   = [256, 256]
+image_size   = [512, 512]
 
 # endregion
 
@@ -41,9 +41,9 @@ model = {
 	"phase"      : "training",     # The model's running phase.
 	# "loss"       : None,           # Loss function for training the model.
 	"metrics"    : {
-	    "train": None,
-		"val"  : None,
-		"test" : None,
+	    "train": None,  # [{"name": "psnr"}],
+		"val"  : [{"name": "psnr"}],
+		"test" : [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{
@@ -67,7 +67,7 @@ model = {
 
 datamodule = {
     "name"        : data_name,
-    "root"        : DATA_DIR / "lol",  # A root directory where the data is stored.
+    "root"        : DATA_DIR / "llie",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),

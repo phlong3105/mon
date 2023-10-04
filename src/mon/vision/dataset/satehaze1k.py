@@ -223,11 +223,9 @@ class SateHaze1KDataModule(base.DataModule):
             self.train       = SateHaze1K(split="train", **self.dataset_kwargs)
             self.val         = SateHaze1K(split="val",   **self.dataset_kwargs)
             self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = SateHaze1K(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -278,11 +276,9 @@ class SateHaze1KThinDataModule(base.DataModule):
             self.train       = SateHaze1KThin(split="train", **self.dataset_kwargs)
             self.val         = SateHaze1KThin(split="val",   **self.dataset_kwargs)
             self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = SateHaze1KThin(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -333,11 +329,9 @@ class SateHaze1KModerateDataModule(base.DataModule):
             self.train       = SateHaze1KModerate(split="train", **self.dataset_kwargs)
             self.val         = SateHaze1KModerate(split="val",   **self.dataset_kwargs)
             self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
         if phase in [None, ModelPhase.TESTING]:
             self.test        = SateHaze1KModerate(split="test", **self.dataset_kwargs)
             self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -385,14 +379,10 @@ class SateHaze1KThickDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = SateHaze1KThick(split="train", **self.dataset_kwargs)
-            self.val         = SateHaze1KThick(split="val",   **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = SateHaze1KThick(split="train", **self.dataset_kwargs)
+            self.val   = SateHaze1KThick(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = SateHaze1KThick(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = SateHaze1KThick(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

@@ -98,14 +98,10 @@ class GTRainDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = GTRain(split="train", **self.dataset_kwargs)
-            self.val         = GTRain(split="val",   **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = GTRain(split="train", **self.dataset_kwargs)
+            self.val   = GTRain(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = GTRain(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = GTRain(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

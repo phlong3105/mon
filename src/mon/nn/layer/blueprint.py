@@ -87,7 +87,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
         self.act1 = activation.to_act_layer(
             act          = act,
             num_features = mid_channels
-        )  # if act else None
+        )  # if norm else None
         self.pw_conv2 = conv.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -104,7 +104,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
         self.act2    = activation.to_act_layer(
             act          = act,
             num_features = out_channels
-        )  # if act else None
+        )  # if norm else None
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -240,14 +240,12 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         dtype           : Any             = None,
         p               : float           = 0.25,
         min_mid_channels: int             = 4,
-        act1            : Callable        = None,
-        act2            : Callable        = None,
+        norm1           : Callable        = None,
+        norm2           : Callable        = None,
     ):
         super().__init__()
         assert 0.0 <= p <= 1.0
-        mid_channels = min(
-            in_channels, max(min_mid_channels, math.ceil(p * in_channels))
-        )
+        mid_channels  = min(in_channels, max(min_mid_channels, math.ceil(p * in_channels)))
         self.pw_conv1 = conv.Conv2d(
             in_channels  = in_channels,
             out_channels = mid_channels,
@@ -261,7 +259,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act1     = act1(num_features=mid_channels) if act1 is not None else None
+        self.norm1    = norm1(num_features=mid_channels) if norm1 is not None else None
         self.pw_conv2 = conv.Conv2d(
             in_channels  = mid_channels,
             out_channels = out_channels,
@@ -275,7 +273,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act2    = act2(num_features=out_channels) if act2 is not None else None
+        self.norm2   = norm2(num_features=out_channels) if norm2 is not None else None
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -295,11 +293,11 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         x = input
         y = self.pw_conv1(x)
         y = self.simam(y)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         return y
     
@@ -339,7 +337,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
         dtype           : Any             = None,
         p               : float           = 0.25,
         min_mid_channels: int             = 4,
-        act             : Callable        = None,
+        norm            : Callable        = None,
     ):
         super().__init__()
         self.pw_conv = conv.Conv2d(
@@ -355,7 +353,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.act     = act(num_features=out_channels) if act is not None else None
+        self.norm    = norm(num_features=out_channels) if norm is not None else None
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,
@@ -375,8 +373,8 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
         x = input
         y = self.pw_conv(x)
         y = self.simam(y)
-        if self.act is not None:
-            y = self.act(y)
+        if self.norm is not None:
+            y = self.norm(y)
         y = self.dw_conv(y)
         return y
 
@@ -390,11 +388,11 @@ class AttentionSubspaceBlueprintSeparableConv2d1(
         x = input
         x = self.pw_conv1(x)
         # x = self.simam(x)
-        # if self.act1 is not None:
-        #     x = self.act1(x)
+        # if self.norm1 is not None:
+        #     x = self.norm1(x)
         x = self.pw_conv2(x)
-        # if self.act2 is not None:
-        #     x = self.act2(x)
+        # if self.norm2 is not None:
+        #     x = self.norm2(x)
         x = self.dw_conv(x)
         return x
 
@@ -408,11 +406,11 @@ class AttentionSubspaceBlueprintSeparableConv2d2(
         x = input
         y = self.pw_conv1(x)
         # y = self.simam(y)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
-        # if self.act2 is not None:
-        #    y = self.act2(y)
+        # if self.norm2 is not None:
+        #    y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -426,11 +424,11 @@ class AttentionSubspaceBlueprintSeparableConv2d3(
         x = input
         y = self.pw_conv1(x)
         # y = self.simam(y)
-        # if self.act1 is not None:
-        #    y = self.act1(y)
+        # if self.norm1 is not None:
+        #    y = self.norm1(y)
         y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -444,11 +442,11 @@ class AttentionSubspaceBlueprintSeparableConv2d4(
         x = input
         y = self.pw_conv1(x)
         # y = self.simam(y)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -462,11 +460,11 @@ class AttentionSubspaceBlueprintSeparableConv2d5(
         x = input
         y = self.pw_conv1(x)
         y = self.simam(y)
-        # if self.act1 is not None:
-        #    y = self.act1(y)
+        # if self.norm1 is not None:
+        #    y = self.norm1(y)
         y = self.pw_conv2(y)
-        # if self.act2 is not None:
-        #    y = self.act2(y)
+        # if self.norm2 is not None:
+        #    y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -479,12 +477,12 @@ class AttentionSubspaceBlueprintSeparableConv2d6(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        # if self.act1 is not None:
-        #    y = self.act1(y)
+        # if self.norm1 is not None:
+        #    y = self.norm1(y)
         y = self.pw_conv2(y)
         y = self.simam(y)
-        # if self.act2 is not None:
-        #    y = self.act2(y)
+        # if self.norm2 is not None:
+        #    y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -497,11 +495,11 @@ class AttentionSubspaceBlueprintSeparableConv2d7(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        # if self.act1 is not None:
-        #    y = self.act1(y)
+        # if self.norm1 is not None:
+        #    y = self.norm1(y)
         y = self.pw_conv2(y)
-        # if self.act2 is not None:
-        #    y = self.act2(y)
+        # if self.norm2 is not None:
+        #    y = self.norm2(y)
         y = self.dw_conv(y)
         y = self.simam(y)
         return y
@@ -516,11 +514,11 @@ class AttentionSubspaceBlueprintSeparableConv2d8(
         x = input
         y = self.pw_conv1(x)
         y = self.simam(y)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
-        # if self.act2 is not None:
-        #    y = self.act2(y)
+        # if self.norm2 is not None:
+        #    y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -534,11 +532,11 @@ class AttentionSubspaceBlueprintSeparableConv2d9(
         x = input
         y = self.pw_conv1(x)
         y = self.simam(y)
-        # if self.act1 is not None:
-        #     y = self.act1(y)
+        # if self.norm1 is not None:
+        #     y = self.norm1(y)
         y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -551,12 +549,12 @@ class AttentionSubspaceBlueprintSeparableConv2d10(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
         y = self.simam(y)
-        # if self.act2 is not None:
-        #     y = self.act2(y)
+        # if self.norm2 is not None:
+        #     y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -569,12 +567,12 @@ class AttentionSubspaceBlueprintSeparableConv2d11(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        # if self.act1 is not None:
-        #     y = self.act1(y)
+        # if self.norm1 is not None:
+        #     y = self.norm1(y)
         y = self.pw_conv2(y)
         y = self.simam(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 
@@ -587,11 +585,11 @@ class AttentionSubspaceBlueprintSeparableConv2d12(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         y = self.simam(y)
         return y
@@ -606,11 +604,11 @@ class AttentionSubspaceBlueprintSeparableConv2d13(
         x = input
         y = self.pw_conv1(x)
         y = self.simam(y)
-        if self.act1 is not None:
-            y = self.act1(y)
+        if self.norm1 is not None:
+            y = self.norm1(y)
         y = self.pw_conv2(y)
-        if self.act2 is not None:
-            y = self.act2(y)
+        if self.norm2 is not None:
+            y = self.norm2(y)
         y = self.dw_conv(y)
         return y
 

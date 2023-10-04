@@ -15,7 +15,6 @@ __all__ = [
 from urllib.error import URLError
 
 import torch
-from torch.utils.data import random_split
 from torchvision.datasets.mnist import read_image_file, read_label_file
 from torchvision.datasets.utils import (
     check_integrity,
@@ -248,16 +247,10 @@ class MNISTDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = MNIST(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = MNIST(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = MNIST(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = MNIST(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -312,16 +305,10 @@ class FashionMNISTDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = FashionMNIST(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = FashionMNIST(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = FashionMNIST(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = FashionMNIST(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

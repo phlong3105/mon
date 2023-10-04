@@ -1,2 +1,2 @@
-- checkpoint_path=/home/longpham/10-workspace/11-code/mon/run/train/enhance/llie/lcdpnet-lol/best.ckpt
+- checkpoint_path=/home/longpham/10-workspace/11-code/mon/zoo/vision/enhance/llie/lcdpnet/lcdpnet-ours.ckpt
 - +image_size=512

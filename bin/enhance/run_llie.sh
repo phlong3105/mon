@@ -41,21 +41,21 @@ models=(
   "sci"                # https://github.com/vis-opt-group/SCI
   "sdsd"               
   "sgz"                #
+  "sice"
+  "sid"
   "snr"                # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
-  "sice"               
-  "sid"                
-  "snr"                
-  "srie"               
+  "srie"
   "stablellve"         # https://github.com/zkawfanx/StableLLVE
   "uretinexnet"        # https://github.com/AndersonYong/URetinex-Net
   "utvnet"             # https://github.com/CharlieZCJ/UTVNet
-  "wahe"               
+  "wahe"
   "zerodce"            #
   "zerodce++"          #
   "zerodace"           #
 )
 train_datasets=(
   "gladnet"
+  "llie"
   "lol"
   "sice"
   "sice-grad"
@@ -99,12 +99,21 @@ read -e -i "$predict_data" -p "Predict data [all ${predict_datasets[*]}]: " pred
 read -e -i "$project"      -p "Project: " project
 read -e -i "$use_data_dir" -p "Use data_dir [yes, no]: " use_data_dir
 
+echo -e "\n"
 machine=$(echo $machine | tr '[:upper:]' '[:lower:]')
 model=$(echo $model | tr '[:upper:]' '[:lower:]')
+model=($(echo $model | tr ',' '\n'))
+# echo "${model[*]}"
 variant=$(echo $variant | tr '[:upper:]' '[:lower:]')
+variant=($(echo "$variant" | tr ',' '\n'))
+echo "${variant[*]}"
 task=$(echo $task | tr '[:upper:]' '[:lower:]')
 train_data=$(echo $train_data | tr '[:upper:]' '[:lower:]')
+train_data=($(echo $train_data | tr ',' '\n'))
+# echo "${train_data[*]}"
 predict_data=$(echo $predict_data | tr '[:upper:]' '[:lower:]')
+predict_data=($(echo $predict_data | tr ',' '\n'))
+# echo "${predict_data[*]}"
 project=$(echo $project | tr '[:upper:]' '[:lower:]')
 
 
@@ -402,8 +411,28 @@ if [ "$task" == "train" ]; then
         --checkpoints-dir "${train_dir}"
     # Zero-DACE
     elif [ "${model[i]}" == "zerodace" ]; then
-      python -W ignore train.py \
-        --name "${model_variant}-${train_data[0]}"
+      if [ "${variant[i]}" == "all" ]; then
+        variants=(
+          "0000"
+          "0100" "0101" "0102" "0103" "0104" "0105" "0106"
+          "0200" "0201" "0202" "0203" "0204" "0205" "0206" "0207" "0208" "0209" "0210" "0211" "0212"
+          "0300" "0301" "0302" "0303" "0304" "0305"
+          "0400" "0401" "0402" "0403" "0404"
+          "0500"
+          "0600"
+        )
+        for (( v=0; v<${#variants[@]}; v++ )); do
+          model_variant="${model[i]}-${variants[v]}"
+          train_dir="${root_dir}/run/train/${project}/${model_variant}-${train_data[0]}"
+          python -W ignore train.py \
+            --name "${model_variant}-${train_data[0]}" \
+            --variant "${variants[v]}"
+        done
+      else
+        python -W ignore train.py \
+          --name "${model_variant}-${train_data[0]}" \
+          --variant "${variant}"
+      fi
     fi
   done
 fi
@@ -414,7 +443,7 @@ if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   for (( i=0; i<${#model[@]}; i++ )); do
     # Model initialization
-    if [ "${model[i]}" == "zerodcepp" ] || [ "${model[i]}" == "zerodace" ]; then
+    if [ "${model[i]}" == "zerodace" ]; then
       model_dir="${current_dir}"
     else
       model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -456,7 +485,7 @@ if [ "$task" == "predict" ]; then
     # LCDPNet
     if [ "${model[i]}" == "lcdpnet" ]; then
       python -W ignore src/test.py \
-        checkpoint_path="${weights}" \
+        checkpoint_path="${root_dir}/zoo/${project}/${model[i]}/lcdpnet-ours.ckpt"  \
         +image_size=512
     else
       for (( j=0; j<${#predict_data[@]}; j++ )); do
@@ -609,14 +638,48 @@ if [ "$task" == "predict" ]; then
             --output-dir "${predict_dir}"
         # Zero-DACE
         elif [ "${model[i]}" == "zerodace" ]; then
-          python -W ignore predict.py \
-            --data "${low_data_dirs[j]}" \
-            --config "${model[i]}_sice_zerodce" \
-            --root "${predict_dir}" \
-            --project "${project}/${model[i]}" \
-            --weights "${weights}" \
-            --image-size 512 \
-            --output-dir "${predict_dir}"
+          if [ "${variant[i]}" == "all" ]; then
+            variants=(
+              "0000"
+              "0100" "0101" "0102" "0103" "0104" "0105" "0106"
+              "0200" "0201" "0202" "0203" "0204" "0205" "0206" "0207" "0208" "0209" "0210" "0211" "0212"
+              "0300" "0301" "0302" "0303" "0304" "0305"
+              "0400" "0401" "0402" "0403" "0404"
+              "0500"
+              "0600"
+            )
+            for (( v=0; v<${#variants[@]}; v++ )); do
+              model_variant="${model[i]}-${variants[v]}"
+              weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/best.pt"
+              python -W ignore predict.py \
+                --data "${low_data_dirs[j]}" \
+                --config "${model[i]}_sice_zerodce" \
+                --root "${predict_dir}" \
+                --project "${project}/${model[i]}" \
+                --variant "${variants[v]}" \
+                --weights "${weights}" \
+                --num_iters 6 \
+                --unsharp_sigma 1.5 \
+                --image-size 512 \
+                --output-dir "${predict_dir}"
+            done
+          else
+            # python -W ignore train.py \
+            #   --name "${model_variant}-${train_data[0]}" \
+            #   --variant "${variant}"
+            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/best.pt"
+            python -W ignore predict.py \
+              --data "${low_data_dirs[j]}" \
+              --config "${model[i]}_llie" \
+              --root "${predict_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[0]}" \
+              --weights "${weights}" \
+              --num_iters 6 \
+              --unsharp_sigma 1.5 \
+              --image-size 512 \
+              --output-dir "${predict_dir}"
+          fi
         fi
       done
     fi
@@ -643,13 +706,14 @@ if [ "$task" == "evaluate" ]; then
         python -W ignore metric.py \
           --image-dir "${predict_dir}" \
           --target-dir "${root_dir}/data/llie/test/${predict_data[j]}/high" \
-          --result-file "${predict_dir}" \
+          --result-file "${current_dir}" \
           --model-name "${model[i]}" \
           --image-size 512 \
           --resize \
           --test-y-channel \
+          --backend "piqa" \
+          --append-results \
           --metric "brisque" \
-          --metric "fid" \
           --metric "niqe" \
           --metric "pi" \
           --metric "fsim" \
@@ -658,11 +722,9 @@ if [ "$task" == "evaluate" ]; then
           --metric "mdsi" \
           --metric "ms-gmsd" \
           --metric "ms-ssim" \
-          --metric "pi" \
           --metric "psnr" \
           --metric "ssim" \
-          --metric "vsi" \
-          --backend "piqa"
+          --metric "vsi"
       done
   done
 fi

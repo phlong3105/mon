@@ -10,8 +10,6 @@ __all__ = [
     "Snow100KM", "Snow100KMDataModule", "Snow100KS", "Snow100KSDataModule",
 ]
 
-from torch.utils.data import random_split
-
 from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision.dataset import base
@@ -225,16 +223,10 @@ class Snow100KDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = Snow100K(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = Snow100K(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = Snow100K(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = Snow100K(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -282,16 +274,10 @@ class Snow100KSDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = Snow100KS(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = Snow100KS(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = Snow100KS(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = Snow100KS(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -339,16 +325,10 @@ class Snow100KMDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = Snow100KM(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = Snow100KM(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = Snow100KM(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = Snow100KM(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -396,16 +376,10 @@ class Snow100KLDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            train      = Snow100KL(split="train", **self.dataset_kwargs)
-            train_size = int(0.8 * len(train))
-            val_size   = len(train) - train_size
-            self.train, self.val = random_split(train, [train_size, val_size])
-            self.classlabels = getattr(train, "classlabels", None)
-            self.collate_fn  = getattr(train, "collate_fn",  None)
+            dataset = Snow100KL(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = Snow100KL(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test = Snow100KL(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

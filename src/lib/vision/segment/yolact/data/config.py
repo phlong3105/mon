@@ -589,7 +589,7 @@ coco_base_config = Config({
     # Whether to use mask coefficient cosine similarity nms instead of bbox iou nms
     'use_coeff_nms': False,
 
-    # Whether or not to have a separate branch whose sole purpose is to act as the coefficients for coeff_diversity_loss
+    # Whether or not to have a separate branch whose sole purpose is to norm as the coefficients for coeff_diversity_loss
     # Remember to turn on coeff_diversity_loss, or these extra coefficients won't do anything!
     # To see their effect, also remember to turn on use_coeff_nms.
     'use_instance_coeff': False,
@@ -823,4 +823,3 @@ def set_cfg(config_name:str):
 def set_dataset(dataset_name:str):
     """ Sets the dataset of the current config. """
     cfg.dataset = eval(dataset_name)
-    

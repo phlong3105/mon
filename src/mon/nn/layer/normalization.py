@@ -36,7 +36,7 @@ class BatchNorm2dAct(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
     """BatchNorm2d + Activation.
     
     This module performs BatchNorm2d + Activation in a manner that will remain
-    backwards compatible with weights trained with separate bn, act. This is why
+    backwards compatible with weights trained with separate bn, norm. This is why
     we inherit from BN instead of composing it as a .bn member.
     """
     
@@ -77,7 +77,7 @@ class BatchNorm2dReLU(BatchNorm2dAct):
     """BatchNorm2d + ReLU.
 
     This module performs BatchNorm2d + ReLU in a manner that will remain
-    backwards compatible with weights trained with separate bn, act. This is why
+    backwards compatible with weights trained with separate bn, norm. This is why
     we inherit from BN instead of composing it as a .bn member.
     """
     
@@ -434,8 +434,13 @@ class HalfInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         self._check_input_dim(x)
-        y1, y2 = torch.chunk(x, 2, dim=1)
-        y1     = functional.instance_norm(
+        if x.dim() == 3:
+            y1, y2 = torch.chunk(x, 2, dim=0)
+        elif x.dim() == 4:
+            y1, y2 = torch.chunk(x, 2, dim=1)
+        else:
+            raise ValueError
+        y1 = functional.instance_norm(
             input           = y1,
             running_mean    = self.running_mean,
             running_var     = self.running_var,
@@ -446,7 +451,7 @@ class HalfInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
             eps             = self.eps
         )
         return torch.cat([y1, y2], dim=1)
-
+ 
 
 @LAYERS.register()
 class InstanceNorm1d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm1d):
@@ -493,7 +498,7 @@ class GroupNormAct(GroupNorm):
     """GroupNorm + Activation.
 
     This module performs GroupNorm + Activation in a manner that will remain
-    backwards compatible with weights trained with separate gn, act. This is why
+    backwards compatible with weights trained with separate gn, norm. This is why
     we inherit from GN instead of composing it as a .gn member.
     """
     

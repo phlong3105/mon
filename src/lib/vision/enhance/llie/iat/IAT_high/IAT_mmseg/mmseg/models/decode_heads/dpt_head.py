@@ -127,7 +127,7 @@ class PreActResidualConvUnit(BaseModule):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg,
             bias=False,
-            order=('act', 'conv', 'norm'))
+            order=('norm', 'conv', 'norm'))
 
         self.conv2 = ConvModule(
             in_channels,
@@ -137,7 +137,7 @@ class PreActResidualConvUnit(BaseModule):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg,
             bias=False,
-            order=('act', 'conv', 'norm'))
+            order=('norm', 'conv', 'norm'))
 
     def forward(self, inputs):
         inputs_ = inputs.clone()

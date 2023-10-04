@@ -88,7 +88,7 @@ class NASFCOS_FPN(BaseModule):
                 with_out_conv=True,
                 out_conv_cfg=cell_conv_cfg,
                 out_norm_cfg=dict(type='BN'),
-                out_conv_order=('norm', 'act', 'conv'),
+                out_conv_order=('norm', 'norm', 'conv'),
                 with_input1_conv=with_input1_conv,
                 with_input2_conv=with_input2_conv,
                 input_conv_cfg=conv_cfg,
@@ -116,7 +116,7 @@ class NASFCOS_FPN(BaseModule):
                     stride=2,
                     padding=1,
                     act_cfg=extra_act_cfg,
-                    order=('act', 'norm', 'conv')))
+                    order=('norm', 'norm', 'conv')))
 
     def forward(self, inputs):
         """Forward function."""

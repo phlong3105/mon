@@ -532,18 +532,18 @@ jetski:
 lift:
   clean_name: lift
   def_wiki: To raise or rise.
-  def_wn: the act of giving temporary assistance
+  def_wn: the norm of giving temporary assistance
   name: lift
   path_wn:
   - aid
   - activity
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
   - entity
-  path_wn10: aid activity act event psychological_feature abstraction entity
-  path_wn3: aid activity act
+  path_wn10: aid activity norm event psychological_feature abstraction entity
+  path_wn3: aid activity norm
 motorbike:
   clean_name: motorbike
   def_wiki: A motorcycle.

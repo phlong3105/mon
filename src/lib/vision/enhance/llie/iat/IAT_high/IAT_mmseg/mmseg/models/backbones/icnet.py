@@ -34,7 +34,7 @@ class ICNet(BaseModule):
             Default: None.
         norm_cfg (dict): Dictionary to construct and config norm layer.
             Default: dict(type='BN').
-        act_cfg (dict): Dictionary to construct and config act layer.
+        act_cfg (dict): Dictionary to construct and config norm layer.
             Default: dict(type='ReLU').
         align_corners (bool): align_corners argument of F.interpolate.
             Default: False.

@@ -192,9 +192,9 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         if self.dirpath == dirpath_from_ckpt:
             self.best_model_score    = state_dict["best_model_score"]
             self.kth_best_model_path = pathlib.Path(state_dict.get("kth_best_model_path", self.kth_best_model_path))
-            self.kth_value           = (state_dict.get("kth_value"          , self.kth_value))
-            self.best_k_models       = state_dict.get("best_k_models"      , self.best_k_models)
-            self.last_model_path     = pathlib.Path(state_dict.get("last_model_path"    , self.last_model_path))
+            self.kth_value           = (state_dict.get("kth_value", self.kth_value))
+            self.best_k_models       = state_dict.get("best_k_models", self.best_k_models)
+            self.last_model_path     = pathlib.Path(state_dict.get("last_model_path", self.last_model_path))
             
             # Our extension
             self.kth_best_model_path = pathlib.Path(self.kth_best_model_path)
@@ -376,23 +376,23 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.ckpt",
             )
             trainer.save_checkpoint(
-                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}-strip.pt",
+                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_BEST}.pt",
                 weights_only = True
             )
             if self.verbose and trainer.is_global_zero:
                 self._log(data=self.keys)
         else:
             self._save_checkpoint(trainer=trainer, filepath=filepath)
-            # Our extension
-            trainer.save_checkpoint(
-                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.ckpt",
-            )
-            trainer.save_checkpoint(
-                filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}-strip.pt",
-                weights_only = True
-            )
             if self.verbose and trainer.is_global_zero:
                 self._log(data=self.keys)
+        # Our extension
+        trainer.save_checkpoint(
+            filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.ckpt",
+        )
+        trainer.save_checkpoint(
+            filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.pt",
+            weights_only = True
+        )
         
         if del_filepath is not None and filepath != del_filepath:
             self._remove_checkpoint(trainer, del_filepath)

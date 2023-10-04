@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements pixel intensity adjustment functions."""
+"""This module implements basic image adjustment functions."""
 
 from __future__ import annotations
 
@@ -11,6 +11,9 @@ __all__ = [
 
 import cv2
 import numpy as np
+import torch
+
+from mon.nn import functional as F
 
 
 # region Adjust

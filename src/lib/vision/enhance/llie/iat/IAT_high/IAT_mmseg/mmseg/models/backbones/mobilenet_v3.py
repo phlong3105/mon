@@ -40,7 +40,7 @@ class MobileNetV3(BaseModule):
             Default: None
     """
     # Parameters to build each block:
-    #     [kernel size, mid channels, out channels, with_se, act type, stride]
+    #     [kernel size, mid channels, out channels, with_se, norm type, stride]
     arch_settings = {
         'small': [[3, 16, 16, True, 'ReLU', 2],  # block0 layer1 os=4
                   [3, 72, 24, False, 'ReLU', 2],  # block1 layer2 os=8

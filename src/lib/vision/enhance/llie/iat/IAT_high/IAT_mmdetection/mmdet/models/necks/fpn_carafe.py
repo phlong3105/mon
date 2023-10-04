@@ -41,7 +41,7 @@ class FPN_CARAFE(BaseModule):
                  end_level=-1,
                  norm_cfg=None,
                  act_cfg=None,
-                 order=('conv', 'norm', 'act'),
+                 order=('conv', 'norm', 'norm'),
                  upsample_cfg=dict(
                      type='carafe',
                      up_kernel=5,
@@ -65,7 +65,7 @@ class FPN_CARAFE(BaseModule):
         self.relu = nn.ReLU(inplace=False)
 
         self.order = order
-        assert order in [('conv', 'norm', 'act'), ('act', 'conv', 'norm')]
+        assert order in [('conv', 'norm', 'norm'), ('norm', 'conv', 'norm')]
 
         assert self.upsample in [
             'nearest', 'bilinear', 'deconv', 'pixel_shuffle', 'carafe', None

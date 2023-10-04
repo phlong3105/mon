@@ -112,12 +112,12 @@ hydra:
     hydra:
     - hydra.mode=RUN
     task:
-    - checkpoint_path=/home/longpham/10-workspace/11-code/mon/run/train/enhance/llie/lcdpnet-lol/best.ckpt
+    - checkpoint_path=/home/longpham/10-workspace/11-code/mon/zoo/vision/enhance/llie/lcdpnet/lcdpnet-ours.ckpt
     - +image_size=512
   job:
     name: test
     chdir: null
-    override_dirname: +image_size=512,checkpoint_path=/home/longpham/10-workspace/11-code/mon/run/train/enhance/llie/lcdpnet-lol/best.ckpt
+    override_dirname: +image_size=512,checkpoint_path=/home/longpham/10-workspace/11-code/mon/zoo/vision/enhance/llie/lcdpnet/lcdpnet-ours.ckpt
     id: ???
     num: ???
     config_name: config

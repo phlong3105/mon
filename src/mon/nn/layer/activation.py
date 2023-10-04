@@ -285,8 +285,8 @@ class Threshold(base.PassThroughLayerParsingMixin, nn.Threshold):
 
 def to_act_layer(act: Callable = ReLU(), *args, **kwargs) -> nn.Module:
     """Create activation layer."""
-    # if isinstance(act, str):
-    #     act = LAYER.build(name=act)
+    # if isinstance(norm, str):
+    #     norm = LAYER.build(name=norm)
     act_layer = act
     if act is None or act == False:
         act_layer = nn.Identity()

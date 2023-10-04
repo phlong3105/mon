@@ -218,14 +218,10 @@ class DenseHazeDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = DenseHaze(split="train", **self.dataset_kwargs)
-            self.val         = DenseHaze(split="val",   **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = DenseHaze(split="train", **self.dataset_kwargs)
+            self.val   = DenseHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = DenseHaze(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = DenseHaze(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -273,14 +269,10 @@ class IHazeDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = IHaze(split="train", **self.dataset_kwargs)
-            self.val         = IHaze(split="val",   **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = IHaze(split="train", **self.dataset_kwargs)
+            self.val   = IHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = IHaze(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = IHaze(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -328,14 +320,10 @@ class NHHazeDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = NHHaze(split="train", **self.dataset_kwargs)
-            self.val         = NHHaze(split="val",   **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = NHHaze(split="train", **self.dataset_kwargs)
+            self.val   = NHHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = NHHaze(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = NHHaze(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -383,14 +371,10 @@ class OHazeDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train       = OHaze(split="train", **self.dataset_kwargs)
-            self.val         = OHaze(split="val",   **self.dataset_kwargs)
-            self.classlabels = getattr(self.train, "classlabels", None)
-            self.collate_fn  = getattr(self.train, "collate_fn",  None)
+            self.train = OHaze(split="train", **self.dataset_kwargs)
+            self.val   = OHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test        = OHaze(split="test", **self.dataset_kwargs)
-            self.classlabels = getattr(self.test, "classlabels", None)
-            self.collate_fn  = getattr(self.test, "collate_fn",  None)
+            self.test  = OHaze(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

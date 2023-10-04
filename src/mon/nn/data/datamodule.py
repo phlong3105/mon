@@ -110,6 +110,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         :attr:`train` exists. Otherwise, returns ``None``.
         """
         if self.train:
+            self.classlabels = self.classlabels or getattr(self.train, "classlabels", None)
             return data.DataLoader(
                 dataset            = self.train,
                 batch_size         = self.batch_size,
@@ -117,7 +118,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 num_workers        = self.num_workers,
                 pin_memory         = True,
                 drop_last          = False,
-                collate_fn         = self.collate_fn,
+                collate_fn         = getattr(self.train, "collate_fn",  None) or self.collate_fn,
                 # prefetch_factor  = 4,
                 persistent_workers = True,
             )
@@ -129,6 +130,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         :attr:`val` exists. Otherwise, returns ``None``.
         """
         if self.val:
+            self.classlabels = self.classlabels or getattr(self.val, "classlabels", None)
             return data.DataLoader(
                 dataset            = self.val,
                 batch_size         = self.batch_size,
@@ -136,7 +138,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 num_workers        = self.num_workers,
                 pin_memory         = True,
                 drop_last          = False,
-                collate_fn         = self.collate_fn,
+                collate_fn         = getattr(self.val, "collate_fn",  None) or self.collate_fn,
                 # prefetch_factor  = 4,
                 persistent_workers = True,
             )
@@ -148,6 +150,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         :attr:`test` exists. Otherwise, returns ``None``.
         """
         if self.test:
+            self.classlabels = self.classlabels or getattr(self.test, "classlabels", None)
             return data.DataLoader(
                 dataset            = self.test,
                 batch_size         = self.batch_size,
@@ -155,7 +158,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 num_workers        = self.num_workers,
                 pin_memory         = True,
                 drop_last          = False,
-                collate_fn         = self.collate_fn,
+                collate_fn         = getattr(self.test, "collate_fn",  None) or self.collate_fn,
                 # prefetch_factor  = 4,
                 persistent_workers = True,
             )
@@ -209,6 +212,19 @@ class DataModule(lightning.LightningDataModule, ABC):
         """
         pass
     
+    def split_train_val(
+        self,
+        dataset    : dataset.Dataset,
+        split_ratio: float = 0.8,
+        full_train : bool  = True
+    ):
+        train_size       = int(split_ratio * len(dataset))
+        val_size         = len(dataset) - train_size
+        train, self.val  = data.random_split(dataset, [train_size, val_size])
+        self.train       = dataset if full_train else train
+        self.classlabels = getattr(dataset, "classlabels", None)
+        # self.collate_fn  = getattr(dataset, "collate_fn",  None)
+    
     @abstractmethod
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -227,5 +243,5 @@ class DataModule(lightning.LightningDataModule, ABC):
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "num_workers", f"{self.num_workers}")
         console.log(table)
-
+    
 # endregion

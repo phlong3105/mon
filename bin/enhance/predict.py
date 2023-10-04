@@ -25,9 +25,10 @@ console = mon.console
 hosts = {
 	"lp-labdesktop-01": {
 		"config"     : "",
-        "root"       : mon.RUN_DIR/"predict",
+        "root"       : mon.RUN_DIR / "predict",
         "project"    : None,
         "name"       : None,
+        "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
@@ -39,9 +40,10 @@ hosts = {
 	},
     "vsw-ws02": {
 		"config"     : "",
-        "root"       : mon.RUN_DIR/"predict",
+        "root"       : mon.RUN_DIR / "predict",
         "project"    : None,
         "name"       : None,
+        "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
@@ -53,9 +55,10 @@ hosts = {
 	},
     "vsw-ws03": {
 		"config"     : "",
-        "root"       : mon.RUN_DIR/"predict",
+        "root"       : mon.RUN_DIR / "predict",
         "project"    : None,
         "name"       : None,
+        "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
@@ -74,26 +77,21 @@ hosts = {
 
 def predict(args: dict):
     # Initialization
-    console.rule(f"[bold red] {args['model']['fullname']}")
-    # console.log(f"Machine: {args['hostname']}")
-    output_dir = args["output_dir"]
-    output_dir.mkdir(parents=True, exist_ok=True)
+    model_name    = args["model"]["name"]
+    variant       = args["model"]["variant"]
+    model_variant = f"{model_name}-{variant}" if variant is not None else f"{model_name}"
+    console.rule(f"[bold red] {model_variant}")
     
-    data       = args["datamodule"]["root"]
-    image_size = args["datamodule"]["image_size"]
-    resize     = args["datamodule"]["resize"]
-    weights    = args["model"]["weights"]
-    
+    weights          = args["model"]["weights"]
     model: mon.Model = mon.MODELS.build(config=args["model"])
     state_dict       = torch.load(weights)
     model.load_state_dict(state_dict=state_dict["state_dict"])
     model            = model.cuda()
     model.eval()
-    # core.print_dict(args, title=model.fullname)
-    # console.log("[green]Done")
     
-    console.log(f"{data}")
-
+    output_dir = args["output_dir"]
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
     # Measure efficiency score
     flops, params, avg_time = mon.calculate_efficiency_score(
         model      = model,
@@ -107,6 +105,11 @@ def predict(args: dict):
     console.log(f"FLOPs  = {flops:.4f}")
     console.log(f"Params = {params:.4f}")
     console.log(f"Time   = {avg_time:.4f}")
+    
+    data       = args["datamodule"]["root"]
+    image_size = args["datamodule"]["image_size"]
+    resize     = args["datamodule"]["resize"]
+    console.log(f"{data}")
     
     #
     with torch.no_grad():
@@ -140,24 +143,31 @@ def predict(args: dict):
         console.log(f"Average time: {avg_time}")
 
 
-@click.command()
-@click.option("--data",        default=mon.DATA_DIR,          type=click.Path(exists=True),   help="Source data directory.")
+@click.command(context_settings=dict(
+    ignore_unknown_options = True,
+    allow_extra_args       = True,
+))
+@click.option("--data",        default=mon.DATA_DIR,          type=click.Path(exists=True),  help="Source data directory.")
 @click.option("--config",      default="",                    type=click.Path(exists=False), help="The training config to use.")
 @click.option("--root",        default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--project",     default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--name",        default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
+@click.option("--variant",     default=None,                  type=str,                      help="Variant.")
 @click.option("--weights",     default=None,                  type=click.Path(exists=False), help="Weights paths.")
 @click.option("--batch-size",  default=1,                     type=int,                      help="Total Batch size for all GPUs.")
 @click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")
 @click.option("--resize",      is_flag=True)
 @click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--verbose",     is_flag=True)
+@click.pass_context
 def main(
+    ctx,
     data       : mon.Path | str,
     config     : mon.Path | str,
     root       : mon.Path | str,
     project    : str,
     name       : str,
+    variant    : int | str | None,
     weights    : Any,
     batch_size : int,
     image_size : int | list[int],
@@ -165,6 +175,12 @@ def main(
     output_dir : mon.Path | str,
     verbose    : bool
 ):
+    model_kwargs = {
+        k.lstrip("--"): ctx.args[i + 1]
+            if not (i + 1 >= len(ctx.args) or ctx.args[i + 1].startswith("--"))
+            else True for i, k in enumerate(ctx.args) if k.startswith("--")
+    }
+    
     # Obtain arguments
     hostname  = socket.gethostname().lower()
     host_args = hosts[hostname]
@@ -183,6 +199,7 @@ def main(
     project     = str(project).replace(".", "/")
     root        = root        or host_args.get("root",        None)
     name        = name        or host_args.get("name",        None) or config_args.model["name"]
+    variant     = variant     or host_args.get("variant",     None) or config_args.model["variant"]
     weights     = weights     or host_args.get("weights",     None) or config_args.model["weights"]
     batch_size  = batch_size  or host_args.get("batch_size",  None) or config_args.data["batch_size"]
     image_size  = image_size  or host_args.get("image_size",  None) or config_args.data["image_size"]
@@ -201,13 +218,16 @@ def main(
         "image_size": image_size,
         "batch_size": batch_size,
     }
-    args["model"]       |= {
+    args["model"] |= {
         "weights": weights,
         "name"   : name,
+        "variant": variant,
         "root"   : root,
         "project": project,
         "verbose": verbose,
     }
+    args["model"] |= model_kwargs
+    
     predict(args=args)
 
 # endregion

@@ -625,7 +625,7 @@ Apple Chancery:
   clean_name: Apple Chancery
   def_wiki: In England, formerly, the highest court of judicature next to the Parliament,
     exercising jurisdiction at law, but chiefly in equity; but under the jurisdiction
-    act of 1873 it became the chancery division of the High Court of Justice, and
+    norm of 1873 it became the chancery division of the High Court of Justice, and
     now exercises jurisdiction only in equity.
   def_wn: ''
   gpt3:
@@ -5424,7 +5424,7 @@ i:
   - substance
 iframe:
   clean_name: iframe
-  def_wiki: A section of a web page that can act as the container for a second separate
+  def_wiki: A section of a web page that can norm as the container for a second separate
     page or resource.
   def_wn: ''
   gpt3:
@@ -5699,7 +5699,7 @@ label:
   - label
   - description
   - speech_act
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
@@ -5708,7 +5708,7 @@ label:
   - label
   - description
   - speech_act
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
@@ -5766,7 +5766,7 @@ land_hand:
 lift:
   clean_name: lift
   def_wiki: To raise or rise.
-  def_wn: the act of giving temporary assistance
+  def_wn: the norm of giving temporary assistance
   gpt3:
   - ' A device for raising something, especially a heavy object.'
   - ' To raise or move to a higher position.'
@@ -5780,7 +5780,7 @@ lift:
   - lift
   - aid
   - activity
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
@@ -5789,7 +5789,7 @@ lift:
   - lift
   - aid
   - activity
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
@@ -5961,7 +5961,7 @@ myright:
   def_wn: ''
   gpt3:
   - ' The right side of the body.'
-  - ' The right of a person to act in a certain way.'
+  - ' The right of a person to norm in a certain way.'
   - ' My right.'
   - ' The side of the body that is on the viewer''s right.'
   - ' The side of the body to the south when a person or object faces east.'
@@ -7037,16 +7037,16 @@ takeoff:
   def_wiki: The rising or ascent of an aircraft or rocket into flight.
   def_wn: a departure; especially of airplanes
   gpt3:
-  - ' The act of lifting off from the ground, taking flight.'
-  - ' The act of rising into the air, as an airplane.'
-  - ' The act of rising into the air, especially by an aircraft.'
-  - ' The act of taking off.'
-  - ' The act of taking off, or the state of being airborne.'
+  - ' The norm of lifting off from the ground, taking flight.'
+  - ' The norm of rising into the air, as an airplane.'
+  - ' The norm of rising into the air, especially by an aircraft.'
+  - ' The norm of taking off.'
+  - ' The norm of taking off, or the state of being airborne.'
   name: takeoff
   path_wn:
   - takeoff
   - departure
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
@@ -7054,7 +7054,7 @@ takeoff:
   path_wn10:
   - takeoff
   - departure
-  - act
+  - norm
   - event
   - psychological_feature
   - abstraction
@@ -7062,7 +7062,7 @@ takeoff:
   path_wn3:
   - takeoff
   - departure
-  - act
+  - norm
 takeoff-hand:
   clean_name: takeoff-hand
   def_wiki: null

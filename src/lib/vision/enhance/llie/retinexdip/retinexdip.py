@@ -259,7 +259,7 @@ class Enhancement(object):
             #     "output/reflection/reflection-{}.png".format(step),
             #     misc.imresize(torch_to_np(self.reflection_out).transpose(1, 2, 0), (self.size[1], self.size[0]))
             # )
-            self.get_enhanced(step, flag=False)
+            self.get_enhanced(step, flag=True)
         
     def gamma_trans(self, image, gamma):
         gamma_table = [np.power(x / 255.0, gamma) * 255.0 for x in range(256)]

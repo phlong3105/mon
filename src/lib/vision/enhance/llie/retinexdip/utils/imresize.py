@@ -135,7 +135,7 @@ def contributions(in_length, out_length, scale, kernel, kernel_width, antialiasi
 
 
 def resize_along_dim(im, dim, weights, field_of_view):
-    # To be able to act on each dim, we swap so that dim 0 is the wanted dim to resize
+    # To be able to norm on each dim, we swap so that dim 0 is the wanted dim to resize
     tmp_im = np.swapaxes(im, dim, 0)
 
     # We add singleton dimensions to the weight matrix so we can multiply it with the big tensor we get for
