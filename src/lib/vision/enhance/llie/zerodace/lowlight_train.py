@@ -19,7 +19,7 @@ def train(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     
     scale_factor = args.scale_factor
-    network      = mon.ZeroDACE().cuda()
+    network      = mon.ZeroDCEv2().cuda()
     
     # network.apply(weights_init)
     if args.load_pretrain:

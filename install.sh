@@ -125,9 +125,9 @@ rm -rf poetry.lock
 rm -rf $CONDA_PREFIX/lib/python3.10/site-packages/cv2/qt/plugins
 eval "$(conda shell.bash hook)"
 if [ "$install_type" == "test" ]; then
-  conda activate mon
-else
   conda activate montest
+else
+  conda activate mon
 fi
 poetry install --extras "dev"
 # poetry install --with dev

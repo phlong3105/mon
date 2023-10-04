@@ -53,7 +53,7 @@ hosts = {
         "max_steps"  : None,
 		"strategy"   : None,
 	},
-    "vsw-ws03": {
+    "vsw-ws-03": {
 		"config"     : "",
         "root"       : mon.RUN_DIR / "predict",
         "project"    : None,
@@ -152,7 +152,7 @@ def predict(args: dict):
 @click.option("--root",        default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--project",     default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--name",        default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--variant",     default=None,                  type=str,                      help="Variant.")
+@click.option("--variant",     default=None,                  type=str,                      help="Model variant.")
 @click.option("--weights",     default=None,                  type=click.Path(exists=False), help="Weights paths.")
 @click.option("--batch-size",  default=1,                     type=int,                      help="Total Batch size for all GPUs.")
 @click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")

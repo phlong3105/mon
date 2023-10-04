@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DACE model trained on LLIE dataset."""
+"""Zero-DCEv2 model trained on SICEMix dataset."""
 
 from __future__ import annotations
 
@@ -13,10 +13,10 @@ from mon import DATA_DIR, RUN_DIR
 # region Basic
 
 root         = RUN_DIR / "train"
-project      = "zerodace"
-model_name   = "zerodace"
+project      = "zerodcev2"
+model_name   = "zerodcev2"
 model_config = None
-data_name    = "llie"
+data_name    = "sice-mix"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]
@@ -42,8 +42,8 @@ model = {
 	# "loss"       : None,           # Loss function for training the model.
 	"metrics"    : {
 	    "train": None,  # [{"name": "psnr"}],
-		"val"  : [{"name": "psnr"}],
-		"test" : [{"name": "psnr"}],
+		"val"  : None,  # [{"name": "psnr"}],
+		"test" : None,  # [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{

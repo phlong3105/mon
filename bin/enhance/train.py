@@ -21,10 +21,10 @@ console = mon.console
 
 hosts = {
 	"lp-labdesktop-01": {
-        "config"     : "zerodace_llie",
+        "config"     : "zerodcev2_llie",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodace",
-        "name"       : "zerodace-llie",
+        "project"    : "vision/enhance/llie/zerodcev2",
+        "name"       : "zerodcev2-llie",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,
@@ -37,10 +37,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "lp-labdesktop-02": {
-        "config"     : "zerodace_sice_zerodce",
+        "config"     : "zerodcev2_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodace",
-        "name"       : "zerodace-sice-zerodce",
+        "project"    : "vision/enhance/llie/zerodcev2",
+        "name"       : "zerodcev2-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 4,
@@ -69,10 +69,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "vsw-ws02": {
-        "config"     : "zerodace_llie",
+        "config"     : "zerodcev2_llie",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodace",
-        "name"       : "zerodace-llie",
+        "project"    : "vision/enhance/llie/zerodcev2",
+        "name"       : "zerodcev2-llie",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,
@@ -84,11 +84,11 @@ hosts = {
         "strategy"   : "auto",
         "exist_ok"   : False,
 	},
-    "vsw-ws03": {
-        "config"     : "zerodcepp_sice_zerodce",
+    "vsw-ws-03": {
+        "config"     : "zerodcev2_llie",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodcepp",
-        "name"       : "zerodcepp-sice-zerodce",
+        "project"    : "vision/enhance/llie/zerodcev2",
+        "name"       : "zerodcev2-llie",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,

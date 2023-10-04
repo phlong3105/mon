@@ -31,7 +31,7 @@ def predict(image_path: str):
     data_lowlight = data_lowlight.permute(2, 0, 1)
     data_lowlight = data_lowlight.cuda().unsqueeze(0)
 
-    network    = mon.ZeroDACE().cuda()
+    network    = mon.ZeroDCEv2().cuda()
     # state_dict = torch.load(str(args.weights))
     # network.load_state_dict(state_dict=state_dict)
     network.model.load_state_dict(torch.load(args.weights))
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     
     # Measure efficiency score
     scale_factor = 1
-    network      = mon.ZeroDACE().cuda()
+    network      = mon.ZeroDCEv2().cuda()
     network.load_state_dict(torch.load(args.weights))
     h = (args.image_size // scale_factor) * scale_factor
     w = (args.image_size // scale_factor) * scale_factor
