@@ -33,16 +33,15 @@ class Instance:
     is mainly used to wrap and pas data between detectors and trackers.
     
     Attributes:
-        id_: A unique ID. Default: None.
+        id_: A unique ID. Default: ``None``.
         roi_id: The unique ID of the ROI containing the
         bbox: A bounding bbox in XYXY format.
-        polygon: A list of points representing an instance mask. Default:
-            None.
+        polygon: A list of points representing an instance mask. Default: ``None``.
         feature: A feature vector that describes the object contained in this
             image.
-        confidence: A confidence score. Default: None.
-        classlabel: A :class:`mon.Classlabel` object. Default: None.
-        frame_index: The current frame index. Default: None.
+        confidence: A confidence score. Default: ``None``.
+        classlabel: A :class:`mon.Classlabel` object. Default: ``None``.
+        frame_index: The current frame index. Default: ``None``.
         timestamp: The creating time of the current instance.
     """
     
@@ -165,8 +164,8 @@ class MovingObject(list[Instance], Object):
         id_: The object unique ID.
         motion: A motion model.
         moving_state: The current state of the moving object with respect to the
-            ROIs. Default: 'Candidate'.
-        moi_id: The unique ID of the MOI. Default: None.
+            ROIs. Default: ``'Candidate'``.
+        moi_id: The unique ID of the MOI. Default: ``None``.
         timestamp: The time when the object is created.
         frame_index: The frame index when the object is created.
     """

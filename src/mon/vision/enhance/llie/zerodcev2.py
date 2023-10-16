@@ -699,8 +699,8 @@ class ZeroDCEv2(base.LowLightImageEnhancementModel):
         metrics, we only need the final predictions and ground-truth.
 
         Args:
-            input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Default: None.
+            input: An input of shape :math:`[N, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default: ``None``.
             
         Return:
             Predictions and loss value.

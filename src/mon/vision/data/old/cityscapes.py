@@ -218,8 +218,8 @@ class CityscapesFog(base.ImageEnhancementDataset):
     
     Args:
         root: A root directory where the data is stored.
-        split: The data split to use. One of: ["train", "val", "test"].
-            Default: "train".
+        split: The data split to use. One of: [``'train'``, ``'val'``, ``'test'``].
+            Default: ``'train'``.
         beta: Additional information on the attenuation coefficient. One of the
             values in :attr:`betas`. Can be a list to include multiple beta
             values. When "all", "*", or None, all beta values will be included.

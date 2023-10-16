@@ -71,7 +71,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     Improved MobileNets".
     
     References:
-        https://github.com/zeiss-microscopy/BSConv
+        `<https://github.com/zeiss-microscopy/BSConv>`__
     """
     
     def __init__(
@@ -167,7 +167,7 @@ class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Modul
     Lead to Improved MobileNets," CVPR 2020.
     
     References:
-        https://github.com/zeiss-microscopy/BSConv
+        `<https://github.com/zeiss-microscopy/BSConv>`__
     """
     
     def __init__(
@@ -245,7 +245,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         Correlations Lead to Improved MobileNets," CVPR 2020.
     
     References:
-        https://github.com/zeiss-microscopy/BSConv
+        `<https://github.com/zeiss-microscopy/BSConv>`__
     """
     
     def __init__(
@@ -342,7 +342,7 @@ class AttentionUnconstrainedBlueprintSeparableConv2d(
         Correlations Lead to Improved MobileNets," CVPR 2020.
     
     References:
-        https://github.com/zeiss-microscopy/BSConv
+        `<https://github.com/zeiss-microscopy/BSConv>`__
     """
     
     def __init__(

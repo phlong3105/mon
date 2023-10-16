@@ -33,7 +33,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
     plain-CNN style architecture at inference time. It is similar to a Conv2d.
     
     References:
-        https://github.com/apple/ml-mobileone/blob/main/mobileone.py
+        `<https://github.com/apple/ml-mobileone/blob/main/mobileone.py>`__
     """
     
     def __init__(
@@ -143,7 +143,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         """Method to obtain re-parameterized kernel and bias.
         
         Reference:
-            https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L83
+            `<https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L83>`__
         
         Returns:
             Tuple of (kernel, bias) after fusing branches.
@@ -182,7 +182,7 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
         """Method to fuse batchnorm layer with preceeding conv layer.
         
         Reference:
-            https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L95
+            `<https://github.com/DingXiaoH/RepVGG/blob/main/repvgg.py#L95>`__
 
         Returns:
             Tuple of (kernel, bias) after fusing batchnorm.
@@ -284,10 +284,10 @@ class MobileOneConv2d(base.ConvLayerParsingMixin, nn.Module):
 @LAYERS.register()
 class MobileOneStage(base.ConvLayerParsingMixin, nn.Module):
     """MobileOneStage used to construct the MobileOne Model from the paper:
-    "An Improved One millisecond Mobile Backbone" (https://arxiv.org/pdf/2206.04040.pdf).
+    `"An Improved One millisecond Mobile Backbone" <https://arxiv.org/pdf/2206.04040.pdf>`__.
     
     References:
-        https://github.com/apple/ml-mobileone/blob/main/mobileone.py
+        `<https://github.com/apple/ml-mobileone/blob/main/mobileone.py>`__
     """
     
     def __init__(

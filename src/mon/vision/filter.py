@@ -69,9 +69,9 @@ def guided_filter(
         A filtered image.
         
     References:
-        - https://github.com/lisabug/guided-filter/blob/master/core/filter.py
-        - https://github.com/lisabug/guided-filter/tree/master
-        - https://github.com/wuhuikai/DeepGuidedFilter
+        - `<https://github.com/lisabug/guided-filter/blob/master/core/filter.py>`__
+        - `<https://github.com/lisabug/guided-filter/tree/master>`__
+        - `<https://github.com/wuhuikai/DeepGuidedFilter>`__
     """
     mean_i  = cv2.boxFilter(input, cv2.CV_64F, (radius, radius))
     mean_g  = cv2.boxFilter(guide, cv2.CV_64F, (radius, radius))

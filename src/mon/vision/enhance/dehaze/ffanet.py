@@ -118,12 +118,12 @@ class FFABlock(nn.SameChannelsLayerParsingMixin, nn.Module):
         )
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = self.act1(self.conv1(x))
-        y = y + x
-        y = self.conv2(y)
-        y = self.ca(y)
-        y = self.pa(y)
+        x  = input
+        y  = self.act1(self.conv1(x))
+        y += x
+        y  = self.conv2(y)
+        y  = self.ca(y)
+        y  = self.pa(y)
         y += x
         return y
 

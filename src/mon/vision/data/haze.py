@@ -596,7 +596,7 @@ class SateHaze1KDataModule(base.DataModule):
                 - "testing"  : prepares :attr:`test`.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Default: None.
+                Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

@@ -128,7 +128,7 @@ class ColorConstancyLoss(Loss):
     channels.
 
     References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py
+        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
     """
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -230,11 +230,10 @@ class EdgeLoss(Loss):
 @LOSSES.register(name="exclusion_loss")
 class ExclusionLoss(Loss):
     """Loss on the gradient.
-    Based on: http://openaccess.thecvf.com/content_cvpr_2018/papers
-    /Zhang_Single_Image_Reflection_CVPR_2018_paper.pdf
+    Based on: `<http://openaccess.thecvf.com/content_cvpr_2018/papers/Zhang_Single_Image_Reflection_CVPR_2018_paper.pdf>`__
 
     References:
-        https://github.com/liboyun/ZID/blob/master/net/losses.py
+        `<https://github.com/liboyun/ZID/blob/master/net/losses.py>`__
     """
     
     def __init__(self, reduction: Reduction | str = "mean", level: int = 3):
@@ -307,8 +306,7 @@ class ExposureControlLoss(Loss):
     value of a local region to the well-exposedness level E.
 
     References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code
-        /Myloss.py
+        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
 
     Args:
         patch_size: Kernel size for pooling layer.
@@ -421,8 +419,7 @@ class IlluminationSmoothnessLoss(Loss):
     curve parameter map A.
     
     References:
-        https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code
-        /Myloss.py
+        `<https://github.com/Li-Chongyi/Zero-DCE/blob/master/Zero-DCE_code/Myloss.py>`__
     """
     
     def __init__(

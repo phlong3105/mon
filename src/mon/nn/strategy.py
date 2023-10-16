@@ -6,7 +6,7 @@ models. A strategy is a composition of one Accelerator, one Precision Plugin, a
 CheckpointIO plugin, and other optional plugins such as the ClusterEnvironment.
 
 References:
-    https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html
+    `<https://pytorch-lightning.readthedocs.io/en/stable/extensions/strategy.html>`__
 """
 
 from __future__ import annotations

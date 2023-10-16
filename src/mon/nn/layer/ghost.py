@@ -30,7 +30,7 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
     from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
     
     References:
-        https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
+        `<https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py>`__
     """
     
     def __init__(
@@ -86,11 +86,10 @@ class GhostConv2d(base.ConvLayerParsingMixin, nn.Module):
 @LAYERS.register()
 class GhostConv2dV2(base.ConvLayerParsingMixin, nn.Module):
     """2D Ghost Convolution V2 proposed in the paper: "`GhostNetV2: Enhance
-    Cheap Operation with Long-Range Attention
-    <https://arxiv.org/pdf/2211.12905.pdf>`__"
+    Cheap Operation with Long-Range Attention <https://arxiv.org/pdf/2211.12905.pdf>`__"
     
     References:
-        https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch
+        `<https://github.com/huawei-noah/Efficient-AI-Backbones/tree/master/ghostnetv2_pytorch>`__
     """
     
     def __init__(
@@ -285,7 +284,7 @@ class GhostBottleneck(base.PassThroughLayerParsingMixin, nn.Module):
     Features from Cheap Operations <https://arxiv.org/pdf/1911.11907.pdf>`__"
     
     References:
-        - https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py
+        `<https://github.com/huawei-noah/Efficient-AI-Backbones/blob/master/ghostnet_pytorch/ghostnet.py>`__
     """
     
     def __init__(

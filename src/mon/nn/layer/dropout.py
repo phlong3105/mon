@@ -84,7 +84,7 @@ def drop_path(
     residual blocks).
     
     References:
-        https://github.com/rwightman/pytorch-image-models/blob/a2727c1bf78ba0d7b5727f5f95e37fb7f8866b1f/timm/models/layers/drop.py
+        `<https://github.com/rwightman/pytorch-image-models/blob/a2727c1bf78ba0d7b5727f5f95e37fb7f8866b1f/timm/models/layers/drop.py>`__
 
     Args:
         input: Input.

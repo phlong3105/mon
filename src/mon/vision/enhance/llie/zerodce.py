@@ -436,8 +436,8 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         metrics, we only need the final predictions and ground-truth.
 
         Args:
-            input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Default: None.
+            input: An input of shape :math:`[N, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default: ``None``.
             
         Return:
             Predictions and loss value.
@@ -452,7 +452,7 @@ class ZeroDCEVanilla(nn.Module):
     """Original implementation of Zero-DCE.
     
     References:
-        https://github.com/Li-Chongyi/Zero-DCE
+        `<https://github.com/Li-Chongyi/Zero-DCE>`__
     """
     
     def __init__(self):
@@ -622,8 +622,8 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
         metrics, we only need the final predictions and ground-truth.
 
         Args:
-            input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Default: None.
+            input: An input of shape :math:`[N, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default: ``None``.
             
         Return:
             Predictions and loss value.
@@ -638,7 +638,7 @@ class ZeroDCEPPVanilla(nn.Module):
     """Original implementation of ZeroDCE++.
     
     References:
-        https://github.com/Li-Chongyi/Zero-DCE_extension
+        `<https://github.com/Li-Chongyi/Zero-DCE_extension>`__
     """
     
     def __init__(self, scale_factor: float = 1.0):
@@ -726,8 +726,8 @@ class ZeroDCETiny(base.LowLightImageEnhancementModel):
         metrics, we only need the final predictions and ground-truth.
 
         Args:
-            input: An input of shape NCHW.
-            target: A ground-truth of shape NCHW. Default: None.
+            input: An input of shape :math:`[N, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default: ``None``.
             
         Return:
             Predictions and loss value.

@@ -33,11 +33,11 @@ class ClassificationLabel(nn.Label):
     See Also: :class:`mon.nn.data.label.Label`.
     
     Args:
-        id_: A class ID of the classification data. Default: -1 means
+        id_: A class ID of the classification data. Default: ``-1`` means
             unknown.
-        label: A label string. Default: ''.
-        confidence: A confidence value for the data. Default: 1.0.
-        logits: Logits associated with the labels. Default: None.
+        label: A label string. Default: ``''``.
+        confidence: A confidence value for the data. Default: ``1.0``.
+        logits: Logits associated with the labels. Default: ``None``.
     """
     
     def __init__(
@@ -136,14 +136,14 @@ class DetectionLabel(nn.Label):
     See Also: :class:`mon.nn.data.label.Label`.
     
     Args:
-        id_: A class ID of the detection data. Default: -1 means unknown.
-        index: An index for the object. Default: -1.
-        label: Label string. Default: ''.
-        confidence: A confidence value for the data. Default: 1.0.
+        id_: A class ID of the detection data. Default: ``-1`` means unknown.
+        index: An index for the object. Default: ``-1``.
+        label: Label string. Default: ``''``.
+        confidence: A confidence value for the data. Default: ``1.0``.
         bbox: A bounding box's coordinates.
         mask: Instance segmentation masks for the object within its bounding
             bbox, which should be a binary (0/1) 2D sequence or a binary integer
-            tensor. Default: None.
+            tensor. Default: ``None``.
     """
     
     def __init__(
@@ -224,8 +224,8 @@ class DetectionLabel(nn.Label):
         Args:
             tolerance: A tolerance, in pixels, when generating an approximate
                 polyline for the instance mask. Typical values are 1-3 pixels.
-                Default: 2.
-            filled: If True, the polyline should be filled. Default: True.
+                Default: ``2``.
+            filled: If ``True``, the polyline should be filled. Default: ``True``.
         
         Return:
             A :class:`PolylineLabel` object.
@@ -245,13 +245,13 @@ class DetectionLabel(nn.Label):
         
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
-                to which to add this object. Default: None.
+                to which to add this object. Default: ``None``.
             image_size: The size of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
-                to None.
+                to ``None``.
             target: The pixel value to use to render the object. If you want
                 color mask, just pass in the :param:`id` attribute. Default:
-                255.
+                ``255``.
         
         Return:
             A :class:`SegmentationLabel` object.
@@ -313,8 +313,8 @@ class DetectionsLabel(list[DetectionLabel], nn.Label):
         Args:
             tolerance: A tolerance, in pixels, when generating an approximate
                 polyline for the instance mask. Typical values are 1-3 pixels.
-                Default: 2.
-            filled: If True, the polyline should be filled. Default: True.
+                Default: ``2``.
+            filled: If ``True``, the polyline should be filled. Default: ``True``.
        
         Return:
             A :class:`PolylinesLabel` object.
@@ -333,13 +333,13 @@ class DetectionsLabel(list[DetectionLabel], nn.Label):
         
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
-                to which to add this object. Default: None.
+                to which to add this object. Default: ``None``.
             image_size: The shape of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
-                to None.
+                to ``None``.
             target: The pixel value to use to render the object. If you want
                 color mask, just pass in the :param:`id` attribute. Default:
-                255.
+                ``255``.
         
         Return:
             A :class:`SegmentationLabel` object.
@@ -371,32 +371,32 @@ class VOCDetectionsLabel(DetectionsLabel):
     
     Args:
         path: Absolute path where the image file is present.
-        source: Specifies the original location of the file in a database. Since
-            we don't use a database, it is set to 'Unknown' by default.
+        source: Specify the original location of the file in a database. Since
+            we don't use a database, it is set to ``'Unknown'`` by default.
         size: Specify the width, height, depth of an image. If the image is
-            black and white, then the depth will be 1. For color images, depth
-            will be 3.
+            black and white, then the depth will be ``1``. For color images,
+            depth will be ``3``.
         segmented: Signify if the images contain annotations that are non-linear
             (irregular) in shape—commonly called polygons. Default:
-            0 (linear shape).
+            ``0`` (linear shape).
         object: Contains the object details. If you have multiple annotations,
             then the object tag with its contents is repeated. The components of
             the object tags are:
             - name: This is the name of the object that we're trying to
               identify (i.e., class_id).
             - pose: Specify the skewness or orientation of the image. Defaults
-              to “Unspecified”, which means that the image isn't skewed.
+              to ``'Unspecified'``, which means that the image isn't skewed.
             - truncated: Indicates that the bounding bbox specified for the
               object doesn't correspond to the full extent of the object. For
               example, if an object is visible partially in the image, then we
-              set truncated to 1. If the object is fully visible, then the set
-              truncated to 0.
+              set truncated to ``1``. If the object is fully visible, then the
+              set truncated to ``0``.
             - difficult: An object is marked as difficult when the object is
               considered difficult to recognize. If the object is difficult to
-               recognize, then we set difficult to 1 else set it to 0.
+               recognize, then we set difficult to ``1`` else set it to ``0``.
             - bndbox: Axis-aligned rectangle specifying the extent of the object
               visible in the image.
-        classlabels: ClassLabel object. Default: None.
+        classlabels: ClassLabel object. Default: ``None``.
     """
     
     def __init__(
@@ -425,7 +425,7 @@ class VOCDetectionsLabel(DetectionsLabel):
         
         Args:
             path: Path to the `.xml` file.
-            classlabels: :class:`ClassLabels` object. Default: None.
+            classlabels: :class:`ClassLabels` object. Default: ``None``.
             
         Return:
             A :class:`VOCDetections` object.
@@ -580,19 +580,19 @@ class ImageLabel(nn.Label):
     See Also: :class:`mon.nn.data.label.Label`.
     
     References:
-        https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image
+        `<https://www.tensorflow.org/datasets/api_docs/python/tfds/features/Image>`__
     
     Args:
         id_: An ID of the image. This can be an integer or a string. This
             attribute is useful for batch processing where you want to keep the
             objects in the correct frame sequence.
-        name: A name of the image. Default: None.
-        path: A path to the image file. Default: None.
-        image: A ground-truth image to be loaded. Default: None.
-        load_on_create: If True, the image will be loaded into memory when the
-            object is created. Default: False.
-        keep_in_memory: If True, the image will be loaded into memory and kept
-            there. Default: False.
+        name: A name of the image. Default: ``None``.
+        path: A path to the image file. Default: ``None``.
+        image: A ground-truth image to be loaded. Default: ``None``.
+        load_on_create: If ``True``, the image will be loaded into memory when
+            the object is created. Default: ``False``.
+        keep_in_memory: If ``True``, the image will be loaded into memory and
+            kept there. Default: ``False``.
     """
     
     to_rgb   : bool = True
@@ -642,12 +642,12 @@ class ImageLabel(nn.Label):
         """Loads image into memory.
         
         Args:
-            path: The path to the image file. Default: None.
-            keep_in_memory: If True, the image will be loaded into memory and
-                kept there. Default: False.
+            path: The path to the image file. Default: ``None``.
+            keep_in_memory: If ``True``, the image will be loaded into memory
+                and kept there. Default: ``False``.
             
         Return:
-            An image of shape HWC.
+            An image of shape :math:`[H, W, C]` .
         """
         self.keep_in_memory = keep_in_memory
         
@@ -704,11 +704,11 @@ class KeypointLabel(nn.Label):
     See Also: :class:`mon.nn.data.label.Label`.
     
     Args:
-        id_: The class ID of the polyline data. Default: -1 means unknown.
-        index: An index for the polyline. Default: -1.
-        label: The label string. Default: "".
-        confidence: A confidence value for the data. Default: 1.0.
-        points: A list of lists of (x, y) points in [0, 1] x [0, 1].
+        id_: The class ID of the polyline data. Default: ``-1`` means unknown.
+        index: An index for the polyline. Default: ``-1``.
+        label: The label string. Default: ``''``.
+        confidence: A confidence value for the data. Default: ``1.0``.
+        points: A list of lists of :math:`(x, y)` points in :math:`[0, 1] x [0, 1]`.
     """
     
     def __init__(
@@ -819,17 +819,18 @@ class PolylineLabel(nn.Label):
     See Also: :class:`mon.nn.data.label.Label`.
     
     Args:
-        id_: The class ID of the polyline data. Default: -1 means unknown.
-        index: An index for the polyline. Default: -1.
-        label: The label string. Default: "".
-        confidence: A confidence value for the data. Default: 1.0.
-        points: A list of lists of (x, y) points in `[0, 1] x [0, 1]` describing
-            the vertices of each shape in the polyline.
+        id_: The class ID of the polyline data. Default: ``-1`` means unknown.
+        index: An index for the polyline. Default: ``-1``.
+        label: The label string. Default: ``''``.
+        confidence: A confidence value for the data. Default: ``1.0``.
+        points: A list of lists of :math:`(x, y)` points in
+            :math:`[0, 1] x [0, 1]` describing the vertices of each shape in the
+            polyline.
         closed: Whether the shapes are closed, in other words, and edge should
             be drawn. from the last vertex to the first vertex of each shape.
-            Default: False.
+            Default: ``False``.
         filled: Whether the polyline represents polygons, i.e., shapes that
-            should be filled when rendering them. Default: False.
+            should be filled when rendering them. Default: ``False``.
     """
     
     def __init__(
@@ -875,11 +876,11 @@ class PolylineLabel(nn.Label):
         
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
-                to which to add this object. Default: None.
-            label: A label string. Default: ““.
+                to which to add this object. Default: ``None``.
+            label: A label string. Default: ``''``.
             tolerance: A tolerance, in pixels, when generating approximate
                 polygons for each region. Typical values are 1-3 pixels.
-                Default: 2.
+                Default: ``2``.
             **kwargs: additional attributes for the :class:`PolylineLabel`.
         
         Return:
@@ -948,15 +949,15 @@ class PolylineLabel(nn.Label):
         
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
-                to which to add this object. Default: None.
+                to which to add this object. Default: ``None``.
             image_size: The shape of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
-                to None.
+                to ``None``.
             target: The pixel value to use to render the object. If you want
                 color mask, just pass in the :param:`id` attribute. Default:
-                255.
+                ``255``.
             thickness: The thickness, in pixels, at which to render (non-filled)
-                polylines. Default: 1.
+                polylines. Default: ``1``.
                 
         Return:
             A :class:`SegmentationLabel` object.
@@ -1044,15 +1045,15 @@ class PolylinesLabel(list[PolylineLabel], nn.Label):
         
         Args:
             mask: An optional 2D integer numpy array to use as an initial mask
-                to which to add this object. Default: None.
+                to which to add this object. Default: ``None``.
             image_size: The shape of the segmentation mask to render. This
                 parameter has no effect if a :param:`mask` is provided. Defaults
                 to None.
             target: The pixel value to use to render the object. If you want
                 color mask, just pass in the :param:`id` attribute. Default:
-                255.
+                ``255``.
             thickness: The thickness, in pixels, at which to render (non-filled)
-                polylines. Default: 1.
+                polylines. Default: ``1``.
                 
         Return:
             A :class:`SegmentationLabel` object.
@@ -1071,7 +1072,7 @@ class RegressionLabel(nn.Label):
     
     Args:
         value: The regression value.
-        confidence: A confidence value for the data. Default: 1.0.
+        confidence: A confidence value for the data. Default: ``1.0``.
     """
     
     def __init__(
@@ -1107,14 +1108,14 @@ class SegmentationLabel(nn.Label):
         id_: The ID of the image. This can be an integer or a string. This
             attribute is useful for batch processing where you want to keep the
             objects in the correct frame sequence.
-        name: The name of the image. Default: None.
-        path: The path to the image file. Default: None.
+        name: The name of the image. Default: ``None``.
+        path: The path to the image file. Default: ``None``.
         mask: The image with integer values encoding the semantic labels.
-            Default: None.
-        load_on_create: If True, the image will be loaded into memory when the
-            object is created. Default: False.
-        keep_in_memory: If True, the image will be loaded into memory and kept
-            there. Default: False.
+            Default: ``None``.
+        load_on_create: If ``True``, the image will be loaded into memory when
+            the object is created. Default: ``False``.
+        keep_in_memory: If ``True``, the image will be loaded into memory and
+            kept there. Default: ``False``.
     """
 
     to_rgb   : bool = True
@@ -1164,12 +1165,12 @@ class SegmentationLabel(nn.Label):
         """Load segmentation mask image into memory.
         
         Args:
-            path: The path to the segmentation mask file. Default: None.
-            keep_in_memory: If True, the image will be loaded into memory and
-                kept there. Default: False.
+            path: The path to the segmentation mask file. Default: ``None``.
+            keep_in_memory: If ``True``, the image will be loaded into memory
+                and kept there. Default: ``False``.
             
         Return:
-            Return image of shape HWC.
+            Return image of shape :math:`[H, W, C]`.
         """
         self.keep_in_memory = keep_in_memory
         

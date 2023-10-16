@@ -6,7 +6,7 @@ datasets. We try to support all possible data types: :class:`torch.Tensor`,
 :class:`numpy.ndarray`.
 
 For transformation operations, we use
-`albumentations <https://albumentations.ai/docs/api_reference/full_reference>`_
+`albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
 """
 
 from __future__ import annotations
@@ -48,19 +48,20 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
     
     Args:
         root: A root directory where the data is stored.
-        split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Default: 'train'.
-        image_size: The desired image size in HW format. Default: 256.
-        classlabels: :class:`mon.nn.ClassLabels` object. Default: None.
+        split: The data split to use. One of: [``'train'``, ``'val'``,
+            ``'test'``, ``'predict'``]. Default: ``'train'``.
+        image_size: The desired image size in :math:`[H, W]` format. Default:
+            ``256``.
+        classlabels: :class:`mon.nn.ClassLabels` object. Default: ``None``.
         transform: Transformations performing on both the input and target. We
-            use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`_
+            use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
         to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Default: False.
-        cache_data: If True, cache data to disk for faster loading next time.
-            Default: False.
-        cache_images: If True, cache images into memory for faster loading
-            (WARNING: large datasets may exceed system RAM). Default: False.
-        verbose: Verbosity. Default: True.
+            Default: ``False``.
+        cache_data: If ``True``, cache data to disk for faster loading next
+            time. Default: ``False``.
+        cache_images: If ``True``, cache images into memory for faster loading
+            (WARNING: large datasets may exceed system RAM). Default: ``False``.
+        verbose: Verbosity. Default: ``True``.
     """
     
     def __init__(
@@ -206,22 +207,22 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
     
     Args:
         root: A root directory where the data is stored.
-        split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Default: 'train'.
-        image_size: The desired image size in HW format. Default: 256.
-        classlabels: :class:`mon.nn.ClassLabels` object. Default: None.
-        max_samples: Only process a certain number of samples. Default: None.
+        split: The data split to use. One of: [``'train'``, ``'val'``,
+            ``'test'``, ``'predict'``]. Default: ``'train'``.
+        image_size: The desired image size in :math:`[H, W]` format.
+            Default: ``256``.
+        classlabels: :class:`mon.nn.ClassLabels` object. Default: ``None``.
+        max_samples: Only process a certain number of samples. Default: ``None``.
         transform: Transformations performing on both the input and target. We
-            use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`_
-        to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Default: False.
+            use `albumentations <https://albumentations.ai/docs/api_reference/full_reference>`__
+        to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
+            Default: ``False``.
         api_preference: Preferred Capture API backends to use. Can be used to
             enforce a specific reader implementation. Two most used options are:
             [cv2.CAP_ANY=0, cv2.CAP_FFMPEG=1900]. See more:
-            https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base
-            .htmlggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf
+            `<https://docs.opencv.org/4.5.5/d4/d15/group__videoio__flags__base.htmlggaeb8dd9c89c10a5c63c139bf7c4f5704da7b235a04f50a444bc2dc72f5ae394aaf>`__
             Default: cv2.CAP_FFMPEG.
-        verbose: Verbosity. Default: True.
+        verbose: Verbosity. Default: ``True``.
     """
     
     def __init__(
@@ -439,18 +440,19 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
     
     Args:
         root: A root directory where the data is stored.
-        split: The data split to use. One of: ['train', 'val', 'test',
-            'predict']. Default: 'train'.
-        image_size: The desired image size in HW format. Default: 256.
-        classlabels: :class:`mon.nn.ClassLabels` object. Default: None.
-        transform: Transformations performing on both the input and target.
-        to_tensor: If True, convert input and target to :class:`torch.Tensor`.
-            Default: False.
-        cache_data: If True, cache data to disk for faster loading next time.
-            Default: False.
-        cache_images: If True, cache images into memory for faster training
-            (WARNING: large datasets may exceed system RAM). Default: False.
-        verbose: Verbosity. Default: True.
+        split: The data split to use. One of: [``'train'``, ``'val'``,
+            ``'test'``, ``'predict'``]. Default: ``'train'``.
+        image_size: The desired image size in :math:`[H, W]`  format.
+            Default: ``256``.
+        classlabels: :class:`mon.nn.ClassLabels` object. Default: ``None``.
+        transform: Transformations performed on both the input and target.
+        to_tensor: If ``True``, convert input and target to :class:`torch.Tensor`.
+            Default: ``False``.
+        cache_data: If ``True``, cache data to disk for faster loading next
+            time. Default: ``False``.
+        cache_images: If ``True``, cache images into memory for faster training
+            (WARNING: large datasets may exceed system RAM). Default: ``False``.
+        verbose: Verbosity. Default: ``True``.
     """
     
     def __init__(

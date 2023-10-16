@@ -156,7 +156,7 @@ class CIFAR10(base.ImageClassificationDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageClassificationDataset`.
     
     References:
-        `<https://www.cs.toronto.edu/~kriz/cifar.html>`_
+        `<https://www.cs.toronto.edu/~kriz/cifar.html>`__
     """
     
     base_folder = "cifar-10"

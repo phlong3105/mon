@@ -68,7 +68,7 @@ class MNIST(base.ImageClassificationDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageClassificationDataset`.
     
     References:
-        `<http://yann.lecun.com/exdb/mnist/>`_
+        `<http://yann.lecun.com/exdb/mnist/>`__
     """
     
     mirrors = [
@@ -183,7 +183,7 @@ class FashionMNIST(MNIST):
     """Fashion-MNIST dataset.
     
     References:
-        `<https://github.com/zalandoresearch/fashion-mnist>`_
+        `<https://github.com/zalandoresearch/fashion-mnist>`__
     """
     
     mirrors = [
@@ -243,7 +243,7 @@ class MNISTDataModule(base.DataModule):
                 - "testing"  : prepares :attr:'test'.
                 - "inference": prepares :attr:`predict`.
                 - None:      : prepares all.
-                Default: None.
+                Default: ``None``.
         """
         console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase

@@ -51,8 +51,8 @@ class SqueezeExciteC(base.PassThroughLayerParsingMixin, nn.Module):
     This implementation uses :class:`torch.nn.Conv2d` layer.
     
     References:
-        - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
-        - https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
+        - `<https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch>`__
+        - `<https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py>`__
     """
     
     def __init__(
@@ -112,8 +112,8 @@ class SqueezeExciteL(base.PassThroughLayerParsingMixin, nn.Module):
     This implementation uses :class:`torch.nn.Linear` layer.
     
     References:
-        - https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch
-        - https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py
+        - `<https://amaarora.github.io/2020/07/24/SeNet.html#squeeze-and-excitation-block-in-pytorch>`__
+        - `<https://github.com/moskomule/senet.pytorch/blob/master/senet/se_module.py>`__
     """
     
     def __init__(
@@ -220,7 +220,7 @@ class BAM(base.PassThroughLayerParsingMixin, nn.Module):
     Module".
     
     References:
-        - https://github.com/Jongchan/attention-module/blob/master/MODELS/bam.py
+        - `<https://github.com/Jongchan/attention-module/blob/master/MODELS/bam.py>`__
     """
     
     class Flatten(nn.Module):
@@ -372,7 +372,7 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
     Block Attention Module".
     
     References:
-        - https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py
+        - `<https://github.com/Jongchan/attention-module/blob/master/MODELS/cbam.py>`__
     
     Args:
         channels:
@@ -565,7 +565,7 @@ class SimAM(base.PassThroughLayerParsingMixin, nn.Module):
     Module for Convolutional Neural Networks".
     
     References:
-        - https://github.com/ZjjConan/SimAM
+        - `<https://github.com/ZjjConan/SimAM>`__
     """
     
     def __init__(self, e_lambda: float = 1e-4, *args, **kwargs):
