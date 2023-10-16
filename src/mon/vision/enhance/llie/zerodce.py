@@ -14,12 +14,12 @@ from typing import Any
 
 import torch
 
-from mon import nn
 from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.nn import _size_2_t, functional as F
-from mon.vision import loss
+from mon.nn.typing import _size_2_t
+from mon.vision import nn
 from mon.vision.enhance.llie import base
+from mon.vision.nn import functional as F
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
@@ -231,14 +231,14 @@ class CombinedLoss01(nn.Loss):
         self.col_weight = col_weight
         self.tv_weight  = tv_weight
         
-        self.loss_spa = loss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp = loss.ExposureControlLoss(
+        self.loss_spa = nn.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col = loss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv  = loss.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_col = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv  = nn.IlluminationSmoothnessLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"
@@ -292,15 +292,15 @@ class CombinedLoss02(nn.Loss):
         self.tv_weight      = tv_weight
         self.channel_weight = channel_weight
         
-        self.loss_spa     = loss.SpatialConsistencyLoss(reduction=reduction)
-        self.loss_exp     = loss.ExposureControlLoss(
+        self.loss_spa     = nn.SpatialConsistencyLoss(reduction=reduction)
+        self.loss_exp     = nn.ExposureControlLoss(
             reduction  = reduction,
             patch_size = exp_patch_size,
             mean_val   = exp_mean_val,
         )
-        self.loss_col     = loss.ColorConstancyLoss(reduction=reduction)
-        self.loss_tv      = loss.IlluminationSmoothnessLoss(reduction=reduction)
-        self.loss_channel = loss.ChannelConsistencyLoss(reduction=reduction)
+        self.loss_col     = nn.ColorConstancyLoss(reduction=reduction)
+        self.loss_tv      = nn.IlluminationSmoothnessLoss(reduction=reduction)
+        self.loss_channel = nn.ChannelConsistencyLoss(reduction=reduction)
     
     def __str__(self) -> str:
         return f"combined_loss"

@@ -13,10 +13,9 @@ from abc import ABC
 
 import torch
 
-from mon import nn
 from mon.core import pathlib
 from mon.globals import ZOO_DIR
-from mon.vision import view
+from mon.vision import nn, view
 
 
 # region Model

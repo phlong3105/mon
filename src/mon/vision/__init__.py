@@ -21,8 +21,7 @@ import mon.vision.feature
 import mon.vision.filter
 import mon.vision.geometry
 import mon.vision.io
-import mon.vision.loss
-import mon.vision.metric
+import mon.vision.prior
 import mon.vision.tracking
 import mon.vision.view
 from mon.vision.classify import *
@@ -35,7 +34,6 @@ from mon.vision.feature import *
 from mon.vision.filter import *
 from mon.vision.geometry import *
 from mon.vision.io import *
-from mon.vision.loss import *
-from mon.vision.metric import *
+from mon.vision.prior import *
 from mon.vision.tracking import *
 from mon.vision.view import *

@@ -11,9 +11,6 @@ __all__ = [
 
 import cv2
 import numpy as np
-import torch
-
-from mon.nn import functional as F
 
 
 # region Adjust

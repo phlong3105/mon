@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import copy
 import importlib
 import socket
 import time
@@ -105,7 +104,7 @@ def predict(args: dict):
     console.log(f"FLOPs  = {flops:.4f}")
     console.log(f"Params = {params:.4f}")
     console.log(f"Time   = {avg_time:.4f}")
-    
+
     data       = args["datamodule"]["root"]
     image_size = args["datamodule"]["image_size"]
     resize     = args["datamodule"]["resize"]
@@ -157,7 +156,7 @@ def predict(args: dict):
 @click.option("--batch-size",  default=1,                     type=int,                      help="Total Batch size for all GPUs.")
 @click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")
 @click.option("--resize",      is_flag=True)
-@click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results to root/project/name.")
+@click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results location.")
 @click.option("--verbose",     is_flag=True)
 @click.pass_context
 def main(

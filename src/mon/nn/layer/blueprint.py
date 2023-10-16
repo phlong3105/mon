@@ -7,15 +7,35 @@
 from __future__ import annotations
 
 __all__ = [
-    "ABSConv2dS", "ABSConv2dS1", "ABSConv2dS10", "ABSConv2dS11", "ABSConv2dS12",
-    "ABSConv2dS13", "ABSConv2dS2", "ABSConv2dS3", "ABSConv2dS4", "ABSConv2dS5",
-    "ABSConv2dS6", "ABSConv2dS7", "ABSConv2dS8", "ABSConv2dS9", "ABSConv2dU",
+    "ABSConv2dS",
+    "ABSConv2dS1",
+    "ABSConv2dS10",
+    "ABSConv2dS11",
+    "ABSConv2dS12",
+    "ABSConv2dS13",
+    "ABSConv2dS14",
+    "ABSConv2dS15",
+    "ABSConv2dS16",
+    "ABSConv2dS17",
+    "ABSConv2dS2",
+    "ABSConv2dS3",
+    "ABSConv2dS4",
+    "ABSConv2dS5",
+    "ABSConv2dS6",
+    "ABSConv2dS7",
+    "ABSConv2dS8",
+    "ABSConv2dS9",
+    "ABSConv2dU",
     "AttentionSubspaceBlueprintSeparableConv2d",
     "AttentionSubspaceBlueprintSeparableConv2d1",
     "AttentionSubspaceBlueprintSeparableConv2d10",
     "AttentionSubspaceBlueprintSeparableConv2d11",
     "AttentionSubspaceBlueprintSeparableConv2d12",
     "AttentionSubspaceBlueprintSeparableConv2d13",
+    "AttentionSubspaceBlueprintSeparableConv2d14",
+    "AttentionSubspaceBlueprintSeparableConv2d15",
+    "AttentionSubspaceBlueprintSeparableConv2d16",
+    "AttentionSubspaceBlueprintSeparableConv2d17",
     "AttentionSubspaceBlueprintSeparableConv2d2",
     "AttentionSubspaceBlueprintSeparableConv2d3",
     "AttentionSubspaceBlueprintSeparableConv2d4",
@@ -24,8 +44,11 @@ __all__ = [
     "AttentionSubspaceBlueprintSeparableConv2d7",
     "AttentionSubspaceBlueprintSeparableConv2d8",
     "AttentionSubspaceBlueprintSeparableConv2d9",
-    "AttentionUnconstrainedBlueprintSeparableConv2d", "BSConv2dS", "BSConv2dU",
-    "SubspaceBlueprintSeparableConv2d", "UnconstrainedBlueprintSeparableConv2d",
+    "AttentionUnconstrainedBlueprintSeparableConv2d",
+    "BSConv2dS",
+    "BSConv2dU",
+    "SubspaceBlueprintSeparableConv2d",
+    "UnconstrainedBlueprintSeparableConv2d",
 ]
 
 from typing import Any, Callable
@@ -613,6 +636,90 @@ class AttentionSubspaceBlueprintSeparableConv2d13(
         return y
 
 
+@LAYERS.register()
+class AttentionSubspaceBlueprintSeparableConv2d14(
+    AttentionSubspaceBlueprintSeparableConv2d
+):
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.simam(x)
+        y = self.pw_conv1(y)
+        # if self.norm1 is not None:
+        #    y = self.norm1(y)
+        # y = self.simam(x)
+        y = self.pw_conv2(y)
+        # if self.norm2 is not None:
+        #    y = self.norm2(y)
+        # y = self.simam(x)
+        y = self.dw_conv(y)
+        # y = self.simam(x)
+        return y
+    
+
+@LAYERS.register()
+class AttentionSubspaceBlueprintSeparableConv2d15(
+    AttentionSubspaceBlueprintSeparableConv2d
+):
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.simam(x)
+        y = self.pw_conv1(y)
+        # if self.norm1 is not None:
+        #     y = self.norm1(y)
+        y = self.simam(y)
+        y = self.pw_conv2(y)
+        # if self.norm2 is not None:
+        #     y = self.norm2(y)
+        # y = self.simam(y)
+        y = self.dw_conv(y)
+        # y = self.simam(y)
+        return y
+    
+
+@LAYERS.register()
+class AttentionSubspaceBlueprintSeparableConv2d16(
+    AttentionSubspaceBlueprintSeparableConv2d
+):
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.simam(x)
+        y = self.pw_conv1(y)
+        # if self.norm1 is not None:
+        #     y = self.norm1(y)
+        y = self.simam(y)
+        y = self.pw_conv2(y)
+        # if self.norm2 is not None:
+        #     y = self.norm2(y)
+        y = self.simam(y)
+        y = self.dw_conv(y)
+        # y = self.simam(y)
+        return y
+
+
+@LAYERS.register()
+class AttentionSubspaceBlueprintSeparableConv2d17(
+    AttentionSubspaceBlueprintSeparableConv2d
+):
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.simam(x)
+        y = self.pw_conv1(y)
+        # if self.norm1 is not None:
+        #     y = self.norm1(y)
+        y = self.simam(y)
+        y = self.pw_conv2(y)
+        # if self.norm2 is not None:
+        #     y = self.norm2(y)
+        y = self.simam(y)
+        y = self.dw_conv(y)
+        y = self.simam(y)
+        return y
+
+
 ABSConv2dS   = AttentionSubspaceBlueprintSeparableConv2d
 ABSConv2dU   = AttentionUnconstrainedBlueprintSeparableConv2d
 ABSConv2dS1  = AttentionSubspaceBlueprintSeparableConv2d1
@@ -628,6 +735,10 @@ ABSConv2dS10 = AttentionSubspaceBlueprintSeparableConv2d10
 ABSConv2dS11 = AttentionSubspaceBlueprintSeparableConv2d11
 ABSConv2dS12 = AttentionSubspaceBlueprintSeparableConv2d12
 ABSConv2dS13 = AttentionSubspaceBlueprintSeparableConv2d13
+ABSConv2dS14 = AttentionSubspaceBlueprintSeparableConv2d14
+ABSConv2dS15 = AttentionSubspaceBlueprintSeparableConv2d15
+ABSConv2dS16 = AttentionSubspaceBlueprintSeparableConv2d16
+ABSConv2dS17 = AttentionSubspaceBlueprintSeparableConv2d17
 
 LAYERS.register(name="ABSConv2dS",   module=ABSConv2dS)
 LAYERS.register(name="ABSConv2dU",   module=ABSConv2dU)
@@ -644,5 +755,9 @@ LAYERS.register(name="ABSConv2dS10", module=ABSConv2dS10)
 LAYERS.register(name="ABSConv2dS11", module=ABSConv2dS11)
 LAYERS.register(name="ABSConv2dS12", module=ABSConv2dS12)
 LAYERS.register(name="ABSConv2dS13", module=ABSConv2dS13)
+LAYERS.register(name="ABSConv2dS14", module=ABSConv2dS14)
+LAYERS.register(name="ABSConv2dS15", module=ABSConv2dS15)
+LAYERS.register(name="ABSConv2dS16", module=ABSConv2dS16)
+LAYERS.register(name="ABSConv2dS17", module=ABSConv2dS17)
 
 # endregion

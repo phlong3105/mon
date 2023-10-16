@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """This module implements visualization functions.
+
+https://www.geeksforgeeks.org/concatenate-images-using-opencv-in-python/
 """
 
 from __future__ import annotations

@@ -23,7 +23,8 @@ def measure_metric_piqa(
     image_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
-    model_name    : str,
+    name          : str,
+    variant       : int | str | None,
     image_size    : int,
     resize        : bool,
     metric        : list[str],
@@ -46,8 +47,9 @@ def measure_metric_piqa(
         "tv"     : {"module": piqa.TV,      "metric_mode": "NR", },
         "vsi"    : {"module": piqa.VSI,     "metric_mode": "FR", },
     }
-    
-    console.rule(f"[bold red] {model_name}")
+
+    model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
+    console.rule(f"[bold red] {model_variant}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     # if target_dir is not None:
     #     assert mon.Path(target_dir).is_dir()
@@ -122,7 +124,7 @@ def measure_metric_piqa(
     
     # Show results
     if append_results:
-        console.log(f"{model_name}")
+        console.log(f"{model_variant}")
         console.log(f"{image_dir.name}")
         console.log(f"backend: pyiqa")
         message = ""
@@ -136,7 +138,7 @@ def measure_metric_piqa(
         print(f"COPY THIS:")
         print(message)
     else:
-        console.log(f"{model_name}")
+        console.log(f"{model_variant}")
         console.log(f"{image_dir.name}")
         console.log(f"backend: pyiqa")
         for m, v in values.items():
@@ -152,7 +154,7 @@ def measure_metric_piqa(
                 f.write(f"{'model':<10}\t{'data':<10}\t")
                 for m, v in values.items():
                     f.write(f"{f'{m}':<10}\t")
-            f.write(f"{f'{model_name}':<10}\t{f'{image_dir.name}':<10}\t")
+            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
             for m, v in values.items():
                 avg = float(sum(v) / num_items)
                 f.write(f"{avg:.10f}\t")
@@ -168,7 +170,8 @@ def measure_metric_pyiqa(
     image_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
-    model_name    : str,
+    name          : str,
+    variant       : int | str | None,
     image_size    : int,
     resize        : bool,
     metric        : list[str],
@@ -187,8 +190,9 @@ def measure_metric_pyiqa(
         "musiq", "nima", "niqe", "nrqm", "paq2piq", "pi", "wadiqam",
     ]
     _METRICS = _NON_REFERENCE_METRICS  # + _FULL_REFERENCE_METRICS
-    
-    console.rule(f"[bold red] {model_name}")
+
+    model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
+    console.rule(f"[bold red] {model_variant}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     # if target_dir is not None:
     #     assert mon.Path(target_dir).is_dir()
@@ -278,7 +282,7 @@ def measure_metric_pyiqa(
     
     # Show results
     if append_results:
-        console.log(f"{model_name}")
+        console.log(f"{model_variant}")
         console.log(f"{image_dir.name}")
         console.log(f"backend: pyiqa")
         message = ""
@@ -292,7 +296,7 @@ def measure_metric_pyiqa(
         print("COPY THIS:")
         print(message)
     else:
-        console.log(f"{model_name}")
+        console.log(f"{model_variant}")
         console.log(f"{image_dir.name}")
         console.log(f"backend: pyiqa")
         for m, v in values.items():
@@ -308,7 +312,7 @@ def measure_metric_pyiqa(
                 f.write(f"{'model':<10}\t{'data':<10}\t")
                 for m, v in values.items():
                     f.write(f"{f'{m}':<10}\t")
-            f.write(f"{f'{model_name}':<10}\t{f'{image_dir.name}':<10}\t")
+            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
             for m, v in values.items():
                 avg = float(sum(v) / num_items)
                 f.write(f"{avg:.10f}\t")
@@ -319,7 +323,8 @@ def measure_metric_pyiqa(
 @click.option("--image-dir",      default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
 @click.option("--target-dir",     default=None,            type=click.Path(exists=False), help="Ground-truth directory.")
 @click.option("--result-file",    default=None,            type=str, help="Result file.")
-@click.option("--model-name",     default=None,            type=str, help="Model name.")
+@click.option("--name",           default=None,            type=str, help="Model name.")
+@click.option("--variant",        default=None,            type=str, help="Model variant.")
 @click.option("--image-size",     default=512, type=int)
 @click.option("--resize",         is_flag=True)
 @click.option("--metric",         multiple=True, type=str, help="Measuring metric.")
@@ -332,7 +337,8 @@ def measure_metric(
     image_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
-    model_name    : str,
+    name          : str,
+    variant       : int | str | None,
     image_size    : int,
     resize        : bool,
     metric        : list[str],
@@ -347,7 +353,8 @@ def measure_metric(
             image_dir      = image_dir,
             target_dir     = target_dir,
             result_file    = result_file,
-            model_name     = model_name,
+            name           = name,
+            variant        = variant,
             image_size     = image_size,
             resize         = resize,
             metric         = metric,
@@ -361,7 +368,8 @@ def measure_metric(
             image_dir      = image_dir,
             target_dir     = target_dir,
             result_file    = result_file,
-            model_name     = model_name,
+            name           = name,
+            variant        = variant,
             image_size     = image_size,
             resize         = resize,
             metric         = metric,

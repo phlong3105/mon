@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DCEv2 model trained on LLIE dataset."""
+"""Zero-DCEv2 model trained on LLIE datasets."""
 
 from __future__ import annotations
 

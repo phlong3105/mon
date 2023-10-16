@@ -39,7 +39,7 @@ class enhance_net_nopool(nn.Module):
         self.upsample     = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
         number_f          = 32
 
-#   zerodce DWC + p-shared
+        #   zerodce DWC + p-shared
         self.e_conv1 = CSDN_Tem(3, number_f)
         self.e_conv2 = CSDN_Tem(number_f, number_f)
         self.e_conv3 = CSDN_Tem(number_f, number_f)

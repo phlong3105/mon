@@ -1,15 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements attention blocks."""
+"""This module implements attention mechanisms."""
 
 from __future__ import annotations
 
 __all__ = [
-    "BAM", "CBAM", "ChannelAttention", "ChannelAttentionModule", "GhostSAM",
-    "GhostSupervisedAttentionModule", "PixelAttentionModule", "SAM", "SimAM",
-    "SimplifiedChannelAttention", "SqueezeExcitation", "SqueezeExciteC",
-    "SqueezeExciteL", "SupervisedAttentionModule",
+    "BAM",
+    "CBAM",
+    "ChannelAttention",
+    "ChannelAttentionModule",
+    "GhostSAM",
+    "GhostSupervisedAttentionModule",
+    "PixelAttentionModule",
+    "SAM",
+    "SimAM",
+    "SimplifiedChannelAttention",
+    "SqueezeExcitation",
+    "SqueezeExciteC",
+    "SqueezeExciteL",
+    "SupervisedAttentionModule",
 ]
 
 from typing import Any, Sequence
@@ -24,6 +34,11 @@ from mon.nn.layer import (
     activation, base, conv, ghost, linear, normalization, pooling,
 )
 from mon.nn.typing import _size_2_t
+
+
+# region Branch Attention
+
+# endregion
 
 
 # region Channel Attention
@@ -638,6 +653,16 @@ class PixelAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
 # endregion
 
 
+# region Spatial Attention
+
+# endregion
+
+
+# region Spatial-Temporal Attention
+
+# endregion
+
+
 # region Supervised Attention
 
 @LAYERS.register()
@@ -821,5 +846,10 @@ GhostSAM = GhostSupervisedAttentionModule
 SAM      = SupervisedAttentionModule
 LAYERS.register(name="GhostSAM", module=GhostSAM)
 LAYERS.register(name="SAM",      module=SAM)
+
+# endregion
+
+
+# region Temporal Attention
 
 # endregion

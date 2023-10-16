@@ -13,10 +13,10 @@ from typing import Any, Sequence
 
 import torch
 
-from mon import nn
 from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.vision.enhance.multitask import base
+from mon.vision import nn
+from mon.vision.enhance.universal import base
 
 _current_dir = pathlib.Path(__file__).absolute().parent
 
