@@ -40,5 +40,6 @@ from mon.core.file import *
 from mon.core.logging import *
 from mon.core.pathlib import *
 from mon.core.rich import (
-    console, error_console, get_progress_bar, print_dict, print_table,
+    console, error_console, get_download_bar, get_progress_bar, print_dict,
+    print_table,
 )

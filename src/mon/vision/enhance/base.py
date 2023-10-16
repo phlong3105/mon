@@ -13,9 +13,11 @@ from abc import ABC
 
 import torch
 
-from mon.core import pathlib
 from mon.globals import ZOO_DIR
-from mon.vision import nn, view
+from mon.vision import core, nn, view
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Model
@@ -27,11 +29,11 @@ class ImageEnhancementModel(nn.Model, ABC):
     """
     
     @property
-    def config_dir(self) -> pathlib.Path:
-        return pathlib.Path(__file__).absolute().parent / "config"
+    def config_dir(self) -> core.Path:
+        return core.Path(__file__).absolute().parent / "config"
     
     @property
-    def zoo_dir(self) -> pathlib.Path:
+    def zoo_dir(self) -> core.Path:
         return ZOO_DIR / "vision" / "enhance" / self.name
     
     def init_weights(self, m: torch.nn.Module):
@@ -82,7 +84,7 @@ class ImageEnhancementModel(nn.Model, ABC):
         input        : torch.Tensor | None = None,
         target	     : torch.Tensor | None = None,
         pred		 : torch.Tensor | None = None,
-        file_path    : pathlib.Path | None = None,
+        file_path    : core.Path | None = None,
         image_quality: int                 = 95,
         max_n        : int          | None = 8,
         nrow         : int          | None = 8,

@@ -15,7 +15,11 @@ import cv2
 import numpy as np
 
 from mon.globals import EMBEDDERS
+from mon.vision import core
 from mon.vision.feature import base
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region HOGEmbedder

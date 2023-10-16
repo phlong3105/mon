@@ -24,9 +24,11 @@ __all__ = [
     "SateHaze1KThinDataModule",
 ]
 
-from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.vision.dataset import base
+from mon.vision import core
+from mon.vision.data import base
+
+console = core.console
 
 
 # region Dataset
@@ -48,7 +50,7 @@ class DenseHaze(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -61,13 +63,13 @@ class DenseHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("haze", "hazefree")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -89,7 +91,7 @@ class IHaze(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("haze/*.jpg")),
@@ -102,13 +104,13 @@ class IHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing I-Haze {self.split} labels"
             ):
                 path  = str(img.path).replace("haze", "hazefree")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -130,7 +132,7 @@ class NHHaze(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("haze/*.png")),
@@ -143,13 +145,13 @@ class NHHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("haze", "hazefree")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -171,7 +173,7 @@ class OHaze(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("haze/*.jpg")),
@@ -184,13 +186,13 @@ class OHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("haze", "hazefree")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
                 
@@ -212,7 +214,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root
             for path in pbar.track(
                 list(pattern.rglob(f"{self.split}/input/*.png")),
@@ -225,13 +227,13 @@ class SateHaze1K(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("input", "target")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -252,7 +254,7 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "thin" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
@@ -265,13 +267,13 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("input", "target")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -292,7 +294,7 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "moderate" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
@@ -305,13 +307,13 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("input", "target")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -332,7 +334,7 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "thick" / self.split
             for path in pbar.track(
                 list(pattern.rglob(f"input/*.png")),
@@ -345,13 +347,13 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("input", "target")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 

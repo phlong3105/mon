@@ -15,13 +15,13 @@ from typing import Sequence
 
 import torch
 
-from mon import nn
-from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
-from mon.nn import functional as F
+from mon.vision import core, nn
 from mon.vision.classify import base
+from mon.vision.nn import functional as F
 
-_current_dir = pathlib.Path(__file__).absolute().parent
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Module

@@ -9,9 +9,11 @@ __all__ = [
     "KODASLoL19", "KODASLoL19DataModule",
 ]
 
-from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.vision.dataset import base
+from mon.vision import core
+from mon.vision.data import base
+
+console = core.console
 
 
 # region Dataset
@@ -32,7 +34,7 @@ class KODASLoL19(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "low"
             for path in pbar.track(
                 list(pattern.rglob("*.png")),
@@ -45,13 +47,13 @@ class KODASLoL19(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 

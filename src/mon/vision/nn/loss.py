@@ -21,10 +21,13 @@ import numpy as np
 import piqa
 import torch
 
-from mon import nn
+from mon import core, nn
 from mon.globals import LOSSES, Reduction
 from mon.nn import functional as F
 from mon.nn.loss import *
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Image Loss

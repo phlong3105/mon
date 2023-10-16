@@ -140,7 +140,7 @@ See Also: :class:`lightning.pytorch.loggers.tensorboard.TensorBoardLogger`
 
 debug = {
     "every_best_epoch": True,   # Show only the best epochs.
-    "every_n_epochs"  : 200,    # Number of epochs between debugging (0 = disable).
+    "every_n_epochs"  : 500,    # Number of epochs between debugging (0 = disable).
     "image_quality"   : 95,     # Image quality to be saved.
     "max_n"           : 8,      # Show max `n` images.
     "nrow"            : 8,      # The maximum number of items to display in a row

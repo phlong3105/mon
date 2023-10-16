@@ -19,6 +19,9 @@ from ultralytics.nn import tasks
 from ultralytics.yolo.data import augment
 from ultralytics.yolo.utils import checks, ops
 
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
+
 
 # region YOLOv8
 

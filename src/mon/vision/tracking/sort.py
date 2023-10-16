@@ -11,11 +11,12 @@ __all__ = [
 
 import numpy as np
 
-from mon.core import console
 from mon.globals import TRACKERS
-from mon.vision import geometry
+from mon.vision import core, geometry
 from mon.vision.tracking import base, motion as mmotion
 
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 np.random.seed(0)
 
 

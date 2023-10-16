@@ -22,14 +22,12 @@ import uuid
 import numpy as np
 import torch
 
-from mon.core import file, pathlib
-from mon.nn import data
-from mon.vision import core, geometry, io
+from mon.vision import core, geometry, io, nn
 
 
 # region Classification
 
-class ClassificationLabel(data.Label):
+class ClassificationLabel(nn.Label):
     """A classification label for an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -85,7 +83,7 @@ class ClassificationLabel(data.Label):
         return [self.id_, self.label]
         
 
-class ClassificationsLabel(list[ClassificationLabel], data.Label):
+class ClassificationsLabel(list[ClassificationLabel], nn.Label):
     """A list of classification labels for an image. It is used for multi-labels
     or multi-classes classification tasks.
     
@@ -130,7 +128,7 @@ class ClassificationsLabel(list[ClassificationLabel], data.Label):
 
 # region Object Detection
 
-class DetectionLabel(data.Label):
+class DetectionLabel(nn.Label):
     """An object detection data. Usually, it is represented as a list of
     bounding boxes (for an object with multiple parts created by an occlusion),
     and an instance mask.
@@ -261,7 +259,7 @@ class DetectionLabel(data.Label):
         raise NotImplementedError(f"This function has not been implemented!")
 
 
-class DetectionsLabel(list[DetectionLabel], data.Label):
+class DetectionsLabel(list[DetectionLabel], nn.Label):
     """A list of object detection labels in an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -403,15 +401,15 @@ class VOCDetectionsLabel(DetectionsLabel):
     
     def __init__(
         self,
-        path       : pathlib.Path = "",
+        path       : core.Path = "",
         source     : dict = {"database": "Unknown"},
         size       : dict = {"width": 0, "height": 0, "depth": 3},
         segmented  : int  = 0,
-        classlabels: data.ClassLabels | None = None,
+        classlabels: nn.ClassLabels | None = None,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.path        = pathlib.Path(path)
+        self.path        = core.Path(path)
         self.source      = source
         self.size        = size
         self.segmented   = segmented
@@ -420,8 +418,8 @@ class VOCDetectionsLabel(DetectionsLabel):
     @classmethod
     def from_file(
         cls,
-        path       : pathlib.Path | str,
-        classlabels: data.ClassLabels | None = None
+        path       : core.Path | str,
+        classlabels: nn.ClassLabels | None = None
     ) -> VOCDetectionsLabel:
         """Create a :class:`VOCDetections` object from a `.xml` file.
         
@@ -432,13 +430,13 @@ class VOCDetectionsLabel(DetectionsLabel):
         Return:
             A :class:`VOCDetections` object.
         """
-        path = pathlib.Path(path)
+        path = core.Path(path)
         if not path.is_xml_file():
             raise ValueError(
                 f"path must be a valid path to an .xml file, but got {path}."
             )
         
-        xml_data = file.read_from_file(path=path)
+        xml_data = core.read_from_file(path=path)
         if "annotation" not in xml_data:
             raise ValueError("xml_data must contain the 'annotation' key.")
        
@@ -468,7 +466,7 @@ class VOCDetectionsLabel(DetectionsLabel):
 
             if name.isnumeric():
                 id = int(name)
-            elif isinstance(classlabels, data.ClassLabels):
+            elif isinstance(classlabels, nn.ClassLabels):
                 id = classlabels.get_id(key="name", value=name)
             else:
                 id = -1
@@ -503,7 +501,7 @@ class YOLODetectionsLabel(DetectionsLabel):
     """
     
     @classmethod
-    def from_file(cls, path: pathlib.Path) -> YOLODetectionsLabel:
+    def from_file(cls, path: core.Path) -> YOLODetectionsLabel:
         """Create a :class:`YOLODetectionsLabel` object from a `.txt` file.
         
         Args:
@@ -512,7 +510,7 @@ class YOLODetectionsLabel(DetectionsLabel):
         Return:
             A :class:`YOLODetections` object.
         """
-        path = pathlib.Path(path)
+        path = core.Path(path)
         if not path.is_txt_file():
             raise ValueError(
                 f"path must be a valid path to an .txt file, but got {path}."
@@ -534,7 +532,7 @@ class YOLODetectionsLabel(DetectionsLabel):
         return cls(detections=detections)
         
 
-class TemporalDetectionLabel(data.Label):
+class TemporalDetectionLabel(nn.Label):
     """An object detection label in a video whose support is defined by a start
     and end frame. Usually, it is represented as a list of bounding boxes (for
     an object with multiple parts created by an occlusion), and an instance
@@ -553,7 +551,7 @@ class TemporalDetectionLabel(data.Label):
 
 # region Heatmap
 
-class HeatmapLabel(data.Label):
+class HeatmapLabel(nn.Label):
     """A heatmap label in an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -576,7 +574,7 @@ class HeatmapLabel(data.Label):
 
 # region Image
 
-class ImageLabel(data.Label):
+class ImageLabel(nn.Label):
     """A ground-truth image label for an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -603,12 +601,12 @@ class ImageLabel(data.Label):
     
     def __init__(
         self,
-        id_           : int                 = uuid.uuid4().int,
-        name          : str          | None = None,
-        path          : pathlib.Path | None = None,
-        image         : np.ndarray   | None = None,
-        load_on_create: bool                = False,
-        keep_in_memory: bool                = False,
+        id_           : int               = uuid.uuid4().int,
+        name          : str        | None = None,
+        path          : core.Path  | None = None,
+        image         : np.ndarray | None = None,
+        load_on_create: bool              = False,
+        keep_in_memory: bool              = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -617,7 +615,7 @@ class ImageLabel(data.Label):
         self.keep_in_memory = keep_in_memory
         
         if path is not None:
-            path = pathlib.Path(path)
+            path = core.Path(path)
             if not path.is_image_file():
                 raise ValueError(
                     f"path must be a valid path to an image file, but got {path}."
@@ -625,7 +623,7 @@ class ImageLabel(data.Label):
         self.path = path
         
         if name is None:
-            name = str(pathlib.Path(path).name) if path.is_image_file() else f"{id_}"
+            name = str(core.Path(path).name) if path.is_image_file() else f"{id_}"
         self.name = name
 
         if load_on_create and image is None:
@@ -638,7 +636,7 @@ class ImageLabel(data.Label):
     
     def load(
         self,
-        path          : pathlib.Path | None = None,
+        path          : core.Path | None = None,
         keep_in_memory: bool = False,
     ) -> np.ndarray:
         """Loads image into memory.
@@ -654,7 +652,7 @@ class ImageLabel(data.Label):
         self.keep_in_memory = keep_in_memory
         
         if path is not None:
-            path = pathlib.Path(path)
+            path = core.Path(path)
             if path.is_image_file():
                 self.path = path
         if not self.path.is_image_file():
@@ -700,7 +698,7 @@ class ImageLabel(data.Label):
 
 # region Keypoint
 
-class KeypointLabel(data.Label):
+class KeypointLabel(nn.Label):
     """A list keypoints label for a single object in an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -760,7 +758,7 @@ class KeypointLabel(data.Label):
         ]
 
 
-class KeypointsLabel(list[KeypointLabel], data.Label):
+class KeypointsLabel(list[KeypointLabel], nn.Label):
     """A list of keypoint labels for multiple objects in an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -814,7 +812,7 @@ class COCOKeypointsLabel(KeypointsLabel):
 
 # region Polyline
 
-class PolylineLabel(data.Label):
+class PolylineLabel(nn.Label):
     """A set of semantically related polylines or polygons for a single object
     in an image.
     
@@ -966,7 +964,7 @@ class PolylineLabel(data.Label):
         pass
 
 
-class PolylinesLabel(list[PolylineLabel], data.Label):
+class PolylinesLabel(list[PolylineLabel], nn.Label):
     """A list of polylines or polygon labels for multiple objects in an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -1066,7 +1064,7 @@ class PolylinesLabel(list[PolylineLabel], data.Label):
 
 # region Regression
 
-class RegressionLabel(data.Label):
+class RegressionLabel(nn.Label):
     """A single regression value.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -1100,7 +1098,7 @@ class RegressionLabel(data.Label):
 
 # region Segmentation
 
-class SegmentationLabel(data.Label):
+class SegmentationLabel(nn.Label):
     """A semantic segmentation label in an image.
     
     See Also: :class:`mon.nn.data.label.Label`.
@@ -1125,12 +1123,12 @@ class SegmentationLabel(data.Label):
     
     def __init__(
         self,
-        id_           : int                 = uuid.uuid4().int,
-        name          : str          | None = None,
-        path          : pathlib.Path | None = None,
-        mask          : np.ndarray   | None = None,
-        load_on_create: bool                = False,
-        keep_in_memory: bool                = False,
+        id_           : int               = uuid.uuid4().int,
+        name          : str        | None = None,
+        path          : core.Path  | None = None,
+        mask          : np.ndarray | None = None,
+        load_on_create: bool              = False,
+        keep_in_memory: bool              = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -1139,7 +1137,7 @@ class SegmentationLabel(data.Label):
         self.keep_in_memory = keep_in_memory
         
         if path is not None:
-            path = pathlib.Path(path)
+            path = core.Path(path)
             if not path.is_image_file():
                 raise ValueError(
                     f"path must be a valid path to an image file, but got {path}."
@@ -1147,7 +1145,7 @@ class SegmentationLabel(data.Label):
         self.path = path
         
         if name is None:
-            name = str(pathlib.Path(path).name) if path.is_image_file() else f"{id_}"
+            name = str(core.Path(path).name) if path.is_image_file() else f"{id_}"
         self.name = name
 
         if load_on_create and mask is None:
@@ -1160,8 +1158,8 @@ class SegmentationLabel(data.Label):
     
     def load(
         self,
-        path          : pathlib.Path | None = None,
-        keep_in_memory: bool                = False,
+        path          : core.Path | None = None,
+        keep_in_memory: bool             = False,
     ) -> np.ndarray:
         """Load segmentation mask image into memory.
         
@@ -1176,7 +1174,7 @@ class SegmentationLabel(data.Label):
         self.keep_in_memory = keep_in_memory
         
         if path is not None:
-            path = pathlib.Path(path)
+            path = core.Path(path)
             if path.is_image_file():
                 self.path = path
         if not path.is_image_file():

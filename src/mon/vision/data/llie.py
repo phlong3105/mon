@@ -39,9 +39,11 @@ __all__ = [
     "VVDataModule",
 ]
 
-from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ImageFormat, ModelPhase
-from mon.vision.dataset import base
+from mon.vision import core
+from mon.vision.data import base
+
+console = core.console
 
 
 # region Dataset
@@ -58,7 +60,7 @@ class DarkFace(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "darkface" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -81,7 +83,7 @@ class DeepUPE(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "lol" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -94,13 +96,13 @@ class DeepUPE(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -122,7 +124,7 @@ class DICM(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "dicm" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -145,7 +147,7 @@ class ExDark(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "exdark" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -168,7 +170,7 @@ class Fusion(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "fusion" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -192,7 +194,7 @@ class GLADNet(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "gladnet" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -205,13 +207,13 @@ class GLADNet(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -236,7 +238,7 @@ class LIME(base.UnlabeledImageDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "train" / "low" / "lime"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -272,7 +274,7 @@ class LLIE(base.UnlabeledImageDataset):
             self.root / "train/ve-lol/low",
         ]
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for subdir in subdirs:
                 for path in pbar.track(
                     list(subdir.rglob("*")),
@@ -298,7 +300,7 @@ class LOL(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "lol" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -311,13 +313,13 @@ class LOL(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -340,7 +342,7 @@ class LOL123(base.UnlabeledImageDataset):
         """Get image files."""
         subdirs = ["dicm", "lime", "mef", "npe", "vv"]
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for subdir in subdirs:
                 pattern = self.root / "test" / subdir / "low"
                 for path in pbar.track(
@@ -364,7 +366,7 @@ class MEF(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "mef" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -387,7 +389,7 @@ class NPE(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "npe" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -410,7 +412,7 @@ class SICEGrad(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "sice-grad" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -423,13 +425,13 @@ class SICEGrad(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -451,7 +453,7 @@ class SICEMix(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "sice-mix" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -464,13 +466,13 @@ class SICEMix(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path = str(img.path).replace("low", "high")
-                path = pathlib.Path(path)
+                path = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -493,7 +495,7 @@ class SICEZeroDCE(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "train" / "sice-zerodce" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -520,7 +522,7 @@ class VELOL(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "ve-lol" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -533,13 +535,13 @@ class VELOL(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -565,7 +567,7 @@ class VELOLSyn(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split / "ve-lol-sync" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -578,13 +580,13 @@ class VELOLSyn(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("low", "high")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 for ext in ImageFormat.values():
                     temp = path.parent / f"{path.stem}{ext}"
                     if temp.exists():
@@ -606,7 +608,7 @@ class VV(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "test" / "vv" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),

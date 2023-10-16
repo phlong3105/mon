@@ -24,12 +24,15 @@ import thop
 import torch
 import torchmetrics
 
-from mon import nn
-from mon.core import console
+from mon import core, nn
 from mon.globals import METRICS
 # noinspection PyUnresolvedReferences
 from mon.nn.metric import *
 from mon.vision import core
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
+
 
 # region Image Metric
 

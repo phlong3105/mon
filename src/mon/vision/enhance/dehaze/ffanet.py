@@ -13,13 +13,13 @@ from typing import Any, Sequence
 
 import torch
 
-from mon import nn
-from mon.core import builtins, pathlib
 from mon.globals import LAYERS, MODELS
-from mon.nn import _size_2_t
+from mon.nn.typing import _size_2_t
+from mon.vision import core, nn
 from mon.vision.enhance.dehaze import base
 
-_current_dir = pathlib.Path(__file__).absolute().parent
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Module
@@ -70,7 +70,7 @@ class FFA(nn.SameChannelsLayerParsingMixin, nn.Module):
     def forward(self, input: Sequence[torch.Tensor]) -> torch.Tensor:
         x = input
         assert isinstance(x, list | tuple) and len(x) == self.num_groups
-        w = self.ca(torch.cat(builtins.to_list(x), dim=1))
+        w = self.ca(torch.cat(core.to_list(x), dim=1))
         w = w.view(-1, self.num_groups, self.channels)[:, :, :, None, None]
         y = w[:, 0, ::] * x[0]
         for i in range(1, len(x)):

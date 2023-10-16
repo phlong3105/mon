@@ -13,6 +13,10 @@ __all__ = [
 import numpy as np
 
 from mon.globals import ShapeCode
+from mon.vision import core
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Conversion

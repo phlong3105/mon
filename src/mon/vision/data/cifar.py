@@ -13,16 +13,17 @@ __all__ = [
 import pickle
 
 import numpy as np
-from torch.utils.data import random_split
 from torchvision.datasets.utils import (
     check_integrity,
     download_and_extract_archive,
 )
 
-from mon.core import console
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.nn import data as md
-from mon.vision.dataset import base
+from mon.vision import core, nn
+from mon.vision.data import base
+
+console = core.console
+
 
 # region ClassLabels
 
@@ -337,7 +338,7 @@ class CIFAR10DataModule(base.DataModule):
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
-        self.classlabels = md.ClassLabels.from_value(value=cifar_10_classlabels)
+        self.classlabels = nn.ClassLabels.from_value(value=cifar_10_classlabels)
 
 
 @DATAMODULES.register(name="cifar-100")
@@ -388,7 +389,7 @@ class CIFAR100DataModule(base.DataModule):
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
-        self.classlabels = md.ClassLabels.from_value(value=cifar_100_classlabels)
+        self.classlabels = nn.ClassLabels.from_value(value=cifar_100_classlabels)
 
 
 # endregion

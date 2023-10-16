@@ -14,9 +14,12 @@ from typing import Any
 
 import torch
 
-from mon import nn as nn
 from mon.globals import LAYERS
-from mon.nn import _size_2_t
+from mon.nn.typing import _size_2_t
+from mon.vision import core, nn
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region UNet Block

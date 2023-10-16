@@ -12,9 +12,12 @@ __all__ = [
 
 from abc import ABC
 
-from mon.core import pathlib
 from mon.globals import ZOO_DIR
+from mon.vision import core
 from mon.vision.enhance import base
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Model
@@ -26,11 +29,11 @@ class LowLightImageEnhancementModel(base.ImageEnhancementModel, ABC):
     """
     
     @property
-    def config_dir(self) -> pathlib.Path:
-        return pathlib.Path(__file__).absolute().parent / "config"
+    def config_dir(self) -> core.Path:
+        return core.Path(__file__).absolute().parent / "config"
     
     @property
-    def zoo_dir(self) -> pathlib.Path:
+    def zoo_dir(self) -> core.Path:
         return ZOO_DIR / "vision" / "enhance" / "llie" / self.name
     
 # endregion

@@ -15,9 +15,10 @@ from typing import Any
 import numpy as np
 import torch
 
-from mon import nn
-from mon.core import pathlib
-from mon.vision import core
+from mon.vision import core, nn
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Embedder
@@ -59,7 +60,7 @@ class DeepEmbedder(Embedder, ABC):
     
     def __init__(
         self,
-        config    : dict | pathlib.Path | None,
+        config    : dict | core.Path | None,
         weight    : Any,
         image_size: int | list[int] = 224,
         device    : int | str | list[int | str] = "cpu",
@@ -82,15 +83,15 @@ class DeepEmbedder(Embedder, ABC):
     
     @weight.setter
     def weight(self, weight: Any):
-        if isinstance(weight, pathlib.Path | str):
-            weight = pathlib.Path(weight)
+        if isinstance(weight, core.Path | str):
+            weight = core.Path(weight)
             if not weight.is_torch_file():
                 raise ValueError(
                     f"weight must be a valid path to a torch saved file, but "
                     f"got {weight}."
                 )
         elif isinstance(weight, list | tuple):
-            weight = [pathlib.Path(w) for w in weight]
+            weight = [core.Path(w) for w in weight]
             if not all(w.is_torch_file for w in weight):
                 raise ValueError(
                     f"weight must be a valid path to a torch saved file, but "

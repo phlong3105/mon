@@ -26,14 +26,16 @@ import numpy as np
 import torch
 import torchvision
 
-from mon.core import pathlib
 from mon.vision import core
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Read
 
 def read_image(
-    path     : pathlib.Path,
+    path     : core.Path,
     to_rgb   : bool = True,
     to_tensor: bool = False,
     normalize: bool = False,
@@ -130,7 +132,7 @@ class Loader(ABC):
     
     def __init__(
         self,
-        source     : pathlib.Path,
+        source     : core.Path,
         max_samples: int | None = None,
         batch_size : int        = 1,
         to_rgb     : bool       = True,
@@ -140,7 +142,7 @@ class Loader(ABC):
         *args, **kwargs
     ):
         super().__init__()
-        self.source      = pathlib.Path(source)
+        self.source      = core.Path(source)
         self.batch_size  = batch_size
         self.to_rgb      = to_rgb
         self.to_tensor   = to_tensor
@@ -214,7 +216,7 @@ class ImageLoader(Loader):
     
     def __init__(
         self,
-        source     : pathlib.Path,
+        source     : core.Path,
         max_samples: int | None = None,
         batch_size : int        = 1,
         to_rgb     : bool       = True,
@@ -287,7 +289,7 @@ class ImageLoader(Loader):
         elif self.source.is_dir():
             images = [i for i in self.source.rglob("*") if i.is_image_file()]
         elif isinstance(self.source, str):
-            images = [pathlib.Path(i) for i in glob.glob(self.source)]
+            images = [core.Path(i) for i in glob.glob(self.source)]
             images = [i for i in images if i.is_image_file()]
         else:
             raise IOError(f"Error when listing image files.")
@@ -328,7 +330,7 @@ class VideoLoader(Loader, ABC):
     
     def __init__(
         self,
-        source     : pathlib.Path,
+        source     : core.Path,
         max_samples: int | None = None,
         batch_size : int        = 1,
         to_rgb     : bool       = True,
@@ -415,7 +417,7 @@ class VideoLoaderCV(VideoLoader):
     
     def __init__(
         self,
-        source        : pathlib.Path,
+        source        : core.Path,
         max_samples   : int | None = None,
         batch_size    : int        = 1,
         to_rgb        : bool       = True,
@@ -555,7 +557,7 @@ class VideoLoaderCV(VideoLoader):
     
     def init(self):
         """Initialize the data source."""
-        source = pathlib.Path(self.source)
+        source = core.Path(self.source)
         if source.is_video_file():
             self.video_capture = cv2.VideoCapture(
                 str(source),
@@ -617,7 +619,7 @@ class VideoLoaderFFmpeg(VideoLoader):
     
     def __init__(
         self,
-        source     : pathlib.Path,
+        source     : core.Path,
         max_samples: int  = 0,
         batch_size : int  = 1,
         to_rgb     : bool = True,
@@ -775,7 +777,7 @@ class VideoLoaderFFmpeg(VideoLoader):
 
 def write_image_cv(
     image      : torch.Tensor | np.ndarray,
-    dir_path   : pathlib.Path,
+    dir_path   : core.Path,
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
@@ -803,9 +805,9 @@ def write_image_cv(
             f"{image.ndim}."
         )
     # Write image
-    dir_path  = pathlib.Path(dir_path)
+    dir_path  = core.Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
-    name      = pathlib.Path(name)
+    name      = core.Path(name)
     stem      = name.stem
     extension = extension  # name.suffix
     extension = f"{name.suffix}" if extension == "" else extension
@@ -818,7 +820,7 @@ def write_image_cv(
 
 def write_image_torch(
     image      : torch.Tensor | np.ndarray,
-    dir_path   : pathlib.Path,
+    dir_path   : core.Path,
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
@@ -848,9 +850,9 @@ def write_image_torch(
             f"{image.ndim}."
         )
     # Write image
-    dir_path  = pathlib.Path(dir_path)
+    dir_path  = core.Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
-    name      = pathlib.Path(name)
+    name      = core.Path(name)
     stem      = name.stem
     extension = extension  # name.suffix
     extension = f"{name.suffix}" if extension == "" else extension
@@ -866,7 +868,7 @@ def write_image_torch(
 
 def write_images_cv(
     images     : list[torch.Tensor | np.ndarray],
-    dir_path   : pathlib.Path,
+    dir_path   : core.Path,
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
@@ -908,7 +910,7 @@ def write_images_cv(
 
 def write_images_torch(
     images     : Sequence[torch.Tensor | np.ndarray],
-    dir_path   : pathlib.Path,
+    dir_path   : core.Path,
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
@@ -999,14 +1001,14 @@ class Writer(ABC):
     
     def __init__(
         self,
-        destination: pathlib.Path,
+        destination: core.Path,
         image_size : int | list[int] = [480, 640],
         denormalize: bool = False,
         verbose    : bool = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.dst         = pathlib.Path(destination)
+        self.dst         = core.Path(destination)
         self.img_size    = core.get_hw(size=image_size)
         self.denormalize = denormalize
         self.verbose     = verbose
@@ -1035,7 +1037,7 @@ class Writer(ABC):
     def write(
         self,
         image      : torch.Tensor | np.ndarray,
-        path       : pathlib.Path | None = None,
+        path       : core.Path | None = None,
         denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
@@ -1052,7 +1054,7 @@ class Writer(ABC):
     def write_batch(
         self,
         images     : list[torch.Tensor  | np.ndarray],
-        paths      : list[pathlib.Path] | None = None,
+        paths      : list[core.Path] | None = None,
         denormalize: bool = False
     ):
         """Write a batch of images to :attr:`dst`.
@@ -1082,7 +1084,7 @@ class ImageWriter(Writer):
     
     def __init__(
         self,
-        destination: pathlib.Path,
+        destination: core.Path,
         image_size : int | list[int] = [480, 640],
         extension  : str  = ".png",
         denormalize: bool = False,
@@ -1115,7 +1117,7 @@ class ImageWriter(Writer):
     def write(
         self,
         image      : torch.Tensor | np.ndarray,
-        path       : pathlib.Path | None = None,
+        path       : core.Path | None = None,
         denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
@@ -1126,13 +1128,13 @@ class ImageWriter(Writer):
             denormalize: If ``True``, convert image to :math:`[0, 255]`.
                 Default: ``False``.
         """
-        if isinstance(path, pathlib.Path):
+        if isinstance(path, core.Path):
             path = self.dst / f"{path.stem}{self.extension}"
         elif isinstance(path, str):
             path = self.dst / path
         else:
             raise ValueError(f"'file' must be given.")
-        path = pathlib.Path(path)
+        path = core.Path(path)
         write_image_cv(
             image       = image,
             dir_path= path.parent,
@@ -1145,7 +1147,7 @@ class ImageWriter(Writer):
     def write_batch(
         self,
         images     : list[torch.Tensor | np.ndarray],
-        paths      : list[pathlib.Path] | None = None,
+        paths      : list[core.Path] | None = None,
         denormalize: bool = False,
     ):
         """Write a batch of images to :attr:`dst`.
@@ -1183,7 +1185,7 @@ class VideoWriter(Writer, ABC):
     
     def __init__(
         self,
-        destination: pathlib.Path,
+        destination: core.Path,
         image_size : int | list[int] = [480, 640],
         frame_rate : float = 10,
         save_image : bool  = False,
@@ -1220,7 +1222,7 @@ class VideoWriterCV(VideoWriter):
     
     def __init__(
         self,
-        destination: pathlib.Path,
+        destination: core.Path,
         image_size : list[int] = [480, 640],
         frame_rate : float = 30,
         fourcc     : str   = "mp4v",
@@ -1271,7 +1273,7 @@ class VideoWriterCV(VideoWriter):
     def write(
         self,
         image      : torch.Tensor | np.ndarray,
-        path       : pathlib.Path | None = None,
+        path       : core.Path | None = None,
         denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
@@ -1286,7 +1288,7 @@ class VideoWriterCV(VideoWriter):
             write_image_cv(
                 image       = image,
                 dir_path= self.dst,
-                name        = f"{pathlib.Path(path).stem}.png",
+                name        = f"{core.Path(path).stem}.png",
                 prefix      = "",
                 extension   =".png",
                 denormalize = denormalize or self.denormalize
@@ -1306,7 +1308,7 @@ class VideoWriterCV(VideoWriter):
     def write_batch(
         self,
         images     : list[torch.Tensor | np.ndarray],
-        paths      : list[pathlib.Path] | None = None,
+        paths      : list[core.Path] | None = None,
         denormalize: bool  = False
     ):
         """Write a batch of images to :attr:`dst`.
@@ -1342,7 +1344,7 @@ class VideoWriterFFmpeg(VideoWriter):
     
     def __init__(
         self,
-        destination: pathlib.Path,
+        destination: core.Path,
         image_size : int | list[int] = [480, 640],
         frame_rate : float = 10,
         pix_fmt    : str   = "yuv420p",
@@ -1419,7 +1421,7 @@ class VideoWriterFFmpeg(VideoWriter):
     def write(
         self,
         image      : torch.Tensor | np.ndarray,
-        path       : pathlib.Path | None = None,
+        path       : core.Path | None = None,
         denormalize: bool = False
     ):
         """Write an image to :attr:`dst`.
@@ -1431,11 +1433,11 @@ class VideoWriterFFmpeg(VideoWriter):
                 Default: ``False``.
         """
         if self.save_image:
-            assert isinstance(path, pathlib.Path)
+            assert isinstance(path, core.Path)
             write_image_cv(
                 image       = image,
                 dir_path= self.dst,
-                name        = f"{pathlib.Path(path).stem}.png",
+                name        = f"{core.Path(path).stem}.png",
                 prefix      = "",
                 extension   =".png",
                 denormalize = denormalize or self.denormalize
@@ -1451,7 +1453,7 @@ class VideoWriterFFmpeg(VideoWriter):
     def write_batch(
         self,
         images     : list[torch.Tensor | np.ndarray],
-        paths      : list[pathlib.Path] | None = None,
+        paths      : list[core.Path] | None = None,
         denormalize: bool = False,
     ):
         """Write a batch of images to :attr:`dst`.

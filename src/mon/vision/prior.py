@@ -13,9 +13,10 @@ __all__ = [
 import cv2
 import numpy as np
 
-from mon import core
+from mon.vision import core
 
-console = core.console
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Image Feature Prior: Intensity & Gradient

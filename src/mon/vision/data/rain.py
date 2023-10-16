@@ -28,9 +28,11 @@ __all__ = [
     "Rain800DataModule",
 ]
 
-from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.vision.dataset import base
+from mon.vision import core
+from mon.vision.data import base
+
+console = core.console
 
 
 # region Dataset
@@ -47,7 +49,7 @@ class GTRain(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("*-R-*.png")),
@@ -60,14 +62,14 @@ class GTRain(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path)
                 path  = path[: path.find("-R-")] + "-C-000.png"
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
                 
@@ -85,7 +87,7 @@ class Rain100(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.png")),
@@ -98,13 +100,13 @@ class Rain100(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -122,7 +124,7 @@ class Rain100H(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.png")),
@@ -135,13 +137,13 @@ class Rain100H(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -159,7 +161,7 @@ class Rain100L(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.png")),
@@ -172,13 +174,13 @@ class Rain100L(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -195,7 +197,7 @@ class Rain12(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.png")),
@@ -208,13 +210,13 @@ class Rain12(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -232,7 +234,7 @@ class Rain1200(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.jpg")),
@@ -245,13 +247,13 @@ class Rain1200(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -268,7 +270,7 @@ class Rain13K(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / "*" / self.split / "rain"
             for path in pbar.track(
                 list(pattern.rglob("*")),
@@ -281,7 +283,7 @@ class Rain13K(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} "
@@ -291,7 +293,7 @@ class Rain13K(base.ImageEnhancementDataset):
                 grand_parent = path.parent.parent
                 name  = path.name
                 path  = grand_parent / "no_rain" / name
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -309,7 +311,7 @@ class Rain1400(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.jpg")),
@@ -322,13 +324,13 @@ class Rain1400(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -345,7 +347,7 @@ class Rain2800(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.jpg")),
@@ -358,13 +360,13 @@ class Rain2800(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -381,7 +383,7 @@ class Rain800(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("rain/*.jpg")),
@@ -394,13 +396,13 @@ class Rain800(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("rain", "no_rain")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 

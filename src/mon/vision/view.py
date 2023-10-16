@@ -20,9 +20,12 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 
-from mon.core import builtins, math
-from mon.nn import data as md
-from mon.vision import core
+from mon.vision import core, nn
+
+math         = core.math
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
+
 
 # mpl.use("wxAgg")
 
@@ -114,7 +117,7 @@ def imshow(
     image = image[: max_n]
     
     if label is not None:
-        label = builtins.to_list(x=label)
+        label = core.to_list(x=label)
         label = label[:max_n]
         if not len(image) == len(label):
             raise ValueError(
@@ -163,7 +166,7 @@ def imshow_classification(
     pred       : Any                    = None,
     target     : Any                    = None,
     label      : str | list[str] | None = None,
-    classlabels: md.ClassLabels | None  = None,
+    classlabels: nn.ClassLabels  | None = None,
     top_k      : int  | None            = 5,
     denormalize: bool                   = True,
     scale      : int                    = 1,
@@ -205,7 +208,7 @@ def imshow_classification(
     image = core.to_list_of_3d_image(image)
     max_n = max_n if isinstance(max_n, int) else len(image)
     top_k = top_k if isinstance(top_k, int) else (
-        len(classlabels) if isinstance(classlabels, md.ClassLabels) else 5
+        len(classlabels) if isinstance(classlabels, nn.ClassLabels) else 5
     )
     image = image[: max_n]
     
@@ -221,7 +224,7 @@ def imshow_classification(
     else:
         scores_topk = [[0.0] * top_k for _ in range(len(image))]
     
-    if isinstance(classlabels, md.ClassLabels):
+    if isinstance(classlabels, nn.ClassLabels):
         if pred_topk:
             pred_topk = [
                 [classlabels.get_name(key="id", value=v) for v in p]

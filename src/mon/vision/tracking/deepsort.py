@@ -14,7 +14,11 @@ __all__ = [
 import numpy as np
 
 from mon.globals import TRACKERS
+from mon.vision import core
 from mon.vision.tracking import base
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 np.random.seed(0)
 

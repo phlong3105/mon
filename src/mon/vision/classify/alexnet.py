@@ -9,12 +9,12 @@ __all__ = [
     "AlexNet",
 ]
 
-from mon import nn
-from mon.core import pathlib
 from mon.globals import MODELS
+from mon.vision import core, nn
 from mon.vision.classify import base
 
-_current_dir = pathlib.Path(__file__).absolute().parent
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Model

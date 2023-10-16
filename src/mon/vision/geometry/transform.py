@@ -71,3 +71,8 @@ __all__ = [
     "warp_perspective",
     "warp_perspective3d",
 ]
+
+from mon.vision import core
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent

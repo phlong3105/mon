@@ -14,13 +14,14 @@ from typing import Any
 import kornia
 import torch
 
-from mon.core import math, pathlib
 from mon.globals import LAYERS, MODELS
-from mon.vision import nn
+from mon.vision import core, nn
 from mon.vision.enhance.llie import base
 from mon.vision.nn import functional as F
 
-_current_dir = pathlib.Path(__file__).absolute().parent
+math         = core.math
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Module
@@ -672,8 +673,8 @@ class ZeroDCEv2(base.LowLightImageEnhancementModel):
         # self.apply(self.init_weights)
         
     @property
-    def config_dir(self) -> pathlib.Path:
-        return pathlib.Path(__file__).absolute().parent / "config"
+    def config_dir(self) -> core.Path:
+        return core.Path(__file__).absolute().parent / "config"
     
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__

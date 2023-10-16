@@ -19,9 +19,11 @@ import cv2
 import numpy as np
 
 from mon.globals import AppleRGB, MOTIONS, MovingState
-from mon.nn import data as mdata
-from mon.vision import drawing, geometry
+from mon.vision import core, drawing, geometry, nn
 from mon.vision.tracking import motion as mmotion
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Instance
@@ -228,7 +230,7 @@ class MovingObject(list[Instance], Object):
     
     @property
     def majority_label(self) -> dict:
-        return mdata.majority_voting(labels=self.classlabels)
+        return nn.majority_voting(labels=self.classlabels)
     
     @property
     def majority_label_id(self) -> int:

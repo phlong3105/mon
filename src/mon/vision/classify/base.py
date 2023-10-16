@@ -13,10 +13,12 @@ from abc import ABC
 
 import torch
 
-from mon import nn
 from mon.core import pathlib
 from mon.globals import ZOO_DIR
-from mon.vision import view
+from mon.vision import core, nn, view
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Model

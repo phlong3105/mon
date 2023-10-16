@@ -10,9 +10,11 @@ __all__ = [
     "Snow100KM", "Snow100KMDataModule", "Snow100KS", "Snow100KSDataModule",
 ]
 
-from mon.core import console, pathlib, rich
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.vision.dataset import base
+from mon.vision import core
+from mon.vision.data import base
+
+console = core.console
 
 
 # region Dataset
@@ -32,7 +34,7 @@ class Snow100K(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 list(pattern.rglob("synthetic/*.jpg")),
@@ -45,13 +47,13 @@ class Snow100K(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("synthetic", "gt")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -71,7 +73,7 @@ class Snow100KS(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / self.split
             else:
@@ -87,13 +89,13 @@ class Snow100KS(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("synthetic", "gt")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -113,7 +115,7 @@ class Snow100KM(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / self.split
             else:
@@ -129,13 +131,13 @@ class Snow100KM(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("synthetic", "gt")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 
@@ -155,7 +157,7 @@ class Snow100KL(base.ImageEnhancementDataset):
             )
         
         self.images: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             if self.split == "train":
                 pattern = self.root / self.split
             else:
@@ -171,13 +173,13 @@ class Snow100KL(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("synthetic", "gt")
-                path  = pathlib.Path(path)
+                path  = core.Path(path)
                 label = base.ImageLabel(path=path)
                 self.labels.append(label)
 

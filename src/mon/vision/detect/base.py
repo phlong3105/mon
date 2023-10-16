@@ -15,9 +15,10 @@ from typing import Any
 import numpy as np
 import torch
 
-from mon import nn
-from mon.core import pathlib
-from mon.vision import core, tracking
+from mon.vision import core, nn, tracking
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Detector

@@ -14,14 +14,14 @@ from typing import Any
 
 import torch
 
-from mon.core import pathlib
 from mon.globals import LAYERS, MODELS
 from mon.nn.typing import _size_2_t
-from mon.vision import nn
+from mon.vision import core, nn
 from mon.vision.enhance.llie import base
 from mon.vision.nn import functional as F
 
-_current_dir = pathlib.Path(__file__).absolute().parent
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
 
 
 # region Layer

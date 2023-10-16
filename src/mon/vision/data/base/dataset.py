@@ -30,18 +30,17 @@ import cv2
 import numpy as np
 import torch
 
-from mon.core import console, file, pathlib, rich
 from mon.globals import BBoxFormat
-from mon.nn import data
-from mon.vision import core
-from mon.vision.dataset.base import label
+from mon.vision import core, nn
+from mon.vision.data.base import label
 
-DataModule = data.DataModule
+console    = core.console
+DataModule = nn.DataModule
 
 
 # region Unlabeled Dataset
 
-class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
+class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     images. This is mainly used for unsupervised learning tasks.
     
@@ -66,15 +65,15 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -86,7 +85,7 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
             *args, **kwargs
         )
         self.image_size  = core.get_hw(size=image_size)
-        self.classlabels = data.ClassLabels.from_value(value=classlabels)
+        self.classlabels = nn.ClassLabels.from_value(value=classlabels)
         self.images: list[label.ImageLabel] = []
         
         cache_file = self.root / f"{self.split}.cache"
@@ -142,7 +141,7 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
             raise RuntimeError(f"No images in dataset.")
         console.log(f"Number of samples: {len(self.images)}.")
     
-    def cache_data(self, path: pathlib.Path):
+    def cache_data(self, path: core.Path):
         """Cache data to :param:`path`."""
         cache = {"images": self.images}
         torch.save(cache, str(path))
@@ -151,7 +150,7 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
         """Cache images into memory for a faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -199,7 +198,7 @@ class UnlabeledImageDataset(data.UnlabeledDataset, ABC):
         return input, target, meta
 
 
-class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
+class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     videos. This is mainly used for unsupervised learning tasks.
     
@@ -227,15 +226,15 @@ class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
     
     def __init__(
         self,
-        root          : pathlib.Path,
-        split         : str                     = "train",
-        image_size    : int | list[int]         = 256,
-        classlabels   : data.ClassLabels | None = None,
-        max_samples   : int              | None = None,
-        transform     : A.Compose        | None = None,
-        to_tensor     : bool                    = False,
-        api_preference: int                     = cv2.CAP_FFMPEG,
-        verbose       : bool                    = True,
+        root          : core.Path,
+        split         : str                   = "train",
+        image_size    : int | list[int]       = 256,
+        classlabels   : nn.ClassLabels | None = None,
+        max_samples   : int            | None = None,
+        transform     : A.Compose      | None = None,
+        to_tensor     : bool                  = False,
+        api_preference: int                   = cv2.CAP_FFMPEG,
+        verbose       : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -249,7 +248,7 @@ class UnlabeledVideoDataset(data.UnlabeledDataset, ABC):
         )
         self.image_size     = core.get_hw(size=image_size)
         self.api_preference = api_preference
-        self.source         = pathlib.Path("")
+        self.source         = core.Path("")
         self.video_capture  = None
         self.index          = 0
         self.max_samples    = max_samples
@@ -382,15 +381,15 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -413,7 +412,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
                 f"root must be a valid directory, but got {self.root}."
             )
         
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             pattern = self.root / self.split
             for path in pbar.track(
                 pattern.rglob("*"),
@@ -432,7 +431,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
 
 # region Labeled Dataset
 
-class LabeledImageDataset(data.LabeledDataset, ABC):
+class LabeledImageDataset(nn.LabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     images.
     
@@ -456,15 +455,15 @@ class LabeledImageDataset(data.LabeledDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -476,7 +475,7 @@ class LabeledImageDataset(data.LabeledDataset, ABC):
             *args, **kwargs
         )
         self.image_size  = core.get_hw(size=image_size)
-        self.classlabels = data.ClassLabels.from_value(value=classlabels)
+        self.classlabels = nn.ClassLabels.from_value(value=classlabels)
         self.images: list[label.ImageLabel] = []
         if not hasattr(self, "labels"):
             self.labels = []
@@ -538,7 +537,7 @@ class LabeledImageDataset(data.LabeledDataset, ABC):
             )
         console.log(f"Number of {self.split} samples: {len(self.images)}.")
         
-    def cache_data(self, path: pathlib.Path):
+    def cache_data(self, path: core.Path):
         """Cache data to :param:`path`."""
         cache = {
             "images": self.images,
@@ -563,7 +562,7 @@ class LabeledImageDataset(data.LabeledDataset, ABC):
         pass
     
 
-class LabeledVideoDataset(data.LabeledDataset, ABC):
+class LabeledVideoDataset(nn.LabeledDataset, ABC):
     """The base class for datasets that represent an unlabeled collection of
     videos.
     
@@ -585,15 +584,15 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         self.labels: list[label.ClassificationLabel] = []
@@ -636,7 +635,7 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -722,16 +721,16 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        bbox_format : BBoxFormat              = BBoxFormat.XYXY,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         self.bbox_format = BBoxFormat.from_value(value=bbox_format)
@@ -782,7 +781,7 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -846,16 +845,16 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        bbox_format : BBoxFormat              = BBoxFormat.XYXY,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -880,7 +879,7 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
                 f"json_file must be a valid path to a .json file, but got "
                 f"{json_file}."
             )
-        json_data = file.read_from_file(json_file)
+        json_data = core.read_from_file(json_file)
         if not isinstance(json_data, dict):
             raise TypeError(
                 f"json_data must be a dict, but got {type(json_data)}."
@@ -918,7 +917,7 @@ class COCODetectionDataset(ImageDetectionDataset, ABC):
             iscrowd     = ann.get("iscrowd"    , False)
         
     @abstractmethod
-    def annotation_file(self) -> pathlib.Path:
+    def annotation_file(self) -> core.Path:
         """Return the path to json annotation file."""
         pass
     
@@ -937,16 +936,16 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        bbox_format : BBoxFormat              = BBoxFormat.XYXY,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -976,7 +975,7 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
             )
         
         self.labels: list[label.VOCDetectionsLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for f in pbar.track(
                 files,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -989,7 +988,7 @@ class VOCDetectionDataset(ImageDetectionDataset, ABC):
                 )
                 
     @abstractmethod
-    def annotation_files(self) -> list[pathlib.Path]:
+    def annotation_files(self) -> list[core.Path]:
         """Return the path to json annotation files."""
         pass
     
@@ -1007,16 +1006,16 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        bbox_format : BBoxFormat              = BBoxFormat.XYXY,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        bbox_format : BBoxFormat            = BBoxFormat.XYXY,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         super().__init__(
@@ -1046,7 +1045,7 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
             )
         
         self.labels: list[label.YOLODetectionsLabel] = []
-        with rich.get_progress_bar() as pbar:
+        with core.get_progress_bar() as pbar:
             for f in pbar.track(
                 files,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -1054,7 +1053,7 @@ class YOLODetectionDataset(ImageDetectionDataset, ABC):
                 self.labels.append(label.YOLODetectionsLabel.from_file(path=f))
         
     @abstractmethod
-    def annotation_files(self) -> list[pathlib.Path]:
+    def annotation_files(self) -> list[core.Path]:
         """Return the path to json annotation files."""
         pass
     
@@ -1076,15 +1075,15 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         self.labels: list[label.ImageLabel] = []
@@ -1127,7 +1126,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -1135,7 +1134,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
         
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
                 description=f"Caching {self.__class__.__name__} {self.split} labels"
@@ -1209,15 +1208,15 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
     
     def __init__(
         self,
-        root        : pathlib.Path,
-        split       : str                     = "train",
-        image_size  : int | list[int]         = 256,
-        classlabels : data.ClassLabels | None = None,
-        transform   : A.Compose        | None = None,
-        to_tensor   : bool                    = False,
-        cache_data  : bool                    = False,
-        cache_images: bool                    = False,
-        verbose     : bool                    = True,
+        root        : core.Path,
+        split       : str                   = "train",
+        image_size  : int | list[int]       = 256,
+        classlabels : nn.ClassLabels | None = None,
+        transform   : A.Compose      | None = None,
+        to_tensor   : bool                  = False,
+        cache_data  : bool                  = False,
+        cache_images: bool                  = False,
+        verbose     : bool                  = True,
         *args, **kwargs
     ):
         self.labels: list[label.SegmentationLabel] = []
@@ -1262,7 +1261,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         """Cache images into memory for faster training (WARNING: large
         datasets may exceed system RAM).
         """
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.images)),
                 description=f"Caching {self.__class__.__name__} {self.split} images"
@@ -1270,7 +1269,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
                 self.images[i].load(keep_in_memory=True)
         console.log(f"Images have been cached.")
         
-        with rich.get_download_bar() as pbar:
+        with core.get_download_bar() as pbar:
             for i in pbar.track(
                 range(len(self.labels)),
                 description=f"Caching {self.__class__.__name__} {self.split} labels"

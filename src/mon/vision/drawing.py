@@ -12,6 +12,11 @@ __all__ = [
 import cv2
 import numpy as np
 
+from mon.vision import core
+
+console      = core.console
+_current_dir = core.Path(__file__).absolute().parent
+
 
 # region Geometry
 

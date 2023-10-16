@@ -24,7 +24,7 @@ from torch.utils.data import random_split
 
 from mon import core
 from mon.vision import constant
-from mon.vision.dataset import base
+from mon.vision.data import base
 
 # region ClassLabels
 

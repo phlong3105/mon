@@ -21,10 +21,12 @@ from torchvision.datasets.utils import (
     download_and_extract_archive,
 )
 
-from mon.core import console, pathlib
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
-from mon.nn import data as md
-from mon.vision.dataset import base
+from mon.vision import core, nn
+from mon.vision.data import base
+
+console = core.console
+
 
 # region ClassLabels
 
@@ -137,7 +139,7 @@ class MNIST(base.ImageClassificationDataset):
     
     def _check_exists(self) -> bool:
         return all(
-            check_integrity(self.root / "raw" / pathlib.Path(url).stem)
+            check_integrity(self.root / "raw" / core.Path(url).stem)
             for url, _ in self.resources
         )
     
@@ -259,7 +261,7 @@ class MNISTDataModule(base.DataModule):
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
-        self.classlabels = md.ClassLabels.from_value(value=mnist_classlabels)
+        self.classlabels = nn.ClassLabels.from_value(value=mnist_classlabels)
 
 
 @DATAMODULES.register(name="fashion-mnist")
@@ -317,7 +319,7 @@ class FashionMNISTDataModule(base.DataModule):
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
-        self.classlabels = md.ClassLabels.from_value(value=fashion_mnist_classlabels)
+        self.classlabels = nn.ClassLabels.from_value(value=fashion_mnist_classlabels)
 
 
 # endregion
