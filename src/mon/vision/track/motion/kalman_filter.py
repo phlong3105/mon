@@ -16,7 +16,7 @@ from filterpy import kalman
 
 from mon.globals import MOTIONS
 from mon.vision import core
-from mon.vision.tracking.motion import base
+from mon.vision.track.motion import base
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

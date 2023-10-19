@@ -16,7 +16,7 @@ import numpy as np
 
 from mon.globals import MOTIONS, OBJECTS
 from mon.vision import core
-from mon.vision.tracking import motion as mmotion, obj
+from mon.vision.track import motion as mmotion, obj
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

@@ -19,8 +19,8 @@ import cv2
 import numpy as np
 
 from mon.globals import AppleRGB, MOTIONS, MovingState
-from mon.vision import core, drawing, geometry, nn
-from mon.vision.tracking import motion as mmotion
+from mon.vision import core, draw, geometry, nn
+from mon.vision.track import motion as mmotion
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

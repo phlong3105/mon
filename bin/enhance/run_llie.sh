@@ -4,10 +4,7 @@ echo "$HOSTNAME"
 
 # Fast Commands
 # ./run_llie.sh zerodcev2 all train sice-zerodce lol vision/enhance/llie no last
-# 0000, 0100, 0101, 0102, 0103, 0104, 0105, 0106, 107
-# 0200, 0201, 0202 ,0203, 0204, 0205, 0206, 0207, 0208, 0209, 0210, 0211, 0212, 0213, 0213, 0214, 0215, 0216, 0217, 0218, 0219
-# 0300, 0301, 0302, 0303, 0304, 0305, 0400, 0401, 0402, 0403, 0404, 0500, 0600
-# 1000, 1001,
+# 00.0.0.0, 00.0.0.1, 00.0.0.2
 
 # Constants
 models=(
@@ -68,7 +65,7 @@ train_datasets=(
   "ve-lol-syn"
 )
 predict_datasets=(
-  # "darkface"
+  "darkface"
   # "deepupe"
   "dicm"
   # "exdark"
@@ -417,31 +414,10 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # Zero-DCEv2
       elif [ "${model[i]}" == "zerodcev2" ]; then
-        if [ "${variant[j]}" == "all" ]; then
-          variants=(
-            "0000"
-            "0100" "0101" "0102" "0103" "0104" "0105" "0106" "107"
-            "0200" "0201" "0202" "0203" "0204" "0205" "0206" "0207" "0208" "0209" "0210" "0211" "0212" "0213" "0214" "0215" "0216" "0217" "0218" "0219"
-            "0300" "0301" "0302" "0303" "0304" "0305"
-            "0400" "0401" "0402" "0403" "0404"
-            "0500"
-            "0600"
-            "1000" "1001"
-          )
-          for (( v=0; v<${#variants[@]}; v++ )); do
-            model_variant="${model[i]}-${variants[v]}"
-            train_dir="${root_dir}/run/train/${project}/${model_variant}-${train_data[0]}"
-            python -W ignore train.py \
-              --name "${model_variant}-${train_data[0]}" \
-              --variant "${variants[v]}" \
-              --max-epochs 300
-          done
-        else
-          python -W ignore train.py \
-            --name "${model_variant}-${train_data[0]}" \
-            --variant "${variant[j]}" \
-            --max-epochs 300
-        fi
+        python -W ignore train.py \
+          --name "${model_variant}-${train_data[0]}" \
+          --variant "${variant[j]}" \
+          --max-epochs 100
       fi
     done
   done
@@ -649,50 +625,18 @@ if [ "$task" == "predict" ]; then
               --output-dir "${predict_dir}"
           # Zero-DCEv2
           elif [ "${model[i]}" == "zerodcev2" ]; then
-            if [ "${variant[j]}" == "all" ]; then
-              variants=(
-                "0000"
-                "0100" "0101" "0102" "0103" "0104" "0105" "0106" "107"
-                "0200" "0201" "0202" "0203" "0204" "0205" "0206" "0207" "0208" "0209" "0210" "0211" "0212" "0213" "0214" "0215" "0216" "0217" "0218" "0219"
-                "0300" "0301" "0302" "0303" "0304" "0305"
-                "0400" "0401" "0402" "0403" "0404"
-                "0500"
-                "0600"
-                "1000" "1001"
-              )
-              for (( v=0; v<${#variants[@]}; v++ )); do
-                model_variant="${model[i]}-${variants[v]}"
-                weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/${checkpoint}.pt"
-                python -W ignore predict.py \
-                  --data "${low_data_dirs[k]}" \
-                  --config "${model[i]}_llie" \
-                  --root "${predict_dir}" \
-                  --project "${project}/${model[i]}" \
-                  --variant "${variants[v]}" \
-                  --weights "${weights}" \
-                  --num_iters 8 \
-                  --unsharp_sigma 1.5 \
-                  --image-size 512 \
-                  --output-dir "${predict_dir}"
-              done
-            else
-              # python -W ignore train.py \
-              #   --name "${model_variant}-${train_data[0]}" \
-              #   --variant "${variant}"
-              weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/${checkpoint}.pt"
-              python -W ignore predict.py \
-                --data "${low_data_dirs[k]}" \
-                --config "${model[i]}_llie" \
-                --root "${predict_dir}" \
-                --project "${project}/${model[i]}" \
-                --variant "${variant[j]}" \
-                --weights "${weights}" \
-                --num_iters 8 \
-                --infer_mode 1 \
-                --unsharp_sigma 1.25 \
-                --image-size 512 \
-                --output-dir "${predict_dir}"
-            fi
+            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/${checkpoint}.pt"
+            python -W ignore predict.py \
+              --data "${low_data_dirs[k]}" \
+              --config "${model[i]}_llie" \
+              --root "${predict_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --num_iters 8 \
+              --unsharp_sigma 2.5 \
+              --image-size 512 \
+              --output-dir "${predict_dir}"
           fi
         done
       fi

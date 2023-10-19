@@ -104,7 +104,7 @@ def predict(args: dict):
     console.log(f"FLOPs  = {flops:.4f}")
     console.log(f"Params = {params:.4f}")
     console.log(f"Time   = {avg_time:.4f}")
-
+    
     data       = args["datamodule"]["root"]
     image_size = args["datamodule"]["image_size"]
     resize     = args["datamodule"]["resize"]
@@ -131,7 +131,7 @@ def predict(args: dict):
                 input       = image.to(model.device)
                 start_time  = time.time()
                 output      = model(input=input, augment=False, profile=False, out_index=-1)
-                run_time    = (time.time() - start_time)
+                run_time    = time.time() - start_time
                 output      = output[-1] if isinstance(output, (list, tuple)) else output
                 if resize:
                     output  = mon.resize(input=image, size=[h0, w0])

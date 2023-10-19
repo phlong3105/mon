@@ -62,7 +62,7 @@ from mon.nn.layer import activation, attention, base, conv
 from mon.nn.typing import _size_2_t
 
 
-# region Blueprint Separable Convolution
+# region Subspace Blueprint Separable Convolution
 
 @LAYERS.register()
 class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
@@ -160,6 +160,14 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
         return torch.norm(wwt - i, p="fro")
 
 
+BSConv2dS = SubspaceBlueprintSeparableConv2d
+LAYERS.register(name="BSConv2dS", module=BSConv2dS)
+
+# endregion
+
+
+# region Unconstrained Blueprint Separable Convolution
+
 @LAYERS.register()
 class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
     """Unconstrained Blueprint Separable Conv2d adopted from the paper:
@@ -224,15 +232,13 @@ class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Modul
         return y
 
 
-BSConv2dS = SubspaceBlueprintSeparableConv2d
 BSConv2dU = UnconstrainedBlueprintSeparableConv2d
-LAYERS.register(name="BSConv2dS", module=BSConv2dS)
 LAYERS.register(name="BSConv2dU", module=BSConv2dU)
 
 # endregion
 
 
-# region Attention Blueprint Separable Convolution
+# region Attention Subspace Blueprint Separable Convolution
 
 @LAYERS.register()
 class AttentionSubspaceBlueprintSeparableConv2d(
@@ -311,6 +317,19 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             dtype        = dtype,
         )
         self.simam   = attention.SimAM()
+        # self.apply(self.init_weights)
+        
+    def init_weights(self, m: nn.Module):
+        classname = m.__class__.__name__
+        if classname.find("Conv") != -1:
+            if hasattr(m, "conv"):
+                m.conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "dw_conv"):
+                m.dw_conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "pw_conv"):
+                m.pw_conv.weight.data.normal_(0.0, 0.02)
+            else:
+                m.weight.data.normal_(0.0, 0.02)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -329,77 +348,6 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         wwt = torch.mm(w, torch.transpose(w, 0, 1))
         i   = torch.eye(wwt.shape[0], device=wwt.device)
         return torch.norm(wwt - i, p="fro")
-
-
-@LAYERS.register()
-class AttentionUnconstrainedBlueprintSeparableConv2d(
-    base.ConvLayerParsingMixin,
-    nn.Module
-):
-    """Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
-    paper:
-        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
-        Correlations Lead to Improved MobileNets," CVPR 2020.
-    
-    References:
-        `<https://github.com/zeiss-microscopy/BSConv>`__
-    """
-    
-    def __init__(
-        self,
-        in_channels     : int,
-        out_channels    : int,
-        kernel_size     : _size_2_t,
-        stride          : _size_2_t       = 1,
-        padding         : _size_2_t | str = 0,
-        dilation        : _size_2_t       = 1,
-        groups          : int             = 1,
-        bias            : bool            = True,
-        padding_mode    : str             = "zeros",
-        device          : Any             = None,
-        dtype           : Any             = None,
-        p               : float           = 0.25,
-        min_mid_channels: int             = 4,
-        norm            : Callable        = None,
-    ):
-        super().__init__()
-        self.pw_conv = conv.Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-            dilation     = 1,
-            groups       = 1,
-            bias         = False,
-            padding_mode = "zeros",
-            device       = device,
-            dtype        = dtype,
-        )
-        self.norm    = norm(num_features=out_channels) if norm is not None else None
-        self.dw_conv = conv.Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = kernel_size,
-            stride       = stride,
-            padding      = padding,
-            dilation     = dilation,
-            groups       = out_channels,
-            bias         = bias,
-            padding_mode = padding_mode,
-            device       = device,
-            dtype        = dtype,
-        )
-        self.simam   = attention.SimAM()
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input
-        y = self.pw_conv(x)
-        y = self.simam(y)
-        if self.norm is not None:
-            y = self.norm(y)
-        y = self.dw_conv(y)
-        return y
 
 
 @LAYERS.register()
@@ -547,7 +495,7 @@ class AttentionSubspaceBlueprintSeparableConv2d8(
 
 
 @LAYERS.register()
-class AttentionSubspaceBlueprintSeparableConv2d9(
+class AttentionSubspaceBlueprintSeparableConv2d9(  # Last paper, this one is the best
     AttentionSubspaceBlueprintSeparableConv2d
 ):
     
@@ -721,7 +669,6 @@ class AttentionSubspaceBlueprintSeparableConv2d17(
 
 
 ABSConv2dS   = AttentionSubspaceBlueprintSeparableConv2d
-ABSConv2dU   = AttentionUnconstrainedBlueprintSeparableConv2d
 ABSConv2dS1  = AttentionSubspaceBlueprintSeparableConv2d1
 ABSConv2dS2  = AttentionSubspaceBlueprintSeparableConv2d2
 ABSConv2dS3  = AttentionSubspaceBlueprintSeparableConv2d3
@@ -741,7 +688,6 @@ ABSConv2dS16 = AttentionSubspaceBlueprintSeparableConv2d16
 ABSConv2dS17 = AttentionSubspaceBlueprintSeparableConv2d17
 
 LAYERS.register(name="ABSConv2dS",   module=ABSConv2dS)
-LAYERS.register(name="ABSConv2dU",   module=ABSConv2dU)
 LAYERS.register(name="ABSConv2dS1",  module=ABSConv2dS1)
 LAYERS.register(name="ABSConv2dS2",  module=ABSConv2dS2)
 LAYERS.register(name="ABSConv2dS3",  module=ABSConv2dS3)
@@ -759,5 +705,84 @@ LAYERS.register(name="ABSConv2dS14", module=ABSConv2dS14)
 LAYERS.register(name="ABSConv2dS15", module=ABSConv2dS15)
 LAYERS.register(name="ABSConv2dS16", module=ABSConv2dS16)
 LAYERS.register(name="ABSConv2dS17", module=ABSConv2dS17)
+
+# endregion
+
+
+# region Attention Unconstrained Blueprint Separable Convolution
+
+@LAYERS.register()
+class AttentionUnconstrainedBlueprintSeparableConv2d(
+    base.ConvLayerParsingMixin,
+    nn.Module
+):
+    """Subspace Blueprint Separable Conv2d with Self-Attention adopted from the
+    paper:
+        "Rethinking Depthwise Separable Convolutions: How Intra-Kernel
+        Correlations Lead to Improved MobileNets," CVPR 2020.
+    
+    References:
+        `<https://github.com/zeiss-microscopy/BSConv>`__
+    """
+    
+    def __init__(
+        self,
+        in_channels     : int,
+        out_channels    : int,
+        kernel_size     : _size_2_t,
+        stride          : _size_2_t       = 1,
+        padding         : _size_2_t | str = 0,
+        dilation        : _size_2_t       = 1,
+        groups          : int             = 1,
+        bias            : bool            = True,
+        padding_mode    : str             = "zeros",
+        device          : Any             = None,
+        dtype           : Any             = None,
+        p               : float           = 0.25,
+        min_mid_channels: int             = 4,
+        norm            : Callable        = None,
+    ):
+        super().__init__()
+        self.pw_conv = conv.Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = 1,
+            padding      = 0,
+            dilation     = 1,
+            groups       = 1,
+            bias         = False,
+            padding_mode = "zeros",
+            device       = device,
+            dtype        = dtype,
+        )
+        self.norm    = norm(num_features=out_channels) if norm is not None else None
+        self.dw_conv = conv.Conv2d(
+            in_channels  = out_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = out_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.simam   = attention.SimAM()
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.pw_conv(x)
+        y = self.simam(y)
+        if self.norm is not None:
+            y = self.norm(y)
+        y = self.dw_conv(y)
+        return y
+
+
+ABSConv2dU = AttentionUnconstrainedBlueprintSeparableConv2d
+LAYERS.register(name="ABSConv2dU", module=ABSConv2dU)
 
 # endregion

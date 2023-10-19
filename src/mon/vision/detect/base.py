@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 import torch
 
-from mon.vision import core, nn, tracking
+from mon.vision import core, nn, track
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -102,7 +102,7 @@ class Detector(ABC):
         self,
         indexes: np.ndarray,
         images : np.ndarray
-    ) -> list[np.ndarray] | list[list[tracking.Instance]]:
+    ) -> list[np.ndarray] | list[list[track.Instance]]:
         """Detect objects in the images.
 
         Args:
@@ -157,7 +157,7 @@ class Detector(ABC):
         input  : torch.Tensor,
         pred   : torch.Tensor,
         *args, **kwargs
-    ) -> list[np.ndarray] | list[list[tracking.Instance]]:
+    ) -> list[np.ndarray] | list[list[track.Instance]]:
         """Postprocessing step.
 
         Args:

@@ -7,9 +7,11 @@ vision models.
 
 from __future__ import annotations
 
+import mon.vision.nn.layer
 import mon.vision.nn.loss
 import mon.vision.nn.metric
 # noinspection PyUnresolvedReferences
 from mon.nn import *
+from mon.vision.nn.layer import *
 from mon.vision.nn.loss import *
 from mon.vision.nn.metric import *

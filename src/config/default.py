@@ -163,7 +163,7 @@ trainer = {
     "default_root_dir"                 : None,    # Default path for logs and weights.
     "detect_anomaly"                   : False,   # Enable anomaly detection for the autograd engine.
     "deterministic"                    : False,   # PyTorch operations must use deterministic algorithms.
-    "devices"                          : None,    # Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.
+    "devices"                          : "auto",  # Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.
     "enable_checkpointing"             : True,
     "enable_model_summary"             : True,
     "enable_progress_bar"              : True,

@@ -72,13 +72,13 @@ datamodule = {
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
     ]),  # Transformations performing on both the input and target.
-    "to_tensor"   : True,         # If True, convert input and target to :class:`torch.Tensor`.
-    "cache_data"  : False,        # If True, cache data to disk for faster loading next time.
-    "cache_images": False,        # If True, cache images into memory for faster training.
-    "batch_size"  : 8,            # The number of samples in one forward pass.
-    "devices"     : 0,            # A list of devices to use. Default: 0.
-    "shuffle"     : True,         # If True, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"     : True,         # Verbosity.
+    "to_tensor"   : True,          # If True, convert input and target to :class:`torch.Tensor`.
+    "cache_data"  : False,         # If True, cache data to disk for faster loading next time.
+    "cache_images": False,         # If True, cache images into memory for faster training.
+    "batch_size"  : 32,            # The number of samples in one forward pass.
+    "devices"     : 0,             # A list of devices to use. Default: 0.
+    "shuffle"     : True,          # If True, reshuffle the datapoints at the beginning of every epoch.
+    "verbose"     : True,          # Verbosity.
 }
 
 # endregion
@@ -89,14 +89,15 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
-		    "monitor": "val/psnr",  # Quantity to monitor.
-			"mode"   : "max",       # 'min' or 'max'.
+		    "monitor": "train/loss",  # Quantity to monitor.
+			"mode"   : "min",       # 'min' or 'max'.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
 		default.rich_progress_bar,
 	],
 	"default_root_dir": root,  # Default path for logs and weights.
+	"gradient_clip_val": 0.1,
 	"logger"          : {
 		"tensorboard": default.tensorboard,
 	},

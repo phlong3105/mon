@@ -6,15 +6,38 @@
 from __future__ import annotations
 
 __all__ = [
-    "add_weighted", "blend", "check_image_size", "denormalize_image",
-    "denormalize_image_mean_std", "get_hw", "get_image_center",
-    "get_image_center4", "get_image_num_channels", "get_image_shape",
-    "get_image_size", "is_channel_first_image", "is_channel_last_image",
-    "is_color_image", "is_gray_image", "is_image", "is_integer_image",
-    "is_normalized_image", "is_one_hot_image", "normalize_image",
-    "normalize_image_by_range", "normalize_image_mean_std", "to_3d_image",
-    "to_4d_image", "to_5d_image", "to_channel_first_image",
-    "to_channel_last_image", "to_image_nparray", "to_image_tensor",
+    "add_weighted",
+    "blend",
+    "check_image_size",
+    "denormalize_image",
+    "denormalize_image_mean_std",
+    "get_channel",
+    "get_first_channel",
+    "get_hw",
+    "get_image_center",
+    "get_image_center4",
+    "get_image_num_channels",
+    "get_image_shape",
+    "get_image_size",
+    "get_last_channel",
+    "is_channel_first_image",
+    "is_channel_last_image",
+    "is_color_image",
+    "is_gray_image",
+    "is_image",
+    "is_integer_image",
+    "is_normalized_image",
+    "is_one_hot_image",
+    "normalize_image",
+    "normalize_image_by_range",
+    "normalize_image_mean_std",
+    "to_3d_image",
+    "to_4d_image",
+    "to_5d_image",
+    "to_channel_first_image",
+    "to_channel_last_image",
+    "to_image_nparray",
+    "to_image_tensor",
     "to_list_of_3d_image",
 ]
 
@@ -174,6 +197,76 @@ def check_image_size(size: list[int], stride: int = 32) -> int:
 
 
 # region Access
+
+def get_channel(
+    input   : torch.Tensor | np.ndarray,
+    index   : int | tuple[int, int] | list[int],
+    keep_dim: bool = True,
+) -> torch.Tensor | np.ndarray:
+    """Return the first channel of an image.
+
+    Args:
+        input   : An image.
+        index   : The channel's index.
+        keep_dim: If ``True``, keep the dimensions of the return output.
+            Default: ``True``.
+    """
+    if isinstance(index, int):
+        i1 = index
+        i2 = None if i1 < 0 else i1 + 1
+    elif isinstance(index, (list, tuple)):
+        i1 = index[0]
+        i2 = index[1]
+    else:
+        raise TypeError
+    
+    if is_channel_first_image(input=input):
+        if input.ndim == 5:
+            if keep_dim:
+                return input[:, :, i1:i2, :, :] if i2 is not None else input[:, :, i1:, :, :]
+            else:
+                return input[:, :, i1, :, :] if i2 is not None else input[:, :, i1, :, :]
+        elif input.ndim == 4:
+            if keep_dim:
+                return input[:, i1:i2, :, :] if i2 is not None else input[:, i1:, :, :]
+            else:
+                return input[:, i1, :, :] if i2 is not None else input[:, i1, :, :]
+        elif input.ndim == 3:
+            if keep_dim:
+                return input[i1:i2, :, :] if i2 is not None else input[i1:, :, :]
+            else:
+                return input[i1, :, :] if i2 is not None else input[i1, :, :]
+        else:
+            raise ValueError
+    else:
+        if input.ndim == 5:
+            if keep_dim:
+                return input[:, :, :, :, i1:i2] if i2 is not None else input[:, :, :, :, i1:]
+            else:
+                return input[:, :, :, :, i1] if i2 is not None else input[:, :, :, :, i1]
+        elif input.ndim == 4:
+            if keep_dim:
+                return input[:, :, :, i1:i2] if i2 is not None else input[:, :, :, i1:]
+            else:
+                return input[:, :, :, i1] if i2 is not None else input[:, :, :, i1]
+        elif input.ndim == 3:
+            if keep_dim:
+                return input[:, :, i1:i2] if i2 is not None else input[:, :, i1:]
+            else:
+                return input[:, :, i1] if i2 is not None else input[:, :, i1]
+        else:
+            raise ValueError
+    
+
+def get_first_channel(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+    """Return the first channel of an image."""
+    return get_channel(input=input, index=0, keep_dim=True)
+
+
+def get_last_channel(input: torch.Tensor | np.ndarray) -> torch.Tensor | np.ndarray:
+    """Return the first channel of an image."""
+    return get_channel(input=input, index=-1, keep_dim=True)
+
 
 def get_image_num_channels(input: torch.Tensor | np.ndarray) -> int:
     """Return the number of channels of an image.

@@ -13,7 +13,7 @@ import numpy as np
 
 from mon.globals import TRACKERS
 from mon.vision import core, geometry
-from mon.vision.tracking import base, motion as mmotion
+from mon.vision.track import base, motion as mmotion
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

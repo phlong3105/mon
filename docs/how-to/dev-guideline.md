@@ -371,8 +371,7 @@ Rules:
   action or operation. For example, the package "pytest" is a testing framework
   for Python and uses the verb "test" in its name to clearly show its purpose.
 - When stuck with coming up with a name for a package. Follow Apple's framework
-  naming. See
-  more: [Apple Documentation](https://developer.apple.com/documentation/technologies).
+  naming. See more: [Apple Documentation](https://developer.apple.com/documentation/technologies).
 
 ---
 

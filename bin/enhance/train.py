@@ -27,7 +27,7 @@ hosts = {
         "name"       : "zerodcev2-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 8,
+        "batch_size" : 16,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
@@ -59,7 +59,7 @@ hosts = {
         "name"       : "hinet-gt-rain",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 4,
+        "batch_size" : 32,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
@@ -75,7 +75,7 @@ hosts = {
         "name"       : "zerodcev2-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 8,
+        "batch_size" : 16,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
@@ -91,7 +91,7 @@ hosts = {
         "name"       : "zerodcev2-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 8,
+        "batch_size" : 16,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
@@ -168,7 +168,7 @@ def train(args: dict):
 @click.option("--name",        default=None,                type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--variant",     default=None,                type=str,                      help="Variant.")
 @click.option("--weights",     default=None,                type=click.Path(exists=False), help="Weights paths.")
-@click.option("--batch-size",  default=8,                   type=int,                      help="Total Batch size for all GPUs.")
+@click.option("--batch-size",  default=None,                type=int,                      help="Total Batch size for all GPUs.")
 @click.option("--image-size",  default=None,                type=int,                      help="Image sizes.")
 @click.option("--accelerator", default="gpu",               type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False))
 @click.option("--devices",     default=0,                   type=int,                      help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")

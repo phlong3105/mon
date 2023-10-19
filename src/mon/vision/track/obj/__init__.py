@@ -5,5 +5,5 @@
 
 from __future__ import annotations
 
-import mon.vision.tracking.obj.base
-from mon.vision.tracking.obj.base import *
+import mon.vision.track.obj.base
+from mon.vision.track.obj.base import *

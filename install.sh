@@ -133,7 +133,7 @@ poetry install --extras "dev"
 # poetry install --with dev
 # pip install -U openmim
 # mim install mmcv-full==1.7.0
-conda install cudatoolkit=11.8 --y
+# conda install cudatoolkit=11.8 --y
 conda update --a --y
 conda clean --a --y
 
