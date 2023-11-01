@@ -332,11 +332,11 @@ def measure_metric_pyiqa(
         console.log(f"backend: pyiqa")
         message = ""
         for m, v in values.items():
-            message += f"{f'{m}':<10}\t"
+            message += f"{f'{m}':<10} \t"
         message += "\n"
         for m, v in values.items():
-            avg  = float(sum(v) / num_items)
-            message += f"{avg:.10f}\t"
+            avg      = float(sum(v) / num_items)
+            message += f"{avg:.10f} \t"
         console.log(f"{message}")
         print("COPY THIS:")
         print(message)
