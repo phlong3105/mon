@@ -21,10 +21,10 @@ console = mon.console
 
 hosts = {
 	"lp-labdesktop-01": {
-        "config"     : "zerodcev2_sice_zerodce",
+        "config"     : "gcenet_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodcev2",
-        "name"       : "zerodcev2-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenet",
+        "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 16,
@@ -37,13 +37,13 @@ hosts = {
         "exist_ok"   : False,
 	},
     "lp-labdesktop-02": {
-        "config"     : "zerodcev2_sice_zerodce",
+        "config"     : "zgcenet_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodcev2",
-        "name"       : "zerodcev2-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenet",
+        "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 4,
+        "batch_size" : 16,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
@@ -69,10 +69,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "vsw-ws02": {
-        "config"     : "zerodcev2_sice_zerodce",
+        "config"     : "gcenet_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodcev2",
-        "name"       : "zerodcev2-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenet",
+        "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 16,
@@ -85,10 +85,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "vsw-ws-03": {
-        "config"     : "zerodcev2_sice_zerodce",
+        "config"     : "gcenet_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zerodcev2",
-        "name"       : "zerodcev2-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenet",
+        "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 16,
@@ -155,8 +155,9 @@ def train(args: dict):
         val_dataloaders   = datamodule.val_dataloader,
         ckpt_path         = ckpt,
     )
+    console.log(f"Model: {args['model']['fullname']}")  # Log
     console.log("[green]Done")
-
+    
 
 @click.command(context_settings=dict(
     ignore_unknown_options = True,

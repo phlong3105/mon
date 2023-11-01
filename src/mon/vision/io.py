@@ -1287,7 +1287,7 @@ class VideoWriterCV(VideoWriter):
         if self.save_image:
             write_image_cv(
                 image       = image,
-                dir_path= self.dst,
+                dir_path    = self.dst,
                 name        = f"{core.Path(path).stem}.png",
                 prefix      = "",
                 extension   =".png",
@@ -1295,7 +1295,7 @@ class VideoWriterCV(VideoWriter):
             )
         
         image = core.to_image_nparray(
-            input= image,
+            input       = image,
             keepdim     = True,
             denormalize = denormalize or self.denormalize,
         )

@@ -69,8 +69,9 @@ def get_dark_channel_prior(
 
 
 def get_guided_brightness_enhancement_map_prior(
-    input: torch.Tensor | np.ndarray,
-    gamma: float = 2.5,
+    input        : torch.Tensor | np.ndarray,
+    gamma        : float      = 2.5,
+    denoise_ksize: int | None = None,
 ) -> torch.Tensor | np.ndarray:
     """Get the Guided Brightness Enhancement Map (GBEM) prior from an RGB image.
     
@@ -88,16 +89,24 @@ def get_guided_brightness_enhancement_map_prior(
         It can be a :class:`torch.Tensor` or :class:`np.ndarray` and in
             :math:`[N, C, H, W]` or :math:`[H, W, C]` format.
         gamma: A parameter controls the curvature of the map.
+        denoise_ksize: Window size for de-noising operation. Default: ``None``.
         
     Returns:
         An :class:`numpy.ndarray` brightness enhancement map as prior.
     """
     if isinstance(input, torch.Tensor):
+        if denoise_ksize is not None:
+            input = kornia.filters.median_blur(input, denoise_ksize)
         hsv  = kornia.color.rgb_to_hsv(input)
         v    = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, 2:3, :, :]
         attn = torch.pow((1 - v), gamma)
     elif isinstance(input, np.ndarray):
-        hsv  = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
+        if denoise_ksize is not None:
+            input = cv2.medianBlur(input, denoise_ksize)
+        hsv = cv2.cvtColor(input, cv2.COLOR_RGB2HSV)
+        if hsv.dtype != np.float64:
+            hsv  = hsv.astype("float64")
+            hsv /= 255.0
         v    = core.get_channel(input=hsv, index=(2, 3), keep_dim=True)  # hsv[:, :, 2:3]
         attn = np.power((1 - v), gamma)
     else:

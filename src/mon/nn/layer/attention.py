@@ -398,7 +398,7 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
             super().__init__()
             self.channels = channels
             self.mlp      = nn.Sequential(
-                self.Flatten(),
+                nn.Flatten(),
                 linear.Linear(
                     in_features  = channels,
                     out_features = channels  // reduction_ratio,
@@ -496,7 +496,8 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = self.channel(x)
+        y = x
+        y = self.channel(y)
         if self.spatial is not None:
             y = self.spatial(y)
         return y

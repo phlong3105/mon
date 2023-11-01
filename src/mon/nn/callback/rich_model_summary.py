@@ -57,7 +57,8 @@ class RichModelSummary(callbacks.RichModelSummary):
         for param in [
             trainable_parameters,
             total_parameters - trainable_parameters,
-            total_parameters, model_size
+            total_parameters,
+            model_size
         ]:
             parameters.append("{:<{}}".format(model_summary.get_human_readable_count(int(param)), 10))
         
@@ -65,11 +66,11 @@ class RichModelSummary(callbacks.RichModelSummary):
         grid.add_column()
         grid.add_column()
         
-        grid.add_row(f"[bold]Trainable params[/]: {parameters[0]}")
-        grid.add_row(f"[bold]Non-trainable params[/]: {parameters[1]}")
-        grid.add_row(f"[bold]Total params[/]: {parameters[2]}")
+        grid.add_row(f"[bold]Trainable params[/]: {parameters[0]} ({trainable_parameters})")
+        grid.add_row(f"[bold]Non-trainable params[/]: {parameters[1]} ({total_parameters - trainable_parameters})")
+        grid.add_row(f"[bold]Total params[/]: {parameters[2]} ({total_parameters})")
         grid.add_row(f"[bold]Total estimated model params size (MB)[/]: {parameters[3]}")
         
         console.log(grid)
-
+        
 # endregion

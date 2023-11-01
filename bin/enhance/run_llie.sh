@@ -3,8 +3,9 @@ echo "$HOSTNAME"
 
 
 # Fast Commands
-# ./run_llie.sh zerodcev2 all train sice-zerodce lol vision/enhance/llie no last
-# 00.0.0.0, 00.0.0.1, 00.0.0.2
+# ./run_llie.sh zerodcev2 00000 train   sice-zerodce lol vision/enhance/llie no last
+# ./run_llie.sh zerodcev2 00000 predict sice-zerodce all vision/enhance/llie no last
+
 
 # Constants
 models=(
@@ -18,6 +19,7 @@ models=(
   "eemefn"
   "enlightengan"       # https://github.com/arsenyinfo/EnlightenGAN-inference
   "excnet"
+  "gcenet"
   "he"
   "iat"                # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
   "jed"
@@ -54,29 +56,32 @@ models=(
   "zerodcev2"          #
 )
 train_datasets=(
-  "gladnet"
+  "fivek-c"
+  "fivek-e"
   "llie"
-  "lol"
+  "lol-v1"
+  "lol-v2-real"
+  "lol-v2-syn"
   "sice"
   "sice-grad"
   "sice-mix"
   "sice-zerodce"
-  "ve-lol"
-  "ve-lol-syn"
 )
 predict_datasets=(
-  "darkface"
+  # "darkface"
   # "deepupe"
   "dicm"
   # "exdark"
+  # "fivek-c"
+  "fivek-e"
   "fusion"
   "lime"
-  "lol"
+  "lol-v1"
+  "lol-v2-real"
+  "lol-v2-syn"
   "mef"
   "npe"
   # "sice"
-  "ve-lol"
-  "ve-lol-syn"
   "vv"
 )
 
@@ -86,15 +91,17 @@ machine=$HOSTNAME
 model=${1:-"all"}
 variant=${2:-"none"}
 task=${3:-"predict"}
-train_data=${4:-"lol"}
-predict_data=${5:-"all"}
-project=${6:-"vision/enhance/llie"}
-use_data_dir=${7:-"yes"}
-checkpoint=${8:-"best"}
+epochs=${4:-100}
+train_data=${5:-"lol"}
+predict_data=${6:-"all"}
+project=${7:-"vision/enhance/llie"}
+use_data_dir=${8:-"yes"}
+checkpoint=${9:-"best"}
 
 read -e -i "$model"        -p "Model [all ${models[*]}]: " model
 read -e -i "$variant"      -p "Variant: " variant
 read -e -i "$task"         -p "Task [train, evaluate, predict, plot]: " task
+read -e -i "$epochs"       -p "Epochs: " epochs
 read -e -i "$train_data"   -p "Train data [all ${train_datasets[*]}]: " train_data
 read -e -i "$predict_data" -p "Predict data [all ${predict_datasets[*]}]: " predict_data
 read -e -i "$project"      -p "Project: " project
@@ -156,13 +163,25 @@ declare -a low_data_dirs=()
 declare -a high_data_dirs=()
 if [ "$task" == "train" ]; then
   for d in "${train_data[@]}"; do
-    if [ "$d" == "gladnet" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/gladnet/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/gladnet/high")
+    if [ "$d" == "fivek-c" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/fivek-c/low")
+      high_data_dirs+=("${root_dir}/data/llie/train/fivek-c/high")
     fi
-    if [ "$d" == "lol" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/lol/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/lol/high")
+    if [ "$d" == "fivek-e" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/fivek-e/low")
+      high_data_dirs+=("${root_dir}/data/llie/train/fivek-e/high")
+    fi
+    if [ "$d" == "lol-v1" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/lol-v1/low")
+      high_data_dirs+=("${root_dir}/data/llie/train/lol-v1/high")
+    fi
+    if [ "$d" == "lol-v2-real" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/lol-v2-real/low")
+      high_data_dirs+=("${root_dir}/data/llie/train/lol-v2-real/high")
+    fi
+    if [ "$d" == "lol-v2-syn" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/lol-v2-syn/low")
+      high_data_dirs+=("${root_dir}/data/llie/train/lol-v2-syn/high")
     fi
     if [ "$d" == "sice" ]; then
       low_data_dirs+=("${root_dir}/data/llie/train/sice-part1/low")
@@ -179,14 +198,6 @@ if [ "$task" == "train" ]; then
     if [ "$d" == "sice-zerodce" ]; then
       low_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/low")
       high_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/high")
-    fi
-    if [ "$d" == "ve-lol" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/ve-lol/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/ve-lol/high")
-    fi
-    if [ "$d" == "ve-lol-sync" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/ve-lol-sync/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/ve-lol-sync/high")
     fi
   done
 elif [ "$task" == "predict" ]; then
@@ -207,6 +218,14 @@ elif [ "$task" == "predict" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/exdark/low")
       high_data_dirs+=("")
     fi
+    if [ "$d" == "fivek-c" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/fivek-c/low")
+      high_data_dirs+=("")
+    fi
+    if [ "$d" == "fivek-e" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/train/fivek-e/low")
+      high_data_dirs+=("")
+    fi
     if [ "$d" == "fusion" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/fusion/low")
       high_data_dirs+=("")
@@ -215,9 +234,17 @@ elif [ "$task" == "predict" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/lime/low")
       high_data_dirs+=("")
     fi
-    if [ "$d" == "lol" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/lol/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/lol/high")
+    if [ "$d" == "lol-v1" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/test/lol-v1/low")
+      high_data_dirs+=("${root_dir}/data/llie/test/lol-v1/high")
+    fi
+    if [ "$d" == "lol-v2-real" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/test/lol-v2-real/low")
+      high_data_dirs+=("${root_dir}/data/llie/test/lol-v2-real/high")
+    fi
+    if [ "$d" == "lol-v2-syn" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/test/lol-v2-syn/low")
+      high_data_dirs+=("${root_dir}/data/llie/test/lol-v2-syn/high")
     fi
     if [ "$d" == "mef" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/mef/low")
@@ -230,14 +257,6 @@ elif [ "$task" == "predict" ]; then
     if [ "$d" == "sice" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/sice-part2/low")
       high_data_dirs+=("${root_dir}/data/llie/test/sice-part2/high")
-    fi
-    if [ "$d" == "ve-lol" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/ve-lol/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/ve-lol/high")
-    fi
-    if [ "$d" == "ve-lol-syn" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/ve-lol-syn/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/ve-lol-syn/high")
     fi
     if [ "$d" == "vv" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/vv/low")
@@ -253,7 +272,7 @@ if [ "$task" == "train" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "zerodcev2" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zerodcev2" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -265,7 +284,7 @@ if [ "$task" == "train" ]; then
       else
         model_variant="${model[i]}"
       fi
-      train_dir="${root_dir}/run/train/${project}/${model_variant}-${train_data[0]}"
+      train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}"
       zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.pt"
       zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.pth"
       zoo_weights_ckpt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.ckpt"
@@ -280,6 +299,26 @@ if [ "$task" == "train" ]; then
       # EnlightenGAN
       if [ "${model[i]}" == "enlightengan" ]; then
         echo -e "\nI have not prepared the training script for EnlightenGAN."
+      # GCE-Net
+      elif [ "${model[i]}" == "gcenet" ]; then
+        # python -W ignore lowlight_train.py \
+        #   --load-pretrain false \
+        #   --name "${model_variant}-${train_data[0]}" \
+        #   --variant "${variant[j]}" \
+        #   --lr 0.0001 \
+        #   --weight-decay 0.0001 \
+        #   --grad-clip-norm 0.1 \
+        #   --epochs "$epochs" \
+        #   --train-batch-size 8 \
+        #   --val-batch-size 4 \
+        #   --num-workers 4 \
+        #   --display-iter 10 \
+        #   --checkpoints-iter 10 \
+        #   --checkpoints-dir "${train_dir}"
+        python -W ignore train.py \
+          --name "${model_variant}-${train_data[0]}" \
+          --variant "${variant[j]}" \
+          --max-epochs "$epochs"
       # IAT
       elif [ "${model[i]}" == "iat" ]; then
         echo -e "\nI have not prepared the training script for IAT."
@@ -293,7 +332,7 @@ if [ "$task" == "train" ]; then
       elif [ "${model[i]}" == "lcdpnet" ]; then
         python -W ignore src/train.py \
           name="lcdpnet-lol" \
-          num_epoch=100 \
+          num_epoch="$epochs" \
           log_every=2000 \
           valid_every=20
       # LLFlow
@@ -325,7 +364,7 @@ if [ "$task" == "train" ]; then
           --data "${low_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
-          --epoch 100 \
+          --epoch "$epochs" \
           --batch-size 1 \
           --report-freq 50 \
           --gpu 0 \
@@ -338,7 +377,7 @@ if [ "$task" == "train" ]; then
           --weights "${weights}" \
           --load-pretrain false \
           --batch-size 1 \
-          --epochs 100 \
+          --epochs "$epochs" \
           --lr 0.0003 \
           --stage 3 \
           --cuda true \
@@ -355,7 +394,7 @@ if [ "$task" == "train" ]; then
           --lr 0.0001 \
           --weight-decay 0.0001 \
           --grad-clip-norm 0.1 \
-          --epochs 100 \
+          --epochs "$epochs" \
           --train-batch-size 6 \
           --val-batch-size 8 \
           --num-workers 4 \
@@ -388,7 +427,7 @@ if [ "$task" == "train" ]; then
           --lr 0.0001 \
           --weight-decay 0.0001 \
           --grad-clip-norm 0.1 \
-          --epochs 100 \
+          --epochs "$epochs" \
           --train-batch-size 8 \
           --val-batch-size 4 \
           --num-workers 4 \
@@ -405,7 +444,7 @@ if [ "$task" == "train" ]; then
           --weight-decay 0.0001 \
           --grad-clip-norm 0.1 \
           --scale-factor 1 \
-          --epochs 100 \
+          --epochs "$epochs" \
           --train-batch-size 8 \
           --val-batch-size 4 \
           --num-workers 4 \
@@ -417,7 +456,7 @@ if [ "$task" == "train" ]; then
         python -W ignore train.py \
           --name "${model_variant}-${train_data[0]}" \
           --variant "${variant[j]}" \
-          --max-epochs 100
+          --max-epochs "$epochs"
       fi
     done
   done
@@ -430,7 +469,7 @@ if [ "$task" == "predict" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "zerodcev2" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zerodcev2" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -486,6 +525,20 @@ if [ "$task" == "predict" ]; then
           if [ "${model[i]}" == "enlightengan" ]; then
             python -W ignore infer/predict.py \
               --data "${low_data_dirs[k]}" \
+              --image-size 512 \
+              --output-dir "${predict_dir}"
+          # GCE-Net
+          elif [ "${model[i]}" == "gcenet" ]; then
+            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/${checkpoint}.pt"
+            python -W ignore predict.py \
+              --data "${low_data_dirs[k]}" \
+              --config "${model[i]}_llie" \
+              --root "${predict_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --num_iters 8 \
+              --unsharp_sigma 2.5 \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # IAT
@@ -668,7 +721,7 @@ if [ "$task" == "evaluate" ]; then
             --result-file "${current_dir}" \
             --name "${model[i]}" \
             --variant "${variant[j]}" \
-            --image-size 512 \
+            --image-size 256 \
             --resize \
             --test-y-channel \
             --backend "piqa" \
@@ -683,7 +736,34 @@ if [ "$task" == "evaluate" ]; then
             --metric "ms-gmsd" \
             --metric "ms-ssim" \
             --metric "psnr" \
+            --metric "psnry" \
             --metric "ssim" \
+            --metric "ssimc" \
+            --metric "vsi"
+
+          python -W ignore metric.py \
+            --image-dir "${predict_dir}" \
+            --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
+            --result-file "${current_dir}" \
+            --name "${model[i]}" \
+            --variant "${variant[j]}" \
+            --image-size 256 \
+            --test-y-channel \
+            --backend "pyiqa" \
+            --append-results \
+            --metric "brisque" \
+            --metric "niqe" \
+            --metric "pi" \
+            --metric "fsim" \
+            --metric "haarpsi" \
+            --metric "lpips" \
+            --metric "mdsi" \
+            --metric "ms-gmsd" \
+            --metric "ms-ssim" \
+            --metric "psnr" \
+            --metric "psnry" \
+            --metric "ssim" \
+            --metric "ssimc" \
             --metric "vsi"
         done
     done

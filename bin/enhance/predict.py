@@ -11,6 +11,8 @@ import time
 from typing import Any
 
 import click
+import cv2
+import numpy as np
 import torch
 import torchvision
 
@@ -22,6 +24,21 @@ console = mon.console
 # region Host
 
 hosts = {
+    "lp-macbookpro.local": {
+        "config"     : "",
+        "root"       : mon.RUN_DIR / "predict",
+        "project"    : None,
+        "name"       : None,
+        "variant"    : None,
+        "weights"    : None,
+        "batch_size" : 8,
+        "image_size" : (512, 512),
+        "accelerator": "auto",
+		"devices"    : None,
+        "max_epochs" : None,
+        "max_steps"  : None,
+		"strategy"   : None,
+    },
 	"lp-labdesktop-01": {
 		"config"     : "",
         "root"       : mon.RUN_DIR / "predict",
@@ -81,64 +98,92 @@ def predict(args: dict):
     model_variant = f"{model_name}-{variant}" if variant is not None else f"{model_name}"
     console.rule(f"[bold red] {model_variant}")
     
-    weights          = args["model"]["weights"]
+    weights = args["model"]["weights"]
     model: mon.Model = mon.MODELS.build(config=args["model"])
-    state_dict       = torch.load(weights)
+    if torch.cuda.is_available():
+        devices = torch.device(f"cuda:0")
+    else:
+        devices = torch.device("cpu")
+    state_dict  = torch.load(weights, map_location=devices)
     model.load_state_dict(state_dict=state_dict["state_dict"])
-    model            = model.cuda()
+    model.phase = mon.ModelPhase.INFERENCE
     model.eval()
     
     output_dir = args["output_dir"]
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = model,
-        image_size = args["image_size"],
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    params = model.params
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
-    
-    data       = args["datamodule"]["root"]
+    if torch.cuda.is_available():
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = args["image_size"],
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+     
+    # Data
+    data       = mon.Path(args["datamodule"]["root"])
     image_size = args["datamodule"]["image_size"]
+    h, w       = mon.get_hw(image_size)
     resize     = args["datamodule"]["resize"]
     console.log(f"{data}")
     
+    if data.is_video_file():
+        image_loader = mon.VideoLoaderCV(source=data, to_rgb=True, to_tensor=True, normalize=True)
+        video_writer = mon.VideoWriterCV(
+            destination = output_dir / data.stem,
+            image_size  = [480, 640],
+            frame_rate  = 30,
+            fourcc      = "mp4v",
+            save_image  = False,
+            denormalize = True,
+            verbose     = False,
+        )
+    else:
+        image_loader = mon.ImageLoader(source=data, to_rgb=True, to_tensor=True, normalize=True)
+        video_writer = None
     #
     with torch.no_grad():
-        image_paths = list(data.rglob("*"))
-        image_paths = [path for path in image_paths if path.is_image_file()]
-        image_paths.sort()
-        h, w        = mon.get_hw(image_size)
-        sum_time    = 0
+        # image_paths = list(data.rglob("*"))
+        # image_paths = [path for path in image_paths if path.is_image_file()]
+        # image_paths.sort()
+        sum_time = 0
         with mon.get_progress_bar() as pbar:
-            for _, image_path in pbar.track(
-                sequence    = enumerate(image_paths),
-                total       = len(image_paths),
+            for images, indexes, files, rel_paths in pbar.track(
+                sequence    = image_loader,
+                total       = len(image_loader),
                 description = f"[bright_yellow] Inferring"
             ):
                 # console.log(image_path)
-                image       = mon.read_image(path=image_path, to_rgb=True, to_tensor=True, normalize=True)
+                # image       = mon.read_image(path=image_path, to_rgb=True, to_tensor=True, normalize=True)
                 if resize:
-                    h0, w0  = mon.get_image_size(image)
-                    image   = mon.resize(input=image, size=[h, w])
-                input       = image.to(model.device)
+                    h0, w0  = mon.get_image_size(images)
+                    images  = mon.resize(input=images, size=[h, w])
+                input       = images.to(model.device)
                 start_time  = time.time()
                 output      = model(input=input, augment=False, profile=False, out_index=-1)
+                # output      = model(input=input, augment=False, profile=False)
+                # a, output   = output[0], output[-1]
+                # a = (-1 * a)
+                # a = mon.to_image_nparray(a, False, True) + 255
                 run_time    = time.time() - start_time
                 output      = output[-1] if isinstance(output, (list, tuple)) else output
                 if resize:
-                    output  = mon.resize(input=image, size=[h0, w0])
-                result_path = output_dir / image_path.name
+                    output  = mon.resize(input=images, size=[h0, w0])
+                result_path = output_dir / f"{files[0].stem}.png"
                 torchvision.utils.save_image(output, str(result_path))
+                if data.is_video_file():
+                    video_writer.write_batch(images=output)
+                    
+                # a_path      = output_dir / f"{image_path.stem}-a.png"
+                # cv2.imwrite(str(a_path), a)
                 sum_time   += run_time
-        avg_time = float(sum_time / len(image_paths))
+        avg_time = float(sum_time / len(image_loader))
         console.log(f"Average time: {avg_time}")
 
 

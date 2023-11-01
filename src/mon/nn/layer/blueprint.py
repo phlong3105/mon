@@ -269,6 +269,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
         dtype           : Any             = None,
         p               : float           = 0.25,
         min_mid_channels: int             = 4,
+        attn            : bool            = False,
         norm1           : Callable        = None,
         norm2           : Callable        = None,
     ):
@@ -316,7 +317,7 @@ class AttentionSubspaceBlueprintSeparableConv2d(
             device       = device,
             dtype        = dtype,
         )
-        self.simam   = attention.SimAM()
+        self.simam   = attention.SimAM() if attn else None
         # self.apply(self.init_weights)
         
     def init_weights(self, m: nn.Module):
@@ -334,7 +335,8 @@ class AttentionSubspaceBlueprintSeparableConv2d(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         if self.norm1 is not None:
             y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -358,7 +360,8 @@ class AttentionSubspaceBlueprintSeparableConv2d1(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         x = self.pw_conv1(x)
-        # x = self.simam(x)
+        # if self.simam is not None:
+        #    y = self.simam(y)
         # if self.norm1 is not None:
         #     x = self.norm1(x)
         x = self.pw_conv2(x)
@@ -376,7 +379,8 @@ class AttentionSubspaceBlueprintSeparableConv2d2(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        # y = self.simam(y)
+        # if self.simam is not None:
+        #     y = self.simam(y)
         if self.norm1 is not None:
             y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -394,7 +398,8 @@ class AttentionSubspaceBlueprintSeparableConv2d3(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        # y = self.simam(y)
+        # if self.simam is not None:
+        #     y = self.simam(y)
         # if self.norm1 is not None:
         #    y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -412,7 +417,8 @@ class AttentionSubspaceBlueprintSeparableConv2d4(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        # y = self.simam(y)
+        # if self.simam is not None:
+        #     y = self.simam(y)
         if self.norm1 is not None:
             y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -430,7 +436,8 @@ class AttentionSubspaceBlueprintSeparableConv2d5(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         # if self.norm1 is not None:
         #    y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -451,7 +458,8 @@ class AttentionSubspaceBlueprintSeparableConv2d6(
         # if self.norm1 is not None:
         #    y = self.norm1(y)
         y = self.pw_conv2(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         # if self.norm2 is not None:
         #    y = self.norm2(y)
         y = self.dw_conv(y)
@@ -472,7 +480,8 @@ class AttentionSubspaceBlueprintSeparableConv2d7(
         # if self.norm2 is not None:
         #    y = self.norm2(y)
         y = self.dw_conv(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         return y
 
 
@@ -484,7 +493,8 @@ class AttentionSubspaceBlueprintSeparableConv2d8(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         if self.norm1 is not None:
             y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -502,7 +512,8 @@ class AttentionSubspaceBlueprintSeparableConv2d9(  # Last paper, this one is the
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         # if self.norm1 is not None:
         #     y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -523,7 +534,8 @@ class AttentionSubspaceBlueprintSeparableConv2d10(
         if self.norm1 is not None:
             y = self.norm1(y)
         y = self.pw_conv2(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         # if self.norm2 is not None:
         #     y = self.norm2(y)
         y = self.dw_conv(y)
@@ -541,7 +553,8 @@ class AttentionSubspaceBlueprintSeparableConv2d11(
         # if self.norm1 is not None:
         #     y = self.norm1(y)
         y = self.pw_conv2(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         if self.norm2 is not None:
             y = self.norm2(y)
         y = self.dw_conv(y)
@@ -562,7 +575,8 @@ class AttentionSubspaceBlueprintSeparableConv2d12(
         if self.norm2 is not None:
             y = self.norm2(y)
         y = self.dw_conv(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         return y
 
 
@@ -574,7 +588,8 @@ class AttentionSubspaceBlueprintSeparableConv2d13(
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         y = self.pw_conv1(x)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         if self.norm1 is not None:
             y = self.norm1(y)
         y = self.pw_conv2(y)
@@ -612,11 +627,13 @@ class AttentionSubspaceBlueprintSeparableConv2d15(
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = self.simam(x)
+        if self.simam is not None:
+            y = self.simam(x)
         y = self.pw_conv1(y)
         # if self.norm1 is not None:
         #     y = self.norm1(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         y = self.pw_conv2(y)
         # if self.norm2 is not None:
         #     y = self.norm2(y)
@@ -633,15 +650,18 @@ class AttentionSubspaceBlueprintSeparableConv2d16(
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = self.simam(x)
+        if self.simam is not None:
+            y = self.simam(x)
         y = self.pw_conv1(y)
         # if self.norm1 is not None:
         #     y = self.norm1(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         y = self.pw_conv2(y)
         # if self.norm2 is not None:
         #     y = self.norm2(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         y = self.dw_conv(y)
         # y = self.simam(y)
         return y
@@ -654,17 +674,21 @@ class AttentionSubspaceBlueprintSeparableConv2d17(
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = self.simam(x)
+        if self.simam is not None:
+            y = self.simam(x)
         y = self.pw_conv1(y)
         # if self.norm1 is not None:
         #     y = self.norm1(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         y = self.pw_conv2(y)
         # if self.norm2 is not None:
         #     y = self.norm2(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         y = self.dw_conv(y)
-        y = self.simam(y)
+        if self.simam is not None:
+            y = self.simam(y)
         return y
 
 

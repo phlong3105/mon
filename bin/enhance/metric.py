@@ -140,7 +140,7 @@ def measure_metric_piqa(
     else:
         console.log(f"{model_variant}")
         console.log(f"{image_dir.name}")
-        console.log(f"backend: pyiqa")
+        console.log(f"backend: piqa")
         for m, v in values.items():
             avg = float(sum(v) / num_items)
             console.log(f"{m:<10}: {avg:.10f}")
@@ -182,14 +182,59 @@ def measure_metric_pyiqa(
 ):
     """Measure metrics using :mod:`pyiqa` package."""
     _FULL_REFERENCE_METRICS = [
-        "ahiq", "ckdn", "cw-ssim", "dists", "fsim", "gmsd", "lpips", "mad",
-        "ms-ssim", "nlpd", "pieapp", "psnr", "ssim", "vif", "vsi", "wadiqam",
+        "ahiq",
+        "ckdn",
+        "cw_ssim",
+        "dists",
+        "fsim",
+        "gmsd",
+        "lpips",
+        "lpips-vgg",
+        "mad",
+        "ms_ssim",
+        "nlpd",
+        "pieapp",
+        "psnr",
+        "psnry",
+        "ssim",
+        "ssimc",
+        "vif",
+        "vsi",
+        "wadiqam",
     ]
     _NON_REFERENCE_METRICS  = [
-        "brisque", "clipiqa", "cnniqa", "fid", "hyperiqa", "ilniqe", "maniqa",
-        "musiq", "nima", "niqe", "nrqm", "paq2piq", "pi", "wadiqam",
+        "brisque",
+        "clipiqa",
+        "clipiqa+",
+        "clipiqa+_rn50_512",
+        "clipiqa+_vitL14_512",
+        "cnniqa",
+        "dbcnn",
+        "fid",
+        "hyperiqa",
+        "ilniqe",
+        "ilniqe",
+        "maniqa",
+        "maniqa-kadid",
+        "maniqa-koniq",
+        "musiq",
+        "musiq-ava",
+        "musiq-koniq",
+        "musiq-paq2piq",
+        "musiq-spaq",
+        "nima",
+        "nima-vgg16-ava",
+        "niqe",
+        "nrqm",
+        "paq2piq",
+        "pi",
+        "pieapp",
+        "tres",
+        "tres-flive",
+        "tres-koniq",
+        "uranker",
     ]
-    _METRICS = _NON_REFERENCE_METRICS  # + _FULL_REFERENCE_METRICS
+    _METRICS = _NON_REFERENCE_METRICS + _FULL_REFERENCE_METRICS
 
     model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
     console.rule(f"[bold red] {model_variant}")
@@ -230,7 +275,7 @@ def measure_metric_pyiqa(
             metric_f[m] = pyiqa.create_metric(
                 metric_name    = m,
                 as_loss        = False,
-                test_y_channel = test_y_channel,
+                # test_y_channel = test_y_channel,
                 device         = device,
             )
         else:

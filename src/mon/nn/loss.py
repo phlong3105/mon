@@ -22,7 +22,7 @@ from abc import ABC, abstractmethod
 import humps
 import torch
 from torch import nn
-from torch.nn import functional
+from torch.nn import functional as F
 from torch.nn.modules.loss import _Loss
 
 from mon.globals import LOSSES, Reduction
@@ -160,7 +160,7 @@ class L1Loss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        loss = functional.l1_loss(
+        loss = F.l1_loss(
             input     = input,
             target    = target,
             reduction = self.reduction
@@ -183,7 +183,7 @@ class L2Loss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        loss = functional.mse_loss(
+        loss = F.mse_loss(
             input     = input,
             target    = target,
             reduction = self.reduction

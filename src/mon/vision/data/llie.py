@@ -13,16 +13,22 @@ __all__ = [
     "DarkFace",
     "DeepUPE",
     "ExDark",
+    "FiveKC",
+    "FiveKCDataModule",
+    "FiveKE",
+    "FiveKEDataModule",
     "Fusion",
     "GLADNet",
     "LIME",
     "LIMEDataModule",
     "LLIE",
     "LLIEDataModule",
-    "LOL",
-    "LOL123",
-    "LOL123DataModule",
-    "LOLDataModule",
+    "LOLV1",
+    "LOLV1DataModule",
+    "LOLV2Real",
+    "LOLV2RealDataModule",
+    "LOLV2Syn",
+    "LOLV2SynDataModule",
     "MEF",
     "MEFDataModule",
     "NPE",
@@ -33,8 +39,6 @@ __all__ = [
     "SICEMixDataModule",
     "SICEZeroDCE",
     "SICEZeroDCEDataModule",
-    "VELOL",
-    "VELOLSyn",
     "VV",
     "VVDataModule",
 ]
@@ -158,6 +162,90 @@ class ExDark(base.UnlabeledImageDataset):
                     self.images.append(image)
 
 
+@DATASETS.register(name="fivek-c")
+class FiveKC(base.UnlabeledImageDataset):
+    """MIT Adobe FiveK dataset with Expert C ground-truth. It consists of 5,000
+    low/high image pairs.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "fivek-c" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("low", "high")
+                path  = core.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
+                label = base.ImageLabel(path=path)
+                self.labels.append(label)
+
+
+@DATASETS.register(name="fivek-e")
+class FiveKE(base.UnlabeledImageDataset):
+    """MIT Adobe FiveK dataset with Expert E ground-truth. It consists of 5,000
+    low/high image pairs.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["train"]
+    
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "fivek-e" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("low", "high")
+                path  = core.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
+                label = base.ImageLabel(path=path)
+                self.labels.append(label)
+
+
 @DATASETS.register(name="fusion")
 class Fusion(base.UnlabeledImageDataset):
     """Fusion dataset consists of 64 low-light images.
@@ -251,7 +339,7 @@ class LIME(base.UnlabeledImageDataset):
 
 @DATASETS.register(name="llie")
 class LLIE(base.UnlabeledImageDataset):
-    """LLIE dataset consists of all low-light images.
+    """LLIE dataset consists of all other datasets.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
@@ -261,17 +349,17 @@ class LLIE(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         subdirs = [
-            self.root / "test/deepupe/low",
             self.root / "test/dicm/low",
             self.root / "test/lime/low",
             self.root / "test/mef/low",
             self.root / "test/npe/low",
             self.root / "test/vv/low",
-            self.root / "train/gladnet/low",
-            self.root / "train/lol/low",
-            self.root / "train/sice-mix/low",
+            self.root / "train/fivek-e/low",
+            self.root / "train/lol-v1/low",
+            self.root / "train/lol-v2-real/low",
+            self.root / "train/lol-v2-syn/low",
+            # self.root / "train/sice-mix/low",
             self.root / "train/sice-zerodce/low",
-            self.root / "train/ve-lol/low",
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
@@ -285,10 +373,10 @@ class LLIE(base.UnlabeledImageDataset):
                         self.images.append(image)
                 
 
-@DATASETS.register(name="lol")
-class LOL(base.ImageEnhancementDataset):
-    """LOL dataset consists of 500 low-light and normal-light image pairs. They
-    are divided into 485 training pairs and 15 testing pairs. The low-light
+@DATASETS.register(name="lol-v1")
+class LOLV1(base.ImageEnhancementDataset):
+    """LOL-v1 dataset consists of 500 low-light and normal-light image pairs.
+    They are divided into 485 training pairs and 15 testing pairs. The low-light
     images contain noise produced during the photo capture process. Most of the
     images are indoor scenes. All the images have a resolution of 400×600.
     
@@ -301,7 +389,7 @@ class LOL(base.ImageEnhancementDataset):
         """Get image files."""
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "lol" / "low"
+            pattern = self.root / self.split / "lol-v1" / "low"
             for path in pbar.track(
                 list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
@@ -329,29 +417,94 @@ class LOL(base.ImageEnhancementDataset):
                 self.labels.append(label)
 
 
-@DATASETS.register(name="lol123")
-class LOL123(base.UnlabeledImageDataset):
-    """LOL123 dataset consists of 123 low-light images.
+@DATASETS.register(name="lol-v2-real")
+class LOLV2Real(base.ImageEnhancementDataset):
+    """LOL-v2 Real (VE-LOL) dataset consists of 500 low-light and normal-light
+    image pairs. They are divided into 400 training pairs and 100 testing pairs.
+    The low-light images contain noise produced during the photo capture
+    process. Most of the images are indoor scenes. All the images have a
+    resolution of 400×600.
     
-    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
-    splits = ["test"]
+    splits = ["train", "test"]
     
     def get_images(self):
         """Get image files."""
-        subdirs = ["dicm", "lime", "mef", "npe", "vv"]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            for subdir in subdirs:
-                pattern = self.root / "test" / subdir / "low"
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
+            pattern = self.root / self.split / "lol-v2-real" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("low", "high")
+                path  = core.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
+                label = base.ImageLabel(path=path)
+                self.labels.append(label)
+
+
+@DATASETS.register(name="lol-v2-syn")
+class LOLV2Syn(base.ImageEnhancementDataset):
+    """LOL-v2 Synthetic (VE-LOL-Syn) dataset consists of 1000 low-light and
+    normal-light image pairs. They are divided into 900 training pairs and 100
+    testing pairs. The low-light images contain noise produced during the photo
+    capture process. Most of the images are indoor scenes. All the images have a
+    resolution of 400×600.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+    
+    splits = ["train", "test"]
+    
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "lol-v2-syn" / "low"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("low", "high")
+                path  = core.Path(path)
+                for ext in ImageFormat.values():
+                    temp = path.parent / f"{path.stem}{ext}"
+                    if temp.exists():
+                        path = temp
+                        break
+                label = base.ImageLabel(path=path)
+                self.labels.append(label)
 
 
 @DATASETS.register(name="mef")
@@ -504,96 +657,6 @@ class SICEZeroDCE(base.UnlabeledImageDataset):
                 if path.is_image_file():
                     image = base.ImageLabel(path=path)
                     self.images.append(image)
-
-
-@DATASETS.register(name="ve-lol")
-class VELOL(base.ImageEnhancementDataset):
-    """VE-LOL dataset consists of 500 low-light and normal-light image pairs.
-    They are divided into 400 training pairs and 100 testing pairs. The
-    low-light images contain noise produced during the photo capture process.
-    Most of the images are indoor scenes. All the images have a resolution of
-    400×600.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-    
-    splits = ["train", "test"]
-    
-    def get_images(self):
-        """Get image files."""
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "ve-lol" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("low", "high")
-                path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
-                self.labels.append(label)
-
-
-@DATASETS.register(name="ve-lol-syn")
-class VELOLSyn(base.ImageEnhancementDataset):
-    """VE-LOL-Syn dataset consists of 1000 low-light and normal-light image
-    pairs. They are divided into 900 training pairs and 100 testing pairs. The
-    low-light images contain noise produced during the photo capture process.
-    Most of the images are indoor scenes. All the images have a resolution of
-    400×600.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-    
-    splits = ["train", "test"]
-    
-    def get_images(self):
-        """Get image files."""
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "ve-lol-sync" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("low", "high")
-                path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
-                self.labels.append(label)
 
 
 @DATASETS.register(name="vv")
@@ -827,6 +890,108 @@ class ExDarkDataModule(base.DataModule):
         pass
 
 
+@DATAMODULES.register(name="fivek-c")
+class FiveKCDataModule(base.DataModule):
+    """MIT Adobe FiveK datamodule with Expert C ground-truth.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = FiveKC(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = LOLV1(split="test",  **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="fivek-e")
+class FiveKEDataModule(base.DataModule):
+    """MIT Adobe FiveK datamodule with Expert E ground-truth.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = FiveKE(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = LOLV1(split="test",  **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+    
+
 @DATAMODULES.register(name="fusion")
 class FusionDataModule(base.DataModule):
     """Fusion datamodule.
@@ -965,10 +1130,10 @@ class LLIEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = LLIE(split="train", **self.dataset_kwargs)
-            self.val   = LOL(split="test",   **self.dataset_kwargs)
+            self.train =  LLIE(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = LOL(split="test", **self.dataset_kwargs)
+            self.test  = LOLV1(split="test",  **self.dataset_kwargs)
             
         if self.classlabels is None:
             self.get_classlabels()
@@ -980,9 +1145,9 @@ class LLIEDataModule(base.DataModule):
         pass
     
 
-@DATAMODULES.register(name="lol")
-class LOLDataModule(base.DataModule):
-    """LOL datamodule.
+@DATAMODULES.register(name="lol-v1")
+class LOLV1DataModule(base.DataModule):
+    """LOLV1 datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
@@ -1016,10 +1181,10 @@ class LOLDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = LOL(split="train", **self.dataset_kwargs)
-            self.val   = LOL(split="test",  **self.dataset_kwargs)
+            self.train = LOLV1(split="train", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = LOL(split="test", **self.dataset_kwargs)
+            self.test  = LOLV1(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1031,9 +1196,9 @@ class LOLDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="lol123")
-class LOL123DataModule(base.DataModule):
-    """LOL123 datamodule.
+@DATAMODULES.register(name="lol-v2-real")
+class LOLV2RealDataModule(base.DataModule):
+    """LOLV2Real datamodule.
     
     See Also: :class:`mon.nn.data.datamodule.DataModule`.
     """
@@ -1047,7 +1212,7 @@ class LOL123DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
     
-    def setup(self, phase: ModelPhase | None = None):
+    def setup(self, phase: ModelPhase | str | None = None):
         """Use this method to do things on every device:
             - Count number of classes.
             - Build classlabels vocabulary.
@@ -1067,11 +1232,62 @@ class LOL123DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = LOL123(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = LOLV2Real(split="train", **self.dataset_kwargs)
+            self.val   = LOLV2Real(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = LOL123(split="test", **self.dataset_kwargs)
+            self.test  = LOLV2Real(split="test", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
 
+
+@DATAMODULES.register(name="lol-v2-syn")
+class LOLV2SynDataModule(base.DataModule):
+    """LOLV2Sy datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | str | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = LOLV2Syn(split="train", **self.dataset_kwargs)
+            self.val   = LOLV2Syn(split="test",  **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = LOLV2Syn(split="test", **self.dataset_kwargs)
+        
         if self.classlabels is None:
             self.get_classlabels()
         
@@ -1323,9 +1539,9 @@ class SICEZeroDCEDataModule(base.DataModule):
         
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SICEZeroDCE(split="train", **self.dataset_kwargs)
-            self.val   = LOL(split="test", **self.dataset_kwargs)
+            self.val   = LOLV1(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = LOL(split="test", **self.dataset_kwargs)
+            self.test  = LOLV1(split="test", **self.dataset_kwargs)
             
         if self.classlabels is None:
             self.get_classlabels()
