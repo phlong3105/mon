@@ -68,12 +68,12 @@ train_datasets=(
   "sice-zerodce"
 )
 predict_datasets=(
-  # "darkface"
-  # "deepupe"
+  "darkcityscapes"
+  "darkface"
   "dicm"
   # "exdark"
   # "fivek-c"
-  "fivek-e"
+  # "fivek-e"
   "fusion"
   "lime"
   "lol-v1"
@@ -90,16 +90,18 @@ predict_datasets=(
 machine=$HOSTNAME
 model=${1:-"all"}
 variant=${2:-"none"}
-task=${3:-"predict"}
-epochs=${4:-100}
-train_data=${5:-"lol"}
-predict_data=${6:-"all"}
-project=${7:-"vision/enhance/llie"}
-use_data_dir=${8:-"yes"}
-checkpoint=${9:-"best"}
+suffix=${3:-"none"}
+task=${4:-"predict"}
+epochs=${5:-100}
+train_data=${6:-"lol"}
+predict_data=${7:-"all"}
+project=${8:-"vision/enhance/llie"}
+use_data_dir=${9:-"yes"}
+checkpoint=${10:-"best"}
 
 read -e -i "$model"        -p "Model [all ${models[*]}]: " model
 read -e -i "$variant"      -p "Variant: " variant
+read -e -i "$suffix"       -p "Suffix: " suffix
 read -e -i "$task"         -p "Task [train, evaluate, predict, plot]: " task
 read -e -i "$epochs"       -p "Epochs: " epochs
 read -e -i "$train_data"   -p "Train data [all ${train_datasets[*]}]: " train_data
@@ -155,8 +157,8 @@ if [ "${predict_data[0]}" == "all" ]; then
   for i in ${!predict_datasets[@]}; do
     predict_data[i]="${predict_datasets[i]}"
   done
-else
-  declare -a predict_data=("${predict_data[0]}")
+# else
+  # declare -a predict_data=("${predict_data[0]}")
 fi
 
 declare -a low_data_dirs=()
@@ -202,12 +204,12 @@ if [ "$task" == "train" ]; then
   done
 elif [ "$task" == "predict" ]; then
   for d in "${predict_data[@]}"; do
-    if [ "$d" == "darkface" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/darkface/low")
+    if [ "$d" == "darkcityscapes" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/low")
       high_data_dirs+=("")
     fi
-    if [ "$d" == "deepupe" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/deepupe/low")
+    if [ "$d" == "darkface" ]; then
+      low_data_dirs+=("${root_dir}/data/llie/test/darkface/low")
       high_data_dirs+=("")
     fi
     if [ "$d" == "dicm" ]; then
@@ -279,11 +281,17 @@ if [ "$task" == "train" ]; then
       fi
       cd "${model_dir}" || exit
 
-      if [ "${variant[j]}" != "none" ]; then
+      if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
         model_variant="${model[i]}-${variant[j]}"
       else
         model_variant="${model[i]}"
       fi
+      if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
+        name="${model_variant}-${train_data[0]}-${suffix}"
+      else
+        name="${model_variant}-${train_data[0]}"
+      fi
+
       train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}"
       zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.pt"
       zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.pth"
@@ -316,7 +324,7 @@ if [ "$task" == "train" ]; then
         #   --checkpoints-iter 10 \
         #   --checkpoints-dir "${train_dir}"
         python -W ignore train.py \
-          --name "${model_variant}-${train_data[0]}" \
+          --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
       # IAT
@@ -475,19 +483,27 @@ if [ "$task" == "predict" ]; then
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
       fi
       cd "${model_dir}" || exit
-
-      if [ "${variant[j]}" != "none" ]; then
+      
+      if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
         model_variant="${model[i]}-${variant[j]}"
       else
         model_variant="${model[i]}"
       fi
-      train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}"
-      train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/${checkpoint}.pt"
-      train_weights_pth="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/${checkpoint}.pth"
-      train_weights_ckpt="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/${checkpoint}.ckpt"
-      zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.pt"
-      zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.pth"
-      zoo_weights_ckpt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train_data[0]}.ckpt"
+      if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
+        model_variant_weights="${model_variant}-${train_data[0]}-${suffix}"
+        model_variant_suffix="${model_variant}-${suffix}"
+      else
+        model_variant_weights="${model_variant}-${train_data[0]}"
+        model_variant_suffix="${model_variant}"
+      fi
+
+      train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}"
+      train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/${checkpoint}.pt"
+      train_weights_pth="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/${checkpoint}.pth"
+      train_weights_ckpt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/${checkpoint}.ckpt"
+      zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.pt"
+      zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.pth"
+      zoo_weights_ckpt="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.ckpt"
       if [ -f "$train_weights_pt" ]; then
         weights=${train_weights_pt}
       elif [ -f "$train_weights_pth" ]; then
@@ -516,9 +532,9 @@ if [ "$task" == "predict" ]; then
       else
         for (( k=0; k<${#predict_data[@]}; k++ )); do
           if [ "${use_data_dir}" == "yes" ]; then
-            predict_dir="${root_dir}/data/llie/predict/${model_variant}/${predict_data[k]}"
+            predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}"
           else
-            predict_dir="${root_dir}/run/predict/${project}/${model_variant}/${predict_data[k]}"
+            predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
           fi
 
           # EnlightenGAN
@@ -529,10 +545,10 @@ if [ "$task" == "predict" ]; then
               --output-dir "${predict_dir}"
           # GCE-Net
           elif [ "${model[i]}" == "gcenet" ]; then
-            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/${checkpoint}.pt"
+            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
-              --config "${model[i]}_llie" \
+              --config "${model[i]}_sice_zerodce" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
@@ -545,8 +561,8 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "iat" ]; then
             python -W ignore IAT_enhance/predict.py \
               --data "${low_data_dirs[k]}" \
-              --exposure-weights "${root_dir}/zoo/${project}/${model[i]}/iat-exposure.pth" \
-              --enhance-weights "${root_dir}/zoo/${project}/${model[i]}/iat-lol.pth" \
+              --exposure-weights "IAT_enhance/best_Epoch_exposure.pth" \
+              --enhance-weights "IAT_enhance/best_Epoch_lol.pth" \
               --image-size 512 \
               --normalize \
               --task "enhance" \
@@ -563,15 +579,6 @@ if [ "$task" == "predict" ]; then
               --data "${low_data_dirs[k]}" \
               --image-size 512 \
               --output-dir "${predict_dir}"
-          # LLFlow
-          elif [ "${model[i]}" == "llflow" ]; then
-            python -W ignore code/test_unpaired_v2.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/llflow-lol-smallnet.pth" \
-              --image-size 512 \
-              --output-dir "${predict_dir}" \
-              --opt "code/confs/LOL_smallNet.yml" \
-              --name "unpaired"
           # LIME
           elif [ "${model[i]}" == "lime" ]; then
             python -W ignore demo.py \
@@ -579,6 +586,15 @@ if [ "$task" == "predict" ]; then
               --image-size 512 \
               --lime \
               --output-dir "${predict_dir}" \
+          # LLFlow
+          elif [ "${model[i]}" == "llflow" ]; then
+            python -W ignore code/test_unpaired_v2.py \
+              --data "${low_data_dirs[k]}" \
+              --weights "weights/llflow-lol-smallnet.pth" \
+              --image-size 512 \
+              --output-dir "${predict_dir}" \
+              --opt "code/confs/LOL_smallNet.yml" \
+              --name "unpaired"
           # MBLLEN
           elif [ "${model[i]}" == "mbllen" ]; then
             python -W ignore main/test.py \
@@ -598,19 +614,18 @@ if [ "$task" == "predict" ]; then
               --weights "${weights}" \
               --image-size 512 \
               --output-dir "${predict_dir}"
-          # RetinexDIP
+          # RetinexNet
           elif [ "${model[i]}" == "retinexnet" ]; then
-            python -W ignore main.py \
+            python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
-              --phase "test" \
+              --weights "./ckpts/" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # RUAS
           elif [ "${model[i]}" == "ruas" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
+              --weights "ckpt/lol.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
@@ -619,7 +634,7 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "sci" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
+              --weights "weights/medium.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
@@ -628,14 +643,14 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "sgz" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
+              --weights "weight/lol.pt" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # SNR-Aware
           elif [ "${model[i]}" == "snr" ]; then
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/snr-lolv1.pth" \
+              --weights "weights/snr-lolv1.pth" \
               --opt "./options/test/LOLv1.yml" \
               --image-size 512 \
               --output-dir "${predict_dir}"
@@ -650,9 +665,9 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "uretinexnet" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --decom-model-low-weights "${root_dir}/zoo/${project}/${model[i]}/${train_data[0]}/init_low-lol.pth" \
-              --unfolding-model-weights "${root_dir}/zoo/${project}/${model[i]}/${train_data[0]}/unfolding-lol.pth" \
-              --adjust-model-weights "${root_dir}/zoo/${project}${model[i]}/${train_data[0]}/L_adjust-lol.pth" \
+              --decom-model-low-weights "ckpt/init_low.pth" \
+              --unfolding-model-weights "ckpt/unfolding.pth" \
+              --adjust-model-weights "ckpt/L_adjust.pth" \
               --image-size 512 \
               --ratio 5 \
               --output-dir "${predict_dir}"
@@ -666,19 +681,19 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "zerodce" ]; then
             python -W ignore lowlight_test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
+              --weights "weights/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # Zero-DCE++
           elif [ "${model[i]}" == "zerodce++" ]; then
             python -W ignore lowlight_test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
+              --weights  "weights/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # Zero-DCEv2
           elif [ "${model[i]}" == "zerodcev2" ]; then
-            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train_data[0]}/weights/${checkpoint}.pt"
+            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
               --config "${model[i]}_llie" \
@@ -710,61 +725,56 @@ if [ "$task" == "evaluate" ]; then
           else
             model_variant="${model[i]}"
           fi
-          if [ "${use_data_dir}" == "yes" ]; then
-            predict_dir="${root_dir}/data/llie/predict/${model_variant}/${predict_data[k]}"
+          if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
+            model_variant_suffix="${model_variant}-${suffix}"
           else
-            predict_dir="${root_dir}/run/predict/${project}/${model_variant}/${predict_data[k]}"
+            model_variant_suffix="${model_variant}"
+          fi
+          if [ "${use_data_dir}" == "yes" ]; then
+            predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}"
+          else
+            predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
           fi
           python -W ignore metric.py \
             --image-dir "${predict_dir}" \
             --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
             --result-file "${current_dir}" \
-            --name "${model[i]}" \
-            --variant "${variant[j]}" \
+            --name "${model_variant_suffix}" \
             --image-size 256 \
             --resize \
             --test-y-channel \
             --backend "piqa" \
             --append-results \
-            --metric "brisque" \
-            --metric "niqe" \
-            --metric "pi" \
-            --metric "fsim" \
-            --metric "haarpsi" \
-            --metric "lpips" \
-            --metric "mdsi" \
-            --metric "ms-gmsd" \
-            --metric "ms-ssim" \
             --metric "psnr" \
             --metric "psnry" \
             --metric "ssim" \
-            --metric "ssimc" \
-            --metric "vsi"
+            --metric "ms-ssim" \
+            --metric "lpips" \
+            --metric "brisque" \
+            --metric "niqe" \
+            --metric "pi"
+            # --name "${model[i]}" \
+            # --variant "${variant[j]}" \
+            # --image-size 256 \
 
           python -W ignore metric.py \
             --image-dir "${predict_dir}" \
             --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
             --result-file "${current_dir}" \
-            --name "${model[i]}" \
-            --variant "${variant[j]}" \
-            --image-size 256 \
+            --name "${model_variant_suffix}" \
             --test-y-channel \
             --backend "pyiqa" \
             --append-results \
-            --metric "brisque" \
-            --metric "niqe" \
-            --metric "pi" \
-            --metric "fsim" \
-            --metric "haarpsi" \
-            --metric "lpips" \
-            --metric "mdsi" \
-            --metric "ms-gmsd" \
-            --metric "ms-ssim" \
             --metric "psnr" \
             --metric "psnry" \
             --metric "ssim" \
-            --metric "ssimc" \
-            --metric "vsi"
+            --metric "ms-ssim" \
+            --metric "lpips" \
+            --metric "brisque" \
+            --metric "niqe" \
+            --metric "pi"
+            # --name "${model[i]}" \
+            # --variant "${variant[j]}" \
         done
     done
   done

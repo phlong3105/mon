@@ -1,65 +1,44 @@
-# RetinexNet
-This is a Tensorflow implement of RetinexNet
+# Deep Retinex Decomposition for Low-Light Enhancement, BMVC'18 (Unofficial PyTorch Code)
+Unofficial PyTorch code for the paper - Deep Retinex Decomposition for Low-Light Enhancement, BMVC'18 (Oral), Chen Wei, Wenjing Wang, Wenhan Yang, and Jiaying Liu
 
-Deep Retinex Decomposition for Low-Light Enhancement. In BMVC'18 (Oral Presentation)<br>
-[Chen Wei*](https://weichen582.github.io/), [Wenjing Wang*](https://daooshee.github.io/website/), [Wenhan Yang](https://flyywh.github.io/), [Jiaying Liu](http://www.icst.pku.edu.cn/struct/people/liujiaying.html). (* indicates equal contributions)<br>
+The offical Tensorflow code is available [here](https://github.com/weichen582/RetinexNet). 
 
-[Paper](https://arxiv.org/abs/1808.04560), [Project Page & Dataset](https://daooshee.github.io/BMVC2018website/)
-
-<img src="figs/results.png" width="800px"/>
-
-### Requirements ###
-1. Python
-2. Tensorflow >= 1.5.0
-3. numpy, PIL
-
-### Testing  Usage ###
-To quickly test your own images with our model, you can just run through
-```shell
-python main.py 
-    --use_gpu=1 \                           # use gpu or not
-    --gpu_idx=0 \
-    --gpu_mem=0.5 \                         # gpu memory usage
-    --phase=test \
-    --test_dir=/path/to/your/test/dir/ \
-    --save_dir=/path/to/save/results/ \
-    --decom=0                               # save only enhanced results or together with decomposition results
+Please ensure that you cite the paper if you use this code:
 ```
-Or you can just see some demo cases by
-```shell
-python main.py --phase=test
-```
-, the results will be saved under ```./test_results/```.
-
-### Training Usage ###
-First, download training data set from [our project page](https://daooshee.github.io/BMVC2018website/). Save training pairs of our LOL dataset under `./data/our485/`, and synthetic pairs under `./data/syn/`.
-Then, just run
-```shell
-python main.py
-    --use_gpu=1 \                           # use gpu or not
-    --gpu_idx=0 \
-    --gpu_mem=0.5 \                         # gpu memory usage
-    --phase=train \
-    --epoch=100 \                           # number of training epoches
-    --batch_size=16 \
-    --patch_size=48 \                       # size of training patches
-    --start_lr=0.001 \                      # initial learning rate for adm
-    --eval_every_epoch=20 \                 # evaluate and save checkpoints for every # epoches
-    --checkpoint_dir=./checkpoint           # if it is not existed, automatically make dirs
-    --sample_dir=./sample                   # dir for saving evaluation results during training
- ```
- Tips:
- 1. The model is quite small, so it will take just minutes to finish the training procedure if you are using GPU. For people who are using CPU, it is also affordable.
- 2. The enhancement performance is highly dependent on training parameters. So if you change the default parameters, you might get some weird results.
- 
- ### Citation ###
- ```
- @inproceedings{Chen2018Retinex,
-  title={Deep Retinex Decomposition for Low-Light Enhancement},
-  author={Chen Wei, Wenjing Wang, Wenhan Yang, Jiaying Liu},
-  booktitle={British Machine Vision Conference},
-  year={2018},
-  organization={British Machine Vision Association}
+@inproceedings{Chen2018Retinex,
+ title={Deep Retinex Decomposition for Low-Light Enhancement},
+ author={Chen Wei, Wenjing Wang, Wenhan Yang, Jiaying Liu},
+ booktitle={British Machine Vision Conference},
+ year={2018},
+ organization={British Machine Vision Association}
 }
 ```
- 
+### Requirements
+The code is tested on Python 3.7, PyTorch 1.1.0, TorchVision 0.3.0, but lower versions are also likely to work. During training on a single NVidia GTX1080 GPU, keeping a batch-size of 16 and image patches of resolution 96x96, the memory consumption was found to be around 2.5GB. The training time is under an hour. 
+
+### Training
+Please download the training and testing datasets from [here](https://daooshee.github.io/BMVC2018website/). Ensure you arrange the data by keeping training pairs of the LOL dataset under `<PATH-TO-TRAIN-DIR>/data/our485/`, and synthetic pairs under `<PATH-TO-TRAIN-DIR>/data/syn/`. You can then run-
+```
+$ python train.py \
+--data_dir <PATH-TO-TRAIN-DIR> \
+```
+### Testing
+For sample testing/prediction, you can run-
+```
+$ python predict.py
+```
+There is a pre-trained checkpoint available in the repo. You may use it for sample testing or create your own after training as needed. The results are generated (by default) for the data present in `./data/test/low/` folder, and the results are saved (by default) in `./results/test/low/` folder. 
+
+### Comparison
+Input, Output (This Code), Output (Official Tensorflow, After Training from Scratch), Output (Official Tensorflow, Pre-trained Checkpoint)
+
+Image: 1 (`./data/test/low/1.bmp`)
+![1](images/1_merged.jpg)
+
+Image: 2 (`./data/test/low/2.bmp`)
+![2](images/2_merged.jpg)
+
+Image: 3 (`./data/test/low/3.bmp`)
+![3](images/3_merged.jpg)  
+
+Please feel free to report any improvements or bugs present in the code.

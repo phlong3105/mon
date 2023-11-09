@@ -21,6 +21,7 @@ from lightning.pytorch import callbacks
 
 from mon.globals import CALLBACKS
 
+
 # region Callback
 
 Callback                      = callbacks.Callback

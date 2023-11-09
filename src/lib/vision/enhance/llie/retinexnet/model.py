@@ -1,278 +1,472 @@
-from __future__ import print_function
-
 import os
-import random
 import time
+import random
+from copy import deepcopy
 
-import tensorflow as tf
+import thop
+from PIL import Image
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+from torch.autograd import Variable
+import numpy as np
 
 import mon
-from utils import *
 
 console = mon.console
 
 
-def concat(layers):
-    return tf.concat(layers, axis=3)
+class DecomNet(nn.Module):
+    def __init__(self, channel=64, kernel_size=3):
+        super(DecomNet, self).__init__()
+        # Shallow feature extraction
+        self.net1_conv0 = nn.Conv2d(4, channel, kernel_size * 3,
+                                    padding=4, padding_mode='replicate')
+        # Activated layers!
+        self.net1_convs = nn.Sequential(nn.Conv2d(channel, channel, kernel_size,
+                                                  padding=1, padding_mode='replicate'),
+                                        nn.ReLU(),
+                                        nn.Conv2d(channel, channel, kernel_size,
+                                                  padding=1, padding_mode='replicate'),
+                                        nn.ReLU(),
+                                        nn.Conv2d(channel, channel, kernel_size,
+                                                  padding=1, padding_mode='replicate'),
+                                        nn.ReLU(),
+                                        nn.Conv2d(channel, channel, kernel_size,
+                                                  padding=1, padding_mode='replicate'),
+                                        nn.ReLU(),
+                                        nn.Conv2d(channel, channel, kernel_size,
+                                                  padding=1, padding_mode='replicate'),
+                                        nn.ReLU())
+        # Final recon layer
+        self.net1_recon = nn.Conv2d(channel, 4, kernel_size,
+                                    padding=1, padding_mode='replicate')
+
+    def forward(self, input_im):
+        input_max= torch.max(input_im, dim=1, keepdim=True)[0]
+        input_img= torch.cat((input_max, input_im), dim=1)
+        feats0   = self.net1_conv0(input_img)
+        featss   = self.net1_convs(feats0)
+        outs     = self.net1_recon(featss)
+        R        = torch.sigmoid(outs[:, 0:3, :, :])
+        L        = torch.sigmoid(outs[:, 3:4, :, :])
+        return R, L
 
 
-def DecomNet(input_im, layer_num, channel=64, kernel_size=3):
-    input_max = tf.reduce_max(input_im, axis=3, keepdims=True)
-    input_im = concat([input_max, input_im])
-    with tf.variable_scope('DecomNet', reuse=tf.AUTO_REUSE):
-        conv = tf.layers.conv2d(input_im, channel, kernel_size * 3, padding='same', activation=None, name="shallow_feature_extraction")
-        for idx in range(layer_num):
-            conv = tf.layers.conv2d(conv, channel, kernel_size, padding='same', activation=tf.nn.relu, name='activated_layer_%d' % idx)
-        conv = tf.layers.conv2d(conv, 4, kernel_size, padding='same', activation=None, name='recon_layer')
+class RelightNet(nn.Module):
+    def __init__(self, channel=64, kernel_size=3):
+        super(RelightNet, self).__init__()
 
-    R = tf.sigmoid(conv[:,:,:,0:3])
-    L = tf.sigmoid(conv[:,:,:,3:4])
+        self.relu         = nn.ReLU()
+        self.net2_conv0_1 = nn.Conv2d(4, channel, kernel_size,
+                                      padding=1, padding_mode='replicate')
 
-    return R, L
+        self.net2_conv1_1 = nn.Conv2d(channel, channel, kernel_size, stride=2,
+                                      padding=1, padding_mode='replicate')
+        self.net2_conv1_2 = nn.Conv2d(channel, channel, kernel_size, stride=2,
+                                      padding=1, padding_mode='replicate')
+        self.net2_conv1_3 = nn.Conv2d(channel, channel, kernel_size, stride=2,
+                                      padding=1, padding_mode='replicate')
+
+        self.net2_deconv1_1= nn.Conv2d(channel*2, channel, kernel_size,
+                                       padding=1, padding_mode='replicate')
+        self.net2_deconv1_2= nn.Conv2d(channel*2, channel, kernel_size,
+                                       padding=1, padding_mode='replicate')
+        self.net2_deconv1_3= nn.Conv2d(channel*2, channel, kernel_size,
+                                       padding=1, padding_mode='replicate')
+
+        self.net2_fusion = nn.Conv2d(channel*3, channel, kernel_size=1,
+                                     padding=1, padding_mode='replicate')
+        self.net2_output = nn.Conv2d(channel, 1, kernel_size=3, padding=0)
+
+    def forward(self, input_L=torch.rand(1, 1, 512, 512), input_R=torch.rand(1, 3, 512, 512)):
+        input_L   = input_L.cuda()
+        input_R   = input_R.cuda()
+        input_img = torch.cat((input_R, input_L), dim=1)
+        out0      = self.net2_conv0_1(input_img)
+        out1      = self.relu(self.net2_conv1_1(out0))
+        out2      = self.relu(self.net2_conv1_2(out1))
+        out3      = self.relu(self.net2_conv1_3(out2))
+
+        out3_up   = F.interpolate(out3, size=(out2.size()[2], out2.size()[3]))
+        deconv1   = self.relu(self.net2_deconv1_1(torch.cat((out3_up, out2), dim=1)))
+        deconv1_up= F.interpolate(deconv1, size=(out1.size()[2], out1.size()[3]))
+        deconv2   = self.relu(self.net2_deconv1_2(torch.cat((deconv1_up, out1), dim=1)))
+        deconv2_up= F.interpolate(deconv2, size=(out0.size()[2], out0.size()[3]))
+        deconv3   = self.relu(self.net2_deconv1_3(torch.cat((deconv2_up, out0), dim=1)))
+
+        deconv1_rs= F.interpolate(deconv1, size=(input_R.size()[2], input_R.size()[3]))
+        deconv2_rs= F.interpolate(deconv2, size=(input_R.size()[2], input_R.size()[3]))
+        feats_all = torch.cat((deconv1_rs, deconv2_rs, deconv3), dim=1)
+        feats_fus = self.net2_fusion(feats_all)
+        output    = self.net2_output(feats_fus)
+        return output
 
 
-def RelightNet(input_L, input_R, channel=64, kernel_size=3):
-    input_im = concat([input_R, input_L])
-    with tf.variable_scope('RelightNet'):
-        conv0 = tf.layers.conv2d(input_im, channel, kernel_size, padding='same', activation=None)
-        conv1 = tf.layers.conv2d(conv0, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
-        conv2 = tf.layers.conv2d(conv1, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
-        conv3 = tf.layers.conv2d(conv2, channel, kernel_size, strides=2, padding='same', activation=tf.nn.relu)
-        
-        up1     = tf.image.resize_nearest_neighbor(conv3, (tf.shape(conv2)[1], tf.shape(conv2)[2]))
-        deconv1 = tf.layers.conv2d(up1, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv2
-        up2     = tf.image.resize_nearest_neighbor(deconv1, (tf.shape(conv1)[1], tf.shape(conv1)[2]))
-        deconv2 = tf.layers.conv2d(up2, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv1
-        up3     = tf.image.resize_nearest_neighbor(deconv2, (tf.shape(conv0)[1], tf.shape(conv0)[2]))
-        deconv3 = tf.layers.conv2d(up3, channel, kernel_size, padding='same', activation=tf.nn.relu) + conv0
-        
-        deconv1_resize = tf.image.resize_nearest_neighbor(deconv1, (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
-        deconv2_resize = tf.image.resize_nearest_neighbor(deconv2, (tf.shape(deconv3)[1], tf.shape(deconv3)[2]))
-        feature_gather = concat([deconv1_resize, deconv2_resize, deconv3])
-        feature_fusion = tf.layers.conv2d(feature_gather, channel, 1, padding='same', activation=None)
-        output         = tf.layers.conv2d(feature_fusion, 1, 3, padding='same', activation=None)
-    return output
+def calculate_efficiency_score(
+    model,
+    image_size: int | list[int] = 512,
+    channels  : int             = 3,
+    runs      : int             = 100,
+    use_cuda  : bool            = True,
+    verbose   : bool            = False,
+):
+    # Define input tensor
+    h, w  = mon.get_hw(image_size)
+    input = torch.rand(1, 1, h, w)
+    mask  = torch.rand(1, 3, h, w)
 
-
-class LowLightEnhance(object):
+    # Deploy to cuda
+    if use_cuda:
+        input = input.cuda()
+        mask  = mask.cuda()
+        model = model.cuda()
+     
+    # Get FLOPs and Params
+    flops, params = thop.profile(deepcopy(model), inputs=(input, mask, ), verbose=verbose)
+    g_flops       = flops  * 1e-9
+    m_params      = params * 1e-6
     
-    def __init__(self, sess):
-        self.sess               = sess
-        self.DecomNet_layer_num = 5
+    # Get time
+    start_time = time.time()
+    for i in range(runs):
+        _ = model(input)
+    runtime  = time.time() - start_time
+    avg_time = runtime / runs
+    
+    # Print
+    if verbose:
+        console.log(f"FLOPs (G)  = {flops:.4f}")
+        console.log(f"Params (M) = {params:.4f}")
+        console.log(f"Time (s)   = {avg_time:.4f}")
+    
+    return flops, params, avg_time
 
-        # build the model
-        self.input_low  = tf.placeholder(tf.float32, [None, None, None, 3], name="input_low")
-        self.input_high = tf.placeholder(tf.float32, [None, None, None, 3], name="input_high")
 
-        [R_low, I_low]   = DecomNet(self.input_low, layer_num=self.DecomNet_layer_num)
-        [R_high, I_high] = DecomNet(self.input_high, layer_num=self.DecomNet_layer_num)
-        
-        I_delta   = RelightNet(I_low, R_low)
+class RetinexNet(nn.Module):
+    def __init__(self, image_size=512):
+        super(RetinexNet, self).__init__()
 
-        I_low_3   = concat([I_low, I_low, I_low])
-        I_high_3  = concat([I_high, I_high, I_high])
-        I_delta_3 = concat([I_delta, I_delta, I_delta])
+        self.DecomNet   = DecomNet()
+        self.RelightNet = RelightNet()
+        flops1, params1, avg_time1 = mon.calculate_efficiency_score(
+            model      = self.DecomNet,
+            image_size = image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        flops2, params2, avg_time2 = calculate_efficiency_score(
+            model      = self.RelightNet,
+            image_size = image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops1+flops2:.4f}")
+        console.log(f"Params = {params1+params2:.4f}")
+        console.log(f"Time   = {avg_time1+avg_time2:.4f}")
 
-        self.output_R_low   = R_low
-        self.output_I_low   = I_low_3
-        self.output_I_delta = I_delta_3
-        self.output_S       = R_low * I_delta_3
+    def forward(self, input_low, input_high):
+        # Forward DecompNet
+        input_low = Variable(torch.FloatTensor(torch.from_numpy(input_low))).cuda()
+        input_high= Variable(torch.FloatTensor(torch.from_numpy(input_high))).cuda()
+        R_low, I_low   = self.DecomNet(input_low)
+        R_high, I_high = self.DecomNet(input_high)
 
-        # loss
-        self.recon_loss_low        = tf.reduce_mean(tf.abs(R_low * I_low_3 -  self.input_low))
-        self.recon_loss_high       = tf.reduce_mean(tf.abs(R_high * I_high_3 - self.input_high))
-        self.recon_loss_mutal_low  = tf.reduce_mean(tf.abs(R_high * I_low_3 - self.input_low))
-        self.recon_loss_mutal_high = tf.reduce_mean(tf.abs(R_low * I_high_3 - self.input_high))
-        self.equal_R_loss          = tf.reduce_mean(tf.abs(R_low - R_high))
-        self.relight_loss          = tf.reduce_mean(tf.abs(R_low * I_delta_3 - self.input_high))
+        # Forward RelightNet
+        I_delta = self.RelightNet(I_low, R_low)
+
+        # Other variables
+        I_low_3  = torch.cat((I_low, I_low, I_low), dim=1)
+        I_high_3 = torch.cat((I_high, I_high, I_high), dim=1)
+        I_delta_3= torch.cat((I_delta, I_delta, I_delta), dim=1)
+
+        # Compute losses
+        self.recon_loss_low  = F.l1_loss(R_low * I_low_3,  input_low)
+        self.recon_loss_high = F.l1_loss(R_high * I_high_3, input_high)
+        self.recon_loss_mutal_low  = F.l1_loss(R_high * I_low_3, input_low)
+        self.recon_loss_mutal_high = F.l1_loss(R_low * I_high_3, input_high)
+        self.equal_R_loss = F.l1_loss(R_low,  R_high.detach())
+        self.relight_loss = F.l1_loss(R_low * I_delta_3, input_high)
 
         self.Ismooth_loss_low   = self.smooth(I_low, R_low)
         self.Ismooth_loss_high  = self.smooth(I_high, R_high)
         self.Ismooth_loss_delta = self.smooth(I_delta, R_low)
 
-        self.loss_Decom   = self.recon_loss_low + self.recon_loss_high + 0.001 * self.recon_loss_mutal_low + 0.001 * self.recon_loss_mutal_high + 0.1 * self.Ismooth_loss_low + 0.1 * self.Ismooth_loss_high + 0.01 * self.equal_R_loss
-        self.loss_Relight = self.relight_loss + 3 * self.Ismooth_loss_delta
+        self.loss_Decom = self.recon_loss_low + \
+                          self.recon_loss_high + \
+                          0.001 * self.recon_loss_mutal_low + \
+                          0.001 * self.recon_loss_mutal_high + \
+                          0.1 * self.Ismooth_loss_low + \
+                          0.1 * self.Ismooth_loss_high + \
+                          0.01 * self.equal_R_loss
+        self.loss_Relight = self.relight_loss + \
+                            3 * self.Ismooth_loss_delta
 
-        self.lr   = tf.placeholder(tf.float32, name="learning_rate")
-        optimizer = tf.train.AdamOptimizer(self.lr, name="AdamOptimizer")
-
-        self.var_Decom   = [var for var in tf.trainable_variables() if "DecomNet"   in var.name]
-        self.var_Relight = [var for var in tf.trainable_variables() if "RelightNet" in var.name]
-
-        self.train_op_Decom   = optimizer.minimize(self.loss_Decom, var_list = self.var_Decom)
-        self.train_op_Relight = optimizer.minimize(self.loss_Relight, var_list = self.var_Relight)
-
-        self.sess.run(tf.global_variables_initializer())
-
-        self.saver_Decom   = tf.train.Saver(var_list = self.var_Decom)
-        self.saver_Relight = tf.train.Saver(var_list = self.var_Relight)
-
-        print("[*] Initialize model successfully...")
+        self.output_R_low   = R_low.detach().cpu()
+        self.output_I_low   = I_low_3.detach().cpu()
+        self.output_I_delta = I_delta_3.detach().cpu()
+        self.output_S       = R_low.detach().cpu() * I_delta_3.detach().cpu()
 
     def gradient(self, input_tensor, direction):
-        self.smooth_kernel_x = tf.reshape(tf.constant([[0, 0], [-1, 1]], tf.float32), [2, 2, 1, 1])
-        self.smooth_kernel_y = tf.transpose(self.smooth_kernel_x, [1, 0, 2, 3])
+        self.smooth_kernel_x = torch.FloatTensor([[0, 0], [-1, 1]]).view((1, 1, 2, 2)).cuda()
+        self.smooth_kernel_y = torch.transpose(self.smooth_kernel_x, 2, 3)
 
         if direction == "x":
             kernel = self.smooth_kernel_x
         elif direction == "y":
             kernel = self.smooth_kernel_y
-        return tf.abs(tf.nn.conv2d(input_tensor, kernel, strides=[1, 1, 1, 1], padding='SAME'))
-    
+        grad_out = torch.abs(F.conv2d(input_tensor, kernel,
+                                      stride=1, padding=1))
+        return grad_out
+
     def ave_gradient(self, input_tensor, direction):
-        return tf.layers.average_pooling2d(
-            self.gradient(input_tensor, direction),
-            pool_size = 3,
-            strides   = 1,
-            padding   = 'SAME'
-        )
+        return F.avg_pool2d(self.gradient(input_tensor, direction),
+                            kernel_size=3, stride=1, padding=1)
 
     def smooth(self, input_I, input_R):
-        input_R = tf.image.rgb_to_grayscale(input_R)
-        return tf.reduce_mean(self.gradient(input_I, "x") * tf.exp(-10 * self.ave_gradient(input_R, "x")) + self.gradient(input_I, "y") * tf.exp(-10 * self.ave_gradient(input_R, "y")))
+        input_R = 0.299*input_R[:, 0, :, :] + 0.587*input_R[:, 1, :, :] + 0.114*input_R[:, 2, :, :]
+        input_R = torch.unsqueeze(input_R, dim=1)
+        return torch.mean(self.gradient(input_I, "x") * torch.exp(-10 * self.ave_gradient(input_R, "x")) +
+                          self.gradient(input_I, "y") * torch.exp(-10 * self.ave_gradient(input_R, "y")))
 
-    def evaluate(self, epoch_num, eval_low_data, sample_dir, train_phase):
-        print("[*] Evaluating for phase %s / epoch %d..." % (train_phase, epoch_num))
+    def evaluate(self, epoch_num, eval_low_data_names, vis_dir, train_phase):
+        print("Evaluating for phase %s / epoch %d..." % (train_phase, epoch_num))
 
-        for idx in range(len(eval_low_data)):
-            input_low_eval = np.expand_dims(eval_low_data[idx], axis=0)
+        for idx in range(len(eval_low_data_names)):
+            eval_low_img   = Image.open(eval_low_data_names[idx])
+            eval_low_img   = np.array(eval_low_img, dtype="float32")/255.0
+            eval_low_img   = np.transpose(eval_low_img, (2, 0, 1))
+            input_low_eval = np.expand_dims(eval_low_img, axis=0)
 
             if train_phase == "Decom":
-                result_1, result_2 = self.sess.run([self.output_R_low, self.output_I_low], feed_dict={self.input_low: input_low_eval})
+                self.forward(input_low_eval, input_low_eval)
+                result_1 = self.output_R_low
+                result_2 = self.output_I_low
+                input    = np.squeeze(input_low_eval)
+                result_1 = np.squeeze(result_1)
+                result_2 = np.squeeze(result_2)
+                cat_image= np.concatenate([input, result_1, result_2], axis=2)
             if train_phase == "Relight":
-                result_1, result_2 = self.sess.run([self.output_S, self.output_I_delta], feed_dict={self.input_low: input_low_eval})
+                self.forward(input_low_eval, input_low_eval)
+                result_1 = self.output_R_low
+                result_2 = self.output_I_low
+                result_3 = self.output_I_delta
+                result_4 = self.output_S
+                input = np.squeeze(input_low_eval)
+                result_1 = np.squeeze(result_1)
+                result_2 = np.squeeze(result_2)
+                result_3 = np.squeeze(result_3)
+                result_4 = np.squeeze(result_4)
+                cat_image= np.concatenate([input, result_1, result_2, result_3, result_4], axis=2)
 
-            save_images(os.path.join(sample_dir, 'eval_%s_%d_%d.png' % (train_phase, idx + 1, epoch_num)), result_1, result_2)
+            cat_image = np.transpose(cat_image, (1, 2, 0))
+            # print(cat_image.shape)
+            im = Image.fromarray(np.clip(cat_image * 255.0, 0, 255.0).astype('uint8'))
+            filepath = os.path.join(vis_dir, 'eval_%s_%d_%d.png' %
+                       (train_phase, idx + 1, epoch_num))
+            im.save(filepath[:-4] + '.jpg')
 
-    def train(self, train_low_data, train_high_data, eval_low_data, batch_size, patch_size, epoch, lr, sample_dir, ckpt_dir, eval_every_epoch, train_phase):
-        assert len(train_low_data) == len(train_high_data)
-        numBatch = len(train_low_data) // int(batch_size)
-        
-        # load pretrained model
-        if train_phase == "Decom":
-            train_op   = self.train_op_Decom
-            train_loss = self.loss_Decom
-            saver      = self.saver_Decom
-        elif train_phase == "Relight":
-            train_op   = self.train_op_Relight
-            train_loss = self.loss_Relight
-            saver      = self.saver_Relight
+    def save(self, iter_num, ckpt_dir):
+        save_dir = ckpt_dir + '/' + self.train_phase + '/'
+        save_name= save_dir + '/' + str(iter_num) + '.tar'
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        if self.train_phase == 'Decom':
+            torch.save(self.DecomNet.state_dict(), save_name)
+        elif self.train_phase == 'Relight':
+            torch.save(self.RelightNet.state_dict(),save_name)
 
-        load_model_status, global_step = self.load(saver, ckpt_dir)
+    def load(self, ckpt_dir):
+        load_dir   = ckpt_dir + '/' + self.train_phase + '/'
+        if os.path.exists(load_dir):
+            load_ckpts = os.listdir(load_dir)
+            load_ckpts.sort()
+            load_ckpts = sorted(load_ckpts, key=len)
+            if len(load_ckpts)>0:
+                load_ckpt  = load_ckpts[-1]
+                global_step= int(load_ckpt[:-4])
+                ckpt_dict  = torch.load(load_dir + load_ckpt)
+                if self.train_phase == 'Decom':
+                    self.DecomNet.load_state_dict(ckpt_dict)
+                elif self.train_phase == 'Relight':
+                    self.RelightNet.load_state_dict(ckpt_dict)
+                return True, global_step
+            else:
+                return False, 0
+        else:
+            return False, 0
+
+    def train(self,
+              train_low_data_names,
+              train_high_data_names,
+              eval_low_data_names,
+              batch_size,
+              patch_size, epoch,
+              lr,
+              vis_dir,
+              ckpt_dir,
+              eval_every_epoch,
+              train_phase):
+        assert len(train_low_data_names) == len(train_high_data_names)
+        numBatch = len(train_low_data_names) // int(batch_size)
+
+        # Create the optimizers
+        self.train_op_Decom   = optim.Adam(self.DecomNet.parameters(),
+                                           lr=lr[0], betas=(0.9, 0.999))
+        self.train_op_Relight = optim.Adam(self.RelightNet.parameters(),
+                                           lr=lr[0], betas=(0.9, 0.999))
+
+        # Initialize a network if its checkpoint is available
+        self.train_phase= train_phase
+        load_model_status, global_step = self.load(ckpt_dir)
         if load_model_status:
             iter_num    = global_step
             start_epoch = global_step // numBatch
             start_step  = global_step % numBatch
-            print("[*] Model restore success!")
+            print("Model restore success!")
         else:
             iter_num    = 0
             start_epoch = 0
             start_step  = 0
-            print("[*] Not find pretrained model!")
+            print("No pretrained model to restore!")
 
-        print("[*] Start training for phase %s, with start epoch %d start iter %d : " % (train_phase, start_epoch, iter_num))
+        print("Start training for phase %s, with start epoch %d start iter %d : " %
+             (self.train_phase, start_epoch, iter_num))
 
         start_time = time.time()
         image_id   = 0
-
         for epoch in range(start_epoch, epoch):
+            self.lr = lr[epoch]
+            # Adjust learning rate
+            for param_group in self.train_op_Decom.param_groups:
+                param_group['lr'] = self.lr
+            for param_group in self.train_op_Relight.param_groups:
+                param_group['lr'] = self.lr
             for batch_id in range(start_step, numBatch):
-                # generate data for a batch
-                batch_input_low  = np.zeros((batch_size, patch_size, patch_size, 3), dtype="float32")
-                batch_input_high = np.zeros((batch_size, patch_size, patch_size, 3), dtype="float32")
+                # Generate training data for a batch
+                batch_input_low = np.zeros((batch_size, 3, patch_size, patch_size,), dtype="float32")
+                batch_input_high= np.zeros((batch_size, 3, patch_size, patch_size,), dtype="float32")
                 for patch_id in range(batch_size):
-                    h, w, _ = train_low_data[image_id].shape
+                    # Load images
+                    train_low_img = Image.open(train_low_data_names[image_id])
+                    train_low_img = np.array(train_low_img, dtype='float32')/255.0
+                    train_high_img= Image.open(train_high_data_names[image_id])
+                    train_high_img= np.array(train_high_img, dtype='float32')/255.0
+                    # Take random crops
+                    h, w, _        = train_low_img.shape
                     x = random.randint(0, h - patch_size)
                     y = random.randint(0, w - patch_size)
-            
-                    rand_mode = random.randint(0, 7)
-                    batch_input_low[patch_id, :, :, :]  = data_augmentation(train_low_data[image_id][x : x+patch_size, y : y+patch_size, :], rand_mode)
-                    batch_input_high[patch_id, :, :, :] = data_augmentation(train_high_data[image_id][x : x+patch_size, y : y+patch_size, :], rand_mode)
-                    
-                    image_id = (image_id + 1) % len(train_low_data)
-                    if image_id == 0:
-                        tmp = list(zip(train_low_data, train_high_data))
-                        random.shuffle(list(tmp))
-                        train_low_data, train_high_data  = zip(*tmp)
+                    train_low_img = train_low_img[x: x + patch_size, y: y + patch_size, :]
+                    train_high_img= train_high_img[x: x + patch_size, y: y + patch_size, :]
+                    # Data augmentation
+                    if random.random() < 0.5:
+                        train_low_img = np.flipud(train_low_img)
+                        train_high_img= np.flipud(train_high_img)
+                    if random.random() < 0.5:
+                        train_low_img = np.fliplr(train_low_img)
+                        train_high_img= np.fliplr(train_high_img)
+                    rot_type = random.randint(1, 4)
+                    if random.random() < 0.5:
+                        train_low_img = np.rot90(train_low_img, rot_type)
+                        train_high_img= np.rot90(train_high_img, rot_type)
+                    # Permute the images to tensor format
+                    train_low_img = np.transpose(train_low_img, (2, 0, 1))
+                    train_high_img= np.transpose(train_high_img, (2, 0, 1))
+                    # Prepare the batch
+                    batch_input_low[patch_id, :, :, :] = train_low_img
+                    batch_input_high[patch_id, :, :, :]= train_high_img
+                    self.input_low = batch_input_low
+                    self.input_high= batch_input_high
 
-                # train
-                _, loss = self.sess.run(
-                    [train_op, train_loss],
-                    feed_dict = {
-                        self.input_low : batch_input_low,
-                        self.input_high: batch_input_high,
-                        self.lr        : lr[epoch]
-                    }
-                )
-                
-                print(
-                    "%s Epoch: [%2d] [%4d/%4d] time: %4.4f, loss: %.6f"
-                    % (train_phase, epoch + 1, batch_id + 1, numBatch, time.time() - start_time, loss)
-                )
+                    image_id = (image_id + 1) % len(train_low_data_names)
+                    if image_id == 0:
+                        tmp = list(zip(train_low_data_names, train_high_data_names))
+                        random.shuffle(list(tmp))
+                        train_low_data_names, train_high_data_names = zip(*tmp)
+
+
+                # Feed-Forward to the network and obtain loss
+                self.forward(self.input_low,  self.input_high)
+                if self.train_phase == "Decom":
+                    self.train_op_Decom.zero_grad()
+                    self.loss_Decom.backward()
+                    self.train_op_Decom.step()
+                    loss = self.loss_Decom.item()
+                elif self.train_phase == "Relight":
+                    self.train_op_Relight.zero_grad()
+                    self.loss_Relight.backward()
+                    self.train_op_Relight.step()
+                    loss = self.loss_Relight.item()
+
+                print("%s Epoch: [%2d] [%4d/%4d] time: %4.4f, loss: %.6f" \
+                      % (train_phase, epoch + 1, batch_id + 1, numBatch, time.time() - start_time, loss))
                 iter_num += 1
-            
+
             # Evaluate the model and save a checkpoint file for it
             if (epoch + 1) % eval_every_epoch == 0:
-                self.evaluate(epoch + 1, eval_low_data, sample_dir=sample_dir, train_phase=train_phase)
-                self.save(saver, iter_num, ckpt_dir, "RetinexNet-%s" % train_phase)
+                self.evaluate(epoch + 1, eval_low_data_names,
+                              vis_dir=vis_dir, train_phase=train_phase)
+                self.save(iter_num, ckpt_dir)
 
-        print("[*] Finish training for phase %s." % train_phase)
+        print("Finished training for phase %s." % train_phase)
 
-    def save(self, saver, iter_num, ckpt_dir, model_name):
-        if not os.path.exists(ckpt_dir):
-            os.makedirs(ckpt_dir)
-        print("[*] Saving model %s" % model_name)
-        saver.save(
-            self.sess,
-            os.path.join(ckpt_dir, model_name),
-            global_step=iter_num
-        )
+    def predict(self,
+                test_low_data_names,
+                res_dir,
+                ckpt_dir):
 
-    def load(self, saver, ckpt_dir):
-        ckpt = tf.train.get_checkpoint_state(ckpt_dir)
-        if ckpt and ckpt.model_checkpoint_path:
-            full_path = tf.train.latest_checkpoint(ckpt_dir)
-            try:
-                global_step = int(full_path.split('/')[-1].split('-')[-1])
-            except ValueError:
-                global_step = None
-            saver.restore(self.sess, full_path)
-            return True, global_step
+        # Load the network with a pre-trained checkpoint
+        self.train_phase = 'Decom'
+        load_model_status, _ = self.load(ckpt_dir)
+        if load_model_status:
+            print(self.train_phase, "  : Model restore success!")
         else:
-            print("[*] Failed to load model from %s" % ckpt_dir)
-            return False, 0
+            print("No pretrained model to restore!")
+            raise Exception
+        self.train_phase = 'Relight'
+        load_model_status, _ = self.load(ckpt_dir)
+        if load_model_status:
+             print(self.train_phase, ": Model restore success!")
+        else:
+            print("No pretrained model to restore!")
+            raise Exception
 
-    def test(self, args):
-        tf.global_variables_initializer().run()
-       
-        # console.log("[*] Reading checkpoint...")
-        load_model_status_Decom,   _ = self.load(self.saver_Decom,   "./model/Decom")
-        load_model_status_Relight, _ = self.load(self.saver_Relight, "./model/Relight")
-        if load_model_status_Decom and load_model_status_Relight:
-            # console.log("[*] Load weights successfully...")
-            pass
+        # Set this switch to True to also save the reflectance and shading maps
+        save_R_L = False
         
-        #
-        image_paths = list(args.data.rglob("*"))
-        image_paths = [path for path in image_paths if path.is_image_file()]
-        sum_time    = 0
-        with mon.get_progress_bar() as pbar:
-            for _, image_path in pbar.track(
-                sequence    = enumerate(image_paths),
-                total       = len(image_paths),
-                description = f"[bright_yellow] Inferring"
-            ):
-                # console.log(image_path)
-                image = load_images(str(image_path))
-                image = np.expand_dims(image, axis=0)
-                start_time = time.time()
-                [R_low, I_low, I_delta, S] = self.sess.run(
-                    [self.output_R_low, self.output_I_low, self.output_I_delta, self.output_S],
-                    feed_dict = {self.input_low: image}
-                )
-                run_time = (time.time() - start_time)
-                if args.decom_flag == 1:
-                    save_images(str(args.output_dir / image_path.stem + "_R_low" + image_path.suffix),   R_low)
-                    save_images(str(args.output_dir / image_path.stem + "_I_low") + image_path.suffix,   I_low)
-                    save_images(str(args.output_dir / image_path.stem + "_I_delta") + image_path.suffix, I_delta)
-                save_images(str(args.output_dir / image_path.name), I_delta)
+        # Predict for the test images
+        for idx in range(len(test_low_data_names)):
+            test_img_path = test_low_data_names[idx]
+            # test_img_name = test_img_path.stem
+            # test_img_name  = test_img_path.split('/')[-1]
+            # print('Processing ', test_img_name)
+            test_low_img   = Image.open(test_img_path)
+            test_low_img   = np.array(test_low_img, dtype="float32") / 255.0
+            test_low_img   = np.transpose(test_low_img, (2, 0, 1))
+            input_low_test = np.expand_dims(test_low_img, axis=0)
+
+            self.forward(input_low_test, input_low_test)
+            result_1 = self.output_R_low
+            result_2 = self.output_I_low
+            result_3 = self.output_I_delta
+            result_4 = self.output_S
+            input = np.squeeze(input_low_test)
+            result_1 = np.squeeze(result_1)
+            result_2 = np.squeeze(result_2)
+            result_3 = np.squeeze(result_3)
+            result_4 = np.squeeze(result_4)
+            if save_R_L:
+                cat_image = np.concatenate([input, result_1, result_2, result_3, result_4], axis=2)
+            else:
+                cat_image = np.concatenate([result_4], axis=2)
+
+            cat_image = np.transpose(cat_image, (1, 2, 0))
+            # print(cat_image.shape)
+            im       = Image.fromarray(np.clip(cat_image * 255.0, 0, 255.0).astype('uint8'))
+            filepath = res_dir / f"{test_img_path.stem}.png"
+            im.save(str(filepath))

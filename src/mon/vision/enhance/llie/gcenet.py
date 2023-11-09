@@ -239,7 +239,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.apply(self.init_weights)
         #
         elif self.variant[0:2] == "10":
-            self.num_channels = 16
+            self.num_channels = 32
             self.conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -252,6 +252,27 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.conv8  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv9  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv10 = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            # self.attn   = nn.SimAM()
+            # self.attn   = nn.CBAM(channels=self.num_channels)
+            self.act    = nn.ReLU(inplace=True)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "11":
+            self.num_channels = 32
+            self.conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            # Curve Enhancement Map (A)
+            self.conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv8  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv9  = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            # Guided Brightness Enhancement Map (G)
+            self.conv10 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv11 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv12 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv13 = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
             # self.attn   = nn.SimAM()
             # self.attn   = nn.CBAM(channels=self.num_channels)
             self.act    = nn.ReLU(inplace=True)
@@ -344,7 +365,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 weight_exp      = 10,   # 10
                 weight_kl       = 0.1,  # 0.1
                 weight_spa      = 1,    # 1
-                weight_tvA      = weight_tvA,
+                weight_tvA      = weight_tvA,  # weight_tvA,
                 reduction       = "mean",
             )
     
@@ -413,7 +434,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
         
         # Variant code: [a][l][e]
-        if "1" in self.variant[0:1]:
+        if self.variant[0:2] in ["10"]:
             f1  = self.act(self.conv1(x_down))
             f2  = self.act(self.conv2(f1))
             f3  = self.act(self.conv3(f2))
@@ -427,7 +448,24 @@ class GCENet(base.LowLightImageEnhancementModel):
             f8  = self.act(self.conv8(torch.cat([f3, f4], dim=1)))
             f9  = self.act(self.conv9(torch.cat([f2, f8], dim=1)))
             p   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
-        elif "2" in self.variant[0:1]:
+        elif self.variant[0:2] in ["11"]:
+            f1  = self.act(self.conv1(x_down))
+            f2  = self.act(self.conv2(f1))
+            f3  = self.act(self.conv3(f2))
+            f4  = self.act(self.conv4(f3))
+            f5  = self.act(self.conv5(f4))
+            f5  = self.attn(f5)
+            # Curve Enhancement Map (A)
+            f6  = self.act(self.conv6(torch.cat([f4, f5], dim=1)))
+            f7  = self.act(self.conv7(torch.cat([f3, f6], dim=1)))
+            f8  = self.act(self.conv8(torch.cat([f2, f7], dim=1)))
+            a   =   F.tanh(self.conv9(torch.cat([f1, f8], dim=1)))
+            # Guided Brightness Enhancement Map (GBEM)
+            f9  = self.act(self.conv10(torch.cat([f4,  f5], dim=1)))
+            f10 = self.act(self.conv11(torch.cat([f3,  f9], dim=1)))
+            f11 = self.act(self.conv12(torch.cat([f2, f10], dim=1)))
+            p   =   F.tanh(self.conv13(torch.cat([f1, f11], dim=1)))
+        elif self.variant[0:2] in ["20"]:
             f1  = self.act(self.conv1(x_down))
             f2  = self.act(self.conv2(f1))
             f3  = self.act(self.conv3(f2))

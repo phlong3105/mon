@@ -48,6 +48,7 @@ def measure_metric_piqa(
         "vsi"    : {"module": piqa.VSI,     "metric_mode": "FR", },
     }
 
+    variant       = variant if variant not in [None, "", "none"] else None
     model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
     console.rule(f"[bold red] {model_variant}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
@@ -236,6 +237,7 @@ def measure_metric_pyiqa(
     ]
     _METRICS = _NON_REFERENCE_METRICS + _FULL_REFERENCE_METRICS
 
+    variant       = variant if variant not in [None, "", "none"] else None
     model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
     console.rule(f"[bold red] {model_variant}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()

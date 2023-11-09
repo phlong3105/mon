@@ -16,7 +16,9 @@ test_ds:
   class: img_dataset
   name: lcdp_data.test
   input:
-  - ../../../../../../data/lol/val/low/lol/*
+  - ../../../../../../data/llie/test/lol-v2-real/low/*
+  GT:
+  - ../../../../../../data/llie/test/lol-v2-real//high/*
 valid_ds:
   class: img_dataset
   name: lcdp_data.valid
@@ -127,7 +129,7 @@ log_every: 100
 batchsize: 1
 valid_batchsize: 1
 lr: 0.0001
-checkpoint_path: /home/longpham/10-workspace/11-code/mon/run/train/enhance/llie/lcdpnet-lol/best.ckpt
+checkpoint_path: /home/longpham/10-workspace/11-code/mon/zoo/vision/enhance/llie/lcdpnet/lcdpnet-ours.ckpt
 checkpoint_monitor: loss
 resume_training: true
 monitor_mode: min

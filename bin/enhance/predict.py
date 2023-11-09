@@ -11,8 +11,6 @@ import time
 from typing import Any
 
 import click
-import cv2
-import numpy as np
 import torch
 import torchvision
 
@@ -95,6 +93,7 @@ def predict(args: dict):
     # Initialization
     model_name    = args["model"]["name"]
     variant       = args["model"]["variant"]
+    variant       = variant if variant not in [None, "", "none"] else None
     model_variant = f"{model_name}-{variant}" if variant is not None else f"{model_name}"
     console.rule(f"[bold red] {model_variant}")
     
@@ -108,7 +107,7 @@ def predict(args: dict):
     model.load_state_dict(state_dict=state_dict["state_dict"])
     model.phase = mon.ModelPhase.INFERENCE
     model.eval()
-    
+
     output_dir = args["output_dir"]
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -147,6 +146,7 @@ def predict(args: dict):
     else:
         image_loader = mon.ImageLoader(source=data, to_rgb=True, to_tensor=True, normalize=True)
         video_writer = None
+
     #
     with torch.no_grad():
         # image_paths = list(data.rglob("*"))

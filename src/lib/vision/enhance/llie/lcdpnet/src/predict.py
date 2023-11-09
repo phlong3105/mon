@@ -35,6 +35,7 @@ def main(opt):
     console.log(f"Loading model from: {ckpt}")
     
     # Measure efficiency score
+    '''
     flops, params, avg_time = mon.calculate_efficiency_score(
         model      = model,
         image_size = 512,
@@ -46,7 +47,8 @@ def main(opt):
     console.log(f"FLOPs  = {flops:.4f}")
     console.log(f"Params = {params:.4f}")
     console.log(f"Time   = {avg_time:.4f}")
-    
+    '''
+
     from data.img_dataset import DataModule
     datamodule = DataModule(opt)
     trainer    = Trainer(

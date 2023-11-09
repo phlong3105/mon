@@ -19,10 +19,12 @@ __all__ = [
 
 import time
 from copy import deepcopy
+from typing import Literal, DefaultDict
 
 import thop
 import torch
 import torchmetrics
+from fvcore.nn import FlopCountAnalysis, parameter_count_table, parameter_count
 
 from mon import core, nn
 from mon.globals import METRICS
@@ -81,6 +83,10 @@ def calculate_efficiency_score(
      
     # Get FLOPs and Params
     flops, params = thop.profile(deepcopy(model), inputs=(input, ), verbose=verbose)
+    flops         = FlopCountAnalysis(model, input).total() if flops == 0 else flops
+    params        = model.params if hasattr(model, "params") and params == 0 else params
+    params        = parameter_count(model) if hasattr(model, "params") else params
+    params        = sum(list(params.values())) if isinstance(params, dict) else params
     g_flops       = flops  * 1e-9
     m_params      = params * 1e-6
     
@@ -88,8 +94,8 @@ def calculate_efficiency_score(
     start_time = time.time()
     for i in range(runs):
         _ = model(input)
-    runtime  = time.time() - start_time
-    avg_time = runtime / runs
+    runtime    = time.time() - start_time
+    avg_time   = runtime / runs
     
     # Print
     if verbose:

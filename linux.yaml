@@ -51,7 +51,7 @@ dependencies:
       - torchaudio        # Simple audio I/O for pytorch.
       - torchvision       # Image and video datasets and models for torch deep learning.
       # Metric
-      # - flopco-pytorch    # FLOPs and other statistics COunter for Pytorch neural networks.
+      - fvcore
       - image-quality
       - lpips
       - thop              # Count the MACs / FLOPs of your PyTorch model.
