@@ -19,12 +19,11 @@ __all__ = [
 
 import time
 from copy import deepcopy
-from typing import Literal, DefaultDict
 
 import thop
 import torch
 import torchmetrics
-from fvcore.nn import FlopCountAnalysis, parameter_count_table, parameter_count
+from fvcore.nn import FlopCountAnalysis, parameter_count
 
 from mon import core, nn
 from mon.globals import METRICS

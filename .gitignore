@@ -16,4 +16,4 @@ __pycache__/
 build/
 dist/
 src/app/supr/config/aic23_autocheckout.zip
-zoo/
+

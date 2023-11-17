@@ -3,6 +3,7 @@ import time
 import random
 from copy import deepcopy
 
+import cv2
 import thop
 from PIL import Image
 import torch
@@ -172,8 +173,8 @@ class RetinexNet(nn.Module):
 
     def forward(self, input_low, input_high):
         # Forward DecompNet
-        input_low = Variable(torch.FloatTensor(torch.from_numpy(input_low))).cuda()
-        input_high= Variable(torch.FloatTensor(torch.from_numpy(input_high))).cuda()
+        input_low      = Variable(torch.FloatTensor(torch.from_numpy(input_low))).cuda()
+        input_high     = Variable(torch.FloatTensor(torch.from_numpy(input_high))).cuda()
         R_low, I_low   = self.DecomNet(input_low)
         R_high, I_high = self.DecomNet(input_high)
 
@@ -181,21 +182,21 @@ class RetinexNet(nn.Module):
         I_delta = self.RelightNet(I_low, R_low)
 
         # Other variables
-        I_low_3  = torch.cat((I_low, I_low, I_low), dim=1)
-        I_high_3 = torch.cat((I_high, I_high, I_high), dim=1)
+        I_low_3  = torch.cat((I_low,   I_low,   I_low),   dim=1)
+        I_high_3 = torch.cat((I_high,  I_high,  I_high),  dim=1)
         I_delta_3= torch.cat((I_delta, I_delta, I_delta), dim=1)
 
         # Compute losses
-        self.recon_loss_low  = F.l1_loss(R_low * I_low_3,  input_low)
-        self.recon_loss_high = F.l1_loss(R_high * I_high_3, input_high)
+        self.recon_loss_low        = F.l1_loss(R_low * I_low_3,  input_low)
+        self.recon_loss_high       = F.l1_loss(R_high * I_high_3, input_high)
         self.recon_loss_mutal_low  = F.l1_loss(R_high * I_low_3, input_low)
         self.recon_loss_mutal_high = F.l1_loss(R_low * I_high_3, input_high)
-        self.equal_R_loss = F.l1_loss(R_low,  R_high.detach())
-        self.relight_loss = F.l1_loss(R_low * I_delta_3, input_high)
+        self.equal_R_loss          = F.l1_loss(R_low,  R_high.detach())
+        self.relight_loss          = F.l1_loss(R_low * I_delta_3, input_high)
 
-        self.Ismooth_loss_low   = self.smooth(I_low, R_low)
-        self.Ismooth_loss_high  = self.smooth(I_high, R_high)
-        self.Ismooth_loss_delta = self.smooth(I_delta, R_low)
+        self.Ismooth_loss_low      = self.smooth(I_low, R_low)
+        self.Ismooth_loss_high     = self.smooth(I_high, R_high)
+        self.Ismooth_loss_delta    = self.smooth(I_delta, R_low)
 
         self.loss_Decom = self.recon_loss_low + \
                           self.recon_loss_high + \
@@ -447,6 +448,8 @@ class RetinexNet(nn.Module):
             # print('Processing ', test_img_name)
             test_low_img   = Image.open(test_img_path)
             test_low_img   = np.array(test_low_img, dtype="float32") / 255.0
+            # h, w, c        = test_low_img.shape
+            # test_low_img   = cv2.resize(test_low_img, (w//2, h//2))
             test_low_img   = np.transpose(test_low_img, (2, 0, 1))
             input_low_test = np.expand_dims(test_low_img, axis=0)
 
@@ -466,6 +469,7 @@ class RetinexNet(nn.Module):
                 cat_image = np.concatenate([result_4], axis=2)
 
             cat_image = np.transpose(cat_image, (1, 2, 0))
+            # cat_image = cv2.resize(cat_image, (w, h))
             # print(cat_image.shape)
             im       = Image.fromarray(np.clip(cat_image * 255.0, 0, 255.0).astype('uint8'))
             filepath = res_dir / f"{test_img_path.stem}.png"

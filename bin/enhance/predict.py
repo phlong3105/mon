@@ -11,6 +11,8 @@ import time
 from typing import Any
 
 import click
+import cv2
+import numpy as np
 import torch
 import torchvision
 
@@ -167,22 +169,41 @@ def predict(args: dict):
                 input       = images.to(model.device)
                 start_time  = time.time()
                 output      = model(input=input, augment=False, profile=False, out_index=-1)
-                # output      = model(input=input, augment=False, profile=False)
-                # a, output   = output[0], output[-1]
-                # a = (-1 * a)
-                # a = mon.to_image_nparray(a, False, True) + 255
+                '''
+                output       = model(input=input, augment=False, profile=False)
+                a, p, output = output[0], output[1], output[2]
+                a = (-1 * a)
+                a = mon.to_image_nparray(a, False, True)
+                p = mon.to_image_nparray(p, False, True)
+                (B, G, R) = cv2.split(a)
+                zeros = np.zeros(a.shape[:2], dtype=a.dtype)
+                R = cv2.merge([zeros, zeros, R])
+                G = cv2.merge([zeros, G, zeros])
+                B = cv2.merge([B, zeros, zeros])
+                '''
                 run_time    = time.time() - start_time
                 output      = output[-1] if isinstance(output, (list, tuple)) else output
                 if resize:
                     output  = mon.resize(input=images, size=[h0, w0])
-                result_path = output_dir / f"{files[0].stem}.png"
-                torchvision.utils.save_image(output, str(result_path))
-                if data.is_video_file():
-                    video_writer.write_batch(images=output)
-                    
-                # a_path      = output_dir / f"{image_path.stem}-a.png"
-                # cv2.imwrite(str(a_path), a)
-                sum_time   += run_time
+
+                if args["save_image"]:
+                    result_path = output_dir / f"{files[0].stem}.png"
+                    torchvision.utils.save_image(output, str(result_path))
+                    '''
+                    a_path = output_dir / f"{files[0].stem}-a.png"
+                    B_path = output_dir / f"{files[0].stem}-b.png"
+                    G_path = output_dir / f"{files[0].stem}-g.png"
+                    R_path = output_dir / f"{files[0].stem}-r.png"
+                    p_path = output_dir / f"{files[0].stem}-p.png"
+                    cv2.imwrite(str(a_path), a)
+                    cv2.imwrite(str(B_path), B)
+                    cv2.imwrite(str(G_path), G)
+                    cv2.imwrite(str(R_path), R)
+                    cv2.imwrite(str(p_path), p)
+                    '''
+                    if data.is_video_file():
+                        video_writer.write_batch(images=output)
+                sum_time += run_time
         avg_time = float(sum_time / len(image_loader))
         console.log(f"Average time: {avg_time}")
 
@@ -202,6 +223,7 @@ def predict(args: dict):
 @click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")
 @click.option("--resize",      is_flag=True)
 @click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results location.")
+@click.option("--save-image",  is_flag=True)
 @click.option("--verbose",     is_flag=True)
 @click.pass_context
 def main(
@@ -217,6 +239,7 @@ def main(
     image_size : int | list[int],
     resize     : bool,
     output_dir : mon.Path | str,
+    save_image : bool,
     verbose    : bool
 ):
     model_kwargs = {
@@ -270,8 +293,8 @@ def main(
         "project": project,
         "verbose": verbose,
     }
-    args["model"] |= model_kwargs
-    
+    args["model"]      |= model_kwargs
+    args["save_image"]  = save_image
     predict(args=args)
 
 # endregion

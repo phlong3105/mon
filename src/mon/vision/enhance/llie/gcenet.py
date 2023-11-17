@@ -524,7 +524,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         # Default
         elif self.variant[3] == "0":
             if self.out_channels == 3:
-                y = x
+                y = xq
                 for _ in range(self.num_iters):
                     y = y + a * (torch.pow(y, 2) - y)
             else:

@@ -68,12 +68,12 @@ train_datasets=(
   "sice-zerodce"
 )
 predict_datasets=(
-  "darkcityscapes"
-  "darkface"
+  # "darkcityscapes"
+  # "darkface"
   "dicm"
   # "exdark"
   # "fivek-c"
-  # "fivek-e"
+  "fivek-e"
   "fusion"
   "lime"
   "lol-v1"
@@ -556,6 +556,7 @@ if [ "$task" == "predict" ]; then
               --num_iters 8 \
               --unsharp_sigma 2.5 \
               --image-size 512 \
+              --save-image \
               --output-dir "${predict_dir}"
           # IAT
           elif [ "${model[i]}" == "iat" ]; then
