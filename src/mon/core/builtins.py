@@ -6,13 +6,39 @@
 from __future__ import annotations
 
 __all__ = [
-    "concat_lists", "copy_attr", "get_module_vars", "intersect_dicts",
-    "intersect_ordered_dicts", "iter_to_iter", "iter_to_list", "iter_to_tuple",
-    "shuffle_dict", "split_list", "to_1list", "to_1tuple", "to_2list",
-    "to_2tuple", "to_3list", "to_3tuple", "to_4list", "to_4tuple", "to_5list",
-    "to_5tuple", "to_6list", "to_6tuple", "to_float", "to_int", "to_list",
-    "to_nlist", "to_ntuple", "to_pair", "to_quadruple", "to_single",
-    "to_triple", "to_tuple", "unique",
+    "concat_lists",
+    "copy_attr",
+    "get_module_vars",
+    "intersect_dicts",
+    "intersect_ordered_dicts",
+    "iter_to_iter",
+    "iter_to_list",
+    "iter_to_tuple",
+    "shuffle_dict",
+    "split_list",
+    "to_1list",
+    "to_1tuple",
+    "to_2list",
+    "to_2tuple",
+    "to_3list",
+    "to_3tuple",
+    "to_4list",
+    "to_4tuple",
+    "to_5list",
+    "to_5tuple",
+    "to_6list",
+    "to_6tuple",
+    "to_float",
+    "to_int",
+    "to_list",
+    "to_nlist",
+    "to_ntuple",
+    "to_pair",
+    "to_quadruple",
+    "to_single",
+    "to_triple",
+    "to_tuple",
+    "unique",
 ]
 
 import copy
@@ -23,6 +49,8 @@ from types import ModuleType
 from typing import Any, Callable, Iterable
 
 import multipledispatch
+
+from mon.core.rich import console
 
 
 # region Object
@@ -66,17 +94,19 @@ def get_module_vars(module: ModuleType) -> dict:
 
 # region Numeric
 
-def to_int(x: str | int | float) -> int:
+def to_int(x: str | int | float | None) -> int | None:
     """Convert a value to :class:`int`."""
-    if isinstance(x, str) and not x.isdigit():
-        raise ValueError(f"x must be a digit string, but got {x}.")
+    if isinstance(x, str) and not x.isdigit() or x is None:
+        console.log(f"``x`` must be a digit string, but got {x}.")
+        return None
     return int(x)
 
 
-def to_float(x: str | int | float) -> float:
+def to_float(x: str | int | float | None) -> float | None:
     """Convert a value to :class:`float`."""
-    if isinstance(x, str) and not x.isdigit():
-        raise ValueError(f"x must be a digit string, but got {x}.")
+    if isinstance(x, str) and not x.isdigit() or x is None:
+        console.log(f"``x`` must be a digit string, but got {x}.")
+        return None
     return float(x)
 
 # endregion

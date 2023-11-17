@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "GCENet",
-    "ZeroReferenceLoss",
+    "GCENet", "ZeroReferenceLoss",
 ]
 
 from typing import Any
@@ -15,6 +14,7 @@ from typing import Any
 import kornia
 import torch
 
+import mon
 from mon.globals import ModelPhase, MODELS
 from mon.vision import core, nn, prior
 from mon.vision.enhance.llie import base
@@ -150,7 +150,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         self,
         config       : Any                = None,
         loss         : Any                = ZeroReferenceLoss(),
-        variant      :         str | None = "0000",
+        variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
         gamma        : float | str | None = None,
@@ -163,26 +163,56 @@ class GCENet(base.LowLightImageEnhancementModel):
             loss   = loss,
             *args, **kwargs
         )
-        
-        # Variant code: [a][l][e]
-        # ma: architecture
-        # l : loss function
-        # e : inference mode
-        self.variant       = f"{int(variant):04d}" if isinstance(variant, int)         or (isinstance(variant, str)       and variant.isdigit())       else "0000"
-        self.num_channels  = int(num_channels)     if isinstance(num_channels, int)    or (isinstance(num_channels, str)  and num_channels.isdigit())  else 32
-        self.scale_factor  = float(scale_factor)   if isinstance(scale_factor, float)  or (isinstance(scale_factor, str)  and scale_factor.isdigit())  else 1.0
-        self.gamma         = float(gamma)          if isinstance(gamma, float)         or (isinstance(gamma, str)         and gamma.isdigit())         else None
-        self.num_iters     = int(num_iters)        if isinstance(num_iters, int)       or (isinstance(num_iters, str)     and num_iters.isdigit())     else 8
-        self.unsharp_sigma = float(unsharp_sigma)  if isinstance(unsharp_sigma, float) or (isinstance(unsharp_sigma, str) and unsharp_sigma.isdigit()) else None
-        
-        # self.gamma         = 2.5
+        variant            = mon.to_int(variant)
+        self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
+        self.num_channels  = mon.to_int(num_channels)    or 32
+        self.scale_factor  = mon.to_float(scale_factor)  or 1.0
+        self.gamma         = mon.to_float(gamma)         or None
+        self.num_iters     = mon.to_int(num_iters)       or 8
+        self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
+        self.previous      = None
+
+        if variant is None:  # Default model
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+            self.conv1        = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7        = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.attn         = nn.Identity()
+            self.act          = nn.ReLU(inplace=True)
+            self.upsample     = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.loss         = ZeroReferenceLoss(
+                exp_patch_size  = 16,
+                exp_mean_val    = 0.6,
+                spa_num_regions = 8,
+                spa_patch_size  = 4,
+                weight_bri      = 0,
+                weight_col      = 5,
+                weight_crl      = 0.1,
+                weight_edge     = 1,
+                weight_exp      = 10,
+                weight_kl       = 0.1,
+                weight_spa      = 1,
+                weight_tvA      = 1600 if self.out_channels == 3 else 200,
+                reduction       = "mean",
+            )
+        else:
+            self.config_model_variant()
+
+    def config_model_variant(self):
+        """Config the model based on ``self.variant``. Mainly used in ablation study."""
+        # self.gamma         = 2.8
         # self.num_iters     = 9
         # self.unsharp_sigma = 2.5
         self.previous      = None
         self.out_channels  = 3
-        
-        # Variant code: [a][l][e]
-        # e: inference mode
+
+        # Variant code: [aa][l][i]
+        # i: inference mode
         if self.variant[3] == "0":
             self.gamma        = None
             self.out_channels = 3
@@ -195,9 +225,9 @@ class GCENet(base.LowLightImageEnhancementModel):
         elif self.variant[3] == "3":
             self.gamma        = self.gamma or 2.8
             self.out_channels = 3
-        
-        # Variant code: [a][l][e]
-        # a: architecture
+
+        # Variant code: [aa][l][i]
+        # aa: architecture
         self.attn     = nn.Identity()
         self.act      = nn.ReLU(inplace=True)
         self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
@@ -297,8 +327,8 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.apply(self.init_weights)
         else:
             raise ValueError
-        
-        # Variant code: [a][l][e]
+
+        # Variant code: [aa][l][i]
         # l: loss function
         weight_tvA = 1600 if self.out_channels == 3 else 200
         if self.variant[2] == "0":  # Zero-DCE Loss
@@ -368,7 +398,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 weight_tvA      = weight_tvA,  # weight_tvA,
                 reduction       = "mean",
             )
-    
+
     @property
     def config_dir(self) -> core.Path:
         return core.Path(__file__).absolute().parent / "config"
@@ -402,8 +432,11 @@ class GCENet(base.LowLightImageEnhancementModel):
         Return:
             Predictions and loss value.
         """
-        pred  = self.forward(input=input, *args, **kwargs)
-        loss, self.previous = self.loss(input, pred, self.previous) if self.loss else None
+        if self.variant is not None:
+            pred = self.forward_once_variant(input=input, *args, **kwargs)
+        else:
+            pred = self.forward(input=input, *args, **kwargs)
+        loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
         loss += self.regularization_loss(alpha=0.1)
         return pred[-1], loss
     
@@ -413,8 +446,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         profile  : bool = False,
         out_index: int = -1,
         *args, **kwargs
-    ) -> (tuple[torch.Tensor, torch.Tensor] |
-          tuple[torch.Tensor, torch.Tensor, torch.Tensor]):
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
@@ -432,7 +464,79 @@ class GCENet(base.LowLightImageEnhancementModel):
         x_down = x
         if self.scale_factor != 1:
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+
+        f1 = self.act(self.conv1(x_down))
+        f2 = self.act(self.conv2(f1))
+        f3 = self.act(self.conv3(f2))
+        f4 = self.act(self.conv4(f3))
+        f4 = self.attn(f4)
+        f5 = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
+        f6 = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
+        a  =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
         
+        # Upsampling
+        if self.scale_factor != 1:
+            a = self.upsample(a)
+
+        # Enhancement
+        if self.out_channels == 3:
+            if self.phase == ModelPhase.TRAINING:
+                y = x
+                for _ in range(self.num_iters):
+                    y = y + a * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for _ in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + a * (torch.pow(d, 2) - d)
+        else:
+            if self.phase == ModelPhase.TRAINING:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    y = y + A[i] * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for i in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + A[i] * (torch.pow(d, 2) - d)
+
+        # Unsharp masking
+        if self.unsharp_sigma is not None:
+            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
+
+        return a, y
+
+    def forward_once_variant(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass once. Implement the logic for a single forward pass. Mainly used for ablation study.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            profile: Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: ``-1`` means the last layer.
+
+        Return:
+            Predictions.
+        """
+        x = input
+
+        # Downsampling
+        x_down = x
+        if self.scale_factor != 1:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+
         # Variant code: [a][l][e]
         if self.variant[0:2] in ["10"]:
             f1  = self.act(self.conv1(x_down))
@@ -488,11 +592,11 @@ class GCENet(base.LowLightImageEnhancementModel):
             f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
             f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
             a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
-        
+
         # Upsampling
         if self.scale_factor != 1:
             a = self.upsample(a)
-        
+
         # Enhancement
         if "1" in self.variant[0:1]:
             if self.out_channels == 3:
@@ -524,10 +628,11 @@ class GCENet(base.LowLightImageEnhancementModel):
         # Default
         elif self.variant[3] == "0":
             if self.out_channels == 3:
-                y = xq
+                y = x
                 for _ in range(self.num_iters):
                     y = y + a * (torch.pow(y, 2) - y)
             else:
+
                 y = x
                 A = torch.split(a, 3, dim=1)
                 for i in range(self.num_iters):
@@ -605,16 +710,16 @@ class GCENet(base.LowLightImageEnhancementModel):
                         b = y * (1 - p)
                         d = y * p
                         y = b + d + A[i] * (torch.pow(d, 2) - d)
-        
+
         # Unsharp masking
         if self.unsharp_sigma is not None:
             y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
-        
+
         #
         if "1" in self.variant[0:1]:
             return a, p, y
         return a, y
-    
+
     def regularization_loss(self, alpha: float = 0.1):
         loss = 0.0
         for sub_module in [
