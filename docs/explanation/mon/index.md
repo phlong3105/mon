@@ -13,7 +13,6 @@ This section explains `🐈 mon`'s core API.
 |-----------------------------------|---------------------------------------|
 | __[core](core/index.md)__         | Base functionality for other packages |
 | __[nn](nn/index.md)__             | Machine learning code                 |
-| __[createml](createml/index.md)__ | Training code                         |
 | __[vision](vision/index.md)__     | Computer vision code                  |
 
 ---

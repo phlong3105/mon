@@ -21,9 +21,8 @@ mon
  |   |_ app              # Code for specific applications/projects
  |   |_ lib              # Third-party libraries
  |   |_ mon              # Main source root 
+ |       |_ core         # Base functionality for other packages
  |       |_ coreml       # Machine learning package
- |       |_ createml     # Machine learning training package
- |       |_ foundation   # Base functionality for other packages
  |       |_ vision       # Computer vision package
  |_ test                 # Testing code
  |_ zoo                  # Model zoo
@@ -51,7 +50,6 @@ __[Python](https://www.python.org/)__ and __[PyTorch](https://pytorch.org/)__.
 |-------------------------------------------|---------------------------------------|
 | __[foundation](mon/foundation/index.md)__ | Base functionality for other packages |
 | __[coreml](mon/coreml/index.md)__         | Machine learning code                 |
-| __[createml](mon/createml/index.md)__     | Training code                         |
 | __[vision](mon/vision/index.md)__         | Computer vision code                  |
 
 ---

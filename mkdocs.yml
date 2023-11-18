@@ -121,11 +121,9 @@ nav:
       - "mon":
           - explanation/mon/index.md
           - "foundation":
-              - explanation/mon/foundation/index.md
+              - explanation/mon/core/index.md
           - "coreml":
               - explanation/mon/coreml/index.md
-          - "createml":
-              - explanation/mon/createml/index.md
           - "vision":
               - explanation/mon/vision/index.md
       - "app":
