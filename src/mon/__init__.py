@@ -15,4 +15,4 @@ from mon.globals import *
 from mon.nn import *
 from mon.vision import *
 
-__version__ = "1.2.11"
+__version__ = "1.2.12"

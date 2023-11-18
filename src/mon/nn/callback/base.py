@@ -8,12 +8,27 @@ corresponding helper functions.
 from __future__ import annotations
 
 __all__ = [
-    "BackboneFinetuning", "BaseFinetuning", "BasePredictionWriter",
-    "BatchSizeFinder", "Callback", "Checkpoint", "DeviceStatsMonitor",
-    "EarlyStopping", "GradientAccumulationScheduler", "LambdaCallback",
-    "LearningRateFinder", "LearningRateMonitor", "ModelPruning", "ModelSummary",
-    "StochasticWeightAveraging", "TQDMProgressBar", "Timer",
-    "TuneReportCallback", "TuneReportCheckpointCallback",
+    "BackboneFinetuning",
+    "BaseFinetuning",
+    "BasePredictionWriter",
+    "BatchSizeFinder",
+    "Callback",
+    "Checkpoint",
+    "DeviceStatsMonitor",
+    "EarlyStopping",
+    "GradientAccumulationScheduler",
+    "LambdaCallback",
+    "LearningRateFinder",
+    "LearningRateMonitor",
+    "ModelPruning",
+    "ModelSummary",
+    "OnExceptionCheckpoint",
+    "StochasticWeightAveraging",
+    "SpikeDetection",
+    "TQDMProgressBar",
+    "Timer",
+    "TuneReportCallback",
+    "TuneReportCheckpointCallback",
 ]
 
 import ray.tune.integration.pytorch_lightning as ray
@@ -38,8 +53,10 @@ LearningRateFinder            = callbacks.LearningRateFinder
 LearningRateMonitor           = callbacks.LearningRateMonitor
 ModelPruning                  = callbacks.ModelPruning
 ModelSummary                  = callbacks.ModelSummary
+OnExceptionCheckpoint         = callbacks.OnExceptionCheckpoint
 ProgressBar                   = callbacks.ProgressBar
 StochasticWeightAveraging     = callbacks.StochasticWeightAveraging
+SpikeDetection                = callbacks.SpikeDetection
 Timer                         = callbacks.Timer
 TQDMProgressBar               = callbacks.TQDMProgressBar
 TuneReportCallback            = ray.TuneReportCallback
@@ -54,7 +71,9 @@ CALLBACKS.register(name="learning_rate_finder"           , module=LearningRateFi
 CALLBACKS.register(name="learning_rate_monitor"          , module=LearningRateMonitor)
 CALLBACKS.register(name="model_pruning"                  , module=ModelPruning)
 CALLBACKS.register(name="model_summary"                  , module=ModelSummary)
+CALLBACKS.register(name="on_exception_checkpoint"        , module=OnExceptionCheckpoint)
 CALLBACKS.register(name="stochastic_weight_averaging"    , module=StochasticWeightAveraging)
+CALLBACKS.register(name="spike_detection"                , module=SpikeDetection)
 CALLBACKS.register(name="timer"                          , module=Timer)
 CALLBACKS.register(name="tqdm_progress_bar"              , module=TQDMProgressBar)
 CALLBACKS.register(name="tune_report_callback"           , module=TuneReportCallback)

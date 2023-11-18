@@ -323,7 +323,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             # curve parameter
             self.conv9  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv10 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv11 = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            self.conv11 = nn.Conv2dHe (self.num_channels * 2, 1, 3, 1, 1, bias=True)
             self.act    = nn.ReLU(inplace=True)
             self.pool   = nn.MaxPool2d(2, 1)
             self.apply(self.init_weights)

@@ -14,9 +14,7 @@ from __future__ import annotations
 __all__ = [
     "FSDPStrategy", "CPUAccelerator", "CUDAAccelerator", "ParallelStrategy",
     "SingleDeviceStrategy", "DDPStrategy", "DeepSpeedStrategy",
-    "HPUAccelerator", "HPUParallelStrategy", "Strategy", "IPUAccelerator",
-    "IPUStrategy", "MPSAccelerator", "SingleHPUStrategy", "SingleTPUStrategy",
-    "TPUAccelerator", "XLAStrategy",
+    "Strategy", "MPSAccelerator", "XLAStrategy",
 ]
 
 import os
@@ -36,18 +34,14 @@ from mon.globals import ACCELERATORS, STRATEGIES
 
 CPUAccelerator  = accelerators.CPUAccelerator
 CUDAAccelerator = accelerators.CUDAAccelerator
-HPUAccelerator  = accelerators.HPUAccelerator
-IPUAccelerator  = accelerators.IPUAccelerator
 MPSAccelerator  = accelerators.MPSAccelerator
-TPUAccelerator  = accelerators.TPUAccelerator
+XLAAccelerator  = accelerators.XLAAccelerator
 
 ACCELERATORS.register(name="cpu" , module=CPUAccelerator)
 ACCELERATORS.register(name="cuda", module=CUDAAccelerator)
 ACCELERATORS.register(name="gpu" , module=CUDAAccelerator)
-ACCELERATORS.register(name="hpu" , module=HPUAccelerator)
-ACCELERATORS.register(name="ipu" , module=IPUAccelerator)
 ACCELERATORS.register(name="mps" , module=MPSAccelerator)
-ACCELERATORS.register(name="tpu" , module=TPUAccelerator)
+ACCELERATORS.register(name="xla" , module=XLAAccelerator)
 
 # endregion
 
@@ -57,25 +51,17 @@ ACCELERATORS.register(name="tpu" , module=TPUAccelerator)
 DDPStrategy          = strategies.DDPStrategy
 DeepSpeedStrategy    = strategies.DeepSpeedStrategy
 FSDPStrategy         = strategies.FSDPStrategy
-HPUParallelStrategy  = strategies.HPUParallelStrategy
-IPUStrategy          = strategies.IPUStrategy
 ParallelStrategy     = strategies.ParallelStrategy
 SingleDeviceStrategy = strategies.SingleDeviceStrategy
-SingleHPUStrategy    = strategies.SingleHPUStrategy
-SingleTPUStrategy    = strategies.SingleTPUStrategy
 Strategy             = strategies.Strategy
 XLAStrategy          = strategies.XLAStrategy
 
-STRATEGIES.register(name = "ddp"          , module = DDPStrategy)
-STRATEGIES.register(name = "deepspeed"    , module = DeepSpeedStrategy)
-STRATEGIES.register(name = "fsdp"         , module = FSDPStrategy)
-STRATEGIES.register(name = "hpu_parallel" , module = HPUParallelStrategy)
-STRATEGIES.register(name = "hpu_single"   , module = SingleHPUStrategy)
-STRATEGIES.register(name = "ipu"          , module = IPUStrategy)
-STRATEGIES.register(name = "parallel"     , module = ParallelStrategy)
-STRATEGIES.register(name = "single_device", module = SingleDeviceStrategy)
-STRATEGIES.register(name = "single_tpu"   , module = SingleTPUStrategy)
-STRATEGIES.register(name = "xla"          , module = XLAStrategy)
+STRATEGIES.register(name="ddp"          , module=DDPStrategy)
+STRATEGIES.register(name="deepspeed"    , module=DeepSpeedStrategy)
+STRATEGIES.register(name="fsdp"         , module=FSDPStrategy)
+STRATEGIES.register(name="parallel"     , module=ParallelStrategy)
+STRATEGIES.register(name="single_device", module=SingleDeviceStrategy)
+STRATEGIES.register(name="xla"          , module=XLAStrategy)
 
 # endregion
 

@@ -57,6 +57,7 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
         train_time_interval    : timedelta | None = None,
         every_n_epochs         : int | None       = None,
         save_on_train_epoch_end: bool             = False,
+        enable_version_counter : bool             = True,
     ):
         self.start_epoch      = 0
         self.start_time       = 0
@@ -70,16 +71,17 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
             dirpath                 = dirpath,
             filename                = filename,
             monitor                 = monitor,
+            verbose                 = verbose,
             save_last               = save_last,
             save_top_k              = save_top_k,
-            save_on_train_epoch_end = save_on_train_epoch_end,
             save_weights_only       = save_weights_only,
             mode                    = mode,
+            auto_insert_metric_name = auto_insert_metric_name,
             every_n_train_steps     = every_n_train_steps,
             train_time_interval     = train_time_interval,
             every_n_epochs          = every_n_epochs,
-            auto_insert_metric_name = auto_insert_metric_name,
-            verbose                 = verbose,
+            save_on_train_epoch_end = save_on_train_epoch_end,
+            enable_version_counter  = enable_version_counter,
         )
         
     @property

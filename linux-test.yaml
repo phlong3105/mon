@@ -11,7 +11,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python=3.11
+  - python=3.12
   - pip                   # PyPA recommended tool for installing Python packages.
   # CUDA
   - cudatoolkit=11.8      # CUDA Toolkit - Including CUDA runtime.
@@ -45,9 +45,9 @@ dependencies:
       - tensorboard       # TensorFlow's Visualization Toolkit.
       # PyTorch           
       - einops            # A new flavour of deep learning operations.
-      - lightning>=2.0.2  #
+      - lightning>=2.1.2  #
       # - pytorch-lightning==1.9.2
-      - torch>=2.0.1      # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+      - torch>=2.1.1      # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
       - torchaudio        # Simple audio I/O for pytorch.
       - torchvision       # Image and video datasets and models for torch deep learning.
       # Metric

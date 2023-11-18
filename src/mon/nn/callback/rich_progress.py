@@ -9,6 +9,8 @@ __all__ = [
    "RichProgressBar",
 ]
 
+from typing import Any
+
 import lightning
 import torch
 from lightning.pytorch.callbacks.progress import rich_progress
@@ -30,8 +32,10 @@ class RichProgressBar(rich_progress.RichProgressBar):
             # self._console: Console = Console(**self._console_kwargs)
             self._console.clear_live()
             self._metric_component = rich_progress.MetricsTextColumn(
-                trainer = trainer,
-                style   = self.theme.metrics
+                trainer        = trainer,
+                style          = self.theme.metrics,
+                text_delimiter = self.theme.metrics_text_delimiter,
+                metrics_format = self.theme.metrics_format,
             )
             self.progress = rich_progress.CustomProgress(
                 *self.configure_columns(trainer),
