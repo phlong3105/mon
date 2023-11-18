@@ -554,7 +554,6 @@ if [ "$task" == "predict" ]; then
               --variant "${variant[j]}" \
               --weights "${weights}" \
               --num_iters 8 \
-              --unsharp_sigma 2.5 \
               --image-size 512 \
               --save-image \
               --output-dir "${predict_dir}"

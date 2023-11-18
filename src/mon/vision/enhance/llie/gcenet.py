@@ -153,7 +153,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
-        gamma        : float | str | None = None,
+        gamma        : float | str | None = 2.8,
         num_iters    : int   | str        = 8,
         unsharp_sigma: int   | str | None = None,
         *args, **kwargs
@@ -167,7 +167,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
         self.num_channels  = mon.to_int(num_channels)    or 32
         self.scale_factor  = mon.to_float(scale_factor)  or 1.0
-        self.gamma         = mon.to_float(gamma)         or None
+        self.gamma         = mon.to_float(gamma)         or 2.8
         self.num_iters     = mon.to_int(num_iters)       or 8
         self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
         self.previous      = None
@@ -188,7 +188,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.loss         = ZeroReferenceLoss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
-                spa_num_regions = 8,
+                spa_num_regions = 4,
                 spa_patch_size  = 4,
                 weight_bri      = 0,
                 weight_col      = 5,
@@ -197,14 +197,16 @@ class GCENet(base.LowLightImageEnhancementModel):
                 weight_exp      = 10,
                 weight_kl       = 0.1,
                 weight_spa      = 1,
-                weight_tvA      = 1600 if self.out_channels == 3 else 200,
+                weight_tvA      = 1600,
                 reduction       = "mean",
             )
         else:
             self.config_model_variant()
 
     def config_model_variant(self):
-        """Config the model based on ``self.variant``. Mainly used in ablation study."""
+        """Config the model based on ``self.variant``.
+        Mainly used in ablation study.
+        """
         # self.gamma         = 2.8
         # self.num_iters     = 9
         # self.unsharp_sigma = 2.5
