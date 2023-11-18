@@ -46,11 +46,11 @@ mon
 `🐈 mon`'s core API includes several packages built on top of 
 __[Python](https://www.python.org/)__ and __[PyTorch](https://pytorch.org/)__.
 
-| Package                                   | Description                           |
-|-------------------------------------------|---------------------------------------|
-| __[foundation](mon/foundation/index.md)__ | Base functionality for other packages |
-| __[coreml](mon/coreml/index.md)__         | Machine learning code                 |
-| __[vision](mon/vision/index.md)__         | Computer vision code                  |
+| Package                           | Description                           |
+|-----------------------------------|---------------------------------------|
+| __[core](mon/core/index.md)__     | Base functionality for other packages |
+| __[coreml](mon/coreml/index.md)__ | Machine learning code                 |
+| __[vision](mon/vision/index.md)__ | Computer vision code                  |
 
 ---
 
