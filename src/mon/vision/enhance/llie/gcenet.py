@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements GCE-Net models."""
+"""This module implements GCE-Net models.
+
+./run_llie.sh gcenet none none train 100 sice-zerodce all vision/enhance/llie no last
+"""
 
 from __future__ import annotations
 
@@ -188,7 +191,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.loss         = ZeroReferenceLoss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
-                spa_num_regions = 4,
+                spa_num_regions = 8,
                 spa_patch_size  = 4,
                 weight_bri      = 0,
                 weight_col      = 5,
@@ -200,6 +203,7 @@ class GCENet(base.LowLightImageEnhancementModel):
                 weight_tvA      = 1600,
                 reduction       = "mean",
             )
+            self.apply(self.init_weights)
         else:
             self.config_model_variant()
 
@@ -409,13 +413,13 @@ class GCENet(base.LowLightImageEnhancementModel):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):
-                m.conv.weight.data.normal_(0.0, 0.02)
+                m.conv.weight.data.normal_(0.0, 0.02)  # 0.02
             elif hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)
+                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
             elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)
+                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
             elif hasattr(m, "weight"):
-                m.weight.data.normal_(0.0, 0.02)
+                m.weight.data.normal_(0.0, 0.02)  # 0.02
     
     def forward_loss(
         self,

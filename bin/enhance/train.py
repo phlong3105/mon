@@ -27,7 +27,7 @@ hosts = {
         "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 32,
+        "batch_size" : 16,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
