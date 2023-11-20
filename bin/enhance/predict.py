@@ -264,13 +264,13 @@ def main(
     data        = mon.Path(data)
     project     = project or config_args.model["project"]
     project     = str(project).replace(".", "/")
-    root        = root        or host_args.get("root",        None)
-    name        = name        or host_args.get("name",        None) or config_args.model["name"]
-    variant     = variant     or host_args.get("variant",     None) or config_args.model["variant"]
+    root        = root        or host_args.get("root",       None)
+    name        = name        or host_args.get("name",       None) or config_args.model["name"]
+    variant     = variant     or host_args.get("variant",    None) or config_args.model["variant"]
     variant     = None if variant in ["", "none", "None"] else variant
-    weights     = weights     or host_args.get("weights",     None) or config_args.model["weights"]
-    batch_size  = batch_size  or host_args.get("batch_size",  None) or config_args.data["batch_size"]
-    image_size  = image_size  or host_args.get("image_size",  None) or config_args.data["image_size"]
+    weights     = weights     or host_args.get("weights",    None) or config_args.model["weights"]
+    batch_size  = batch_size  or host_args.get("batch_size", None) or config_args.data["batch_size"]
+    image_size  = image_size  or host_args.get("image_size", None) or config_args.data["image_size"]
     
     # Update arguments
     args                 = mon.get_module_vars(config_args)

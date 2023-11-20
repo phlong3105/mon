@@ -175,7 +175,7 @@ def train(args: dict):
 @click.option("--devices",     default=0,                   type=int,                      help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
 @click.option("--max-epochs",  default=100,                 type=int,                      help="Stop training once this number of epochs is reached.")
 @click.option("--max-steps",   default=None,                type=int,                      help="Stop training once this number of steps is reached.")
-@click.option("--strategy",    default="auto",              type=str,                      help="Supports different training strategies with aliases as well custom strategies.")
+@click.option("--strategy",    default="auto",              type=str,                      help="Supports different training strategies with aliases as well as custom strategies.")
 @click.option("--exist-ok",    is_flag=True,                                               help="Whether to overwrite existing experiment.")
 @click.pass_context
 def main(

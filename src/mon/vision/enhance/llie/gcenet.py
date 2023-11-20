@@ -231,6 +231,8 @@ class GCENet(base.LowLightImageEnhancementModel):
         elif self.variant[3] == "3":
             self.gamma        = self.gamma or 2.8
             self.out_channels = 3
+        else:
+            raise ValueError
 
         # Variant code: [aa][l][i]
         # aa: architecture
@@ -404,6 +406,8 @@ class GCENet(base.LowLightImageEnhancementModel):
                 weight_tvA      = weight_tvA,  # weight_tvA,
                 reduction       = "mean",
             )
+        else:
+            raise ValueError
 
     @property
     def config_dir(self) -> core.Path:
@@ -543,7 +547,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         if self.scale_factor != 1:
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
 
-        # Variant code: [a][l][e]
+        # Variant code: [aa][l][e]
         if self.variant[0:2] in ["10"]:
             f1  = self.act(self.conv1(x_down))
             f2  = self.act(self.conv2(f1))

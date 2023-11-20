@@ -51,9 +51,9 @@ models=(
   "uretinexnet"        # https://github.com/AndersonYong/URetinex-Net
   "utvnet"             # https://github.com/CharlieZCJ/UTVNet
   "wahe"
+  "zeroadce"           #
   "zerodce"            #
   "zerodce++"          #
-  "zerodcev2"          #
 )
 train_datasets=(
   "fivek-c"
@@ -426,6 +426,12 @@ if [ "$task" == "train" ]; then
       # UTVNet
       elif [ "${model[i]}" == "utvnet" ]; then
         echo -e "\nI have not prepared the training script for UTVNet."
+      # Zero-ADCE
+      elif [ "${model[i]}" == "zeroadce" ]; then
+        python -W ignore train.py \
+          --name "${name}" \
+          --variant "${variant[j]}" \
+          --max-epochs "$epochs"
       # Zero-DCE
       elif [ "${model[i]}" == "zerodce" ]; then
         python -W ignore lowlight_train.py \
@@ -459,12 +465,6 @@ if [ "$task" == "train" ]; then
           --display-iter 10 \
           --checkpoints-iter 10 \
           --checkpoints-dir "${train_dir}"
-      # Zero-DCEv2
-      elif [ "${model[i]}" == "zerodcev2" ]; then
-        python -W ignore train.py \
-          --name "${model_variant}-${train_data[0]}" \
-          --variant "${variant[j]}" \
-          --max-epochs "$epochs"
       fi
     done
   done
@@ -498,9 +498,9 @@ if [ "$task" == "predict" ]; then
       fi
 
       train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}"
-      train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/${checkpoint}.pt"
-      train_weights_pth="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/${checkpoint}.pth"
-      train_weights_ckpt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/${checkpoint}.ckpt"
+      train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
+      train_weights_pth="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pth"
+      train_weights_ckpt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.ckpt"
       zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.pt"
       zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.pth"
       zoo_weights_ckpt="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.ckpt"
@@ -545,7 +545,6 @@ if [ "$task" == "predict" ]; then
               --output-dir "${predict_dir}"
           # GCE-Net
           elif [ "${model[i]}" == "gcenet" ]; then
-            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
@@ -677,6 +676,19 @@ if [ "$task" == "predict" ]; then
               --data "${low_data_dirs[k]}" \
               --image-size 512 \
               --output-dir "${predict_dir}"
+          # Zero-ADCE
+          elif [ "${model[i]}" == "zeroadce" ]; then
+            python -W ignore predict.py \
+              --data "${low_data_dirs[k]}" \
+              --config "${model[i]}_sice_zerodce" \
+              --root "${predict_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --num_iters 8 \
+              --image-size 512 \
+              --save-image \
+              --output-dir "${predict_dir}"
           # Zero-DCE
           elif [ "${model[i]}" == "zerodce" ]; then
             python -W ignore lowlight_test.py \
@@ -689,20 +701,6 @@ if [ "$task" == "predict" ]; then
             python -W ignore lowlight_test.py \
               --data "${low_data_dirs[k]}" \
               --weights  "weights/best.pth" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # Zero-DCEv2
-          elif [ "${model[i]}" == "zerodcev2" ]; then
-            weights="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
-            python -W ignore predict.py \
-              --data "${low_data_dirs[k]}" \
-              --config "${model[i]}_llie" \
-              --root "${predict_dir}" \
-              --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
-              --weights "${weights}" \
-              --num_iters 8 \
-              --unsharp_sigma 2.5 \
               --image-size 512 \
               --output-dir "${predict_dir}"
           fi
