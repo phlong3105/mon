@@ -73,7 +73,7 @@ predict_datasets=(
   "dicm"
   # "exdark"
   # "fivek-c"
-  "fivek-e"
+  # "fivek-e"
   "fusion"
   "lime"
   "lol-v1"
@@ -274,7 +274,7 @@ if [ "$task" == "train" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zerodcev2" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zeroadce" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -477,7 +477,7 @@ if [ "$task" == "predict" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zerodcev2" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zeroadce" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"

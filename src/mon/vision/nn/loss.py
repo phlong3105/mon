@@ -510,9 +510,9 @@ class SpatialConsistencyLoss(Loss):
     
     def __init__(
         self,
-        num_regions: Literal[4, 8]   = 4,
-        patch_size : int             = 4,
-        reduction  : Reduction | str = "mean",
+        num_regions: Literal[4, 8, 16, 24] = 4,
+        patch_size : int                   = 4,
+        reduction  : Reduction | str       = "mean",
     ):
         super().__init__(reduction=reduction)
         self.num_regions = num_regions

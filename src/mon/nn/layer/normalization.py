@@ -250,7 +250,7 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
 
 @LAYERS.register()
 class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
-    """Applies Instance Normalization on a fraction of the input tensor.
+    """Apply Instance Normalization on a fraction of the input tensor.
     
     Args:
         num_features: Number of input features.
@@ -305,9 +305,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             dtype               = dtype,
         )
         if scheme not in self.schemes:
-            raise ValueError(
-                f"'scheme' must be one of: {self.schemes}. But got: {scheme}."
-            )
+            raise ValueError(f"``scheme`` must be one of: {self.schemes}. But got: {scheme}.")
         if scheme == "half":
             self.alpha = torch.zeros(num_features)
             self.alpha[0:math.ceil(num_features * 0.5)] = 1
@@ -330,9 +328,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             self.alpha = torch.nn.Parameter(torch.full([num_features], p))
         elif scheme == "attentive":
             if pool not in ["avg", "max"]:
-                raise ValueError(
-                    f"pool must be one of: ['avg', 'max'], but got {pool}."
-                )
+                raise ValueError(f"``pool`` must be one of: [``'avg'``, ``'max'``], but got {pool}.")
             self.channel_attention = nn.Sequential(
                 self.Flatten(),
                 linear.Linear(
@@ -360,7 +356,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
         self._check_input_dim(input)
         x          = input
         b, c, h, w = x.shape
-        x_norm = functional.instance_norm(
+        x_norm     = functional.instance_norm(
             input           = x,
             running_mean    = self.running_mean,
             running_var     = self.running_var,

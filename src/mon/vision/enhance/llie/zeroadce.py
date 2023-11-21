@@ -16,8 +16,8 @@ import kornia
 import torch
 
 import mon
-from mon.globals import MODELS
-from mon.vision import core, nn
+from mon.globals import MODELS, ModelPhase
+from mon.vision import core, nn, prior
 from mon.vision.enhance.llie import base
 from mon.vision.nn import functional as F
 
@@ -154,6 +154,7 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
         variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
+        gamma        : float | str | None = 2.8,
         num_iters    : int   | str        = 8,
         unsharp_sigma: int   | str | None = None,
         *args, **kwargs
@@ -167,6 +168,7 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
         self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
         self.num_channels  = mon.to_int(num_channels)    or 32
         self.scale_factor  = mon.to_float(scale_factor)  or 1.0
+        self.gamma         = mon.to_float(gamma)         or 2.8
         self.num_iters     = mon.to_int(num_iters)       or 8
         self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
         self.previous      = None
@@ -190,7 +192,7 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
                 weight_bri      = 0,
                 weight_col      = 5,
                 weight_crl      = 0.1,
-                weight_edge     = 5,
+                weight_edge     = 1,
                 weight_exp      = 10,
                 weight_kl       = 5,
                 weight_spa      = 1,
@@ -214,41 +216,215 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
         # i: inference mode
         if self.variant[3] == "0":
             self.out_channels = 3
+        elif self.variant[3] == "1":
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+        elif self.variant[3] == "2":
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+        elif self.variant[3] == "3":
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+        else:
+            raise ValueError
 
         # Variant code: [aa][l][i]
         # aa: architecture
-        self.act      = nn.ReLU(inplace=True)
-        self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
         if self.variant[0:2] == "00":
-            self.conv1    = nn.ABSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True, norm2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, norm2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, norm2=nn.HalfInstanceNorm2d)
-            self.conv7    =     nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.ABSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "01":
-            self.conv1    = nn.ABSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv7    =     nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.ABSConv2dS1(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS1(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS1(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS1(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS1(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS1(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS1(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "02":
-            self.conv1    = nn.ABSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv2    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv3    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv4    = nn.ABSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv5    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv6    = nn.ABSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
-            self.conv7    = nn.ABSConv2dS(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv1    = nn.ABSConv2dS2(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS2(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS2(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS2(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS2(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS2(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS2(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "03":
+            self.conv1    = nn.ABSConv2dS3(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS3(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS3(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS3(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS3(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS3(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS3(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "04":
+            self.conv1    = nn.ABSConv2dS4(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS4(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS4(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS4(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS4(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS4(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS4(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "05":
+            self.conv1    = nn.ABSConv2dS5(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS5(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS5(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS5(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS5(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS5(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS5(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "06":
+            self.conv1    = nn.ABSConv2dS6(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS6(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS6(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS6(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS6(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS6(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS6(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "07":
+            self.conv1    = nn.ABSConv2dS7(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS7(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS7(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS7(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS7(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS7(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS7(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "08":
+            self.conv1    = nn.ABSConv2dS8(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS8(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS8(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS8(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS8(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS8(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS8(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "09":
+            self.conv1    = nn.ABSConv2dS9(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS9(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS9(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS9(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS9(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS9(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS9(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "10":
+            self.conv1    = nn.ABSConv2dS10(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS10(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS10(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS10(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS10(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS10(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS10(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "11":
+            self.conv1    = nn.ABSConv2dS11(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS11(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS11(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS11(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS11(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS11(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS11(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "12":
+            self.conv1    = nn.ABSConv2dS12(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS12(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS12(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS12(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS12(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS12(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS12(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "13":
+            self.conv1    = nn.ABSConv2dS13(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS13(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS13(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS13(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS13(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS13(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS13(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "14":
+            self.conv1    = nn.ABSConv2dS14(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS14(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS14(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS14(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS14(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS14(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS14(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "15":
+            self.conv1    = nn.ABSConv2dS15(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS15(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS15(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS15(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS15(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS15(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS15(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "16":
+            self.conv1    = nn.ABSConv2dS16(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS16(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS16(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS16(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS16(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS16(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS16(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "17":
+            self.conv1    = nn.ABSConv2dS17(self.channels,         self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv2    = nn.ABSConv2dS17(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv3    = nn.ABSConv2dS17(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv4    = nn.ABSConv2dS17(self.num_channels,     self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv5    = nn.ABSConv2dS17(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv6    = nn.ABSConv2dS17(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
+            self.conv7    = nn.ABSConv2dS17(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True, p=0.25, min_mid_channels=4, attn=True, norm1=nn.HalfInstanceNorm2d, norm2=nn.HalfInstanceNorm2d)
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
@@ -283,10 +459,10 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
                 spa_patch_size  = 4,
                 weight_bri      = 0,
                 weight_col      = 5,
-                weight_crl      = 0,
-                weight_edge     = 5,
+                weight_crl      = 0.1,
+                weight_edge     = 1,
                 weight_exp      = 10,
-                weight_kl       = 5,
+                weight_kl       = 0.1,
                 weight_spa      = 1,
                 weight_tvA      = weight_tvA,
                 reduction       = "mean",
@@ -415,7 +591,7 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
         if self.scale_factor != 1:
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
 
-        # Variant code: [aa][l][e]
+        # Estimation
         # if self.variant[0:2] in ["10"]:
         f1  = self.act(self.conv1(x_down))
         f2  = self.act(self.conv2(f1))
@@ -430,16 +606,90 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
             a = self.upsample(a)
 
         # Enhancement
-        # if self.variant[3] == "0":
-        if self.out_channels == 3:
-            y = x
-            for _ in range(self.num_iters):
-                y = y + a * (torch.pow(y, 2) - y)
-        else:
-            y = x
-            A = torch.split(a, 3, dim=1)
-            for i in range(self.num_iters):
-                y = y + A[i] * (torch.pow(y, 2) - y)
+        # Default
+        if self.variant[3] == "0":
+            if self.out_channels == 3:
+                y = x
+                for _ in range(self.num_iters):
+                    y = y + a * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    y = y + A[i] * (torch.pow(y, 2) - y)
+        # Global P
+        elif self.variant[3] == "1":
+            if self.out_channels == 3:
+                y = x
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for _ in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for i in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + A[i] * (torch.pow(d, 2) - d)
+        # Global P Inference Only
+        elif self.variant[3] == "2":
+            if self.out_channels == 3:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    for _ in range(self.num_iters):
+                        y = y + a * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    for _ in range(self.num_iters):
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        y = y + A[i] * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    for i in range(self.num_iters):
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + A[i] * (torch.pow(d, 2) - d)
+        # Iterative P Inference Only
+        elif self.variant[3] == "3":
+            if self.out_channels == 3:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    for _ in range(self.num_iters):
+                        y = y + a * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    for _ in range(self.num_iters):
+                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        y = y + A[i] * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
         if self.unsharp_sigma is not None:

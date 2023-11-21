@@ -642,7 +642,6 @@ class GCENet(base.LowLightImageEnhancementModel):
                 for _ in range(self.num_iters):
                     y = y + a * (torch.pow(y, 2) - y)
             else:
-
                 y = x
                 A = torch.split(a, 3, dim=1)
                 for i in range(self.num_iters):
