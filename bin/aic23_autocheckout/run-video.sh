@@ -99,7 +99,7 @@ if [ "$preprocess" == "yes" ]; then
       image_dir="${root_dir}/data/${dataset}/${subset}/deblur/${video}" \
       label_dir="${root_dir}/data/${dataset}/${subset}/person/${video}" \
       output_dir="${root_dir}/data/${dataset}/${subset}/inpainting/${video}" \
-      model.path="${root_dir}/zoo/lama/big-lama-aic" \
+      model.path="weights/big-lama-aic" \
       dataset.kind="video" \
       dataset.dilate=7
 

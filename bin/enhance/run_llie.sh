@@ -527,7 +527,7 @@ if [ "$task" == "predict" ]; then
       # LCDPNet
       if [ "${model[i]}" == "lcdpnet" ]; then
         python -W ignore src/test.py \
-          checkpoint_path="${root_dir}/zoo/${project}/${model[i]}/lcdpnet-ours.ckpt"  \
+          checkpoint_path="weights/ours.ckpt"  \
           +image_size=512
       else
         for (( k=0; k<${#predict_data[@]}; k++ )); do

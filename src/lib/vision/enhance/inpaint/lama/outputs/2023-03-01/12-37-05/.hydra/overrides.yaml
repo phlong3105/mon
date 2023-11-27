@@ -1,6 +1,0 @@
-- image_dir=/home/longpham/workspace/mon/data/aic23-autocheckout/testA/convert/testA_1
-- label_dir=/home/longpham/workspace/mon/data/aic23-autocheckout/testA/person/testA_1
-- output_dir=/home/longpham/workspace/mon/data/aic23-autocheckout/testA/inpainting/testA_1
-- model.path=/home/longpham/workspace/mon/zoo/lama/big-lama-aic
-- dataset.kind=video
-- dataset.dilate=7
