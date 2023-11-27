@@ -86,7 +86,7 @@ def measure_metric_piqa(
         
     need_target = any(m in _METRICS and _METRICS[m]["metric_mode"] == "FR" for m in metric)
    
-   # Measuring
+    # Measuring
     h, w = mon.get_hw(image_size)
     with mon.get_progress_bar() as pbar:
         for image_file in pbar.track(

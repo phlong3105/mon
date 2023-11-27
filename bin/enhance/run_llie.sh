@@ -206,7 +206,7 @@ elif [ "$task" == "predict" ]; then
   for d in "${predict_data[@]}"; do
     if [ "$d" == "darkcityscapes" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/low")
-      high_data_dirs+=("")
+      high_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/high")
     fi
     if [ "$d" == "darkface" ]; then
       low_data_dirs+=("${root_dir}/data/llie/test/darkface/low")
@@ -723,16 +723,27 @@ if [ "$task" == "evaluate" ]; then
           else
             model_variant="${model[i]}"
           fi
+
           if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
             model_variant_suffix="${model_variant}-${suffix}"
           else
             model_variant_suffix="${model_variant}"
           fi
-          if [ "${use_data_dir}" == "yes" ]; then
-            predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}"
+
+          if [ "${predict_data[k]}" == "darkcityscapes" ]; then
+            if [ "${use_data_dir}" == "yes" ]; then
+              predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}/enhance"
+            else
+              predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}/enhance"
+            fi
           else
-            predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
+            if [ "${use_data_dir}" == "yes" ]; then
+              predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}"
+            else
+              predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
+            fi
           fi
+
           python -W ignore metric.py \
             --image-dir "${predict_dir}" \
             --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
@@ -760,17 +771,23 @@ if [ "$task" == "evaluate" ]; then
             --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
             --result-file "${current_dir}" \
             --name "${model_variant_suffix}" \
+            --image-size 256 \
+            --resize \
             --test-y-channel \
             --backend "pyiqa" \
             --append-results \
-            --metric "psnr" \
             --metric "psnry" \
-            --metric "ssim" \
-            --metric "ms-ssim" \
-            --metric "lpips" \
             --metric "brisque" \
             --metric "niqe" \
             --metric "pi"
+            # --metric "psnr" \
+            # --metric "psnry" \
+            # --metric "ssim" \
+            # --metric "ms-ssim" \
+            # --metric "lpips" \
+            # --metric "brisque" \
+            # --metric "niqe" \
+            # --metric "pi"
             # --name "${model[i]}" \
             # --variant "${variant[j]}" \
         done

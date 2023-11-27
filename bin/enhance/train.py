@@ -21,13 +21,13 @@ console = mon.console
 
 hosts = {
 	"lp-labdesktop-01": {
-        "config"     : "zeroadce_sice_zerodce",
+        "config"     : "gcenet_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zeroadce",
-        "name"       : "zeroadce-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenet",
+        "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 16,
+        "batch_size" : 8,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : 1,
@@ -69,10 +69,10 @@ hosts = {
         "exist_ok"   : False,
 	},
     "vsw-ws02": {
-        "config"     : "zeroadce_sice_zerodce",
+        "config"     : "gcenet_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/zeroadce",
-        "name"       : "zeroadce-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenet",
+        "name"       : "gcenet-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 32,
