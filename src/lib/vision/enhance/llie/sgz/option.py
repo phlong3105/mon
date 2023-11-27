@@ -1,10 +1,10 @@
 import argparse
 
-import mon
+from mon import RUN_DIR, ZOO_DIR
 
 parser = argparse.ArgumentParser(description="Train_Test")
 parser.add_argument("--data",             type=str,   default="data/train_data/")
-parser.add_argument("--weights",          type=str,   default="weight/Epoch99.pth")
+parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/sgz/sgz-lol.pt")
 parser.add_argument("--load-pretrain",    type=bool,  default=False)
 parser.add_argument("--image-size",       type=int,   default=512)
 parser.add_argument("--lr",               type=float, default=0.0001)
@@ -21,6 +21,6 @@ parser.add_argument("--conv-type",        type=str,   default="dsc", choices=["d
 parser.add_argument("--patch-size",       type=int,   default=4,     choices=[3, 4, 5])
 parser.add_argument("--exp-level",        type=float, default=0.6,   choices=[0.5, 0.6, 0.7])
 parser.add_argument("--checkpoints-iter", type=int,   default=10)
-parser.add_argument("--checkpoints-dir",  type=str,   default=mon.RUN_DIR/"train/sgz")
-parser.add_argument("--output-dir",       type=str,   default=mon.RUN_DIR/"predict/sgz")
+parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/sgz")
+parser.add_argument("--output-dir",       type=str,   default=RUN_DIR / "predict/sgz")
 args = parser.parse_args()

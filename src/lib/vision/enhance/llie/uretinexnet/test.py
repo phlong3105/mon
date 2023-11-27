@@ -12,6 +12,7 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 
 import mon
+from mon import ZOO_DIR, RUN_DIR
 from network.decom import Decom
 from network.Math_Module import P, Q
 from utils import *
@@ -94,13 +95,13 @@ class Inference(nn.Module):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Configure")
     parser.add_argument("--data",                    type=str, default="./demo/input")
-    parser.add_argument("--decom-model-low-weights", type=str, default="./ckpt/init_low.pth")
-    parser.add_argument("--unfolding-model-weights", type=str, default="./ckpt/unfolding.pth")
-    parser.add_argument("--adjust-model-weights",    type=str, default="./ckpt/L_adjust.pth")
+    parser.add_argument("--decom-model-low-weights", type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-init_low.pth")
+    parser.add_argument("--unfolding-model-weights", type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-unfolding.pth")
+    parser.add_argument("--adjust-model-weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-L_adjust.pth")
     parser.add_argument("--image-size",              type=int, default=512)
     parser.add_argument("--ratio",                   type=int, default=5)  # ratio are recommended to be 3-5, bigger ratio will lead to over-exposure
     parser.add_argument("--gpu",                     type=int, default=0)
-    parser.add_argument("--output-dir",              type=str, default="./demo/output")
+    parser.add_argument("--output-dir",              type=str, default=RUN_DIR / "predict/uretinexnet")
     args = parser.parse_args()
     
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)

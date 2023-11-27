@@ -10,6 +10,7 @@ from base_parser import BaseParser
 from base_trainer import BaseTrainer
 from dataloader import *
 from models import *
+from mon import ZOO_DIR
 
 console = mon.console
 
@@ -124,13 +125,13 @@ if __name__ == "__main__":
     
     if args.checkpoint is not None:
         if config["noDecom"] is False:
-            pretrain_decom = torch.load("./checkpoints/decom_net.pth")
+            pretrain_decom = torch.load(ZOO_DIR / "vision/enhance/llie/kind/kind-decom_net.pth")
             model.decom_net.load_state_dict(pretrain_decom)
             # console.log("Model loaded from decom_net.pth")
-        pretrain_restore = torch.load("./checkpoints/restore_net.pth")
+        pretrain_restore = torch.load(ZOO_DIR / "vision/enhance/llie/kind/kind-restore_net.pth")
         model.restore_net.load_state_dict(pretrain_restore)
         # console.log("Model loaded from restore_net.pth")
-        pretrain_illum   = torch.load("./checkpoints/illum_net.pth")
+        pretrain_illum   = torch.load(ZOO_DIR / "vision/enhance/llie/kind/kind-illum_net.pth")
         model.illum_net.load_state_dict(pretrain_illum)
         # console.log("Model loaded from illum_net.pth")
     

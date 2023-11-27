@@ -1,2 +1,0 @@
-model_checkpoint_path: "RetinexNet-tensorflow"
-all_model_checkpoint_paths: "RetinexNet-tensorflow"

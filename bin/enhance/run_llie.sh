@@ -9,48 +9,25 @@ echo "$HOSTNAME"
 
 # Constants
 models=(
-  "bimef"
-  "bpdhe"
-  "cvc"
-  "deepupe"
-  "dheci"
-  "dong"
-  "drbn"
-  "eemefn"
   "enlightengan"       # https://github.com/arsenyinfo/EnlightenGAN-inference
-  "excnet"
   "gcenet"
-  "he"
   "iat"                # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
-  "jed"
   "kind"               # https://github.com/zhangyhuaee/KinD
   "kind++"             # https://github.com/zhangyhuaee/KinD_plus
   "lcdpnet"            # https://github.com/onpix/LCDPNet
-  "ldr"
-  "lightennet"
   "lime"               # https://github.com/pvnieo/Low-light-Image-Enhancement
   "llflow"             # https://github.com/wyf0912/LLFlow
-  "llnet"
   "mbllen"             # https://github.com/Lvfeifan/MBLLEN
-  "mf"
-  "multiscaleretinex"
-  "npe"
   "pie"                # https://github.com/DavidQiuChao/PIE
   "retinexdip"         # https://github.com/zhaozunjin/RetinexDIP
   "retinexnet"         # https://github.com/weichen582/RetinexNet
-  "rrm"                
   "ruas"               # https://github.com/KarelZhang/RUAS
   "sci"                # https://github.com/vis-opt-group/SCI
-  "sdsd"               
   "sgz"                #
-  "sice"
-  "sid"
   "snr"                # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
-  "srie"
   "stablellve"         # https://github.com/zkawfanx/StableLLVE
   "uretinexnet"        # https://github.com/AndersonYong/URetinex-Net
   "utvnet"             # https://github.com/CharlieZCJ/UTVNet
-  "wahe"
   "zeroadce"           #
   "zerodce"            #
   "zerodce++"          #
@@ -114,17 +91,18 @@ echo -e "\n"
 machine=$(echo $machine | tr '[:upper:]' '[:lower:]')
 model=$(echo $model | tr '[:upper:]' '[:lower:]')
 model=($(echo $model | tr ',' '\n'))
-# echo "${model[*]}"
+
 variant=$(echo $variant | tr '[:upper:]' '[:lower:]')
 variant=($(echo "$variant" | tr ',' '\n'))
-# echo "${variant[*]}"
+
 task=$(echo $task | tr '[:upper:]' '[:lower:]')
+
 train_data=$(echo $train_data | tr '[:upper:]' '[:lower:]')
 train_data=($(echo $train_data | tr ',' '\n'))
-# echo "${train_data[*]}"
+
 predict_data=$(echo $predict_data | tr '[:upper:]' '[:lower:]')
 predict_data=($(echo $predict_data | tr ',' '\n'))
-# echo "${predict_data[*]}"
+
 project=$(echo $project | tr '[:upper:]' '[:lower:]')
 
 
@@ -157,8 +135,6 @@ if [ "${predict_data[0]}" == "all" ]; then
   for i in ${!predict_datasets[@]}; do
     predict_data[i]="${predict_datasets[i]}"
   done
-# else
-  # declare -a predict_data=("${predict_data[0]}")
 fi
 
 declare -a low_data_dirs=()
@@ -286,6 +262,7 @@ if [ "$task" == "train" ]; then
       else
         model_variant="${model[i]}"
       fi
+
       if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
         name="${model_variant}-${train_data[0]}-${suffix}"
       else
@@ -309,20 +286,6 @@ if [ "$task" == "train" ]; then
         echo -e "\nI have not prepared the training script for EnlightenGAN."
       # GCE-Net
       elif [ "${model[i]}" == "gcenet" ]; then
-        # python -W ignore lowlight_train.py \
-        #   --load-pretrain false \
-        #   --name "${model_variant}-${train_data[0]}" \
-        #   --variant "${variant[j]}" \
-        #   --lr 0.0001 \
-        #   --weight-decay 0.0001 \
-        #   --grad-clip-norm 0.1 \
-        #   --epochs "$epochs" \
-        #   --train-batch-size 8 \
-        #   --val-batch-size 4 \
-        #   --num-workers 4 \
-        #   --display-iter 10 \
-        #   --checkpoints-iter 10 \
-        #   --checkpoints-dir "${train_dir}"
         python -W ignore train.py \
           --name "${name}" \
           --variant "${variant[j]}" \
@@ -489,6 +452,7 @@ if [ "$task" == "predict" ]; then
       else
         model_variant="${model[i]}"
       fi
+
       if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
         model_variant_weights="${model_variant}-${train_data[0]}-${suffix}"
         model_variant_suffix="${model_variant}-${suffix}"
@@ -527,7 +491,7 @@ if [ "$task" == "predict" ]; then
       # LCDPNet
       if [ "${model[i]}" == "lcdpnet" ]; then
         python -W ignore src/test.py \
-          checkpoint_path="weights/ours.ckpt"  \
+          checkpoint_path="${root_dir}/zoo/${project}/${model[i]}/lcdpnet-ours.ckpt" \
           +image_size=512
       else
         for (( k=0; k<${#predict_data[@]}; k++ )); do
@@ -560,8 +524,8 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "iat" ]; then
             python -W ignore IAT_enhance/predict.py \
               --data "${low_data_dirs[k]}" \
-              --exposure-weights "IAT_enhance/best_Epoch_exposure.pth" \
-              --enhance-weights "IAT_enhance/best_Epoch_lol.pth" \
+              --exposure-weights "${root_dir}/zoo/${project}/${model[i]}/iat-exposure.pth" \
+              --enhance-weights "${root_dir}/zoo/${project}/${model[i]}/iat-lol-v1.pth" \
               --image-size 512 \
               --normalize \
               --task "enhance" \
@@ -617,14 +581,14 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "retinexnet" ]; then
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
-              --weights "./ckpts/" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # RUAS
           elif [ "${model[i]}" == "ruas" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "ckpt/lol.pt" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/ruas-lol.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
@@ -633,7 +597,7 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "sci" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "weights/medium.pt" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/sci-medium.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
@@ -642,14 +606,14 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "sgz" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "weight/lol.pt" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/sgz-lol.pt" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # SNR-Aware
           elif [ "${model[i]}" == "snr" ]; then
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
-              --weights "weights/snr-lolv1.pth" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/snr-lolv1.pth" \
               --opt "./options/test/LOLv1.yml" \
               --image-size 512 \
               --output-dir "${predict_dir}"
@@ -657,16 +621,16 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "stablellve" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "./checkpoint.pth" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/stablellve-checkpoint.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # URetinex-Net
           elif [ "${model[i]}" == "uretinexnet" ]; then
             python -W ignore test.py \
               --data "${low_data_dirs[k]}" \
-              --decom-model-low-weights "ckpt/init_low.pth" \
-              --unfolding-model-weights "ckpt/unfolding.pth" \
-              --adjust-model-weights "ckpt/L_adjust.pth" \
+              --decom-model-low-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-init_low.pth" \
+              --unfolding-model-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-unfolding.pth" \
+              --adjust-model-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-L_adjust.pth" \
               --image-size 512 \
               --ratio 5 \
               --output-dir "${predict_dir}"
@@ -693,14 +657,14 @@ if [ "$task" == "predict" ]; then
           elif [ "${model[i]}" == "zerodce" ]; then
             python -W ignore lowlight_test.py \
               --data "${low_data_dirs[k]}" \
-              --weights "weights/best.pth" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # Zero-DCE++
           elif [ "${model[i]}" == "zerodce++" ]; then
             python -W ignore lowlight_test.py \
               --data "${low_data_dirs[k]}" \
-              --weights  "weights/best.pth" \
+              --weights "${root_dir}/zoo/${project}/${model[i]}/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           fi

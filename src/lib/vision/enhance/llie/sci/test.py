@@ -19,6 +19,7 @@ from torch.autograd import Variable
 
 import mon
 from model import Finetunemodel
+from mon import ZOO_DIR
 from multi_read_data import MemoryFriendlyLoader
 
 console = mon.console
@@ -88,7 +89,7 @@ def test(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("SCI")
     parser.add_argument("--data",       type=str, default="./data/medium", help="location of the data corpus")
-    parser.add_argument("--weights",    type=str, default="./weights/medium.pt", help="location of the data corpus")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/sci-medium.pt", help="location of the data corpus")
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--gpu",        type=int, default=0, help="gpu device id")
     parser.add_argument("--seed",       type=int, default=2, help="random seed")

@@ -18,6 +18,7 @@ from natsort import natsort
 import mon
 import options.options as option
 from models import create_model
+from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 
@@ -92,9 +93,9 @@ def format_measurements(meas):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default=mon.ZOO_DIR/"vision"/"enhance"/"llflow"/"llflow-lol-smallnet.pth")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/llflow/llflow-lol-smallnet.pth")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/llflow")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/llflow")
     parser.add_argument("--opt",        type=str, default="./confs/LOL_smallNet.yml")
     parser.add_argument("--name", "-n", type=str, default="unpaired")
     args = parser.parse_args()

@@ -18,6 +18,7 @@ from torch.autograd import Variable
 
 import mon
 from model import Network
+from mon import DATA_DIR, ZOO_DIR, RUN_DIR
 from multi_read_data import MemoryFriendlyLoader
 
 console = mon.console
@@ -110,12 +111,12 @@ def test(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("ruas")
-    parser.add_argument("--data",       type=str, default=mon.DATA_DIR/"lol")
-    parser.add_argument("--weights",    type=str, default=mon.ZOO_DIR/"ruas/ruas-lol.pt")
+    parser.add_argument("--data",       type=str, default=DATA_DIR / "lol")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/ruas/ruas-lol.pt")
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--gpu",        type=int, default=0)
     parser.add_argument("--seed",       type=int, default=2)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/ruas")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/ruas")
     args = parser.parse_args()
     
     args.output_dir = mon.Path(args.output_dir)

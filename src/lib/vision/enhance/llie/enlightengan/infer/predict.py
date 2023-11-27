@@ -11,13 +11,11 @@ import argparse
 import time
 
 import cv2
-import onnx_tool
 import torch
-import torchvision
-from onnx_tool import create_ndarray_f32
 
 import mon
 from enlighten_inference import EnlightenOnnxModel
+from mon import ZOO_DIR
 
 console = mon.console
 _current_dir = mon.Path(__file__).absolute().parent
@@ -26,7 +24,7 @@ _current_dir = mon.Path(__file__).absolute().parent
 def predict():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default="./data/test/*")
-    parser.add_argument("--weights",    type=str, default="./checkpoint.pth")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR/"vision/enhance/llie/enlightengan/enlightengan.onnx")
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/enlightengan")
     args = parser.parse_args()

@@ -37,6 +37,7 @@ from PIL import Image
 
 import mon
 from models import network
+from mon import RUN_DIR, ZOO_DIR
 
 console = mon.console
 
@@ -44,9 +45,9 @@ console = mon.console
 def test():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default="./pretrain_model/model_test.pt")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/utvnet/utvnet-model_test.pt")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/utvnet")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/utvnet")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

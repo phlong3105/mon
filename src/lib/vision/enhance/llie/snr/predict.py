@@ -7,16 +7,17 @@ from __future__ import annotations
 
 import argparse
 import time
-import options.options as option
+
 import cv2
 import numpy as np
 import torch
-import torchvision
 
 import data.util as dutil
 import mon
+import options.options as option
 import utils.util as util
 from models import create_model
+from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 
@@ -24,10 +25,10 @@ console = mon.console
 def predict():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default=mon.ZOO_DIR/"snr/snr-lolv1.pth")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/snr/snr-lolv1.pth")
     parser.add_argument("--opt",        type=str, default="./options/test/LOLv1.yml", help="Path to options YAML file.")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/snr")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/snr")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

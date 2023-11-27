@@ -18,6 +18,7 @@ from keras_flops import get_flops
 import mon
 import Network
 import utls
+from mon import ZOO_DIR
 
 console = mon.console
 
@@ -25,7 +26,7 @@ console = mon.console
 def test():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",        type=str, default="./input", help="test image folder")
-    parser.add_argument("--model",       type=str, default="Syn_img_lowlight_withnoise", help="model name")
+    parser.add_argument("--model",       type=str, default=ZOO_DIR / "vision/enhance/llie//mbllen/mbllen-syn_img_lowlight_withnoise", help="model name")
     parser.add_argument("--weights",     type=str, default="./models")
     parser.add_argument("--image-size",  type=int, default=512)
     parser.add_argument("--com",         type=int, default=1,  help="Output with/without origional image and mid-result")
