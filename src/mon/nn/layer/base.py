@@ -8,9 +8,14 @@ helper functions.
 from __future__ import annotations
 
 __all__ = [
-    "ConcatLayerParsingMixin", "ConvLayerParsingMixin", "HeadLayerParsingMixin",
-    "Layer", "LayerParsingMixin", "MergingLayerParsingMixin",
-    "PassThroughLayerParsingMixin", "SameChannelsLayerParsingMixin",
+    "ConcatLayerParsingMixin",
+    "ConvLayerParsingMixin",
+    "HeadLayerParsingMixin",
+    "Layer",
+    "LayerParsingMixin",
+    "MergingLayerParsingMixin",
+    "PassThroughLayerParsingMixin",
+    "SameChannelsLayerParsingMixin",
 ]
 
 from abc import ABC, abstractmethod

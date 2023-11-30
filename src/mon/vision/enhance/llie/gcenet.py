@@ -9,7 +9,9 @@
 from __future__ import annotations
 
 __all__ = [
-    "GCENet", "ZeroReferenceLoss",
+    "GCENet",
+    "GCENetV2",
+    "ZeroReferenceLoss",
 ]
 
 from typing import Any, Literal
@@ -236,110 +238,113 @@ class GCENet(base.LowLightImageEnhancementModel):
 
         # Variant code: [aa][l][i]
         # aa: architecture
-        self.attn     = nn.Identity()
-        self.act      = nn.ReLU(inplace=True)
-        self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
         if self.variant[0:2] == "00":  # Zero-DCE (baseline)
-            self.conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # self.attn   = nn.SimAM()
-            # self.attn   = nn.CBAM(channels=self.num_channels)
-            self.act    = nn.ReLU(inplace=True)
+            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "01":  # Zero-DCE++ (baseline)
-            self.conv1  = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # self.attn   = nn.SimAM()
-            # self.attn   = nn.CBAM(channels=self.num_channels)
-            self.act    = nn.ReLU(inplace=True)
+            self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "02":
-            self.conv1  = nn.BSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.BSConv2dS(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.act    = nn.ReLU(inplace=True)
+            self.conv1    = nn.BSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.BSConv2dS(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "03":
-            self.conv1  = nn.BSConv2dU(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.BSConv2dU(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.act    = nn.ReLU(inplace=True)
+            self.conv1    = nn.BSConv2dU(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.BSConv2dU(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         #
         elif self.variant[0:2] == "10":
             self.num_channels = 32
-            self.conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             # Curve Enhancement Map (A)
-            self.conv5  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
             # Guided Brightness Enhancement Map (G)
-            self.conv8  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv9  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv10 = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
-            # self.attn   = nn.SimAM()
-            # self.attn   = nn.CBAM(channels=self.num_channels)
-            self.act    = nn.ReLU(inplace=True)
+            self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv10   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "11":
             self.num_channels = 32
-            self.conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             # Curve Enhancement Map (A)
-            self.conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv8  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv9  = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv9    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
             # Guided Brightness Enhancement Map (G)
-            self.conv10 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv11 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv12 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv13 = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
-            # self.attn   = nn.SimAM()
-            # self.attn   = nn.CBAM(channels=self.num_channels)
-            self.act    = nn.ReLU(inplace=True)
+            self.conv10   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv11   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv12   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv13   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         #
         elif self.variant[0:2] == "20":
-            self.conv1  = nn.Conv2d(self.channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
+            self.conv1    = nn.Conv2d(self.channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
             # knot points
-            self.conv5  = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
-            self.conv8  = nn.Conv2d(self.num_channels, 24, 3, 1, 1, bias=True)
+            self.conv5    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.Conv2d(self.num_channels, self.num_channels, 3, 1, 1, bias=True)
+            self.conv8    = nn.Conv2d(self.num_channels, 24, 3, 1, 1, bias=True)
             # curve parameter
-            self.conv9  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv10 = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv11 = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
-            self.act    = nn.ReLU(inplace=True)
-            self.pool   = nn.MaxPool2d(2, 1)
+            self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv10   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv11   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.pool     = nn.MaxPool2d(2, 1)
             self.apply(self.init_weights)
         else:
             raise ValueError
@@ -643,6 +648,545 @@ class GCENet(base.LowLightImageEnhancementModel):
                 for n in range(0, 4):
                     S = S + a * (torch.pow(S, 2) - S)
                 y = y + (k_m1 - k_m) * S
+        # Default
+        elif self.variant[3] == "0":
+            if self.out_channels == 3:
+                y = x
+                for _ in range(self.num_iters):
+                    y = y + a * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    y = y + A[i] * (torch.pow(y, 2) - y)
+        # Global P
+        elif self.variant[3] == "1":
+            if self.out_channels == 3:
+                y = x
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for _ in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for i in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + A[i] * (torch.pow(d, 2) - d)
+        # Global P Inference Only
+        elif self.variant[3] == "2":
+            if self.out_channels == 3:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    for _ in range(self.num_iters):
+                        y = y + a * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    for _ in range(self.num_iters):
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        y = y + A[i] * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    for i in range(self.num_iters):
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + A[i] * (torch.pow(d, 2) - d)
+        # Iterative P Inference Only
+        elif self.variant[3] == "3":
+            if self.out_channels == 3:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    for _ in range(self.num_iters):
+                        y = y + a * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    for _ in range(self.num_iters):
+                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        y = y + A[i] * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + A[i] * (torch.pow(d, 2) - d)
+
+        # Unsharp masking
+        if self.unsharp_sigma is not None:
+            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
+
+        #
+        if "1" in self.variant[0:1]:
+            return a, p, y
+        return a, y
+
+    def regularization_loss(self, alpha: float = 0.1):
+        loss = 0.0
+        for sub_module in [
+            self.conv1, self.conv2, self.conv3, self.conv4,
+            self.conv5, self.conv6, self.conv7
+        ]:
+            if hasattr(sub_module, "regularization_loss"):
+                loss += sub_module.regularization_loss()
+        return alpha * loss
+
+
+@MODELS.register(name="gcenetv2")
+@MODELS.register(name="gce-net-v2")
+class GCENetV2(base.LowLightImageEnhancementModel):
+    """GCE-NetV2 (Guidance Curve Estimation) model.
+
+    See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
+    """
+
+    configs     = {}
+    zoo         = {}
+    map_weights = {}
+
+    def __init__(
+        self,
+        config       : Any                = None,
+        loss         : Any                = ZeroReferenceLoss(),
+        variant      :         str | None = None,
+        num_channels : int   | str        = 32,
+        scale_factor : float | str        = 1.0,
+        p            : float | str | None = 0.5,
+        gamma        : float | str | None = 2.8,
+        num_iters    : int   | str        = 8,
+        unsharp_sigma: int   | str | None = None,
+        *args, **kwargs
+    ):
+        super().__init__(
+            config = config,
+            loss   = loss,
+            *args, **kwargs
+        )
+        variant            = mon.to_int(variant)
+        self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
+        self.num_channels  = mon.to_int(num_channels)    or 32
+        self.p             = mon.to_float(p)             or 0.5
+        self.scale_factor  = mon.to_float(scale_factor)  or 1.0
+        self.gamma         = mon.to_float(gamma)         or 2.8
+        self.num_iters     = mon.to_int(num_iters)       or 8
+        self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
+        self.previous      = None
+
+        if variant is None:  # Default model
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+            self.conv1        = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7        = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.norm1        = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm2        = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm3        = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm4        = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm5        = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm6        = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm7        = nn.FractionalInstanceNorm2d(self.out_channels, self.p)
+            self.attn         = nn.Identity()
+            self.act          = nn.ReLU(inplace=True)
+            self.upsample     = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.loss         = ZeroReferenceLoss(
+                exp_patch_size  = 16,
+                exp_mean_val    = 0.6,
+                spa_num_regions = 8,
+                spa_patch_size  = 4,
+                weight_bri      = 0,
+                weight_col      = 5,
+                weight_crl      = 0.1,
+                weight_edge     = 1,
+                weight_exp      = 10,
+                weight_kl       = 0.1,
+                weight_spa      = 1,
+                weight_tvA      = 1600,
+                reduction       = "mean",
+            )
+            self.apply(self.init_weights)
+        else:
+            self.config_model_variant()
+
+    def config_model_variant(self):
+        """Config the model based on ``self.variant``.
+        Mainly used in ablation study.
+        """
+        # self.gamma         = 2.8
+        # self.num_iters     = 9
+        # self.unsharp_sigma = 2.5
+        self.previous      = None
+        self.out_channels  = 3
+
+        # Variant code: [aa][l][i]
+        # i: inference mode
+        if self.variant[3] == "0":
+            self.gamma        = None
+            self.out_channels = 3
+        elif self.variant[3] == "1":
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+        elif self.variant[3] == "2":
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+        elif self.variant[3] == "3":
+            self.gamma        = self.gamma or 2.8
+            self.out_channels = 3
+        else:
+            raise ValueError
+
+        # Variant code: [aa][l][i]
+        # aa: architecture
+        if self.variant[0:2] == "00":  # Zero-DCE (baseline)
+            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.norm1    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm2    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm3    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm4    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm5    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm6    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm7    = nn.FractionalInstanceNorm2d(self.out_channels, self.p)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        elif self.variant[0:2] == "01":  # Zero-DCE++ (baseline)
+            self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            self.norm1    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm2    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm3    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm4    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm5    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm6    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm7    = nn.FractionalInstanceNorm2d(self.out_channels, self.p)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        #
+        elif self.variant[0:2] == "10":
+            self.num_channels = 32
+            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            # Curve Enhancement Map (A)
+            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            # Guided Brightness Enhancement Map (G)
+            self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv10   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+
+            self.norm1    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm2    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm3    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm4    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm5    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm6    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm7    = nn.FractionalInstanceNorm2d(self.out_channels, self.p)
+            self.norm8    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm9    = nn.FractionalInstanceNorm2d(self.num_channels, self.p)
+            self.norm10   = nn.FractionalInstanceNorm2d(1, self.p)
+            self.attn     = nn.Identity()
+            self.act      = nn.ReLU(inplace=True)
+            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
+            self.apply(self.init_weights)
+        else:
+            raise ValueError
+
+        # Variant code: [aa][l][i]
+        # l: loss function
+        weight_tvA = 1600 if self.out_channels == 3 else 200
+        if self.variant[2] == "0":  # Zero-DCE Loss
+            # NOT WORKING: over-exposed artifacts, enhance noises
+            self.loss = ZeroReferenceLoss(
+                exp_patch_size  = 16,
+                exp_mean_val    = 0.6,
+                spa_num_regions = 4,
+                spa_patch_size  = 4,
+                weight_bri      = 0,
+                weight_col      = 5,
+                weight_crl      = 0,
+                weight_edge     = 0,
+                weight_exp      = 10,
+                weight_kl       = 0,
+                weight_spa      = 1,
+                weight_tvA      = weight_tvA,
+                reduction       = "mean",
+            )
+        elif self.variant[2] == "1":  # New Loss
+            self.loss = ZeroReferenceLoss(
+                exp_patch_size  = 16,
+                exp_mean_val    = 0.6,
+                spa_num_regions = 8,
+                spa_patch_size  = 4,
+                weight_bri      = 0,
+                weight_col      = 5,
+                weight_crl      = 0,
+                weight_edge     = 1,
+                weight_exp      = 10,
+                weight_kl       = 0.1,
+                weight_spa      = 1,
+                weight_tvA      = weight_tvA,
+                reduction       = "mean",
+            )
+        elif self.variant[2] == "2":
+            self.loss = ZeroReferenceLoss(
+                exp_patch_size  = 16,
+                exp_mean_val    = 0.6,
+                spa_num_regions = 8,
+                spa_patch_size  = 4,
+                weight_bri      = 0,
+                weight_col      = 5,
+                weight_crl      = 0.1,
+                weight_edge     = 1,
+                weight_exp      = 10,
+                weight_kl       = 0.1,
+                weight_spa      = 1,
+                weight_tvA      = weight_tvA,
+                reduction       = "mean",
+            )
+        elif self.variant[2] == "9":
+            self.gamma = self.gamma or 2.5
+            self.loss  = ZeroReferenceLoss(
+                bri_gamma       = self.gamma,
+                exp_patch_size  = 16,   # 16
+                exp_mean_val    = 0.6,  # 0.6
+                spa_num_regions = 8,    # 8
+                spa_patch_size  = 4,    # 4
+                weight_bri      = 10,   # 10
+                weight_col      = 5,    # 5
+                weight_crl      = 0.1,  # 0.1
+                weight_edge     = 1,    # 1
+                weight_exp      = 10,   # 10
+                weight_kl       = 0.1,  # 0.1
+                weight_spa      = 1,    # 1
+                weight_tvA      = weight_tvA,  # weight_tvA,
+                reduction       = "mean",
+            )
+        else:
+            raise ValueError
+
+    @property
+    def config_dir(self) -> core.Path:
+        return core.Path(__file__).absolute().parent / "config"
+
+    def init_weights(self, m: nn.Module):
+        classname = m.__class__.__name__
+        if classname.find("Conv") != -1:
+            if hasattr(m, "conv"):
+                m.conv.weight.data.normal_(0.0, 0.02)  # 0.02
+            elif hasattr(m, "dw_conv"):
+                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
+            elif hasattr(m, "pw_conv"):
+                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
+            elif hasattr(m, "weight"):
+                m.weight.data.normal_(0.0, 0.02)  # 0.02
+
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        """Forward pass with loss value. Loss function may need more arguments
+        beside the ground-truth and prediction values. For calculating the
+        metrics, we only need the final predictions and ground-truth.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default: ``None``.
+
+        Return:
+            Predictions and loss value.
+        """
+        if self.variant is not None:
+            pred = self.forward_once_variant(input=input, *args, **kwargs)
+        else:
+            pred = self.forward(input=input, *args, **kwargs)
+        loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
+        loss += self.regularization_loss(alpha=0.1)
+        return pred[-1], loss
+
+    def forward_once(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass once. Implement the logic for a single forward pass.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            profile: Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: ``-1`` means the last layer.
+
+        Return:
+            Predictions.
+        """
+        x = input
+
+        # Downsampling
+        x_down = x
+        if self.scale_factor != 1:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+
+        f1 = self.act(self.conv1(x_down))
+        f2 = self.act(self.conv2(f1))
+        f3 = self.act(self.conv3(f2))
+        f4 = self.act(self.conv4(f3))
+        f4 = self.attn(f4)
+        f5 = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
+        f6 = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
+        a  =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
+
+        # Upsampling
+        if self.scale_factor != 1:
+            a = self.upsample(a)
+
+        # Enhancement
+        if self.out_channels == 3:
+            if self.phase == ModelPhase.TRAINING:
+                y = x
+                for _ in range(self.num_iters):
+                    y = y + a * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for _ in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + a * (torch.pow(d, 2) - d)
+        else:
+            if self.phase == ModelPhase.TRAINING:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    y = y + A[i] * (torch.pow(y, 2) - y)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                for i in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + A[i] * (torch.pow(d, 2) - d)
+
+        # Unsharp masking
+        if self.unsharp_sigma is not None:
+            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
+
+        return a, y
+
+    def forward_once_variant(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass once. Implement the logic for a single forward pass. Mainly used for ablation study.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            profile: Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: ``-1`` means the last layer.
+
+        Return:
+            Predictions.
+        """
+        x = input
+
+        # Downsampling
+        x_down = x
+        if self.scale_factor != 1:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+
+        # Variant code: [aa][l][e]
+        if self.variant[0:2] in ["10", "12"]:
+            f1  = self.act(self.conv1(x_down))
+            f2  = self.act(self.conv2(f1))
+            f3  = self.act(self.conv3(f2))
+            f4  = self.act(self.conv4(f3))
+            f4  = self.attn(f4)
+            # Curve Enhancement Map (A)
+            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
+            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
+            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
+            # Guided Brightness Enhancement Map (GBEM)
+            f8  = self.act(self.conv8(torch.cat([f3, f4], dim=1)))
+            f9  = self.act(self.conv9(torch.cat([f2, f8], dim=1)))
+            p   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
+        else:
+            f1  = self.act(self.conv1(x_down))
+            f2  = self.act(self.conv2(f1))
+            f3  = self.act(self.conv3(f2))
+            f4  = self.act(self.conv4(f3))
+            f4  = self.attn(f4)
+            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
+            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
+            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
+
+        # Upsampling
+        if self.scale_factor != 1:
+            a = self.upsample(a)
+
+        # Enhancement
+        if "1" in self.variant[0:1]:
+            if self.out_channels == 3:
+                y = x
+                for _ in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + A[i] * (torch.pow(d, 2) - d)
         # Default
         elif self.variant[3] == "0":
             if self.out_channels == 3:

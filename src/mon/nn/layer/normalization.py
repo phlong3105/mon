@@ -6,13 +6,30 @@
 from __future__ import annotations
 
 __all__ = [
-    "BatchNorm1d", "BatchNorm2d", "BatchNorm3d", "BatchNorm2dAct",
-    "BatchNorm2dReLU", "CrossMapLRN2d", "FractionalInstanceNorm2d",
-    "FractionalInstanceNorm2dOld", "FrozenBatchNorm2d", "GroupNorm",
-    "GroupNormAct", "HalfInstanceNorm2d", "InstanceNorm1d", "InstanceNorm2d",
-    "InstanceNorm3d", "LayerNorm", "LayerNorm2d", "LazyBatchNorm1d",
-    "LazyBatchNorm2d", "LazyBatchNorm3d", "LazyInstanceNorm1d",
-    "LazyInstanceNorm2d", "LazyInstanceNorm3d", "LocalResponseNorm",
+    "BatchNorm1d",
+    "BatchNorm2d",
+    "BatchNorm2dAct",
+    "BatchNorm2dReLU",
+    "BatchNorm3d",
+    "CrossMapLRN2d",
+    "FractionalInstanceNorm2d",
+    "FractionalInstanceNorm2dOld",
+    "FrozenBatchNorm2d",
+    "GroupNorm",
+    "GroupNormAct",
+    "HalfInstanceNorm2d",
+    "InstanceNorm1d",
+    "InstanceNorm2d",
+    "InstanceNorm3d",
+    "LayerNorm",
+    "LayerNorm2d",
+    "LazyBatchNorm1d",
+    "LazyBatchNorm2d",
+    "LazyBatchNorm3d",
+    "LazyInstanceNorm1d",
+    "LazyInstanceNorm2d",
+    "LazyInstanceNorm3d",
+    "LocalResponseNorm",
     "SyncBatchNorm",
 ]
 
@@ -575,6 +592,8 @@ class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
 # endregion
 
 
+# region Misc
+
 @LAYERS.register()
 class CrossMapLRN2d(base.SameChannelsLayerParsingMixin, nn.CrossMapLRN2d):
     pass
@@ -588,3 +607,5 @@ class FrozenBatchNorm2d(base.SameChannelsLayerParsingMixin, misc.FrozenBatchNorm
 @LAYERS.register()
 class LocalResponseNorm(base.SameChannelsLayerParsingMixin, nn.LocalResponseNorm):
     pass
+
+# endregion
