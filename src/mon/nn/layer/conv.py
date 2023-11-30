@@ -10,14 +10,11 @@ __all__ = [
     "Conv2d",
     "Conv2dBn",
     "Conv2dNormAct",
-    "Conv2dNormActivation",
     "Conv2dSame",
     "Conv2dTF",
     "Conv3d",
     "Conv3dNormAct",
-    "Conv3dNormActivation",
     "ConvNormAct",
-    "ConvNormActivation",
     "ConvTranspose1d",
     "ConvTranspose2d",
     "ConvTranspose3d",
@@ -259,17 +256,17 @@ class Conv3d(base.ConvLayerParsingMixin, nn.Conv3d):
 
 
 @LAYERS.register()
-class ConvNormActivation(base.ConvLayerParsingMixin, misc.ConvNormActivation):
+class ConvNormAct(base.ConvLayerParsingMixin, misc.ConvNormActivation):
     pass
 
 
 @LAYERS.register()
-class Conv2dNormActivation(base.ConvLayerParsingMixin, misc.Conv2dNormActivation):
+class Conv2dNormAct(base.ConvLayerParsingMixin, misc.Conv2dNormActivation):
     pass
 
 
 @LAYERS.register()
-class Conv3dNormActivation(base.ConvLayerParsingMixin, misc.Conv3dNormActivation):
+class Conv3dNormAct(base.ConvLayerParsingMixin, misc.Conv3dNormActivation):
     pass
 
 
@@ -288,9 +285,6 @@ class LazyConv3d(base.ConvLayerParsingMixin, nn.LazyConv3d):
     pass
 
 
-ConvNormAct   = ConvNormActivation
-Conv2dNormAct = Conv2dNormActivation
-Conv3dNormAct = Conv3dNormActivation
 LAYERS.register(name="ConvNormAct",   module=ConvNormAct)
 LAYERS.register(name="Conv2dNormAct", module=Conv2dNormAct)
 LAYERS.register(name="Conv3dNormAct", module=Conv3dNormAct)

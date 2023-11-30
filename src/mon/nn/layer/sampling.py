@@ -6,7 +6,11 @@
 from __future__ import annotations
 
 __all__ = [
-    "Downsample", "Interpolate", "Scale", "Upsample", "UpsamplingBilinear2d",
+    "Downsample",
+    "Interpolate",
+    "Scale",
+    "Upsample",
+    "UpsamplingBilinear2d",
     "UpsamplingNearest2d",
 ]
 

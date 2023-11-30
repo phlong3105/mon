@@ -517,7 +517,7 @@ class SpatialConsistencyLoss(Loss):
         super().__init__(reduction=reduction)
         self.num_regions = num_regions
         
-        kernel_left  = torch.FloatTensor([
+        kernel_left = torch.FloatTensor([
             [ 0,  0, 0],
             [-1,  1, 0],
             [ 0,  0, 0]
@@ -527,28 +527,28 @@ class SpatialConsistencyLoss(Loss):
             [0,  1, -1],
             [0,  0,  0]
         ]).unsqueeze(0).unsqueeze(0)
-        kernel_up    = torch.FloatTensor([
+        kernel_up = torch.FloatTensor([
             [0, -1, 0],
             [0,  1, 0],
             [0,  0, 0]
         ]).unsqueeze(0).unsqueeze(0)
-        kernel_down  = torch.FloatTensor([
+        kernel_down = torch.FloatTensor([
             [0,  0, 0],
             [0,  1, 0],
             [0, -1, 0]
         ]).unsqueeze(0).unsqueeze(0)
         if self.num_regions in [8, 16]:
-            kernel_upleft    = torch.FloatTensor([
+            kernel_upleft = torch.FloatTensor([
                 [-1, 0, 0],
                 [ 0, 1, 0],
                 [ 0, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_upright   = torch.FloatTensor([
+            kernel_upright = torch.FloatTensor([
                 [0, 0, -1],
                 [0, 1,  0],
                 [0, 0,  0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_downleft  = torch.FloatTensor([
+            kernel_downleft = torch.FloatTensor([
                 [ 0, 0, 0],
                 [ 0, 1, 0],
                 [-1, 0, 0]
@@ -559,49 +559,49 @@ class SpatialConsistencyLoss(Loss):
                 [0, 0, -1]
             ]).unsqueeze(0).unsqueeze(0)
         if self.num_regions in [16, 24]:
-            kernel_left2       = torch.FloatTensor([
+            kernel_left2 = torch.FloatTensor([
                 [0,  0,  0, 0, 0],
                 [0,  0,  0, 0, 0],
                 [-1, 0,  1, 0, 0],
                 [0,  0,  0, 0, 0],
                 [0,  0,  0, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_right2      = torch.FloatTensor([
+            kernel_right2 = torch.FloatTensor([
                 [0, 0,  0, 0,  0],
                 [0, 0,  0, 0,  0],
                 [0, 0,  1, 0, -1],
                 [0, 0,  0, 0,  0],
                 [0, 0,  0, 0,  0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2         = torch.FloatTensor([
+            kernel_up2 = torch.FloatTensor([
                 [0, 0, -1, 0, 0],
                 [0, 0,  0, 0, 0],
                 [0, 0,  1, 0, 0],
                 [0, 0,  0, 0, 0],
                 [0, 0,  0, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2       = torch.FloatTensor([
+            kernel_down2 = torch.FloatTensor([
                 [0, 0,  0, 0, 0],
                 [0, 0,  0, 0, 0],
                 [0, 0,  1, 0, 0],
                 [0, 0,  0, 0, 0],
                 [0, 0, -1, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2left2    = torch.FloatTensor([
+            kernel_up2left2 = torch.FloatTensor([
                 [-1, 0, 0, 0, 0],
                 [ 0, 0, 0, 0, 0],
                 [ 0, 0, 1, 0, 0],
                 [ 0, 0, 0, 0, 0],
                 [ 0, 0, 0, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2right2   = torch.FloatTensor([
+            kernel_up2right2 = torch.FloatTensor([
                 [0, 0, 0, 0, -1],
                 [0, 0, 0, 0,  0],
                 [0, 0, 1, 0,  0],
                 [0, 0, 0, 0,  0],
                 [0, 0, 0, 0,  0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2left2  = torch.FloatTensor([
+            kernel_down2left2 = torch.FloatTensor([
                 [ 0, 0, 0, 0, 0],
                 [ 0, 0, 0, 0, 0],
                 [ 0, 0, 1, 0, 0],
@@ -616,35 +616,35 @@ class SpatialConsistencyLoss(Loss):
                 [0, 0, 0, 0, -1]
             ]).unsqueeze(0).unsqueeze(0)
         if self.num_regions in [24]:
-            kernel_up2left1    = torch.FloatTensor([
+            kernel_up2left1 = torch.FloatTensor([
                 [0, -1, 0, 0, 0],
                 [0,  0, 0, 0, 0],
                 [0,  0, 1, 0, 0],
                 [0,  0, 0, 0, 0],
                 [0,  0, 0, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_up2right1   = torch.FloatTensor([
+            kernel_up2right1 = torch.FloatTensor([
                 [0, 0, 0, -1, 0],
                 [0, 0, 0,  0, 0],
                 [0, 0, 1,  0, 0],
                 [0, 0, 0,  0, 0],
                 [0, 0, 0,  0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_up1left2    = torch.FloatTensor([
+            kernel_up1left2 = torch.FloatTensor([
                 [0,  0, 0, 0, 0],
                 [-1, 0, 0, 0, 0],
                 [0,  0, 1, 0, 0],
                 [0,  0, 0, 0, 0],
                 [0,  0, 0, 0, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_up1right2   = torch.FloatTensor([
+            kernel_up1right2 = torch.FloatTensor([
                 [0, 0, 0, 0,  0],
                 [0, 0, 0, 0, -1],
                 [0, 0, 1, 0,  0],
                 [0, 0, 0, 0,  0],
                 [0, 0, 0, 0,  0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_down2left1  = torch.FloatTensor([
+            kernel_down2left1 = torch.FloatTensor([
                 [0,  0, 0, 0, 0],
                 [0,  0, 0, 0, 0],
                 [0,  0, 1, 0, 0],
@@ -658,7 +658,7 @@ class SpatialConsistencyLoss(Loss):
                 [0, 0, 0,  0, 0],
                 [0, 0, 0, -1, 0]
             ]).unsqueeze(0).unsqueeze(0)
-            kernel_down1left2  = torch.FloatTensor([
+            kernel_down1left2 = torch.FloatTensor([
                 [ 0, 0, 0, 0, 0],
                 [ 0, 0, 0, 0, 0],
                 [ 0, 0, 1, 0, 0],

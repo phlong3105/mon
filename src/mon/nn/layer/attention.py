@@ -460,7 +460,7 @@ class CBAM(base.PassThroughLayerParsingMixin, nn.Module):
             super().__init__()
             kernel_size = 7
             self.compress = pooling.ChannelPool()
-            self.spatial  = conv.Conv2dNormActivation(
+            self.spatial  = conv.Conv2dNormAct(
                 in_channels      = 2,
                 out_channels     = 1,
                 kernel_size      = kernel_size,

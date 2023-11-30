@@ -12,7 +12,7 @@ __all__ = [
     "GCENet", "ZeroReferenceLoss",
 ]
 
-from typing import Any
+from typing import Any, Literal
 
 import kornia
 import torch
@@ -37,7 +37,7 @@ class ZeroReferenceLoss(nn.Loss):
         bri_gamma      : float = 2.8,
         exp_patch_size : int   = 16,
         exp_mean_val   : float = 0.6,
-        spa_num_regions: int   = 4,     # 4
+        spa_num_regions: Literal[4, 8, 16, 24] = 4,  # 4
         spa_patch_size : int   = 4,     # 4
         weight_bri     : float = 1,
         weight_col     : float = 5,
@@ -112,7 +112,7 @@ class ZeroReferenceLoss(nn.Loss):
             loss_crl = self.loss_crl(input=enhance, target=input)     if self.weight_crl  > 0 else 0
         
         loss = (
-             self.weight_bri   * loss_bri
+              self.weight_bri  * loss_bri
             + self.weight_col  * loss_col
             + self.weight_crl  * loss_crl
             + self.weight_edge * loss_edge
@@ -264,47 +264,23 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.act    = nn.ReLU(inplace=True)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "02":
-            self.conv1  = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn   = nn.SimAM()
+            self.conv1  = nn.BSConv2dS(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2  = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3  = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4  = nn.BSConv2dS(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5  = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6  = nn.BSConv2dS(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7  = nn.BSConv2dS(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
             self.act    = nn.ReLU(inplace=True)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "03":
-            self.conv1  = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn   = nn.CBAM(channels=self.num_channels)
-            self.act    = nn.ReLU(inplace=True)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "04":
-            self.conv1  = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn   = nn.SqueezeExciteL(channels=self.num_channels)
-            self.act    = nn.ReLU(inplace=True)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "05":
-            self.conv1  = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4  = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6  = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7  = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn   = nn.PixelAttentionModule(self.num_channels, 16, 1)
+            self.conv1  = nn.BSConv2dU(self.channels,         self.num_channels, 3, 1, 1, bias=True)
+            self.conv2  = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv3  = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv4  = nn.BSConv2dU(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
+            self.conv5  = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv6  = nn.BSConv2dU(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv7  = nn.BSConv2dU(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
             self.act    = nn.ReLU(inplace=True)
             self.apply(self.init_weights)
         #

@@ -6,9 +6,16 @@
 from __future__ import annotations
 
 __all__ = [
-    "FFConv2d", "FFConv2dNormAct", "FFConv2dSE", "FastFourierConv2d",
-    "FastFourierConv2dNormActivation", "FastFourierConv2dSE", "FourierUnit",
-    "FourierUnit2d", "FourierUnit3d", "SpectralTransform2d",
+    "FFConv2d",
+    "FFConv2dNormAct",
+    "FFConv2dSE",
+    "FastFourierConv2d",
+    "FastFourierConv2dNormAct",
+    "FastFourierConv2dSE",
+    "FourierUnit",
+    "FourierUnit2d",
+    "FourierUnit3d",
+    "SpectralTransform2d",
 ]
 
 from typing import Any
@@ -47,10 +54,10 @@ class FourierUnit(nn.Module):
     ):
         # bn_layer not used
         super().__init__()
-        self.groups     = groups
-        self.ffc3d      = ffc3d
-        self.fft_norm   = fft_norm
-        self.conv_layer = conv.Conv2d(
+        self.groups   = groups
+        self.ffc3d    = ffc3d
+        self.fft_norm = fft_norm
+        self.conv     = conv.Conv2d(
             in_channels  = in_channels * 2,
             out_channels = out_channels * 2,
             kernel_size  = 1,
@@ -73,7 +80,7 @@ class FourierUnit(nn.Module):
         ffted = ffted.permute(0, 1, 4, 2, 3).contiguous()  # (b, c, 2, h, w/2+1)
         ffted = ffted.view((b, -1,) + ffted.size()[3:])
         
-        ffted = self.conv_layer(ffted)  # (b, c*2, h, w/2+1)
+        ffted = self.conv(ffted)  # (b, c*2, h, w/2+1)
         ffted = self.relu(self.bn(ffted))
         
         ffted = ffted.view((b, -1, 2,) + ffted.size()[2:]).permute(0, 1, 3, 4, 2).contiguous()  # (b, c, t, h, w/2+1, 2)
@@ -311,7 +318,7 @@ class FastFourierConv2d(base.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class FastFourierConv2dNormActivation(base.ConvLayerParsingMixin, nn.Module):
+class FastFourierConv2dNormAct(base.ConvLayerParsingMixin, nn.Module):
     """Fast Fourier convolution + normalization + activation proposed in the
     paper: "`Fast Fourier Convolution <https://github.com/pkumivision/FFC>`__".
     
@@ -424,7 +431,7 @@ class FastFourierConv2dSE(base.ConvLayerParsingMixin, nn.Module):
 
 
 FFConv2d        = FastFourierConv2d
-FFConv2dNormAct = FastFourierConv2dNormActivation
+FFConv2dNormAct = FastFourierConv2dNormAct
 FFConv2dSE      = FastFourierConv2dSE
 LAYERS.register(name="FFConv2d",        module=FFConv2d)
 LAYERS.register(name="FFConv2dNormAct", module=FFConv2dNormAct)
