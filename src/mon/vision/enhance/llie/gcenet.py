@@ -140,9 +140,8 @@ class ZeroReferenceLoss(nn.Loss):
 # region Model
 
 @MODELS.register(name="gcenet")
-@MODELS.register(name="gce-net")
 class GCENet(base.LowLightImageEnhancementModel):
-    """GCE-Net (Guidance Curve Estimation) model.
+    """GCENet (Guidance Curve Estimation) model.
     
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
@@ -455,14 +454,48 @@ class GCENet(base.LowLightImageEnhancementModel):
         Return:
             Predictions and loss value.
         """
-        if self.variant is not None:
-            pred = self.forward_once_variant(input=input, *args, **kwargs)
-        else:
-            pred = self.forward(input=input, *args, **kwargs)
+        pred  = self.forward(input=input, *args, **kwargs)
         loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
         loss += self.regularization_loss(alpha=0.1)
         return pred[-1], loss
-    
+
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : bool = False,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass. This is the primary :meth:`forward` function of the
+        model. It supports augmented inference. In this function, we perform
+        test-time augmentation and pass the transformed input to
+        :meth:`forward_once()`.
+
+        Args:
+            input: An input of shape :math`[B, C, H, W]`.
+            augment: If ``True``, perform test-time augmentation. Default:
+                ``False``.
+            profile: If ``True``, Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: -1 means the last layer.
+
+        Return:
+            Predictions.
+        """
+        if augment:
+            # For now just forward the input. Later, we will implement the
+            # test-time augmentation.
+            if self.variant is not None:
+                return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
+            else:
+                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+        else:
+            if self.variant is not None:
+                return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
+            else:
+                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+
     def forward_once(
         self,
         input    : torch.Tensor,
@@ -482,7 +515,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             Predictions.
         """
         x = input
-        
+
         # Downsampling
         x_down = x
         if self.scale_factor != 1:
@@ -754,9 +787,8 @@ class GCENet(base.LowLightImageEnhancementModel):
 
 
 @MODELS.register(name="gcenetv2")
-@MODELS.register(name="gce-net-v2")
 class GCENetV2(base.LowLightImageEnhancementModel):
-    """GCE-NetV2 (Guidance Curve Estimation) model.
+    """GCENetV2 (Guidance Curve Estimation) model.
 
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
@@ -773,6 +805,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
         p            : float | str | None = 0.5,
+        scheme       :         str | None = "half",
         gamma        : float | str | None = 2.8,
         num_iters    : int   | str        = 8,
         unsharp_sigma: int   | str | None = None,
@@ -783,17 +816,19 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             loss   = loss,
             *args, **kwargs
         )
+
         variant            = mon.to_int(variant)
         self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
         self.num_channels  = mon.to_int(num_channels)    or 32
         self.p             = mon.to_float(p)             or 0.5
+        self.scheme        = scheme                      or "half"
         self.scale_factor  = mon.to_float(scale_factor)  or 1.0
         self.gamma         = mon.to_float(gamma)         or 2.8
         self.num_iters     = mon.to_int(num_iters)       or 8
         self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
         self.previous      = None
 
-        if variant is None:  # Default model
+        if self.variant is None:  # Default model
             self.gamma        = self.gamma or 2.8
             self.out_channels = 3
             self.conv1        = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
@@ -836,30 +871,55 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         """Config the model based on ``self.variant``.
         Mainly used in ablation study.
         """
-        # self.gamma         = 2.8
+        # self.p             = 0.5
+        # self.scheme        = "half"
+        self.gamma         = 2.8
         # self.num_iters     = 9
         # self.unsharp_sigma = 2.5
         self.previous      = None
         self.out_channels  = 3
 
-        # Variant code: [aa][l][i]
-        # i: inference mode
-        if self.variant[3] == "0":
-            self.gamma        = None
-            self.out_channels = 3
-        elif self.variant[3] == "1":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        elif self.variant[3] == "2":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        elif self.variant[3] == "3":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
+        # Variant code: [aa][p][s]
+        # p: probability
+        if self.variant[2] == "0":
+            self.p = 0.0
+        elif self.variant[2] == "1":
+            self.p = 0.1
+        elif self.variant[2] == "2":
+            self.p = 0.2
+        elif self.variant[2] == "3":
+            self.p = 0.3
+        elif self.variant[2] == "4":
+            self.p = 0.4
+        elif self.variant[2] == "5":
+            self.p = 0.5
+        elif self.variant[2] == "6":
+            self.p = 0.6
+        elif self.variant[2] == "7":
+            self.p = 0.7
+        elif self.variant[2] == "8":
+            self.p = 0.8
+        elif self.variant[2] == "9":
+            self.p = 0.9
         else:
             raise ValueError
 
-        # Variant code: [aa][l][i]
+        # Variant code: [aa][p][s]
+        # s: scheme
+        if self.variant[3] == "0":
+            self.scheme = "half"
+        elif self.variant[3] == "1":
+            self.scheme = "bipartite"
+        elif self.variant[3] == "2":
+            self.scheme = "checkerboard"
+        elif self.variant[3] == "3":
+            self.scheme = "random"
+        elif self.variant[3] == "4":
+            self.scheme = "adaptive"
+        elif self.variant[3] == "5":
+            self.scheme = "attentive"
+
+        # Variant code: [aa][p][s]
         # aa: architecture
         if self.variant[0:2] == "00":  # Zero-DCE (baseline)
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
@@ -932,43 +992,9 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         else:
             raise ValueError
 
-        # Variant code: [aa][l][i]
         # l: loss function
         weight_tvA = 1600 if self.out_channels == 3 else 200
-        if self.variant[2] == "0":  # Zero-DCE Loss
-            # NOT WORKING: over-exposed artifacts, enhance noises
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 4,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0,
-                weight_edge     = 0,
-                weight_exp      = 10,
-                weight_kl       = 0,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[2] == "1":  # New Loss
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[2] == "2":
+        if self.variant[0] in ["0"]:  # Zero-DCE Loss
             self.loss = ZeroReferenceLoss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
@@ -984,7 +1010,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
                 weight_tvA      = weight_tvA,
                 reduction       = "mean",
             )
-        elif self.variant[2] == "9":
+        elif self.variant[0] == "1":
             self.gamma = self.gamma or 2.5
             self.loss  = ZeroReferenceLoss(
                 bri_gamma       = self.gamma,
@@ -1038,13 +1064,47 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         Return:
             Predictions and loss value.
         """
-        if self.variant is not None:
-            pred = self.forward_once_variant(input=input, *args, **kwargs)
-        else:
-            pred = self.forward(input=input, *args, **kwargs)
+        pred  = self.forward(input=input, *args, **kwargs)
         loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
         loss += self.regularization_loss(alpha=0.1)
         return pred[-1], loss
+
+    def forward(
+        self,
+        input    : torch.Tensor,
+        augment  : bool = False,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> tuple[torch.Tensor, torch.Tensor] | tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Forward pass. This is the primary :meth:`forward` function of the
+        model. It supports augmented inference. In this function, we perform
+        test-time augmentation and pass the transformed input to
+        :meth:`forward_once()`.
+
+        Args:
+            input: An input of shape :math`[B, C, H, W]`.
+            augment: If ``True``, perform test-time augmentation. Default:
+                ``False``.
+            profile: If ``True``, Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: -1 means the last layer.
+
+        Return:
+            Predictions.
+        """
+        if augment:
+            # For now just forward the input. Later, we will implement the
+            # test-time augmentation.
+            if self.variant is not None:
+                return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
+            else:
+                return self.forward_once(input=input, profile=profile, *args, **kwargs)
+        else:
+            if self.variant is not None:
+                return self.forward_once_variant(input=input, profile=profile, *args, **kwargs)
+            else:
+                return self.forward_once(input=input, profile=profile, *args, **kwargs)
 
     def forward_once(
         self,
@@ -1145,68 +1205,52 @@ class GCENetV2(base.LowLightImageEnhancementModel):
 
         # Variant code: [aa][l][e]
         if self.variant[0:2] in ["10", "12"]:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
+            f1  = self.act(self.norm1(self.conv1(x_down)))
+            f2  = self.act(self.norm2(self.conv2(f1)))
+            f3  = self.act(self.norm3(self.conv3(f2)))
+            f4  = self.act(self.norm4(self.conv4(f3)))
             f4  = self.attn(f4)
             # Curve Enhancement Map (A)
-            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
+            f5  = self.act(self.norm5(self.conv5(torch.cat([f3, f4], dim=1))))
+            f6  = self.act(self.norm6(self.conv6(torch.cat([f2, f5], dim=1))))
+            a   =   F.tanh(self.norm7(self.conv7(torch.cat([f1, f6], dim=1))))
             # Guided Brightness Enhancement Map (GBEM)
-            f8  = self.act(self.conv8(torch.cat([f3, f4], dim=1)))
-            f9  = self.act(self.conv9(torch.cat([f2, f8], dim=1)))
-            p   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
+            f8  = self.act(self.norm8(self.conv8(torch.cat([f3, f4], dim=1))))
+            f9  = self.act(self.norm9(self.conv9(torch.cat([f2, f8], dim=1))))
+            p   =  F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
         else:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
+            f1  = self.act(self.norm1(self.conv1(x_down)))
+            f2  = self.act(self.norm2(self.conv2(f1)))
+            f3  = self.act(self.norm3(self.conv3(f2)))
+            f4  = self.act(self.norm4(self.conv4(f3)))
             f4  = self.attn(f4)
-            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
+            f5  = self.act(self.norm5(self.conv5(torch.cat([f3, f4], dim=1))))
+            f6  = self.act(self.norm6(self.conv6(torch.cat([f2, f5], dim=1))))
+            a   =   F.tanh(self.norm7(self.conv7(torch.cat([f1, f6], dim=1))))
 
         # Upsampling
         if self.scale_factor != 1:
             a = self.upsample(a)
 
         # Enhancement
-        if "1" in self.variant[0:1]:
-            if self.out_channels == 3:
-                y = x
-                for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
-                    y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Default
-        elif self.variant[3] == "0":
-            if self.out_channels == 3:
+        if self.out_channels == 3:
+            if self.phase == ModelPhase.TRAINING:
                 y = x
                 for _ in range(self.num_iters):
                     y = y + a * (torch.pow(y, 2) - y)
             else:
                 y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    y = y + A[i] * (torch.pow(y, 2) - y)
-        # Global P
-        elif self.variant[3] == "1":
-            if self.out_channels == 3:
-                y = x
                 p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for _ in range(self.num_iters):
                     b = y * (1 - p)
                     d = y * p
                     y = b + d + a * (torch.pow(d, 2) - d)
+        else:
+            if self.phase == ModelPhase.TRAINING:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    y = y + A[i] * (torch.pow(y, 2) - y)
             else:
                 y = x
                 A = torch.split(a, 3, dim=1)
@@ -1215,62 +1259,6 @@ class GCENetV2(base.LowLightImageEnhancementModel):
                     b = y * (1 - p)
                     d = y * p
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Global P Inference Only
-        elif self.variant[3] == "2":
-            if self.out_channels == 3:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    for _ in range(self.num_iters):
-                        y = y + a * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                    for _ in range(self.num_iters):
-                        b = y * (1 - p)
-                        d = y * p
-                        y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        y = y + A[i] * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                    for i in range(self.num_iters):
-                        b = y * (1 - p)
-                        d = y * p
-                        y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Iterative P Inference Only
-        elif self.variant[3] == "3":
-            if self.out_channels == 3:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    for _ in range(self.num_iters):
-                        y = y + a * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    for _ in range(self.num_iters):
-                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - p)
-                        d = y * p
-                        y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        y = y + A[i] * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - p)
-                        d = y * p
-                        y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
         if self.unsharp_sigma is not None:

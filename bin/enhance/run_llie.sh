@@ -10,7 +10,8 @@ echo "$HOSTNAME"
 # Constants
 models=(
   "enlightengan"       # https://github.com/arsenyinfo/EnlightenGAN-inference
-  "gcenet"
+  "gcenet"             # Our model
+  "gcenetv2"           # Our model
   "iat"                # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
   "kind"               # https://github.com/zhangyhuaee/KinD
   "kind++"             # https://github.com/zhangyhuaee/KinD_plus
@@ -250,7 +251,7 @@ if [ "$task" == "train" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zeroadce" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ] || [ "${model[i]}" == "zeroadce" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -284,8 +285,14 @@ if [ "$task" == "train" ]; then
       # EnlightenGAN
       if [ "${model[i]}" == "enlightengan" ]; then
         echo -e "\nI have not prepared the training script for EnlightenGAN."
-      # GCE-Net
+      # GCENet
       elif [ "${model[i]}" == "gcenet" ]; then
+        python -W ignore train.py \
+          --name "${name}" \
+          --variant "${variant[j]}" \
+          --max-epochs "$epochs"
+      # GCENetV2
+      elif [ "${model[i]}" == "gcenetv2" ]; then
         python -W ignore train.py \
           --name "${name}" \
           --variant "${variant[j]}" \
@@ -440,7 +447,7 @@ if [ "$task" == "predict" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "zeroadce" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ] || [ "${model[i]}" == "zeroadce" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -507,8 +514,22 @@ if [ "$task" == "predict" ]; then
               --data "${low_data_dirs[k]}" \
               --image-size 512 \
               --output-dir "${predict_dir}"
-          # GCE-Net
+          # GCENet
           elif [ "${model[i]}" == "gcenet" ]; then
+            python -W ignore predict.py \
+              --data "${low_data_dirs[k]}" \
+              --config "${model[i]}_sice_zerodce" \
+              --root "${predict_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --num_iters 8 \
+              --image-size 512 \
+              --save-image \
+              --benchmark \
+              --output-dir "${predict_dir}"
+          # GCENetV2
+          elif [ "${model[i]}" == "gcenetv2" ]; then
             python -W ignore predict.py \
               --data "${low_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \

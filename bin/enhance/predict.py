@@ -114,7 +114,7 @@ def predict(args: dict):
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Measure efficiency score
-    if torch.cuda.is_available():
+    if args["benchmark"] and torch.cuda.is_available():
         flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
             image_size = args["image_size"],
@@ -222,6 +222,7 @@ def predict(args: dict):
 @click.option("--batch-size",  default=1,                     type=int,                      help="Total Batch size for all GPUs.")
 @click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")
 @click.option("--resize",      is_flag=True)
+@click.option("--benchmark",   is_flag=True)
 @click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results location.")
 @click.option("--save-image",  is_flag=True)
 @click.option("--verbose",     is_flag=True)
@@ -238,6 +239,7 @@ def main(
     batch_size : int,
     image_size : int | list[int],
     resize     : bool,
+    benchmark  : bool,
     output_dir : mon.Path | str,
     save_image : bool,
     verbose    : bool
@@ -247,7 +249,7 @@ def main(
             if not (i + 1 >= len(ctx.args) or ctx.args[i + 1].startswith("--"))
             else True for i, k in enumerate(ctx.args) if k.startswith("--")
     }
-    
+
     # Obtain arguments
     hostname  = socket.gethostname().lower()
     host_args = hosts[hostname]
@@ -296,6 +298,7 @@ def main(
     }
     args["model"]      |= model_kwargs
     args["save_image"]  = save_image
+    args["benchmark"]   = benchmark
     predict(args=args)
 
 # endregion

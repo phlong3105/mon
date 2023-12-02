@@ -273,7 +273,6 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
         num_features: Number of input features.
         p: Ratio of input features that will be normalized. Default: ``0.5``.
         scheme: Feature selection mechanism. One of:
-            - ``'full'``        : Run Instance Normalization as normal.
             - ``'half'``        : Split the input tensor into two even parts.
                                   Normalized the first half.
             - ``'bipartite'``   : Split the input tensor into two uneven parts.
@@ -294,7 +293,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
     """
     
     schemes = [
-        "full", "half", "bipartite", "checkerboard", "random", "adaptive",
+        "half", "bipartite", "checkerboard", "random", "adaptive",
         "attentive",
     ]
     

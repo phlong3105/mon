@@ -6,8 +6,13 @@
 from __future__ import annotations
 
 __all__ = [
-    "DCE", "PixelwiseHigherOrderLECurve", "ZeroDCE", "ZeroDCEPP",
-    "ZeroDCEPPVanilla", "ZeroDCETiny", "ZeroDCEVanilla",
+    "DCE",
+    "PixelwiseHigherOrderLECurve",
+    "ZeroDCE",
+    "ZeroDCEPP",
+    "ZeroDCEPPVanilla",
+    "ZeroDCETiny",
+    "ZeroDCEVanilla",
 ]
 
 from typing import Any
