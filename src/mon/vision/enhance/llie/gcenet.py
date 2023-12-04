@@ -960,7 +960,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         #
-        elif self.variant[0:2] == "10":
+        elif self.variant[0:2] in ["10", "11"]:
             self.num_channels = 32
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -1204,7 +1204,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
 
         # Variant code: [aa][l][e]
-        if self.variant[0:2] in ["10", "12"]:
+        if self.variant[0:2] in ["10"]:
             f1  = self.act(self.norm1(self.conv1(x_down)))
             f2  = self.act(self.norm2(self.conv2(f1)))
             f3  = self.act(self.norm3(self.conv3(f2)))
@@ -1214,10 +1214,24 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             f5  = self.act(self.norm5(self.conv5(torch.cat([f3, f4], dim=1))))
             f6  = self.act(self.norm6(self.conv6(torch.cat([f2, f5], dim=1))))
             a   =   F.tanh(self.norm7(self.conv7(torch.cat([f1, f6], dim=1))))
-            # Guided Brightness Enhancement Map (GBEM)
-            f8  = self.act(self.norm8(self.conv8(torch.cat([f3, f4], dim=1))))
-            f9  = self.act(self.norm9(self.conv9(torch.cat([f2, f8], dim=1))))
-            p   =  F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
+            # Guided Brightness Enhancement Map (G)
+            f8  = self.act( self.norm8( self.conv8(torch.cat([f3, f4], dim=1))))
+            f9  = self.act( self.norm9( self.conv9(torch.cat([f2, f8], dim=1))))
+            p   =   F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
+        elif self.variant[0:2] in ["11"]:
+            f1  = self.act(self.norm1(self.conv1(x_down)))
+            f2  = self.act(self.norm2(self.conv2(f1)))
+            f3  = self.act(self.norm3(self.conv3(f2)))
+            f4  = self.act(self.norm4(self.conv4(f3)))
+            f4  = self.attn(f4)
+            # Guided Brightness Enhancement Map (G)
+            f8  = self.act( self.norm8( self.conv8(torch.cat([f3, f4], dim=1))))
+            f9  = self.act( self.norm9( self.conv9(torch.cat([f2, f8], dim=1))))
+            p   =   F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
+            # Curve Enhancement Map (A)
+            f5  = self.act(self.norm5(self.conv5(torch.cat([f3, f4], dim=1)))) * f8
+            f6  = self.act(self.norm6(self.conv6(torch.cat([f2, f5], dim=1)))) * f9
+            a   =   F.tanh(self.norm7(self.conv7(torch.cat([f1, f6], dim=1)))) * p
         else:
             f1  = self.act(self.norm1(self.conv1(x_down)))
             f2  = self.act(self.norm2(self.conv2(f1)))
@@ -1233,32 +1247,57 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             a = self.upsample(a)
 
         # Enhancement
-        if self.out_channels == 3:
-            if self.phase == ModelPhase.TRAINING:
+        if self.variant[0:2] in ["10"]:
+            if self.out_channels == 3:
+                y = x
+                for _ in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + a * (torch.pow(d, 2) - d)
+            else:
+                y = x
+                A = torch.split(a, 3, dim=1)
+                for i in range(self.num_iters):
+                    b = y * (1 - p)
+                    d = y * p
+                    y = b + d + A[i] * (torch.pow(d, 2) - d)
+        elif self.variant[0:2] in ["11"]:
+            if self.out_channels == 3:
                 y = x
                 for _ in range(self.num_iters):
                     y = y + a * (torch.pow(y, 2) - y)
             else:
                 y = x
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
-                    y = b + d + a * (torch.pow(d, 2) - d)
-        else:
-            if self.phase == ModelPhase.TRAINING:
-                y = x
                 A = torch.split(a, 3, dim=1)
                 for i in range(self.num_iters):
                     y = y + A[i] * (torch.pow(y, 2) - y)
+        else:
+            if self.out_channels == 3:
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    for _ in range(self.num_iters):
+                        y = y + a * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    for _ in range(self.num_iters):
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + a * (torch.pow(d, 2) - d)
             else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
+                if self.phase == ModelPhase.TRAINING:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    for i in range(self.num_iters):
+                        y = y + A[i] * (torch.pow(y, 2) - y)
+                else:
+                    y = x
+                    A = torch.split(a, 3, dim=1)
+                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    for i in range(self.num_iters):
+                        b = y * (1 - p)
+                        d = y * p
+                        y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
         if self.unsharp_sigma is not None:
