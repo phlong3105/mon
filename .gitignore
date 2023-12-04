@@ -6,6 +6,7 @@
 *.pth
 *.py[cod]
 *.so
+*.xlsx
 *~
 __pycache__/
 build/
@@ -13,8 +14,6 @@ dist/
 
 /.idea/
 /archive/
-/bin/enhance/data.xlsx
-/bin/enhance/hrnet.xlsx
 /data/*/
 /run/*/
 /src/app/supr/config/aic23_autocheckout.zip
