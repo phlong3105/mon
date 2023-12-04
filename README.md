@@ -23,6 +23,8 @@ bash -i install.sh
 
 ## Directory Organization
 
+- Look at "private.docx" for more information.
+
 ```text
 11-code
  |_ 45-data
