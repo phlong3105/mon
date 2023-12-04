@@ -3,8 +3,8 @@ echo "$HOSTNAME"
 
 
 # Fast Commands
-# ./run_les.sh zerodcev2 none train   sice-zerodce lol vision/enhance/llie no last
-# ./run_les.sh zerodcev2 none predict sice-zerodce all vision/enhance/llie no last
+# ./run_les.sh zerodcev2 none train   sice-zerodce lol vision/enhance/les no last
+# ./run_les.sh zerodcev2 none predict sice-zerodce all vision/enhance/les no last
 
 
 # Constants
@@ -55,7 +55,7 @@ task=${4:-"predict"}
 epochs=${5:-100}
 train_data=${6:-"lol"}
 predict_data=${7:-"all"}
-project=${8:-"vision/enhance/llie"}
+project=${8:-"vision/enhance/les"}
 use_data_dir=${9:-"yes"}
 checkpoint=${10:-"best"}
 
@@ -419,7 +419,7 @@ if [ "$task" == "predict" ]; then
       else
         for (( k=0; k<${#predict_data[@]}; k++ )); do
           if [ "${use_data_dir}" == "yes" ]; then
-            predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}"
+            predict_dir="${root_dir}/data/les/predict/${model_variant_suffix}/${predict_data[k]}"
           else
             predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
           fi
@@ -633,13 +633,13 @@ if [ "$task" == "evaluate" ]; then
 
           if [ "${predict_data[k]}" == "darkcityscapes" ]; then
             if [ "${use_data_dir}" == "yes" ]; then
-              predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}/enhance"
+              predict_dir="${root_dir}/data/les/predict/${model_variant_suffix}/${predict_data[k]}/enhance"
             else
               predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}/enhance"
             fi
           else
             if [ "${use_data_dir}" == "yes" ]; then
-              predict_dir="${root_dir}/data/llie/predict/${model_variant_suffix}/${predict_data[k]}"
+              predict_dir="${root_dir}/data/les/predict/${model_variant_suffix}/${predict_data[k]}"
             else
               predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
             fi
@@ -647,7 +647,7 @@ if [ "$task" == "evaluate" ]; then
 
           python -W ignore metric.py \
             --image-dir "${predict_dir}" \
-            --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
+            --target-dir "${root_dir}/data/les/test/${predict_data[k]}/high" \
             --result-file "${current_dir}" \
             --name "${model_variant_suffix}" \
             --image-size 256 \
@@ -669,7 +669,7 @@ if [ "$task" == "evaluate" ]; then
 
           python -W ignore metric.py \
             --image-dir "${predict_dir}" \
-            --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
+            --target-dir "${root_dir}/data/les/test/${predict_data[k]}/high" \
             --result-file "${current_dir}" \
             --name "${model_variant_suffix}" \
             --image-size 256 \
@@ -702,8 +702,8 @@ if [ "$task" == "plot" ]; then
   echo -e "\\nPlot"
   cd "${current_dir}" || exit
   if [ "${use_data_dir}" == "yes" ]; then
-    predict_dir="${root_dir}/data/llie/predict"
-    output_dir="${root_dir}/data/llie/compare"
+    predict_dir="${root_dir}/data/les/predict"
+    output_dir="${root_dir}/data/les/compare"
   else
     predict_dir="${root_dir}/run/predict/${project}"
     output_dir="${root_dir}/run/predict/${project}/compare"
