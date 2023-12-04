@@ -13,29 +13,31 @@ console environment.
 
 ```text
 mon
- |_ bin                  # Executable, main() files, CLI
- |_ data                 # Default location to store working datasets
- |_ docs                 # Documentation
- |_ run                  # Running results: train/val/test/predict
- |_ src                  # Source code 
- |   |_ app              # Code for specific applications/projects
- |   |_ lib              # Third-party libraries
- |   |_ mon              # Main source root 
- |       |_ core         # Base functionality for other packages
- |       |_ coreml       # Machine learning package
- |       |_ vision       # Computer vision package
- |_ test                 # Testing code
- |_ zoo                  # Model zoo
- |_ dockerfile           # Docker setup
- |_ pycharm.env          # Local environment variables
- |_ CHANGELOG.md         # Changelogs
- |_ GUIDELINE.md  
+ |_ bin                  # Executable, main() files, CLI.
+ |_ data                 # Default location to store working datasets.
+ |_ docs                 # Documentation.
+ |_ run                  # Running results for train/val/test/predict.
+ |_ src                  # Source code.
+ |   |_ app              # Code for specific applications/projects.
+ |   |_ cmon             # C++ code.
+ |   |_ lib              # Third-party libraries. Place code from other sources here.
+ |   |_ mon              # Python code.
+ |       |_ core         # Base functionality for other packages.
+ |       |_ nn           # Machine learning package.
+ |       |_ vision       # Computer vision package.
+ |_ test                 # Testing code.
+ |_ zoo                  # Model zoo.
+ |_ dockerfile           # Docker setup.
+ |_ linux.yaml           # ``conda`` setup for Linux.
+ |_ linux-test.yaml      # ``conda`` testing setup for Linux.
+ |_ mac.yaml             # ``conda`` setup for macOS.
+ |_ server.yaml          # ``conda`` setup for deep learning workstation.
+ |_ pycharm.env          # Local environment variables.
+ |_ .gitignore           # 
  |_ README.md            # Github Readme
  |_ install.sh           # Installation script
  |_ pyproject.toml  
  |_ LICENSE  
- |_ linux.yaml           # conda setup for Linux
- |_ mac.yaml             # conda setup for macOS
  |_ mkdocs.yaml          # mkdocs setup
 ```
 
