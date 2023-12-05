@@ -4,37 +4,22 @@
 from __future__ import annotations
 
 import argparse
-import os
 
 import cv2
-import numpy as np
+import torch
 import torch.optim as optim
 import torch.utils.data as Data
 from guided_filter_pytorch.guided_filter import GuidedFilter
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from skimage.metrics import structural_similarity as compare_ssim
 from torch.autograd import Variable
-from torch.nn import functional
 from torchvision import utils as vutils
-from tqdm import tqdm
 
 import load_data as DA
+from mon import RUN_DIR
 from net import *
 
 console = mon.console
-
-
-def get_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--img_name",      type=str,   default="GOPR0364_frame_000939_rgb_anon.png", help="Image to be used for demo")
-    parser.add_argument("--out_dir",       type=str,   default="./light-effects-output/",            help="Location at which to save the light-effects suppression results.")
-    parser.add_argument("--data_dir",      type=str,   default="./light-effects/",                   help="Directory containing images with light-effects for demo")
-    parser.add_argument("--load_model",    type=str,   default=None,                                 help="model to initialize with")
-    parser.add_argument("--load_size",     type=str,   default="Resize",                             help="Width and height to resize training and testing frames. None for no resizing, only [512, 512] for no resizing")
-    parser.add_argument("--crop_size",     type=str,   default="[512, 512]",                         help="Width and height to crop training and testing frames. Must be a multiple of 16")
-    parser.add_argument("--iters",         type=int,   default=60,                                   help="No of iterations to train the model.")
-    parser.add_argument("--learning_rate", type=float, default=1e-4,                                 help="Learning rate for the model.")
-    return parser.parse_args()
 
 
 def get_LFHF(image, rad_list=[4, 8, 16, 32], eps_list=[0.001, 0.0001]):
@@ -73,7 +58,8 @@ class MeanShift(nn.Conv2d):
             self.bias.data = data_range * torch.Tensor(data_mean)
         self.requires_grad = False
         
-        
+
+'''     
 class Vgg16ExDark(torch.nn.Module):
     def __init__(self, load_model=None, requires_grad=False):
         super(Vgg16ExDark, self).__init__()
@@ -101,8 +87,9 @@ class Vgg16ExDark(torch.nn.Module):
             if i in indices:
                 out.append(X)
         return out
+'''
 
-
+'''
 class PerceptualLossVgg16ExDark(nn.Module):
     def __init__(
             self,
@@ -135,8 +122,9 @@ class PerceptualLossVgg16ExDark(nn.Module):
         for i in range(len(x_vgg)):
             loss += self.weights[i] * self.criter(x_vgg[i], y_vgg[i].detach())
         return loss
+'''
 
-
+'''
 class StdLoss(nn.Module):
     def __init__(self):
         super(StdLoss, self).__init__()
@@ -153,6 +141,7 @@ class StdLoss(nn.Module):
     def forward(self, x):
         x = self.gray_scale(x)
         return self.mse(functional.conv2d(x, self.image), functional.conv2d(x, self.blur))
+'''
 
 
 class ExclusionLoss(nn.Module):
@@ -200,12 +189,13 @@ class ExclusionLoss(nn.Module):
 
 
 def gradient(pred):
-    D_dy = pred[:, :, 1:] - pred[:, :, :-1]
+    D_dy = pred[:, :, 1:]    - pred[:, :, :-1]
     D_dx = pred[:, :, :, 1:] - pred[:, :, :, :-1]
     return D_dx, D_dy
 
 
 class GradientLoss(nn.Module):
+
     def __init__(self):
         super(GradientLoss, self).__init__()
         
@@ -261,7 +251,7 @@ def calc_ssim_masked(im1, im2, mask):
 
 def demo(args, dle_net, optimizer_dle_net, inputs):
     dle_net.train()
-    img_in = Variable(torch.FloatTensor(inputs["img_in"])).cuda()
+    img_in   = Variable(torch.FloatTensor(inputs["img_in"])).cuda()
     optimizer_dle_net.zero_grad()
 
     le_pred  = dle_net(img_in)
@@ -271,7 +261,7 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     dle_pred_cc    = torch.mean(dle_pred, dim=1, keepdims=True)
     cc_loss        = (F.l1_loss(dle_pred[:, 0:1, :, :], dle_pred_cc) + \
                      F.l1_loss(dle_pred[:, 1:2, :, :], dle_pred_cc) + \
-                     F.l1_loss(dle_pred[:, 2:3, :, :], dle_pred_cc))*(1/3) ##Color Constancy Loss
+                     F.l1_loss(dle_pred[:, 2:3, :, :], dle_pred_cc)) * (1/3)  # Color Constancy Loss
                    
     lambda_recon   = 1.0
     recon_loss     = F.l1_loss(dle_pred, img_in)
@@ -283,8 +273,8 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     lambda_smooth  = 1.0
     le_smooth_loss = smooth_loss(le_pred)
 
-    loss  = lambda_recon * recon_loss + lambda_cc * cc_loss
-    loss += lambda_excl * excl_loss(dle_pred, le_pred)
+    loss  = lambda_recon  * recon_loss + lambda_cc * cc_loss
+    loss += lambda_excl   * excl_loss(dle_pred, le_pred)
     loss += lambda_smooth * le_smooth_loss
     loss.backward()
 
@@ -295,52 +285,82 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     return imgs_dict
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",           type=str,   default="GOPR0364_frame_000939_rgb_anon.png",           help="Image to be used for demo")
+    parser.add_argument("--weights",        type=str,   default=None,                                           help="model to initialize with")
+    parser.add_argument("--image-size",     type=int,   default=512,                                            help="The training size of image")
+    parser.add_argument("--load-size",      type=str,   default="Resize",                                       help="Width and height to resize training and testing frames. None for no resizing, only [512, 512] for no resizing")
+    parser.add_argument("--crop-size",      type=str,   default="[512, 512]",                                   help="Width and height to crop training and testing frames. Must be a multiple of 16")
+    parser.add_argument("--iters",          type=int,   default=60,                                             help="No of iterations to train the model.")
+    parser.add_argument("--lr",             type=float, default=1e-4,                                           help="Learning rate for the model.")
+    parser.add_argument("--output-dir",     type=str,   default=RUN_DIR / "predict/vision/enhance/les/jin2022", help="Location at which to save the light-effects suppression results.")
+    parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/les/jin2022",   help="Location at which to save the light-effects suppression results.")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    args           = get_arguments()
-    args.imgin_dir = args.data_dir
-    args.use_gray  = False
+    args = parse_args()
+
+    args.use_gray       = False
+    args.data           = mon.Path(args.data)
+    args.output_dir     = mon.Path(args.output_dir)
+    args.checkpoint_dir = mon.Path(args.checkpoint_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    args.checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     torch.manual_seed(0)
 
-    args.imgs_dir = args.out_dir
-    if not os.path.exists(args.imgs_dir):
-        os.makedirs(args.imgs_dir)
+    channels = 1 if args.use_gray else 3
+    dle_net  = Net(input_nc=channels, output_nc=channels)
 
-    if args.use_gray:
-        channels = 1
-    else:
-        channels = 3
-    dle_net = Net(input_nc=channels, output_nc=channels)
+    # Measure efficiency score
+    flops, params, avg_time = mon.calculate_efficiency_score(
+        model      = dle_net,
+        image_size = args.image_size,
+        channels   = 3,
+        runs       = 100,
+        use_cuda   = True,
+        verbose    = False,
+    )
+    console.log(f"FLOPs  = {flops:.4f}")
+    console.log(f"Params = {params:.4f}")
+    console.log(f"Time   = {avg_time:.4f}")
+
     dle_net = nn.DataParallel(dle_net).cuda()
+    if args.weights is not None:
+        dle_net.load_state_dict(torch.load(str(args.weights))["state_dict"])
 
-    if args.load_model is not None:
-        dle_net_ckpt_file = args.load_model
-        dle_net.load_state_dict(torch.load(dle_net_ckpt_file)["state_dict"])
+    optimizer_dle_net = optim.Adam(dle_net.parameters(), lr=args.lr, betas=(0.9, 0.999))
 
-    optimizer_dle_net = optim.Adam(dle_net.parameters(), lr=args.learning_rate, betas=(0.9, 0.999))
-
-    da_list   = sorted([(args.imgin_dir+ file) for file in os.listdir(args.imgin_dir) if file == args.img_name])
-    demo_list = da_list
-    demo_list = demo_list*args.iters
-
-    Dele_Loader = torch.utils.data.DataLoader(
+    #
+    image_paths = list(args.data.rglob("*"))
+    image_paths = [str(path) for path in image_paths if path.is_image_file()]
+    demo_list   = image_paths * args.iters
+    loader      = torch.utils.data.DataLoader(
         DA.LoadImgs(args, demo_list, mode="demo"),
         batch_size  = 1,
         shuffle     = True,
         num_workers = 16,
         drop_last   = False
     )
-    count_idx = 0
-    tbar      = tqdm(Dele_Loader)
-    for batch_idx, inputs in enumerate(tbar):
-        count_idx = count_idx + 1
-        imgs_dict = demo(args, dle_net, optimizer_dle_net, inputs)
-        tbar.update()
+    count_idx   = 0
+    sum_time    = 0
+    with mon.get_progress_bar() as pbar:
+        for inputs, img_in_path in pbar.track(
+            sequence    = loader,
+            total       = len(loader),
+            description = f"[bright_yellow] Inferring"
+        ):
+            count_idx = count_idx + 1
+            imgs_dict = demo(args, dle_net, optimizer_dle_net, inputs)
 
-        if count_idx % 60 == 0:
-            inout    = os.path.join(args.imgs_dir, args.img_name[:-4] + "_in_out")
-            out      = os.path.join(args.imgs_dir, args.img_name[:-4] + "_out")
-            save_img = torch.cat((inputs["img_in"][0, :, :, :], imgs_dict["dle_pred"][0, :, :, :]), dim=2)
-            out_img  = imgs_dict["dle_pred"][0, :, :, :]
-            vutils.save_image(save_img, inout + ".png")
-            vutils.save_image(out_img,  out   + ".png")
+            if count_idx % 60 == 0:
+                img_in_path = mon.Path(img_in_path[0])
+                inout       = args.output_dir / f"{img_in_path.stem}_in_out.png"
+                out         = args.output_dir / f"{img_in_path.stem}_out.png"
+                save_img    = torch.cat((inputs["img_in"][0, :, :, :], imgs_dict["dle_pred"][0, :, :, :]), dim=2)
+                out_img     = imgs_dict["dle_pred"][0, :, :, :]
+                vutils.save_image(save_img, str(inout))
+                vutils.save_image(out_img,  str(out))
+                torch.save(dle_net.state_dict(), str(args.checkpoint_dir / "best.pt"))

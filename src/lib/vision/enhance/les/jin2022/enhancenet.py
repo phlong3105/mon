@@ -3,20 +3,20 @@
 
 from __future__ import annotations
 
+import time
 from glob import glob
 
 from cv2 import resize
-from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from dataset import ImageFolder
 from networks import *
 from utils import *
 
 console = mon.console
 
 
-class EnhanceNet(object) :
+class EnhanceNet(object):
+
     def __init__(self, args):        
         self.model_name         = "EnhanceNet"
         self.data               = args.data
@@ -37,7 +37,7 @@ class EnhanceNet(object) :
         self.lr                 = args.lr
         self.weight_decay       = args.weight_decay
         self.decay_flag         = args.decay_flag
-        self.result_dir         = args.result_dir
+        self.output_dir         = args.output_dir
         self.print_freq         = args.print_freq
         self.save_freq          = args.save_freq
         self.device             = args.device
@@ -47,7 +47,7 @@ class EnhanceNet(object) :
         if torch.backends.cudnn.enabled and self.benchmark_flag:
             console.log("set benchmark !")
             torch.backends.cudnn.benchmark = True
-        console.log("# data : ", self.data)
+        # console.log("# data : ", self.data)
 
     def build_model(self):
         self.test_transform = transforms.Compose([
@@ -55,28 +55,45 @@ class EnhanceNet(object) :
             transforms.ToTensor(),
             transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         ])
-        self.testA        = ImageFolder(os.path.join(self.data), self.test_transform)
-        self.testA_loader = DataLoader(self.testA, batch_size=1, shuffle=False)
+        # self.testA        = ImageFolder(os.path.join(self.data), self.test_transform)
+        # self.testA_loader = DataLoader(self.testA, batch_size=1, shuffle=False)
         self.genA2B       = ResnetGenerator(input_nc=3, output_nc=3, ngf=self.channels, n_blocks=self.n_res, img_size=self.image_size).to(self.device)
         self.disGA        = Discriminator(input_nc=3, ndf=self.channels, n_layers=7).to(self.device)
         self.disLA        = Discriminator(input_nc=3, ndf=self.channels, n_layers=5).to(self.device)
 
     def load(self, weights):
-        console.log(str(weights))
+        console.log(f"Pretrained weights: {weights}")
         params = torch.load(str(weights), map_location=torch.device(self.device))
         self.genA2B.load_state_dict(params["genA2B"])
         self.disGA.load_state_dict(params["disGA"])
         self.disLA.load_state_dict(params["disLA"])
 
+    def predict(self, image_path):
+        self.genA2B.eval()
+
+        image  = Image.open(str(image_path)).convert("RGB")
+        w, h   = image.size
+        real_A = (self.test_transform(image).unsqueeze(0)).to(self.device)
+
+        start_time = time.time()
+        fake_A2B, _, _ = self.genA2B(real_A)
+        run_time   = (time.time() - start_time)
+
+        A_real = RGB2BGR(tensor2numpy(denorm(real_A[0])))
+        B_fake = RGB2BGR(tensor2numpy(denorm(fake_A2B[0])))
+        A_real = resize(A_real, (w, h))
+        B_fake = resize(B_fake, (w, h))
+        return B_fake * 255.0, run_time
+
     def test(self):
-        model_list = glob(os.path.join(self.result_dir, self.data_name, "model", "*.pt"))
+        model_list = glob(os.path.join(self.output_dir, self.data_name, "model", "*.pt"))
         if not len(model_list) == 0:
             model_list.sort()
             console.log("model_list", model_list)
             for i in range(-1, 0, 1):
                 iter = int(model_list[i].split("_")[-1].split(".")[0])
                 console.log("iter", iter)
-                self.load(os.path.join(self.result_dir, self.data_name, "model"), iter)
+                self.load(os.path.join(self.output_dir, self.data_name, "model"), iter)
                 console.log(" Load SUCCESS")
 
                 self.genA2B.eval()

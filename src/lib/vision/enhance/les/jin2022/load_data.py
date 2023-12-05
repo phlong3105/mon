@@ -85,7 +85,7 @@ class LoadImgs(data.Dataset):
 
         if self.mode == "demo":
             inputs = {"img_in": img_in}
-            return inputs
+            return inputs, img_in_path
         if self.mode == "predict":
             inputs = {"img_in": img_in}
 

@@ -9,29 +9,29 @@ echo "$HOSTNAME"
 
 # Constants
 models=(
-  "enlightengan"       # https://github.com/arsenyinfo/EnlightenGAN-inference
-  "gcenet"             # Our model
-  "gcenetv2"           # Our model
-  "iat"                # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
-  "kind"               # https://github.com/zhangyhuaee/KinD
-  "kind++"             # https://github.com/zhangyhuaee/KinD_plus
-  "lcdpnet"            # https://github.com/onpix/LCDPNet
-  "lime"               # https://github.com/pvnieo/Low-light-Image-Enhancement
-  "llflow"             # https://github.com/wyf0912/LLFlow
-  "mbllen"             # https://github.com/Lvfeifan/MBLLEN
-  "pie"                # https://github.com/DavidQiuChao/PIE
-  "retinexdip"         # https://github.com/zhaozunjin/RetinexDIP
-  "retinexnet"         # https://github.com/weichen582/RetinexNet
-  "ruas"               # https://github.com/KarelZhang/RUAS
-  "sci"                # https://github.com/vis-opt-group/SCI
-  "sgz"                #
-  "snr"                # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
-  "stablellve"         # https://github.com/zkawfanx/StableLLVE
-  "uretinexnet"        # https://github.com/AndersonYong/URetinex-Net
-  "utvnet"             # https://github.com/CharlieZCJ/UTVNet
-  "zeroadce"           #
-  "zerodce"            #
-  "zerodce++"          #
+  "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
+  "gcenet"        # Our model
+  "gcenetv2"      # Our model
+  "iat"           # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
+  "kind"          # https://github.com/zhangyhuaee/KinD
+  "kind++"        # https://github.com/zhangyhuaee/KinD_plus
+  "lcdpnet"       # https://github.com/onpix/LCDPNet
+  "lime"          # https://github.com/pvnieo/Low-light-Image-Enhancement
+  "llflow"        # https://github.com/wyf0912/LLFlow
+  "mbllen"        # https://github.com/Lvfeifan/MBLLEN
+  "pie"           # https://github.com/DavidQiuChao/PIE
+  "retinexdip"    # https://github.com/zhaozunjin/RetinexDIP
+  "retinexnet"    # https://github.com/weichen582/RetinexNet
+  "ruas"          # https://github.com/KarelZhang/RUAS
+  "sci"           # https://github.com/vis-opt-group/SCI
+  "sgz"           #
+  "snr"           # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
+  "stablellve"    # https://github.com/zkawfanx/StableLLVE
+  "uretinexnet"   # https://github.com/AndersonYong/URetinex-Net
+  "utvnet"        # https://github.com/CharlieZCJ/UTVNet
+  "zeroadce"      #
+  "zerodce"       #
+  "zerodce++"     #
 )
 train_datasets=(
   "fivek-c"
@@ -299,8 +299,7 @@ if [ "$task" == "train" ]; then
           --max-epochs "$epochs"
       # IAT
       elif [ "${model[i]}" == "iat" ]; then
-        echo -e "\nI have not prepared the training script for IAT."
-        python -W ignore trian_lol_v1_patch.py \
+        python -W ignore train_lol_v1_patch.py \
           --data-train "${low_data_dirs[j]}" \
           --data-val "${low_data_dirs[j]}" \
           --batch-size 8 \

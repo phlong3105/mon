@@ -9,29 +9,9 @@ echo "$HOSTNAME"
 
 # Constants
 models=(
-  "enlightengan"       # https://github.com/arsenyinfo/EnlightenGAN-inference
-  "gcenet"             # Our model
-  "gcenetv2"           # Our model
-  "iat"                # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
-  "kind"               # https://github.com/zhangyhuaee/KinD
-  "kind++"             # https://github.com/zhangyhuaee/KinD_plus
-  "lcdpnet"            # https://github.com/onpix/LCDPNet
-  "lime"               # https://github.com/pvnieo/Low-light-Image-Enhancement
-  "llflow"             # https://github.com/wyf0912/LLFlow
-  "mbllen"             # https://github.com/Lvfeifan/MBLLEN
-  "pie"                # https://github.com/DavidQiuChao/PIE
-  "retinexdip"         # https://github.com/zhaozunjin/RetinexDIP
-  "retinexnet"         # https://github.com/weichen582/RetinexNet
-  "ruas"               # https://github.com/KarelZhang/RUAS
-  "sci"                # https://github.com/vis-opt-group/SCI
-  "sgz"                #
-  "snr"                # https://github.com/dvlab-research/SNR-Aware-Low-Light-Enhance
-  "stablellve"         # https://github.com/zkawfanx/StableLLVE
-  "uretinexnet"        # https://github.com/AndersonYong/URetinex-Net
-  "utvnet"             # https://github.com/CharlieZCJ/UTVNet
-  "zeroadce"           #
-  "zerodce"            #
-  "zerodce++"          #
+  "gcenet"        # Our model
+  "gcenetv2"      # Our model
+  "jin2022"       # https://github.com/jinyeying/night-enhancement
 )
 train_datasets=(
   "jin2022"
@@ -167,7 +147,7 @@ if [ "$task" == "train" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ] || [ "${model[i]}" == "zeroadce" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -199,10 +179,7 @@ if [ "$task" == "train" ]; then
       fi
 
       # EnlightenGAN
-      if [ "${model[i]}" == "enlightengan" ]; then
-        echo -e "\nI have not prepared the training script for EnlightenGAN."
-      # GCENet
-      elif [ "${model[i]}" == "gcenet" ]; then
+      if [ "${model[i]}" == "gcenet" ]; then
         python -W ignore train.py \
           --name "${name}" \
           --variant "${variant[j]}" \
@@ -213,144 +190,13 @@ if [ "$task" == "train" ]; then
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
-      # IAT
-      elif [ "${model[i]}" == "iat" ]; then
-        echo -e "\nI have not prepared the training script for IAT."
-      # KinD
-      elif [ "${model[i]}" == "kind" ]; then
-        echo -e "\nI have not prepared the training script for KinD."
-      # KinD++
-      elif [ "${model[i]}" == "kind++" ]; then
-        echo -e "\nI have not prepared the training script for KinD++."
-      # LCDPNet
-      elif [ "${model[i]}" == "lcdpnet" ]; then
-        python -W ignore src/train.py \
-          name="lcdpnet-lol" \
-          num_epoch="$epochs" \
-          log_every=2000 \
-          valid_every=20
-      # LLFlow
-      elif [ "${model[i]}" == "llflow" ]; then
-        echo -e "\nI have not prepared the training script for LLFlow."
-      # LIME
-      elif [ "${model[i]}" == "lime" ]; then
-        echo -e "\nLIME does not need any training."
-      # MBLLEN
-      elif [ "${model[i]}" == "mbllen" ]; then
-        echo -e "\nI have not prepared the training script for MBLLEN."
-      # PIE
-      elif [ "${model[i]}" == "pie" ]; then
-        echo -e "\nPIE does not need any training."
-      # RetinexDIP
-      elif [ "${model[i]}" == "retinexdip" ]; then
-        echo -e "\nRetinexNet does not need any training."
-        python -W ignore retinexdip.py \
-          --data "${light_effects_data_dirs[j]}" \
-          --weights "${weights}" \
+      # Jin2022
+      elif [ "${model[i]}" == "jin2022" ]; then
+        python -W ignore demo.py \
+          --data "${light_effects_data_dirs[k]}" \
           --image-size 512 \
-          --output-dir "${train_dir}"
-      # RetinexDIP
-      elif [ "${model[i]}" == "retinexnet" ]; then
-        echo -e "\nI have not prepared the training script for RetinexNet."
-      # RUAS
-      elif [ "${model[i]}" == "ruas" ]; then
-        python -W ignore train.py \
-          --data "${light_effects_data_dirs[j]}" \
-          --weights "${weights}" \
-          --load-pretrain false \
-          --epoch "$epochs" \
-          --batch-size 1 \
-          --report-freq 50 \
-          --gpu 0 \
-          --seed 2 \
-          --checkpoints-dir "${train_dir}"
-      # SCI
-      elif [ "${model[i]}" == "sci" ]; then
-        python -W ignore train.py \
-          --data "${light_effects_data_dirs[j]}" \
-          --weights "${weights}" \
-          --load-pretrain false \
-          --batch-size 1 \
-          --epochs "$epochs" \
-          --lr 0.0003 \
-          --stage 3 \
-          --cuda true \
-          --gpu 0 \
-          --seed 2 \
-          --checkpoints-dir "${train_dir}"
-      # SGZ
-      elif [ "${model[i]}" == "sgz" ]; then
-        python -W ignore train.py \
-          --data "${light_effects_data_dirs[j]}" \
-          --weights "${weights}" \
-          --load-pretrain false \
-          --image-size 512 \
-          --lr 0.0001 \
-          --weight-decay 0.0001 \
-          --grad-clip-norm 0.1 \
-          --epochs "$epochs" \
-          --train-batch-size 6 \
-          --val-batch-size 8 \
-          --num-workers 4 \
-          --display-iter 10 \
-          --scale-factor 1 \
-          --num-of-SegClass 21 \
-          --conv-type "dsc" \
-          --patch-size 4 \
-          --exp-level 0.6 \
-          --checkpoints-iter 10 \
-          --checkpoints-dir "${train_dir}"
-      # SNR-Aware
-      elif [ "${model[i]}" == "snr" ]; then
-        echo -e "\nI have not prepared the training script for SNR-Aware."
-      # StableLLVE
-      elif [ "${model[i]}" == "stablellve" ]; then
-        echo -e "\nI have not prepared the training script for StableLLVE."
-      # URetinex-Net
-      elif [ "${model[i]}" == "uretinexnet" ]; then
-        echo -e "\nI have not prepared the training script for URetinex-Net."
-      # UTVNet
-      elif [ "${model[i]}" == "utvnet" ]; then
-        echo -e "\nI have not prepared the training script for UTVNet."
-      # Zero-ADCE
-      elif [ "${model[i]}" == "zeroadce" ]; then
-        python -W ignore train.py \
-          --name "${name}" \
-          --variant "${variant[j]}" \
-          --max-epochs "$epochs"
-      # Zero-DCE
-      elif [ "${model[i]}" == "zerodce" ]; then
-        python -W ignore lowlight_train.py \
-          --data "${light_effects_data_dirs[j]}" \
-          --weights "${weights}" \
-          --load-pretrain false \
-          --lr 0.0001 \
-          --weight-decay 0.0001 \
-          --grad-clip-norm 0.1 \
-          --epochs "$epochs" \
-          --train-batch-size 8 \
-          --val-batch-size 4 \
-          --num-workers 4 \
-          --display-iter 10 \
-          --checkpoints-iter 10 \
-          --checkpoints-dir "${train_dir}"
-      # Zero-DCE++
-      elif [ "${model[i]}" == "zerodce++" ]; then
-        python -W ignore lowlight_train.py \
-          --data "${light_effects_data_dirs[j]}" \
-          --weights "${weights}" \
-          --load-pretrain false \
-          --lr 0.0001 \
-          --weight-decay 0.0001 \
-          --grad-clip-norm 0.1 \
-          --scale-factor 1 \
-          --epochs "$epochs" \
-          --train-batch-size 8 \
-          --val-batch-size 4 \
-          --num-workers 4 \
-          --display-iter 10 \
-          --checkpoints-iter 10 \
-          --checkpoints-dir "${train_dir}"
+          --output-dir "${train_dir}/visual" \
+          --checkpoint-dir "${train_dir}"
       fi
     done
   done
@@ -363,7 +209,7 @@ if [ "$task" == "predict" ]; then
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ] || [ "${model[i]}" == "zeroadce" ]; then
+      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ]; then
         model_dir="${current_dir}"
       else
         model_dir="${root_dir}/src/lib/${project}/${model[i]}"
@@ -411,202 +257,51 @@ if [ "$task" == "predict" ]; then
         weights="${zoo_weights_pt}"
       fi
 
-      # LCDPNet
-      if [ "${model[i]}" == "lcdpnet" ]; then
-        python -W ignore src/test.py \
-          checkpoint_path="${root_dir}/zoo/${project}/${model[i]}/lcdpnet-ours.ckpt" \
-          +image_size=512
-      else
-        for (( k=0; k<${#predict_data[@]}; k++ )); do
-          if [ "${use_data_dir}" == "yes" ]; then
-            predict_dir="${root_dir}/data/les/predict/${model_variant_suffix}/${predict_data[k]}"
-          else
-            predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
-          fi
+      for (( k=0; k<${#predict_data[@]}; k++ )); do
+        if [ "${use_data_dir}" == "yes" ]; then
+          predict_dir="${root_dir}/data/les/predict/${model_variant_suffix}/${predict_data[k]}"
+        else
+          predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
+        fi
 
-          # EnlightenGAN
-          if [ "${model[i]}" == "enlightengan" ]; then
-            python -W ignore infer/predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # GCENet
-          elif [ "${model[i]}" == "gcenet" ]; then
-            python -W ignore predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --config "${model[i]}_sice_zerodce" \
-              --root "${predict_dir}" \
-              --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
-              --weights "${weights}" \
-              --num_iters 8 \
-              --image-size 512 \
-              --save-image \
-              --benchmark \
-              --output-dir "${predict_dir}"
-          # GCENetV2
-          elif [ "${model[i]}" == "gcenetv2" ]; then
-            python -W ignore predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --config "${model[i]}_sice_zerodce" \
-              --root "${predict_dir}" \
-              --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
-              --weights "${weights}" \
-              --num_iters 8 \
-              --image-size 512 \
-              --save-image \
-              --output-dir "${predict_dir}"
-          # IAT
-          elif [ "${model[i]}" == "iat" ]; then
-            python -W ignore IAT_enhance/predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --exposure-weights "${root_dir}/zoo/${project}/${model[i]}/iat-exposure.pth" \
-              --enhance-weights "${root_dir}/zoo/${project}/${model[i]}/iat-lol-v1.pth" \
-              --image-size 512 \
-              --normalize \
-              --task "enhance" \
-              --output-dir "${predict_dir}"
-          # KinD
-          elif [ "${model[i]}" == "kind" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # KinD++
-          elif [ "${model[i]}" == "kind++" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # LIME
-          elif [ "${model[i]}" == "lime" ]; then
-            python -W ignore demo.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --lime \
-              --output-dir "${predict_dir}" \
-          # LLFlow
-          elif [ "${model[i]}" == "llflow" ]; then
-            python -W ignore code/test_unpaired_v2.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "weights/llflow-lol-smallnet.pth" \
-              --image-size 512 \
-              --output-dir "${predict_dir}" \
-              --opt "code/confs/LOL_smallNet.yml" \
-              --name "unpaired"
-          # MBLLEN
-          elif [ "${model[i]}" == "mbllen" ]; then
-            python -W ignore main/test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}" \
-          # PIE
-          elif [ "${model[i]}" == "pie" ]; then
-            python main.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}" \
-          # RetinexDIP
-          elif [ "${model[i]}" == "retinexdip" ]; then
-            python -W ignore retinexdip.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${weights}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # RetinexNet
-          elif [ "${model[i]}" == "retinexnet" ]; then
-            python -W ignore predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # RUAS
-          elif [ "${model[i]}" == "ruas" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/ruas-lol.pt" \
-              --image-size 512 \
-              --gpu 0 \
-              --seed 2 \
-              --output-dir "${predict_dir}"
-          # SCI
-          elif [ "${model[i]}" == "sci" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/sci-medium.pt" \
-              --image-size 512 \
-              --gpu 0 \
-              --seed 2 \
-              --output-dir "${predict_dir}"
-          # SGZ
-          elif [ "${model[i]}" == "sgz" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/sgz-lol.pt" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # SNR-Aware
-          elif [ "${model[i]}" == "snr" ]; then
-            python -W ignore predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/snr-lolv1.pth" \
-              --opt "./options/test/LOLv1.yml" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # StableLLVE
-          elif [ "${model[i]}" == "stablellve" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/stablellve-checkpoint.pth" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # URetinex-Net
-          elif [ "${model[i]}" == "uretinexnet" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --decom-model-low-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-init_low.pth" \
-              --unfolding-model-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-unfolding.pth" \
-              --adjust-model-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-L_adjust.pth" \
-              --image-size 512 \
-              --ratio 5 \
-              --output-dir "${predict_dir}"
-          # UTVNet
-          elif [ "${model[i]}" == "utvnet" ]; then
-            python -W ignore test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # Zero-ADCE
-          elif [ "${model[i]}" == "zeroadce" ]; then
-            python -W ignore predict.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --config "${model[i]}_sice_zerodce" \
-              --root "${predict_dir}" \
-              --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
-              --weights "${weights}" \
-              --num_iters 8 \
-              --image-size 512 \
-              --save-image \
-              --output-dir "${predict_dir}"
-          # Zero-DCE
-          elif [ "${model[i]}" == "zerodce" ]; then
-            python -W ignore lowlight_test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/best.pth" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          # Zero-DCE++
-          elif [ "${model[i]}" == "zerodce++" ]; then
-            python -W ignore lowlight_test.py \
-              --data "${light_effects_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/best.pth" \
-              --image-size 512 \
-              --output-dir "${predict_dir}"
-          fi
-        done
-      fi
+        # GCENet
+        if [ "${model[i]}" == "gcenet" ]; then
+          python -W ignore predict.py \
+            --data "${light_effects_data_dirs[k]}" \
+            --config "${model[i]}_sice_zerodce" \
+            --root "${predict_dir}" \
+            --project "${project}/${model[i]}" \
+            --variant "${variant[j]}" \
+            --weights "${weights}" \
+            --num_iters 8 \
+            --image-size 512 \
+            --save-image \
+            --benchmark \
+            --output-dir "${predict_dir}"
+        # GCENetV2
+        elif [ "${model[i]}" == "gcenetv2" ]; then
+          python -W ignore predict.py \
+            --data "${light_effects_data_dirs[k]}" \
+            --config "${model[i]}_sice_zerodce" \
+            --root "${predict_dir}" \
+            --project "${project}/${model[i]}" \
+            --variant "${variant[j]}" \
+            --weights "${weights}" \
+            --num_iters 8 \
+            --image-size 512 \
+            --save-image \
+            --output-dir "${predict_dir}"
+        # Jin2022
+        elif [ "${model[i]}" == "jin2022" ]; then
+          python -W ignore predict.py \
+            --data  "${light_effects_data_dirs[k]}" \
+            --data-name "${predict_data[k]}" \
+            --phase "test" \
+            --weights "${root_dir}/zoo/${project}/${model[i]}/delighteffects_params_0600000.pt" \
+            --image-size 512 \
+            --output-dir "${predict_dir}"
+        fi
+      done
     done
   done
 fi
