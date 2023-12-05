@@ -116,7 +116,7 @@ if __name__ == "__main__":
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--gpu",        type=int, default=0)
     parser.add_argument("--seed",       type=int, default=2)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/ruas")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
     args = parser.parse_args()
     
     args.output_dir = mon.Path(args.output_dir)

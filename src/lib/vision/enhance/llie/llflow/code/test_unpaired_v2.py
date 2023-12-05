@@ -22,6 +22,7 @@ from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 
+
 def fiFindByWildcard(wildcard):
     return natsort.natsorted(glob.glob(wildcard, recursive=True))
  
@@ -95,7 +96,7 @@ def main():
     parser.add_argument("--data",       type=str, default="data/test_data/")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/llflow/llflow-lol-smallnet.pth")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/llflow")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/llflow")
     parser.add_argument("--opt",        type=str, default="./confs/LOL_smallNet.yml")
     parser.add_argument("--name", "-n", type=str, default="unpaired")
     args = parser.parse_args()

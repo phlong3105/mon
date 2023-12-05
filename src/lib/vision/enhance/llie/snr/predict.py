@@ -28,7 +28,7 @@ def predict():
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/snr/snr-lolv1.pth")
     parser.add_argument("--opt",        type=str, default="./options/test/LOLv1.yml", help="Path to options YAML file.")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/snr")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/snr")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

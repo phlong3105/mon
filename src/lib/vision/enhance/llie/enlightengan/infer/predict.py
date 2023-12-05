@@ -15,7 +15,7 @@ import torch
 
 import mon
 from enlighten_inference import EnlightenOnnxModel
-from mon import ZOO_DIR
+from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 _current_dir = mon.Path(__file__).absolute().parent
@@ -24,9 +24,9 @@ _current_dir = mon.Path(__file__).absolute().parent
 def predict():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default="./data/test/*")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR/"vision/enhance/llie/enlightengan/enlightengan.onnx")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan.onnx")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/enlightengan")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/enlightengan")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

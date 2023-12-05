@@ -101,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument("--image-size",              type=int, default=512)
     parser.add_argument("--ratio",                   type=int, default=5)  # ratio are recommended to be 3-5, bigger ratio will lead to over-exposure
     parser.add_argument("--gpu",                     type=int, default=0)
-    parser.add_argument("--output-dir",              type=str, default=RUN_DIR / "predict/uretinexnet")
+    parser.add_argument("--output-dir",              type=str, default=RUN_DIR / "predict/vision/enhance/llie/uretinexnet")
     args = parser.parse_args()
     
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)

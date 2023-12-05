@@ -22,7 +22,6 @@ console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
 
 
-
 # region Tracker
 
 class Tracker(ABC):

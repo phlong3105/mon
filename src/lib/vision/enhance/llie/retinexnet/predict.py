@@ -9,7 +9,7 @@ import time
 
 import mon
 from model import RetinexNet
-from mon import ZOO_DIR
+from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 
@@ -29,11 +29,11 @@ def predict(args, model):
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="./data/test/low/",    help="directory storing the test data")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR/"vision/enhance/llie/retinexnet", help="directory for checkpoints")
-    parser.add_argument("--gpu",        type=str, default="0",                   help="GPU ID (-1 for CPU)")
+    parser.add_argument("--data",       type=str, default="./data/test/low/", help="directory storing the test data")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/retinexnet", help="directory for checkpoints")
+    parser.add_argument("--gpu",        type=str, default="0", help="GPU ID (-1 for CPU)")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default="./results/test/low/", help="directory for saving the results")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/retinexnet", help="directory for saving the results")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

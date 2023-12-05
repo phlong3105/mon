@@ -21,6 +21,6 @@ parser.add_argument("--conv-type",        type=str,   default="dsc", choices=["d
 parser.add_argument("--patch-size",       type=int,   default=4,     choices=[3, 4, 5])
 parser.add_argument("--exp-level",        type=float, default=0.6,   choices=[0.5, 0.6, 0.7])
 parser.add_argument("--checkpoints-iter", type=int,   default=10)
-parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/sgz")
-parser.add_argument("--output-dir",       type=str,   default=RUN_DIR / "predict/sgz")
+parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/sgz")
+parser.add_argument("--output-dir",       type=str,   default=RUN_DIR / "predict/vision/enhance/llie/sgz")
 args = parser.parse_args()

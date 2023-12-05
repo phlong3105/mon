@@ -19,6 +19,7 @@ import mon
 # noinspection PyUnresolvedReferences
 import utils
 from model import Network
+from mon import ZOO_DIR, DATA_DIR, RUN_DIR
 from multi_read_data import MemoryFriendlyLoader
 
 console = mon.console
@@ -89,15 +90,15 @@ def train(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("ruas")
-    parser.add_argument("--data",            type=str,   default=mon.DATA_DIR/"lol")
-    parser.add_argument("--weights",         type=str,   default=mon.ZOO_DIR/"ruas/ruas-lol.pt")
+    parser.add_argument("--data",            type=str,   default=DATA_DIR / "lol")
+    parser.add_argument("--weights",         type=str,   default=ZOO_DIR / "vision/enhance/llie/ruas/ruas-lol.pt")
     parser.add_argument("--load-pretrain",   type=bool,  default=False)
     parser.add_argument("--epochs",          type=int,   default=200)
     parser.add_argument("--batch-size",      type=int,   default=1,  help="Batch size")
     parser.add_argument("--report-freq",     type=float, default=50, help="Report frequency")
     parser.add_argument("--gpu",             type=int,   default=0,  help="GPU device id")
     parser.add_argument("--seed",            type=int,   default=2,  help="Random seed")
-    parser.add_argument("--checkpoints-dir", type=str,   default=mon.RUN_DIR/"train/ruas")
+    parser.add_argument("--checkpoints-dir", type=str,   default=RUN_DIR / "train/vision/enhance/llie/ruas")
     args = parser.parse_args()
     
     args.checkpoints_dir = mon.Path(args.checkpoints_dir)

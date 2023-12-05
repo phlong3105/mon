@@ -17,6 +17,7 @@ from torchvision.models import vgg16
 import mon
 from data_loaders.lol_v1_new import lowlight_loader_new
 from model.IAT_main import IAT
+from mon import ZOO_DIR, RUN_DIR
 from utils import LossNetwork, PSNR, validation
 
 console = mon.console
@@ -124,7 +125,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-train",       type=str,   default="/data/unagi0/cui_data/light_dataset/LOL_v1/our485_patch/low/")
     parser.add_argument("--data-val",         type=str,   default="/data/unagi0/cui_data/light_dataset/LOL_v1/eval15/low/")
-    parser.add_argument("--weights",          type=str,   default="best_Epoch_lol_v1.pth")
+    parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/iat/iat-lol-v1.pth")
     parser.add_argument("--load-pretrain",    type=bool,  default=False)
     parser.add_argument("--batch-size",       type=int,   default=8)
     parser.add_argument("--lr",               type=float, default=2e-4)   # for batch size 4x2=8
@@ -135,7 +136,7 @@ if __name__ == "__main__":
     parser.add_argument("--gpu",              type=str,   default=0)
     parser.add_argument("--display-iter",     type=int,   default=10)
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
-    parser.add_argument("--checkpoints-dir",  type=str,   default=mon.RUN_DIR/"train/iat/lol_v1_patch")
+    parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/iat/lol_v1_patch")
     args = parser.parse_args()
     
     args.checkpoints_dir = mon.Path(args.checkpoints_dir)

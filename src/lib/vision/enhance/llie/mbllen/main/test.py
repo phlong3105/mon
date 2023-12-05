@@ -15,10 +15,10 @@ import keras.backend as K
 import numpy as np
 from keras_flops import get_flops
 
-import mon
 import Network
+import mon
 import utls
-from mon import ZOO_DIR
+from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 
@@ -34,7 +34,7 @@ def test():
     parser.add_argument("--lowpercent",  type=int, default=5,  help="Should be in [0,15], rescale the range [p%,1] to [0, 1]")
     parser.add_argument("--gamma",       type=int, default=8,  help="Should be in [6,10], increase the saturability")
     parser.add_argument("--maxrange",    type=int, default=8,  help="Linear amplification range")
-    parser.add_argument("--output-dir",  type=str, default=mon.RUN_DIR/"predict/mbllen")
+    parser.add_argument("--output-dir",  type=str, default=RUN_DIR / "predict/vision/enhance/llie/mbllen")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

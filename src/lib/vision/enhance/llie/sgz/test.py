@@ -8,6 +8,7 @@ import time
 
 import torchvision
 
+import mon
 from modeling import model
 from option import *
 from utils import *
@@ -49,7 +50,7 @@ class Tester:
         self.net.eval()
         
         console.log(f"Data: {args.data}")
-        args.data = mon.Path(args.data)
+        args.data   = mon.Path(args.data)
         image_paths = list(args.data.rglob("*"))
         image_paths = [p for p in image_paths if p.is_image_file()]
         

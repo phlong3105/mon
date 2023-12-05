@@ -17,6 +17,7 @@ from tqdm import tqdm
 import mon
 from data_loaders.exposure import exposure_loader
 from model.IAT_main import IAT
+from mon import RUN_DIR
 from utils import PSNR
 
 console = mon.console
@@ -81,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument("--expert",     type=str,  default="c")  # Choose the evaluation expert
     parser.add_argument("--pre-norm",   type=bool, default=False)
     parser.add_argument("--gpu",        type=str,  default=3)
-    parser.add_argument("--output-dir", type=str,  default=mon.RUN_DIR/"predict/iat")
+    parser.add_argument("--output-dir", type=str,  default=RUN_DIR / "predict/vision/enhance/llie/iat")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

@@ -300,6 +300,17 @@ if [ "$task" == "train" ]; then
       # IAT
       elif [ "${model[i]}" == "iat" ]; then
         echo -e "\nI have not prepared the training script for IAT."
+        python -W ignore trian_lol_v1_patch.py \
+          --data-train "${low_data_dirs[j]}" \
+          --data-val "${low_data_dirs[j]}" \
+          --batch-size 8 \
+          --lr 0.0002 \
+          --weight-decay 0.0004 \
+          --epochs "$epochs" \
+          --gpu 0 \
+          --display-iter 10 \
+          --checkpoints-iter 10 \
+          --checkpoints-dir "${train_dir}"
       # KinD
       elif [ "${model[i]}" == "kind" ]; then
         echo -e "\nI have not prepared the training script for KinD."
@@ -327,15 +338,23 @@ if [ "$task" == "train" ]; then
         echo -e "\nPIE does not need any training."
       # RetinexDIP
       elif [ "${model[i]}" == "retinexdip" ]; then
-        echo -e "\nRetinexNet does not need any training."
+        echo -e "\nRetinexDIP does not need any training."
         python -W ignore retinexdip.py \
           --data "${low_data_dirs[j]}" \
           --weights "${weights}" \
           --image-size 512 \
           --output-dir "${train_dir}"
-      # RetinexDIP
+      # RetinexNet
       elif [ "${model[i]}" == "retinexnet" ]; then
-        echo -e "\nI have not prepared the training script for RetinexNet."
+        python -W ignore train.py \
+          --data-low "${low_data_dirs[j]}" \
+          --data-high "${high_data_dirs[j]}" \
+          --gpu 0 \
+          --epochs "$epochs" \
+          --batch-size 16 \
+          --patch-size 96 \
+          --lr 0.001 \
+          --checkpoints-dir "${train_dir}"
       # RUAS
       elif [ "${model[i]}" == "ruas" ]; then
         python -W ignore train.py \
@@ -389,7 +408,15 @@ if [ "$task" == "train" ]; then
         echo -e "\nI have not prepared the training script for SNR-Aware."
       # StableLLVE
       elif [ "${model[i]}" == "stablellve" ]; then
-        echo -e "\nI have not prepared the training script for StableLLVE."
+        python -W ignore train.py \
+          --data "${low_data_dirs[j]}" \
+          --epochs "$epochs" \
+          --batch-size 1 \
+          --lr 0.0001 \
+          --weight 20 \
+          --gpu 0 \
+          --log-dir "${train_dir}" \
+          --checkpoint-dir "${train_dir}"
       # URetinex-Net
       elif [ "${model[i]}" == "uretinexnet" ]; then
         echo -e "\nI have not prepared the training script for URetinex-Net."

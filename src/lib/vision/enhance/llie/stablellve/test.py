@@ -25,7 +25,7 @@ def test():
     parser.add_argument("--data",       type=str, default="./data/test/*")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/stablellve/stablellve-checkpoint.pth")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/utvnet")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

@@ -12,6 +12,7 @@ import cv2
 
 import mon
 import pie
+from mon import RUN_DIR
 
 console = mon.console
 
@@ -21,7 +22,7 @@ def main():
     parser.add_argument("--data",       type=str, default="data/test_data/")
     parser.add_argument("--weights",    type=str, default="weights/Epoch99.pth")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/zerodce")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/zerodce")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

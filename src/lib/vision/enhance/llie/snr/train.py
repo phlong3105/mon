@@ -27,11 +27,11 @@ from utils import util
 console = mon.console
 
 
-def init_dist(backend='nccl', **kwargs):
+def init_dist(backend="nccl", **kwargs):
     """initialization for distributed training"""
-    if mp.get_start_method(allow_none=True) != 'spawn':
-        mp.set_start_method('spawn')
-    rank = int(os.environ['RANK'])
+    if mp.get_start_method(allow_none=True) != "spawn":
+        mp.set_start_method("spawn")
+    rank     = int(os.environ["RANK"])
     num_gpus = torch.cuda.device_count()
     torch.cuda.set_device(rank % num_gpus)
     dist.init_process_group(backend=backend, **kwargs)
@@ -40,32 +40,31 @@ def init_dist(backend='nccl', **kwargs):
 def main():
     #### options
     parser = argparse.ArgumentParser()
-    parser.add_argument('-opt', type=str, help='Path to option YAML file.', default='./options/train/train_EDVR_ours.yml')
-    parser.add_argument('--launcher', choices=['none', 'pytorch'], default='none',
-                        help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument("-opt",         type=str, help="Path to option YAML file.", default="./options/train/train_EDVR_ours.yml")
+    parser.add_argument("--launcher",   choices=["none", "pytorch"], default="none",  help="job launcher")
+    parser.add_argument("--local_rank", type=int, default=0)
     args = parser.parse_args()
 
     opt = option.parse(args.opt, is_train=True)
 
     #### distributed training settings
-    if args.launcher == 'none':  # disabled distributed training
-        opt['dist'] = False
+    if args.launcher == "none":  # disabled distributed training
+        opt["dist"] = False
         rank = -1
-        print('Disabled distributed training.')
+        print("Disabled distributed training.")
     else:
-        opt['dist'] = True
+        opt["dist"] = True
         init_dist()
         world_size = torch.distributed.get_world_size()
         rank = torch.distributed.get_rank()
 
     #### loading resume state if exists
-    if opt['path'].get('resume_state', None):
+    if opt["path"].get("resume_state", None):
         # distributed resuming: all load into default GPU
         device_id = torch.cuda.current_device()
-        resume_state = torch.load(opt['path']['resume_state'],
+        resume_state = torch.load(opt["path"]["resume_state"],
                                   map_location=lambda storage, loc: storage.cuda(device_id))
-        option.check_resume(opt, resume_state['iter'])  # check resume options
+        option.check_resume(opt, resume_state["iter"])  # check resume options
     else:
         resume_state = None
 

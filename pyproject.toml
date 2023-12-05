@@ -9,7 +9,7 @@
 #
 [tool.poetry]
 name          = "mon"
-version       = "1.3.0"
+version       = "1.3.1"
 description   = "MON covers a wide range of research topics in computer vision, machine learning, and deep learning."
 license       = "MIT"
 authors       = [
@@ -56,24 +56,50 @@ include = [
 exclude = []
 
 [tool.poetry.dependencies]
-python         = ">=3.8, <3.12"
-addict         = {version="*", optional=true}
-cog            = {version="*", optional=true}
-easydict       = {version="*", optional=true}
-hydra-core     = {version="*", optional=true}
-mediapipe      = {version="*", optional=true}
-pandas         = {version="*", optional=true}
-tensorflow     = {version="*", optional=true}
-torchfile      = {version="*", optional=true}
-webdataset     = {version="*", optional=true}
-saicinpainting = {path="src/lib/vision/enhance/inpaint/lama", develop=true}
-ultralytics    = {path="src/lib/vision/detect/yolov8",        develop=true}
+python                = ">=3.8, <3.12"
+IQA-pytorch           = {version="*", optional=true}
+addict                = {version="*", optional=true}
+cog                   = {version="*", optional=true}
+easydict              = {version="*", optional=true}
+guided-filter-pytorch = {version="*", optional=true}
+hydra-core            = {version="*", optional=true}
+mediapipe             = {version="*", optional=true}
+natsort               = {version="*", optional=true}
+pandas                = {version="*", optional=true}
+tensorflow            = {version="*", optional=true}
+torchfile             = {version="*", optional=true}
+webdataset            = {version="*", optional=true}
+saicinpainting        = {path="src/lib/vision/enhance/inpaint/lama", develop=true}
+ultralytics           = {path="src/lib/vision/detect/yolov8",        develop=true}
 
 [tool.poetry.extras]
-dev = ["ultralytics"]
+dev = [
+    "IQA-pytorch",
+    "addict",
+    "cog",
+    "easydict",
+    "guided-filter-pytorch",
+    "hydra-core",
+    "kornia",
+    "natsort",
+    "pandas",
+    "tensorflow",
+    "torchfile",
+    "ultralytics",
+]
 aic = [
-    "addict", "cog", "easydict", "hydra-core", "kornia", "mediapipe", "pandas",
-    "tensorflow", "torchfile", "saicinpainting", "ultralytics",
+    "addict",
+    "cog",
+    "easydict",
+    "guided-filter-pytorch",
+    "hydra-core",
+    "kornia",
+    "mediapipe",
+    "pandas",
+    "saicinpainting",
+    "tensorflow",
+    "torchfile",
+    "ultralytics",
 ]
 
 # [tool.poetry.group.dev]

@@ -14,6 +14,7 @@ import cv2
 from torchvision import transforms
 
 import mon
+from mon import RUN_DIR, DATA_DIR, ZOO_DIR
 from net import *
 from net.downsampler import *
 from net.losses import ExclusionLoss, GradientLoss, TVLoss
@@ -337,10 +338,10 @@ def lowlight_enhancer(image_name, image):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default=mon.DATA_DIR)
-    parser.add_argument("--weights",    type=str, default=mon.ZOO_DIR/"retinexdip/retinexdip-lol.pt")
+    parser.add_argument("--data",       type=str, default=DATA_DIR)
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "retinexdip/retinexdip-lol.pt")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=mon.RUN_DIR/"predict/ruas")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

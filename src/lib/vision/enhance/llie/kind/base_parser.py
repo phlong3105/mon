@@ -19,5 +19,5 @@ class BaseParser:
         self.parser.add_argument("--config",     type=str, default="./config.yaml", help="path to config")
         self.parser.add_argument("--image-size", type=int, default=512)
         self.parser.add_argument("--mode",       type=str, default="test", choices=["train", "test"])
-        self.parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/kind")
+        self.parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/kind")
         return self.parser.parse_args()

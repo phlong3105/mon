@@ -19,7 +19,7 @@ from torch.autograd import Variable
 
 import mon
 from model import Finetunemodel
-from mon import ZOO_DIR
+from mon import ZOO_DIR, RUN_DIR
 from multi_read_data import MemoryFriendlyLoader
 
 console = mon.console
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--gpu",        type=int, default=0, help="gpu device id")
     parser.add_argument("--seed",       type=int, default=2, help="random seed")
-    parser.add_argument("--output-dir", type=str, default="./results/medium", help="location of the data corpus")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/sci", help="location of the data corpus")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

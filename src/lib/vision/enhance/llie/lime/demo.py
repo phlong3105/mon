@@ -13,6 +13,7 @@ import cv2
 
 import mon
 from exposure_enhancement import enhance_image_exposure
+from mon import RUN_DIR
 
 console = mon.console
 
@@ -31,7 +32,7 @@ def main():
     parser.add_argument("--bs",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's saturation measure.")
     parser.add_argument("--be",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's well exposedness measure.")
     parser.add_argument("--eps",        type=float, default=1e-3,      help="Constant to avoid computation instability.")
-    parser.add_argument("--output-dir", type=str,   default=mon.RUN_DIR/"predict/lime")
+    parser.add_argument("--output-dir", type=str,   default=RUN_DIR / "predict/vision/enhance/llie/lime")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

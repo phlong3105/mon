@@ -13,6 +13,7 @@ import dataloader
 import model
 import mon
 import Myloss
+from mon import ZOO_DIR, RUN_DIR
 
 
 def weights_init(m):
@@ -82,7 +83,7 @@ def train(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",             type=str,   default="data/train_data/")
-    parser.add_argument("--weights",          type=str,   default="weights/Epoch99.pth")
+    parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/zerodce/best.pth")
     parser.add_argument("--load-pretrain",    type=bool,  default=False)
     parser.add_argument("--lr",               type=float, default=0.0001)
     parser.add_argument("--weight-decay",     type=float, default=0.0001)
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument("--num-workers",      type=int,   default=4)
     parser.add_argument("--display-iter",     type=int,   default=10)
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
-    parser.add_argument("--checkpoints-dir",  type=str,   default=mon.RUN_DIR/"train/zerodce")
+    parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/zerodce")
     args = parser.parse_args()
 	
     args.checkpoints_dir = mon.Path(args.checkpoints_dir)

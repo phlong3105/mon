@@ -17,7 +17,7 @@ from torchvision.transforms import Normalize
 
 import mon
 from model.IAT_main import IAT
-from mon import ZOO_DIR
+from mon import ZOO_DIR, RUN_DIR
 
 console = mon.console
 
@@ -102,12 +102,12 @@ def predict(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",             type=str,  default="demo_imgs/low_demo.jpg")
-    parser.add_argument("--exposure-weights", type=str,  default=ZOO_DIR/"vision/enhance/llie/iat-exposure.pth")
-    parser.add_argument("--enhance-weights",  type=str,  default=ZOO_DIR/"vision/enhance/llie/iat-lol-v1.pth")
+    parser.add_argument("--exposure-weights", type=str,  default=ZOO_DIR / "vision/enhance/llie/iat-exposure.pth")
+    parser.add_argument("--enhance-weights",  type=str,  default=ZOO_DIR / "vision/enhance/llie/iat-lol-v1.pth")
     parser.add_argument("--image-size",       type=int,  default=512)
     parser.add_argument("--normalize",        action="store_true", default=False)
     parser.add_argument("--task",             type=str,  default="enhance", help="Choose from exposure or enhance")
-    parser.add_argument("--output-dir",       type=str,  default=mon.RUN_DIR/"predict/iat")
+    parser.add_argument("--output-dir",       type=str,  default=RUN_DIR / "predict/vision/enhance/llie/iat")
     args = parser.parse_args()
     
     args.data       = mon.Path(args.data)

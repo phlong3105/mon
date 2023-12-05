@@ -21,6 +21,7 @@ from torchvision.models import vgg16
 import mon
 from data_loaders.exposure import exposure_loader
 from model.IAT_main import IAT
+from mon import RUN_DIR, ZOO_DIR
 from utils import get_dist_info, LossNetwork, PSNR, validation
 
 console = mon.console
@@ -146,7 +147,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-train",       type=str,   default="/data/unagi0/cui_data/light_dataset/Exposure_CVPR21/train/INPUT_IMAGES")
     parser.add_argument("--data-val",         type=str,   default="/data/unagi0/cui_data/light_dataset/Exposure_CVPR21/validation/INPUT_IMAGES")
-    parser.add_argument("--weights",          type=str,   default="best_Epoch_exposure.pth")
+    parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/iat/iat-exposure.pth")
     parser.add_argument("--load-pretrain",    type=bool,  default=False)
     parser.add_argument("--batch-size",       type=int,   default=8)
     parser.add_argument("--lr",               type=float, default=2e-4)   # for batch size 4x2=8
@@ -156,7 +157,7 @@ if __name__ == "__main__":
     parser.add_argument("--normalize",        action="store_true", help="Default not Normalize in exposure training.")
     parser.add_argument("--display-iter",     type=int,   default=10)
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
-    parser.add_argument("--checkpoints-dir",  type=str,   default=mon.RUN_DIR/"train/iat/exposure")
+    parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/iat/exposure")
     args = parser.parse_args()
     
     args.checkpoints_dir = mon.Path(args.checkpoints_dir)
