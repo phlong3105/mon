@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
+    "detect_blur_spot",
+    "detect_bright_spot",
     "get_bright_channel_prior",
     "get_dark_channel_prior",
     "get_guided_brightness_enhancement_map_prior",
@@ -24,6 +26,54 @@ _current_dir = core.Path(__file__).absolute().parent
 
 # region Image Feature Prior: Intensity & Gradient
 
+def detect_blur_spot(
+    input    : np.ndarray,
+    threshold: int  = 250,
+    verbose  : bool = False,
+) -> bool:
+    # Convert image to grayscale
+    gray = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
+    # Apply binary thresholding for bright spot detection
+    _, binary = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+    # Apply Laplacian filter for edge detection
+    laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+    # Calculate maximum intensity and variance
+    laplacian_variance = laplacian.var()
+    # Check blur condition based on variance of Laplacian image
+    is_blur = False
+    if laplacian_variance < threshold:
+        is_blur = True
+    if verbose:
+        text = "Blurry" if is_blur else "Not Blurry"
+        cv2.putText(input, text, (15, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
+        cv2.imshow("Blur Spot", input)
+        cv2.waitKey(0)
+    return is_blur
+
+
+def detect_bright_spot(
+    input    : np.ndarray,
+    threshold: int  = 250,
+    verbose  : bool = False,
+) -> bool:
+    # Convert image to grayscale
+    gray = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
+    # Apply binary thresholding for bright spot detection
+    _, binary = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+    # Calculate maximum intensity and variance
+    binary_variance = binary.var()
+    # Check bright spot condition based on variance of binary image
+    is_bright = False
+    if 5000 < binary_variance < 8500:
+        is_bright = True
+    if verbose:
+        text = "Bright Spot" if is_bright else "No Bright Spot"
+        cv2.putText(input, text, (15, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
+        cv2.imshow("Bright Spot", input)
+        cv2.waitKey(0)
+    return is_bright
+
+
 def get_bright_channel_prior(
     input     : np.ndarray,
     patch_size: int | tuple[int, int],
@@ -39,11 +89,11 @@ def get_bright_channel_prior(
     """
     # b, g, r      = cv2.split(input)
     # dark_channel = cv2.max(cv2.min(r, g), b)
-    dark_channel = np.max(input, axis=2)
-    patch_size   = core.to_2tuple(patch_size)
-    kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, patch_size)
-    dcp          = cv2.erode(dark_channel, kernel)
-    return dcp
+    bright_channel = np.max(input, axis=2)
+    patch_size     = core.to_2tuple(patch_size)
+    kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, patch_size)
+    bcp            = cv2.erode(bright_channel, kernel)
+    return bcp
 
 
 def get_dark_channel_prior(
@@ -73,7 +123,7 @@ def get_guided_brightness_enhancement_map_prior(
     gamma        : float      = 2.5,
     denoise_ksize: int | None = None,
 ) -> torch.Tensor | np.ndarray:
-    """Get the Guided Brightness Enhancement Map (GBEM) prior from an RGB image.
+    """Get the Guided Brightness Enhancement Map (G) prior from an RGB image.
     
     This is a self-attention map extracted from the V-channel of a low-light
     image. This map is multiplied to convolutional activations of all layers in

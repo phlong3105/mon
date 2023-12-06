@@ -83,7 +83,7 @@ model = {
 
 datamodule = {
     "name"        : data_name,
-    "root"        : DATA_DIR/"rain13k",  # A root directory where the data is stored.
+    "root"        : DATA_DIR / "derain",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),

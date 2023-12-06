@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-CIFAR datasets and datamodules.
-"""
+"""CIFAR datasets and datamodules."""
 
 from __future__ import annotations
 
 __all__ = [
-    "FashionMNIST", "FashionMNISTDataModule", "MNIST", "MNISTDataModule",
-    "fashion_mnist_classlabels", "mnist_classlabels",
+    "FashionMNIST",
+    "FashionMNISTDataModule",
+    "MNIST",
+    "MNISTDataModule",
+    "fashion_mnist_classlabels",
+    "mnist_classlabels",
 ]
 
 from urllib.error import URLError

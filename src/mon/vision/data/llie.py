@@ -1130,7 +1130,7 @@ class LLIEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train =  LLIE(split="train", **self.dataset_kwargs)
+            self.train =   LLIE(split="train", **self.dataset_kwargs)
             self.val   = LOLV1(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = LOLV1(split="test",  **self.dataset_kwargs)

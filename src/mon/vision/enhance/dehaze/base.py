@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for de-hazing models.
-"""
+"""This module implements the base class for de-hazing models."""
 
 from __future__ import annotations
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Total Variation denoising model."""
+"""This module implements Total Variation de-noising model."""
 
 from __future__ import annotations
 

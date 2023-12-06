@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements SateHaze1K datasets and datamodules."""
+"""This module implements De-hazing datasets and datamodules."""
 
 from __future__ import annotations
 

@@ -3,7 +3,7 @@
 
 """This module implements GCE-Net models.
 
-./run_llie.sh gcenet none none train 100 sice-zerodce all vision/enhance/llie no last
+./run.sh gcenet none none train 100 sice-zerodce all vision/enhance/llie no last
 """
 
 from __future__ import annotations
@@ -11,7 +11,6 @@ from __future__ import annotations
 __all__ = [
     "GCENet",
     "GCENetV2",
-    "ZeroReferenceLoss",
 ]
 
 from typing import Any, Literal
@@ -97,11 +96,11 @@ class ZeroReferenceLoss(nn.Loss):
                 enhance = target[-1]
             elif len(target) == 3:
                 a       = target[-3]
-                p       = target[-2]
+                g       = target[-2]
                 enhance = target[-1]
         else:
             raise TypeError
-        loss_bri  = self.loss_bri(input=p, target=input)              if self.weight_bri  > 0 else 0
+        loss_bri  = self.loss_bri(input=g, target=input)              if self.weight_bri  > 0 else 0
         loss_col  = self.loss_col(input=enhance)                      if self.weight_col  > 0 else 0
         loss_edge = self.loss_edge(input=enhance, target=input)       if self.weight_edge > 0 else 0
         loss_exp  = self.loss_exp(input=enhance)                      if self.weight_exp  > 0 else 0
@@ -542,10 +541,10 @@ class GCENet(base.LowLightImageEnhancementModel):
                     y = y + a * (torch.pow(y, 2) - y)
             else:
                 y = x
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + a * (torch.pow(d, 2) - d)
         else:
             if self.phase == ModelPhase.TRAINING:
@@ -556,10 +555,10 @@ class GCENet(base.LowLightImageEnhancementModel):
             else:
                 y = x
                 A = torch.split(a, 3, dim=1)
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
@@ -607,7 +606,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             # Guided Brightness Enhancement Map (GBEM)
             f8  = self.act(self.conv8(torch.cat([f3, f4], dim=1)))
             f9  = self.act(self.conv9(torch.cat([f2, f8], dim=1)))
-            p   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
+            g   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
         elif self.variant[0:2] in ["11"]:
             f1  = self.act(self.conv1(x_down))
             f2  = self.act(self.conv2(f1))
@@ -624,7 +623,7 @@ class GCENet(base.LowLightImageEnhancementModel):
             f9  = self.act(self.conv10(torch.cat([f4,  f5], dim=1)))
             f10 = self.act(self.conv11(torch.cat([f3,  f9], dim=1)))
             f11 = self.act(self.conv12(torch.cat([f2, f10], dim=1)))
-            p   =   F.tanh(self.conv13(torch.cat([f1, f11], dim=1)))
+            g   =   F.tanh(self.conv13(torch.cat([f1, f11], dim=1)))
         elif self.variant[0:2] in ["20"]:
             f1  = self.act(self.conv1(x_down))
             f2  = self.act(self.conv2(f1))
@@ -658,15 +657,15 @@ class GCENet(base.LowLightImageEnhancementModel):
             if self.out_channels == 3:
                 y = x
                 for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + a * (torch.pow(d, 2) - d)
             else:
                 y = x
                 A = torch.split(a, 3, dim=1)
                 for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
         # Piece-wise
         elif "2" in self.variant[0:1]:
@@ -692,24 +691,24 @@ class GCENet(base.LowLightImageEnhancementModel):
                 A = torch.split(a, 3, dim=1)
                 for i in range(self.num_iters):
                     y = y + A[i] * (torch.pow(y, 2) - y)
-        # Global P
+        # Global G
         elif self.variant[3] == "1":
             if self.out_channels == 3:
                 y = x
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + a * (torch.pow(d, 2) - d)
             else:
                 y = x
                 A = torch.split(a, 3, dim=1)
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Global P Inference Only
+        # Global G Inference Only
         elif self.variant[3] == "2":
             if self.out_channels == 3:
                 if self.phase == ModelPhase.TRAINING:
@@ -718,10 +717,10 @@ class GCENet(base.LowLightImageEnhancementModel):
                         y = y + a * (torch.pow(y, 2) - y)
                 else:
                     y = x
-                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                     for _ in range(self.num_iters):
-                        b = y * (1 - p)
-                        d = y * p
+                        b = y * (1 - g)
+                        d = y * g
                         y = b + d + a * (torch.pow(d, 2) - d)
             else:
                 if self.phase == ModelPhase.TRAINING:
@@ -732,12 +731,12 @@ class GCENet(base.LowLightImageEnhancementModel):
                 else:
                     y = x
                     A = torch.split(a, 3, dim=1)
-                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                     for i in range(self.num_iters):
-                        b = y * (1 - p)
-                        d = y * p
+                        b = y * (1 - g)
+                        d = y * g
                         y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Iterative P Inference Only
+        # Iterative G Inference Only
         elif self.variant[3] == "3":
             if self.out_channels == 3:
                 if self.phase == ModelPhase.TRAINING:
@@ -747,9 +746,9 @@ class GCENet(base.LowLightImageEnhancementModel):
                 else:
                     y = x
                     for _ in range(self.num_iters):
-                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - p)
-                        d = y * p
+                        g = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
+                        b = y * (1 - g)
+                        d = y * g
                         y = b + d + a * (torch.pow(d, 2) - d)
             else:
                 if self.phase == ModelPhase.TRAINING:
@@ -761,9 +760,9 @@ class GCENet(base.LowLightImageEnhancementModel):
                     y = x
                     A = torch.split(a, 3, dim=1)
                     for i in range(self.num_iters):
-                        p = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - p)
-                        d = y * p
+                        g = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
+                        b = y * (1 - g)
+                        d = y * g
                         y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
@@ -772,7 +771,7 @@ class GCENet(base.LowLightImageEnhancementModel):
 
         #
         if "1" in self.variant[0:1]:
-            return a, p, y
+            return a, g, y
         return a, y
 
     def regularization_loss(self, alpha: float = 0.1):
@@ -1152,10 +1151,10 @@ class GCENetV2(base.LowLightImageEnhancementModel):
                     y = y + a * (torch.pow(y, 2) - y)
             else:
                 y = x
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + a * (torch.pow(d, 2) - d)
         else:
             if self.phase == ModelPhase.TRAINING:
@@ -1166,10 +1165,10 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             else:
                 y = x
                 A = torch.split(a, 3, dim=1)
-                p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                 for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
@@ -1217,7 +1216,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             # Guided Brightness Enhancement Map (G)
             f8  = self.act( self.norm8( self.conv8(torch.cat([f3, f4], dim=1))))
             f9  = self.act( self.norm9( self.conv9(torch.cat([f2, f8], dim=1))))
-            p   =   F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
+            g   =   F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
         elif self.variant[0:2] in ["11"]:
             f1  = self.act(self.norm1(self.conv1(x_down)))
             f2  = self.act(self.norm2(self.conv2(f1)))
@@ -1227,11 +1226,11 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             # Guided Brightness Enhancement Map (G)
             f8  = self.act( self.norm8( self.conv8(torch.cat([f3, f4], dim=1))))
             f9  = self.act( self.norm9( self.conv9(torch.cat([f2, f8], dim=1))))
-            p   =   F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
+            g   =   F.tanh(self.norm10(self.conv10(torch.cat([f1, f9], dim=1))))
             # Curve Enhancement Map (A)
             f5  = self.act(self.norm5(self.conv5(torch.cat([f3, f4], dim=1)))) * f8
             f6  = self.act(self.norm6(self.conv6(torch.cat([f2, f5], dim=1)))) * f9
-            a   =   F.tanh(self.norm7(self.conv7(torch.cat([f1, f6], dim=1)))) * p
+            a   =   F.tanh(self.norm7(self.conv7(torch.cat([f1, f6], dim=1)))) * g
         else:
             f1  = self.act(self.norm1(self.conv1(x_down)))
             f2  = self.act(self.norm2(self.conv2(f1)))
@@ -1251,15 +1250,15 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             if self.out_channels == 3:
                 y = x
                 for _ in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + a * (torch.pow(d, 2) - d)
             else:
                 y = x
                 A = torch.split(a, 3, dim=1)
                 for i in range(self.num_iters):
-                    b = y * (1 - p)
-                    d = y * p
+                    b = y * (1 - g)
+                    d = y * g
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
         elif self.variant[0:2] in ["11"]:
             if self.out_channels == 3:
@@ -1279,10 +1278,10 @@ class GCENetV2(base.LowLightImageEnhancementModel):
                         y = y + a * (torch.pow(y, 2) - y)
                 else:
                     y = x
-                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                     for _ in range(self.num_iters):
-                        b = y * (1 - p)
-                        d = y * p
+                        b = y * (1 - g)
+                        d = y * g
                         y = b + d + a * (torch.pow(d, 2) - d)
             else:
                 if self.phase == ModelPhase.TRAINING:
@@ -1293,10 +1292,10 @@ class GCENetV2(base.LowLightImageEnhancementModel):
                 else:
                     y = x
                     A = torch.split(a, 3, dim=1)
-                    p = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
+                    g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                     for i in range(self.num_iters):
-                        b = y * (1 - p)
-                        d = y * p
+                        b = y * (1 - g)
+                        d = y * g
                         y = b + d + A[i] * (torch.pow(d, 2) - d)
 
         # Unsharp masking
@@ -1305,7 +1304,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
 
         #
         if "1" in self.variant[0:1]:
-            return a, p, y
+            return a, g, y
         return a, y
 
     def regularization_loss(self, alpha: float = 0.1):

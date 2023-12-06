@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements snow datasets and datamodules."""
+"""This module implements De-snowing datasets and datamodules."""
 
 from __future__ import annotations
 
 __all__ = [
-    "Snow100K", "Snow100KDataModule", "Snow100KL", "Snow100KLDataModule",
-    "Snow100KM", "Snow100KMDataModule", "Snow100KS", "Snow100KSDataModule",
+    "Snow100K",
+    "Snow100KDataModule",
+    "Snow100KL",
+    "Snow100KLDataModule",
+    "Snow100KM",
+    "Snow100KMDataModule",
+    "Snow100KS",
+    "Snow100KSDataModule",
 ]
 
 from mon.globals import DATAMODULES, DATASETS, ModelPhase

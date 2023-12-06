@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""GCE-Net model trained on LLIE datasets."""
+"""GCENet model trained on LLIE datasets."""
 
 from __future__ import annotations
 
