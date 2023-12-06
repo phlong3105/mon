@@ -339,7 +339,7 @@ def lowlight_enhancer(image_name, image):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data",       type=str, default=DATA_DIR)
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "retinexdip/retinexdip-lol.pt")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/retinexdip/retinexdip-lol.pt")
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
     args = parser.parse_args()

@@ -2,13 +2,16 @@
 echo "$HOSTNAME"
 
 
-# Fast Commands
-# ./run_llie.sh zerodcev2 00000 train   sice-zerodce lol vision/enhance/llie no last
-# ./run_llie.sh zerodcev2 00000 predict sice-zerodce all vision/enhance/llie no last
+## Fast Commands
+# ./run.sh zerodcev2 00000 train   sice-zerodce lol vision/enhance/llie no last
+# ./run.sh zerodcev2 00000 predict sice-zerodce all vision/enhance/llie no last
 
 
-# Constants
+## Constants
 models=(
+  ## LES
+  "jin2022"       # https://github.com/jinyeying/night-enhancement
+  ## LLIE
   "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
   "gcenet"        # Our model
   "gcenetv2"      # Our model
@@ -34,6 +37,11 @@ models=(
   "zerodce++"     #
 )
 train_datasets=(
+  ## LES
+  "jin2022"
+  "ledlight"
+  "syn-light-effects"
+  ## LLIE
   "fivek-c"
   "fivek-e"
   "llie"
@@ -46,6 +54,11 @@ train_datasets=(
   "sice-zerodce"
 )
 predict_datasets=(
+  ## LES
+  "jin2022"
+  "ledlight"
+  "syn-light-effects"
+  ## LLIE
   # "darkcityscapes"
   # "darkface"
   "dicm"
@@ -64,7 +77,7 @@ predict_datasets=(
 )
 
 
-# Input
+## User Input
 machine=$HOSTNAME
 model=${1:-"all"}
 variant=${2:-"none"}
@@ -107,11 +120,13 @@ predict_data=($(echo $predict_data | tr ',' '\n'))
 project=$(echo $project | tr '[:upper:]' '[:lower:]')
 
 
-# Initialization
+## Initialization
 script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
+les_dir="${root_dir}/src/lib/vision/enhance/les"
+llie_dir="${root_dir}/src/lib/vision/enhance/llie"
 
 if [ "${model[0]}" == "all" ]; then
   declare -a model=()
@@ -138,126 +153,149 @@ if [ "${predict_data[0]}" == "all" ]; then
   done
 fi
 
-declare -a low_data_dirs=()
-declare -a high_data_dirs=()
+declare -a input_data_dirs=()
+declare -a target_data_dirs=()
 if [ "$task" == "train" ]; then
   for d in "${train_data[@]}"; do
+    ## LES
+    if [ "$d" == "jin2022" ]; then
+      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/light-effects")
+      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/clear")
+      clear_data_dirs+=("")
+    fi
+    if [ "$d" == "ledlight" ]; then
+      light_effects_data_dirs+=("${root_dir}/data/les/test/ledlight/light-effects")
+      clear_data_dirs+=("${root_dir}/data/les/test/ledlight/clear")
+    fi
+    if [ "$d" == "syn-light-effects" ]; then
+      light_effects_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/light-effects")
+      clear_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/clear")
+    fi
+    ## LLIE
     if [ "$d" == "fivek-c" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/fivek-c/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/fivek-c/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/fivek-c/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/fivek-c/high")
     fi
     if [ "$d" == "fivek-e" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/fivek-e/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/fivek-e/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/fivek-e/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/fivek-e/high")
     fi
     if [ "$d" == "lol-v1" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/lol-v1/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/lol-v1/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/lol-v1/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/lol-v1/high")
     fi
     if [ "$d" == "lol-v2-real" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/lol-v2-real/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/lol-v2-real/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/lol-v2-real/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/lol-v2-real/high")
     fi
     if [ "$d" == "lol-v2-syn" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/lol-v2-syn/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/lol-v2-syn/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/lol-v2-syn/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/lol-v2-syn/high")
     fi
     if [ "$d" == "sice" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/sice-part1/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/sice-part1/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/sice-part1/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/sice-part1/high")
     fi
     if [ "$d" == "sice-grad" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/sice-grad/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/sice-grad/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/sice-grad/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/sice-grad/high")
     fi
     if [ "$d" == "sice-mix" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/sice-mix/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/sice-mix/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/sice-mix/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/sice-mix/high")
     fi
     if [ "$d" == "sice-zerodce" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/low")
-      high_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/high")
+      input_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/low")
+      target_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/high")
     fi
   done
 elif [ "$task" == "predict" ]; then
   for d in "${predict_data[@]}"; do
+    ## LES
+    if [ "$d" == "jin2022" ]; then
+      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/light-effects")
+      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/clear")
+      clear_data_dirs+=("")
+    fi
+    if [ "$d" == "ledlight" ]; then
+      light_effects_data_dirs+=("${root_dir}/data/les/test/ledlight/light-effects")
+      clear_data_dirs+=("${root_dir}/data/les/test/ledlight/clear")
+    fi
+    if [ "$d" == "syn-light-effects" ]; then
+      light_effects_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/light-effects")
+      clear_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/clear")
+    fi
+    ## LLIE
     if [ "$d" == "darkcityscapes" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/high")
+      input_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/low")
+      target_data_dirs+=("${root_dir}/data/llie/test/darkcityscapes/high")
     fi
     if [ "$d" == "darkface" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/darkface/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/darkface/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "dicm" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/dicm/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/dicm/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "exdark" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/exdark/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/exdark/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "fivek-c" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/fivek-c/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/train/fivek-c/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "fivek-e" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/train/fivek-e/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/train/fivek-e/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "fusion" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/fusion/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/fusion/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "lime" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/lime/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/lime/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "lol-v1" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/lol-v1/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/lol-v1/high")
+      input_data_dirs+=("${root_dir}/data/llie/test/lol-v1/low")
+      target_data_dirs+=("${root_dir}/data/llie/test/lol-v1/high")
     fi
     if [ "$d" == "lol-v2-real" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/lol-v2-real/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/lol-v2-real/high")
+      input_data_dirs+=("${root_dir}/data/llie/test/lol-v2-real/low")
+      target_data_dirs+=("${root_dir}/data/llie/test/lol-v2-real/high")
     fi
     if [ "$d" == "lol-v2-syn" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/lol-v2-syn/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/lol-v2-syn/high")
+      input_data_dirs+=("${root_dir}/data/llie/test/lol-v2-syn/low")
+      target_data_dirs+=("${root_dir}/data/llie/test/lol-v2-syn/high")
     fi
     if [ "$d" == "mef" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/mef/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/mef/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "npe" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/npe/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/npe/low")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "sice" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/sice-part2/low")
-      high_data_dirs+=("${root_dir}/data/llie/test/sice-part2/high")
+      input_data_dirs+=("${root_dir}/data/llie/test/sice-part2/low")
+      target_data_dirs+=("${root_dir}/data/llie/test/sice-part2/high")
     fi
     if [ "$d" == "vv" ]; then
-      low_data_dirs+=("${root_dir}/data/llie/test/vv/low")
-      high_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/llie/test/vv/low")
+      target_data_dirs+=("")
     fi
   done
 fi
 
 
-# Train
+## Train
 if [ "$task" == "train" ]; then
   echo -e "\nTraining"
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ] || [ "${model[i]}" == "zeroadce" ]; then
-        model_dir="${current_dir}"
-      else
-        model_dir="${root_dir}/src/lib/${project}/${model[i]}"
-      fi
-      cd "${model_dir}" || exit
-
       if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
         model_variant="${model[i]}-${variant[j]}"
       else
@@ -282,26 +320,45 @@ if [ "$task" == "train" ]; then
         weights="${zoo_weights_pt}"
       fi
 
+      ## LES
+      # Jin2022
+      if [ "${model[i]}" == "jin2022" ]; then
+        model_dir="${les_dir}/${model[i]}"
+        cd "${model_dir}" || exit
+        python -W ignore demo.py \
+          --data "${light_effects_data_dirs[k]}" \
+          --image-size 512 \
+          --output-dir "${train_dir}/visual" \
+          --checkpoint-dir "${train_dir}"
+      ## LLIE
       # EnlightenGAN
-      if [ "${model[i]}" == "enlightengan" ]; then
+      elif [ "${model[i]}" == "enlightengan" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for EnlightenGAN."
       # GCENet
       elif [ "${model[i]}" == "gcenet" ]; then
+        model_dir="${current_dir}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
       # GCENetV2
       elif [ "${model[i]}" == "gcenetv2" ]; then
+        model_dir="${current_dir}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
       # IAT
       elif [ "${model[i]}" == "iat" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore train_lol_v1_patch.py \
-          --data-train "${low_data_dirs[j]}" \
-          --data-val "${low_data_dirs[j]}" \
+          --data-train "${input_data_dirs[j]}" \
+          --data-val "${input_data_dirs[j]}" \
           --batch-size 8 \
           --lr 0.0002 \
           --weight-decay 0.0004 \
@@ -312,12 +369,18 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # KinD
       elif [ "${model[i]}" == "kind" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for KinD."
       # KinD++
       elif [ "${model[i]}" == "kind++" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for KinD++."
       # LCDPNet
       elif [ "${model[i]}" == "lcdpnet" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore src/train.py \
           name="lcdpnet-lol" \
           num_epoch="$epochs" \
@@ -325,29 +388,40 @@ if [ "$task" == "train" ]; then
           valid_every=20
       # LLFlow
       elif [ "${model[i]}" == "llflow" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for LLFlow."
       # LIME
       elif [ "${model[i]}" == "lime" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nLIME does not need any training."
       # MBLLEN
       elif [ "${model[i]}" == "mbllen" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for MBLLEN."
       # PIE
       elif [ "${model[i]}" == "pie" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nPIE does not need any training."
       # RetinexDIP
       elif [ "${model[i]}" == "retinexdip" ]; then
-        echo -e "\nRetinexDIP does not need any training."
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore retinexdip.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --image-size 512 \
           --output-dir "${train_dir}"
       # RetinexNet
       elif [ "${model[i]}" == "retinexnet" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data-low "${low_data_dirs[j]}" \
-          --data-high "${high_data_dirs[j]}" \
+          --data-low "${input_data_dirs[j]}" \
+          --data-high "${target_data_dirs[j]}" \
           --gpu 0 \
           --epochs "$epochs" \
           --batch-size 16 \
@@ -356,8 +430,10 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # RUAS
       elif [ "${model[i]}" == "ruas" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --epoch "$epochs" \
@@ -368,8 +444,10 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # SCI
       elif [ "${model[i]}" == "sci" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --batch-size 1 \
@@ -382,8 +460,10 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # SGZ
       elif [ "${model[i]}" == "sgz" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --image-size 512 \
@@ -404,11 +484,15 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # SNR-Aware
       elif [ "${model[i]}" == "snr" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for SNR-Aware."
       # StableLLVE
       elif [ "${model[i]}" == "stablellve" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --epochs "$epochs" \
           --batch-size 1 \
           --lr 0.0001 \
@@ -418,20 +502,28 @@ if [ "$task" == "train" ]; then
           --checkpoint-dir "${train_dir}"
       # URetinex-Net
       elif [ "${model[i]}" == "uretinexnet" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for URetinex-Net."
       # UTVNet
       elif [ "${model[i]}" == "utvnet" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         echo -e "\nI have not prepared the training script for UTVNet."
       # Zero-ADCE
       elif [ "${model[i]}" == "zeroadce" ]; then
+        model_dir="${current_dir}"
+        cd "${model_dir}" || exit
         python -W ignore train.py \
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
       # Zero-DCE
       elif [ "${model[i]}" == "zerodce" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore lowlight_train.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --lr 0.0001 \
@@ -446,8 +538,10 @@ if [ "$task" == "train" ]; then
           --checkpoints-dir "${train_dir}"
       # Zero-DCE++
       elif [ "${model[i]}" == "zerodce++" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore lowlight_train.py \
-          --data "${low_data_dirs[j]}" \
+          --data "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --lr 0.0001 \
@@ -467,19 +561,12 @@ if [ "$task" == "train" ]; then
 fi
 
 
-# Predict
+## Predict
 if [ "$task" == "predict" ]; then
   echo -e "\nPredicting"
   for (( i=0; i<${#model[@]}; i++ )); do
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
-      if [ "${model[i]}" == "gcenet" ] || [ "${model[i]}" == "gcenetv2" ] || [ "${model[i]}" == "zeroadce" ]; then
-        model_dir="${current_dir}"
-      else
-        model_dir="${root_dir}/src/lib/${project}/${model[i]}"
-      fi
-      cd "${model_dir}" || exit
-      
       if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
         model_variant="${model[i]}-${variant[j]}"
       else
@@ -523,6 +610,8 @@ if [ "$task" == "predict" ]; then
 
       # LCDPNet
       if [ "${model[i]}" == "lcdpnet" ]; then
+        model_dir="${llie_dir}/${model[i]}"
+        cd "${model_dir}" || exit
         python -W ignore src/test.py \
           checkpoint_path="${root_dir}/zoo/${project}/${model[i]}/lcdpnet-ours.ckpt" \
           +image_size=512
@@ -534,16 +623,33 @@ if [ "$task" == "predict" ]; then
             predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
           fi
 
+          ## LES
+          # Jin2022
+          if [ "${model[i]}" == "jin2022" ]; then
+            model_dir="${les_dir}/${model[i]}"
+            cd "${model_dir}" || exit
+            python -W ignore predict.py \
+              --data  "${light_effects_data_dirs[k]}" \
+              --data-name "${predict_data[k]}" \
+              --phase "test" \
+              --weights "${root_dir}/zoo/vision/enhance/les/jin2022/delighteffects_params_0600000.pt" \
+              --image-size 512 \
+              --output-dir "${predict_dir}"
+          ## LLIE
           # EnlightenGAN
-          if [ "${model[i]}" == "enlightengan" ]; then
+          elif [ "${model[i]}" == "enlightengan" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore infer/predict.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # GCENet
           elif [ "${model[i]}" == "gcenet" ]; then
+            model_dir="${current_dir}"
+            cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
@@ -556,8 +662,10 @@ if [ "$task" == "predict" ]; then
               --output-dir "${predict_dir}"
           # GCENetV2
           elif [ "${model[i]}" == "gcenetv2" ]; then
+            model_dir="${current_dir}"
+            cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
@@ -569,128 +677,166 @@ if [ "$task" == "predict" ]; then
               --output-dir "${predict_dir}"
           # IAT
           elif [ "${model[i]}" == "iat" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore IAT_enhance/predict.py \
-              --data "${low_data_dirs[k]}" \
-              --exposure-weights "${root_dir}/zoo/${project}/${model[i]}/iat-exposure.pth" \
-              --enhance-weights "${root_dir}/zoo/${project}/${model[i]}/iat-lol-v1.pth" \
+              --data "${input_data_dirs[k]}" \
+              --exposure-weights "${root_dir}/zoo/vision/enhance/llie/iat/iat-exposure.pth" \
+              --enhance-weights "${root_dir}/zoo/vision/enhance/llie/iat/iat-lol-v1.pth" \
               --image-size 512 \
               --normalize \
               --task "enhance" \
               --output-dir "${predict_dir}"
           # KinD
           elif [ "${model[i]}" == "kind" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/kind" \
               --image-size 512 \
+              --mode "test" \
               --output-dir "${predict_dir}"
           # KinD++
           elif [ "${model[i]}" == "kind++" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/kind++" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # LIME
           elif [ "${model[i]}" == "lime" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore demo.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --image-size 512 \
               --lime \
               --output-dir "${predict_dir}" \
           # LLFlow
           elif [ "${model[i]}" == "llflow" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore code/test_unpaired_v2.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "weights/llflow-lol-smallnet.pth" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/llflow/llflow-lol-smallnet.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}" \
               --opt "code/confs/LOL_smallNet.yml" \
               --name "unpaired"
           # MBLLEN
           elif [ "${model[i]}" == "mbllen" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore main/test.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --image-size 512 \
               --output-dir "${predict_dir}" \
           # PIE
           elif [ "${model[i]}" == "pie" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python main.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --image-size 512 \
               --output-dir "${predict_dir}" \
           # RetinexDIP
           elif [ "${model[i]}" == "retinexdip" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore retinexdip.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${weights}" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/retinexdip/retinexdip-lol.pt" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # RetinexNet
           elif [ "${model[i]}" == "retinexnet" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/retinexnet" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # RUAS
           elif [ "${model[i]}" == "ruas" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/ruas-lol.pt" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/ruas//ruas-lol.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
               --output-dir "${predict_dir}"
           # SCI
           elif [ "${model[i]}" == "sci" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/sci-medium.pt" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/sci/sci-medium.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
               --output-dir "${predict_dir}"
           # SGZ
           elif [ "${model[i]}" == "sgz" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/sgz-lol.pt" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/sgz/sgz-lol.pt" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # SNR-Aware
           elif [ "${model[i]}" == "snr" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/snr-lolv1.pth" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/snr/snr-lolv1.pth" \
               --opt "./options/test/LOLv1.yml" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # StableLLVE
           elif [ "${model[i]}" == "stablellve" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/stablellve-checkpoint.pth" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/stablellve/stablellve-checkpoint.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # URetinex-Net
           elif [ "${model[i]}" == "uretinexnet" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
-              --decom-model-low-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-init_low.pth" \
-              --unfolding-model-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-unfolding.pth" \
-              --adjust-model-weights "${root_dir}/zoo/${project}/${model[i]}/uretinexnet-L_adjust.pth" \
+              --data "${input_data_dirs[k]}" \
+              --decom-model-low-weights "${root_dir}/zoo/vision/enhance/llie/uretinexnet/uretinexnet-init_low.pth" \
+              --unfolding-model-weights "${root_dir}/zoo/vision/enhance/llie/uretinexnet/uretinexnet-unfolding.pth" \
+              --adjust-model-weights "${root_dir}/zoo/vision/enhance/llie/uretinexnet/uretinexnet-L_adjust.pth" \
               --image-size 512 \
               --ratio 5 \
               --output-dir "${predict_dir}"
           # UTVNet
           elif [ "${model[i]}" == "utvnet" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/utvnet/utvnet-model_test.pt" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # Zero-ADCE
           elif [ "${model[i]}" == "zeroadce" ]; then
+            model_dir="${current_dir}"
+            cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${low_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
@@ -702,16 +848,20 @@ if [ "$task" == "predict" ]; then
               --output-dir "${predict_dir}"
           # Zero-DCE
           elif [ "${model[i]}" == "zerodce" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore lowlight_test.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/best.pth" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/zerodce/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           # Zero-DCE++
           elif [ "${model[i]}" == "zerodce++" ]; then
+            model_dir="${llie_dir}/${model[i]}"
+            cd "${model_dir}" || exit
             python -W ignore lowlight_test.py \
-              --data "${low_data_dirs[k]}" \
-              --weights "${root_dir}/zoo/${project}/${model[i]}/best.pth" \
+              --data "${input_data_dirs[k]}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/zerodce++/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
           fi
@@ -722,7 +872,7 @@ if [ "$task" == "predict" ]; then
 fi
 
 
-# Evaluate
+## Evaluate
 if [ "$task" == "evaluate" ]; then
   echo -e "\nEvaluate"
   cd "${current_dir}" || exit
@@ -775,7 +925,6 @@ if [ "$task" == "evaluate" ]; then
             --metric "pi"
             # --name "${model[i]}" \
             # --variant "${variant[j]}" \
-            # --image-size 256 \
 
           python -W ignore metric.py \
             --image-dir "${predict_dir}" \
@@ -787,18 +936,14 @@ if [ "$task" == "evaluate" ]; then
             --test-y-channel \
             --backend "pyiqa" \
             --append-results \
+            --metric "psnr" \
             --metric "psnry" \
+            --metric "ssim" \
+            --metric "ms-ssim" \
+            --metric "lpips" \
             --metric "brisque" \
             --metric "niqe" \
             --metric "pi"
-            # --metric "psnr" \
-            # --metric "psnry" \
-            # --metric "ssim" \
-            # --metric "ms-ssim" \
-            # --metric "lpips" \
-            # --metric "brisque" \
-            # --metric "niqe" \
-            # --metric "pi"
             # --name "${model[i]}" \
             # --variant "${variant[j]}" \
         done

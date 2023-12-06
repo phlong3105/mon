@@ -28,13 +28,13 @@ def test():
     
     if args.weights is not None:
         if config["noDecom"] is False:
-            pretrain_decom = torch.load("./checkpoints/decom_net.pth")
+            pretrain_decom = torch.load(args.weights / "kind-decom_net.pth")
             model.decom_net.load_state_dict(pretrain_decom)
             # console.log("Model loaded from decom_net.pth")
-        pretrain_restore = torch.load("./checkpoints/restore_net.pth")
+        pretrain_restore = torch.load(args.weights / "kind-restore_net.pth")
         model.restore_net.load_state_dict(pretrain_restore)
         # console.log("Model loaded from restore_net.pth")
-        pretrain_illum   = torch.load("./checkpoints/illum_net.pth")
+        pretrain_illum   = torch.load(args.weights / "kind-illum_net.pth")
         model.illum_net.load_state_dict(pretrain_illum)
         # console.log("Model loaded from illum_net.pth")
     
