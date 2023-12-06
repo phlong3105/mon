@@ -14,6 +14,24 @@ __all__ = [
     "NHHazeDataModule",
     "OHaze",
     "OHazeDataModule",
+    "RESIDEHSTSReal",
+    "RESIDEHSTSRealDataModule",
+    "RESIDEHSTSSyn",
+    "RESIDEHSTSSynDataModule",
+    "RESIDEITS",
+    "RESIDEITSDataModule",
+    "RESIDEITSV2",
+    "RESIDEITSV2DataModule",
+    "RESIDEOTS",
+    "RESIDEOTSDataModule",
+    "RESIDERTTS",
+    "RESIDERTTSDataModule",
+    "RESIDESOTSIndoor",
+    "RESIDESOTSIndoorDataModule",
+    "RESIDESOTSOutdoor",
+    "RESIDESOTSOutdoorDataModule",
+    "RESIDEUHI",
+    "RESIDEUHIDataModule",
     "SateHaze1K",
     "SateHaze1KDataModule",
     "SateHaze1KModerate",
@@ -40,20 +58,16 @@ class DenseHaze(base.ImageEnhancementDataset):
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-    
+
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / self.split / "dense-haze" / "haze"
             for path in pbar.track(
-                list(pattern.rglob("haze/*.png")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
@@ -68,9 +82,9 @@ class DenseHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "hazefree")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -81,20 +95,16 @@ class IHaze(base.ImageEnhancementDataset):
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-    
+
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / self.split / "i-haze" / "haze"
             for path in pbar.track(
-                list(pattern.rglob("haze/*.jpg")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
@@ -107,11 +117,11 @@ class IHaze(base.ImageEnhancementDataset):
         with core.get_progress_bar() as pbar:
             for img in pbar.track(
                 self.images,
-                description=f"Listing I-Haze {self.split} labels"
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "hazefree")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -123,25 +133,21 @@ class NHHaze(base.ImageEnhancementDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / self.split / "nh-haze" / "haze"
             for path in pbar.track(
-                list(pattern.rglob("haze/*.png")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
                     image = base.ImageLabel(path=path)
                     self.images.append(image)
-    
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -150,9 +156,9 @@ class NHHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "hazefree")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -164,25 +170,21 @@ class OHaze(base.ImageEnhancementDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split
+            pattern = self.root / self.split / "o-haze" / "haze"
             for path in pbar.track(
-                list(pattern.rglob("haze/*.jpg")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
                     image = base.ImageLabel(path=path)
                     self.images.append(image)
-    
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -191,11 +193,307 @@ class OHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "hazefree")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
-                
+
+
+@DATASETS.register(name="reside-hsts-real")
+class RESIDEHSTSReal(base.UnlabeledImageDataset):
+    """RESIDE-HSTS-Real dataset consists of 10 real hazy images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-hsts-real" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+
+@DATASETS.register(name="reside-hsts-syn")
+class RESIDEHSTSSyn(base.ImageEnhancementDataset):
+    """RESIDE-HSTS-Syn dataset consists of 10 pairs of hazy and corresponding
+    haze-free images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-hsts-syn" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("haze", "clear")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="reside-its")
+class RESIDEITS(base.ImageEnhancementDataset):
+    """RESIDE-ITS dataset consists of 13,990 pairs of hazy and corresponding
+    haze-free images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["train", "val"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-its" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                stem  = str(img.path.stem).split("_")[0]
+                path  = str(img.path).replace("haze", "clear")
+                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="reside-its-v2")
+class RESIDEITSV2(base.ImageEnhancementDataset):
+    """RESIDE-ITS-V2 dataset consists of 13,990 pairs of hazy and corresponding
+    haze-free images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["train"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-its-v2" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                stem  = str(img.path.stem).split("_")[0]
+                path  = str(img.path).replace("haze", "clear")
+                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="reside-ots")
+class RESIDEOTS(base.ImageEnhancementDataset):
+    """RESIDE-OTS dataset consists of 73,135 pairs of hazy and corresponding
+    haze-free images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["train"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-ots" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                stem  = str(img.path.stem).split("_")[0]
+                path  = str(img.path).replace("haze", "clear")
+                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="reside-rtts")
+class RESIDERTTS(base.UnlabeledImageDataset):
+    """RESIDE-RTTS dataset consists of 4,322 real hazy images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-rtts" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+
+@DATASETS.register(name="reside-sots-indoor")
+class RESIDESOTSIndoor(base.ImageEnhancementDataset):
+    """RESIDE-SOTS-Indoor dataset consists of 500 pairs of hazy and
+    corresponding haze-free images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-sots-indoor" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                stem  = str(img.path.stem).split("_")[0]
+                path  = str(img.path).replace("haze", "clear")
+                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="reside-sots-outdoor")
+class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
+    """RESIDE-SOTS-Outdoor dataset consists of 500 pairs of hazy and
+    corresponding haze-free images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-sots-outdoor" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                stem  = str(img.path.stem).split("_")[0]
+                path  = str(img.path).replace("haze", "clear")
+                path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="reside-uhi")
+class RESIDEUHI(base.UnlabeledImageDataset):
+    """RESIDE-UHI dataset consists of 4,809 real hazy images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            pattern = self.root / self.split / "reside-uhi" / "haze"
+            for path in pbar.track(
+                list(pattern.rglob("*")),
+                description=f"Listing {self.__class__.__name__} {self.split} images"
+            ):
+                if path.is_image_file():
+                    image = base.ImageLabel(path=path)
+                    self.images.append(image)
+
 
 @DATASETS.register(name="satehaze1k")
 class SateHaze1K(base.ImageEnhancementDataset):
@@ -205,25 +503,26 @@ class SateHaze1K(base.ImageEnhancementDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
+        subdirs = [
+            self.root / self.split / "satehaze1k-thin" / "haze",
+            self.root / self.split / "satehaze1k-moderate" / "haze",
+            self.root / self.split / "satehaze1k-thick" / "haze",
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root
-            for path in pbar.track(
-                list(pattern.rglob(f"{self.split}/input/*.png")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
+            for subdir in subdirs:
+                for path in pbar.track(
+                    list(subdir.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -232,9 +531,9 @@ class SateHaze1K(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("input", "target")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -244,20 +543,16 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-    
+
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "thin" / self.split
+            pattern = self.root / self.split / "satehaze1k-thin" / "haze"
             for path in pbar.track(
-                list(pattern.rglob(f"input/*.png")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
@@ -272,9 +567,9 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("input", "target")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -285,25 +580,21 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "moderate" / self.split
+            pattern = self.root / self.split / "satehaze1k-moderate" / "haze"
             for path in pbar.track(
-                list(pattern.rglob(f"input/*.png")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
                     image = base.ImageLabel(path=path)
                     self.images.append(image)
-    
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -312,9 +603,9 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("input", "target")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -325,25 +616,21 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["train", "val", "test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "val", "test"]:
-            console.log(
-                f"split must be one of ['train', 'val', 'test'], but got "
-                f"{self.split}."
-            )
-        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "thick" / self.split
+            pattern = self.root / self.split / "satehaze1k-thick" / "haze"
             for path in pbar.track(
-                list(pattern.rglob(f"input/*.png")),
+                list(pattern.rglob("*")),
                 description=f"Listing {self.__class__.__name__} {self.split} images"
             ):
                 if path.is_image_file():
                     image = base.ImageLabel(path=path)
                     self.images.append(image)
-    
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -352,9 +639,9 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("input", "target")
+                path  = str(img.path).replace("haze", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 # endregion
@@ -401,7 +688,7 @@ class DenseHazeDataModule(base.DataModule):
             self.train = DenseHaze(split="train", **self.dataset_kwargs)
             self.val   = DenseHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = DenseHaze(split="test", **self.dataset_kwargs)
+            self.test  = DenseHaze(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -566,6 +853,414 @@ class OHazeDataModule(base.DataModule):
         pass
 
 
+@DATAMODULES.register(name="reside-hsts-real")
+class RESIDEHSTSRealDataModule(base.DataModule):
+    """RESIDE-HSTS-Real datamodule.
+
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-hsts-syn")
+class RESIDEHSTSSynDataModule(base.DataModule):
+    """RESIDE-HSTS-Syn datamodule.
+
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-its")
+class RESIDEITSDataModule(base.DataModule):
+    """RESIDE-ITS datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | str | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = RESIDEITS(split="train", **self.dataset_kwargs)
+            self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = RESIDEITS(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-its-v2")
+class RESIDEITSV2DataModule(base.DataModule):
+    """RESIDE-ITS-V2 datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | str | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = RESIDEITSV2(split="train", **self.dataset_kwargs)
+            self.val   =   RESIDEITS(split="val",   **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  =   RESIDEITS(split="test",  **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-ots")
+class RESIDEOTSDataModule(base.DataModule):
+    """RESIDE-OTS datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | str | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = RESIDEOTS(split="train", **self.dataset_kwargs)
+            self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = RESIDEITS(split="test",  **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-rtts")
+class RESIDERTTSDataModule(base.DataModule):
+    """RESIDE-RTTS datamodule.
+
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = RESIDERTTS(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDERTTS(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-sots-indoor")
+class RESIDESOTSIndoorDataModule(base.DataModule):
+    """RESIDE-SOTS-Indoor datamodule.
+
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-sots-outdoor")
+class RESIDESOTSOutdoorDataModule(base.DataModule):
+    """RESIDE-SOTS-Outdoor datamodule.
+
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
 @DATAMODULES.register(name="satehaze1k")
 class SateHaze1KDataModule(base.DataModule):
     """SateHaze1K datamodule.
@@ -614,6 +1309,57 @@ class SateHaze1KDataModule(base.DataModule):
         
         self.summarize()
     
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="reside-uhi")
+class RESIDEUHIDataModule(base.DataModule):
+    """RESIDE-UHI datamodule.
+
+     See Also: :class:`mon.nn.data.datamodule.DataModule`.
+     """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = RESIDEUHI(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = RESIDEUHI(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass

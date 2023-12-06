@@ -107,12 +107,7 @@ class DeepUPE(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -195,12 +190,7 @@ class FiveKC(base.UnlabeledImageDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -237,12 +227,7 @@ class FiveKE(base.UnlabeledImageDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -302,12 +287,7 @@ class GLADNet(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -366,7 +346,7 @@ class LLIE(base.UnlabeledImageDataset):
             for subdir in subdirs:
                 for path in pbar.track(
                     list(subdir.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} images"
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
                 ):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
@@ -408,12 +388,7 @@ class LOLV1(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -453,12 +428,7 @@ class LOLV2Real(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -498,12 +468,7 @@ class LOLV2Syn(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -585,12 +550,7 @@ class SICEGrad(base.ImageEnhancementDataset):
             ):
                 path  = str(img.path).replace("low", "high")
                 path  = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
@@ -624,14 +584,9 @@ class SICEMix(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path = str(img.path).replace("low", "high")
-                path = core.Path(path)
-                for ext in ImageFormat.values():
-                    temp = path.parent / f"{path.stem}{ext}"
-                    if temp.exists():
-                        path = temp
-                        break
-                label = base.ImageLabel(path=path)
+                path  = str(img.path).replace("low", "high")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 

@@ -6,9 +6,22 @@
 from __future__ import annotations
 
 __all__ = [
-    "Path", "PosixPath", "PurePath", "PurePosixPath", "PureWindowsPath",
-    "WindowsPath", "copy_file", "delete_cache", "delete_dir", "delete_files",
-    "get_files", "get_next_version", "hash_files", "mkdirs", "rmdirs",
+    "Path",
+    "PosixPath",
+    "PurePath",
+    "PurePosixPath",
+    "PureWindowsPath",
+    "WindowsPath",
+    "copy_file",
+    "delete_cache",
+    "delete_dir",
+    "delete_files",
+    "get_files",
+    "get_image_file",
+    "get_next_version",
+    "hash_files",
+    "mkdirs",
+    "rmdirs",
 ]
 
 import glob
@@ -20,6 +33,7 @@ from pathlib import *
 import validators
 
 from mon.core import builtins
+from mon.globals import ImageFormat
 
 
 # region Path
@@ -187,7 +201,11 @@ class Path(type(pathlib.Path())):
         paths = list(path.iterdir())
         paths = [p for p in paths if p.is_file()]
         return paths
-    
+
+    def image_file(self) -> Path:
+        """Return the image file with the given path."""
+        return get_image_file(self)
+
     def latest_file(self) -> Path | None:
         """Return the latest file, in other words, the file with the last
         created time, in a :class:`dict`.
@@ -238,6 +256,16 @@ def get_files(regex: str, recursive: bool = False) -> list[Path]:
         if path.is_file():
             paths.append(path)
     return builtins.unique(paths)
+
+
+def get_image_file(path: Path) -> Path:
+    """Get the image of arbitrary extension from the given path."""
+    for ext in ImageFormat.values():
+        temp = path.parent / f"{path.stem}{ext}"
+        if temp.exists():
+            path = temp
+            break
+    return path
 
 
 def get_next_version(path: Path | str, prefix: str | None = None) -> int:
