@@ -14,6 +14,7 @@ import mon.vision.data.dehaze
 import mon.vision.data.derain
 import mon.vision.data.desnow
 import mon.vision.data.kodas
+import mon.vision.data.les
 import mon.vision.data.llie
 import mon.vision.data.mnist
 from mon.vision.data.a2i2_haze import *
@@ -23,6 +24,7 @@ from mon.vision.data.dehaze import *
 from mon.vision.data.derain import *
 from mon.vision.data.desnow import *
 from mon.vision.data.kodas import *
+from mon.vision.data.les import *
 from mon.vision.data.llie import *
 from mon.vision.data.mnist import *
 

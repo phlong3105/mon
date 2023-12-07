@@ -19,7 +19,6 @@ __all__ = [
     "FiveKE",
     "FiveKEDataModule",
     "Fusion",
-    "GLADNet",
     "LIME",
     "LIMEDataModule",
     "LLIE",
@@ -236,46 +235,6 @@ class Fusion(base.UnlabeledImageDataset):
                     if path.is_image_file():
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
-
-
-@DATASETS.register(name="gladnet")
-class GLADNet(base.ImageEnhancementDataset):
-    """GLADNet dataset consists of 589 low-light and normal-light image pairs
-    for training.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-    
-    splits = ["train"]
-    
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            self.root / self.split / "gladnet" / "low"
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-    
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("low", "high")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
 
 
 @DATASETS.register(name="lime")
