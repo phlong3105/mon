@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Low-Light Image Enhancement (LLIE) datasets and
+"""This module implements low-light image enhancement (llie) datasets and
 datamodules.
 """
 
@@ -11,8 +11,9 @@ __all__ = [
     "DICM",
     "DICMDataModule",
     "DarkFace",
-    "DeepUPE",
+    "DarkFaceDataModule",
     "ExDark",
+    "ExDarkDataModule",
     "FiveKC",
     "FiveKCDataModule",
     "FiveKE",
@@ -43,7 +44,7 @@ __all__ = [
     "VVDataModule",
 ]
 
-from mon.globals import DATAMODULES, DATASETS, ImageFormat, ModelPhase
+from mon.globals import DATAMODULES, DATASETS, ModelPhase
 from mon.vision import core
 from mon.vision.data import base
 
@@ -63,52 +64,20 @@ class DarkFace(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "darkface" / "low"
+        ]
+
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "darkface" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-
-
-@DATASETS.register(name="deepupe")
-class DeepUPE(base.ImageEnhancementDataset):
-    """DeepUPE dataset consists of 500 paired images for tesing.
-    
-    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
-    """
-    
-    splits = ["test"]
-    
-    def get_images(self):
-        """Get image files."""
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "lol" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
-    def get_labels(self):
-        """Get label files."""
-        self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            for img in pbar.track(
-                self.images,
-                description=f"Listing {self.__class__.__name__} {self.split} labels"
-            ):
-                path  = str(img.path).replace("low", "high")
-                path  = core.Path(path)
-                label = base.ImageLabel(path=path.image_file())
-                self.labels.append(label)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="dicm")
@@ -122,16 +91,19 @@ class DICM(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "dicm" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "dicm" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="exdark")
@@ -145,16 +117,19 @@ class ExDark(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "exdark" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "exdark" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="fivek-c")
@@ -169,16 +144,19 @@ class FiveKC(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "fivek-c" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "fivek-c" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -206,16 +184,19 @@ class FiveKE(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "fivek-e" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "fivek-e" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -242,16 +223,19 @@ class Fusion(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "fusion" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "fusion" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="gladnet")
@@ -266,16 +250,19 @@ class GLADNet(base.ImageEnhancementDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "gladnet" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "gladnet" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -297,24 +284,24 @@ class LIME(base.UnlabeledImageDataset):
     
     See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
     """
+
+    splits = ["train"]
     
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train"]:
-            console.log(
-                f"split must be one of ['train'], but got {self.split}."
-            )
-        
+        patterns = [
+            self.root / self.split / "low" / "lime"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "train" / "low" / "lime"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="llie")
@@ -328,7 +315,7 @@ class LLIE(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
-        subdirs = [
+        patterns = [
             self.root / "test/dicm/low",
             self.root / "test/lime/low",
             self.root / "test/mef/low",
@@ -343,9 +330,9 @@ class LLIE(base.UnlabeledImageDataset):
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            for subdir in subdirs:
+            for pattern in patterns:
                 for path in pbar.track(
-                    list(subdir.rglob("*")),
+                    list(pattern.rglob("*")),
                     description=f"Listing {self.__class__.__name__} {self.split} images"
                 ):
                     if path.is_image_file():
@@ -367,16 +354,19 @@ class LOLV1(base.ImageEnhancementDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "lol-v1" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "lol-v1" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -407,16 +397,19 @@ class LOLV2Real(base.ImageEnhancementDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "lol-v2-real" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "lol-v2-real" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -447,16 +440,19 @@ class LOLV2Syn(base.ImageEnhancementDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "lol-v2-syn" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "lol-v2-syn" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -483,16 +479,19 @@ class MEF(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "mef" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "mef" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="npe")
@@ -506,16 +505,19 @@ class NPE(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "npe" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "npe" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="sice-grad")
@@ -529,16 +531,19 @@ class SICEGrad(base.ImageEnhancementDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "sice-grad" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "sice-grad" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -565,16 +570,19 @@ class SICEMix(base.ImageEnhancementDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "sice-mix" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split / "sice-mix" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -602,16 +610,19 @@ class SICEZeroDCE(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "sice-zerodce" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "train" / "sice-zerodce" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 
 @DATASETS.register(name="vv")
@@ -625,16 +636,19 @@ class VV(base.UnlabeledImageDataset):
     
     def get_images(self):
         """Get image files."""
+        patterns = [
+            self.root / self.split / "vv" / "low"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / "test" / "vv" / "low"
-            for path in pbar.track(
-                list(pattern.rglob("*")),
-                description=f"Listing {self.__class__.__name__} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
 
 # endregion
 
@@ -681,57 +695,6 @@ class DarkFaceDataModule(base.DataModule):
             self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
             self.test = DarkFace(split="test", **self.dataset_kwargs)
-        
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="deepupe")
-class DeepUPEDataModule(base.DataModule):
-    """DeepUPE datamodule.
-    
-    See Also: :class:`mon.nn.data.datamodule.DataModule`.
-    """
-    
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, phase: ModelPhase | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
-        if phase in [None, ModelPhase.TRAINING]:
-            dataset = DeepUPE(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test = DeepUPE(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

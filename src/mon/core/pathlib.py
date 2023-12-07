@@ -33,7 +33,6 @@ from pathlib import *
 import validators
 
 from mon.core import builtins
-from mon.globals import ImageFormat
 
 
 # region Path
@@ -260,6 +259,7 @@ def get_files(regex: str, recursive: bool = False) -> list[Path]:
 
 def get_image_file(path: Path) -> Path:
     """Get the image of arbitrary extension from the given path."""
+    from mon import ImageFormat
     for ext in ImageFormat.values():
         temp = path.parent / f"{path.stem}{ext}"
         if temp.exists():

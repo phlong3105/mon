@@ -1,11 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements De-snowing datasets and datamodules."""
+"""This module implements de-snowing datasets and datamodules."""
 
 from __future__ import annotations
 
 __all__ = [
+    "KITTISnow",
+    "KITTISnowDataModule",
+    "KITTISnowL",
+    "KITTISnowLDataModule",
+    "KITTISnowM",
+    "KITTISnowMDataModule",
+    "KITTISnowS",
+    "KITTISnowSDataModule",
     "Snow100K",
     "Snow100KDataModule",
     "Snow100KL",
@@ -25,31 +33,188 @@ console = core.console
 
 # region Dataset
 
+@DATASETS.register(name="kitti-snow")
+class KITTISnow(base.ImageEnhancementDataset):
+    """KITTI-Snow dataset.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["train"]
+
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "kitti-snow" / "snow"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("snow", "clear")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="kitti-snow-s")
+class KITTISnowS(base.ImageEnhancementDataset):
+    """KITTI-Snow-S dataset.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "kitti-snow-s" / "snow"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("snow", "clear")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="kitti-snow-m")
+class KITTISnowM(base.ImageEnhancementDataset):
+    """KITTI-Snow-M dataset.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "kitti-snow-m" / "snow"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("snow", "clear")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="kitti-snow-l")
+class KITTISnowL(base.ImageEnhancementDataset):
+    """KITTI-Snow-L dataset.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+
+    splits = ["test"]
+
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "kitti-snow-l" / "snow"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("snow", "clear")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
 @DATASETS.register(name="snow100k")
 class Snow100K(base.ImageEnhancementDataset):
     """Snow100K dataset.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-    
+
+    splits = ["train"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "test"]:
-            console.log(
-                f"split must be one of ['train', 'test'], but got {self.split}."
-            )
-        
+        patterns = [
+            self.root / self.split / "snow100k" / "snow"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            pattern = self.root / self.split
-            for path in pbar.track(
-                list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -58,39 +223,36 @@ class Snow100K(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("synthetic", "gt")
+                path  = str(img.path).replace("snow", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
-@DATASETS.register(name="snow100k-small")
+@DATASETS.register(name="snow100k-s")
 class Snow100KS(base.ImageEnhancementDataset):
     """Snow100K-S dataset.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
-    
+
+    splits = ["test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "test"]:
-            console.log(
-                f"split must be one of ['train', 'test'], but got {self.split}."
-            )
-        
+        patterns = [
+            self.root / self.split / "snow100k-s" / "snow"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            if self.split == "train":
-                pattern = self.root / self.split
-            else:
-                pattern = self.root / self.split / "small"
-            for path in pbar.track(
-                list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
     
     def get_labels(self):
         """Get label files."""
@@ -100,40 +262,37 @@ class Snow100KS(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("synthetic", "gt")
+                path  = str(img.path).replace("snow", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
-@DATASETS.register(name="snow100k-medium")
+@DATASETS.register(name="snow100k-m")
 class Snow100KM(base.ImageEnhancementDataset):
     """Snow100K-M dataset.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "test"]:
-            console.log(
-                f"split must be one of ['train', 'test'], but got {self.split}."
-            )
-        
+        patterns = [
+            self.root / self.split / "snow100k-m" / "snow"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            if self.split == "train":
-                pattern = self.root / self.split
-            else:
-                pattern = self.root / self.split / "medium"
-            for path in pbar.track(
-                list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -142,40 +301,37 @@ class Snow100KM(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("synthetic", "gt")
+                path  = str(img.path).replace("snow", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
 
 
-@DATASETS.register(name="snow100k-large")
+@DATASETS.register(name="snow100k-l")
 class Snow100KL(base.ImageEnhancementDataset):
     """Snow100K-L dataset.
     
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
     
+    splits = ["test"]
+
     def get_images(self):
         """Get image files."""
-        if self.split not in ["train", "test"]:
-            console.log(
-                f"split must be one of ['train', 'test'], but got {self.split}."
-            )
-        
+        patterns = [
+            self.root / self.split / "snow100k-l" / "snow"
+        ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
-            if self.split == "train":
-                pattern = self.root / self.split
-            else:
-                pattern = self.root / self.split / "large"
-            for path in pbar.track(
-                list(pattern.rglob("synthetic/*.jpg")),
-                description=f"Listing {self.__class__.__name__} {self.split} images"
-            ):
-                if path.is_image_file():
-                    image = base.ImageLabel(path=path)
-                    self.images.append(image)
-    
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
@@ -184,16 +340,219 @@ class Snow100KL(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("synthetic", "gt")
+                path  = str(img.path).replace("snow", "clear")
                 path  = core.Path(path)
-                label = base.ImageLabel(path=path)
+                label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
-
 
 # endregion
 
 
 # region Datamodule
+
+@DATAMODULES.register(name="kitti-snow")
+class KITTISnowDataModule(base.DataModule):
+    """KITTI-Snow datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = KITTISnow(split="train", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = KITTISnow(split="train", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="kitti-snow-s")
+class KITTISnowSDataModule(base.DataModule):
+    """KITTI-Snow-S datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = KITTISnowS(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = KITTISnowS(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="kitti-snow-m")
+class KITTISnowMDataModule(base.DataModule):
+    """KITTI-Snow-M datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = KITTISnowM(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = KITTISnowM(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="kitti-snow-l")
+class KITTISnowLDataModule(base.DataModule):
+    """KITTI-Snow-L datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            dataset = KITTISnowL(split="test", **self.dataset_kwargs)
+            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test = KITTISnowL(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
 
 @DATAMODULES.register(name="snow100k")
 class Snow100KDataModule(base.DataModule):
@@ -234,7 +593,7 @@ class Snow100KDataModule(base.DataModule):
             dataset = Snow100K(split="train", **self.dataset_kwargs)
             self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Snow100K(split="test", **self.dataset_kwargs)
+            self.test = Snow100K(split="train", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -246,7 +605,7 @@ class Snow100KDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="snow100k-small")
+@DATAMODULES.register(name="snow100k-s")
 class Snow100KSDataModule(base.DataModule):
     """Snow100K-S datamodule.
     
@@ -284,6 +643,7 @@ class Snow100KSDataModule(base.DataModule):
         if phase in [None, ModelPhase.TRAINING]:
             dataset = Snow100KS(split="train", **self.dataset_kwargs)
             self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Snow100KS(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test = Snow100KS(split="test", **self.dataset_kwargs)
         
@@ -297,7 +657,7 @@ class Snow100KSDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="snow100k-medium")
+@DATAMODULES.register(name="snow100k-m")
 class Snow100KMDataModule(base.DataModule):
     """Snow100K-M datamodule.
     
@@ -348,7 +708,7 @@ class Snow100KMDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="snow100k-large")
+@DATAMODULES.register(name="snow100k-l")
 class Snow100KLDataModule(base.DataModule):
     """Snow100K-L datamodule.
     

@@ -55,9 +55,9 @@ train_datasets=(
 )
 predict_datasets=(
   ## LES
-  "jin2022"
-  "ledlight"
-  "syn-light-effects"
+  # "jin2022"
+  # "ledlight"
+  # "syn-light-effects"
   ## LLIE
   # "darkcityscapes"
   # "darkface"
@@ -159,17 +159,17 @@ if [ "$task" == "train" ]; then
   for d in "${train_data[@]}"; do
     ## LES
     if [ "$d" == "jin2022" ]; then
-      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/light-effects")
-      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/clear")
-      clear_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/les/test/jin2022/light-effects")
+      input_data_dirs+=("${root_dir}/data/les/test/jin2022/clear")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "ledlight" ]; then
-      light_effects_data_dirs+=("${root_dir}/data/les/test/ledlight/light-effects")
-      clear_data_dirs+=("${root_dir}/data/les/test/ledlight/clear")
+      input_data_dirs+=("${root_dir}/data/les/test/ledlight/light-effects")
+      target_data_dirs+=("${root_dir}/data/les/test/ledlight/clear")
     fi
     if [ "$d" == "syn-light-effects" ]; then
-      light_effects_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/light-effects")
-      clear_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/clear")
+      input_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/light-effects")
+      target_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/clear")
     fi
     ## LLIE
     if [ "$d" == "fivek-c" ]; then
@@ -213,17 +213,17 @@ elif [ "$task" == "predict" ]; then
   for d in "${predict_data[@]}"; do
     ## LES
     if [ "$d" == "jin2022" ]; then
-      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/light-effects")
-      light_effects_data_dirs+=("${root_dir}/data/les/test/jin2022/clear")
-      clear_data_dirs+=("")
+      input_data_dirs+=("${root_dir}/data/les/test/jin2022/light-effects")
+      input_data_dirs+=("${root_dir}/data/les/test/jin2022/clear")
+      target_data_dirs+=("")
     fi
     if [ "$d" == "ledlight" ]; then
-      light_effects_data_dirs+=("${root_dir}/data/les/test/ledlight/light-effects")
-      clear_data_dirs+=("${root_dir}/data/les/test/ledlight/clear")
+      input_data_dirs+=("${root_dir}/data/les/test/ledlight/light-effects")
+      target_data_dirs+=("${root_dir}/data/les/test/ledlight/clear")
     fi
     if [ "$d" == "syn-light-effects" ]; then
-      light_effects_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/light-effects")
-      clear_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/clear")
+      input_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/light-effects")
+      target_data_dirs+=("${root_dir}/data/les/test/syn-light-effects/clear")
     fi
     ## LLIE
     if [ "$d" == "darkcityscapes" ]; then
@@ -326,7 +326,7 @@ if [ "$task" == "train" ]; then
         model_dir="${les_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore demo.py \
-          --data "${light_effects_data_dirs[k]}" \
+          --data "${input_data_dirs[k]}" \
           --image-size 512 \
           --output-dir "${train_dir}/visual" \
           --checkpoint-dir "${train_dir}"
@@ -629,7 +629,7 @@ if [ "$task" == "predict" ]; then
             model_dir="${les_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data  "${light_effects_data_dirs[k]}" \
+              --data  "${input_data_dirs[k]}" \
               --data-name "${predict_data[k]}" \
               --phase "test" \
               --weights "${root_dir}/zoo/vision/enhance/les/jin2022/delighteffects_params_0600000.pt" \
