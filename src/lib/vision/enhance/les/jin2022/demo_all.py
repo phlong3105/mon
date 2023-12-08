@@ -4,13 +4,23 @@
 from __future__ import annotations
 
 import argparse
+import os
+import time
+from os import listdir
+from os.path import join, basename
 
-import cv2
+import matplotlib.pyplot as plt
 import torch.optim as optim
 import torch.utils.data as Data
-from guided_filter_pytorch.guided_filter import GuidedFilter
-from skimage.metrics import peak_signal_noise_ratio as compare_psnr
-from skimage.metrics import structural_similarity as compare_ssim
+from PIL import Image
+from torch.autograd import Variable
+from torchvision import utils as vutils
+
+import load_data as DA
+from lib.vision.enhance.les.jin2022.utils import is_image_file
+from net import *
+import torch.optim as optim
+import torch.utils.data as Data
 from torch.autograd import Variable
 from torchvision import utils as vutils
 
@@ -19,28 +29,6 @@ from mon import RUN_DIR
 from net import *
 
 console = mon.console
-
-
-def get_LFHF(image, rad_list=[4, 8, 16, 32], eps_list=[0.001, 0.0001]):
-
-    def decomposition(guide, inp, rad_list, eps_list):
-        LF_list = []
-        HF_list = []
-        for radius in rad_list:
-            for eps in eps_list:
-                gf = GuidedFilter(radius, eps)
-                LF = gf(guide, inp)
-                LF[LF > 1] = 1
-                LF_list.append(LF)
-                HF_list.append(inp - LF)
-        LF = torch.cat(LF_list, dim=1)
-        HF = torch.cat(HF_list, dim=1)
-        return LF, HF
-
-    image = torch.clamp(image, min=0.0, max=1.0)
-    # Compute the LF-HF features of the image
-    img_lf, img_hf = decomposition(guide=image, inp=image, rad_list=rad_list, eps_list=eps_list)
-    return img_lf, img_hf
 
 
 class MeanShift(nn.Conv2d):
@@ -57,91 +45,6 @@ class MeanShift(nn.Conv2d):
             self.weight.data.mul_(std.view(c, 1, 1, 1))
             self.bias.data = data_range * torch.Tensor(data_mean)
         self.requires_grad = False
-        
-
-'''     
-class Vgg16ExDark(torch.nn.Module):
-    def __init__(self, load_model=None, requires_grad=False):
-        super(Vgg16ExDark, self).__init__()
-        # Create the model
-        self.vgg_pretrained_features = visionmodels.vgg16(pretrained=True).features
-        if load_model is None:
-            console.log("Vgg16ExDark needs a pre-trained checkpoint!")
-            raise Exception
-        else:
-            console.log("Vgg16ExDark initialized with %s"% load_model)
-            model_state_dict = torch.load(load_model)
-            model_dict       = self.vgg_pretrained_features.state_dict()
-            model_state_dict = {k[16:]: v for k, v in model_state_dict.items() if k[16:] in model_dict}
-            self.vgg_pretrained_features.load_state_dict(model_state_dict)
-        if not requires_grad:
-            for param in self.parameters():
-                param.requires_grad = False
-
-    def forward(self, X, indices=None):
-        if indices is None:
-            indices = [3, 8, 15, 22] 
-        out = []
-        for i in range(indices[-1] + 1):
-            X = self.vgg_pretrained_features[i](X)
-            if i in indices:
-                out.append(X)
-        return out
-'''
-
-'''
-class PerceptualLossVgg16ExDark(nn.Module):
-    def __init__(
-            self,
-            vgg        = None,
-            load_model = None,
-            weights    = None,
-            indices    = None,
-            normalize  = True
-    ):
-        super(PerceptualLossVgg16ExDark, self).__init__()        
-        if vgg is None:
-            self.vgg = Vgg16ExDark(load_model)
-        else:
-            self.vgg = vgg
-        self.vgg     = self.vgg.cuda()
-        self.criter  = nn.L1Loss()
-        self.weights = weights or [1.0, 1.0, 1.0, 1.0]
-        self.indices = indices or [3, 8, 15, 22]
-        if normalize:
-            self.normalize = MeanShift([0.485, 0.456, 0.406], [0.229, 0.224, 0.225], norm=True).cuda()
-        else:
-            self.normalize = None
-
-    def forward(self, x, y):
-        if self.normalize is not None:
-            x = self.normalize(x)
-            y = self.normalize(y)
-        x_vgg, y_vgg = self.vgg(x, self.indices), self.vgg(y, self.indices)
-        loss = 0
-        for i in range(len(x_vgg)):
-            loss += self.weights[i] * self.criter(x_vgg[i], y_vgg[i].detach())
-        return loss
-'''
-
-'''
-class StdLoss(nn.Module):
-    def __init__(self):
-        super(StdLoss, self).__init__()
-        blur            = (1 / 25) * np.ones((5, 5))
-        blur            = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
-        self.mse        = nn.MSELoss()
-        self.blur       = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
-        image           = np.zeros((5, 5))
-        image[2, 2]     = 1
-        image           = image.reshape(1, 1, image.shape[0], image.shape[1])
-        self.image      = nn.Parameter(data=torch.cuda.FloatTensor(image), requires_grad=False)
-        self.gray_scale = GrayscaleLayer()
-
-    def forward(self, x):
-        x = self.gray_scale(x)
-        return self.mse(functional.conv2d(x, self.image), functional.conv2d(x, self.blur))
-'''
 
 
 class ExclusionLoss(nn.Module):
@@ -158,16 +61,16 @@ class ExclusionLoss(nn.Module):
         for l in range(self.level):
             gradx1, grady1 = self.compute_gradient(img1)
             gradx2, grady2 = self.compute_gradient(img2)
-            alphay         = 1
-            alphax         = 1
-            gradx1_s       = (self.sigmoid(gradx1) * 2) - 1
-            grady1_s       = (self.sigmoid(grady1) * 2) - 1
-            gradx2_s       = (self.sigmoid(gradx2 * alphax) * 2) - 1
-            grady2_s       = (self.sigmoid(grady2 * alphay) * 2) - 1
-            gradx_loss    += self._all_comb(gradx1_s, gradx2_s)
-            grady_loss    += self._all_comb(grady1_s, grady2_s)
-            img1           = self.avg_pool(img1)
-            img2           = self.avg_pool(img2)
+            alphay   = 1
+            alphax   = 1
+            gradx1_s = (self.sigmoid(gradx1) * 2) - 1
+            grady1_s = (self.sigmoid(grady1) * 2) - 1
+            gradx2_s = (self.sigmoid(gradx2 * alphax) * 2) - 1
+            grady2_s = (self.sigmoid(grady2 * alphay) * 2) - 1
+            gradx_loss += self._all_comb(gradx1_s, gradx2_s)
+            grady_loss += self._all_comb(grady1_s, grady2_s)
+            img1 = self.avg_pool(img1)
+            img2 = self.avg_pool(img2)
         return gradx_loss, grady_loss
 
     def _all_comb(self, grad1_s, grad2_s):
@@ -189,27 +92,16 @@ class ExclusionLoss(nn.Module):
 
 
 def gradient(pred):
-    D_dy = pred[:, :, 1:]    - pred[:, :, :-1]
-    D_dx = pred[:, :, :, 1:] - pred[:, :, :, :-1]
+    D_dy      = pred[:, :, 1:]    - pred[:, :, :-1]
+    D_dx      = pred[:, :, :, 1:] - pred[:, :, :, :-1]
     return D_dx, D_dy
 
 
-class GradientLoss(nn.Module):
-
-    def __init__(self):
-        super(GradientLoss, self).__init__()
-        
-    def forward(self, a):
-        gradient_a_x = torch.abs(a[:, :, :, :-1] - a[:, :, :, 1:])
-        gradient_a_y = torch.abs(a[:, :, :-1, :] - a[:, :, 1:, :])
-        return torch.mean(gradient_a_x) + torch.mean(gradient_a_y)
-
-
 def smooth_loss(pred_map):
-    dx, dy    = gradient(pred_map)
-    dx2, dxdy = gradient(dx)
-    dydx, dy2 = gradient(dy)
-    loss      =  (dx2.abs().mean()  + dxdy.abs().mean() + dydx.abs().mean() + dy2.abs().mean())
+    dx,   dy   = gradient(pred_map)
+    dx2,  dxdy = gradient(dx)
+    dydx, dy2  = gradient(dy)
+    loss       = (dx2.abs().mean()  + dxdy.abs().mean() + dydx.abs().mean() + dy2.abs().mean())
     return loss
 
 
@@ -218,35 +110,6 @@ def rgb2gray(rgb):
            0.5870 * rgb[:, :, 1:2, :] + \
            0.1140 * rgb[:, :, 2:3, :]
     return gray
-
-
-def validate(dle_net, inputs):
-    console.log("Validation not possible since there are no labels!")
-    raise Exception
-
-
-def calc_psnr(im1, im2):
-    im1_y = cv2.cvtColor(im1, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    im2_y = cv2.cvtColor(im2, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    return compare_psnr(im1_y, im2_y)
-
-
-def calc_ssim(im1, im2):
-    im1_y = cv2.cvtColor(im1, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    im2_y = cv2.cvtColor(im2, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    return compare_ssim(im1_y, im2_y)
-
-
-def calc_psnr_masked(im1, im2, mask):
-    im1_y = cv2.cvtColor(im1, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    im2_y = cv2.cvtColor(im2, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    return compare_psnr(im1_y[mask], im2_y[mask])
-
-
-def calc_ssim_masked(im1, im2, mask):
-    im1_y = cv2.cvtColor(im1, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    im2_y = cv2.cvtColor(im2, cv2.COLOR_BGR2YCR_CB)[:, :, 0]
-    return compare_ssim(im1_y[mask], im2_y[mask])
 
 
 def demo(args, dle_net, optimizer_dle_net, inputs):
@@ -260,9 +123,9 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     lambda_cc      = 1.0
     dle_pred_cc    = torch.mean(dle_pred, dim=1, keepdims=True)
     cc_loss        = (F.l1_loss(dle_pred[:, 0:1, :, :], dle_pred_cc) + \
-                     F.l1_loss(dle_pred[:, 1:2, :, :], dle_pred_cc) + \
-                     F.l1_loss(dle_pred[:, 2:3, :, :], dle_pred_cc)) * (1/3)  # Color Constancy Loss
-                   
+                      F.l1_loss(dle_pred[:, 1:2, :, :], dle_pred_cc) + \
+                      F.l1_loss(dle_pred[:, 2:3, :, :], dle_pred_cc))*(1/3) ##Color Constancy Loss
+
     lambda_recon   = 1.0
     recon_loss     = F.l1_loss(dle_pred, img_in)
 
@@ -273,8 +136,8 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     lambda_smooth  = 1.0
     le_smooth_loss = smooth_loss(le_pred)
 
-    loss  = lambda_recon  * recon_loss + lambda_cc * cc_loss
-    loss += lambda_excl   * excl_loss(dle_pred, le_pred)
+    loss  = lambda_recon * recon_loss + lambda_cc * cc_loss
+    loss += lambda_excl * excl_loss(dle_pred, le_pred)
     loss += lambda_smooth * le_smooth_loss
     loss.backward()
 
@@ -302,7 +165,6 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-
     args.use_gray       = False
     args.data           = mon.Path(args.data)
     args.output_dir     = mon.Path(args.output_dir)
@@ -312,6 +174,7 @@ if __name__ == "__main__":
 
     torch.manual_seed(0)
 
+    # Initialize model
     channels = 1 if args.use_gray else 3
     dle_net  = Net(input_nc=channels, output_nc=channels)
 
@@ -328,6 +191,8 @@ if __name__ == "__main__":
     console.log(f"Params = {params:.4f}")
     console.log(f"Time   = {avg_time:.4f}")
 
+    # Load weights
+    dle_net = Net(input_nc=channels, output_nc=channels)
     dle_net = nn.DataParallel(dle_net).cuda()
     if args.weights is not None:
         dle_net.load_state_dict(torch.load(str(args.weights))["state_dict"])
@@ -335,6 +200,53 @@ if __name__ == "__main__":
     optimizer_dle_net = optim.Adam(dle_net.parameters(), lr=args.lr, betas=(0.9, 0.999))
 
     #
+    num_items    = 0
+    sum_time     = 0
+    in_filenames = sorted([join(args.data, x) for x in listdir(args.data) if is_image_file(x)])
+    with mon.get_progress_bar() as pbar:
+        for in_filename in pbar.track(
+            sequence    = in_filenames,
+            total       = len(in_filenames),
+            description = f"[bright_yellow] Inferring"
+        ):
+            img_name   = basename(in_filename)
+            da_list    = sorted([(args.data / file) for file in os.listdir(args.data) if file == img_name])
+            da_list    = [str(path) for path in da_list]
+            num_items += len(da_list)
+            demo_list  = da_list
+            demo_list  = demo_list * args.iters
+            loader     = torch.utils.data.DataLoader(
+                DA.LoadImgs(args, demo_list, mode="demo"),
+                batch_size  = 1,
+                shuffle     = True,
+                num_workers = 16,
+                drop_last   = False,
+            )
+
+            count_idx  = 0
+            start_time = time.time()
+            with mon.get_progress_bar() as pbar:
+                for batch_idx, (inputs, img_in_path) in loader:
+                    count_idx = count_idx + 1
+                    imgs_dict = demo(args, dle_net, optimizer_dle_net, inputs)
+
+                    if count_idx % 60 == 0:
+                        img_in_path = mon.Path(img_in_path[0])
+                        inout       = args.output_dir / f"{img_in_path.stem}_in_out.png"
+                        out         = args.output_dir / f"{img_in_path.stem}_out.png"
+                        save_img    = torch.cat((inputs["img_in"][0, :, :, :], imgs_dict["dle_pred"][0, :, :, :]), dim=2)
+                        in_img      = inputs["img_in"][0, :, :, :]
+                        out_img     = imgs_dict["dle_pred"][0, :, :, :]
+                        vutils.save_image(save_img, str(inout))
+                        vutils.save_image(out_img,  str(out))
+                        torch.save(dle_net.state_dict(), str(args.checkpoint_dir / "best.pt"))
+            run_time = (time.time() - start_time)
+            sum_time += run_time
+    avg_time = float(sum_time / num_items)
+    console.log(f"Average time: {avg_time}")
+
+    #
+    '''
     image_paths = list(args.data.rglob("*"))
     image_paths = [str(path) for path in image_paths if path.is_image_file()]
     demo_list   = image_paths * args.iters
@@ -345,11 +257,11 @@ if __name__ == "__main__":
         num_workers = 16,
         drop_last   = False
     )
-    count_idx   = 0
-    sum_time    = 0
+
+    count_idx = 0
     with mon.get_progress_bar() as pbar:
-        for inputs, img_in_path in pbar.track(
-            sequence    = loader,
+        for batch_idx, (inputs, img_in_path) in pbar.track(
+            sequence    = enumerate(loader),
             total       = len(loader),
             description = f"[bright_yellow] Inferring"
         ):
@@ -365,3 +277,4 @@ if __name__ == "__main__":
                 vutils.save_image(save_img, str(inout))
                 vutils.save_image(out_img,  str(out))
                 torch.save(dle_net.state_dict(), str(args.checkpoint_dir / "best.pt"))
+    '''

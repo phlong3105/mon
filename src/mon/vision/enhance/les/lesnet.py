@@ -175,34 +175,7 @@ class LESNet(base.LowLightImageEnhancementModel):
         self.previous      = None
 
         if variant is None:  # Default model
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-            self.conv1        = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4        = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6        = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7        = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn         = nn.Identity()
-            self.act          = nn.ReLU(inplace=True)
-            self.upsample     = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.loss         = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0.1,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = 1600,
-                reduction       = "mean",
-            )
-            self.apply(self.init_weights)
+            pass
         else:
             self.config_model_variant()
 
@@ -210,43 +183,16 @@ class LESNet(base.LowLightImageEnhancementModel):
         """Config the model based on ``self.variant``.
         Mainly used in ablation study.
         """
-        # self.gamma         = 2.8
-        # self.num_iters     = 8
-        # self.unsharp_sigma = 2.5
+        self.gamma         = 2.8
+        self.num_iters     = 8
+        self.unsharp_sigma = None  # 2.5
         self.previous      = None
         self.out_channels  = 3
 
         # Variant code: [aa][l][i]
-        # i: inference mode
-        if self.variant[3] == "0":
-            self.gamma        = None
-            self.out_channels = 3
-        elif self.variant[3] == "1":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        elif self.variant[3] == "2":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        elif self.variant[3] == "3":
-            self.gamma        = self.gamma or 2.8
-            self.out_channels = 3
-        else:
-            raise ValueError
-
-        # Variant code: [aa][l][i]
         # aa: architecture
         if self.variant[0:2] == "00":
-            self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
+            pass
         elif self.variant[0:2] == "01":
             self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -260,7 +206,6 @@ class LESNet(base.LowLightImageEnhancementModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "10":
-            self.num_channels = 32
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -269,10 +214,15 @@ class LESNet(base.LowLightImageEnhancementModel):
             self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # Guided Brightness Enhancement Map (G)
+            # Light Effect Map (L)
             self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv10   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            self.conv10   = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            # Guided Brightness Enhancement Map (G)
+            self.conv11   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv12   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv13   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            #
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
@@ -283,23 +233,7 @@ class LESNet(base.LowLightImageEnhancementModel):
         # Variant code: [aa][l][i]
         # l: loss function
         weight_tvA = 1600 if self.out_channels == 3 else 200
-        if self.variant[2] == "0":
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[2] == "1":
+        if self.variant[0] in ["0"]:
             self.loss = ZeroReferenceLoss(
                 exp_patch_size  = 16,
                 exp_mean_val    = 0.6,
@@ -315,9 +249,8 @@ class LESNet(base.LowLightImageEnhancementModel):
                 weight_tvA      = weight_tvA,
                 reduction       = "mean",
             )
-        elif self.variant[2] == "9":
-            self.gamma = self.gamma or 2.5
-            self.loss  = ZeroReferenceLoss(
+        elif self.variant[0] in ["1"]:
+            self.loss = ZeroReferenceLoss(
                 bri_gamma       = self.gamma,
                 exp_patch_size  = 16,   # 16
                 exp_mean_val    = 0.6,  # 0.6
@@ -430,58 +363,7 @@ class LESNet(base.LowLightImageEnhancementModel):
             Predictions.
         """
         x = input
-
-        # Downsampling
-        x_down = x
-        if self.scale_factor != 1:
-            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
-
-        f1 = self.act(self.conv1(x_down))
-        f2 = self.act(self.conv2(f1))
-        f3 = self.act(self.conv3(f2))
-        f4 = self.act(self.conv4(f3))
-        f4 = self.attn(f4)
-        f5 = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-        f6 = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-        a  =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
-        
-        # Upsampling
-        if self.scale_factor != 1:
-            a = self.upsample(a)
-
-        # Enhancement
-        if self.out_channels == 3:
-            if self.phase == ModelPhase.TRAINING:
-                y = x
-                for _ in range(self.num_iters):
-                    y = y + a * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for _ in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + a * (torch.pow(d, 2) - d)
-        else:
-            if self.phase == ModelPhase.TRAINING:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    y = y + A[i] * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
-
-        # Unsharp masking
-        if self.unsharp_sigma is not None:
-            y = kornia.filters.unsharp_mask(y, (3, 3), (self.unsharp_sigma, self.unsharp_sigma))
-
-        return a, y
+        pass
 
     def forward_once_variant(
         self,
@@ -552,36 +434,7 @@ class LESNet(base.LowLightImageEnhancementModel):
                     b = y * (1 - g)
                     d = y * g
                     y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Default
-        elif self.variant[3] == "0":
-            if self.out_channels == 3:
-                y = x
-                for _ in range(self.num_iters):
-                    y = y + a * (torch.pow(y, 2) - y)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                for i in range(self.num_iters):
-                    y = y + A[i] * (torch.pow(y, 2) - y)
-        # Global G
-        elif self.variant[3] == "1":
-            if self.out_channels == 3:
-                y = x
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for _ in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                y = x
-                A = torch.split(a, 3, dim=1)
-                g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
-                for i in range(self.num_iters):
-                    b = y * (1 - g)
-                    d = y * g
-                    y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Global G Inference Only
-        elif self.variant[3] == "2":
+        else:
             if self.out_channels == 3:
                 if self.phase == ModelPhase.TRAINING:
                     y = x
@@ -605,34 +458,6 @@ class LESNet(base.LowLightImageEnhancementModel):
                     A = torch.split(a, 3, dim=1)
                     g = prior.get_guided_brightness_enhancement_map_prior(x, self.gamma, 9)
                     for i in range(self.num_iters):
-                        b = y * (1 - g)
-                        d = y * g
-                        y = b + d + A[i] * (torch.pow(d, 2) - d)
-        # Iterative G Inference Only
-        elif self.variant[3] == "3":
-            if self.out_channels == 3:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    for _ in range(self.num_iters):
-                        y = y + a * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    for _ in range(self.num_iters):
-                        g = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
-                        b = y * (1 - g)
-                        d = y * g
-                        y = b + d + a * (torch.pow(d, 2) - d)
-            else:
-                if self.phase == ModelPhase.TRAINING:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        y = y + A[i] * (torch.pow(y, 2) - y)
-                else:
-                    y = x
-                    A = torch.split(a, 3, dim=1)
-                    for i in range(self.num_iters):
-                        g = prior.get_guided_brightness_enhancement_map_prior(y, self.gamma, 9)
                         b = y * (1 - g)
                         d = y * g
                         y = b + d + A[i] * (torch.pow(d, 2) - d)

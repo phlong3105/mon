@@ -286,7 +286,6 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.apply(self.init_weights)
         #
         elif self.variant[0:2] == "10":
-            self.num_channels = 32
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -304,7 +303,6 @@ class GCENet(base.LowLightImageEnhancementModel):
             self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
             self.apply(self.init_weights)
         elif self.variant[0:2] == "11":
-            self.num_channels = 32
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -960,7 +958,6 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             self.apply(self.init_weights)
         #
         elif self.variant[0:2] in ["10", "11"]:
-            self.num_channels = 32
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -1009,7 +1006,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
                 weight_tvA      = weight_tvA,
                 reduction       = "mean",
             )
-        elif self.variant[0] == "1":
+        elif self.variant[0] in ["1"]:
             self.gamma = self.gamma or 2.5
             self.loss  = ZeroReferenceLoss(
                 bri_gamma       = self.gamma,

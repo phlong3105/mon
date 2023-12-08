@@ -116,22 +116,22 @@ class Net(nn.Module):
         x     = self.bn5_1(self.LReLU5_1(self.conv5_1(x)))
         conv5 = self.bn5_2(self.LReLU5_2(self.conv5_2(x)))
 
-        conv5 = F.interpolate(conv5, scale_factor=2, mode='bilinear', align_corners=False)
+        conv5 = F.interpolate(conv5, scale_factor=2, mode="bilinear", align_corners=False)
         up6   = torch.cat([self.deconv5(conv5), conv4], 1)
         x     = self.bn6_1(self.LReLU6_1(self.conv6_1(up6)))
         conv6 = self.bn6_2(self.LReLU6_2(self.conv6_2(x)))
 
-        conv6 = F.interpolate(conv6, scale_factor=2, mode='bilinear', align_corners=False)
+        conv6 = F.interpolate(conv6, scale_factor=2, mode="bilinear", align_corners=False)
         up7   = torch.cat([self.deconv6(conv6), conv3], 1)
         x     = self.bn7_1(self.LReLU7_1(self.conv7_1(up7)))
         conv7 = self.bn7_2(self.LReLU7_2(self.conv7_2(x)))
 
-        conv7 = F.interpolate(conv7, scale_factor=2, mode='bilinear', align_corners=False)
+        conv7 = F.interpolate(conv7, scale_factor=2, mode="bilinear", align_corners=False)
         up8   = torch.cat([self.deconv7(conv7), conv2], 1)
         x     = self.bn8_1(self.LReLU8_1(self.conv8_1(up8)))
         conv8 = self.bn8_2(self.LReLU8_2(self.conv8_2(x)))
 
-        conv8 = F.interpolate(conv8, scale_factor=2, mode='bilinear', align_corners=False)
+        conv8 = F.interpolate(conv8, scale_factor=2, mode="bilinear", align_corners=False)
         up9   = torch.cat([self.deconv8(conv8), conv1], 1)
         x     = self.bn9_1(self.LReLU9_1(self.conv9_1(up9)))
         conv9 = self.LReLU9_2(self.conv9_2(x))
