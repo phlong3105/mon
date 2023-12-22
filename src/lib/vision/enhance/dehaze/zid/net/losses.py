@@ -146,6 +146,7 @@ class GradientLoss(nn.Module):
 
 
 class YIQGNGCLoss(nn.Module):
+
     def __init__(self, shape=5):
         super(YIQGNGCLoss, self).__init__()
         self.shape = shape

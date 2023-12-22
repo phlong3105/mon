@@ -15,18 +15,23 @@ __all__ = [
     "ChannelRatioConsistencyLoss",
     "ColorConstancyLoss",
     "EdgeConstancyLoss",
+    "ExclusionLoss",
     "ExposureControlLoss",
-    "GradientL1Loss",
+    "GradientLoss",
+    "GrayLoss",
     "IlluminationSmoothnessLoss",
+    "NonBlurryLoss",
     "PSNRLoss",
     "PerceptualL1Loss",
     "PerceptualLoss",
     "SSIMLoss",
     "SpatialConsistencyLoss",
+    "StdLoss",
 ]
 
 from typing import Literal
 
+import numpy as np
 import piqa
 import torch
 
@@ -153,7 +158,7 @@ class ColorConstancyLoss(Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor = None
+        target: torch.Tensor | None = None
     ) -> torch.Tensor:
         mean_rgb   = torch.mean(input, [2, 3], keepdim=True)
         mr, mg, mb = torch.split(mean_rgb, 1, dim=1)
@@ -162,6 +167,25 @@ class ColorConstancyLoss(Loss):
         d_gb       = torch.pow(mb - mg, 2)
         loss       = torch.pow(torch.pow(d_rg, 2) + torch.pow(d_rb, 2) + torch.pow(d_gb, 2), 0.5)
         loss       = reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+
+@LOSSES.register(name="grayscale_loss")
+class GrayscaleLoss(nn.Module):
+
+    def __init__(self, reduction: Reduction | str = "mean"):
+        super().__init__(reduction=reduction)
+        self.mse = MSELoss()
+
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor,
+    ) -> torch.Tensor:
+        x_g  = torch.mean(input,  1, keepdim=True)
+        y_g  = torch.mean(target, 1, keepdim=True)
+        loss = self.mse(x_g, y_g)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 # endregion
@@ -241,7 +265,7 @@ class ExposureControlLoss(Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor = None
+        target: torch.Tensor | None  = None
     ) -> torch.Tensor:
         x    = input
         x    = torch.mean(x, 1, keepdim=True)
@@ -271,7 +295,7 @@ class EdgeConstancyLoss(Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor = None
+        target: torch.Tensor | None = None
     ) -> torch.Tensor:
         assert input.shape == target.shape
         edge1 = self.laplacian_kernel(input)
@@ -361,8 +385,77 @@ class PerceptualL1Loss(Loss):
 
 # region Reconstruction Loss
 
-@LOSSES.register(name="gradient_l1_loss")
-class GradientL1Loss(Loss):
+@LOSSES.register(name="exclusion_loss")
+class ExclusionLoss(nn.Module):
+    """Loss on the gradient.
+
+    References:
+    `<http://openaccess.thecvf.com/content_cvpr_2018/papers/Zhang_Single_Image_Reflection_CVPR_2018_paper.pdf>`__
+    """
+
+    def __init__(
+        self,
+        level    : int             = 3,
+        reduction: Reduction | str = "mean",
+    ):
+        super().__init__(reduction=reduction)
+        self.level    = level
+        self.avg_pool = nn.AvgPool2d(2, stride=2).type(torch.cuda.FloatTensor)
+        self.sigmoid  = nn.Sigmoid().type(torch.cuda.FloatTensor)
+
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor,
+    ) -> torch.Tensor | float:
+        grad_x_loss, grad_y_loss = self.get_gradients(input, target)
+        loss_grad_xy = sum(grad_x_loss) / (self.level * 9) + sum(grad_y_loss) / (self.level * 9)
+        loss         = loss_grad_xy / 2.0
+        # loss         = reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+    def get_gradients(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor,
+    ) -> tuple[list, list]:
+        grad_x_loss = []
+        grad_y_loss = []
+
+        for l in range(self.level):
+            grad_x1, grad_y1 = self.compute_gradient(input)
+            grad_x2, grad_y2 = self.compute_gradient(target)
+            # alpha_x = 2.0 * torch.mean(torch.abs(grad_x1)) / torch.mean(torch.abs(grad_x2))
+            # alpha_y = 2.0 * torch.mean(torch.abs(grad_y1)) / torch.mean(torch.abs(grad_y2))
+            alpha_y   = 1
+            alpha_x   = 1
+            grad_x1_s = (self.sigmoid(grad_x1) * 2) - 1
+            grad_y1_s = (self.sigmoid(grad_y1) * 2) - 1
+            grad_x2_s = (self.sigmoid(grad_x2  * alpha_x) * 2) - 1
+            grad_y2_s = (self.sigmoid(grad_y2  * alpha_y) * 2) - 1
+            # grad_x_loss.append(torch.mean(((grad_x1_s ** 2) * (grad_x2_s ** 2))) ** 0.25)
+            # grad_y_loss.append(torch.mean(((grad_y1_s ** 2) * (grad_y2_s ** 2))) ** 0.25)
+            grad_x_loss += self._all_comb(grad_x1_s, grad_x2_s)
+            grad_y_loss += self._all_comb(grad_y1_s, grad_y2_s)
+            input        = self.avg_pool(input)
+            target        = self.avg_pool(target)
+        return grad_x_loss, grad_y_loss
+
+    def _all_comb(self, grad1_s: torch.Tensor, grad2_s: torch.Tensor) -> torch.Tensor:
+        v = []
+        for i in range(3):
+            for j in range(3):
+                v.append(torch.mean(((grad1_s[:, j, :, :] ** 2) * (grad2_s[:, i, :, :] ** 2))) ** 0.25)
+        return v
+
+    def compute_gradient(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        grad_x = input[:, :, 1:, :] - input[:, :, :-1, :]
+        grad_y = input[:, :, :, 1:] - input[:, :, :, :-1]
+        return grad_x, grad_y
+
+
+@LOSSES.register(name="gradient_loss")
+class GradientLoss(Loss):
     """L1 loss on the gradient of the image."""
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -374,16 +467,54 @@ class GradientL1Loss(Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor = None
+        target: torch.Tensor | None = None
     ) -> torch.Tensor:
         gradient_a_x = torch.abs(input[:, :, :, :-1] - input[:, :, :, 1:])
         gradient_a_y = torch.abs(input[:, :, :-1, :] - input[:, :, 1:, :])
         loss = reduce_loss(
-            loss=torch.mean(gradient_a_x) + torch.mean(gradient_a_y),
-            reduction=self.reduction
+            loss      = torch.mean(gradient_a_x) + torch.mean(gradient_a_y),
+            reduction = self.reduction
         )
         return loss
-    
+
+
+@LOSSES.register(name="gray_loss")
+class GrayLoss(nn.Module):
+
+    def __init__(self, reduction: Reduction | str = "mean"):
+        super().__init__(reduction=reduction)
+        self.mae = MAELoss()
+
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        x = input
+        y = torch.ones_like(x) / 2.0
+        loss = 1 / self.mae(x, y)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
+
+@LOSSES.register(name="non_blurry_loss")
+class NonBlurryLoss(nn.Module):
+    """Loss on the distance to 0.5."""
+
+    def __init__(self, reduction: Reduction | str = "mean"):
+        super().__init__(reduction=reduction)
+        self.mse = MSELoss()
+
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        x    = input
+        loss = 1 - self.mse(x, torch.ones_like(x) * 0.5)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
 
 @LOSSES.register(name="psnr_loss")
 class PSNRLoss(Loss):
@@ -449,6 +580,38 @@ class SSIMLoss(Loss):
         loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
+
+@LOSSES.register(name="std_loss")
+class StdLoss(nn.Module):
+    """Loss on the variance of the image. Works in the grayscale. If the image
+    is smooth, gets zero.
+    """
+
+    def __init__(self, reduction: Reduction | str = "mean"):
+        super().__init__(reduction=reduction)
+        blur      = (1 / 25) * np.ones((5, 5))
+        blur      = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
+        self.blur = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
+        self.mse  = MSELoss()
+
+        image       = np.zeros((5, 5))
+        image[2, 2] = 1
+        image       = image.reshape(1, 1, image.shape[0], image.shape[1])
+        self.image  = nn.Parameter(data=torch.cuda.FloatTensor(image), requires_grad=False)
+
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        x    = input
+        x    = torch.mean(x, 1, keepdim=True)
+        if self.image.device != x.device:
+            self.image = self.image.to(x.device)
+        loss = self.mse(F.conv2d(x, self.image), F.conv2d(x, self.blur))
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return loss
+
 # endregion
 
 
@@ -478,7 +641,7 @@ class IlluminationSmoothnessLoss(Loss):
     def forward(
         self,
         input : torch.Tensor,
-        target: torch.Tensor = None
+        target: torch.Tensor | None  = None
     ) -> torch.Tensor:
         x       = input
         b       = x.size()[0]
@@ -865,5 +1028,10 @@ class SpatialConsistencyLoss(Loss):
         
         loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
+
+# endregion
+
+
+# region Misc
 
 # endregion

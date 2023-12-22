@@ -3,8 +3,9 @@ echo "$HOSTNAME"
 
 
 ## Fast Commands
-# ./run.sh zerodcev2 00000 train   sice-zerodce lol vision/enhance/llie no last
-# ./run.sh zerodcev2 00000 predict sice-zerodce all vision/enhance/llie no last
+# ./run.sh gcenetv2 none none train    100 sice-zerodce lol vision/enhance/llie no last
+# ./run.sh gcenetv2 none none predict  100 sice-zerodce all vision/enhance/llie no last
+# ./run.sh gcenetv2 none none evaluate 100 sice-zerodce dicm,fusion,lime,lol-v1,lol-v2-real,lol-v2-syn,mef,npe,vv vision/enhance/llie no last
 
 
 ## Constants
@@ -901,7 +902,6 @@ if [ "$task" == "evaluate" ]; then
             --result-file "${current_dir}" \
             --name "${model_variant_suffix}" \
             --image-size 256 \
-            --resize \
             --test-y-channel \
             --backend "piqa" \
             --append-results \
@@ -922,7 +922,6 @@ if [ "$task" == "evaluate" ]; then
             --result-file "${current_dir}" \
             --name "${model_variant_suffix}" \
             --image-size 256 \
-            --resize \
             --test-y-channel \
             --backend "pyiqa" \
             --append-results \
