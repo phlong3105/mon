@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 import os
-import sys
 
 import click
 import piqa
@@ -353,17 +352,18 @@ def measure_metric(
                 message += f"{f'{m}':<10}\t"
             message += "\n"
         # Values
-        for m, v in results.items():
-            if v is None:
-                message += f"{0:.10f}\t"
+        for i, (m, v) in enumerate(results.items()):
+            if i == len(results) - 1:
+                message += f"{0:.10f}"   if v is None else f"{v:.10f}"
             else:
-                message += f"{v:.10f}\t"
+                message += f"{0:.10f}\t" if v is None else f"{v:.10f}\t"
+
         if verbose:
             console.log(f"{message}")
         if not append_results:
             print(f"COPY THIS:")
         print(message)
-
+    
     # Save results
     if save_txt:
         if not append_results:
@@ -371,6 +371,7 @@ def measure_metric(
         with open(str(result_file), "a") as f:
             if os.stat(str(result_file)).st_size == 0:
                 f.write(f"{'model':<10}\t{'data':<10}\t")
+                
                 for m, v in results.items():
                     f.write(f"{f'{m}':<10}\t")
             f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
