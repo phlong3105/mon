@@ -8,39 +8,105 @@ package.
 from __future__ import annotations
 
 __all__ = [
-    "AUROC", "Accuracy", "AveragePrecision", "BootStrapper", "CalibrationError",
-    "CatMetric", "ClasswiseWrapper", "CohenKappa", "ConcordanceCorrCoef",
-    "ConfusionMatrix", "CosineSimilarity", "Dice", "ExactMatch",
-    "ExplainedVariance", "F1Score", "FBetaScore", "HammingDistance",
-    "HingeLoss", "JaccardIndex", "KLDivergence", "KendallRankCorrCoef",
-    "LogCoshError", "MatthewsCorrCoef", "MaxMetric", "MeanAbsoluteError",
-    "MeanAbsolutePercentageError", "MeanMetric", "MeanSquaredError",
-    "MeanSquaredLogError", "Metric", "MetricCollection", "MetricTracker",
-    "MinMaxMetric", "MinMetric", "MultioutputWrapper", "PearsonCorrCoef",
-    "Precision", "PrecisionRecallCurve", "R2Score", "ROC", "Recall",
-    "RetrievalFallOut", "RetrievalHitRate", "RetrievalMAP", "RetrievalMRR",
-    "RetrievalNormalizedDCG", "RetrievalPrecision",
-    "RetrievalPrecisionRecallCurve", "RetrievalRPrecision", "RetrievalRecall",
-    "RetrievalRecallAtFixedPrecision", "SpearmanCorrCoef", "Specificity",
-    "StatScores", "SumMetric", "SymmetricMeanAbsolutePercentageError",
-    "TweedieDevianceScore", "WeightedMeanAbsolutePercentageError",
+    "AUROC",
+    "Accuracy",
+    "AveragePrecision",
+    "BootStrapper",
+    "CalibrationError",
+    "CatMetric",
+    "ClasswiseWrapper",
+    "CohenKappa",
+    "ConcordanceCorrCoef",
+    "ConfusionMatrix",
+    "CosineSimilarity",
+    "Dice",
+    "ExactMatch",
+    "ExplainedVariance",
+    "F1Score",
+    "FBetaScore",
+    "HammingDistance",
+    "HingeLoss",
+    "JaccardIndex",
+    "KLDivergence",
+    "KendallRankCorrCoef",
+    "LogCoshError",
+    "MatthewsCorrCoef",
+    "MaxMetric",
+    "MeanAbsoluteError",
+    "MeanAbsolutePercentageError",
+    "MeanMetric",
+    "MeanSquaredError",
+    "MeanSquaredLogError",
+    "Metric",
+    "MetricCollection",
+    "MetricTracker",
+    "MinMaxMetric",
+    "MinMetric",
+    "MultioutputWrapper",
+    "PearsonCorrCoef",
+    "Precision",
+    "PrecisionRecallCurve",
+    "R2Score",
+    "ROC",
+    "Recall",
+    "RetrievalFallOut",
+    "RetrievalHitRate",
+    "RetrievalMAP",
+    "RetrievalMRR",
+    "RetrievalNormalizedDCG",
+    "RetrievalPrecision",
+    "RetrievalPrecisionRecallCurve",
+    "RetrievalRPrecision",
+    "RetrievalRecall",
+    "RetrievalRecallAtFixedPrecision",
+    "SpearmanCorrCoef",
+    "Specificity",
+    "StatScores",
+    "SumMetric",
+    "SymmetricMeanAbsolutePercentageError",
+    "TweedieDevianceScore",
+    "WeightedMeanAbsolutePercentageError",
 ]
+
+from abc import ABC
+from typing import Literal
 
 import torchmetrics
 
 from mon.globals import METRICS
 
-Metric           = torchmetrics.Metric
-MetricCollection = torchmetrics.MetricCollection
+
+# region Base Metric
+
+class Metric(torchmetrics.Metric, ABC):
+    """The base class for all loss functions.
+
+    Args:
+        mode: One of: ``'FR'`` or ``'NR'``. Default: ``'FR'``.
+        lower_better: Default: ``False``.
+    """
+    def __init__(
+        self,
+        mode        : Literal["FR", "NR"] = "FR",
+        lower_better: bool = False,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.mode         = mode
+        self.lower_better = lower_better
+
+# endregion
 
 
 # region Aggregation
 
-CatMetric  = torchmetrics.CatMetric
-MaxMetric  = torchmetrics.MaxMetric
-MeanMetric = torchmetrics.MeanMetric
-MinMetric  = torchmetrics.MinMetric
-SumMetric  = torchmetrics.SumMetric
+MetricCollection = torchmetrics.MetricCollection
+
+CatMetric        = torchmetrics.CatMetric
+MaxMetric        = torchmetrics.MaxMetric
+MeanMetric       = torchmetrics.MeanMetric
+MinMetric        = torchmetrics.MinMetric
+SumMetric        = torchmetrics.SumMetric
 
 # endregion
 

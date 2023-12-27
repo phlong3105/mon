@@ -5,7 +5,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import sys
 
 import click
 import piqa
@@ -13,6 +15,7 @@ import pyiqa
 import torch
 
 import mon
+from mon import METRIC_CONFIG
 
 console = mon.console
 
@@ -31,26 +34,24 @@ def measure_metric_piqa(
     test_y_channel: bool,
     save_txt      : bool,
     append_results: bool,
+    show_results  : bool,
     verbose       : bool,
-):
+) -> dict:
     """Measure metrics."""
     _METRICS = {
-        # "fid"    : {"module": piqa.FID,     "metric_mode": "FR", },
-        "fsim"   : {"module": piqa.FSIM,    "metric_mode": "FR", },
-        "haarpsi": {"module": piqa.HaarPSI, "metric_mode": "FR", },
-        "lpips"  : {"module": piqa.LPIPS,   "metric_mode": "FR", },
-        "mdsi"   : {"module": piqa.MDSI,    "metric_mode": "FR", },
-        "ms-gmsd": {"module": piqa.MS_GMSD, "metric_mode": "FR", },
-        "ms-ssim": {"module": piqa.MS_SSIM, "metric_mode": "FR", },
-        "psnr"   : {"module": piqa.PSNR,    "metric_mode": "FR", },
-        "ssim"   : {"module": piqa.SSIM,    "metric_mode": "FR", },
-        "tv"     : {"module": piqa.TV,      "metric_mode": "NR", },
-        "vsi"    : {"module": piqa.VSI,     "metric_mode": "FR", },
+        # "fid"    : piqa.FID,
+        "fsim"   : piqa.FSIM,   
+        "haarpsi": piqa.HaarPSI,
+        "lpips"  : piqa.LPIPS,  
+        "mdsi"   : piqa.MDSI,   
+        "ms-gmsd": piqa.MS_GMSD,
+        "ms-ssim": piqa.MS_SSIM,
+        "psnr"   : piqa.PSNR,   
+        "ssim"   : piqa.SSIM,   
+        "tv"     : piqa.TV,     
+        "vsi"    : piqa.VSI,    
     }
 
-    variant       = variant if variant not in [None, "", "none"] else None
-    model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
-    console.rule(f"[bold red] {model_variant}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     # if target_dir is not None:
     #     assert mon.Path(target_dir).is_dir()
@@ -79,16 +80,17 @@ def measure_metric_piqa(
     metric       = _METRICS if ("all" in metric or "*" in metric) else metric
     metric       = [m.lower() for m in metric]
     values       = {m: []     for m in metric}
+    results      = {}
     metric_f     = {}
     for i, m in enumerate(metric):
         if m in _METRICS:
-            metric_f[m] = _METRICS[m]["module"]().to(device=device)
+            metric_f[m] = _METRICS[m]().to(device=device)
         
-    need_target = any(m in _METRICS and _METRICS[m]["metric_mode"] == "FR" for m in metric)
+    need_target = any(m in _METRICS and METRIC_CONFIG[m]["metric_mode"] == "FR" for m in metric)
    
     # Measuring
     h, w = mon.get_hw(image_size)
-    with mon.get_progress_bar() as pbar:
+    with mon.get_progress_bar(transient=not verbose) as pbar:
         for image_file in pbar.track(
             sequence    = image_files,
             total       = len(image_files),
@@ -116,55 +118,19 @@ def measure_metric_piqa(
             for m in metric:
                 if m not in _METRICS:
                     continue
-                if not has_target and _METRICS[m]["metric_mode"] == "FR":
+                if not has_target and METRIC_CONFIG[m]["metric_mode"] == "FR":
                     continue
-                elif has_target and _METRICS[m]["metric_mode"] == "FR":
+                elif has_target and METRIC_CONFIG[m]["metric_mode"] == "FR":
                     values[m].append(float(metric_f[m](image, target)))
                 else:
                     values[m].append(float(metric_f[m](image)))
-    
-    # Show results
-    if append_results:
-        console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
-        console.log(f"backend: pyiqa")
-        message = ""
-        for m, v in values.items():
-            message += f"{f'{m}':<10}\t"
-        message += "\n"
-        for m, v in values.items():
-            avg = float(sum(v) / num_items)
-            message += f"{avg:.10f}\t"
-        console.log(f"{message}")
-        print(f"COPY THIS:")
-        print(message)
-    else:
-        console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
-        console.log(f"backend: piqa")
-        for m, v in values.items():
-            avg = float(sum(v) / num_items)
-            console.log(f"{m:<10}: {avg:.10f}")
-    
-    # Save results
-    if save_txt:
-        if not append_results:
-            mon.delete_files(regex=result_file.name, path=result_file.parent)
-        with open(str(result_file), "a") as f:
-            if os.stat(str(result_file)).st_size == 0:
-                f.write(f"{'model':<10}\t{'data':<10}\t")
-                for m, v in values.items():
-                    f.write(f"{f'{m}':<10}\t")
-            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
-            for m, v in values.items():
-                avg = float(sum(v) / num_items)
-                f.write(f"{avg:.10f}\t")
-            f.write(f"\n")
-            # f.write(f"{model_name}\n")
-            # f.write(f"{image_dir.name}\n")
-            # for m, v in values.items():
-            #     avg = float(sum(v) / num_items)
-            #     f.write(f"{m:<10}: {avg:.9f}\n")
+
+    for m, v in values.items():
+        if len(v) > 0:
+            results[m] = float(sum(v) / num_items)
+        else:
+            results[m] = None
+    return results
 
 
 def measure_metric_pyiqa(
@@ -179,67 +145,12 @@ def measure_metric_pyiqa(
     test_y_channel: bool,
     save_txt      : bool,
     append_results: bool,
+    show_results  : bool,
     verbose       : bool,
-):
+) -> dict:
     """Measure metrics using :mod:`pyiqa` package."""
-    _FULL_REFERENCE_METRICS = [
-        "ahiq",
-        "ckdn",
-        "cw_ssim",
-        "dists",
-        "fsim",
-        "gmsd",
-        "lpips",
-        "lpips-vgg",
-        "mad",
-        "ms_ssim",
-        "nlpd",
-        "pieapp",
-        "psnr",
-        "psnry",
-        "ssim",
-        "ssimc",
-        "vif",
-        "vsi",
-        "wadiqam",
-    ]
-    _NON_REFERENCE_METRICS  = [
-        "brisque",
-        "clipiqa",
-        "clipiqa+",
-        "clipiqa+_rn50_512",
-        "clipiqa+_vitL14_512",
-        "cnniqa",
-        "dbcnn",
-        "fid",
-        "hyperiqa",
-        "ilniqe",
-        "ilniqe",
-        "maniqa",
-        "maniqa-kadid",
-        "maniqa-koniq",
-        "musiq",
-        "musiq-ava",
-        "musiq-koniq",
-        "musiq-paq2piq",
-        "musiq-spaq",
-        "nima",
-        "nima-vgg16-ava",
-        "niqe",
-        "nrqm",
-        "paq2piq",
-        "pi",
-        "pieapp",
-        "tres",
-        "tres-flive",
-        "tres-koniq",
-        "uranker",
-    ]
-    _METRICS = _NON_REFERENCE_METRICS + _FULL_REFERENCE_METRICS
+    _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
 
-    variant       = variant if variant not in [None, "", "none"] else None
-    model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
-    console.rule(f"[bold red] {model_variant}")
     assert image_dir is not None and mon.Path(image_dir).is_dir()
     # if target_dir is not None:
     #     assert mon.Path(target_dir).is_dir()
@@ -249,8 +160,8 @@ def measure_metric_pyiqa(
                 or isinstance(result_file, str))
         result_file = mon.Path(result_file)
         
-    image_dir   = mon.Path(image_dir)
-    target_dir  = mon.Path(target_dir) \
+    image_dir  = mon.Path(image_dir)
+    target_dir = mon.Path(target_dir) \
         if target_dir is not None \
         else mon.Path(str(image_dir).replace("low", "high"))
     
@@ -268,30 +179,32 @@ def measure_metric_pyiqa(
     metric      = _METRICS if ("all" in metric or "*" in metric) else metric
     metric      = [m.lower() for m in metric]
     values      = {m: []     for m in metric}
+    results     = {}
     metric_f    = {}
+
+    mon.disable_print()
     for i, m in enumerate(metric):
         if m not in _METRICS:
             continue
-        metric_config = pyiqa.DEFAULT_CONFIGS[m]
-        if "test_y_channel" in metric_config["metric_opts"]:
-            metric_f[m] = pyiqa.create_metric(
+        if "test_y_channel" in pyiqa.DEFAULT_CONFIGS[m]["metric_opts"]:
+            metric_f[m] = pyiqa.InferenceModel(
                 metric_name    = m,
                 as_loss        = False,
                 # test_y_channel = test_y_channel,
                 device         = device,
             )
         else:
-            metric_f[m] = pyiqa.create_metric(
+            metric_f[m] = pyiqa.InferenceModel(
                 metric_name = m,
                 as_loss     = False,
                 device      = device,
             )
-        
-    need_target = any(m in _FULL_REFERENCE_METRICS for m in metric)
+    mon.enable_print()
+    need_target = any(METRIC_CONFIG[m]["metric_mode"] == "FR" for m in metric)
     
     # Measuring
     h, w = mon.get_hw(image_size)
-    with mon.get_progress_bar() as pbar:
+    with mon.get_progress_bar(transient=not verbose) as pbar:
         for image_file in pbar.track(
             sequence    = image_files,
             total       = len(image_files),
@@ -319,52 +232,34 @@ def measure_metric_pyiqa(
             for m in metric:
                 if m not in _METRICS:
                     continue
-                metric_config = pyiqa.DEFAULT_CONFIGS[m]
-                if not has_target and metric_config["metric_mode"] == "FR":
+                if not has_target and METRIC_CONFIG[m]["metric_mode"] == "FR":
                     continue
-                elif has_target and metric_config["metric_mode"] == "FR":
+                elif has_target and METRIC_CONFIG[m]["metric_mode"] == "FR":
                     values[m].append(metric_f[m](image, target))
                 else:
                     values[m].append(metric_f[m](image))
-    
-    # Show results
-    if append_results:
-        console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
-        console.log(f"backend: pyiqa")
-        message = ""
-        for m, v in values.items():
-            message += f"{f'{m}':<10} \t"
-        message += "\n"
-        for m, v in values.items():
-            avg      = float(sum(v) / num_items)
-            message += f"{avg:.10f} \t"
-        console.log(f"{message}")
-        print("COPY THIS:")
-        print(message)
-    else:
-        console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
-        console.log(f"backend: pyiqa")
-        for m, v in values.items():
-            avg = float(sum(v) / num_items)
-            console.log(f"{m:<10}: {avg:.10f}")
-    
-    # Save results
-    if save_txt:
-        if not append_results:
-            mon.delete_files(regex=result_file.name, path=result_file.parent)
-        with open(str(result_file), "a") as f:
-            if os.stat(str(result_file)).st_size == 0:
-                f.write(f"{'model':<10}\t{'data':<10}\t")
-                for m, v in values.items():
-                    f.write(f"{f'{m}':<10}\t")
-            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
-            for m, v in values.items():
-                avg = float(sum(v) / num_items)
-                f.write(f"{avg:.10f}\t")
-            f.write(f"\n")
-                
+
+    for m, v in values.items():
+        if len(v) > 0:
+            results[m] = float(sum(v) / num_items)
+        else:
+            results[m] = None
+    return results
+
+
+def update_results(results: dict, new_values: dict) -> dict:
+    for m, v in new_values.items():
+        if m in METRIC_CONFIG:
+            lower_better = METRIC_CONFIG[m]["lower_better"]
+            if m not in results:
+                results[m] = v
+            elif results[m] is None:
+                results[m] = v
+            elif v is not None:
+                results[m] = min(results[m], v) if lower_better else max(results[m], v)
+
+    return results
+
 
 @click.command()
 @click.option("--image-dir",      default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
@@ -376,9 +271,10 @@ def measure_metric_pyiqa(
 @click.option("--resize",         is_flag=True)
 @click.option("--metric",         multiple=True, type=str, help="Measuring metric.")
 @click.option("--test-y-channel", is_flag=True)
-@click.option("--backend",        default="pyiqa", type=click.Choice(["piqa", "pyiqa"], case_sensitive=False))
+@click.option("--backend",        multiple=True, default=["piqa", "pyiqa"], type=click.Choice(["piqa", "pyiqa"], case_sensitive=False))
 @click.option("--save-txt",       is_flag=True)
 @click.option("--append-results", is_flag=True)
+@click.option("--show-results",   is_flag=True)
 @click.option("--verbose",        is_flag=True)
 def measure_metric(
     image_dir     : mon.Path,
@@ -390,44 +286,98 @@ def measure_metric(
     resize        : bool,
     metric        : list[str],
     test_y_channel: bool,
-    backend       : str,
+    backend       : list[str],
     save_txt      : bool,
     append_results: bool,
+    show_results  : bool,
     verbose       : bool,
 ):
-    if backend in ["piqa"]:
-        measure_metric_piqa(
-            image_dir      = image_dir,
-            target_dir     = target_dir,
-            result_file    = result_file,
-            name           = name,
-            variant        = variant,
-            image_size     = image_size,
-            resize         = resize,
-            metric         = metric,
-            test_y_channel = test_y_channel,
-            save_txt       = save_txt,
-            append_results = append_results,
-            verbose        = verbose,
-        )
-    elif backend in ["pyiqa"]:
-        measure_metric_pyiqa(
-            image_dir      = image_dir,
-            target_dir     = target_dir,
-            result_file    = result_file,
-            name           = name,
-            variant        = variant,
-            image_size     = image_size,
-            resize         = resize,
-            metric         = metric,
-            test_y_channel = test_y_channel,
-            save_txt       = save_txt,
-            append_results = append_results,
-            verbose        = verbose,
-        )
-    else:
-        console.log(f"`{backend}` is not supported!")
-    
+    results = {}
+
+    if not verbose:
+        logger = logging.getLogger()
+        logger.disabled = True
+
+    for b in backend:
+        if b in ["piqa"]:
+            new_values = measure_metric_piqa(
+                image_dir      = image_dir,
+                target_dir     = target_dir,
+                result_file    = result_file,
+                name           = name,
+                variant        = variant,
+                image_size     = image_size,
+                resize         = resize,
+                metric         = metric,
+                test_y_channel = test_y_channel,
+                save_txt       = save_txt,
+                append_results = append_results,
+                show_results   = show_results,
+                verbose        = verbose,
+            )
+            results = update_results(results, new_values)
+        elif b in ["pyiqa"]:
+            new_values = measure_metric_pyiqa(
+                image_dir      = image_dir,
+                target_dir     = target_dir,
+                result_file    = result_file,
+                name           = name,
+                variant        = variant,
+                image_size     = image_size,
+                resize         = resize,
+                metric         = metric,
+                test_y_channel = test_y_channel,
+                save_txt       = save_txt,
+                append_results = append_results,
+                show_results   = show_results,
+                verbose        = verbose,
+            )
+            results = update_results(results, new_values)
+        else:
+            console.log(f"`{backend}` is not supported!")
+
+    # Show results
+    variant       = variant if variant not in [None, "", "none"] else None
+    model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
+    if verbose:
+        console.rule(f"[bold red] {model_variant}")
+        console.log(f"{model_variant}")
+        console.log(f"{image_dir.name}")
+        for m, v in results.items():
+            console.log(f"{m:<10}: {v:.10f}")
+    if show_results:
+        message = ""
+        # Headers
+        if not append_results:
+            for m, v in results.items():
+                message += f"{f'{m}':<10}\t"
+            message += "\n"
+        # Values
+        for m, v in results.items():
+            if v is None:
+                message += f"{0:.10f}\t"
+            else:
+                message += f"{v:.10f}\t"
+        if verbose:
+            console.log(f"{message}")
+        if not append_results:
+            print(f"COPY THIS:")
+        print(message)
+
+    # Save results
+    if save_txt:
+        if not append_results:
+            mon.delete_files(regex=result_file.name, path=result_file.parent)
+        with open(str(result_file), "a") as f:
+            if os.stat(str(result_file)).st_size == 0:
+                f.write(f"{'model':<10}\t{'data':<10}\t")
+                for m, v in results.items():
+                    f.write(f"{f'{m}':<10}\t")
+            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
+            for m, v in results.items():
+                f.write(f"{v:.10f}\t")
+            f.write(f"\n")
+
 # endregion
 
 

@@ -867,9 +867,11 @@ fi
 if [ "$task" == "evaluate" ]; then
   echo -e "\nEvaluate"
   cd "${current_dir}" || exit
-  for (( i=0; i<${#model[@]}; i++ )); do
-    for (( j=0; j<${#variant[@]}; j++ )); do
-      for (( k=0; k<${#predict_data[@]}; k++ )); do
+  for (( k=0; k<${#predict_data[@]}; k++ )); do
+    echo -e "\n${predict_data[k]}"
+
+    for (( i=0; i<${#model[@]}; i++ )); do
+      for (( j=0; j<${#variant[@]}; j++ )); do
           if [ "${variant[j]}" != "none" ]; then
             model_variant="${model[i]}-${variant[j]}"
           else
@@ -896,45 +898,51 @@ if [ "$task" == "evaluate" ]; then
             fi
           fi
 
-          python -W ignore metric.py \
-            --image-dir "${predict_dir}" \
-            --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
-            --result-file "${current_dir}" \
-            --name "${model_variant_suffix}" \
-            --image-size 256 \
-            --test-y-channel \
-            --backend "piqa" \
-            --append-results \
-            --metric "psnr" \
-            --metric "psnry" \
-            --metric "ssim" \
-            --metric "ms-ssim" \
-            --metric "lpips" \
-            --metric "brisque" \
-            --metric "niqe" \
-            --metric "pi"
-            # --name "${model[i]}" \
-            # --variant "${variant[j]}" \
-
-          python -W ignore metric.py \
-            --image-dir "${predict_dir}" \
-            --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
-            --result-file "${current_dir}" \
-            --name "${model_variant_suffix}" \
-            --image-size 256 \
-            --test-y-channel \
-            --backend "pyiqa" \
-            --append-results \
-            --metric "psnr" \
-            --metric "psnry" \
-            --metric "ssim" \
-            --metric "ms-ssim" \
-            --metric "lpips" \
-            --metric "brisque" \
-            --metric "niqe" \
-            --metric "pi"
-            # --name "${model[i]}" \
-            # --variant "${variant[j]}" \
+          if [ "${j}" == 0 ]; then
+            python -W ignore metric.py \
+              --image-dir "${predict_dir}" \
+              --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
+              --result-file "${current_dir}" \
+              --name "${model_variant_suffix}" \
+              --image-size 256 \
+              --test-y-channel \
+              --backend "piqa" \
+              --backend "pyiqa" \
+              --show-results \
+              --metric "psnr" \
+              --metric "psnry" \
+              --metric "ssim" \
+              --metric "ms-ssim" \
+              --metric "lpips" \
+              --metric "brisque" \
+              --metric "niqe" \
+              --metric "pi"
+              # --name "${model[i]}" \
+              # --variant "${variant[j]}" \
+          else
+            python -W ignore metric.py \
+              --image-dir "${predict_dir}" \
+              --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
+              --result-file "${current_dir}" \
+              --name "${model_variant_suffix}" \
+              --image-size 256 \
+              --resize \
+              --test-y-channel \
+              --backend "piqa" \
+              --backend "pyiqa" \
+              --append-results \
+              --show-results \
+              --metric "psnr" \
+              --metric "psnry" \
+              --metric "ssim" \
+              --metric "ms-ssim" \
+              --metric "lpips" \
+              --metric "brisque" \
+              --metric "niqe" \
+              --metric "pi"
+              # --name "${model[i]}" \
+              # --variant "${variant[j]}" \
+          fi
         done
     done
   done

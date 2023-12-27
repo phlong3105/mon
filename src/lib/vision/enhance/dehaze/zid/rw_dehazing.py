@@ -118,7 +118,7 @@ class Dehaze(object):
         self._init_loss()
 
     def optimize(self):
-        torch.backends.cudnn.enabled = True
+        torch.backends.cudnn.enabled   = True
         torch.backends.cudnn.benchmark = True
 
         optimizer = torch.optim.Adam(self.parameters, lr=self.learning_rate)
@@ -153,10 +153,10 @@ class Dehaze(object):
 
     def _obtain_current_result(self, step):
         if step % 5 == 0:
-            image_out_np    = np.clip(torch_to_np(self.image_out), 0, 1)
-            mask_out_np     = np.clip(torch_to_np(self.mask_out), 0, 1)
-            ambient_out_np  = np.clip(torch_to_np(self.ambient_out), 0, 1)
-            mask_out_np     = self.t_matting(mask_out_np)
+            image_out_np        = np.clip(torch_to_np(self.image_out), 0, 1)
+            mask_out_np         = np.clip(torch_to_np(self.mask_out), 0, 1)
+            ambient_out_np      = np.clip(torch_to_np(self.ambient_out), 0, 1)
+            mask_out_np         = self.t_matting(mask_out_np)
             self.current_result = DehazeResult(learned=image_out_np, t=mask_out_np, a=ambient_out_np)
 
     def _plot_closure(self, step):

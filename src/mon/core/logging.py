@@ -6,10 +6,15 @@
 from __future__ import annotations
 
 __all__ = [
-    "get_logger", "logger",
+    "disable_print",
+    "enable_print",
+    "get_logger",
+    "logger",
 ]
 
 import logging
+import os
+import sys
 
 from rich import logging as r_logging
 
@@ -42,5 +47,18 @@ def get_logger(path: pathlib.Path | None = None) -> logging.Logger:
         logger.addHandler(path)
     
     return logger
+
+# endregion
+
+
+# region Print
+
+def disable_print():
+    sys.stdout = open(os.devnull, "w")
+
+
+# Restore
+def enable_print():
+    sys.stdout = sys.__stdout__
 
 # endregion

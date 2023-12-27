@@ -107,7 +107,9 @@ def get_error_console() -> rich.console.Console:
 
 # region Progress
 
-def get_download_bar() -> progress.Progress:
+def get_download_bar(
+    transient: bool = False,
+) -> progress.Progress:
     """Return a :class:`rich.progress.Progress` object displaying the current
     time, the task description, a progress bar, the percentage complete, the
     transfer speed, the amount downloaded, the time remaining, the time elapsed,
@@ -130,11 +132,14 @@ def get_download_bar() -> progress.Progress:
         progress.TimeRemainingColumn(),
         ">",
         progress.TimeElapsedColumn(),
-        console=console,
+        console   = console,
+        transient = transient,
     )
 
 
-def get_progress_bar() -> progress.Progress:
+def get_progress_bar(
+    transient: bool = False,
+) -> progress.Progress:
     """Return a :class:`rich.progress.Progress` object displaying the current
     time, the task description, a progress bar, the percentage complete, the
     total number of processed items, the processing speed, the time remaining,
@@ -158,7 +163,8 @@ def get_progress_bar() -> progress.Progress:
         ">",
         progress.TimeElapsedColumn(),
         progress.SpinnerColumn(),
-        console=console,
+        console   = console,
+        transient = transient,
     )
 
 
