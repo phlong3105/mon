@@ -872,7 +872,7 @@ if [ "$task" == "predict" ]; then
               --image-size 512 \
               --output-dir "${predict_dir}"
           ## DERAIN
-          # Zero-DCE++
+          # ipt
           elif [ "${model[i]}" == "ipt" ]; then
             model_dir="${derain_dir}/${model[i]}"
             cd "${model_dir}" || exit
