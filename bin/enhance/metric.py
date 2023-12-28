@@ -349,14 +349,13 @@ def measure_metric(
         # Headers
         if not append_results:
             for m, v in results.items():
-                message += f"{f'{m}':<10}\t"
+                if v is not None:
+                    message += f"{f'{m}':<10}\t"
             message += "\n"
         # Values
         for i, (m, v) in enumerate(results.items()):
-            if i == len(results) - 1:
-                message += f"{0:.10f}"   if v is None else f"{v:.10f}"
-            else:
-                message += f"{0:.10f}\t" if v is None else f"{v:.10f}\t"
+            if v is not None:
+                message += f"{v:.10f}\t"
 
         if verbose:
             console.log(f"{message}")
