@@ -21,10 +21,10 @@ console = mon.console
 
 hosts = {
 	"lp-labdesktop-01": {
-        "config"     : "gcenet_sice_zerodce",
+        "config"     : "gcenetv2_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/les/gcenet",
-        "name"       : "gcenet-sice-zerodce",
+        "project"    : "vision/enhance/llie/gcenetv2",
+        "name"       : "gcenetv2-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 8,

@@ -1,9 +1,16 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from zid.utils.image_io import np_to_torch
+from utils.image_io import np_to_torch
 
 
 def get_noise(input_depth, method, spatial_size, noise_type='u', var=1. / 100):

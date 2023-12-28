@@ -1,7 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 import torch.nn as nn
 
-from zid.utils.image_io import *
-from zid.utils.imresize import imresize
+from utils.image_io import *
+from utils.imresize import imresize
 
 
 class Downsampler(nn.Module):

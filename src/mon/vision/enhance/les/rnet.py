@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements LESNet models.
+"""This module implements RNet models.
 
 ./run.sh gcenet none none train 100 sice-zerodce all vision/enhance/llie no last
 """
@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 __all__ = [
-    "LESNet",
+    "RNet",
 ]
 
 from typing import Any, Literal
@@ -137,9 +137,9 @@ class ZeroReferenceLoss(nn.Loss):
 
 # region Model
 
-@MODELS.register(name="lesnet")
-class LESNet(base.LowLightImageEnhancementModel):
-    """LESNet (Light Effect Suppression Network) model.
+@MODELS.register(name="rnet")
+class RNet(base.LowLightImageEnhancementModel):
+    """RNet (Re-Light Network) model.
     
     See Also: :class:`mon.vision.enhance.les.base.LightEffectSuppressionModel`
     """
@@ -172,6 +172,7 @@ class LESNet(base.LowLightImageEnhancementModel):
         self.gamma         = mon.to_float(gamma)         or 2.8
         self.num_iters     = mon.to_int(num_iters)       or 8
         self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
+        self.out_channels  = 3   
         self.previous      = None
 
         if variant is None:  # Default model
@@ -191,21 +192,7 @@ class LESNet(base.LowLightImageEnhancementModel):
 
         # Variant code: [aa][l][i]
         # aa: architecture
-        if self.variant[0:2] == "00":
-            pass
-        elif self.variant[0:2] == "01":
-            self.conv1    = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-            self.conv2    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv3    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv4    = nn.DSConv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-            self.conv5    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv6    = nn.DSConv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv7    = nn.DSConv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            self.attn     = nn.Identity()
-            self.act      = nn.ReLU(inplace=True)
-            self.upsample = nn.UpsamplingBilinear2d(self.scale_factor)
-            self.apply(self.init_weights)
-        elif self.variant[0:2] == "10":
+        if self.variant[0:2] in ["00"]:
             self.conv1    = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
             self.conv2    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
             self.conv3    = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -214,14 +201,18 @@ class LESNet(base.LowLightImageEnhancementModel):
             self.conv5    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv6    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv7    = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # Light Effect Map (L)
+            # Guided Brightness Enhancement Map (G)
             self.conv8    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv9    = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv10   = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
-            # Guided Brightness Enhancement Map (G)
+            self.conv10   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            # Clean Image (J)
             self.conv11   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
             self.conv12   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-            self.conv13   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
+            self.conv13   = nn.Conv2d(self.num_channels * 2, self.out_channels, 3, 1, 1, bias=True)
+            # Transmission Map (T)
+            self.conv14   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv15   = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
+            self.conv16   = nn.Conv2d(self.num_channels * 2, 1, 3, 1, 1, bias=True)
             #
             self.attn     = nn.Identity()
             self.act      = nn.ReLU(inplace=True)
@@ -234,22 +225,6 @@ class LESNet(base.LowLightImageEnhancementModel):
         # l: loss function
         weight_tvA = 1600 if self.out_channels == 3 else 200
         if self.variant[0] in ["0"]:
-            self.loss = ZeroReferenceLoss(
-                exp_patch_size  = 16,
-                exp_mean_val    = 0.6,
-                spa_num_regions = 8,
-                spa_patch_size  = 4,
-                weight_bri      = 0,
-                weight_col      = 5,
-                weight_crl      = 0.1,
-                weight_edge     = 1,
-                weight_exp      = 10,
-                weight_kl       = 0.1,
-                weight_spa      = 1,
-                weight_tvA      = weight_tvA,
-                reduction       = "mean",
-            )
-        elif self.variant[0] in ["1"]:
             self.loss = ZeroReferenceLoss(
                 bri_gamma       = self.gamma,
                 exp_patch_size  = 16,   # 16
@@ -269,10 +244,6 @@ class LESNet(base.LowLightImageEnhancementModel):
         else:
             raise ValueError
 
-    @property
-    def config_dir(self) -> core.Path:
-        return core.Path(__file__).absolute().parent / "config"
-    
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -391,7 +362,7 @@ class LESNet(base.LowLightImageEnhancementModel):
             x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
 
         # Variant code: [aa][l][e]
-        if self.variant[0:2] in ["10"]:
+        if self.variant[0:2] in ["00"]:
             f1  = self.act(self.conv1(x_down))
             f2  = self.act(self.conv2(f1))
             f3  = self.act(self.conv3(f2))
@@ -405,15 +376,6 @@ class LESNet(base.LowLightImageEnhancementModel):
             f8  = self.act(self.conv8(torch.cat([f3, f4], dim=1)))
             f9  = self.act(self.conv9(torch.cat([f2, f8], dim=1)))
             g   =  F.tanh(self.conv10(torch.cat([f1, f9], dim=1)))
-        else:
-            f1  = self.act(self.conv1(x_down))
-            f2  = self.act(self.conv2(f1))
-            f3  = self.act(self.conv3(f2))
-            f4  = self.act(self.conv4(f3))
-            f4  = self.attn(f4)
-            f5  = self.act(self.conv5(torch.cat([f3, f4], dim=1)))
-            f6  = self.act(self.conv6(torch.cat([f2, f5], dim=1)))
-            a   =   F.tanh(self.conv7(torch.cat([f1, f6], dim=1)))
 
         # Upsampling
         if self.scale_factor != 1:
@@ -473,10 +435,7 @@ class LESNet(base.LowLightImageEnhancementModel):
 
     def regularization_loss(self, alpha: float = 0.1):
         loss = 0.0
-        for sub_module in [
-            self.conv1, self.conv2, self.conv3, self.conv4,
-            self.conv5, self.conv6, self.conv7
-        ]:
+        for sub_module in [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6, self.conv7]:
             if hasattr(sub_module, "regularization_loss"):
                 loss += sub_module.regularization_loss()
         return alpha * loss

@@ -1,21 +1,29 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 from collections import namedtuple
 
 import torch.nn as nn
 from cv2.ximgproc import guidedFilter
-from skimage.measure import compare_psnr, compare_ssim
+from skimage.metrics import peak_signal_noise_ratio, structural_similarity
 
-from .net import *
-from .net.losses import StdLoss
-from .net.vae_model import VAE
-from .utils.dcp import get_atmosphere
-from .utils.image_io import *
-from .utils.imresize import np_imresize
+from net import *
+from net.losses import StdLoss
+from net.vae_model import VAE
+from utils.dcp import get_atmosphere
+from utils.image_io import *
+from utils.imresize import np_imresize
 
 DehazeResult_psnr = namedtuple("DehazeResult", ["learned", "t", "a", "psnr"])
 DehazeResult_ssim = namedtuple("DehazeResult", ["learned", "t", "a", "ssim"])
 
 
 class Dehaze(object):
+
     def __init__(self, image_name, image, gt_img, num_iter=500, clip=True, output_path="output/"):
         self.image_name       = image_name
         self.image            = image
@@ -30,7 +38,6 @@ class Dehaze(object):
         self.parameters       = None
         self.current_result   = None
         self.output_path      = output_path
-
         self.clip             = clip
         self.blur_loss        = None
         self.best_result_psnr = None
@@ -71,9 +78,9 @@ class Dehaze(object):
         mask_net = skip(
             input_depth, 
             1,
-            num_channels_down = [8         , 16, 32, 64, 128],
-            num_channels_up   = [8         , 16, 32, 64, 128],
-            num_channels_skip = [0         , 0 , 0 , 4 , 4],
+            num_channels_down = [8, 16, 32, 64, 128],
+            num_channels_up   = [8, 16, 32, 64, 128],
+            num_channels_skip = [0, 0 , 0 , 4 , 4],
             upsample_mode     = "bilinear",
             need_sigmoid      = True,
             need_bias         = True,
@@ -156,8 +163,9 @@ class Dehaze(object):
             mask_out_np    = self.t_matting(mask_out_np)
 
             post  = np.clip((self.image - ((1 - mask_out_np) * ambient_out_np)) / mask_out_np, 0, 1)
-            psnr  = compare_psnr(self.gt_img, post)
-            ssims = compare_ssim(self.gt_img.transpose(1, 2, 0), post.transpose(1, 2, 0), multichannel=True)
+            psnr  = peak_signal_noise_ratio(self.gt_img, post)
+            # ssims = structural_similarity(self.gt_img.transpose(1, 2, 0), post.transpose(1, 2, 0), multichannel=True)
+            ssims = 0
 
             self.current_result = DehazeResult_psnr(learned=image_out_np, t=mask_out_np, a=ambient_out_np, psnr=psnr)
             self.temp           = DehazeResult_ssim(learned=image_out_np, t=mask_out_np, a=ambient_out_np, ssim=ssims)
@@ -175,12 +183,15 @@ class Dehaze(object):
          :return:
          """
         print('Iteration %05d    Loss %f  %f cur_ssim %f max_ssim: %f cur_psnr %f max_psnr %f\n' % (
-                                                                            step, self.total_loss.item(),
-                                                                            self.blur_out.item(),
-                                                                            self.temp.ssim,
-                                                                            self.best_result_ssim.ssim,
-                                                                            self.current_result.psnr,
-                                                                            self.best_result_psnr.psnr), '\r', end='')
+                step,
+                self.total_loss.item(),
+                self.blur_out.item(),
+                self.temp.ssim,
+                self.best_result_ssim.ssim,
+                self.current_result.psnr,
+                self.best_result_psnr.psnr
+            ), '\r', end=''
+        )
 
     def finalize(self):
         self.final_image = np_imresize(self.best_result_psnr.learned, output_shape=self.original_image.shape[1:])
@@ -233,8 +244,7 @@ if __name__ == "__main__":
     name     = "1400_3"
     print(name)
 
-    hazy_img = prepare_hazy_image(hazy_add)
-    gt_img   = prepare_gt_img(gt_add, SOTS=True)
-
+    hazy_img   = prepare_hazy_image(hazy_add)
+    gt_img     = prepare_gt_img(gt_add, SOTS=True)
     psnr, ssim = dehaze(name, hazy_img, gt_img, output_path="output/")
     print(psnr, ssim)

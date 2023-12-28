@@ -6,6 +6,6 @@
 from __future__ import annotations
 
 import mon.vision.enhance.les.base
-import mon.vision.enhance.les.lesnet
+import mon.vision.enhance.les.rnet
 from mon.vision.enhance.les.base import *
-from mon.vision.enhance.les.lesnet import *
+from mon.vision.enhance.les.rnet import *

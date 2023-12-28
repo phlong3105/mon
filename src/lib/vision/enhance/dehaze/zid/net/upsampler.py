@@ -1,6 +1,13 @@
-from torch import nn
-import torch
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 import numpy as np
+import torch
+from torch import nn
 
 
 class UpsamplerModel(nn.Module):

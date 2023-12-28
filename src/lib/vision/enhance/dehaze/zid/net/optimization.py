@@ -1,3 +1,10 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 import torch
 
 

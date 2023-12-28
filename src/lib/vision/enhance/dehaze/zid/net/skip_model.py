@@ -1,4 +1,11 @@
-from zid.net.layers import *
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
+from net.layers import *
 
 
 def skip(

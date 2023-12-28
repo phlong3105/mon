@@ -418,10 +418,6 @@ class GCENet(base.LowLightImageEnhancementModel):
         else:
             raise ValueError
 
-    @property
-    def config_dir(self) -> core.Path:
-        return core.Path(__file__).absolute().parent / "config"
-    
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -998,10 +994,6 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         else:
             raise ValueError
 
-    @property
-    def config_dir(self) -> core.Path:
-        return core.Path(__file__).absolute().parent / "config"
-
     def init_weights(self, m: nn.Module):
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
@@ -1223,10 +1215,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
 
     def regularization_loss(self, alpha: float = 0.1):
         loss = 0.0
-        for sub_module in [
-            self.conv1, self.conv2, self.conv3, self.conv4,
-            self.conv5, self.conv6, self.conv7
-        ]:
+        for sub_module in [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6, self.conv7]:
             if hasattr(sub_module, "regularization_loss"):
                 loss += sub_module.regularization_loss()
         return alpha * loss
