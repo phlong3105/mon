@@ -8,9 +8,15 @@ images.
 from __future__ import annotations
 
 __all__ = [
-    "MOI", "MovementOfInterest", "ROI", "RegionOfInterest",
-    "assign_detections_to_rois", "assign_moving_objects_to_mois",
-    "get_best_matched_moi", "get_moi_for_box", "get_roi_for_box",
+    "MOI",
+    "MovementOfInterest",
+    "ROI",
+    "RegionOfInterest",
+    "assign_detections_to_rois",
+    "assign_moving_objects_to_mois",
+    "get_best_matched_moi",
+    "get_moi_for_box",
+    "get_roi_for_box",
 ]
 
 from typing import Any, Sequence

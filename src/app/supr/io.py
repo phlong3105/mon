@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
-    "AICAutoCheckoutWriter", "AIC22AutoCheckoutWriter",
+    "AICAutoCheckoutWriter",
+    "AIC22AutoCheckoutWriter",
     "AIC23AutoCheckoutWriter"
 ]
 
