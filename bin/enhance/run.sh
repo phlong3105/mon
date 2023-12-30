@@ -38,6 +38,8 @@ models=(
   "zeroadce"      #
   "zerodce"       #
   "zerodce++"     #
+  ## DERAIN
+  "ipt"           # https://github.com/huawei-noah/Pretrained-IPT
 )
 train_datasets=(
   ## LES
@@ -54,6 +56,7 @@ train_datasets=(
   "sice-grad"
   "sice-mix"
   "sice-zerodce"
+  ## DERAIN
 )
 predict_datasets=(
   ## LES
@@ -75,6 +78,9 @@ predict_datasets=(
   "npe"
   # "sice"
   "vv"
+  ## DERAIN
+  "rain100l"
+  "rain100h"
 )
 
 
@@ -129,6 +135,7 @@ root_dir=$(dirname "$bin_dir")
 dehaze_dir="${root_dir}/src/lib/vision/enhance/dehaze"
 les_dir="${root_dir}/src/lib/vision/enhance/les"
 llie_dir="${root_dir}/src/lib/vision/enhance/llie"
+derain_dir="${root_dir}/src/lib/vision/enhance/derain"
 
 if [ "${model[0]}" == "all" ]; then
   declare -a model=()
@@ -279,6 +286,15 @@ elif [ "$task" == "predict" ]; then
     if [ "$d" == "vv" ]; then
       input_data_dirs+=("${root_dir}/data/llie/test/vv/low")
       target_data_dirs+=("")
+    fi
+    ## DERAIN
+    if [ "$d" == "rain100l" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/test/rain100l/rain")
+      target_data_dirs+=("${root_dir}/data/derain/test/rain100l/clear")
+    fi
+    if [ "$d" == "rain100h" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/test/rain100h/rain")
+      target_data_dirs+=("${root_dir}/data/derain/test/rain100h/clear")
     fi
   done
 fi
@@ -864,6 +880,21 @@ if [ "$task" == "predict" ]; then
               --weights "${root_dir}/zoo/vision/enhance/llie/zerodce++/best.pth" \
               --image-size 512 \
               --output-dir "${predict_dir}"
+          ## DERAIN
+          # ipt
+          elif [ "${model[i]}" == "ipt" ]; then
+            model_dir="${derain_dir}/${model[i]}"
+            cd "${model_dir}" || exit
+            python -W ignore main.py \
+              --dir_data "${input_data_dirs[k]}" \
+              --pretrain "${root_dir}/zoo/vision/enhance/derain/ipt/IPT_derain.pt" \
+              --scale 1 \
+              --derain  \
+              --test_only \
+              --save "${predict_dir}" \
+              --save_results \
+              --save_models \
+              --n_GPUs 2
           fi
         done
       fi
