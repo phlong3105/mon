@@ -1,8 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
-from zid.net.downsampler import Downsampler
+from net.downsampler import Downsampler
 
 
 def weights_init(m):

@@ -10,6 +10,8 @@ echo "$HOSTNAME"
 
 ## Constants
 models=(
+  ## De-Hazing
+  "zid"           # https://github.com/liboyun/ZID
   ## LES
   "jin2022"       # https://github.com/jinyeying/night-enhancement
   ## LLIE
@@ -131,6 +133,7 @@ script_path=$(readlink -f "$0")
 current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
+dehaze_dir="${root_dir}/src/lib/vision/enhance/dehaze"
 les_dir="${root_dir}/src/lib/vision/enhance/les"
 llie_dir="${root_dir}/src/lib/vision/enhance/llie"
 derain_dir="${root_dir}/src/lib/vision/enhance/derain"
@@ -337,9 +340,15 @@ if [ "$task" == "train" ]; then
         weights="${zoo_weights_pt}"
       fi
 
+      ## De-Hazing
+      # ZID
+      if [ "${model[i]}" == "zid" ]; then
+        model_dir="${dehaze_dir}/${model[i]}"
+        cd "${model_dir}" || exit
+        python -W ignore rw_dehazing.py
       ## LES
       # Jin2022
-      if [ "${model[i]}" == "jin2022" ]; then
+      elif [ "${model[i]}" == "jin2022" ]; then
         model_dir="${les_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore demo_all.py \

@@ -1,8 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 from torch.nn import functional
 
-from zid.net.downsampler import *
-from zid.net.layers import CovarianceLayer, GrayscaleLayer, VarianceLayer
-from .layers import CovarianceLayer, GrayscaleLayer, VarianceLayer
+from net.layers import CovarianceLayer, GrayscaleLayer, VarianceLayer
+from net.downsampler import *
 
 
 class StdLoss(nn.Module):

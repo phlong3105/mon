@@ -1,4 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
+
 import sys
+
 sys.path.append("..")
 
 import argparse
@@ -185,9 +193,9 @@ class Dehaze(object):
             return np.array([np.clip(refine_t, 0, 1)])
 
 
-def dehaze(args: dict, num_iter: int = 500):
+def dehaze(args: dict):
     assert args["image"] is not None and mon.Path(args["image"]).is_dir()
-  
+
     image_dir = mon.Path(args["image"])
     if args["output"] is None:
         output_dir = image_dir.parent / f"{image_dir.stem}-hazefree"
@@ -198,6 +206,8 @@ def dehaze(args: dict, num_iter: int = 500):
     image_files = list(image_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
+
+    num_iter = args["num_iter"]
     with mon.get_progress_bar() as pbar:
         for f in pbar.track(
             sequence    = image_files,
@@ -215,28 +225,35 @@ def dehaze(args: dict, num_iter: int = 500):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image",   type=str, default=mon.DATA_DIR / "a2i2-haze/train/detection/haze/images", help="Image directory.")
-    parser.add_argument("--output",  type=str, default=None, help="Output directory.")
-    parser.add_argument("--verbose", action="store_true", help="Display results.")
+    parser.add_argument("--image",    type=str, default="data/",   help="Image directory.")
+    parser.add_argument("--output",   type=str, default="output/", help="Output directory.")
+    parser.add_argument("--num-iter", type=int, default=500,       help="Number of iterations per image.")
+    parser.add_argument("--verbose",  action="store_true",         help="Display results.")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = vars(parse_args())
-    dehaze(args=args, num_iter=500)
+    dehaze(args=args)
 
 
 """
 if __name__ == "__main__":
     torch.cuda.set_device(0)
 
-    hazy_add = 'data/hazy.png'
-    name = "1400_3"
+    hazy_add = "data/DSC00574.png"
+    name     = "DSC00574"
     print(name)
 
     hazy_img = prepare_hazy_image(hazy_add)
-    dehaze(name, hazy_img, num_iter=500, output_path="output/")
+
+    args = {
+        "image"   : "data/",
+        "output"  : "output/",
+        "num_iter": 500,
+    }
+    dehaze(args)
 """
 
 # endregion

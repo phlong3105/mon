@@ -7,7 +7,12 @@
 from __future__ import annotations
 
 __all__ = [
-    "CAMERAS", "DATA_DIR", "ROOT_DIR", "RUN_DIR", "SOURCE_DIR", "ZOO_DIR",
+    "CAMERAS",
+    "DATA_DIR",
+    "ROOT_DIR",
+    "RUN_DIR",
+    "SOURCE_DIR",
+    "ZOO_DIR",
 ]
 
 import os

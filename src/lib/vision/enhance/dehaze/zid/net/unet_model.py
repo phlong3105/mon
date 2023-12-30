@@ -1,6 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 # full assembly of the sub-parts to form the complete net
-
 # sub-parts of the U-Net model
+
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
 
 import torch
 import torch.nn as nn

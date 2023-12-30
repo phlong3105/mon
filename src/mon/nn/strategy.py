@@ -12,9 +12,17 @@ References:
 from __future__ import annotations
 
 __all__ = [
-    "FSDPStrategy", "CPUAccelerator", "CUDAAccelerator", "ParallelStrategy",
-    "SingleDeviceStrategy", "DDPStrategy", "DeepSpeedStrategy",
-    "Strategy", "MPSAccelerator", "XLAStrategy",
+    "FSDPStrategy",
+    "CPUAccelerator",
+    "CUDAAccelerator",
+    "ParallelStrategy",
+    "SingleDeviceStrategy",
+    "DDPStrategy",
+    "DeepSpeedStrategy",
+    "Strategy",
+    "MPSAccelerator",
+    "XLAAccelerator",
+    "XLAStrategy",
 ]
 
 import os

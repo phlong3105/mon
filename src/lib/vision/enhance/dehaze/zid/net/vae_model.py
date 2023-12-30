@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jul 25 10:36:51 2019
 
-@author: lester
-"""
+"""This module implements prediction pipeline."""
+
+from __future__ import annotations
 
 import torch
 
