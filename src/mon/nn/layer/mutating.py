@@ -6,14 +6,34 @@
 from __future__ import annotations
 
 __all__ = [
-    "ChannelShuffle", "Chuncat", "Concat", "ExtractFeature", "ExtractFeatures",
-    "ExtractItem", "ExtractItems", "Flatten", "FlattenSingle", "Fold",
-    "Foldcut", "InterpolateConcat", "Join", "Max", "Permute", "PixelShuffle",
-    "PixelUnshuffle", "Shortcut", "SoftmaxFusion", "Sum", "Unflatten", "Unfold",
+    "ChannelShuffle",
+    "Chuncat",
+    "Concat",
+    "CustomConcat",
+    "ExtractFeature",
+    "ExtractFeatures",
+    "ExtractItem",
+    "ExtractItems",
+    "Flatten",
+    "FlattenSingle",
+    "Fold",
+    "Foldcut",
+    "InterpolateConcat",
+    "Join",
+    "Max",
+    "Permute",
+    "PixelShuffle",
+    "PixelUnshuffle",
+    "Shortcut",
+    "SoftmaxFusion",
+    "Sum",
+    "Unflatten",
+    "Unfold",
 ]
 
 from typing import Sequence
 
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional
@@ -218,6 +238,42 @@ class Concat(base.ConcatLayerParsingMixin, nn.Module):
         x = input
         y = torch.cat(list(x), dim=self.dim)
         return y
+
+
+@LAYERS.register()
+class CustomConcat(nn.Module):
+
+    def __init__(self, dim, *args, **kwargs):
+        super().__init__()
+        self.dim = dim
+
+        for idx, module_ in enumerate(args):
+            self.add_module(str(idx), module_)
+
+    def __len__(self):
+        return len(self._modules)
+
+    def forward(self, input_):
+        inputs = []
+        for module_ in self._modules.values():
+            inputs.append(module_(input_))
+
+        inputs_shapes2 = [x.shape[2] for x in inputs]
+        inputs_shapes3 = [x.shape[3] for x in inputs]
+
+        if np.all(np.array(inputs_shapes2) == min(inputs_shapes2)) and np.all(np.array(inputs_shapes3) == min(inputs_shapes3)):
+            inputs_ = inputs
+        else:
+            target_shape2 = min(inputs_shapes2)
+            target_shape3 = min(inputs_shapes3)
+
+            inputs_ = []
+            for inp in inputs:
+                diff2 = (inp.size(2) - target_shape2) // 2
+                diff3 = (inp.size(3) - target_shape3) // 2
+                inputs_.append(inp[:, :, diff2: diff2 + target_shape2, diff3:diff3 + target_shape3])
+
+        return torch.cat(inputs_, dim=self.dim)
 
 
 @LAYERS.register()

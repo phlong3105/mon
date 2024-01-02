@@ -6,9 +6,17 @@
 from __future__ import annotations
 
 __all__ = [
-    "AlphaDropout", "drop_block2d", "drop_block3d", "DropBlock2d",
-    "DropBlock3d", "Dropout", "Dropout1d", "Dropout2d", "Dropout3d", "DropPath",
+    "AlphaDropout",
+    "DropBlock2d",
+    "DropBlock3d",
+    "DropPath",
+    "Dropout",
+    "Dropout1d",
+    "Dropout2d",
+    "Dropout3d",
     "FeatureAlphaDropout",
+    "drop_block2d",
+    "drop_block3d",
 ]
 
 import torch

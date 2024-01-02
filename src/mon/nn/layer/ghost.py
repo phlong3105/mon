@@ -6,8 +6,11 @@
 from __future__ import annotations
 
 __all__ = [
-    "GhostConv2dV2", "GhostBottleneck", "GhostBottleneckSE", "GhostBottleneckV2",
+    "GhostBottleneck",
+    "GhostBottleneckSE",
+    "GhostBottleneckV2",
     "GhostConv2d",
+    "GhostConv2dV2",
 ]
 
 from typing import Callable

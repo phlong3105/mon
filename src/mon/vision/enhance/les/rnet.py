@@ -20,7 +20,7 @@ import torch
 import mon
 from mon.globals import ModelPhase, MODELS
 from mon.vision import core, nn, prior
-from mon.vision.enhance.llie import base
+from mon.vision.enhance.les import base
 from mon.vision.nn import functional as F
 
 math         = core.math
@@ -138,7 +138,7 @@ class ZeroReferenceLoss(nn.Loss):
 # region Model
 
 @MODELS.register(name="rnet")
-class RNet(base.LowLightImageEnhancementModel):
+class RNet(base.LightEffectSuppressionModel):
     """RNet (Re-Light Network) model.
     
     See Also: :class:`mon.vision.enhance.les.base.LightEffectSuppressionModel`

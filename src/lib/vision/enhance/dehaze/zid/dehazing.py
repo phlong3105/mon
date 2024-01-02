@@ -216,7 +216,12 @@ class Dehaze(object):
         save_image(self.image_name + "_run_final", post, self.output_path)
 
     def t_matting(self, mask_out_np):
-        refine_t = guidedFilter(self.original_image.transpose(1, 2, 0).astype(np.float32), mask_out_np[0].astype(np.float32), 50, 1e-4)
+        refine_t = guidedFilter(
+            guide  = self.original_image.transpose(1, 2, 0).astype(np.float32),
+            src    = mask_out_np[0].astype(np.float32),
+            radius = 50,
+            eps    = 1e-4,
+        )
         if self.clip:
             return np.array([np.clip(refine_t, 0.1, 1)])
         else:

@@ -12,12 +12,14 @@ echo "$HOSTNAME"
 models=(
   ## De-Hazing
   "zid"           # https://github.com/liboyun/ZID
+  ## De-Raining
+  "ipt"           #
   ## LES
   "jin2022"       # https://github.com/jinyeying/night-enhancement
   ## LLIE
   "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
-  "gcenet"        # Our model
-  "gcenetv2"      # Our model
+  "gcenet"        # https://github.com/phlong3105/mon
+  "gcenetv2"      # https://github.com/phlong3105/mon
   "iat"           # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
   "kind"          # https://github.com/zhangyhuaee/KinD
   "kind++"        # https://github.com/zhangyhuaee/KinD_plus
@@ -35,9 +37,9 @@ models=(
   "stablellve"    # https://github.com/zkawfanx/StableLLVE
   "uretinexnet"   # https://github.com/AndersonYong/URetinex-Net
   "utvnet"        # https://github.com/CharlieZCJ/UTVNet
-  "zeroadce"      #
-  "zerodce"       #
-  "zerodce++"     #
+  "zeroadce"      # https://github.com/phlong3105/mon
+  "zerodce"       # https://github.com/Li-Chongyi/Zero-DCE
+  "zerodce++"     # https://github.com/Li-Chongyi/Zero-DCE_extension
   ## DERAIN
   "ipt"           # https://github.com/huawei-noah/Pretrained-IPT
 )

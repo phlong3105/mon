@@ -28,6 +28,7 @@ DehazeResult = namedtuple("DehazeResult", ["learned", "t", "a"])
 
 
 class Dehaze(object):
+
     def __init__(self, image_name, image, num_iter=500, clip=True, output_path="output/"):
         self.image_name       = image_name
         self.image            = image
@@ -58,7 +59,7 @@ class Dehaze(object):
 
     def _init_images(self):
         self.original_image = self.image.copy()
-        self.images_torch = np_to_torch(self.image).type(torch.cuda.FloatTensor)
+        self.images_torch   = np_to_torch(self.image).type(torch.cuda.FloatTensor)
 
     def _init_nets(self):
         input_depth = self.input_depth
@@ -66,32 +67,31 @@ class Dehaze(object):
         pad         = "reflection"
 
         image_net = skip(
-            input_depth,
-            3,
-            num_channels_down = [8, 16, 32, 64, 128],
-            num_channels_up   = [8, 16, 32, 64, 128],
-            num_channels_skip = [0, 0 , 0 , 4 , 4],
-            upsample_mode     = "bilinear",
-            need_sigmoid      = True,
-            need_bias         = True,
-            pad               = pad,
-            act_fun           = "LeakyReLU"
+            num_input_channels  = input_depth,
+            num_output_channels = 3,
+            num_channels_down   = [8, 16, 32, 64, 128],
+            num_channels_up     = [8, 16, 32, 64, 128],
+            num_channels_skip   = [0, 0 , 0 , 4 , 4],
+            upsample_mode       = "bilinear",
+            need_sigmoid        = True,
+            need_bias           = True,
+            pad                 = pad,
+            act_fun             = "LeakyReLU"
         )
         self.image_net = image_net.type(data_type)
 
         mask_net = skip(
-            input_depth,
-            1,
-            num_channels_down = [8, 16, 32, 64, 128],
-            num_channels_up   = [8, 16, 32, 64, 128],
-            num_channels_skip = [0, 0 , 0 , 4 , 4],
-            upsample_mode     = "bilinear",
-            need_sigmoid      = True,
-            need_bias         = True,
-            pad               = pad,
-            act_fun           = "LeakyReLU"
+            num_input_channels  = input_depth,
+            num_output_channels = 1,
+            num_channels_down   = [8, 16, 32, 64, 128],
+            num_channels_up     = [8, 16, 32, 64, 128],
+            num_channels_skip   = [0, 0 , 0 , 4 , 4],
+            upsample_mode       = "bilinear",
+            need_sigmoid        = True,
+            need_bias           = True,
+            pad                 = pad,
+            act_fun             = "LeakyReLU"
         )
-
         self.mask_net = mask_net.type(data_type)
 
     def _init_ambient(self):
@@ -169,10 +169,9 @@ class Dehaze(object):
 
     def _plot_closure(self, step):
         """
-         :param step: the number of the iteration
-
-         :return:
-         """
+        :param step: the number of the iteration
+        :return:
+        """
         console.log('Iteration %05d    Loss %f  %f' % (step, self.total_loss.item(), self.blur_out.item()), '\r', end='')
 
     def finalize(self):
@@ -186,7 +185,12 @@ class Dehaze(object):
         save_image(self.image_name + "-mask", mask_out_np, self.output_path)
 
     def t_matting(self, mask_out_np):
-        refine_t = guidedFilter(self.original_image.transpose(1, 2, 0).astype(np.float32), mask_out_np[0].astype(np.float32), 50, 1e-4)
+        refine_t = guidedFilter(
+            guide  = self.original_image.transpose(1, 2, 0).astype(np.float32),
+            src    = mask_out_np[0].astype(np.float32),
+            radius = 50,
+            eps    = 1e-4,
+        )
         if self.clip:
             return np.array([np.clip(refine_t, 0.1, 1)])
         else:
@@ -218,7 +222,7 @@ def dehaze(args: dict):
             dh    = Dehaze(str(f.stem), image, num_iter, clip=True, output_path=str(output_dir) + "/")
             dh.optimize()
             dh.finalize()
-            # save_image(name + "_original", np.clip(image, 0, 1), dh.output_path)
+            # save_image(str(f.stem) + "_original", np.clip(image, 0, 1), dh.output_path)
 
 
 # region Main
