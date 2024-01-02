@@ -8,7 +8,8 @@ models.
 from __future__ import annotations
 
 __all__ = [
-    "MobileOneConv2d", "MobileOneStage",
+    "MobileOneConv2d",
+    "MobileOneStage",
 ]
 
 from typing import Any

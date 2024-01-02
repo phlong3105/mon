@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
+    "CustomDownsample",
+    "CustomUpsample",
     "Downsample",
     "Interpolate",
     "Scale",
@@ -14,6 +16,9 @@ __all__ = [
     "UpsamplingNearest2d",
 ]
 
+from typing import Literal
+
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional
@@ -35,7 +40,7 @@ class Downsample(base.PassThroughLayerParsingMixin, nn.Module):
     [optional depth] x [optional height] x width`. Hence, for spatial inputs, we
     expect a 4D Tensor and for volumetric inputs, we expect a 5D Tensor.
 
-    The algorithms available for upsampling are nearest neighbor and linear,
+    The algorithms available for upsampling are the nearest neighbor and linear,
     bilinear, bicubic and trilinear for 3D, 4D and 5D input tensor,
     respectively.
 
@@ -92,18 +97,168 @@ class Downsample(base.PassThroughLayerParsingMixin, nn.Module):
         if self.size and self.size == list(x[2:]):
             return x
         if self.scale_factor is not None \
+            and isinstance(self.scale_factor, tuple) \
             and (self.scale_factor == 1.0 or all(s == 1.0 for s in self.scale_factor)):
             return x
         y = functional.interpolate(
-            input         = x,
-            size          = self.size,
-            scale_factor  = self.scale_factor,
-            mode          = self.mode,
-            align_corners = self.align_corners,
+            input                  = x,
+            size                   = self.size,
+            scale_factor           = self.scale_factor,
+            mode                   = self.mode,
+            align_corners          = self.align_corners,
             recompute_scale_factor = self.recompute_scale_factor
         )
         return y
 
+
+@LAYERS.register()
+class CustomDownsample(base.PassThroughLayerParsingMixin, nn.Module):
+    """
+
+    References:
+        `<http://www.realitypixels.com/turk/computergraphics/ResamplingFilters.pdf>`__
+    """
+
+    def __init__(
+        self,
+        in_channels  : int,
+        scale_factor : int,
+        kernel_type  : str | Literal["box", "gauss", "gauss12", "gauss1sq2", "lanczos", "lanczos2", "lanczos3"],
+        phase        : float        = 0,
+        kernel_width : int   | None = None,
+        support      : int   | None = None,
+        sigma        : float | None = None,
+        preserve_size: bool         = False,
+    ):
+        super().__init__()
+        assert phase in [0, 0.5], "``phase`` should be 0 or 0.5"
+
+        if kernel_type == "lanczos2":
+            support      = 2
+            kernel_width = 4 * scale_factor + 1
+            kernel_type_ = "lanczos"
+        elif kernel_type == "lanczos3":
+            support      = 3
+            kernel_width = 6 * scale_factor + 1
+            kernel_type_ = "lanczos"
+        elif kernel_type == "gauss12":
+            kernel_width = 7
+            sigma        = 1 / 2
+            kernel_type_ = "gauss"
+        elif kernel_type == "gauss1sq2":
+            kernel_width = 9
+            sigma        = 1.0 / np.sqrt(2)
+            kernel_type_ = "gauss"
+        elif kernel_type in ["lanczos", "gauss", "box"]:
+            kernel_type_ = kernel_type
+        else:
+            assert False, "Wrong name kernel"
+
+        # note that `kernel width` will be different to actual size for ``phase`` = 1/2
+        self.kernel = self.get_kernel(
+            scale_factor = scale_factor,
+            kernel_type  = kernel_type_,
+            phase        = phase,
+            kernel_width = kernel_width,
+            support      = support,
+            sigma        = sigma
+        )
+
+        downsampler = nn.Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = self.kernel.shape,
+            stride       = scale_factor,
+            padding      = 0,
+        )
+        downsampler.weight.data[:] = 0
+        downsampler.bias.data[:]   = 0
+
+        kernel_torch = torch.from_numpy(self.kernel)
+        for i in range(in_channels):
+            downsampler.weight.data[i, i] = kernel_torch
+
+        self.downsampler_ = downsampler
+
+        if preserve_size:
+            if self.kernel.shape[0] % 2 == 1:
+                pad = int((self.kernel.shape[0] - 1) / 2.0)
+            else:
+                pad = int((self.kernel.shape[0] - scale_factor) / 2.0)
+            self.padding = nn.ReplicationPad2d(pad)
+
+        self.preserve_size = preserve_size
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        if self.preserve_size:
+            x = self.padding(input)
+        else:
+            x = input
+        self.x = x
+        return self.downsampler_(x)
+
+    @staticmethod
+    def get_kernel(
+        scale_factor : int,
+        kernel_type  : str   | Literal["box", "gauss", "gauss12", "gauss1sq2", "lanczos", "lanczos2", "lanczos3"],
+        phase        : float        = 0,
+        kernel_width : int   | None = None,
+        support      : int   | None = None,
+        sigma        : float | None = None,
+    ):
+        assert kernel_type in ["lanczos", "gauss", "box"]
+
+        # scale_factor = float(scale_factor)
+        if phase == 0.5 and kernel_type != "box":
+            kernel = np.zeros([kernel_width - 1, kernel_width - 1])
+        else:
+            kernel = np.zeros([kernel_width, kernel_width])
+
+        if kernel_type == "box":
+            assert phase == 0.5, "Box filter is always half-phased"
+            kernel[:] = 1.0 / (kernel_width * kernel_width)
+        elif kernel_type == "gauss":
+            assert sigma,        "``sigma`` is not specified."
+            assert phase != 0.5, "``phase`` 1/2 for gauss not implemented."
+
+            center   = (kernel_width + 1.0) / 2.0
+            sigma_sq = sigma * sigma
+
+            for i in range(1, kernel.shape[0] + 1):
+                for j in range(1, kernel.shape[1] + 1):
+                    di = (i - center) / 2.0
+                    dj = (j - center) / 2.0
+                    kernel[i - 1][j - 1] = np.exp(-(di * di + dj * dj) / (2 * sigma_sq))
+                    kernel[i - 1][j - 1] = kernel[i - 1][j - 1] / (2.0 * np.pi * sigma_sq)
+        elif kernel_type == "lanczos":
+            assert support, "``support`` is not specified"
+            center = (kernel_width + 1) / 2.0
+
+            for i in range(1, kernel.shape[0] + 1):
+                for j in range(1, kernel.shape[1] + 1):
+                    if phase == 0.5:
+                        di = abs(i + 0.5 - center) / scale_factor
+                        dj = abs(j + 0.5 - center) / scale_factor
+                    else:
+                        di = abs(i - center) / scale_factor
+                        dj = abs(j - center) / scale_factor
+
+                    pi_sq = np.pi * np.pi
+
+                    val = 1
+                    if di != 0:
+                        val = val * support * np.sin(np.pi * di) * np.sin(np.pi * di / support)
+                        val = val / (np.pi * np.pi * di * di)
+                    if dj != 0:
+                        val = val * support * np.sin(np.pi * dj) * np.sin(np.pi * dj / support)
+                        val = val / (np.pi * np.pi * dj * dj)
+
+                    kernel[i - 1][j - 1] = val
+        else:
+            assert False, "Wrong method name"
+
+        kernel /= kernel.sum()
+        return kernel
 
 # endregion
 
@@ -125,8 +280,25 @@ class UpsamplingNearest2d(base.PassThroughLayerParsingMixin, nn.UpsamplingNeares
     pass
 
 
+@LAYERS.register()
+class CustomUpsample(nn.Module):
+
+    def __init__(self, output_shape: list | tuple, scale_factor: int):
+        super().__init__()
+        assert output_shape[0] % scale_factor == 0
+        assert output_shape[1] % scale_factor == 0
+        seed = np.ones((1, 1, output_shape[0] // scale_factor, output_shape[1] // scale_factor)) * 0.5
+        self.output_shape = output_shape
+        self.sigmoid      = nn.Sigmoid()
+        self.seed         = nn.Parameter(data=torch.cuda.FloatTensor(seed), requires_grad=True)
+
+    def forward(self):
+        return nn.functional.interpolate(self.sigmoid(self.seed), size=self.output_shape, mode="bilinear")
+
 # endregion
 
+
+# region Misc
 
 @LAYERS.register()
 class Scale(base.PassThroughLayerParsingMixin, nn.Module):
@@ -159,3 +331,5 @@ class Interpolate(base.PassThroughLayerParsingMixin, nn.Module):
         x = input
         y = functional.interpolate(input=x, size=self.size)
         return y
+
+# endregion

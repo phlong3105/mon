@@ -6,9 +6,15 @@
 from __future__ import annotations
 
 __all__ = [
-    "AlexNetClassifier", "ConvNeXtClassifier", "GoogleNetClassifier",
-    "InceptionClassifier", "LeNetClassifier", "LinearClassifier",
-    "MobileOneClassifier", "ShuffleNetV2Classifier", "SqueezeNetClassifier",
+    "AlexNetClassifier",
+    "ConvNeXtClassifier",
+    "GoogleNetClassifier",
+    "InceptionClassifier",
+    "LeNetClassifier",
+    "LinearClassifier",
+    "MobileOneClassifier",
+    "ShuffleNetV2Classifier",
+    "SqueezeNetClassifier",
     "VGGClassifier",
 ]
 

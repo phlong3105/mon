@@ -6,7 +6,10 @@
 from __future__ import annotations
 
 __all__ = [
-    "Bilinear", "Identity", "LazyLinear", "Linear",
+    "Bilinear",
+    "Identity",
+    "LazyLinear",
+    "Linear",
 ]
 
 from torch import nn
