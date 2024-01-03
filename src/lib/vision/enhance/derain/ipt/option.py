@@ -27,7 +27,7 @@ parser.add_argument('--dir_data', type=str, default='/cache/data/',
 
 parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
-parser.add_argument('--data_train', type=str, default='DIV2K',
+parser.add_argument('--data_train', type=str, default='rain',
                     help='train dataset name')
 parser.add_argument('--data_test', type=str, default='rain',
                     help='test dataset name')

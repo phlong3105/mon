@@ -59,6 +59,7 @@ train_datasets=(
   "sice-mix"
   "sice-zerodce"
   ## DERAIN
+  "rain100l"
 )
 predict_datasets=(
   ## LES
@@ -214,6 +215,15 @@ if [ "$task" == "train" ]; then
     if [ "$d" == "sice-zerodce" ]; then
       input_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/low")
       target_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/high")
+    fi
+    ## DERAIN
+    if [ "$d" == "rain100l" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/train/rain100l/rain")
+      target_data_dirs+=("${root_dir}/data/derain/train/rain100l/clear")
+    fi
+    if [ "$d" == "rain100h" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/train/rain100h/rain")
+      target_data_dirs+=("${root_dir}/data/derain/train/rain100h/clear")
     fi
   done
 elif [ "$task" == "predict" ]; then
@@ -573,6 +583,30 @@ if [ "$task" == "train" ]; then
           --display-iter 10 \
           --checkpoints-iter 10 \
           --checkpoints-dir "${train_dir}"
+      ## DERAIN
+      # IPT
+      elif [ "${model[i]}" == "ipt" ]; then
+        model_dir="${derain_dir}/${model[i]}"
+        cd "${model_dir}" || exit
+        echo -e "\nI have not prepared the training script for IPT."
+      # elif [ "${model[i]}" == "ipt" ]; then
+      #   model_dir="${derain_dir}/${model[i]}"
+      #   cd "${model_dir}" || exit
+      #   python -W ignore main.py \
+      #     --dir_data "${input_data_dirs[j]}" \
+      #     --pretrain "${weights}" \
+      #     --load-pretrain false \
+      #     --lr 0.0001 \
+      #     --weight-decay 0.0001 \
+      #     --grad-clip-norm 0.1 \
+      #     --scale-factor 1 \
+      #     --epochs "$epochs" \
+      #     --train-batch-size 8 \
+      #     --val-batch-size 4 \
+      #     --num-workers 4 \
+      #     --display-iter 10 \
+      #     --checkpoints-iter 10 \
+      #     --checkpoints-dir "${train_dir}"
       fi
     done
   done

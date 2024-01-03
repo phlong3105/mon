@@ -238,3 +238,21 @@ def make_optimizer(args, target):
     optimizer._register_scheduler(scheduler_class, **kwargs_scheduler)
     return optimizer
 
+def sub_mean(x):
+    red_channel_mean = 0.4488 * 255
+    green_channel_mean = 0.4371 * 255
+    blue_channel_mean = 0.4040 * 255
+    x[:, 0, :, :] -= red_channel_mean
+    x[:, 1, :, :] -= green_channel_mean
+    x[:, 2, :, :] -= blue_channel_mean
+    return x
+
+
+def add_mean(x):
+    red_channel_mean = 0.4488 * 255
+    green_channel_mean = 0.4371 * 255
+    blue_channel_mean = 0.4040 * 255
+    x[:, 0, :, :] += red_channel_mean
+    x[:, 1, :, :] += green_channel_mean
+    x[:, 2, :, :] += blue_channel_mean
+    return x
