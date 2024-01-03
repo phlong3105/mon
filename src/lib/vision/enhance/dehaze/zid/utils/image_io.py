@@ -363,7 +363,7 @@ def pil_to_np(img_PIL, with_transpose=True):
         else:
             ar = ar[None, ...]
     
-    return ar.astype(np.float32) / 255.
+    return ar.astype(np.float32) / 255.0
 
 
 def median(img_np_list):

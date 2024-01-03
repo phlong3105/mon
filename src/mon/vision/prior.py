@@ -8,8 +8,10 @@ from __future__ import annotations
 __all__ = [
     "detect_blur_spot",
     "detect_bright_spot",
+    "get_atmosphere_prior",
     "get_bright_channel_prior",
     "get_dark_channel_prior",
+    "get_dark_channel_prior_02",
     "get_guided_brightness_enhancement_map_prior",
 ]
 
@@ -74,6 +76,32 @@ def detect_bright_spot(
     return is_bright
 
 
+def get_atmosphere_prior(
+    input: np.ndarray,
+    w    : int   = 15,
+    p    : float = 0.0001,
+):
+    """Get the atmosphere light in the (RGB) image data.
+
+    Args:
+        input: An image in :math:`[H, W, C]` format.
+        w: Window for the dark channel.
+        p: Percentage of pixels for estimating the atmosphere light.
+
+    Returns:
+        A 3-element array containing atmosphere light ([0, L-1]) for each channel.
+    """
+    input      = input.transpose(1, 2, 0)
+    # Reference CVPR09, 4.4
+    dark       = get_dark_channel_prior_02(input, patch_size=w)
+    m, n       = dark.shape
+    flat_i     = input.reshape(m * n, 3)
+    flat_dark  = dark.ravel()
+    search_idx = (-flat_dark).argsort()[:int(m * n * p)]  # find top M * N * p indexes
+    # Return the highest intensity for each channel
+    return np.max(flat_i.take(search_idx, axis=0), axis=0)
+
+
 def get_bright_channel_prior(
     input     : np.ndarray,
     patch_size: int | tuple[int, int],
@@ -115,6 +143,28 @@ def get_dark_channel_prior(
     dark_channel = np.min(input, axis=2)
     kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, patch_size)
     dcp          = cv2.erode(dark_channel, kernel)
+    return dcp
+
+
+def get_dark_channel_prior_02(
+    input     : np.ndarray,
+    patch_size: int,
+) -> np.ndarray:
+    """Get the dark channel prior from an image.
+
+    Args:
+        input: An image in :math:`[H, W, C]` format.
+        patch_size: Window size.
+
+    Returns:
+        An :class:`numpy.ndarray` dark channel as prior.
+    """
+    m, n, _ = input.shape
+    w       = patch_size
+    padded  = np.pad(input, ((w // 2, w // 2), (w // 2, w // 2), (0, 0)), 'edge')
+    dcp     = np.zeros((m, n))
+    for i, j in np.ndindex(dcp.shape):
+        dcp[i, j] = np.min(padded[i:i + w, j:j + w, :])  # CVPR09, eq.5
     return dcp
 
 

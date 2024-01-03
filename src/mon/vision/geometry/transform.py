@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import PIL
 # noinspection PyUnresolvedReferences
 from kornia.geometry.transform import *
 
@@ -36,6 +37,7 @@ __all__ = [
     "crop_by_indices",
     "crop_by_transform_mat",
     "crop_by_transform_mat3d",
+    "crop_divisible",
     "elastic_transform2d",
     "get_affine_matrix2d",
     "get_affine_matrix3d",
@@ -76,3 +78,20 @@ from mon.vision import core
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
+
+
+# region Crop
+
+def crop_divisible(image: PIL.Image, d: int = 32):
+    """Make dimensions divisible by :param:`d`."""
+    new_size = (image.size[0] - image.size[0] % d, image.size[1] - image.size[1] % d)
+    box      = [
+        int((image.size[0] - new_size[0]) / 2),
+        int((image.size[1] - new_size[1]) / 2),
+        int((image.size[0] + new_size[0]) / 2),
+        int((image.size[1] + new_size[1]) / 2),
+    ]
+    image_cropped = image.crop(box=box)
+    return image_cropped
+
+# endregion

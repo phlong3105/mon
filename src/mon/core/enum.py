@@ -6,7 +6,13 @@
 from __future__ import annotations
 
 __all__ = [
-    "auto", "Enum", "EnumMeta", "Flag", "IntEnum", "IntFlag", "unique",
+    "auto",
+    "Enum",
+    "EnumMeta",
+    "Flag",
+    "IntEnum",
+    "IntFlag",
+    "unique",
 ]
 
 import enum

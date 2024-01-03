@@ -366,10 +366,10 @@ def get_hw(size: int | list[int]) -> list[int]:
     """
     if isinstance(size, list | tuple):
         if len(size) == 3:
-            if size[0] >= size[3]:
+            if size[0] >= size[2]:
                 size = size[0:2]
             else:
-                size = size[1:3]
+                size = size[1:]
         elif len(size) == 1:
             size = [size[0], size[0]]
     elif isinstance(size, int | float):

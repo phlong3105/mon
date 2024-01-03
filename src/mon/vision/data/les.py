@@ -118,7 +118,7 @@ class Jin2022(base.UnlabeledImageDataset):
         """Get image files."""
         patterns = [
             self.root / self.split / "jin2022" / "clear",
-            self.root / self.split / "jin2022" / "flare",
+            self.root / self.split / "jin2022" / "light-effects",
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
@@ -313,10 +313,10 @@ class Jin2022DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Jin2022(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Jin2022(split="train", **self.dataset_kwargs)
+            self.val   = Jin2022(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Jin2022(split="train", **self.dataset_kwargs)
+            self.test  = Jin2022(split="train", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()

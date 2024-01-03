@@ -9,6 +9,7 @@ import torch
 
 
 class VAE(torch.nn.Module):
+
     def __init__(self, size):
         super().__init__()
 
@@ -74,20 +75,14 @@ class Encoder(torch.nn.Module):
         self.fc1 = torch.nn.Linear(int(128 * (size[1] // 16) * (size[2] // 16)), 100)
         self.fc2 = torch.nn.Linear(int(128 * (size[1] // 16) * (size[2] // 16)), 100)
 
-
     def forward(self, data):
-
-        data = self.conv1(data)
-
-        data = self.conv2(data)
-
-        data = self.conv3(data)
-
-        data = self.conv4(data)
-
-        data = data.view(data.size(0), -1)
+        data  = self.conv1(data)
+        data  = self.conv2(data)
+        data  = self.conv3(data)
+        data  = self.conv4(data)
+        data  = data.view(data.size(0), -1)
         means = self.fc1(data)
-        var = self.fc2(data)
+        var   = self.fc2(data)
         return means, var
 
 

@@ -345,9 +345,15 @@ if [ "$task" == "train" ]; then
       ## De-Hazing
       # ZID
       if [ "${model[i]}" == "zid" ]; then
-        model_dir="${dehaze_dir}/${model[i]}"
+        # model_dir="${dehaze_dir}/${model[i]}"
+        # cd "${model_dir}" || exit
+        # python -W ignore rw_dehazing.py
+        model_dir="${current_dir}"
         cd "${model_dir}" || exit
-        python -W ignore rw_dehazing.py
+        python -W ignore train.py \
+          --name "${name}" \
+          --variant "${variant[j]}" \
+          --max-epochs 500
       ## LES
       # Jin2022
       elif [ "${model[i]}" == "jin2022" ]; then
