@@ -14,8 +14,14 @@ console = mon.console
 
 
 def main():
-    path       = mon.Path("./data/DSC00580.jpg")
+    path       = mon.Path("./data/10.jpg")
     image      = cv2.imread(str(path))
+
+    dcp1       = mon.get_dark_channel_prior(image, 15)
+    dcp2       = mon.get_dark_channel_prior_02(image, 15)
+    cv2.imshow("DCP 01", dcp1)
+    cv2.imshow("DCP 02", dcp2)
+
     prior0     = mon.get_guided_brightness_enhancement_map_prior(image, 2, None)
     prior      = np.where(prior0 > 0.2, 255, 0).astype(np.uint8)
     dark       = cv2.bitwise_and(image, image, mask=prior)

@@ -275,7 +275,6 @@ class RNet(base.LightEffectSuppressionModel):
         """
         pred  = self.forward(input=input, *args, **kwargs)
         loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
-        loss += self.regularization_loss(alpha=0.1)
         return pred[-1], loss
 
     def forward(
@@ -432,12 +431,5 @@ class RNet(base.LightEffectSuppressionModel):
         if "1" in self.variant[0:1]:
             return a, g, y
         return a, y
-
-    def regularization_loss(self, alpha: float = 0.1):
-        loss = 0.0
-        for sub_module in [self.conv1, self.conv2, self.conv3, self.conv4, self.conv5, self.conv6, self.conv7]:
-            if hasattr(sub_module, "regularization_loss"):
-                loss += sub_module.regularization_loss()
-        return alpha * loss
 
 # endregion

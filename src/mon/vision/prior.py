@@ -19,7 +19,7 @@ import cv2
 import kornia
 import numpy as np
 import torch
-
+from torch.nn import functional as F
 from mon.vision import core
 
 console      = core.console
@@ -77,15 +77,15 @@ def detect_bright_spot(
 
 
 def get_atmosphere_prior(
-    input: np.ndarray,
-    w    : int   = 15,
-    p    : float = 0.0001,
+    input      : np.ndarray,
+    kernel_size: int   = 15,
+    p          : float = 0.0001,
 ):
     """Get the atmosphere light in the (RGB) image data.
 
     Args:
         input: An image in :math:`[H, W, C]` format.
-        w: Window for the dark channel.
+        kernel_size: Window for the dark channel.
         p: Percentage of pixels for estimating the atmosphere light.
 
     Returns:
@@ -93,7 +93,7 @@ def get_atmosphere_prior(
     """
     input      = input.transpose(1, 2, 0)
     # Reference CVPR09, 4.4
-    dark       = get_dark_channel_prior_02(input, patch_size=w)
+    dark       = get_dark_channel_prior_02(input, kernel_size=kernel_size)
     m, n       = dark.shape
     flat_i     = input.reshape(m * n, 3)
     flat_dark  = dark.ravel()
@@ -103,68 +103,84 @@ def get_atmosphere_prior(
 
 
 def get_bright_channel_prior(
-    input     : np.ndarray,
-    patch_size: int | tuple[int, int],
-) -> np.ndarray:
+    input      : torch.Tensor | np.ndarray,
+    kernel_size: int | tuple[int, int],
+) -> torch.Tensor | np.ndarray:
     """Get the bright channel prior from an image.
     
     Args:
-        input: An image in :math:`[H, W, C]` format.
-        patch_size: Window size.
-        
+        input: A :class:`torch.Tensor` image in :math:`[N, C, H, W]` format, or
+            a :class:`np.ndarray` image in :math:`[H, W, C]` format.
+        kernel_size: Window size.
+
     Returns:
-        An :class:`numpy.ndarray` bright channel as prior.
+        A bright channel prior.
     """
-    # b, g, r      = cv2.split(input)
-    # dark_channel = cv2.max(cv2.min(r, g), b)
-    bright_channel = np.max(input, axis=2)
-    patch_size     = core.to_2tuple(patch_size)
-    kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, patch_size)
-    bcp            = cv2.erode(bright_channel, kernel)
+    if isinstance(input, torch.Tensor):
+        dark_channel   = torch.max(input, dim=1)[0]
+        kernel         = torch.ones(kernel_size, kernel_size)
+        bcp            = kornia.morphology.erosion(dark_channel, kernel)
+    elif isinstance(input, np.ndarray):
+        bright_channel = np.max(input, axis=2)
+        kernel_size    = core.to_2tuple(kernel_size)
+        kernel         = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
+        bcp            = cv2.erode(bright_channel, kernel)
+    else:
+        raise TypeError()
     return bcp
 
 
 def get_dark_channel_prior(
-    input     : np.ndarray,
-    patch_size: int | tuple[int, int],
-) -> np.ndarray:
+    input      : torch.Tensor | np.ndarray,
+    kernel_size: int | tuple[int, int],
+) -> torch.Tensor | np.ndarray:
     """Get the dark channel prior from an image.
     
     Args:
-        input: An image in :math:`[H, W, C]` format.
-        patch_size: Window size.
+        input: A :class:`torch.Tensor` image in :math:`[N, C, H, W]` format, or
+            a :class:`np.ndarray` image in :math:`[H, W, C]` format.
+        kernel_size: Window size.
         
     Returns:
-        An :class:`numpy.ndarray` dark channel as prior.
+        A dark channel prior.
     """
-    # b, g, r      = cv2.split(input)
-    # dark_channel = cv2.min(cv2.min(r, g), b)
-    patch_size   = core.to_2tuple(patch_size)
-    dark_channel = np.min(input, axis=2)
-    kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, patch_size)
-    dcp          = cv2.erode(dark_channel, kernel)
+    if isinstance(input, torch.Tensor):
+        dark_channel = torch.min(input, dim=1)[0]
+        kernel       = torch.ones(kernel_size, kernel_size)
+        dcp          = kornia.morphology.erosion(dark_channel, kernel)
+    elif isinstance(input, np.ndarray):
+        dark_channel = np.min(input, axis=2)
+        kernel_size  = core.to_2tuple(kernel_size)
+        kernel       = cv2.getStructuringElement(cv2.MORPH_RECT, kernel_size)
+        dcp          = cv2.erode(dark_channel, kernel)
+    else:
+        raise TypeError()
     return dcp
 
 
 def get_dark_channel_prior_02(
-    input     : np.ndarray,
-    patch_size: int,
+    input      : torch.Tensor | np.ndarray,
+    kernel_size: int | tuple[int, int],
 ) -> np.ndarray:
     """Get the dark channel prior from an image.
 
     Args:
-        input: An image in :math:`[H, W, C]` format.
-        patch_size: Window size.
+        input: A :class:`torch.Tensor` image in :math:`[N, C, H, W]` format, or
+            a :class:`np.ndarray` image in :math:`[H, W, C]` format.
+        kernel_size: Window size.
 
     Returns:
-        An :class:`numpy.ndarray` dark channel as prior.
+        A dark channel prior.
     """
-    m, n, _ = input.shape
-    w       = patch_size
-    padded  = np.pad(input, ((w // 2, w // 2), (w // 2, w // 2), (0, 0)), 'edge')
-    dcp     = np.zeros((m, n))
-    for i, j in np.ndindex(dcp.shape):
-        dcp[i, j] = np.min(padded[i:i + w, j:j + w, :])  # CVPR09, eq.5
+    if isinstance(input, np.ndarray):
+        m, n, _ = input.shape
+        w       = kernel_size
+        padded  = np.pad(input, ((w // 2, w // 2), (w // 2, w // 2), (0, 0)), "edge")
+        dcp     = np.zeros((m, n))
+        for i, j in np.ndindex(dcp.shape):
+            dcp[i, j] = np.min(padded[i:i + w, j:j + w, :])  # CVPR09, eq.5
+    else:
+        raise TypeError()
     return dcp
 
 
