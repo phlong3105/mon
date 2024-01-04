@@ -11,8 +11,6 @@ import time
 from typing import Any
 
 import click
-import cv2
-import numpy as np
 import torch
 import torchvision
 
@@ -33,11 +31,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : None,
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
+		"devices"    : "auto",
     },
 	"lp-labdesktop-01": {
 		"config"     : "",
@@ -48,11 +42,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : 0,
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
+		"devices"    : "auto",
 	},
     "vsw-ws02": {
 		"config"     : "",
@@ -63,11 +53,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : 0,
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
+		"devices"    : "auto",
 	},
     "vsw-ws-03": {
 		"config"     : "",
@@ -78,11 +64,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : 0,
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
+		"devices"    : "auto",
 	},
 }
 
@@ -92,32 +74,38 @@ hosts = {
 # region Function
 
 def predict(args: dict):
-    # Initialization
+    # Get args
     model_name    = args["model"]["name"]
     variant       = args["model"]["variant"]
+    weights       = args["model"]["weights"]
+    input_dir     = args["datamodule"]["root"]
+    image_size    = args["datamodule"]["image_size"]
+    resize        = args["datamodule"]["resize"]
+    devices       = args["predictor"]["devices"] or "auto"
+    benchmark     = args["predictor"]["benchmark"]
+    output_dir    = args["predictor"]["output_dir"]
+    save_image    = args["predictor"]["save_image"]
+    verbose       = args["predictor"]["verbose"]
+
+    # Initialization
     variant       = variant if variant not in [None, "", "none"] else None
     model_variant = f"{model_name}-{variant}" if variant is not None else f"{model_name}"
     console.rule(f"[bold red] {model_variant}")
-    
-    weights = args["model"]["weights"]
+
+    devices = "cpu" if not torch.cuda.is_available() else devices
+    devices = torch.device(devices)
+
     model: mon.Model = mon.MODELS.build(config=args["model"])
-    if torch.cuda.is_available():
-        devices = torch.device(f"cuda:0")
-    else:
-        devices = torch.device("cpu")
-    state_dict  = torch.load(weights, map_location=devices)
+    state_dict       = torch.load(weights, map_location=devices)
     model.load_state_dict(state_dict=state_dict["state_dict"])
     model.phase = mon.ModelPhase.INFERENCE
     model.eval()
-
-    output_dir = args["output_dir"]
-    output_dir.mkdir(parents=True, exist_ok=True)
     
     # Measure efficiency score
-    if args["benchmark"] and torch.cuda.is_available():
+    if benchmark and torch.cuda.is_available():
         flops, params, avg_time = mon.calculate_efficiency_score(
             model      = model,
-            image_size = args["image_size"],
+            image_size = image_size,
             channels   = 3,
             runs       = 100,
             use_cuda   = True,
@@ -128,16 +116,13 @@ def predict(args: dict):
         console.log(f"Time   = {avg_time:.4f}")
      
     # Data
-    data       = mon.Path(args["datamodule"]["root"])
-    image_size = args["datamodule"]["image_size"]
-    h, w       = mon.get_hw(image_size)
-    resize     = args["datamodule"]["resize"]
-    console.log(f"{data}")
-    
-    if data.is_video_file():
-        image_loader = mon.VideoLoaderCV(source=data, to_rgb=True, to_tensor=True, normalize=True)
+    input_dir = mon.Path(input_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    console.log(f"{input_dir}")
+    if input_dir.is_video_file():
+        image_loader = mon.VideoLoaderCV(source=input_dir, to_rgb=True, to_tensor=True, normalize=True)
         video_writer = mon.VideoWriterCV(
-            destination = output_dir / data.stem,
+            destination = output_dir / input_dir.stem,
             image_size  = [480, 640],
             frame_rate  = 30,
             fourcc      = "mp4v",
@@ -146,14 +131,12 @@ def predict(args: dict):
             verbose     = False,
         )
     else:
-        image_loader = mon.ImageLoader(source=data, to_rgb=True, to_tensor=True, normalize=True)
+        image_loader = mon.ImageLoader(source=input_dir, to_rgb=True, to_tensor=True, normalize=True)
         video_writer = None
 
     #
+    h, w = mon.get_hw(image_size)
     with torch.no_grad():
-        # image_paths = list(data.rglob("*"))
-        # image_paths = [path for path in image_paths if path.is_image_file()]
-        # image_paths.sort()
         sum_time = 0
         with mon.get_progress_bar() as pbar:
             for images, indexes, files, rel_paths in pbar.track(
@@ -161,15 +144,13 @@ def predict(args: dict):
                 total       = len(image_loader),
                 description = f"[bright_yellow] Inferring"
             ):
-                # console.log(image_path)
-                # image       = mon.read_image(path=image_path, to_rgb=True, to_tensor=True, normalize=True)
                 if resize:
                     h0, w0  = mon.get_image_size(images)
                     images  = mon.resize(input=images, size=[h, w])
                 input       = images.to(model.device)
                 start_time  = time.time()
                 output      = model(input=input, augment=False, profile=False, out_index=-1)
-                '''
+                ''' Debug code for GCENet paper.
                 output       = model(input=input, augment=False, profile=False)
                 a, p, output = output[0], output[1], output[2]
                 a = (-1 * a)
@@ -186,9 +167,9 @@ def predict(args: dict):
                 if resize:
                     output  = mon.resize(input=images, size=[h0, w0])
 
-                if args["save_image"]:
-                    result_path = output_dir / f"{files[0].stem}.png"
-                    torchvision.utils.save_image(output, str(result_path))
+                if save_image:
+                    output_path = output_dir / f"{files[0].stem}.png"
+                    torchvision.utils.save_image(output, str(output_path))
                     '''
                     a_path = output_dir / f"{files[0].stem}-a.png"
                     B_path = output_dir / f"{files[0].stem}-b.png"
@@ -201,7 +182,7 @@ def predict(args: dict):
                     cv2.imwrite(str(R_path), R)
                     cv2.imwrite(str(p_path), p)
                     '''
-                    if data.is_video_file():
+                    if input_dir.is_video_file():
                         video_writer.write_batch(images=output)
                 sum_time += run_time
         avg_time = float(sum_time / len(image_loader))
@@ -212,25 +193,27 @@ def predict(args: dict):
     ignore_unknown_options = True,
     allow_extra_args       = True,
 ))
-@click.option("--data",        default=mon.DATA_DIR,          type=click.Path(exists=True),  help="Source data directory.")
-@click.option("--config",      default="",                    type=click.Path(exists=False), help="The training config to use.")
-@click.option("--root",        default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--project",     default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--name",        default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--variant",     default=None,                  type=str,                      help="Model variant.")
-@click.option("--weights",     default=None,                  type=click.Path(exists=False), help="Weights paths.")
-@click.option("--batch-size",  default=1,                     type=int,                      help="Total Batch size for all GPUs.")
-@click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")
+@click.option("--config",      type=click.Path(exists=False), default="",                    help="The prediction config to use.")
+@click.option("--input-dir",   type=click.Path(exists=True),  default=mon.DATA_DIR,          help="Source data directory.")
+@click.option("--output-dir",  type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results location.")
+@click.option("--root",        type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results to root/project/name.")
+@click.option("--project",     type=click.Path(exists=False), default=None,                  help="Save results to root/project/name.")
+@click.option("--name",        type=click.Path(exists=False), default=None,                  help="Save results to root/project/name.")
+@click.option("--variant",     type=str,                      default=None,                  help="Model variant.")
+@click.option("--weights",     type=click.Path(exists=False), default=None,                  help="Weights paths.")
+@click.option("--batch-size",  type=int,                      default=1,                     help="Total batch size for all GPUs.")
+@click.option("--image-size",  type=int,                      default=512,                   help="Image sizes.")
+@click.option("--devices",     type=str,                      default=None,                  help="Running devices.")
 @click.option("--resize",      is_flag=True)
 @click.option("--benchmark",   is_flag=True)
-@click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results location.")
 @click.option("--save-image",  is_flag=True)
 @click.option("--verbose",     is_flag=True)
 @click.pass_context
 def main(
     ctx,
-    data       : mon.Path | str,
     config     : mon.Path | str,
+    input_dir  : mon.Path | str,
+    output_dir : mon.Path | str,
     root       : mon.Path | str,
     project    : str,
     name       : str,
@@ -238,9 +221,9 @@ def main(
     weights    : Any,
     batch_size : int,
     image_size : int | list[int],
+    devices    : str,
     resize     : bool,
     benchmark  : bool,
-    output_dir : mon.Path | str,
     save_image : bool,
     verbose    : bool
 ):
@@ -263,7 +246,7 @@ def main(
         config_args    = importlib.import_module(f"config.{config}")
     
     # Prioritize input args --> predefined args --> config file args
-    data        = mon.Path(data)
+    input_dir   = mon.Path(input_dir)
     project     = project or config_args.model["project"]
     project     = str(project).replace(".", "/")
     root        = root        or host_args.get("root",       None)
@@ -273,32 +256,39 @@ def main(
     weights     = weights     or host_args.get("weights",    None) or config_args.model["weights"]
     batch_size  = batch_size  or host_args.get("batch_size", None) or config_args.data["batch_size"]
     image_size  = image_size  or host_args.get("image_size", None) or config_args.data["image_size"]
-    
+    devices     = devices     or host_args.get("devices",    None) or config_args.data["devices"]
+
     # Update arguments
     args                 = mon.get_module_vars(config_args)
     args["hostname"]     = hostname
-    args["root"]         = mon.Path(root)
+    args["root"]         = root
     args["project"]      = project
     args["image_size"]   = image_size
-    args["output_dir"]   = mon.Path(output_dir)
+    args["verbose"]      = verbose
     args["config_file"]  = config_args.__file__,
     args["datamodule"]  |= {
-        "root"      : data,
+        "root"      : input_dir,
         "resize"    : resize,
         "image_size": image_size,
         "batch_size": batch_size,
+        # "verbose"   : verbose,
     }
     args["model"] |= {
-        "weights": weights,
-        "name"   : name,
-        "variant": variant,
-        "root"   : root,
-        "project": project,
-        "verbose": verbose,
+        "weights"  : weights,
+        "name"     : name,
+        "variant"  : variant,
+        "root"     : root,
+        "project"  : project,
+        # "verbose"  : verbose,
     }
-    args["model"]      |= model_kwargs
-    args["save_image"]  = save_image
-    args["benchmark"]   = benchmark
+    args["model"]     |= model_kwargs
+    args["predictor"] |= {
+        "devices"   : devices,
+        "benchmark" : benchmark,
+        "output_dir": mon.Path(output_dir),
+        "save_image": save_image,
+        "verbose"   : verbose,
+    }
     predict(args=args)
 
 # endregion

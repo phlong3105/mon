@@ -16,8 +16,8 @@ from net.noise import get_noise
 from utils.image_io import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--input", "-i", type=str, default='data/Test', help='test image folder')
-parser.add_argument("--result", "-r", type=str, default='./result', help='result folder')
+parser.add_argument("--input",  "-i", type=str, default='data/Test', help='test image folder')
+parser.add_argument("--result", "-r", type=str, default='./result',  help='result folder')
 arg = parser.parse_args()
 
 

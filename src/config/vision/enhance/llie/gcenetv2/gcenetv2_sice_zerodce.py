@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""GCE-NetV2 model trained on SICEZeroDCE dataset."""
+"""GCENetV2 model trained on SICEZeroDCE dataset."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ data_name    = "sice-zerodce"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]
+verbose 	 = True
 
 # endregion
 
@@ -57,7 +58,7 @@ model = {
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
-	"verbose"    : True,           # Verbosity.
+	"verbose"    : verbose,        # Verbosity.
 }
 
 # endregion
@@ -72,13 +73,13 @@ datamodule = {
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
     ]),  # Transformations performing on both the input and target.
-    "to_tensor"   : True,          # If True, convert input and target to :class:`torch.Tensor`.
-    "cache_data"  : False,         # If True, cache data to disk for faster loading next time.
-    "cache_images": False,         # If True, cache images into memory for faster training.
+    "to_tensor"   : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "cache_data"  : False,         # If ``True``, cache data to disk for faster loading next time.
+    "cache_images": False,         # If ``True``, cache images into memory for faster training.
     "batch_size"  : 32,            # The number of samples in one forward pass.
-    "devices"     : 0,             # A list of devices to use. Default: 0.
-    "shuffle"     : True,          # If True, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"     : True,          # Verbosity.
+    "devices"     : 0,             # A list of devices to use. Default: ``0``.
+    "shuffle"     : True,          # If ``True``, reshuffle the datapoints at the beginning of every epoch.
+    "verbose"     : verbose,       # Verbosity.
 }
 
 # endregion
@@ -90,7 +91,7 @@ trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
 		    "monitor": "val/psnr",  # Quantity to monitor.
-			"mode"   : "max",       # 'min' or 'max'.
+			"mode"   : "max",       # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
@@ -102,5 +103,12 @@ trainer = default.trainer | {
 		"tensorboard": default.tensorboard,
 	},
 }
+
+# endregion
+
+
+# region Predicting
+
+predictor = default.predictor | {}
 
 # endregion

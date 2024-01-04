@@ -336,18 +336,11 @@ def lowlight_enhancer(image_name, image):
     return s.optimize()
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default=DATA_DIR)
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/retinexdip/retinexdip-lol.pt")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
-    args = parser.parse_args()
-    
+def test(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     #
     with torch.no_grad():
         image_paths = list(args.data.rglob("*"))
@@ -367,7 +360,7 @@ if __name__ == "__main__":
                 # torchvision.utils.save_image(enhanced_image, str(result_path))
                 cv2.imwrite(str(result_path), enhanced_image)
                 sum_time    += run_time
-                
+
                 # Measure efficiency score
                 if i == 0:
                     s = Enhancement(
@@ -382,10 +375,20 @@ if __name__ == "__main__":
                         channels   = 8,
                         runs       = 100,
                     )
-        
+
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
-    
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",       type=str, default=DATA_DIR)
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/retinexdip/retinexdip-lol.pt")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
+    args = parser.parse_args()
+    test(args)
+
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--input",  "-i", type=str, default="data/Test", help="test image folder")

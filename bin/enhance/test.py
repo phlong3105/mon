@@ -22,45 +22,48 @@ console = mon.console
 hosts = {
 	"lp-labdesktop-01": {
 		"config"     : "",
-        "root"       : mon.RUN_DIR/"test",
+        "root"       : mon.RUN_DIR / "test",
         "project"    : None,
         "name"       : None,
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
         "accelerator": "auto",
-		"devices"    : 0,
+		"devices"    : "auto",
         "max_epochs" : None,
         "max_steps"  : None,
 		"strategy"   : None,
+        "verbose"    : True,
 	},
     "vsw-ws02": {
 		"config"     : "",
-        "root"       : mon.RUN_DIR/"test",
+        "root"       : mon.RUN_DIR / "test",
         "project"    : None,
         "name"       : None,
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
         "accelerator": "auto",
-		"devices"    : 0,
+		"devices"    : "auto",
         "max_epochs" : None,
         "max_steps"  : None,
 		"strategy"   : None,
+        "verbose"    : True,
 	},
     "vsw-ws03": {
 		"config"     : "",
-        "root"       : mon.RUN_DIR/"test",
+        "root"       : mon.RUN_DIR / "test",
         "project"    : None,
         "name"       : None,
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
         "accelerator": "auto",
-		"devices"    : 0,
+		"devices"    : "auto",
         "max_epochs" : None,
         "max_steps"  : None,
 		"strategy"   : None,
+        "verbose"    : True,
 	},
 }
 
@@ -115,35 +118,48 @@ def test(args: dict):
     console.log("[green]Done")
 
 
-@click.command()
-@click.option("--config",      default="",                 type=click.Path(exists=False), help="The training config to use.")
-@click.option("--root",        default=mon.RUN_DIR/"test", type=click.Path(exists=True),  help="Save results to root/project/name.")
-@click.option("--project",     default=None,               type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--name",        default=None,               type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--weights",     default=None,               type=click.Path(exists=False), help="Weights paths.")
-@click.option("--batch-size",  default=8,                  type=int, help="Total Batch size for all GPUs.")
-@click.option("--image-size",  default=None,               type=int, nargs="+", help="Image sizes.")
-@click.option("--resize",      is_flag=True)
-@click.option("--accelerator", default="gpu",              type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False))
-@click.option("--devices",     default=0,                  type=int, help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
-@click.option("--max-epochs",  default=None,               type=int, help="Stop training once this number of epochs is reached.")
-@click.option("--max-steps",   default=None,               type=int, help="Stop training once this number of steps is reached.")
-@click.option("--strategy",    default=None,               type=int, help="Supports different training strategies with aliases as well custom strategies.")
+@click.command(context_settings=dict(
+    ignore_unknown_options = True,
+    allow_extra_args       = True,
+))
+@click.option("--config",      type=click.Path(exists=False),  default="",                 help="The training config to use.")
+@click.option("--root",        type=click.Path(exists=True),   default=mon.RUN_DIR/"train",help="Save results to root/project/name.")
+@click.option("--project",     type=click.Path(exists=False),  default=None,               help="Save results to root/project/name.")
+@click.option("--name",        type=click.Path(exists=False),  default=None,               help="Save results to root/project/name.")
+@click.option("--variant",     type=str,                       default=None,               help="Variant.")
+@click.option("--weights",     type=click.Path(exists=False),  default=None,               help="Weights paths.")
+@click.option("--batch-size",  type=int,                       default=None,               help="Total Batch size for all GPUs.")
+@click.option("--image-size",  type=int,                       default=None,               help="Image sizes.")
+@click.option("--accelerator", type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False), default="gpu")
+@click.option("--devices",     type=int,                       default=0,                  help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
+@click.option("--max-epochs",  type=int,                       default=100,                help="Stop training once this number of epochs is reached.")
+@click.option("--max-steps",   type=int,                       default=None,               help="Stop training once this number of steps is reached.")
+@click.option("--strategy",    type=str,                       default="auto",             help="Supports different training strategies with aliases as well as custom strategies.")
+@click.option("--verbose",     is_flag=True)
+@click.pass_context
 def main(
-    config     : mon.Path | str,
-    root       : mon.Path,
-    project    : str,
-    name       : str,
-    weights    : Any,
-    batch_size : int,
-    image_size : int | list[int],
-    resize     : bool,
-    accelerator: str,
-    devices    : int | str | list[int, str],
-    max_epochs : int,
-    max_steps  : int,
-    strategy   : str,
+        ctx,
+        config     : mon.Path | str,
+        root       : mon.Path,
+        project    : str,
+        name       : str,
+        variant    : int | str | None,
+        weights    : Any,
+        batch_size : int,
+        image_size : int | list[int],
+        accelerator: str,
+        devices    : int | str | list[int, str],
+        max_epochs : int,
+        max_steps  : int,
+        strategy   : str,
+        verbose    : bool,
 ):
+    model_kwargs = {
+        k.lstrip("--"): ctx.args[i + 1]
+        if not (i + 1 >= len(ctx.args) or ctx.args[i + 1].startswith("--"))
+        else True for i, k in enumerate(ctx.args) if k.startswith("--")
+    }
+
     # Obtain arguments
     hostname  = socket.gethostname().lower()
     host_args = hosts[hostname]
@@ -169,25 +185,28 @@ def main(
     max_epochs  = max_epochs  or host_args.get("max_epochs",  None) or config_args.trainer["max_epochs"]
     max_steps   = max_steps   or host_args.get("max_steps",   None) or config_args.trainer["max_steps"]
     strategy    = strategy    or host_args.get("strategy",    None) or config_args.trainer["strategy"]
-    
+
     # Update arguments
     args                 = mon.get_module_vars(config_args)
     args["hostname"]     = hostname
     args["root"]         = root
     args["project"]      = project
     args["image_size"]   = image_size
-    args["config_file"]  = config_args.__file__,
+    args["verbose"]      = verbose
+    args["config_file"]  = config_args.__file__
     args["datamodule"]  |= {
         "image_size": image_size,
         "batch_size": batch_size,
     }
-    args["model"]       |= {
-        "weights": weights,
-        "name"   : name,
-        "root"   : root,
-        "project": project,
+    args["model"] |= {
+        "weights" : weights,
+        "variant" : variant,
+        "fullname": name,
+        "root"    : root,
+        "project" : project,
     }
-    args["trainer"]     |= {
+    args["model"]   |= model_kwargs
+    args["trainer"] |= {
         "accelerator": accelerator,
         "devices"    : devices,
         "max_epochs" : max_epochs,

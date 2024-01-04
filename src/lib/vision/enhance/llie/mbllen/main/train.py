@@ -106,7 +106,10 @@ def scheduler(epoch):
     return lr
 
 num_epoch = 0
+
+
 class Show_History(keras.callbacks.Callback):
+
     def on_epoch_end(self, val_loss=None, logs=None):
         # save model
         global num_epoch
@@ -173,13 +176,14 @@ class Show_History(keras.callbacks.Callback):
         fileObject.write("%d %f\n" % (batch, logs['loss']))
         fileObject.close()
 
+
 show_history = Show_History()
-change_lr = LearningRateScheduler(scheduler)
-tbCallBack = keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=False,
+change_lr    = LearningRateScheduler(scheduler)
+tbCallBack   = keras.callbacks.TensorBoard(log_dir='./logs', histogram_freq=0, write_graph=True, write_images=False,
                                          embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None)
-nanstop = keras.callbacks.TerminateOnNaN()
+nanstop       = keras.callbacks.TerminateOnNaN()
 reducelearate = keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5, patience=2, min_lr=1e-10)
-earlystop = keras.callbacks.EarlyStopping(monitor='loss', min_delta=3, patience=0, verbose=0, mode='min')
+earlystop     = keras.callbacks.EarlyStopping(monitor='loss', min_delta=3, patience=0, verbose=0, mode='min')
 
 batch_size = 16
 step_epoch = 200

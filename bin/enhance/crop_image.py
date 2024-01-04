@@ -33,23 +33,23 @@ _EXCLUDE_DIRS = [
 # region Function
 
 @click.command()
-@click.option("--image-dir",  default=mon.DATA_DIR/"llie/predict", type=click.Path(exists=True),  help="Image directory.")
+@click.option("--input-dir",  default=mon.DATA_DIR/"llie/predict",      type=click.Path(exists=True),  help="Image directory.")
 @click.option("--output-dir", default=mon.DATA_DIR/"llie/predict-crop", type=click.Path(exists=False), help="Output directory.")
 @click.option("--extension",  default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
 @click.option("--verbose",    is_flag=True)
 def visualize_image(
-    image_dir  : mon.Path,
-    output_dir : mon.Path,
-    extension  : str,
-    verbose    : bool
+    input_dir : mon.Path,
+    output_dir: mon.Path,
+    extension : str,
+    verbose   : bool
 ):
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert input_dir is not None and mon.Path(input_dir).is_dir()
 
-    output_dir  = output_dir or image_dir.parent / f"{image_dir.stem}-crop"
+    output_dir  = output_dir or input_dir.parent / f"{input_dir.stem}-crop"
     output_dir  = mon.Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    image_files = list(image_dir.rglob("*"))
+    image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
     with mon.get_progress_bar() as pbar:
@@ -70,11 +70,11 @@ def visualize_image(
             y       = int(h / 2 - s / 2)
             crop    = image[y:y + s, x:x + s]
 
-            # result_file = output_dir / f"{image_files[i].stem}.{extension}"
-            result_file = str(image_files[i])
-            result_file = result_file.replace("predict", "predict-crop")
-            mon.Path(result_file).parent.mkdir(parents=True, exist_ok=True)
-            cv2.imwrite(result_file, crop)
+            # output_file = output_dir / f"{image_files[i].stem}.{extension}"
+            output_file = str(image_files[i])
+            output_file = output_file.replace("predict", "predict-crop")
+            mon.Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            cv2.imwrite(output_file, crop)
 
             if verbose:
                 cv2.imshow("Image", image)

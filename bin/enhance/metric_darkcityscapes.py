@@ -88,7 +88,7 @@ def color_to_gray(path):
 
 @click.command()
 @click.option(
-    "--image-dir",
+    "--input-dir",
     default = mon.DATA_DIR/"llie"/"predict"/"MODEL"/"darkcityscapes"/"hrnetv2"/"single-scale"/"pseudo_color",
     type    = click.Path(exists=False),
     help    = "Image directory."
@@ -106,7 +106,7 @@ def color_to_gray(path):
 @click.option("--append-results", is_flag=True)
 @click.option("--verbose",        is_flag=True)
 def measure_metric(
-    image_dir     : mon.Path,
+    input_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     name          : str,
@@ -119,9 +119,9 @@ def measure_metric(
     model_variant = f"{name}-{variant}" if variant is not None else f"{name}"
     console.rule(f"[bold red] {model_variant}")
 
-    image_dir = str(image_dir).replace("MODEL", model_variant)
+    input_dir = str(input_dir).replace("MODEL", model_variant)
 
-    assert image_dir  is not None and mon.Path(image_dir).is_dir()
+    assert input_dir is not None and mon.Path(input_dir).is_dir()
     assert target_dir is not None and mon.Path(target_dir).is_dir()
 
     if result_file is not None:
@@ -130,17 +130,17 @@ def measure_metric(
                 or isinstance(result_file, str))
         result_file = mon.Path(result_file)
 
-    image_dir  = mon.Path(image_dir)
+    input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
         if target_dir is not None \
-        else mon.Path(str(image_dir).replace("low", "labels"))
+        else mon.Path(str(input_dir).replace("low", "labels"))
 
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
 
-    image_files = list(image_dir.rglob("*"))
+    image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
 
@@ -174,7 +174,7 @@ def measure_metric(
     # Show results
     if append_results:
         console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
+        console.log(f"{input_dir.name}")
         message = ""
         message += f"{'mIoU':<10}\t"
         message += f"{'mPA':<10}\t"
@@ -186,7 +186,7 @@ def measure_metric(
         print(message)
     else:
         console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
+        console.log(f"{input_dir.name}")
         console.log(f"{'mIoU':<10}: {mIoU:.10f}")
         console.log(f"{'mPA':<10}: {mPA:.10f}")
     # Save results
@@ -198,7 +198,7 @@ def measure_metric(
                 f.write(f"{'model':<10}\t{'data':<10}\t")
                 f.write(f"{f'{mIoU}':<10}\t")
                 f.write(f"{f'{mPA}':<10}\t")
-            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
+            f.write(f"{f'{model_variant}':<10}\t{f'{input_dir.name}':<10}\t")
             f.write(f"{mIoU:.10f}\t")
             f.write(f"{mPA:.10f}\t")
             f.write(f"\n")

@@ -13,7 +13,7 @@ models=(
   ## De-Hazing
   "zid"           # https://github.com/liboyun/ZID
   ## De-Raining
-  "ipt"           #
+  "ipt"           # https://github.com/huawei-noah/Pretrained-IPT
   ## LES
   "jin2022"       # https://github.com/jinyeying/night-enhancement
   ## LLIE
@@ -40,8 +40,6 @@ models=(
   "zeroadce"      # https://github.com/phlong3105/mon
   "zerodce"       # https://github.com/Li-Chongyi/Zero-DCE
   "zerodce++"     # https://github.com/Li-Chongyi/Zero-DCE_extension
-  ## DERAIN
-  "ipt"           # https://github.com/huawei-noah/Pretrained-IPT
 )
 train_datasets=(
   ## LES

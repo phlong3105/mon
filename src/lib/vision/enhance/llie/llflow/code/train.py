@@ -23,7 +23,7 @@ from utils import util
 from utils.timer import Timer, TickTock
 from utils.util import get_resume_paths
 
-to_tensor = T.ToTensor()
+to_tensor    = T.ToTensor()
 to_cv2_image = lambda x: np.array(T.ToPILImage()(torch.clip(x, 0, 1)))
 
 

@@ -18,23 +18,7 @@ from mon import RUN_DIR
 console = mon.console
 
 
-def main():
-    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
-    parser.add_argument("--data",       type=str,   default="./demo/", help="folder path to test images.")
-    parser.add_argument("--weights",    type=str,   default="./checkpoint.pth")
-    parser.add_argument("--image-size", type=int,   default=512)
-    parser.add_argument("--gamma",      type=float, default=0.6,       help="Gamma correction parameter.")
-    parser.add_argument("--lambda_",    type=float, default=0.15,      help="The weight for balancing the two terms in the illumination refinement optimization objective.")
-    parser.add_argument("--lime",       action="store_true", default=True, help="Use the LIME method. By default, the DUAL method is used.")
-    parser.add_argument("--resize",     action="store_true")
-    parser.add_argument("--sigma",      type=int,   default=3,         help="Spatial standard deviation for spatial affinity based Gaussian weights.")
-    parser.add_argument("--bc",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's contrast measure.")
-    parser.add_argument("--bs",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's saturation measure.")
-    parser.add_argument("--be",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's well exposedness measure.")
-    parser.add_argument("--eps",        type=float, default=1e-3,      help="Constant to avoid computation instability.")
-    parser.add_argument("--output-dir", type=str,   default=RUN_DIR / "predict/vision/enhance/llie/lime")
-    args = parser.parse_args()
-    
+def main(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -79,4 +63,19 @@ def main():
     
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
+    parser.add_argument("--data",       type=str,   default="./demo/", help="folder path to test images.")
+    parser.add_argument("--weights",    type=str,   default="./checkpoint.pth")
+    parser.add_argument("--image-size", type=int,   default=512)
+    parser.add_argument("--gamma",      type=float, default=0.6,       help="Gamma correction parameter.")
+    parser.add_argument("--lambda_",    type=float, default=0.15,      help="The weight for balancing the two terms in the illumination refinement optimization objective.")
+    parser.add_argument("--lime",       action="store_true", default=True, help="Use the LIME method. By default, the DUAL method is used.")
+    parser.add_argument("--resize",     action="store_true")
+    parser.add_argument("--sigma",      type=int,   default=3,         help="Spatial standard deviation for spatial affinity based Gaussian weights.")
+    parser.add_argument("--bc",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's contrast measure.")
+    parser.add_argument("--bs",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's saturation measure.")
+    parser.add_argument("--be",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's well exposedness measure.")
+    parser.add_argument("--eps",        type=float, default=1e-3,      help="Constant to avoid computation instability.")
+    parser.add_argument("--output-dir", type=str,   default=RUN_DIR / "predict/vision/enhance/llie/lime")
+    args = parser.parse_args()
+    main(args)

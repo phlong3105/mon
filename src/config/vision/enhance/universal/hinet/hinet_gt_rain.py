@@ -88,12 +88,12 @@ datamodule = {
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
     ]),  # Transformations performing on both the input and target.
-    "to_tensor"   : True,         # If True, convert input and target to :class:`torch.Tensor`.
-    "cache_data"  : False,        # If True, cache data to disk for faster loading next time.
-    "cache_images": False,        # If True, cache images into memory for faster training.
+    "to_tensor"   : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
+    "cache_images": False,        # If ``True``, cache images into memory for faster training.
     "batch_size"  : 16,            # The number of samples in one forward pass.
-    "devices"     : 0,            # A list of devices to use. Default: 0.
-    "shuffle"     : True,         # If True, reshuffle the datapoints at the beginning of every epoch.
+    "devices"     : 0,            # A list of devices to use. Default: ``0``.
+    "shuffle"     : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"     : True,         # Verbosity.
 }
 
@@ -106,7 +106,7 @@ trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
 		    "monitor": "train/psnr",  # Quantity to monitor.
-			"mode"   : "max",         # 'min' or 'max'.
+			"mode"   : "max",         # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
@@ -118,5 +118,12 @@ trainer = default.trainer | {
 	},
 	
 }
+
+# endregion
+
+
+# region Predicting
+
+predictor = default.predictor | {}
 
 # endregion

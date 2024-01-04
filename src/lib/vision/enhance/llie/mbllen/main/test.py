@@ -23,20 +23,7 @@ from mon import ZOO_DIR, RUN_DIR
 console = mon.console
 
 
-def test():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",        type=str, default="./input", help="test image folder")
-    parser.add_argument("--model",       type=str, default=ZOO_DIR / "vision/enhance/llie//mbllen/mbllen-syn_img_lowlight_withnoise", help="model name")
-    parser.add_argument("--weights",     type=str, default="./models")
-    parser.add_argument("--image-size",  type=int, default=512)
-    parser.add_argument("--com",         type=int, default=1,  help="Output with/without origional image and mid-result")
-    parser.add_argument("--highpercent", type=int, default=95, help="Should be in [85,100], linear amplification")
-    parser.add_argument("--lowpercent",  type=int, default=5,  help="Should be in [0,15], rescale the range [p%,1] to [0, 1]")
-    parser.add_argument("--gamma",       type=int, default=8,  help="Should be in [6,10], increase the saturability")
-    parser.add_argument("--maxrange",    type=int, default=8,  help="Linear amplification range")
-    parser.add_argument("--output-dir",  type=str, default=RUN_DIR / "predict/vision/enhance/llie/mbllen")
-    args = parser.parse_args()
-    
+def test(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -112,4 +99,16 @@ def test():
     
 
 if __name__ == "__main__":
-    test()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",        type=str, default="./input", help="test image folder")
+    parser.add_argument("--model",       type=str, default=ZOO_DIR / "vision/enhance/llie//mbllen/mbllen-syn_img_lowlight_withnoise", help="model name")
+    parser.add_argument("--weights",     type=str, default="./models")
+    parser.add_argument("--image-size",  type=int, default=512)
+    parser.add_argument("--com",         type=int, default=1,  help="Output with/without origional image and mid-result")
+    parser.add_argument("--highpercent", type=int, default=95, help="Should be in [85,100], linear amplification")
+    parser.add_argument("--lowpercent",  type=int, default=5,  help="Should be in [0,15], rescale the range [p%,1] to [0, 1]")
+    parser.add_argument("--gamma",       type=int, default=8,  help="Should be in [6,10], increase the saturability")
+    parser.add_argument("--maxrange",    type=int, default=8,  help="Linear amplification range")
+    parser.add_argument("--output-dir",  type=str, default=RUN_DIR / "predict/vision/enhance/llie/mbllen")
+    args = parser.parse_args()
+    test(args)

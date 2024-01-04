@@ -6,9 +6,18 @@
 from __future__ import annotations
 
 __all__ = [
-    "datamodule", "dataset", "debug", "learning_rate_monitor",
-    "model_checkpoint", "rich_model_summary", "rich_progress_bar",
-    "tensorboard", "trainer", "tune_report_callback", "tuner",
+    "datamodule",
+    "dataset",
+    "debug",
+    "learning_rate_monitor",
+    "model_checkpoint",
+    "predictor",
+    "rich_model_summary",
+    "rich_progress_bar",
+    "tensorboard",
+    "trainer",
+    "tune_report_callback",
+    "tuner",
 ]
 
 import albumentations as A
@@ -33,7 +42,7 @@ model_checkpoint = {
     "every_n_epochs"         : 1,           # Number of epochs between checkpoints.
     "every_n_train_steps"    : 0,           # Number of training steps between checkpoints (0 = disable).
     "filename"               : None,        # Checkpoint filename.
-    "mode"                   : "min",       # 'min' or 'max'.
+    "mode"                   : "min",       # ``'min'`` or ``'max'``.
     "monitor"                : "loss/val",  # Quantity to monitor.
     "save_last"              : True,        # Save an exact copy of the checkpoint to a file `last.ckpt`.
     "save_on_train_epoch_end": None,        # Run checkpointing at the end of the training epoch.
@@ -201,6 +210,19 @@ See Also: :class:`lightning.pytorch.trainer.trainer.Trainer`
 # endregion
 
 
+# region Predicting
+
+predictor = {
+    "devices"   : "auto",  # Running devices
+    "benchmark" : False,   # Measure efficient score
+    "output_dir": None,    # Location to save results
+    "save_image": False,   # Save result images
+    "verbose"   : True,    # Verbosity
+}
+
+# endregion
+
+
 # region Tuner
 
 tuner = {
@@ -220,7 +242,7 @@ tuner = {
     "max_concurrent_trials": None,   # Maximum number of trials to run concurrently.
     "max_failures"         : 0,      # Try to recover a trial at least this many times (-1 = infinite retries, 0 = disable).
     "metric"               : None,   # Metric to optimize.
-    "mode"                 : "min",  # 'min' or 'max'.
+    "mode"                 : "min",  # ``'min'`` or ``'max'``.
     "progress_reporter"    : None,   #  Progress reporter for reporting intermediate experiment progress.
     "raise_on_failed_trial": True,
     "resources_per_trial"  : {},     # Machine resources to allocate per trial. Ex: {"cpu": 64, "gpu": 8}.

@@ -84,12 +84,12 @@ _EXCLUDE_DIRS = [
 
 # region Function
 
-def list_images(image_dir: mon.Path, verbose: bool):
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
-    image_dir = mon.Path(image_dir)
+def list_images(input_dir: mon.Path, verbose: bool):
+    assert input_dir is not None and mon.Path(input_dir).is_dir()
+    input_dir = mon.Path(input_dir)
     
     # List all sub-directories
-    subdirs       = sorted(image_dir.subdirs())
+    subdirs       = sorted(input_dir.subdirs())
     dataset_names = []
     image_grid    = {
         "input"       : "",
@@ -124,7 +124,7 @@ def list_images(image_dir: mon.Path, verbose: bool):
             total       = len(dataset_names),
             description = f"[bright_yellow] Listing images"
         ):
-            image_paths         = image_dir.glob(f"*/{dn}/*")
+            image_paths         = input_dir.glob(f"*/{dn}/*")
             image_paths         = [p for p in image_paths if p.is_image_file() ]
             image_stem_dict[dn] = list(set([p.stem for p in image_paths]))
     
@@ -132,13 +132,13 @@ def list_images(image_dir: mon.Path, verbose: bool):
 
 
 def plot_cv2(
-    image_dir : mon.Path,
+    input_dir : mon.Path,
+    output_dir: mon.Path | str,
     image_size: int | bool,
     num_cols  : int,
-    output_dir: mon.Path | str,
     verbose   : bool
 ):
-    subdirs, dataset_names, image_grid, image_stem_dict = list_images(image_dir, verbose)
+    subdirs, dataset_names, image_grid, image_stem_dict = list_images(input_dir, verbose)
     
     if output_dir is not None:
         output_dir = mon.Path(output_dir)
@@ -160,7 +160,7 @@ def plot_cv2(
                 for k, _ in image_grid.items():
                     path = None
                     for ext in mon.ImageFormat.values():
-                        temp = image_dir / k / dn / f"{image_stem}{ext}"
+                        temp = input_dir / k / dn / f"{image_stem}{ext}"
                         if temp.exists():
                             path = temp
                     if path is not None and path.exists() and path.is_image_file():
@@ -234,15 +234,16 @@ def plot_cv2(
                 
 
 def plot_cv2_diff(
-    image_dir : mon.Path,
+    input_dir : mon.Path,
+    output_dir: mon.Path | str,
     image_size: int | bool,
     num_cols  : int,
-    output_dir: mon.Path | str,
+
     mode      : str,
     ref       : str,
     verbose   : bool
 ):
-    subdirs, dataset_names, image_grid, image_stem_dict = list_images(image_dir, verbose)
+    subdirs, dataset_names, image_grid, image_stem_dict = list_images(input_dir, verbose)
     
     if output_dir is not None:
         output_dir = mon.Path(output_dir)
@@ -264,7 +265,7 @@ def plot_cv2_diff(
                 for k, _ in image_grid.items():
                     path = None
                     for ext in mon.ImageFormat.values():
-                        temp = image_dir / k / dn / f"{image_stem}{ext}"
+                        temp = input_dir / k / dn / f"{image_stem}{ext}"
                         if temp.exists():
                             path = temp
                     if path is not None and path.exists() and path.is_image_file():
@@ -350,13 +351,13 @@ def plot_cv2_diff(
                         
 
 def plot_matplotlib(
-    image_dir : mon.Path,
+    input_dir : mon.Path,
+    output_dir: mon.Path | str,
     image_size: int | bool,
     num_cols  : int,
-    output_dir: mon.Path | str,
     verbose   : bool
 ):
-    subdirs, dataset_names, image_grid, image_stem_dict = list_images(image_dir, verbose)
+    subdirs, dataset_names, image_grid, image_stem_dict = list_images(input_dir, verbose)
     
     if output_dir is not None:
         output_dir = mon.Path(output_dir)
@@ -378,7 +379,7 @@ def plot_matplotlib(
                 for k, _ in image_grid.items():
                     path = None
                     for ext in mon.ImageFormat.values():
-                        temp = image_dir / k / dn / f"{image_stem}{ext}"
+                        temp = input_dir / k / dn / f"{image_stem}{ext}"
                         if temp.exists():
                             path = temp
                     if path is not None and path.exists() and path.is_image_file():
@@ -443,19 +444,19 @@ def plot_matplotlib(
     allow_extra_args       = True,
 ))
 @click.option(
-    "--image-dir",
+    "--input-dir",
     default = mon.RUN_DIR / "predict/vision/enhance/llie",
     type    = click.Path(exists=True),
     help    = "Image directory."
 )
-@click.option("--image-size", default=None, type=int)
-@click.option("--num-cols",   default=8,    type=int)
 @click.option(
     "--output-dir",
     default = mon.RUN_DIR / "predict/vision/enhance/llie/compare",
     type    = click.Path(exists=False),
     help    = "Save results location."
 )
+@click.option("--image-size", default=None, type=int)
+@click.option("--num-cols",   default=8,    type=int)
 @click.option("--mode",    default="diff",  type=click.Choice(["image", "diff"],     case_sensitive=False))
 @click.option("--ref",     default="input", type=click.Choice(_INCLUDE_DIRS,                 case_sensitive=False))
 @click.option("--backend", default="cv2",   type=click.Choice(["cv2", "matplotlib"], case_sensitive=False))
@@ -463,10 +464,10 @@ def plot_matplotlib(
 @click.pass_context
 def main(
     ctx,
-    image_dir : mon.Path,
+    input_dir : mon.Path,
+    output_dir: mon.Path | str,
     image_size: int | bool,
     num_cols  : int,
-    output_dir: mon.Path | str,
     mode      : str,
     ref       : str,
     backend   : str,
@@ -480,28 +481,28 @@ def main(
     
     if backend in ["cv2"]:
         plot_cv2(
-            image_dir  = image_dir,
+            input_dir  = input_dir,
+            output_dir = output_dir,
             image_size = image_size,
             num_cols   = num_cols,
-            output_dir = output_dir,
             verbose    = verbose,
         )
         if mode == "diff":
             plot_cv2_diff(
-                image_dir  = image_dir,
+                input_dir  = input_dir,
+                output_dir = output_dir,
                 image_size = image_size,
                 num_cols   = num_cols,
-                output_dir = output_dir,
                 mode       = mode,
                 ref        = ref,
                 verbose    = verbose,
             )
     elif backend in ["matplotlib"]:
         plot_matplotlib(
-            image_dir  = image_dir,
+            input_dir  = input_dir,
+            output_dir = output_dir,
             image_size = image_size,
             num_cols   = num_cols,
-            output_dir = output_dir,
             verbose    = verbose,
         )
     else:

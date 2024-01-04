@@ -23,9 +23,11 @@ from utils import LossNetwork, PSNR, validation
 console = mon.console
 
 
-def train(args):
+def train(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    
+    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
+    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
+
     # Model Setting
     model = IAT().cuda()
     if args.load_pretrain is not None:
@@ -138,8 +140,4 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
     parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/iat/lol_v1_patch")
     args = parser.parse_args()
-    
-    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
-    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
-    
     train(args)

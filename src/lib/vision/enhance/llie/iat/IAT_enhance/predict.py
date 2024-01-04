@@ -22,7 +22,11 @@ from mon import ZOO_DIR, RUN_DIR
 console = mon.console
 
 
-def predict(args):
+def predict(args: argparse.Namespace):
+    args.data       = mon.Path(args.data)
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
     console.log(f"Data: {args.data}")
     
     # Load Pre-train Weights
@@ -109,10 +113,5 @@ if __name__ == "__main__":
     parser.add_argument("--task",             type=str,  default="enhance", help="Choose from exposure or enhance")
     parser.add_argument("--output-dir",       type=str,  default=RUN_DIR / "predict/vision/enhance/llie/iat")
     args = parser.parse_args()
-    
-    args.data       = mon.Path(args.data)
-    args.output_dir = mon.Path(args.output_dir)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    
     with torch.no_grad():
         predict(args)

@@ -17,14 +17,7 @@ from mon import RUN_DIR
 console = mon.console
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default="weights/Epoch99.pth")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/zerodce")
-    args = parser.parse_args()
-    
+def main(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -54,4 +47,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",       type=str, default="data/test_data/")
+    parser.add_argument("--weights",    type=str, default="weights/Epoch99.pth")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/zerodce")
+    args = parser.parse_args()
+    main(args)

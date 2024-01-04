@@ -4,6 +4,7 @@ from models import *
 
 
 class KinD_Player(BaseTrainer):
+
     def __init__(self, model, dataloader_test, plot_more=False):
         self.dataloader_test = dataloader_test
         self.model = model
@@ -73,17 +74,17 @@ class TestParser(BaseParser):
 
 
 if __name__ == "__main__":
-    model = KinD()
+    model  = KinD()
     parser = TestParser()
-    args = parser.parse()
+    args   = parser.parse()
 
-    input_dir = args.input_dir
-    output_dir = args.output_dir
-    plot_more = args.plot_more
-    checkpoint = args.checkpoint
-    decom_net_dir = os.path.join(checkpoint, "decom_net.pth")
+    input_dir       = args.input_dir
+    output_dir      = args.output_dir
+    plot_more       = args.plot_more
+    checkpoint      = args.checkpoint
+    decom_net_dir   = os.path.join(checkpoint, "decom_net.pth")
     restore_net_dir = os.path.join(checkpoint, "restore_net.pth")
-    illum_net_dir = os.path.join(checkpoint, "illum_net.pth")
+    illum_net_dir   = os.path.join(checkpoint, "illum_net.pth")
     
     pretrain_decom = torch.load(decom_net_dir)
     model.decom_net.load_state_dict(pretrain_decom)

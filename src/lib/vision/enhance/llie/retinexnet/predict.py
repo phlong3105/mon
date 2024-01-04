@@ -14,7 +14,26 @@ from mon import ZOO_DIR, RUN_DIR
 console = mon.console
 
 
-def predict(args, model):
+def predict(args):
+    args.data       = mon.Path(args.data)
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    console.log(f"Data: {args.data}")
+
+    if args.gpu != "-1":
+        # Create directories for saving the results
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
+        # Setup the CUDA env
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
+
+        # Create the model
+        model = RetinexNet(args.image_size).cuda()
+    else:
+        # CPU mode not supported at the moment!
+        raise NotImplementedError
+
     image_paths = list(args.data.rglob("*"))
     image_paths = [path for path in image_paths if path.is_image_file()]
     image_paths.sort()
@@ -35,25 +54,4 @@ if __name__ == "__main__":
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/retinexnet", help="directory for saving the results")
     args = parser.parse_args()
-    
-    args.data       = mon.Path(args.data)
-    args.output_dir = mon.Path(args.output_dir)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-
-    console.log(f"Data: {args.data}")
-
-    if args.gpu != "-1":
-        # Create directories for saving the results
-        if not os.path.exists(args.output_dir):
-            os.makedirs(args.output_dir)
-        # Setup the CUDA env
-        os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu
-       
-        # Create the model
-        model = RetinexNet(args.image_size).cuda()
-
-        # Test the model
-        predict(args, model)
-    else:
-        # CPU mode not supported at the moment!
-        raise NotImplementedError
+    predict(args)

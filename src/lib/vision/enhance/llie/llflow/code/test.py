@@ -74,6 +74,7 @@ def imCropCenter(img, size):
 def impad(img, top=0, bottom=0, left=0, right=0, color=255):
     return np.pad(img, [(top, bottom), (left, right), (0, 0)], 'reflect')
 
+
 def hiseq_color_cv2_img(img):
     (b, g, r) = cv2.split(img)
     bH = cv2.equalizeHist(b)

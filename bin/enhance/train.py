@@ -30,11 +30,12 @@ hosts = {
         "batch_size" : 8,
         "image_size" : (512, 512),
         "accelerator": "auto",
-        "devices"    : 1,
+        "devices"    : "auto",
         "max_epochs" : None,
         "max_steps"  : None,
         "strategy"   : "auto",
         "exist_ok"   : False,
+        "verbose"    : True,
 	},
     "vsw-ws01": {
         "config"     : "hinet_gt_rain",
@@ -46,11 +47,12 @@ hosts = {
         "batch_size" : 32,
         "image_size" : (512, 512),
         "accelerator": "auto",
-        "devices"    : 1,
+        "devices"    : "auto",
         "max_epochs" : None,
         "max_steps"  : None,
         "strategy"   : "auto",
         "exist_ok"   : False,
+        "verbose"    : True,
 	},
     "vsw-ws02": {
         "config"     : "zid_jin2022",
@@ -62,11 +64,12 @@ hosts = {
         "batch_size" : 1,
         "image_size" : (512, 512),
         "accelerator": "auto",
-        "devices"    : 1,
+        "devices"    : "auto",
         "max_epochs" : 500,
         "max_steps"  : None,
         "strategy"   : "auto",
         "exist_ok"   : False,
+        "verbose"    : True,
 	},
     "vsw-ws-03": {
         "config"     : "zeroadce_sice_zerodce",
@@ -78,11 +81,12 @@ hosts = {
         "batch_size" : 32,
         "image_size" : (512, 512),
         "accelerator": "auto",
-        "devices"    : 1,
+        "devices"    : "auto",
         "max_epochs" : 300,
         "max_steps"  : None,
         "strategy"   : "auto",
         "exist_ok"   : False,
+        "verbose"    : True,
 	},
 }
 
@@ -147,20 +151,21 @@ def train(args: dict):
     ignore_unknown_options = True,
     allow_extra_args       = True,
 ))
-@click.option("--config",      default="",                  type=click.Path(exists=False), help="The training config to use.")
-@click.option("--root",        default=mon.RUN_DIR/"train", type=click.Path(exists=True),  help="Save results to root/project/name.")
-@click.option("--project",     default=None,                type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--name",        default=None,                type=click.Path(exists=False), help="Save results to root/project/name.")
-@click.option("--variant",     default=None,                type=str,                      help="Variant.")
-@click.option("--weights",     default=None,                type=click.Path(exists=False), help="Weights paths.")
-@click.option("--batch-size",  default=None,                type=int,                      help="Total Batch size for all GPUs.")
-@click.option("--image-size",  default=None,                type=int,                      help="Image sizes.")
-@click.option("--accelerator", default="gpu",               type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False))
-@click.option("--devices",     default=0,                   type=int,                      help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
-@click.option("--max-epochs",  default=100,                 type=int,                      help="Stop training once this number of epochs is reached.")
-@click.option("--max-steps",   default=None,                type=int,                      help="Stop training once this number of steps is reached.")
-@click.option("--strategy",    default="auto",              type=str,                      help="Supports different training strategies with aliases as well as custom strategies.")
+@click.option("--config",      type=click.Path(exists=False),  default="",                 help="The training config to use.")
+@click.option("--root",        type=click.Path(exists=True),   default=mon.RUN_DIR/"train",help="Save results to root/project/name.")
+@click.option("--project",     type=click.Path(exists=False),  default=None,               help="Save results to root/project/name.")
+@click.option("--name",        type=click.Path(exists=False),  default=None,               help="Save results to root/project/name.")
+@click.option("--variant",     type=str,                       default=None,               help="Variant.")
+@click.option("--weights",     type=click.Path(exists=False),  default=None,               help="Weights paths.")
+@click.option("--batch-size",  type=int,                       default=None,               help="Total Batch size for all GPUs.")
+@click.option("--image-size",  type=int,                       default=None,               help="Image sizes.")
+@click.option("--accelerator", type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False), default="gpu")
+@click.option("--devices",     type=int,                       default=0,                  help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
+@click.option("--max-epochs",  type=int,                       default=100,                help="Stop training once this number of epochs is reached.")
+@click.option("--max-steps",   type=int,                       default=None,               help="Stop training once this number of steps is reached.")
+@click.option("--strategy",    type=str,                       default="auto",             help="Supports different training strategies with aliases as well as custom strategies.")
 @click.option("--exist-ok",    is_flag=True,                                               help="Whether to overwrite existing experiment.")
+@click.option("--verbose",     is_flag=True)
 @click.pass_context
 def main(
     ctx,
@@ -178,6 +183,7 @@ def main(
     max_steps  : int,
     strategy   : str,
     exist_ok   : bool,
+    verbose    : bool,
 ):
     model_kwargs = {
         k.lstrip("--"): ctx.args[i + 1]
@@ -220,6 +226,7 @@ def main(
     args["root"]         = root
     args["project"]      = project
     args["image_size"]   = image_size
+    args["verbose"]      = verbose
     args["config_file"]  = config_args.__file__
     args["datamodule"]  |= {
         "image_size": image_size,
@@ -242,7 +249,7 @@ def main(
     }
    
     if not exist_ok:
-        mon.delete_dir(paths=mon.Path(root)/project/name)
+        mon.delete_dir(paths=mon.Path(root) / project / name)
         
     train(args=args)
 

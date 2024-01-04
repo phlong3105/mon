@@ -24,6 +24,7 @@ data_name    = "jin2022"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]
+verbose 	 = True
 
 # endregion
 
@@ -58,7 +59,7 @@ model = {
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
-	"verbose"    : True,           # Verbosity.
+	"verbose"    : verbose,        # Verbosity.
 }
 
 # endregion
@@ -73,13 +74,13 @@ datamodule = {
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
     ]),  # Transformations performing on both the input and target.
-    "to_tensor"   : True,         # If True, convert input and target to :class:`torch.Tensor`.
-    "cache_data"  : False,        # If True, cache data to disk for faster loading next time.
-    "cache_images": False,        # If True, cache images into memory for faster training.
+    "to_tensor"   : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
+    "cache_images": False,        # If ``True``, cache images into memory for faster training.
     "batch_size"  : 1,            # The number of samples in one forward pass.
-    "devices"     : 0,            # A list of devices to use. Default: 0.
-    "shuffle"     : True,         # If True, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"     : True,         # Verbosity.
+    "devices"     : 0,            # A list of devices to use. Default: ``0``.
+    "shuffle"     : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
+    "verbose"     : verbose,      # Verbosity.
 }
 
 # endregion
@@ -91,7 +92,7 @@ trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
 		    "monitor": "val/loss",  # Quantity to monitor.
-			"mode"   : "min",       # 'min' or 'max'.
+			"mode"   : "min",       # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
@@ -103,5 +104,12 @@ trainer = default.trainer | {
 		"tensorboard": default.tensorboard,
 	},
 }
+
+# endregion
+
+
+# region Predicting
+
+predictor = default.predictor | {}
 
 # endregion
