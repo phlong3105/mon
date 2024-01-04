@@ -238,7 +238,6 @@ def plot_cv2_diff(
     output_dir: mon.Path | str,
     image_size: int | bool,
     num_cols  : int,
-
     mode      : str,
     ref       : str,
     verbose   : bool

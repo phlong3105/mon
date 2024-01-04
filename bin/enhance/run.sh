@@ -42,6 +42,8 @@ models=(
   "zerodce++"     # https://github.com/Li-Chongyi/Zero-DCE_extension
 )
 train_datasets=(
+  ## De-Raining
+  "rain100l"
   ## LES
   "jin2022"
   "ledlight"
@@ -56,10 +58,11 @@ train_datasets=(
   "sice-grad"
   "sice-mix"
   "sice-zerodce"
-  ## DERAIN
-  "rain100l"
 )
 predict_datasets=(
+  ## De-Raining
+  "rain100l"
+  "rain100h"
   ## LES
   # "jin2022"
   # "ledlight"
@@ -79,9 +82,6 @@ predict_datasets=(
   "npe"
   # "sice"
   "vv"
-  ## DERAIN
-  "rain100l"
-  "rain100h"
 )
 
 
@@ -167,6 +167,15 @@ declare -a input_data_dirs=()
 declare -a target_data_dirs=()
 if [ "$task" == "train" ]; then
   for d in "${train_data[@]}"; do
+    ## De-Raining
+    if [ "$d" == "rain100l" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/train/rain100l/rain")
+      target_data_dirs+=("${root_dir}/data/derain/train/rain100l/clear")
+    fi
+    if [ "$d" == "rain100h" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/train/rain100h/rain")
+      target_data_dirs+=("${root_dir}/data/derain/train/rain100h/clear")
+    fi
     ## LES
     if [ "$d" == "jin2022" ]; then
       input_data_dirs+=("${root_dir}/data/les/train/jin2022/light-effects")
@@ -214,18 +223,18 @@ if [ "$task" == "train" ]; then
       input_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/low")
       target_data_dirs+=("${root_dir}/data/llie/train/sice-zerodce/high")
     fi
-    ## DERAIN
-    if [ "$d" == "rain100l" ]; then
-      input_data_dirs+=("${root_dir}/data/derain/train/rain100l/rain")
-      target_data_dirs+=("${root_dir}/data/derain/train/rain100l/clear")
-    fi
-    if [ "$d" == "rain100h" ]; then
-      input_data_dirs+=("${root_dir}/data/derain/train/rain100h/rain")
-      target_data_dirs+=("${root_dir}/data/derain/train/rain100h/clear")
-    fi
   done
 elif [ "$task" == "predict" ]; then
   for d in "${predict_data[@]}"; do
+    ## De-Raining
+    if [ "$d" == "rain100l" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/test/rain100l/rain")
+      target_data_dirs+=("${root_dir}/data/derain/test/rain100l/clear")
+    fi
+    if [ "$d" == "rain100h" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/test/rain100h/rain")
+      target_data_dirs+=("${root_dir}/data/derain/test/rain100h/clear")
+    fi
     ## LES
     if [ "$d" == "jin2022" ]; then
       input_data_dirs+=("${root_dir}/data/les/train/jin2022/light-effects")
@@ -296,15 +305,6 @@ elif [ "$task" == "predict" ]; then
     if [ "$d" == "vv" ]; then
       input_data_dirs+=("${root_dir}/data/llie/test/vv/low")
       target_data_dirs+=("")
-    fi
-    ## DERAIN
-    if [ "$d" == "rain100l" ]; then
-      input_data_dirs+=("${root_dir}/data/derain/test/rain100l/rain")
-      target_data_dirs+=("${root_dir}/data/derain/test/rain100l/clear")
-    fi
-    if [ "$d" == "rain100h" ]; then
-      input_data_dirs+=("${root_dir}/data/derain/test/rain100h/rain")
-      target_data_dirs+=("${root_dir}/data/derain/test/rain100h/clear")
     fi
   done
 fi
@@ -685,7 +685,7 @@ if [ "$task" == "predict" ]; then
             model_dir="${les_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data  "${input_data_dirs[k]}" \
+              --data "${input_data_dirs[k]}" \
               --data-name "${predict_data[k]}" \
               --phase "test" \
               --weights "${root_dir}/zoo/vision/enhance/les/jin2022/delighteffects_params_0600000.pt" \
@@ -697,16 +697,17 @@ if [ "$task" == "predict" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore infer/predict.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
           # GCENet
           elif [ "${model[i]}" == "gcenet" ]; then
             model_dir="${current_dir}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${input_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
@@ -714,15 +715,15 @@ if [ "$task" == "predict" ]; then
               --num_iters 8 \
               --image-size 512 \
               --save-image \
-              --benchmark \
-              --output-dir "${predict_dir}"
+              --benchmark
           # GCENetV2
           elif [ "${model[i]}" == "gcenetv2" ]; then
             model_dir="${current_dir}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${input_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
@@ -730,7 +731,7 @@ if [ "$task" == "predict" ]; then
               --num_iters 8 \
               --image-size 512 \
               --save-image \
-              --output-dir "${predict_dir}"
+              --benchmark
           # IAT
           elif [ "${model[i]}" == "iat" ]; then
             model_dir="${llie_dir}/${model[i]}"
@@ -892,8 +893,9 @@ if [ "$task" == "predict" ]; then
             model_dir="${current_dir}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${input_data_dirs[k]}" \
               --config "${model[i]}_sice_zerodce" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --root "${predict_dir}" \
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
@@ -901,7 +903,7 @@ if [ "$task" == "predict" ]; then
               --num_iters 8 \
               --image-size 512 \
               --save-image \
-              --output-dir "${predict_dir}"
+              --benchmark
           # Zero-DCE
           elif [ "${model[i]}" == "zerodce" ]; then
             model_dir="${llie_dir}/${model[i]}"
@@ -980,7 +982,7 @@ if [ "$task" == "evaluate" ]; then
 
           if [ "${j}" == 0 ]; then
             python -W ignore metric.py \
-              --image-dir "${predict_dir}" \
+              --input-dir "${predict_dir}" \
               --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
               --result-file "${current_dir}" \
               --name "${model_variant_suffix}" \
@@ -1001,7 +1003,7 @@ if [ "$task" == "evaluate" ]; then
               # --variant "${variant[j]}" \
           else
             python -W ignore metric.py \
-              --image-dir "${predict_dir}" \
+              --input-dir "${predict_dir}" \
               --target-dir "${root_dir}/data/llie/test/${predict_data[k]}/high" \
               --result-file "${current_dir}" \
               --name "${model_variant_suffix}" \
@@ -1034,17 +1036,17 @@ if [ "$task" == "plot" ]; then
   echo -e "\\nPlot"
   cd "${current_dir}" || exit
   if [ "${use_data_dir}" == "yes" ]; then
-    predict_dir="${root_dir}/data/llie/predict"
+    input_dir="${root_dir}/data/llie/predict"
     output_dir="${root_dir}/data/llie/compare"
   else
-    predict_dir="${root_dir}/run/predict/${project}"
+    input_dir="${root_dir}/run/predict/${project}"
     output_dir="${root_dir}/run/predict/${project}/compare"
   fi
   python -W ignore plot.py \
-    --image-dir "${predict_dir}" \
+    --input-dir "${input_dir}" \
+    --output-dir "${output_dir}" \
     --image-size 512 \
-    --num-cols 8 \
-    --output-dir "${output_dir}"
+    --num-cols 8
 fi
 
 
