@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""AlexNet model trained on CIFAR10 dataset. This is the 'Hello World'
-deep learning models.
+"""AlexNet model trained on CIFAR10 dataset. This is the 'Hello World' for
+deep learning.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ from __future__ import annotations
 import albumentations as A
 
 from config import default
-from mon import RUN_DIR
+from mon import RUN_DIR, DATA_DIR
 
 # region Basic
 
@@ -22,6 +22,7 @@ data_name    = "cifar10"
 num_classes  = 10
 fullname     = f"{model_name}-{data_name}"
 image_size   = [64, 64]
+verbose 	 = True
 
 # endregion
 
@@ -62,7 +63,7 @@ model = {
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
-	"verbose"    : True,           # Verbosity.
+	"verbose"    : verbose,        # Verbosity.
 }
 
 # endregion
@@ -72,18 +73,18 @@ model = {
 
 datamodule = {
     "name"        : data_name,    # A root directory where the data is stored.
-    # "root"        : DATA_DIR / "a2i2-haze",
+    "root"        : DATA_DIR / "a2i2-haze",
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
     ]),  # Transformations performing on both the input and target.
-    "to_tensor"   : False,        # If True, convert input and target to :class:`torch.Tensor`.
-    "cache_data"  : False,        # If True, cache data to disk for faster loading next time.
-    "cache_images": False,        # If True, cache images into memory for faster training.
+    "to_tensor"   : False,        # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
+    "cache_images": False,        # If ``True``, cache images into memory for faster training.
     "batch_size"  : 8,            # The number of samples in one forward pass.
-    "devices"     : 0,            # A list of devices to use. Default: 0.
-    "shuffle"     : True,         # If True, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"     : True,         # Verbosity.
+    "devices"     : 0,            # A list of devices to use. Default: ``0``.
+    "shuffle"     : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
+    "verbose"     : verbose,      # Verbosity.
 }
 
 # endregion
@@ -95,7 +96,7 @@ trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
 		    "monitor": "checkpoint/psnr/train_epoch",  # Quantity to monitor.
-			"mode"   : "max",                          # 'min' or 'max'.
+			"mode"   : "max",                          # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,
@@ -107,5 +108,12 @@ trainer = default.trainer | {
 	},
 	
 }
+
+# endregion
+
+
+# region Predicting
+
+predictor = default.predictor | {}
 
 # endregion
