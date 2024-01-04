@@ -61,7 +61,7 @@ bash -i install.sh
 If you find our work useful, please cite the following:
 ```text
 @misc{Pham2022,  
-    author       = {Long Hoang Pham},  
+    author       = {Long Hoang Pham, Duong Nguyen-Ngoc Tran, Quoc Pham-Nam Ho},  
     title        = {🐈 mon},  
     publisher    = {GitHub},
     journal      = {GitHub repository},
