@@ -27,6 +27,8 @@ def weights_init(m):
 
 def train(args):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
+    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
     
     scale_factor = args.scale_factor
     DCE_net      = model.enhance_net_nopool(scale_factor).cuda()
@@ -35,7 +37,7 @@ def train(args):
     if args.load_pretrain:
         DCE_net.load_state_dict(torch.load(args.weights))
     
-    train_dataset = dataloader.lowlight_loader(args.data)
+    train_dataset = dataloader.lowlight_loader(args.input_dir)
     train_loader  = torch.utils.data.DataLoader(
 	    train_dataset,
 	    batch_size  = args.train_batch_size,
@@ -84,9 +86,9 @@ def train(args):
                     torch.save(DCE_net.state_dict(), args.checkpoints_dir / "best.pt")
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",             type=str,   default="data/train_data/")
+    parser.add_argument("--input-dir",        type=str,   default="data/train_data/")
     parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/zerodce++/best.pth")
     parser.add_argument("--load-pretrain",    type=bool,  default=False)
     parser.add_argument("--lr",               type=float, default=0.0001)
@@ -101,8 +103,9 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
     parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/zerodce++")
     args = parser.parse_args()
-    
-    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
-    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
-    
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     train(args)

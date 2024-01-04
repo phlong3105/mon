@@ -19,14 +19,14 @@ console = mon.console
 
 
 def main(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     #
-    image_paths = list(args.data.rglob("*"))
+    image_paths = list(args.input_dir.rglob("*"))
     image_paths = [path for path in image_paths if path.is_image_file()]
     sum_time    = 0
     with mon.get_progress_bar() as pbar:
@@ -55,17 +55,17 @@ def main(args: argparse.Namespace):
             run_time = (time.time() - start_time)
             if args.resize:
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
-            result_path    = args.output_dir / image_path.name
-            cv2.imwrite(str(result_path), enhanced_image)
-            sum_time      += run_time
+            output_path = args.output_dir / image_path.name
+            cv2.imwrite(str(output_path), enhanced_image)
+            sum_time += run_time
     avg_time = float(sum_time / len(image_paths))
     console.log(f"Average time: {avg_time}")
     
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
-    parser.add_argument("--data",       type=str,   default="./demo/", help="folder path to test images.")
-    parser.add_argument("--weights",    type=str,   default="./checkpoint.pth")
+    parser.add_argument("--input-dir",  type=str,   default="./demo/", help="folder path to test images.")
+    parser.add_argument("--output-dir", type=str,   default=RUN_DIR / "predict/vision/enhance/llie/lime")
     parser.add_argument("--image-size", type=int,   default=512)
     parser.add_argument("--gamma",      type=float, default=0.6,       help="Gamma correction parameter.")
     parser.add_argument("--lambda_",    type=float, default=0.15,      help="The weight for balancing the two terms in the illumination refinement optimization objective.")
@@ -76,6 +76,10 @@ if __name__ == "__main__":
     parser.add_argument("--bs",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's saturation measure.")
     parser.add_argument("--be",         type=float, default=1,         help="Parameter for controlling the influence of Mertens's well exposedness measure.")
     parser.add_argument("--eps",        type=float, default=1e-3,      help="Constant to avoid computation instability.")
-    parser.add_argument("--output-dir", type=str,   default=RUN_DIR / "predict/vision/enhance/llie/lime")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     main(args)

@@ -49,28 +49,29 @@ class Tester:
     def test(self):
         self.net.eval()
         
-        console.log(f"Data: {args.data}")
-        args.data   = mon.Path(args.data)
-        image_paths = list(args.data.rglob("*"))
-        image_paths = [p for p in image_paths if p.is_image_file()]
+        console.log(f"Data: {args.input_dir}")
+        args.input_dir = mon.Path(args.input_dir)
+        image_paths    = list(args.input_dir.rglob("*"))
+        image_paths    = [p for p in image_paths if p.is_image_file()]
         
         args.output_dir = mon.Path(args.output_dir)
         args.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Measure efficiency score
-        h = (args.image_size // self.scale_factor) * self.scale_factor
-        w = (args.image_size // self.scale_factor) * self.scale_factor
-        flops, params, avg_time = mon.calculate_efficiency_score(
-            model      = self.net,
-            image_size = [h, w],
-            channels   = 3,
-            runs       = 100,
-            use_cuda   = True,
-            verbose    = False,
-        )
-        console.log(f"FLOPs  = {flops:.4f}")
-        console.log(f"Params = {params:.4f}")
-        console.log(f"Time   = {avg_time:.4f}")
+        if args.benchmark:
+            h = (args.image_size // self.scale_factor) * self.scale_factor
+            w = (args.image_size // self.scale_factor) * self.scale_factor
+            flops, params, avg_time = mon.calculate_efficiency_score(
+                model      = self.net,
+                image_size = [h, w],
+                channels   = 3,
+                runs       = 100,
+                use_cuda   = True,
+                verbose    = False,
+            )
+            console.log(f"FLOPs  = {flops:.4f}")
+            console.log(f"Params = {params:.4f}")
+            console.log(f"Time   = {avg_time:.4f}")
         
         sum_time = 0
         with mon.get_progress_bar() as pbar:
@@ -81,8 +82,8 @@ class Tester:
             ):
                 enhanced_image, run_time = self.inference(image_path)
                 sum_time    += run_time
-                result_path  = args.output_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
+                output_path  = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(output_path))
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
 

@@ -17,7 +17,7 @@ from torchvision.models import vgg16
 import mon
 from data_loaders.lol_v1_new import lowlight_loader_new
 from model.IAT_main import IAT
-from mon import ZOO_DIR, RUN_DIR
+from mon import ZOO_DIR, RUN_DIR, DATA_DIR
 from utils import LossNetwork, PSNR, validation
 
 console = mon.console
@@ -34,7 +34,7 @@ def train(args: argparse.Namespace):
         model.load_state_dict(torch.load(args.weights))
     
     # Data Setting
-    train_dataset = lowlight_loader_new(images_path=str(args.data_train))
+    train_dataset = lowlight_loader_new(images_path=str(args.input_train))
     train_loader  = torch.utils.data.DataLoader(
         train_dataset,
         batch_size  = args.batch_size,
@@ -42,7 +42,7 @@ def train(args: argparse.Namespace):
         num_workers = 8,
         pin_memory  = True
     )
-    val_dataset = lowlight_loader_new(images_path=str(args.data_val), mode="test")
+    val_dataset = lowlight_loader_new(images_path=str(args.input_val), mode="test")
     val_loader  = torch.utils.data.DataLoader(
         val_dataset,
         batch_size  = 1,
@@ -123,21 +123,26 @@ def train(args: argparse.Namespace):
             torch.save(model.state_dict(), args.checkpoints_dir / "best.pt")
     
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-train",       type=str,   default="/data/unagi0/cui_data/light_dataset/LOL_v1/our485_patch/low/")
-    parser.add_argument("--data-val",         type=str,   default="/data/unagi0/cui_data/light_dataset/LOL_v1/eval15/low/")
-    parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/iat/iat-lol-v1.pth")
+    parser.add_argument("--input-train",      type=str,   default=DATA_DIR / "llie/train/lol-v1/low")
+    parser.add_argument("--input-val",        type=str,   default=DATA_DIR / "llie/test/lol-v1/low")
+    parser.add_argument("--weights",          type=str,   default=ZOO_DIR  / "vision/enhance/llie/iat/iat-lol-v1.pth")
     parser.add_argument("--load-pretrain",    type=bool,  default=False)
     parser.add_argument("--batch-size",       type=int,   default=8)
     parser.add_argument("--lr",               type=float, default=2e-4)   # for batch size 4x2=8
     parser.add_argument("--weight-decay",     type=float, default=0.0004)
     parser.add_argument("--epochs",           type=int,   default=200)
     parser.add_argument("--local-rank",       type=int,   default=-1, help="")
-    parser.add_argument("--normalize",        action="store_true", help="Default not Normalize in exposure training.")
+    parser.add_argument("--normalize",        action="store_true",    help="Default not Normalize in exposure training.")
     parser.add_argument("--gpu",              type=str,   default=0)
     parser.add_argument("--display-iter",     type=int,   default=10)
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
     parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/iat/lol_v1_patch")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     train(args)

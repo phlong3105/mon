@@ -32,6 +32,12 @@ def save_images(tensor, path):
 
 
 def test(args):
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    # (args.output_dir / "lol").mkdir(parents=True, exist_ok=True)
+    # (args.output_dir / "dark").mkdir(parents=True, exist_ok=True)
+    
     if not torch.cuda.is_available():
         console.log("No gpu device available")
         sys.exit(1)
@@ -44,7 +50,7 @@ def test(args):
     torch.cuda.manual_seed(args.seed)
     # print("GPU device = %d" % args.gpu)
     # print("args = %s", args)
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     model      = Network()
     model      = model.cuda()
@@ -54,22 +60,23 @@ def test(args):
         p.requires_grad = False
     
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = model,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
     # Prepare DataLoader
     # test_low_data_names = r"H:\CVPR2021\LOL-700\input-100/*.png"
     # test_low_data_names = r"H:\image-enhance\LLIECompared\DarkFace1000\input/*.png"
-    test_low_data_names = args.data
+    test_low_data_names = args.input_dir
     test_dataset = MemoryFriendlyLoader(img_dir=test_low_data_names, task="test")
     test_loader  = torch.utils.data.DataLoader(
         test_dataset,
@@ -107,22 +114,21 @@ def test(args):
                 """
         avg_time = sum_time / len(test_dataset)
         console.log(f"Average time: {avg_time}")
-            
 
-if __name__ == "__main__":
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("ruas")
-    parser.add_argument("--data",       type=str, default=DATA_DIR / "lol")
+    parser.add_argument("--input-dir",  type=str, default=DATA_DIR)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/ruas/ruas-lol.pt")
     parser.add_argument("--image-size", type=int, default=512)
     parser.add_argument("--gpu",        type=int, default=0)
     parser.add_argument("--seed",       type=int, default=2)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
+    parser.add_argument("--benchmark",  action="store_true")
     args = parser.parse_args()
-    
-    args.output_dir = mon.Path(args.output_dir)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # (args.output_dir / "lol").mkdir(parents=True, exist_ok=True)
-    # (args.output_dir / "dark").mkdir(parents=True, exist_ok=True)
-    
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     test(args)

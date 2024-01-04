@@ -20,7 +20,7 @@ from mon import RUN_DIR, ZOO_DIR
 console = mon.console
 
 
-def predict(image_path: str):
+def run_infer(image_path: str):
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     data_lowlight = Image.open(image_path).convert("RGB")
     data_lowlight = (np.asarray(data_lowlight) / 255.0)
@@ -44,39 +44,33 @@ def predict(image_path: str):
     return enhanced_image, run_time
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/zerodce/best.pth")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/zerodce")
-    args = parser.parse_args()
-    
-    args.data       = mon.Path(args.data)
+def test(args):
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     DCE_net = model.enhance_net_nopool().cuda()
     DCE_net.load_state_dict(torch.load(args.weights))
     
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = DCE_net,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = DCE_net,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
     #
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         image_paths.sort()
         sum_time    = 0
@@ -87,9 +81,25 @@ if __name__ == "__main__":
                 description = f"[bright_yellow] Inferring"
             ):
                 # console.log(image_path)
-                enhanced_image, run_time = predict(image_path)
-                result_path = args.output_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
+                enhanced_image, run_time = run_infer(image_path)
+                output_path = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-dir",  type=str, default="data/test_data/")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/zerodce")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/zerodce/best.pth")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--benchmark",  action="store_true")
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    test(args)

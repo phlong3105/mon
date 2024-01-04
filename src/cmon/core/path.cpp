@@ -15,7 +15,7 @@ namespace mon {
     }
 
     auto is_image_file(const fs::path& path, const bool exist) -> bool  {
-        const auto ext = static_cast<std::string>(path.extension());
+        const auto ext = path.extension().string();
         auto exts = ImageFormat::values;
         return (exist ? is_file(path) : true) & (std::find(exts.begin(), exts.end(), ext) != exts.end());
     }

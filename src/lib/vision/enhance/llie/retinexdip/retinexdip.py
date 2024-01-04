@@ -337,13 +337,13 @@ def lowlight_enhancer(image_name, image):
 
 
 def test(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     #
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -354,39 +354,46 @@ def test(args: argparse.Namespace):
             ):
                 # console.log(image_path)
                 image_path   = mon.Path(image_path)
-                result_path  = args.output_dir / image_path.name
+                output_path  = args.output_dir / image_path.name
                 image        = Image.open(image_path).convert("RGB")
-                enhanced_image, run_time = lowlight_enhancer(result_path, image)
-                # torchvision.utils.save_image(enhanced_image, str(result_path))
-                cv2.imwrite(str(result_path), enhanced_image)
+                enhanced_image, run_time = lowlight_enhancer(output_path, image)
+                # torchvision.utils.save_image(enhanced_image, str(output_path))
+                cv2.imwrite(str(output_path), enhanced_image)
                 sum_time    += run_time
 
                 # Measure efficiency score
                 if i == 0:
                     s = Enhancement(
-                        image_name           = result_path,
+                        image_name           = output_path,
                         image                = image,
                         plot_during_training = True,
                         show_every           = 10,
                         num_iter             = 500,
                     )
-                    s.calculate_efficiency_score(
-                        image_size = args.image_size,
-                        channels   = 8,
-                        runs       = 100,
-                    )
+                    if args.benchmark:
+                        s.calculate_efficiency_score(
+                            image_size = args.image_size,
+                            channels   = 8,
+                            runs       = 100,
+                        )
 
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default=DATA_DIR)
+    parser.add_argument("--input-dir",  type=str, default=DATA_DIR)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/retinexdip/retinexdip-lol.pt")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/ruas")
+    parser.add_argument("--benchmark",  action="store_true")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     test(args)
 
     """

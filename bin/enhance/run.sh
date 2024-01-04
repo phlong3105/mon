@@ -410,8 +410,8 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore train_lol_v1_patch.py \
-          --data-train "${input_data_dirs[j]}" \
-          --data-val "${input_data_dirs[j]}" \
+          --input-train "${input_data_dirs[j]}" \
+          --input-val "${input_data_dirs[j]}" \
           --batch-size 8 \
           --lr 0.0002 \
           --weight-decay 0.0004 \
@@ -464,17 +464,17 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore retinexdip.py \
-          --data "${input_data_dirs[j]}" \
-          --weights "${weights}" \
-          --image-size 512 \
-          --output-dir "${train_dir}"
+          --input-dir "${input_data_dirs[j]}" \
+          --output-dir "${train_dir}" \
+          --weights "${root_dir}/zoo/vision/enhance/llie/retinexdip/retinexdip-lol.pt" \
+          --image-size 512
       # RetinexNet
       elif [ "${model[i]}" == "retinexnet" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data-low "${input_data_dirs[j]}" \
-          --data-high "${target_data_dirs[j]}" \
+          --input-low "${input_data_dirs[j]}" \
+          --input-high "${target_data_dirs[j]}" \
           --gpu 0 \
           --epochs "$epochs" \
           --batch-size 16 \
@@ -486,7 +486,7 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${input_data_dirs[j]}" \
+          --input-dir "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --epoch "$epochs" \
@@ -500,7 +500,7 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${input_data_dirs[j]}" \
+          --input-dir "${input_data_dirs[j]}" \
           --weights "${weights}" \
           --load-pretrain false \
           --batch-size 1 \
@@ -516,8 +516,8 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${input_data_dirs[j]}" \
-          --weights "${weights}" \
+          --input-dir "${input_data_dirs[j]}" \
+          --weights "${root_dir}/zoo/vision/enhance/llie/sgz/sgz-lol.pt" \
           --load-pretrain false \
           --image-size 512 \
           --lr 0.0001 \
@@ -545,7 +545,7 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore train.py \
-          --data "${input_data_dirs[j]}" \
+          --input-dir "${input_data_dirs[j]}" \
           --epochs "$epochs" \
           --batch-size 1 \
           --lr 0.0001 \
@@ -576,8 +576,8 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore lowlight_train.py \
-          --data "${input_data_dirs[j]}" \
-          --weights "${weights}" \
+          --input-dir "${input_data_dirs[j]}" \
+          --weights "${root_dir}/zoo/vision/enhance/llie/zerodce/best.pth" \
           --load-pretrain false \
           --lr 0.0001 \
           --weight-decay 0.0001 \
@@ -594,8 +594,8 @@ if [ "$task" == "train" ]; then
         model_dir="${llie_dir}/${model[i]}"
         cd "${model_dir}" || exit
         python -W ignore lowlight_train.py \
-          --data "${input_data_dirs[j]}" \
-          --weights "${weights}" \
+          --input-dir "${input_data_dirs[j]}" \
+          --weights "${root_dir}/zoo/vision/enhance/llie/zerodce++/best.pth" \
           --load-pretrain false \
           --lr 0.0001 \
           --weight-decay 0.0001 \
@@ -711,7 +711,9 @@ if [ "$task" == "predict" ]; then
             python -W ignore infer/predict.py \
               --input-dir "${input_data_dirs[k]}" \
               --output-dir "${predict_dir}" \
+              --weights "${root_dir}/zoo/vision/enhance/llie/enlightengan/enlightengan.onnx" \
               --image-size 512 \
+              --benchmark
           # GCENet
           elif [ "${model[i]}" == "gcenet" ]; then
             model_dir="${current_dir}"
@@ -749,157 +751,171 @@ if [ "$task" == "predict" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore IAT_enhance/predict.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --exposure-weights "${root_dir}/zoo/vision/enhance/llie/iat/iat-exposure.pth" \
               --enhance-weights "${root_dir}/zoo/vision/enhance/llie/iat/iat-lol-v1.pth" \
               --image-size 512 \
               --normalize \
               --task "enhance" \
-              --output-dir "${predict_dir}"
+              --benchmark
           # KinD
           elif [ "${model[i]}" == "kind" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/kind" \
               --image-size 512 \
               --mode "test" \
-              --output-dir "${predict_dir}"
+              --benchmark
           # KinD++
           elif [ "${model[i]}" == "kind++" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/kind++" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # LIME
           elif [ "${model[i]}" == "lime" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore demo.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --image-size 512 \
               --lime \
-              --output-dir "${predict_dir}" \
           # LLFlow
           elif [ "${model[i]}" == "llflow" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore code/test_unpaired_v2.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/llflow/llflow-lol-smallnet.pth" \
               --image-size 512 \
-              --output-dir "${predict_dir}" \
               --opt "code/confs/LOL_smallNet.yml" \
-              --name "unpaired"
+              --name "unpaired" \
+              --benchmark
           # MBLLEN
           elif [ "${model[i]}" == "mbllen" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore main/test.py \
-              --data "${input_data_dirs[k]}" \
-              --image-size 512 \
+              --input-dir "${input_data_dirs[k]}" \
               --output-dir "${predict_dir}" \
+              --image-size 512 \
+              --benchmark
           # PIE
           elif [ "${model[i]}" == "pie" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python main.py \
-              --data "${input_data_dirs[k]}" \
-              --image-size 512 \
+              --input-dir "${input_data_dirs[k]}" \
               --output-dir "${predict_dir}" \
+              --image-size 512
           # RetinexDIP
           elif [ "${model[i]}" == "retinexdip" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore retinexdip.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/retinexdip/retinexdip-lol.pt" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # RetinexNet
           elif [ "${model[i]}" == "retinexnet" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/retinexnet" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # RUAS
           elif [ "${model[i]}" == "ruas" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/ruas//ruas-lol.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # SCI
           elif [ "${model[i]}" == "sci" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/sci/sci-medium.pt" \
               --image-size 512 \
               --gpu 0 \
               --seed 2 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # SGZ
           elif [ "${model[i]}" == "sgz" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/sgz/sgz-lol.pt" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # SNR-Aware
           elif [ "${model[i]}" == "snr" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/snr/snr-lolv1.pth" \
               --opt "./options/test/LOLv1.yml" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # StableLLVE
           elif [ "${model[i]}" == "stablellve" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/stablellve/stablellve-checkpoint.pth" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # URetinex-Net
           elif [ "${model[i]}" == "uretinexnet" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --decom-model-low-weights "${root_dir}/zoo/vision/enhance/llie/uretinexnet/uretinexnet-init_low.pth" \
               --unfolding-model-weights "${root_dir}/zoo/vision/enhance/llie/uretinexnet/uretinexnet-unfolding.pth" \
               --adjust-model-weights "${root_dir}/zoo/vision/enhance/llie/uretinexnet/uretinexnet-L_adjust.pth" \
               --image-size 512 \
               --ratio 5 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # UTVNet
           elif [ "${model[i]}" == "utvnet" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/utvnet/utvnet-model_test.pt" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # Zero-ADCE
           elif [ "${model[i]}" == "zeroadce" ]; then
             model_dir="${current_dir}"
@@ -921,19 +937,21 @@ if [ "$task" == "predict" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore lowlight_test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/zerodce/best.pth" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           # Zero-DCE++
           elif [ "${model[i]}" == "zerodce++" ]; then
             model_dir="${llie_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore lowlight_test.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --weights "${root_dir}/zoo/vision/enhance/llie/zerodce++/best.pth" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           fi
         done
       fi

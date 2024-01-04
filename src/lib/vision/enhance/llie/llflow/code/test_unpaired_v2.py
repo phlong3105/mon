@@ -92,11 +92,11 @@ def format_measurements(meas):
 
 
 def main(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     conf_path      = args.opt
     conf           = conf_path.split("/")[-1].replace(".yml", "")
@@ -110,14 +110,15 @@ def main(args: argparse.Namespace):
     model.netG     = model.netG.cuda()
 
     # Measure efficiency score
-    flops, params, avg_time = model.measure_efficiency_score(image_size=args.image_size)
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = model.measure_efficiency_score(image_size=args.image_size)
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
 
     #
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -154,19 +155,25 @@ def main(args: argparse.Namespace):
                 run_time  = (time.time() - start_time)
                 sum_time += run_time
                 
-                result_path = args.output_dir / image_path.name
-                imwrite(str(result_path), sr)
+                output_path = args.output_dir / image_path.name
+                imwrite(str(output_path), sr)
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
+    parser.add_argument("--input-dir",  type=str, default="data/test_data/")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/llflow")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/llflow/llflow-lol-smallnet.pth")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/llflow")
     parser.add_argument("--opt",        type=str, default="./confs/LOL_smallNet.yml")
     parser.add_argument("--name", "-n", type=str, default="unpaired")
+    parser.add_argument("--benchmark",  action="store_true")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     main(args)

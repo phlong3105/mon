@@ -23,7 +23,7 @@ console = mon.console
 
 
 def predict(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -31,20 +31,21 @@ def predict(args: argparse.Namespace):
     args.opt = option.dict_to_nonedict(args.opt)
     args.opt["path"]["pretrain_model_G"] = str(args.weights)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     # Load model
     model = create_model(args.opt)
     
     # Measure efficiency score
-    # flops, params, avg_time = model.measure_efficiency_score(image_size=args.image_size)
-    # console.log(f"FLOPs  = {flops:.4f}")
-    # console.log(f"Params = {params:.4f}")
-    # console.log(f"Time   = {avg_time:.4f}")
-    
+    if args.benchmark:
+        flops, params, avg_time = model.measure_efficiency_score(image_size=args.image_size)
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+
     #
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -76,21 +77,26 @@ def predict(args: argparse.Namespace):
                 visuals        = model.get_current_visuals(need_GT=False)
                 enhanced_image = util.tensor2img(visuals['rlt'])  # uint8
                 enhanced_image = cv2.resize(enhanced_image, (w, h))
-                result_path    = args.output_dir / image_path.name
-                cv2.imwrite(str(result_path), enhanced_image)
-                # torchvision.utils.save_image(enhanced_image, str(result_path))
+                output_path    = args.output_dir / image_path.name
+                cv2.imwrite(str(output_path), enhanced_image)
+                # torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
     
-        
-if __name__ == "__main__":
+
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
+    parser.add_argument("--input-dir",  type=str, default="data/test_data/")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/snr")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/snr/snr-lolv1.pth")
     parser.add_argument("--opt",        type=str, default="./options/test/LOLv1.yml", help="Path to options YAML file.")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/snr")
+    parser.add_argument("--benchmark",  action="store_true")
     args = parser.parse_args()
+    return args
 
+
+if __name__ == "__main__":
+    args = parse_args()
     predict(args)

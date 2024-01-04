@@ -19,6 +19,7 @@ from torch.autograd import Variable
 import mon
 import utils
 from model import *
+from mon import ZOO_DIR
 from multi_read_data import MemoryFriendlyLoader
 
 console = mon.console
@@ -32,7 +33,10 @@ def save_images(tensor, path):
 
 
 def train(args):
-    console.log(f"Data: {args.data}")
+    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
+    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
+    
+    console.log(f"Data: {args.input_dir}")
     
     if not torch.cuda.is_available():
         console.log("No gpu device available")
@@ -72,7 +76,7 @@ def train(args):
     console.log("model size = %f", MB)
     console.log(MB)
 
-    train_low_data_names = str(args.data)
+    train_low_data_names = str(args.input_dir)
     train_dataset        = MemoryFriendlyLoader(img_dir=train_low_data_names, task="train")
     test_low_data_names  = "./data/medium"
     test_dataset         = MemoryFriendlyLoader(img_dir=test_low_data_names, task="test")
@@ -121,17 +125,17 @@ def train(args):
                 model.eval()
                 with torch.no_grad():
                     for _, (input, image_name) in enumerate(test_queue):
-                        input      = Variable(input, volatile=True).cuda()
+                        input       = Variable(input, volatile=True).cuda()
                         illu_list, ref_list, input_list, atten = model(input)
                         image_name  = image_name[0].split("\\")[-1].split(".")[0]
-                        result_path = image_path / f"{image_name}_{epoch}.png"
-                        save_images(ref_list[0], str(result_path))
+                        output_path = image_path / f"{image_name}_{epoch}.png"
+                        save_images(ref_list[0], str(output_path))
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("SCI")
-    parser.add_argument("--data",            type=str,   default="data/train_data/")
-    parser.add_argument("--weights",         type=str,   default="weights/Epoch99.pth")
+    parser.add_argument("--input-dir",       type=str,   default="data/train_data/")
+    parser.add_argument("--weights",         type=str,   default=ZOO_DIR / "vision/enhance/llie/sci/sci-medium.pt")
     parser.add_argument("--load-pretrain",   type=bool,  default=False)
     parser.add_argument("--batch-size",      type=int,   default=1,      help="batch size")
     parser.add_argument("--epochs",          type=int,   default=1000,   help="epochs")
@@ -142,8 +146,9 @@ if __name__ == "__main__":
     parser.add_argument("--seed",            type=int,   default=2,      help="random seed")
     parser.add_argument("--checkpoints-dir", type=str,   default=mon.RUN_DIR/"train/iat", help="location of the data corpus")
     args = parser.parse_args()
-   
-    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
-    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
-    
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     train(args)

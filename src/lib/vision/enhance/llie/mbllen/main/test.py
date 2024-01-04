@@ -24,18 +24,19 @@ console = mon.console
 
 
 def test(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     # Measure efficiency score
-    model  = Network.build_mbllen((args.image_size, args.image_size, 3))
-    flops  = get_flops(model, batch_size=1)
-    params = int(np.sum([K.count_params(p) for p in set(model.trainable_weights)]))
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
+    if args.benchmark:
+        model  = Network.build_mbllen((args.image_size, args.image_size, 3))
+        flops  = get_flops(model, batch_size=1)
+        params = int(np.sum([K.count_params(p) for p in set(model.trainable_weights)]))
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
     
     # Load model
     model_name = args.model
@@ -50,7 +51,7 @@ def test(args: argparse.Namespace):
     highpercent = args.highpercent
     maxrange    = args.maxrange / 10.0
     hsvgamma    = args.gamma    / 10.0
-    image_paths = list(args.data.rglob("*"))
+    image_paths = list(args.input_dir.rglob("*"))
     image_paths = [path for path in image_paths if path.is_image_file()]
     sum_time    = 0
     with mon.get_progress_bar() as pbar:
@@ -91,17 +92,18 @@ def test(args: argparse.Namespace):
             outputs = np.minimum(outputs, 1.0)
             outputs = np.maximum(outputs, 0.0)
         
-            result_path = args.output_dir / image_path.name
-            utls.imwrite(str(result_path), outputs)
+            output_path = args.output_dir / image_path.name
+            utls.imwrite(str(output_path), outputs)
             sum_time      += run_time
     avg_time = float(sum_time / len(image_paths))
     console.log(f"Average time: {avg_time}")
     
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",        type=str, default="./input", help="test image folder")
-    parser.add_argument("--model",       type=str, default=ZOO_DIR / "vision/enhance/llie//mbllen/mbllen-syn_img_lowlight_withnoise", help="model name")
+    parser.add_argument("--input-dir",   type=str, default="./input", help="test image folder")
+    parser.add_argument("--output-dir",  type=str, default=RUN_DIR / "predict/vision/enhance/llie/mbllen")
+    parser.add_argument("--model",       type=str, default=ZOO_DIR / "vision/enhance/llie/mbllen/mbllen-syn_img_lowlight_withnoise", help="model name")
     parser.add_argument("--weights",     type=str, default="./models")
     parser.add_argument("--image-size",  type=int, default=512)
     parser.add_argument("--com",         type=int, default=1,  help="Output with/without origional image and mid-result")
@@ -109,6 +111,11 @@ if __name__ == "__main__":
     parser.add_argument("--lowpercent",  type=int, default=5,  help="Should be in [0,15], rescale the range [p%,1] to [0, 1]")
     parser.add_argument("--gamma",       type=int, default=8,  help="Should be in [6,10], increase the saturability")
     parser.add_argument("--maxrange",    type=int, default=8,  help="Linear amplification range")
-    parser.add_argument("--output-dir",  type=str, default=RUN_DIR / "predict/vision/enhance/llie/mbllen")
+    parser.add_argument("--benchmark",   action="store_true")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     test(args)

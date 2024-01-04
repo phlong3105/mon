@@ -21,11 +21,11 @@ console = mon.console
 
 
 def test(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     # Load model
     model = UNet(n_channels=3, bilinear=True)
@@ -33,21 +33,22 @@ def test(args: argparse.Namespace):
     model = model.cuda()
     
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = model,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
     #
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -65,8 +66,8 @@ def test(args: argparse.Namespace):
                 start_time     = time.time()
                 enhanced_image = model(image)
                 run_time       = (time.time() - start_time)
-                result_path    = args.output_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
+                output_path    = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time      += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
@@ -89,11 +90,17 @@ def test(args: argparse.Namespace):
     """
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="./data/test/*")
+    parser.add_argument("--input-dir",  type=str, default="./data/test/*")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
     parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/stablellve/stablellve-checkpoint.pth")
     parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
+    parser.add_argument("--benchmark",  action="store_true")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     test(args)

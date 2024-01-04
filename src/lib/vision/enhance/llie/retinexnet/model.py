@@ -146,30 +146,31 @@ def calculate_efficiency_score(
 
 
 class RetinexNet(nn.Module):
-    def __init__(self, image_size=512):
+    def __init__(self, image_size=512, benchmark=False):
         super(RetinexNet, self).__init__()
 
         self.DecomNet   = DecomNet()
         self.RelightNet = RelightNet()
-        flops1, params1, avg_time1 = mon.calculate_efficiency_score(
-            model      = self.DecomNet,
-            image_size = image_size,
-            channels   = 3,
-            runs       = 100,
-            use_cuda   = True,
-            verbose    = False,
-        )
-        flops2, params2, avg_time2 = calculate_efficiency_score(
-            model      = self.RelightNet,
-            image_size = image_size,
-            channels   = 3,
-            runs       = 100,
-            use_cuda   = True,
-            verbose    = False,
-        )
-        console.log(f"FLOPs  = {flops1+flops2:.4f}")
-        console.log(f"Params = {params1+params2:.4f}")
-        console.log(f"Time   = {avg_time1+avg_time2:.4f}")
+        if benchmark:
+            flops1, params1, avg_time1 = calculate_efficiency_score(
+                model      = self.DecomNet,
+                image_size = image_size,
+                channels   = 3,
+                runs       = 100,
+                use_cuda   = True,
+                verbose    = False,
+            )
+            flops2, params2, avg_time2 = calculate_efficiency_score(
+                model      = self.RelightNet,
+                image_size = image_size,
+                channels   = 3,
+                runs       = 100,
+                use_cuda   = True,
+                verbose    = False,
+            )
+            console.log(f"FLOPs  = {flops1+flops2:.4f}")
+            console.log(f"Params = {params1+params2:.4f}")
+            console.log(f"Time   = {avg_time1+avg_time2:.4f}")
 
     def forward(self, input_low, input_high):
         # Forward DecompNet

@@ -14,11 +14,11 @@ console = mon.console
 
 
 def test(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     # Load model
     # args.noDecom = True
@@ -41,22 +41,23 @@ def test(args: argparse.Namespace):
     model.eval()
     
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = model,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
     #
     target_b = 0.70
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -77,8 +78,8 @@ def test(args: argparse.Namespace):
                 _, _, enhanced_image = model(L=image, ratio=ratio)
                 # enhanced_image = enhanced_image.detach().cpu()[0]
                 run_time       = (time.time() - start_time)
-                result_path    = args.output_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
+                output_path    = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time      += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")

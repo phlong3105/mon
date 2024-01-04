@@ -42,19 +42,12 @@ from mon import RUN_DIR, ZOO_DIR
 console = mon.console
 
 
-def test():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/utvnet/utvnet-model_test.pt")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
-    args = parser.parse_args()
-    
-    args.data       = mon.Path(args.data)
+def test(args):
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     # Load model
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -63,22 +56,23 @@ def test():
     model.load_state_dict(torch.load(str(args.weights), map_location=device))
     
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = model,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
     
     #
     torch.set_grad_enabled(False)
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -97,28 +91,40 @@ def test():
                 enhanced_image = model(image)
                 enhanced_image = enhanced_image.clamp(0, 1).cpu()
                 run_time       = (time.time() - start_time)
-                result_path    = args.output_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
+                output_path    = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time      += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
         
     """
-    if args.data_name == 'sRGBSID':
+    if args.input_dir_name == 'sRGBSID':
         test_input_dir = './dataset/sRGBSID/test/1/'
         test_input_dir2 = './dataset/sRGBSID/test/2/'
         test_gt_dir = './dataset/sRGBSID/gt/test/'
-        loaderTest = dataset.rgbDataset(test_input_dir, test_input_dir2, test_gt_dir, 'test', '512', args.data_name)
+        loaderTest = dataset.rgbDataset(test_input_dir, test_input_dir2, test_gt_dir, 'test', '512', args.input_dir_name)
 
     else:
-        test_input_dir = './dataset/ELD/{}/'.format(args.data_name)
+        test_input_dir = './dataset/ELD/{}/'.format(args.input_dir_name)
         test_input_dir2 = ''
-        test_gt_dir = './dataset/ELD/{}g/'.format(args.data_name)
-        loaderTest = dataset.rgbDataset(test_input_dir, test_input_dir2, test_gt_dir, 'test', '1024', args.data_name)
+        test_gt_dir = './dataset/ELD/{}g/'.format(args.input_dir_name)
+        loaderTest = dataset.rgbDataset(test_input_dir, test_input_dir2, test_gt_dir, 'test', '1024', args.input_dir_name)
 
     test(model, args, loaderTest, device)
     """
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-dir",  type=str, default="data/test_data/")
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/utvnet/utvnet-model_test.pt")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--benchmark",  action="store_true")
+    args = parser.parse_args()
+    return args
+
+
 if __name__ == "__main__":
-    test()
+    args = parse_args()
+    test(args)

@@ -40,7 +40,7 @@ class Inference(nn.Module):
         # Loading decomposition model
         self.model_Decom_low  = Decom()
         self.model_Decom_high = Decom()
-        self.model_Decom_low  = load_initialize(self.model_Decom_low, self.opts.Decom_model_low_weights)
+        self.model_Decom_low  = load_initialize(self.model_Decom_low,  self.opts.Decom_model_low_weights)
         self.model_Decom_high = load_initialize(self.model_Decom_high, self.opts.Decom_model_high_weights)
         # Loading R; old_model_opts; and L model
         self.unfolding_opts, self.model_R, self.model_L = load_unfolding(self.opts.unfolding_model_weights)
@@ -96,7 +96,7 @@ class Inference(nn.Module):
         return I_enhance, run_time
 
     def evaluate(self):
-        low_image_paths = list(self.opts.data_low.rglob("*"))
+        low_image_paths = list(self.opts.input_low.rglob("*"))
         low_image_paths = [path for path in low_image_paths if path.is_image_file()]
         with mon.get_progress_bar() as pbar:
             for _, low_image_path in pbar.track(
@@ -104,7 +104,7 @@ class Inference(nn.Module):
                 total       = len(low_image_paths),
                 description = f"[bright_yellow] Inferring"
             ):
-                high_image_path   = self.opts.data_high / low_image_path.name
+                high_image_path   = self.opts.input_high / low_image_path.name
                 low_image         = self.transform(Image.open(low_image_path)).unsqueeze(0)
                 high_image        = self.transform(Image.open(high_image_path)).unsqueeze(0)
                 enhance, run_time = self.forward(low_image, high_image)
@@ -118,26 +118,34 @@ class Inference(nn.Module):
             print("================================= time for %s: %f============================"%(file_name, p_time))
             """
             return enhance, run_time
-            
-    
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Configure")
-    parser.add_argument("--data-low",                 type=str, default="./test_daat/LOLdataset/eval15/low")
-    parser.add_argument("--data-high",                type=str, default="./test_data/LOLdataset/eval15/high")
-    parser.add_argument("--decom-model-low-weights",  type=str, default="./ckpt/init_low.pth")
-    parser.add_argument("--decom-model-high-weights", type=str, default="./ckpt/init_high.pth")
-    parser.add_argument("--unfolding-model-weights",  type=str, default="./ckpt/unfolding.pth")
-    parser.add_argument("--adjust-model-weights",     type=str, default="./ckpt/L_adjust.pth")
-    parser.add_argument("--gpu",                      type=int, default=0)
-    parser.add_argument("--output-dir",               type=str, default="./demo/output/LOL")
-    args = parser.parse_args()
 
+
+def evaluate(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    
-    args.data_low   = mon.Path(args.data_low)
-    args.data_high  = mon.Path(args.data_high)
+
+    args.input_low  = mon.Path(args.input_low)
+    args.input_high = mon.Path(args.input_high)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     model = Inference(args).cuda()
     model.evaluate()
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Configure")
+    parser.add_argument("--input-low",                 type=str, default="./test_data/LOLdataset/eval15/low")
+    parser.add_argument("--input-high",                type=str, default="./test_data/LOLdataset/eval15/high")
+    parser.add_argument("--output-dir",               type=str, default="./demo/output/LOL")
+    parser.add_argument("--decom-model-low-weights",  type=str, default="./ckpt/init_low.pth")
+    parser.add_argument("--decom-model-high-weights", type=str, default="./ckpt/init_high.pth")
+    parser.add_argument("--unfolding-model-weights",  type=str, default="./ckpt/unfolding.pth")
+    parser.add_argument("--adjust-model-weights",     type=str, default="./ckpt/L_adjust.pth")
+    parser.add_argument("--gpu",                      type=int, default=0)
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    evaluate(args)

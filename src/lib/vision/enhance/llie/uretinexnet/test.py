@@ -13,8 +13,8 @@ import torchvision.transforms as transforms
 
 import mon
 from mon import ZOO_DIR, RUN_DIR
-from network.decom import Decom
 from network.Math_Module import P, Q
+from network.decom import Decom
 from utils import *
 
 console = mon.console
@@ -91,45 +91,35 @@ class Inference(nn.Module):
         """
         return enhance, run_time
         
-    
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Configure")
-    parser.add_argument("--data",                    type=str, default="./demo/input")
-    parser.add_argument("--decom-model-low-weights", type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-init_low.pth")
-    parser.add_argument("--unfolding-model-weights", type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-unfolding.pth")
-    parser.add_argument("--adjust-model-weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-L_adjust.pth")
-    parser.add_argument("--image-size",              type=int, default=512)
-    parser.add_argument("--ratio",                   type=int, default=5)  # ratio are recommended to be 3-5, bigger ratio will lead to over-exposure
-    parser.add_argument("--gpu",                     type=int, default=0)
-    parser.add_argument("--output-dir",              type=str, default=RUN_DIR / "predict/vision/enhance/llie/uretinexnet")
-    args = parser.parse_args()
-    
+
+def test(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-    
-    args.data       = mon.Path(args.data)
+
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    
-    console.log(f"Data: {args.data}")
-    
+
+    console.log(f"Data: {args.input_dir}")
+
     model = Inference(args).cuda()
-    
+
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = model,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
-    
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = model,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
+
     #
     with torch.no_grad():
-        image_paths = list(args.data.rglob("*"))
+        image_paths = list(args.input_dir.rglob("*"))
         image_paths = [path for path in image_paths if path.is_image_file()]
         sum_time    = 0
         with mon.get_progress_bar() as pbar:
@@ -140,8 +130,28 @@ if __name__ == "__main__":
             ):
                 # console.log(image_path)
                 enhanced_image, run_time = model.run(image_path)
-                result_path  = args.output_dir / image_path.name
-                torchvision.utils.save_image(enhanced_image, str(result_path))
+                output_path  = args.output_dir / image_path.name
+                torchvision.utils.save_image(enhanced_image, str(output_path))
                 sum_time    += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Configure")
+    parser.add_argument("--input-dir",               type=str, default="./demo/input")
+    parser.add_argument("--output-dir",              type=str, default=RUN_DIR / "predict/vision/enhance/llie/uretinexnet")
+    parser.add_argument("--decom-model-low-weights", type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-init_low.pth")
+    parser.add_argument("--unfolding-model-weights", type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-unfolding.pth")
+    parser.add_argument("--adjust-model-weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/uretinexnet/uretinexnet-L_adjust.pth")
+    parser.add_argument("--image-size",              type=int, default=512)
+    parser.add_argument("--ratio",                   type=int, default=5)  # ratio are recommended to be 3-5, bigger ratio will lead to over-exposure
+    parser.add_argument("--gpu",                     type=int, default=0)
+    parser.add_argument("--benchmark",               action="store_true")
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    test(args)

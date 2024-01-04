@@ -25,7 +25,7 @@ class Trainer:
         self.net           = model.enhance_net_nopool(self.scale_factor, conv_type=args.conv_type).to(device)
         self.seg           = fpn(args.num_of_SegClass).to(device)
         self.seg_criterion = FocalLoss(gamma=2).to(device)
-        self.train_dataset = dataloader.lowlight_loader(str(args.data))
+        self.train_dataset = dataloader.lowlight_loader(str(args.input_dir))
         self.train_loader  = torch.utils.data.DataLoader(
             self.train_dataset,
             batch_size  = args.train_batch_size,

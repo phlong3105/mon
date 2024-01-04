@@ -26,6 +26,9 @@ console = mon.console
 
 
 def train(args):
+    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
+    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
+    
     if not torch.cuda.is_available():
         console.log("No gpu device available.")
         sys.exit(1)
@@ -48,7 +51,7 @@ def train(args):
     # Prepare DataLoader
     # train_low_data_names = r"D:\ZJA\data\LOL\OR\trainA/*.png"
     # train_low_data_names = r"H:\image-enhance\UPE500\OR\trainA/*.png"
-    train_low_data_names = args.data + "/*"
+    train_low_data_names = args.input_dir + "/*"
     train_dataset = MemoryFriendlyLoader(img_dir=train_low_data_names, task="train")
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -88,9 +91,9 @@ def train(args):
     """
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("ruas")
-    parser.add_argument("--data",            type=str,   default=DATA_DIR / "lol")
+    parser.add_argument("--input-dir",       type=str,   default=DATA_DIR)
     parser.add_argument("--weights",         type=str,   default=ZOO_DIR / "vision/enhance/llie/ruas/ruas-lol.pt")
     parser.add_argument("--load-pretrain",   type=bool,  default=False)
     parser.add_argument("--epochs",          type=int,   default=200)
@@ -100,10 +103,11 @@ if __name__ == "__main__":
     parser.add_argument("--seed",            type=int,   default=2,  help="Random seed")
     parser.add_argument("--checkpoints-dir", type=str,   default=RUN_DIR / "train/vision/enhance/llie/ruas")
     args = parser.parse_args()
-    
-    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
-    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
-    
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     train(args)
     
     """

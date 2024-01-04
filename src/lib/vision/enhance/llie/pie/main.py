@@ -18,14 +18,14 @@ console = mon.console
 
 
 def main(args: argparse.Namespace):
-    args.data       = mon.Path(args.data)
+    args.input_dir  = mon.Path(args.input_dir)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     
-    console.log(f"Data: {args.data}")
+    console.log(f"Data: {args.input_dir}")
     
     #
-    image_paths = list(args.data.rglob("*"))
+    image_paths = list(args.input_dir.rglob("*"))
     image_paths = [path for path in image_paths if path.is_image_file()]
     sum_time    = 0
     with mon.get_progress_bar() as pbar:
@@ -39,18 +39,22 @@ def main(args: argparse.Namespace):
             start_time     = time.time()
             enhanced_image = pie.PIE(image)
             run_time       = (time.time() - start_time)
-            result_path    = args.output_dir / image_path.name
-            cv2.imwrite(str(result_path), enhanced_image)
+            output_path    = args.output_dir / image_path.name
+            cv2.imwrite(str(output_path), enhanced_image)
             sum_time      += run_time
     avg_time = float(sum_time / len(image_paths))
     console.log(f"Average time: {avg_time}")
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default="weights/Epoch99.pth")
-    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--input-dir",  type=str, default="data/test_data/")
     parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/zerodce")
+    parser.add_argument("--image-size", type=int, default=512)
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     main(args)

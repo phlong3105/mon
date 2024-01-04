@@ -17,7 +17,7 @@ from torchvision.models import vgg16
 import mon
 from data_loaders.lol import lowlight_loader
 from model.IAT_main import IAT
-from mon import RUN_DIR, ZOO_DIR
+from mon import RUN_DIR, ZOO_DIR, DATA_DIR
 from utils import LossNetwork, PSNR, validation
 
 
@@ -36,7 +36,7 @@ def train(args: argparse.Namespace):
     
     # Data Setting
     train_dataset = lowlight_loader(
-        images_path = str(args.data_train),
+        images_path = str(args.input_train),
         normalize   = args.normalize
     )
     train_loader  = torch.utils.data.DataLoader(
@@ -47,7 +47,7 @@ def train(args: argparse.Namespace):
         pin_memory    = True
     )
     val_dataset = lowlight_loader(
-        images_path = str(args.data_val),
+        images_path = str(args.input_val),
         mode        = "test",
         normalize   = args.normalize
     )
@@ -125,22 +125,26 @@ def train(args: argparse.Namespace):
                 torch.save(model.state_dict(), args.checkpoints_dir / "best.pt")
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-train",       type=str,   default="/data/unagi0/cui_data/light_dataset/LOL/Train/Low/")
-    parser.add_argument("--data-val",         type=str,   default="/data/unagi0/cui_data/light_dataset/LOL/Test/Low/")
-    parser.add_argument("--weights",          type=str,   default=ZOO_DIR / "vision/enhance/llie/iat/iat-lol.pth")
+    parser.add_argument("--input-train",      type=str,   default=DATA_DIR / "llie/train/lol-v1/low")
+    parser.add_argument("--input-val",        type=str,   default=DATA_DIR / "llie/test/lol-v1/low")
+    parser.add_argument("--weights",          type=str,   default=ZOO_DIR  / "vision/enhance/llie/iat/iat-lol.pth")
     parser.add_argument("--load-pretrain",    type=bool,  default=False)
-    parser.add_argument("--model_type",       type=str,   default="s")
     parser.add_argument("--batch-size",       type=int,   default=8)
     parser.add_argument("--lr",               type=float, default=2e-4)   # for batch size 4x2=8
-    parser.add_argument("--weight-decay",     type=float, default=0.0005)
+    parser.add_argument("--weight-decay",     type=float, default=0.0004)
     parser.add_argument("--epochs",           type=int,   default=200)
     parser.add_argument("--local-rank",       type=int,   default=-1, help="")
-    parser.add_argument("--normalize",        action="store_true", help="Default not Normalize in exposure training.")
+    parser.add_argument("--normalize",        action="store_true",    help="Default not Normalize in exposure training.")
     parser.add_argument("--gpu",              type=str,   default=0)
     parser.add_argument("--display-iter",     type=int,   default=10)
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
     parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/iat/lol")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     train(args)

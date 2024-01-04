@@ -31,10 +31,9 @@ def save_checkpoint(state, epoch, output_directory):
     torch.save(state, checkpoint_filename)
 
 
-def train():
-    # Parse arguments
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Low-light enhancement")
-    parser.add_argument("--data",           type=str,   default=DATA_DIR, help="path to the dataset")
+    parser.add_argument("--input-dir",      type=str,   default=DATA_DIR, help="path to the dataset")
     parser.add_argument("--epochs",         type=int,   default=200)
     parser.add_argument("--batch-size",     type=int,   default=1,        help="[train] batch size(default: 1)")
     parser.add_argument("--lr",             type=float, default=1e-4,     help="learning rate (default: 1e-4)")
@@ -43,7 +42,12 @@ def train():
     parser.add_argument("--log-dir",        type=str,   default=RUN_DIR / "train/vision/enhance/llie/stablellve", help="folder to log")
     parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/llie/stablellve", help="path to checkpoint")
     args = parser.parse_args()
-    # print(args)
+    return args
+
+
+def train():
+    args = parse_args()
+
     args.checkpoints_dir = mon.Path(args.checkpoints_dir)
     args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
     
