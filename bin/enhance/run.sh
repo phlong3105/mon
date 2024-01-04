@@ -676,9 +676,18 @@ if [ "$task" == "predict" ]; then
             predict_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict_data[k]}"
           fi
 
+          ## De-Hazing
+          # ZID
+          if [ "${model[i]}" == "zid" ]; then
+            model_dir="${dehaze_dir}/${model[i]}"
+            cd "${model_dir}" || exit
+            python -W ignore rw_dehazing.py \
+              --input-dir "data/" \
+              --output-dir "output/" \
+              --num-iters 500
           ## De-Raining
           # IPT
-          if [ "${model[i]}" == "ipt" ]; then
+          elif [ "${model[i]}" == "ipt" ]; then
             model_dir="${derain_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore main.py \
@@ -697,12 +706,13 @@ if [ "$task" == "predict" ]; then
             model_dir="${les_dir}/${model[i]}"
             cd "${model_dir}" || exit
             python -W ignore predict.py \
-              --data "${input_data_dirs[k]}" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
               --data-name "${predict_data[k]}" \
               --phase "test" \
               --weights "${root_dir}/zoo/vision/enhance/les/jin2022/delighteffects_params_0600000.pt" \
               --image-size 512 \
-              --output-dir "${predict_dir}"
+              --benchmark
           ## LLIE
           # EnlightenGAN
           elif [ "${model[i]}" == "enlightengan" ]; then

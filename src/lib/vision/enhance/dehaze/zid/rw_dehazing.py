@@ -199,21 +199,21 @@ class Dehaze(object):
             return np.array([np.clip(refine_t, 0, 1)])
 
 
-def dehaze(args: dict):
-    assert args["image"] is not None and mon.Path(args["image"]).is_dir()
+def dehaze(args: argparse.Namespace):
+    assert args.input_dir is not None and mon.Path(args.input_dir).is_dir()
 
-    image_dir = mon.Path(args["image"])
-    if args["output"] is None:
-        output_dir = image_dir.parent / f"{image_dir.stem}-hazefree"
+    input_dir = mon.Path(args.input_dir)
+    if args.output_dir is None:
+        output_dir = input_dir.parent / f"{input_dir.stem}-hazefree"
     else:
-        output_dir = mon.Path(args["output"])
+        output_dir = mon.Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    image_files = list(image_dir.rglob("*"))
+    image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
 
-    num_iter = args["num_iter"]
+    num_iters = args.num_iters
     with mon.get_progress_bar() as pbar:
         for f in pbar.track(
             sequence    = image_files,
@@ -221,7 +221,7 @@ def dehaze(args: dict):
             description = f"[bright_yellow] Dehazing"
         ):
             image = prepare_hazy_image(str(f))
-            dh    = Dehaze(str(f.stem), image, num_iter, clip=True, output_path=str(output_dir) + "/")
+            dh    = Dehaze(str(f.stem), image, num_iters, clip=True, output_path=str(output_dir) + "/")
             dh.optimize()
             dh.finalize()
             # save_image(str(f.stem) + "_original", np.clip(image, 0, 1), dh.output_path)
@@ -229,19 +229,19 @@ def dehaze(args: dict):
 
 # region Main
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image",    type=str, default="data/",   help="Image directory.")
-    parser.add_argument("--output",   type=str, default="output/", help="Output directory.")
-    parser.add_argument("--num-iter", type=int, default=500,       help="Number of iterations per image.")
-    parser.add_argument("--verbose",  action="store_true",         help="Display results.")
+    parser.add_argument("--input-dir",  type=str, default="data/",   help="Image directory.")
+    parser.add_argument("--output-dir", type=str, default="output/", help="Output directory.")
+    parser.add_argument("--num-iters",  type=int, default=500,       help="Number of iterations per image.")
+    parser.add_argument("--verbose",    action="store_true",         help="Display results.")
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
-    args = vars(parse_args())
-    dehaze(args=args)
+    args = parse_args()
+    dehaze(args)
 
 
 """
