@@ -31,7 +31,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-		"devices"    : "auto",
+		"devices"    : "cpu",
     },
 	"lp-labdesktop-01": {
 		"config"     : "",
@@ -42,7 +42,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-		"devices"    : "auto",
+		"devices"    : "cuda:0",
 	},
     "vsw-ws02": {
 		"config"     : "",
@@ -53,7 +53,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-		"devices"    : "auto",
+		"devices"    : "cuda:0",
 	},
     "vsw-ws-03": {
 		"config"     : "",
@@ -64,7 +64,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
-		"devices"    : "auto",
+		"devices"    : "cuda:0",
 	},
 }
 
