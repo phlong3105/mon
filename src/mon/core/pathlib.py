@@ -66,7 +66,7 @@ class Path(type(pathlib.Path())):
         return (self.is_file() if exist else True) and self.suffix.lower() in [".ckpt"]
     
     def is_dir_like(self) -> bool:
-        """Return ``True`` if the path is a correct file format."""
+        """Return ``True`` if the path is a correct directory format."""
         return "" in self.suffix
     
     def is_file_like(self) -> bool:
@@ -364,6 +364,7 @@ def delete_files(
             f.unlink()
     except Exception as err:
         print(f"Cannot delete files: {err}.")
+
 
 def mkdirs(
     paths   : Path | str | list[Path | str],

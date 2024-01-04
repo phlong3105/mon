@@ -582,7 +582,7 @@ class SSIMLoss(Loss):
 
 
 @LOSSES.register(name="std_loss")
-class StdLoss(nn.Module):
+class StdLoss(Loss):
     """Loss on the variance of the image. Works in the grayscale. If the image
     is smooth, gets zero.
     """

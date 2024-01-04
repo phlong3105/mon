@@ -66,6 +66,7 @@ import cv2
 
 from mon.core import enum, factory, pathlib
 
+
 # region Directory
 
 _current_file = pathlib.Path(__file__).absolute()

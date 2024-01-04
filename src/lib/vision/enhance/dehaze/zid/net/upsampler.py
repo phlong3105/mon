@@ -11,6 +11,7 @@ from torch import nn
 
 
 class UpsamplerModel(nn.Module):
+
     def __init__(self, output_shape, factor):
         assert output_shape[0] % factor == 0
         assert output_shape[1] % factor == 0

@@ -16,10 +16,20 @@ from mon.core import builtins, pynvml
 from mon.globals import MemoryUnit
 
 __all__ = [
-    "GPUMemoryUsageColumn", "ProcessedItemsColumn", "ProcessingSpeedColumn",
-    "console", "error_console", "field_style", "get_console",
-    "get_download_bar", "get_error_console", "get_progress_bar", "level_styles",
-    "print_dict", "print_table", "rich_console_theme",
+    "GPUMemoryUsageColumn",
+    "ProcessedItemsColumn",
+    "ProcessingSpeedColumn",
+    "console",
+    "error_console",
+    "field_style",
+    "get_console",
+    "get_download_bar",
+    "get_error_console",
+    "get_progress_bar",
+    "level_styles",
+    "print_dict",
+    "print_table",
+    "rich_console_theme",
 ]
 
 # region Console

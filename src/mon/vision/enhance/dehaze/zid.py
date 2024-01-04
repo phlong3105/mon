@@ -9,19 +9,30 @@ __all__ = [
     "ZID",
 ]
 
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 import torch
+from cv2.ximgproc import guidedFilter
 
-import mon
 from mon.globals import MODELS
-from mon.vision import core, nn
+from mon.vision import core, nn, prior
 from mon.vision.enhance.dehaze import base
 
 math         = core.math
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
+
+
+# region Misc
+
+def add_module(self, module_):
+    self.add_module(str(len(self) + 1), module_)
+
+
+nn.Module.add = add_module
+
+# endregion
 
 
 # region Module
@@ -63,22 +74,22 @@ def conv(
 
 
 def encoder_decoder_skip(
-    in_channels     : int          = 2,
-    out_channels    : int          = 3,
-    channels_down   : list | tuple = [16, 32, 64, 128, 128],
-    channels_up     : list | tuple = [16, 32, 64, 128, 128],
-    channels_skip   : list | tuple = [4 , 4,  4,  4,   4],
-    kernel_size_down: int          = 3,
-    kernel_size_up  : int          = 3,
-    kernel_size_skip: int          = 1,
-    padding         : str          = "zero",
-    bias            : bool         = True,
-    upsample_mode   : str          = "nearest",
-    downsample_mode : str          = "stride",
-    up_1x1          : bool         = True,
-    sigmoid         : bool         = True,
-    act             : Any          = nn.LeakyReLU,
-) -> nn.Module:
+    in_channels      : int          = 2,
+    out_channels     : int          = 3,
+    channels_down    : list | tuple = [16, 32, 64, 128, 128],
+    channels_up      : list | tuple = [16, 32, 64, 128, 128],
+    channels_skip    : list | tuple = [4 , 4 , 4 , 4  , 4],
+    kernel_size_down : int          = 3,
+    kernel_size_up   : int          = 3,
+    kernel_size_skip : int          = 1,
+    padding          : str          = "zero",
+    bias             : bool         = True,
+    upsample_mode    : str          = "nearest",
+    downsample_mode  : str          = "stride",
+    need_1x1_up      : bool         = True,
+    sigmoid          : bool         = True,
+    act              : Any          = nn.LeakyReLU,
+) -> nn.Sequential:
     """Encoder-decoder network with skip connections.
 
     Args:
@@ -97,28 +108,28 @@ def encoder_decoder_skip(
             Default: ``'nearest'``.
         downsample_mode: Downsampling mode. One of: ``'stride'``, ``'avg'``,
             ``'max'``, or ``'lanczos2'``. Default: ``'stride'``.
-        up_1x1: Whether to use 1x1 convolution.
+        need_1x1_up: Whether to use 1x1 convolution.
         sigmoid: Whether to use sigmoid function.
         act: Activation layer.
     """
     assert len(channels_down) == len(channels_up) == len(channels_skip)
-
     n_scales = len(channels_down)
-    if not (isinstance(upsample_mode, list)    or isinstance(upsample_mode, tuple)):
+
+    if not (isinstance(upsample_mode, list) or isinstance(upsample_mode, tuple)):
         upsample_mode    = [upsample_mode]    * n_scales
-    if not (isinstance(downsample_mode, list)  or isinstance(downsample_mode, tuple)):
+    if not (isinstance(downsample_mode, list) or isinstance(downsample_mode, tuple)):
         downsample_mode  = [downsample_mode]  * n_scales
     if not (isinstance(kernel_size_down, list) or isinstance(kernel_size_down, tuple)):
         kernel_size_down = [kernel_size_down] * n_scales
-    if not (isinstance(kernel_size_up, list)   or isinstance(kernel_size_up, tuple)):
+    if not (isinstance(kernel_size_up, list) or isinstance(kernel_size_up, tuple)):
         kernel_size_up   = [kernel_size_up]   * n_scales
 
-    last_scale  = n_scales - 1
-    cur_depth   = None
-    input_depth = in_channels
-    model       = nn.Sequential()
-    model_tmp   = model
+    last_scale = n_scales - 1
+    cur_depth  = None
+    model      = nn.Sequential()
+    model_tmp  = model
 
+    input_depth = in_channels
     for i in range(len(channels_down)):
         deeper = nn.Sequential()
         skip   = nn.Sequential()
@@ -135,11 +146,11 @@ def encoder_decoder_skip(
             skip.add(nn.BatchNorm2d(channels_skip[i]))
             skip.add(act())
 
-        deeper.add(conv(input_depth, channels_down[i], kernel_size_down[i], stride=2, bias=bias, padding=padding, downsample_mode=downsample_mode[i]))
+        deeper.add(conv(input_depth, channels_down[i], kernel_size_down[i], 2, bias=bias, padding=padding, downsample_mode=downsample_mode[i]))
         deeper.add(nn.BatchNorm2d(channels_down[i]))
         deeper.add(act())
 
-        deeper.add(conv(channels_down[i], kernel_size_down[i], kernel_size_down[i], bias=bias, padding=padding))
+        deeper.add(conv(channels_down[i], channels_down[i], kernel_size_down[i], bias=bias, padding=padding))
         deeper.add(nn.BatchNorm2d(channels_down[i]))
         deeper.add(act())
 
@@ -154,130 +165,149 @@ def encoder_decoder_skip(
 
         deeper.add(nn.Upsample(scale_factor=2, mode=upsample_mode[i], align_corners=True))
 
-        model_tmp.add(conv(channels_skip[i] + k, channels_up[i], kernel_size_up[i], stride=1, bias=bias, padding=padding))
+        model_tmp.add(conv(channels_skip[i] + k, channels_up[i], kernel_size_up[i], 1, bias=bias, padding=padding))
         model_tmp.add(nn.BatchNorm2d(channels_up[i]))
+        # model_tmp.add(layer_norm(num_channels_up[i]))
         model_tmp.add(act())
 
-        if up_1x1:
-            model_tmp.add(conv(channels_up[i], channels_up[i], kernel_size=1, bias=bias, padding=padding))
+        if need_1x1_up:
+            model_tmp.add(conv(channels_up[i], channels_up[i], 1, bias=bias, padding=padding))
             model_tmp.add(nn.BatchNorm2d(channels_up[i]))
             model_tmp.add(act())
 
         input_depth = channels_down[i]
         model_tmp   = deeper_main
 
-    model.add(conv(channels_up[0], out_channels, kernel_size=1, bias=bias, padding=padding))
+    model.add(conv(channels_up[0], out_channels, 1, bias=bias, padding=padding))
     if sigmoid:
         model.add(nn.Sigmoid())
 
     return model
 
-# endregion
 
+class VariationalAutoEncoder(nn.Module):
 
-# region Loss
+    class Encoder(nn.Module):
 
-class CustomLoss(nn.Loss):
+        def __init__(self, size: list | tuple):
+            super().__init__()
+            self.conv1 = nn.Sequential(
+                nn.Conv2d(3, 16, 5, 1, 2),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(2)
+            )
+            self.conv2 = nn.Sequential(
+                nn.Conv2d(16, 32, 5, 1, 2),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(2)
+            )
+            self.conv3 = nn.Sequential(
+                nn.Conv2d(32, 64, 5, 1, 2),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(2)
+            )
+            self.conv4 = nn.Sequential(
+                nn.Conv2d(64, 128, 5, 1, 2),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(2)
+            )
+            self.fc1 = nn.Linear(int(128 * (size[0] // 16) * (size[1] // 16)), 100)
+            self.fc2 = nn.Linear(int(128 * (size[0] // 16) * (size[1] // 16)), 100)
 
-    def __init__(
-        self,
-        bri_gamma      : float = 2.8,
-        exp_patch_size : int   = 16,
-        exp_mean_val   : float = 0.6,
-        spa_num_regions: Literal[4, 8, 16, 24] = 4,  # 4
-        spa_patch_size : int   = 4,     # 4
-        weight_bri     : float = 1,
-        weight_col     : float = 5,
-        weight_crl     : float = 1,     # 20
-        weight_edge    : float = 5,
-        weight_exp     : float = 10,
-        weight_kl      : float = 5,     # 5
-        weight_spa     : float = 1,
-        weight_tvA     : float = 1600,  # 200
-        reduction      : str   = "mean",
-        verbose        : bool  = False,
-        *args, **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        self.weight_bri  = weight_bri
-        self.weight_col  = weight_col
-        self.weight_crl  = weight_crl
-        self.weight_edge = weight_edge
-        self.weight_exp  = weight_exp
-        self.weight_kl   = weight_kl
-        self.weight_spa  = weight_spa
-        self.weight_tvA  = weight_tvA
-        self.verbose     = verbose
+        def forward(self, input: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+            x     = input
+            y     = self.conv1(x)
+            y     = self.conv2(y)
+            y     = self.conv3(y)
+            y     = self.conv4(y)
+            y     = y.view(y.size(0), -1)
+            means = self.fc1(y)
+            var   = self.fc2(y)
+            return means, var
 
-        self.loss_bri  = nn.BrightnessConstancyLoss(reduction=reduction, gamma=bri_gamma)
-        self.loss_col  = nn.ColorConstancyLoss(reduction=reduction)
-        self.loss_crl  = nn.ChannelRatioConsistencyLoss(reduction=reduction)
-        self.loss_kl   = nn.ChannelConsistencyLoss(reduction=reduction)
-        self.loss_edge = nn.EdgeConstancyLoss(reduction=reduction)
-        self.loss_exp  = nn.ExposureControlLoss(
-            reduction  = reduction,
-            patch_size = exp_patch_size,
-            mean_val   = exp_mean_val,
-        )
-        self.loss_spa  = nn.SpatialConsistencyLoss(
-            num_regions = spa_num_regions,
-            patch_size  = spa_patch_size,
-            reduction   = reduction,
-        )
-        self.loss_tvA  = nn.IlluminationSmoothnessLoss(reduction=reduction)
+    class Decoder(nn.Module):
+        def __init__(self, size: list | tuple):
+            super().__init__()
+            self.linear0 = nn.Linear(100, int(128 * (size[0] // 16) * (size[1] // 16)))
+            self.size    = size
+            self.conv1 = nn.Sequential(
+                nn.Conv2d(128, 64, 5, 1, 2),
+                nn.BatchNorm2d(64),
+                nn.ReLU(inplace=True)
+            )
+            self.conv2 = nn.Sequential(
+                nn.Conv2d(64, 32, 5, 1, 2),
+                nn.BatchNorm2d(32),
+                nn.ReLU(inplace=True)
+            )
+            self.conv3 = nn.Sequential(
+                nn.Conv2d(32, 16, 5, 1, 2),
+                nn.BatchNorm2d(16),
+                nn.ReLU(inplace=True)
+            )
+            self.conv4 = nn.Sequential(
+                nn.Conv2d(16, 3, 5, 1, 2),
+                nn.BatchNorm2d(3),
+                nn.ReLU(inplace=True)
+            )
+            self.de = nn.Sequential(
+                nn.Upsample(scale_factor=2, mode="bilinear"),
+                nn.Conv2d(128, 64, 5, 1, 2),
+                nn.BatchNorm2d(64),
+                nn.ReLU(True),
+                nn.Upsample(scale_factor=2, mode="bilinear"),
+                nn.Conv2d(64, 32, 5, 1, 2),
+                nn.BatchNorm2d(32),
+                nn.ReLU(True),
+                nn.Upsample(scale_factor=2, mode="bilinear"),
+                nn.Conv2d(32, 16, 5, 1, 2),
+                nn.BatchNorm2d(16),
+                nn.ReLU(True),
+                nn.Upsample(scale_factor=2, mode="bilinear"),
+                nn.Conv2d(16, 3, 5, 1, 2),
+                nn.Sigmoid()
+            )
 
-    def __str__(self) -> str:
-        return f"zero-reference loss"
+        def forward(self, input: torch.Tensor) -> torch.Tensor:
+            x = input
+            y = self.linear0(x)
+            y = y.view(1, -1, self.size[0] // 16, self.size[1] // 16)
+            y = self.de(y)
+            return y
 
-    def forward(
-        self,
-        input   : torch.Tensor | list[torch.Tensor],
-        target  : list[torch.Tensor],
-        previous: torch.Tensor = None,
-        **_
-    ) -> tuple[torch.Tensor, torch.Tensor]:
-        if isinstance(target, list | tuple):
-            if len(target) == 2:
-                a       = target[-2]
-                enhance = target[-1]
-            elif len(target) == 3:
-                a       = target[-3]
-                g       = target[-2]
-                enhance = target[-1]
-        else:
-            raise TypeError
-        loss_bri  = self.loss_bri(input=g, target=input)              if self.weight_bri  > 0 else 0
-        loss_col  = self.loss_col(input=enhance)                      if self.weight_col  > 0 else 0
-        loss_edge = self.loss_edge(input=enhance, target=input)       if self.weight_edge > 0 else 0
-        loss_exp  = self.loss_exp(input=enhance)                      if self.weight_exp  > 0 else 0
-        loss_kl   = self.loss_kl(input=enhance, target=input)         if self.weight_kl   > 0 else 0
-        loss_spa  = self.loss_spa(input=enhance, target=input)        if self.weight_spa  > 0 else 0
-        loss_tvA  = self.loss_tvA(input=a)                            if self.weight_tvA  > 0 else 0
-        if previous is not None and (enhance.shape == previous.shape):
-            loss_crl = self.loss_crl(input=enhance, target=previous)  if self.weight_crl  > 0 else 0
-        else:
-            loss_crl = self.loss_crl(input=enhance, target=input)     if self.weight_crl  > 0 else 0
+    def __init__(self, size: list | tuple):
+        super().__init__()
+        self.encoder = self.Encoder(size=size)
+        self.decoder = self.Decoder(size=size)
+        self.means   = None
+        self.var     = None
 
-        loss = (
-              self.weight_bri  * loss_bri
-            + self.weight_col  * loss_col
-            + self.weight_crl  * loss_crl
-            + self.weight_edge * loss_edge
-            + self.weight_exp  * loss_exp
-            + self.weight_tvA  * loss_tvA
-            + self.weight_kl   * loss_kl
-            + self.weight_spa  * loss_spa
-        )
+    def get_latent(self, means, var):
+        log_var    = var
+        epsilon    = torch.randn(means.size()).cuda()
+        sigma      = torch.exp(0.5 * log_var)
+        z          = means + sigma * epsilon
+        self.means = means
+        self.var   = var
+        return z
 
-        if self.verbose:
-            console.log(f"{self.loss_bri.__str__():<30} : {loss_bri}")
-            console.log(f"{self.loss_col.__str__():<30} : {loss_col}")
-            console.log(f"{self.loss_edge.__str__():<30}: {loss_edge}")
-            console.log(f"{self.loss_exp.__str__():<30} : {loss_exp}")
-            console.log(f"{self.loss_kl.__str__():<30}  : {loss_kl}")
-            console.log(f"{self.loss_spa.__str__():<30} : {loss_spa}")
-            console.log(f"{self.loss_tvA.__str__():<30} : {loss_tvA}")
-        return loss, enhance
+    def sample(self):
+        z = self.getLatent(self.means, self.var)
+        return self.decoder(z)
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        means, var = self.encoder(input)
+        z          = self.get_latent(means, var)
+        return self.decoder(z)
+
+    def get_loss(self):
+        # lossX = torch.nn.functional.mse_loss(res, inputs, reduction='sum')
+        log_var = self.var
+        loss_kl = 0.5 * torch.sum(log_var.exp() + self.means * self.means - 1 - log_var)
+        # print(lossX, lossKL)
+        # loss = lossX + lossKL
+        loss    = loss_kl
+        return loss
 
 # endregion
 
@@ -297,9 +327,12 @@ class ZID(base.DehazingModel):
     
     def __init__(
         self,
-        config : Any        = None,
-        loss   : Any        = CustomLoss(),
-        variant: str | None = None,
+        config    : Any          = None,
+        loss      : Any          = None,
+        variant   : str  | None  = None,
+        image_size: list | tuple = (512, 512, 3),
+        clip      : bool         = True,
+        save_image: bool         = False,
         *args, **kwargs
     ):
         super().__init__(
@@ -307,17 +340,19 @@ class ZID(base.DehazingModel):
             loss   = loss,
             *args, **kwargs
         )
-        variant           = mon.to_int(variant)
-        self.variant      = f"{variant:04d}" if isinstance(variant, int) else None
-        self.out_channels = 3
-
+        variant         = core.to_int(variant)
+        self.variant    = f"{variant:04d}" if isinstance(variant, int) else None
+        self.image_size = core.get_hw(size=image_size or [512, 512, 3])
+        self.clip       = clip
+        self.save_image = save_image
+        
         # Image Network
         self.image_net   = encoder_decoder_skip(
             in_channels   = 3,
             out_channels  = 3,
             channels_down = [8, 16, 32, 64, 128],
             channels_up   = [8, 16, 32, 64, 128],
-            channels_skip = [0, 0 , 0 , 4 , 4  ],
+            channels_skip = [0, 0 , 0 , 4 , 4],
             padding       = "reflection",
             bias          = True,
             upsample_mode = "bilinear",
@@ -331,28 +366,20 @@ class ZID(base.DehazingModel):
             out_channels  = 1,
             channels_down = [8, 16, 32, 64, 128],
             channels_up   = [8, 16, 32, 64, 128],
-            channels_skip = [0, 0 , 0 , 4 , 4  ],
-            padding       = "reflection",
+            channels_skip = [0, 0 , 0 , 4 , 4],
             bias          = True,
+            padding       = "reflection",
             upsample_mode = "bilinear",
             sigmoid       = True,
             act           = nn.LeakyReLU
         ).type(torch.cuda.FloatTensor)
-
+        
         # Ambient Network
-        self.ambient_net = None
-
-    def init_weights(self, m: nn.Module):
-        classname = m.__class__.__name__
-        if classname.find("Conv") != -1:
-            if hasattr(m, "conv"):
-                m.conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "dw_conv"):
-                m.dw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "pw_conv"):
-                m.pw_conv.weight.data.normal_(0.0, 0.02)  # 0.02
-            elif hasattr(m, "weight"):
-                m.weight.data.normal_(0.0, 0.02)  # 0.02
+        self.ambient_net = VariationalAutoEncoder(self.image_size).type(torch.cuda.FloatTensor)
+        
+        # Loss Functions
+        self.mse_loss = nn.MSELoss().type(torch.cuda.FloatTensor)
+        self.std_loss = nn.StdLoss().type(torch.cuda.FloatTensor)
     
     def forward_loss(
         self,
@@ -371,18 +398,30 @@ class ZID(base.DehazingModel):
         Return:
             Predictions and loss value.
         """
-        pred  = self.forward(input=input, *args, **kwargs)
-        loss, self.previous = self.loss(input, pred, self.previous) if self.loss else (None, None)
-        loss += self.regularization_loss(alpha=0.1)
+        pred = self.forward(input=input, *args, **kwargs)
+        image, ambient, mask, _ = pred
+        
+        loss         = self.mse_loss(mask * image + (1 - mask) * ambient, image)
+        loss        += self.ambient_net.get_loss()
+        loss        += 0.005 * self.std_loss(mask)
+        loss        += 0.1   * self.std_loss(ambient)
+        
+        dcp_prior    = torch.min(image.permute(0, 2, 3, 1), 3)[0]
+        loss        += self.mse_loss(dcp_prior, torch.zeros_like(dcp_prior)) - 0.05
+        
+        atmosphere   = prior.get_atmosphere_prior(input.detach().cpu().numpy()[0])
+        ambient_val  = nn.Parameter(data=torch.cuda.FloatTensor(atmosphere.reshape((1, 3, 1, 1))), requires_grad=False)
+        loss        += self.mse_loss(ambient, ambient_val * torch.ones_like(ambient))
+        
         return pred[-1], loss
-
+    
     def forward_once(
         self,
         input    : torch.Tensor,
         profile  : bool = False,
-        out_index: int = -1,
+        out_index: int  = -1,
         *args, **kwargs
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Forward pass once. Implement the logic for a single forward pass.
 
         Args:
@@ -394,7 +433,32 @@ class ZID(base.DehazingModel):
         Return:
             Predictions.
         """
-        x = input
-        pass
-
+        x       = input
+        image   = self.image_net(x)
+        ambient = self.ambient_net(x)
+        mask    = self.mask_net(x)
+        
+        ambient_clip = torch.clip(ambient, 0, 1)
+        mask_clip    = torch.clip(mask,    0, 1)
+        mask_clip    = self.t_matting(x, mask_clip).to(x.device)
+        y            = torch.clip((x - ((1 - mask_clip) * ambient_clip)) / mask_clip, 0, 1)
+        
+        return image, ambient, mask, y
+    
+    def t_matting(self, input: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        input    = input.detach().cpu().numpy()[0]
+        mask     = mask.detach().cpu().numpy()[0]
+        refine_t = guidedFilter(
+            guide  = input.transpose(1, 2, 0).astype(np.float32),
+            src    = mask[0].astype(np.float32),
+            radius = 50,
+            eps    = 1e-4,
+        )
+        if self.clip:
+            refine_t = np.array([np.clip(refine_t, 0.1, 1)])
+        else:
+            refine_t = np.array([np.clip(refine_t, 0, 1)])
+        refine_t = torch.from_numpy(refine_t)[None, :]
+        return refine_t
+        
 # endregion

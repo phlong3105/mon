@@ -14,10 +14,28 @@ See Also:
 from __future__ import annotations
 
 __all__ = [
-    "angle", "braycurtis", "canberra", "chebyshev", "cityblock", "correlation",
-    "cosine", "dice", "directed_hausdorff", "euclidean", "hamming", "jaccard",
-    "kulczynski1", "mahalanobis", "manhattan", "minkowski", "rogerstanimoto",
-    "russellrao", "seuclidean", "sokalmichener", "sokalsneath", "sqeuclidean",
+    "angle",
+    "braycurtis",
+    "canberra",
+    "chebyshev",
+    "cityblock",
+    "correlation",
+    "cosine",
+    "dice",
+    "directed_hausdorff",
+    "euclidean",
+    "hamming",
+    "jaccard",
+    "kulczynski1",
+    "mahalanobis",
+    "manhattan",
+    "minkowski",
+    "rogerstanimoto",
+    "russellrao",
+    "seuclidean",
+    "sokalmichener",
+    "sokalsneath",
+    "sqeuclidean",
     "yule",
 ]
 
