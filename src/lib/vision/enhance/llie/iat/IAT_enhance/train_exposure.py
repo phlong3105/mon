@@ -30,10 +30,12 @@ console.log(torch.cuda.device_count())
 dist.init_process_group(backend="nccl")
 
 
-def train(args):
+def train(args: argparse.Namespace):
     # Distribute Setting
     torch.cuda.set_device(args.local_rank)
-    
+    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
+    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
+
     # Seed
     seed = random.randint(1, 10000)
     # print("Random seed: {}".format(seed))
@@ -159,8 +161,4 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoints-iter", type=int,   default=10)
     parser.add_argument("--checkpoints-dir",  type=str,   default=RUN_DIR / "train/vision/enhance/llie/iat/exposure")
     args = parser.parse_args()
-    
-    args.checkpoints_dir = mon.Path(args.checkpoints_dir)
-    args.checkpoints_dir.mkdir(parents=True, exist_ok=True)
-
     train(args)

@@ -91,16 +91,7 @@ def format_measurements(meas):
     return str_out
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/llflow/llflow-lol-smallnet.pth")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/llflow")
-    parser.add_argument("--opt",        type=str, default="./confs/LOL_smallNet.yml")
-    parser.add_argument("--name", "-n", type=str, default="unpaired")
-    args = parser.parse_args()
-    
+def main(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -170,4 +161,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",       type=str, default="data/test_data/")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/llflow/llflow-lol-smallnet.pth")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/llflow")
+    parser.add_argument("--opt",        type=str, default="./confs/LOL_smallNet.yml")
+    parser.add_argument("--name", "-n", type=str, default="unpaired")
+    args = parser.parse_args()
+    main(args)

@@ -22,15 +22,7 @@ from mon import ZOO_DIR, RUN_DIR
 console = mon.console
 
 
-def predict():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="data/test_data/")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/snr/snr-lolv1.pth")
-    parser.add_argument("--opt",        type=str, default="./options/test/LOLv1.yml", help="Path to options YAML file.")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/snr")
-    args = parser.parse_args()
-    
+def predict(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -87,10 +79,18 @@ def predict():
                 result_path    = args.output_dir / image_path.name
                 cv2.imwrite(str(result_path), enhanced_image)
                 # torchvision.utils.save_image(enhanced_image, str(result_path))
-                sum_time      += run_time
+                sum_time += run_time
         avg_time = float(sum_time / len(image_paths))
         console.log(f"Average time: {avg_time}")
     
         
 if __name__ == "__main__":
-    predict()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",       type=str, default="data/test_data/")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/snr/snr-lolv1.pth")
+    parser.add_argument("--opt",        type=str, default="./options/test/LOLv1.yml", help="Path to options YAML file.")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/snr")
+    args = parser.parse_args()
+
+    predict(args)

@@ -3,18 +3,17 @@
 
 from __future__ import annotations
 
+import argparse
+
 import mon
-from base_parser import BaseParser
 from dataloader import *
+from lib.vision.enhance.llie.kind.base_parser import BaseParser
 from models import *
 
 console = mon.console
 
 
-def test():
-    parser = BaseParser()
-    args   = parser.parse()
-    
+def test(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -86,4 +85,6 @@ def test():
         
                 
 if __name__ == "__main__":
-    test()
+    parser = BaseParser()
+    args   = parser.parse()
+    test(args)

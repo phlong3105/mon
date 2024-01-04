@@ -21,14 +21,7 @@ console = mon.console
 _current_dir = mon.Path(__file__).absolute().parent
 
 
-def predict():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="./data/test/*")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan.onnx")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/enlightengan")
-    args = parser.parse_args()
-    
+def predict(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -66,4 +59,10 @@ def predict():
     
 
 if __name__ == "__main__":
-    predict()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",       type=str, default="./data/test/*")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/enlightengan/enlightengan.onnx")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/enlightengan")
+    args = parser.parse_args()
+    predict(args)

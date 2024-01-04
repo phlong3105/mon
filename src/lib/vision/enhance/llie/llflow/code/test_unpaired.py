@@ -22,6 +22,7 @@ from utils.util import opt_get
 
 console = mon.console
 
+
 def fiFindByWildcard(wildcard):
     return natsort.natsorted(glob.glob(wildcard, recursive=True))
 
@@ -105,11 +106,7 @@ def format_measurements(meas):
     return str_out
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--opt",        default="./confs/LOL_smallNet.yml")
-    parser.add_argument("--name", "-n", default="unpaired")
-    args       = parser.parse_args()
+def main(args: argparse.Namespace):
     conf_path  = args.opt
     conf       = conf_path.split("/")[-1].replace(".yml", "")
     model, opt = load_model(conf_path)
@@ -150,4 +147,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--opt",        default="./confs/LOL_smallNet.yml")
+    parser.add_argument("--name", "-n", default="unpaired")
+    args = parser.parse_args()
+    main(args)

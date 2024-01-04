@@ -20,14 +20,7 @@ from mon import RUN_DIR, ZOO_DIR
 console = mon.console
 
 
-def test():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",       type=str, default="./data/test/*")
-    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/stablellve/stablellve-checkpoint.pth")
-    parser.add_argument("--image-size", type=int, default=512)
-    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
-    args = parser.parse_args()
-    
+def test(args: argparse.Namespace):
     args.data       = mon.Path(args.data)
     args.output_dir = mon.Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -97,4 +90,10 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data",       type=str, default="./data/test/*")
+    parser.add_argument("--weights",    type=str, default=ZOO_DIR / "vision/enhance/llie/stablellve/stablellve-checkpoint.pth")
+    parser.add_argument("--image-size", type=int, default=512)
+    parser.add_argument("--output-dir", type=str, default=RUN_DIR / "predict/vision/enhance/llie/utvnet")
+    args = parser.parse_args()
+    test(args)

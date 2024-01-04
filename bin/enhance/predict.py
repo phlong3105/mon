@@ -212,8 +212,9 @@ def predict(args: dict):
     ignore_unknown_options = True,
     allow_extra_args       = True,
 ))
+@click.option("--config",      default="",                    type=click.Path(exists=False), help="The prediction config to use.")
 @click.option("--data",        default=mon.DATA_DIR,          type=click.Path(exists=True),  help="Source data directory.")
-@click.option("--config",      default="",                    type=click.Path(exists=False), help="The training config to use.")
+@click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results location.")
 @click.option("--root",        default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--project",     default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
 @click.option("--name",        default=None,                  type=click.Path(exists=False), help="Save results to root/project/name.")
@@ -223,14 +224,14 @@ def predict(args: dict):
 @click.option("--image-size",  default=512,                   type=int,                      help="Image sizes.")
 @click.option("--resize",      is_flag=True)
 @click.option("--benchmark",   is_flag=True)
-@click.option("--output-dir",  default=mon.RUN_DIR/"predict", type=click.Path(exists=False), help="Save results location.")
 @click.option("--save-image",  is_flag=True)
 @click.option("--verbose",     is_flag=True)
 @click.pass_context
 def main(
     ctx,
-    data       : mon.Path | str,
     config     : mon.Path | str,
+    data       : mon.Path | str,
+    output_dir : mon.Path | str,
     root       : mon.Path | str,
     project    : str,
     name       : str,
@@ -240,7 +241,6 @@ def main(
     image_size : int | list[int],
     resize     : bool,
     benchmark  : bool,
-    output_dir : mon.Path | str,
     save_image : bool,
     verbose    : bool
 ):

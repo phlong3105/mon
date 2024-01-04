@@ -22,7 +22,7 @@ console = mon.console
 # region Function
 
 def measure_metric_piqa(
-    image_dir     : mon.Path,
+    input_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     name          : str,
@@ -51,7 +51,7 @@ def measure_metric_piqa(
         "vsi"    : piqa.VSI,    
     }
 
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert input_dir is not None and mon.Path(input_dir).is_dir()
     # if target_dir is not None:
     #     assert mon.Path(target_dir).is_dir()
     if result_file is not None:
@@ -60,17 +60,17 @@ def measure_metric_piqa(
                 or isinstance(result_file, str))
         result_file = mon.Path(result_file)
         
-    image_dir   = mon.Path(image_dir)
+    input_dir   = mon.Path(input_dir)
     target_dir  = mon.Path(target_dir) \
         if target_dir is not None \
-        else mon.Path(str(image_dir).replace("low", "high"))
+        else mon.Path(str(input_dir).replace("low", "high"))
     
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
     
-    image_files  = list(image_dir.rglob("*"))
+    image_files  = list(input_dir.rglob("*"))
     image_files  = [f for f in image_files if f.is_image_file()]
     image_files  = sorted(image_files)
     num_items    = len(image_files)
@@ -133,7 +133,7 @@ def measure_metric_piqa(
 
 
 def measure_metric_pyiqa(
-    image_dir     : mon.Path,
+    input_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     name          : str,
@@ -150,7 +150,7 @@ def measure_metric_pyiqa(
     """Measure metrics using :mod:`pyiqa` package."""
     _METRICS = list(pyiqa.DEFAULT_CONFIGS.keys())
 
-    assert image_dir is not None and mon.Path(image_dir).is_dir()
+    assert input_dir is not None and mon.Path(input_dir).is_dir()
     # if target_dir is not None:
     #     assert mon.Path(target_dir).is_dir()
     if result_file is not None:
@@ -159,17 +159,17 @@ def measure_metric_pyiqa(
                 or isinstance(result_file, str))
         result_file = mon.Path(result_file)
         
-    image_dir  = mon.Path(image_dir)
+    input_dir  = mon.Path(input_dir)
     target_dir = mon.Path(target_dir) \
         if target_dir is not None \
-        else mon.Path(str(image_dir).replace("low", "high"))
+        else mon.Path(str(input_dir).replace("low", "high"))
     
     result_file = mon.Path(result_file) if result_file is not None else None
     if save_txt and result_file is not None and result_file.is_dir():
         result_file /= "metric.txt"
         result_file.parent.mkdir(parents=True, exist_ok=True)
     
-    image_files = list(image_dir.rglob("*"))
+    image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)
     num_items   = len(image_files)
@@ -261,7 +261,7 @@ def update_results(results: dict, new_values: dict) -> dict:
 
 
 @click.command()
-@click.option("--image-dir",      default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
+@click.option("--input-dir",      default=mon.DATA_DIR/"", type=click.Path(exists=True),  help="Image directory.")
 @click.option("--target-dir",     default=None,            type=click.Path(exists=False), help="Ground-truth directory.")
 @click.option("--result-file",    default=None,            type=str, help="Result file.")
 @click.option("--name",           default=None,            type=str, help="Model name.")
@@ -276,7 +276,7 @@ def update_results(results: dict, new_values: dict) -> dict:
 @click.option("--show-results",   is_flag=True)
 @click.option("--verbose",        is_flag=True)
 def measure_metric(
-    image_dir     : mon.Path,
+    input_dir     : mon.Path,
     target_dir    : mon.Path | None,
     result_file   : mon.Path | str,
     name          : str,
@@ -300,7 +300,7 @@ def measure_metric(
     for b in backend:
         if b in ["piqa"]:
             new_values = measure_metric_piqa(
-                image_dir      = image_dir,
+                input_dir= input_dir,
                 target_dir     = target_dir,
                 result_file    = result_file,
                 name           = name,
@@ -317,7 +317,7 @@ def measure_metric(
             results = update_results(results, new_values)
         elif b in ["pyiqa"]:
             new_values = measure_metric_pyiqa(
-                image_dir      = image_dir,
+                input_dir= input_dir,
                 target_dir     = target_dir,
                 result_file    = result_file,
                 name           = name,
@@ -341,7 +341,7 @@ def measure_metric(
     if verbose:
         console.rule(f"[bold red] {model_variant}")
         console.log(f"{model_variant}")
-        console.log(f"{image_dir.name}")
+        console.log(f"{input_dir.name}")
         for m, v in results.items():
             console.log(f"{m:<10}: {v:.10f}")
     if show_results:
@@ -373,7 +373,7 @@ def measure_metric(
                 
                 for m, v in results.items():
                     f.write(f"{f'{m}':<10}\t")
-            f.write(f"{f'{model_variant}':<10}\t{f'{image_dir.name}':<10}\t")
+            f.write(f"{f'{model_variant}':<10}\t{f'{input_dir.name}':<10}\t")
             for m, v in results.items():
                 f.write(f"{v:.10f}\t")
             f.write(f"\n")

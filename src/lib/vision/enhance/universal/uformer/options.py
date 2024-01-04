@@ -1,7 +1,13 @@
-import os
-import torch
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+""""""
+
+from __future__ import annotations
+
+
 class Options():
-    """docstring for Options"""
+
     def __init__(self):
         pass
 

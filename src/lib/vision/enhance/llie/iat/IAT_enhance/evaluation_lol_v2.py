@@ -23,8 +23,12 @@ from utils import PSNR
 console = mon.console
 
 
-def eval(args):
+def eval(args: argparse.Namespace):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+    args.data       = mon.Path(args.data)
+    args.output_dir = mon.Path(args.output_dir)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
     console.log(f"Data: {args.data}")
     
     val_dataset = lowlight_loader(
@@ -84,9 +88,4 @@ if __name__ == "__main__":
     parser.add_argument("--gpu",        type=str,  default=0)
     parser.add_argument("--output-dir", type=str,  default=RUN_DIR / "predict/vision/enhance/llie/iat")
     args = parser.parse_args()
-    
-    args.data       = mon.Path(args.data)
-    args.output_dir = mon.Path(args.output_dir)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    
     eval(args)
