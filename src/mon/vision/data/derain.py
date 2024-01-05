@@ -24,6 +24,8 @@ __all__ = [
     "Rain2800DataModule",
     "Rain800",
     "Rain800DataModule",
+    "GT_Rain",
+    "GT_RainDataModule"
 ]
 
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
@@ -416,6 +418,51 @@ class Rain800(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("/rain/", "/clear/")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
+@DATASETS.register(name="gtrain")
+class GT_Rain(base.ImageEnhancementDataset):
+    """Rain800 dataset consists 800 pairs of rain/no-rain train-val images.
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
+    """
+    
+    splits = ["train", "val", "test"]
+    
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            self.root / self.split / "gt_rain" / "*"
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file() and "-C-" not in str(path):
+                        print(str(path))
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                if "Gurutto_1-2" in str(img.path):
+                    path  = str(img.path).replace("-R-", "-C-")
+                else:
+                    path  = str(img.path)[:-9] + "C-000.png"
+                    
+                # path  = str(img.path).replace("rain", "clear")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -873,6 +920,57 @@ class Rain800DataModule(base.DataModule):
             self.val   = Rain800(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = Rain800(split="test",  **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="gtrain")
+class GT_RainDataModule(base.DataModule):
+    """Rain800 datamodule.
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings:
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | str | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = GT_Rain(split="train", **self.dataset_kwargs)
+            self.val   = GT_Rain(split="val",   **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = GT_Rain(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
