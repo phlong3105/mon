@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-""""""
+"""
+Reference:
+    `<https://github.com/ZhendongWang6/Uformer>`__
+"""
 
 from __future__ import annotations
 
@@ -75,6 +78,7 @@ def test(args: argparse.Namespace):
         console.log(f"Time   = {avg_time:.4f}")
 
     utils.load_checkpoint(model, args.weights)
+    console.log(args.weights)
     model.cuda()
     model.eval()
 

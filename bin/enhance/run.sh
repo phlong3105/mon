@@ -41,11 +41,14 @@ models=(
   "zeroadce"      # https://github.com/phlong3105/mon
   "zerodce"       # https://github.com/Li-Chongyi/Zero-DCE
   "zerodce++"     # https://github.com/Li-Chongyi/Zero-DCE_extension
+  ## Universal
+  "uformer"       # https://github.com/ZhendongWang6/Uformer
 )
 train_datasets=(
   ## De-Raining
-  "rain100l"
   "gt-rain"
+  "rain100h"
+  "rain100l"
   ## LES
   "jin2022"
   "ledlight"
@@ -63,9 +66,9 @@ train_datasets=(
 )
 predict_datasets=(
   ## De-Raining
-  "rain100l"
-  "rain100h"
   "gt-rain"
+  "rain100h"
+  "rain100l"
   ## LES
   "jin2022"
   "ledlight"
@@ -140,6 +143,7 @@ dehaze_dir="${root_dir}/src/lib/vision/enhance/dehaze"
 les_dir="${root_dir}/src/lib/vision/enhance/les"
 llie_dir="${root_dir}/src/lib/vision/enhance/llie"
 derain_dir="${root_dir}/src/lib/vision/enhance/derain"
+universal_dir="${root_dir}/src/lib/vision/enhance/universal"
 
 if [ "${model[0]}" == "all" ]; then
   declare -a model=()
@@ -171,13 +175,17 @@ declare -a target_data_dirs=()
 if [ "$task" == "train" ]; then
   for d in "${train_data[@]}"; do
     ## De-Raining
-    if [ "$d" == "rain100l" ]; then
-      input_data_dirs+=("${root_dir}/data/derain/train/rain100l/rain")
-      target_data_dirs+=("${root_dir}/data/derain/train/rain100l/clear")
+    if [ "$d" == "gt-rain" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/train/gt-rain/rain")
+      target_data_dirs+=("${root_dir}/data/derain/train/gt-rain/clear")
     fi
     if [ "$d" == "rain100h" ]; then
       input_data_dirs+=("${root_dir}/data/derain/train/rain100h/rain")
       target_data_dirs+=("${root_dir}/data/derain/train/rain100h/clear")
+    fi
+    if [ "$d" == "rain100l" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/train/rain100l/rain")
+      target_data_dirs+=("${root_dir}/data/derain/train/rain100l/clear")
     fi
     ## LES
     if [ "$d" == "jin2022" ]; then
@@ -230,13 +238,17 @@ if [ "$task" == "train" ]; then
 elif [ "$task" == "predict" ]; then
   for d in "${predict_data[@]}"; do
     ## De-Raining
-    if [ "$d" == "rain100l" ]; then
-      input_data_dirs+=("${root_dir}/data/derain/test/rain100l/rain")
-      target_data_dirs+=("${root_dir}/data/derain/test/rain100l/clear")
+    if [ "$d" == "gt-rain" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/test/gt-rain/rain")
+      target_data_dirs+=("${root_dir}/data/derain/test/gt-rain/clear")
     fi
     if [ "$d" == "rain100h" ]; then
       input_data_dirs+=("${root_dir}/data/derain/test/rain100h/rain")
       target_data_dirs+=("${root_dir}/data/derain/test/rain100h/clear")
+    fi
+    if [ "$d" == "rain100l" ]; then
+      input_data_dirs+=("${root_dir}/data/derain/test/rain100l/rain")
+      target_data_dirs+=("${root_dir}/data/derain/test/rain100l/clear")
     fi
     ## LES
     if [ "$d" == "jin2022" ]; then
@@ -617,6 +629,11 @@ if [ "$task" == "train" ]; then
           --display-iter 10 \
           --checkpoints-iter 10 \
           --checkpoints-dir "${train_dir}"
+      ## Universal
+      # UFormer
+      elif [ "${model[i]}" == "uformer" ]; then
+        model_dir="${universal_dir}/${model[i]}"
+        cd "${model_dir}" || exit
       fi
     done
   done
@@ -988,6 +1005,16 @@ if [ "$task" == "predict" ]; then
               --weights "${root_dir}/zoo/vision/enhance/llie/zerodce++/best.pth" \
               --image-size 512 \
               --benchmark
+          ## Universal
+          # UFormer
+          elif [ "${model[i]}" == "uformer" ]; then
+            model_dir="${universal_dir}/${model[i]}"
+            cd "${model_dir}" || exit
+            python -W ignore test/test_derain.py \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
+              --weights "${weights}" \
+              --image-size 512
           fi
         done
       fi

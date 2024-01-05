@@ -15,6 +15,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 from utils import is_png_file, load_img, Augment_RGB_torch
 
+import mon
+
 augment        = Augment_RGB_torch()
 transforms_aug = [method for method in dir(augment) if callable(getattr(augment, method)) if not method.startswith("_")] 
 
@@ -27,47 +29,46 @@ def is_image_file(filename):
 
 class DataLoaderTrain(Dataset):
 
-    def __init__(self, rgb_dir, img_options=None, target_transform=None):
+    def __init__(self, input_dir, target_dir, img_options=None, target_transform=None):
         super(DataLoaderTrain, self).__init__()
-
         self.target_transform = target_transform
         
-        gt_dir = "groundtruth" 
-        input_dir = "input"
-        
-        clean_files = sorted(os.listdir(os.path.join(rgb_dir, gt_dir)))
-        noisy_files = sorted(os.listdir(os.path.join(rgb_dir, input_dir)))
-        
-        self.clean_filenames = [os.path.join(rgb_dir, gt_dir, x) for x in clean_files if is_png_file(x)]
-        self.noisy_filenames = [os.path.join(rgb_dir, input_dir, x)       for x in noisy_files if is_png_file(x)]
-        
-        self.img_options=img_options
+        input_dir    = mon.Path(input_dir)
+        input_files  = sorted(list(input_dir.rglob("*")))
+        input_files  = [str(x) for x in input_files]
+                     
+        target_dir   = mon.Path(target_dir)
+        target_files = sorted(list(target_dir.rglob("*")))
+        target_files = [str(x) for x in target_files]
 
-        self.tar_size = len(self.clean_filenames)  # get the size of target
+        self.noisy_filenames = [os.path.join(input_dir,  x) for x in input_files  if is_png_file(x)]
+        self.clean_filenames = [os.path.join(target_dir, x) for x in target_files if is_png_file(x)]
+        self.img_options     = img_options
+        self.tar_size        = len(self.clean_filenames)  # get the size of target
 
     def __len__(self):
         return self.tar_size
 
     def __getitem__(self, index):
-        tar_index   = index % self.tar_size
+        tar_index = index % self.tar_size
         clean = torch.from_numpy(np.float32(load_img(self.clean_filenames[tar_index])))
         noisy = torch.from_numpy(np.float32(load_img(self.noisy_filenames[tar_index])))
-        
-        clean = clean.permute(2,0,1)
-        noisy = noisy.permute(2,0,1)
+
+        clean = clean.permute(2, 0, 1)
+        noisy = noisy.permute(2, 0, 1)
 
         clean_filename = os.path.split(self.clean_filenames[tar_index])[-1]
         noisy_filename = os.path.split(self.noisy_filenames[tar_index])[-1]
 
-        #Crop Input and Target
+        # Crop Input and Target
         ps = self.img_options["patch_size"]
-        H = clean.shape[1]
-        W = clean.shape[2]
+        H  = clean.shape[1]
+        W  = clean.shape[2]
         # r = np.random.randint(0, H - ps) if not H-ps else 0
         # c = np.random.randint(0, W - ps) if not H-ps else 0
-        if H-ps==0:
-            r=0
-            c=0
+        if H - ps == 0:
+            r = 0
+            c = 0
         else:
             r = np.random.randint(0, H - ps)
             c = np.random.randint(0, W - ps)
@@ -86,30 +87,27 @@ class DataLoaderTrain(Dataset):
 
 class DataLoaderVal(Dataset):
 
-    def __init__(self, rgb_dir, target_transform=None):
+    def __init__(self, input_dir, target_dir, target_transform=None):
         super(DataLoaderVal, self).__init__()
-
         self.target_transform = target_transform
 
-        gt_dir = "groundtruth"
-        input_dir = "input"
-        
-        clean_files = sorted(os.listdir(os.path.join(rgb_dir, gt_dir)))
-        noisy_files = sorted(os.listdir(os.path.join(rgb_dir, input_dir)))
+        input_dir    = mon.Path(input_dir)
+        input_files  = sorted(list(input_dir.rglob("*")))
+        input_files  = [str(x) for x in input_files]
+                     
+        target_dir   = mon.Path(target_dir)
+        target_files = sorted(list(target_dir.rglob("*")))
+        target_files = [str(x) for x in target_files]
 
-
-        self.clean_filenames = [os.path.join(rgb_dir, gt_dir, x) for x in clean_files if is_png_file(x)]
-        self.noisy_filenames = [os.path.join(rgb_dir, input_dir, x) for x in noisy_files if is_png_file(x)]
-        
-
-        self.tar_size = len(self.clean_filenames)  
+        self.noisy_filenames = [os.path.join(input_dir,  x) for x in input_files  if is_png_file(x)]
+        self.clean_filenames = [os.path.join(target_dir, x) for x in target_files if is_png_file(x)]
+        self.tar_size        = len(self.clean_filenames)
 
     def __len__(self):
         return self.tar_size
 
     def __getitem__(self, index):
-        tar_index   = index % self.tar_size
-        
+        tar_index = index % self.tar_size
 
         clean = torch.from_numpy(np.float32(load_img(self.clean_filenames[tar_index])))
         noisy = torch.from_numpy(np.float32(load_img(self.noisy_filenames[tar_index])))
@@ -117,22 +115,26 @@ class DataLoaderVal(Dataset):
         clean_filename = os.path.split(self.clean_filenames[tar_index])[-1]
         noisy_filename = os.path.split(self.noisy_filenames[tar_index])[-1]
 
-        clean = clean.permute(2,0,1)
-        noisy = noisy.permute(2,0,1)
+        clean = clean.permute(2, 0, 1)
+        noisy = noisy.permute(2, 0, 1)
 
         return clean, noisy, clean_filename, noisy_filename
 
 
 class DataLoaderVal_deblur(Dataset):
 
-    def __init__(self, rgb_dir, img_options=None, rgb_dir2=None):
+    def __init__(self, input_dir, target_dir, img_options=None, rgb_dir2=None):
         super(DataLoaderVal_deblur, self).__init__()
+        input_dir    = mon.Path(input_dir)
+        input_files  = sorted(list(input_dir.rglob("*")))
+        input_files  = [str(x) for x in input_files]
+                     
+        target_dir   = mon.Path(target_dir)
+        target_files = sorted(list(target_dir.rglob("*")))
+        target_files = [str(x) for x in target_files]
 
-        inp_files = sorted(os.listdir(os.path.join(rgb_dir, "input")))
-        tar_files = sorted(os.listdir(os.path.join(rgb_dir, "groundtruth")))
-
-        self.inp_filenames = [os.path.join(rgb_dir, "input", x)  for x in inp_files if is_png_file(x)]
-        self.tar_filenames = [os.path.join(rgb_dir, "groundtruth", x) for x in tar_files if is_png_file(x)]
+        self.inp_filenames = [os.path.join(input_dir,  x) for x in input_files  if is_png_file(x)]
+        self.tar_filenames = [os.path.join(target_dir, x) for x in target_files if is_png_file(x)]
 
         self.img_options   = img_options
         self.tar_size      = len(self.tar_filenames)  # get the size of target
@@ -169,10 +171,12 @@ class DataLoaderVal_deblur(Dataset):
 
 class DataLoaderTest(Dataset):
 
-    def __init__(self, inp_dir, img_options):
+    def __init__(self, input_dir, img_options):
         super(DataLoaderTest, self).__init__()
-        inp_files          = sorted(os.listdir(inp_dir))
-        self.inp_filenames = [os.path.join(inp_dir, x) for x in inp_files if is_image_file(x)]
+        input_dir          = mon.Path(input_dir)
+        input_files        = sorted(list(input_dir.rglob("*")))
+        input_files        = [str(x) for x in input_files]
+        self.inp_filenames = [os.path.join(input_dir, x) for x in input_files if is_image_file(x)]
         self.inp_size      = len(self.inp_filenames)
         self.img_options   = img_options
 
@@ -187,16 +191,16 @@ class DataLoaderTest(Dataset):
         return inp, filename
 
 
-def get_training_data(rgb_dir, img_options):
-    assert os.path.exists(rgb_dir)
-    return DataLoaderTrain(rgb_dir, img_options, None)
+def get_training_data(input_dir, target_dir, img_options):
+    assert os.path.exists(input_dir)
+    return DataLoaderTrain(input_dir, target_dir, img_options, None)
 
 
-def get_validation_deblur_data(rgb_dir, img_options=None):
-    assert os.path.exists(rgb_dir)
-    return DataLoaderVal_deblur(rgb_dir, img_options, None)
+def get_validation_deblur_data(input_dir, target_dir, img_options=None):
+    assert os.path.exists(input_dir)
+    return DataLoaderVal_deblur(input_dir, target_dir, img_options, None)
 
 
-def get_test_data(rgb_dir, img_options=None):
-    assert os.path.exists(rgb_dir)
-    return DataLoaderTest(rgb_dir, img_options)
+def get_test_data(input_dir, img_options=None):
+    assert os.path.exists(input_dir)
+    return DataLoaderTest(input_dir, img_options)
