@@ -87,12 +87,12 @@ def test(args: argparse.Namespace):
                 if pad_h > 0 or pad_w > 0:
                     input_numpy = cv2.copyMakeBorder(input_numpy, pad_h_half, pad_h - pad_h_half, pad_w_half, pad_w - pad_w_half, cv2.BORDER_CONSTANT)
                 new_h, new_w, _ = input_numpy.shape
-                stride_h     = int(np.ceil(test_patch_size * stride_rate))
-                stride_w     = int(np.ceil(test_patch_size * stride_rate))
-                grid_h       = int(np.ceil(float(new_h - test_patch_size) / stride_h) + 1)
-                grid_w       = int(np.ceil(float(new_w - test_patch_size) / stride_w) + 1)
-                rgb_restored = np.zeros((new_h, new_w, 3), dtype=float)
-                count_crop   = np.zeros((new_h, new_w), dtype=float)
+                stride_h        = int(np.ceil(test_patch_size * stride_rate))
+                stride_w        = int(np.ceil(test_patch_size * stride_rate))
+                grid_h          = int(np.ceil(float(new_h - test_patch_size) / stride_h) + 1)
+                grid_w          = int(np.ceil(float(new_w - test_patch_size) / stride_w) + 1)
+                rgb_restored    = np.zeros((new_h, new_w, 3), dtype=float)
+                count_crop      = np.zeros((new_h, new_w), dtype=float)
                 for index_h in range(0, grid_h):
                     for index_w in range(0, grid_w):
                         s_h        = index_h * stride_h
@@ -149,5 +149,4 @@ def parse_args() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    test(args)
+    test(parse_args())
