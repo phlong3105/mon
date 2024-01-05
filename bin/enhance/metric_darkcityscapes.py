@@ -89,19 +89,19 @@ def color_to_gray(path):
 @click.command()
 @click.option(
     "--input-dir",
-    default = mon.DATA_DIR/"llie"/"predict"/"MODEL"/"darkcityscapes"/"hrnetv2"/"single-scale"/"pseudo_color",
     type    = click.Path(exists=False),
+    default = mon.DATA_DIR/"llie"/"predict"/"MODEL"/"darkcityscapes"/"hrnetv2"/"single-scale"/"pseudo_color",
     help    = "Image directory."
 )
 @click.option(
     "--target-dir",
-    default = mon.DATA_DIR/"llie"/"test"/"darkcityscapes"/"labels",
     type    = click.Path(exists=False),
+    default = mon.DATA_DIR/"llie"/"test"/"darkcityscapes"/"labels",
     help    = "Ground-truth directory."
 )
-@click.option("--result-file",    default=None, type=str, help="Result file.")
-@click.option("--name",           default="ground-truth", type=str, help="Model name.")
-@click.option("--variant",        default=None, type=str, help="Model variant.")
+@click.option("--result-file",    type=str, default=None,           help="Result file.")
+@click.option("--name",           type=str, default="ground-truth", help="Model name.")
+@click.option("--variant",        type=str, default=None,           help="Model variant.")
 @click.option("--save-txt",       is_flag=True)
 @click.option("--append-results", is_flag=True)
 @click.option("--verbose",        is_flag=True)

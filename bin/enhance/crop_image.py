@@ -33,9 +33,9 @@ _EXCLUDE_DIRS = [
 # region Function
 
 @click.command()
-@click.option("--input-dir",  default=mon.DATA_DIR/"llie/predict",      type=click.Path(exists=True),  help="Image directory.")
-@click.option("--output-dir", default=mon.DATA_DIR/"llie/predict-crop", type=click.Path(exists=False), help="Output directory.")
-@click.option("--extension",  default="png", type=click.Choice(["jpg", "png"], case_sensitive=False), help="Image extension.")
+@click.option("--input-dir",  type=click.Path(exists=True),  default=mon.DATA_DIR/"llie/predict",      help="Image directory.")
+@click.option("--output-dir", type=click.Path(exists=False), default=mon.DATA_DIR/"llie/predict-crop", help="Output directory.")
+@click.option("--extension",  type=click.Choice(["jpg", "png"], case_sensitive=False),  default="png", help="Image extension.")
 @click.option("--verbose",    is_flag=True)
 def visualize_image(
     input_dir : mon.Path,

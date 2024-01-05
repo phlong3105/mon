@@ -74,7 +74,7 @@ hosts = {
 # region Function
 
 def predict(args: dict):
-    # Get args
+    # Get arguments
     model_name    = args["model"]["name"]
     variant       = args["model"]["variant"]
     weights       = args["model"]["weights"]
@@ -96,7 +96,7 @@ def predict(args: dict):
     devices = torch.device(devices)
 
     model: mon.Model = mon.MODELS.build(config=args["model"])
-    state_dict       = torch.load(weights, map_location=devices)
+    state_dict  = torch.load(weights, map_location=devices)
     model.load_state_dict(state_dict=state_dict["state_dict"])
     model.phase = mon.ModelPhase.INFERENCE
     model.eval()
@@ -261,7 +261,7 @@ def main(
     # Update arguments
     args                 = mon.get_module_vars(config_args)
     args["hostname"]     = hostname
-    args["root"]         = root
+    args["root"]         = mon.Path(root)
     args["project"]      = project
     args["image_size"]   = image_size
     args["verbose"]      = verbose
@@ -277,7 +277,7 @@ def main(
         "weights"  : weights,
         "name"     : name,
         "variant"  : variant,
-        "root"     : root,
+        "root"     : mon.Path(root),
         "project"  : project,
         # "verbose"  : verbose,
     }
