@@ -50,7 +50,7 @@ class GTRain(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "gt_rain"
+            self.root / self.split / "gt-rain" / "*" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
@@ -59,7 +59,7 @@ class GTRain(base.ImageEnhancementDataset):
                     list(pattern.rglob("*")),
                     description=f"Listing {self.__class__.__name__} {self.split} images"
                 ):
-                    if path.is_image_file() and "-C-" not in str(path):
+                    if path.is_image_file():
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
@@ -71,12 +71,12 @@ class GTRain(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                if "Gurutto_1-2" in str(img.path):
-                    path = str(img.path).replace("-R-", "-C-")
-                    # print(path)
+                path = str(img.path)
+                if "Gurutto_1-2" in path:
+                    path = path.replace("-R-", "-C-")
                 else:
-                    path = str(img.path)[:-9] + "C-000.png"
-                # path  = str(img.path).replace("rain", "clear")
+                    path = path[:-9] + "C-000.png"
+                path  = path.replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -511,9 +511,9 @@ class GTRainDataModule(base.DataModule):
 
         if phase in [None, ModelPhase.TRAINING]:
             self.train = GTRain(split="train", **self.dataset_kwargs)
-            self.val   = GTRain(split="val", **self.dataset_kwargs)
+            self.val   = GTRain(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = GTRain(split="test", **self.dataset_kwargs)
+            self.test  = GTRain(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()

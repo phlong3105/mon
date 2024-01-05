@@ -67,7 +67,7 @@ hosts = {
         "devices"    : "auto",
         "max_epochs" : 500,
         "max_steps"  : None,
-        "strategy"   : "auto",
+        "strategy"   : "ddp_find_unused_parameters_true",
         "exist_ok"   : False,
         "verbose"    : True,
 	},
@@ -245,7 +245,7 @@ def main(
         "devices"    : devices,
         "max_epochs" : max_epochs,
         "max_steps"  : max_steps,
-        "strategy"   : strategy,
+        "strategy"   : mon.DDPStrategy(find_unused_parameters=True),
     }
    
     if not exist_ok:
