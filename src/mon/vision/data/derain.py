@@ -40,7 +40,7 @@ console = core.console
 @DATASETS.register(name="gtrain")
 @DATASETS.register(name="gt-rain")
 class GTRain(base.ImageEnhancementDataset):
-    """GT-Rain dataset consists 800 pairs of rain/no-rain train-val images.
+    """GT-Rain dataset consists 26124 train and 1793 val pairs of rain/no-rain images.
 
     See Also: :class:`mon.vision.dataset.base.dataset.ImageEnhancementDataset`.
     """
@@ -50,7 +50,7 @@ class GTRain(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "gt-rain" / "*" / "rain"
+            self.root / self.split / "gt-rain" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:

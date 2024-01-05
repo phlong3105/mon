@@ -190,7 +190,7 @@ class GrayscaleLoss(nn.Module):
         return loss
     
 
-@LOSSES.register(name="contradic_channel_loss")
+@LOSSES.register(name="contradict_channel_loss")
 class ContradictChannelLoss(Loss):
     """Contradic Channel Loss :math:`\mathcal{L}_{con}` measures the distance
     between the average intensity value of a local region to the
@@ -208,20 +208,20 @@ class ContradictChannelLoss(Loss):
     def __init__(
         self,
         reduction : Reduction | str = "mean",
-        patch_size: int | list[int] = 35,
+        kernel_size: int | list[int] = 35,
     ):
         super().__init__(reduction=reduction)
-        self.patch_size = patch_size
+        self.kernel_size = kernel_size
         self.pool       = nn.MaxPool2d(
-            kernel_size =self.patch_size,
-            stride      =1,
-            padding     =self.patch_size//2
+            kernel_size = self.kernel_size,
+            stride      = 1,
+            padding     = int(self.kernel_size//2)
         )
         self.mae = MAELoss()
         self.sigmoid = nn.Sigmoid()
     
     def __str__(self) -> str:
-        return f"contradic_channel_loss"
+        return f"contradict_channel_loss"
     
     def forward(
         self,
