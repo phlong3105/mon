@@ -10,6 +10,7 @@ import mon.vision.enhance.base
 import mon.vision.enhance.deblur
 import mon.vision.enhance.dehaze
 import mon.vision.enhance.denoise
+import mon.vision.enhance.derain
 import mon.vision.enhance.les
 import mon.vision.enhance.llie
 import mon.vision.enhance.universal
@@ -21,3 +22,4 @@ from mon.vision.enhance.denoise import *
 from mon.vision.enhance.les import *
 from mon.vision.enhance.llie import *
 from mon.vision.enhance.universal import *
+from mon.vision.enhance.derain import *
