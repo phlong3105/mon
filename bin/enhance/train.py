@@ -21,17 +21,17 @@ console = mon.console
 
 hosts = {
 	"lp-labdesktop-01": {
-        "config"     : "gcenetv2_sice_zerodce",
+        "config"     : "zid_jin2022",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/gcenetv2",
-        "name"       : "gcenetv2-sice-zerodce",
+        "project"    : "vision/enhance/dehaze/zid",
+        "name"       : "zid-jin2022",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 8,
+        "batch_size" : 1,
         "image_size" : (512, 512),
         "accelerator": "auto",
         "devices"    : "auto",
-        "max_epochs" : None,
+        "max_epochs" : 500,
         "max_steps"  : None,
         "strategy"   : "auto",
         "exist_ok"   : False,
@@ -245,7 +245,7 @@ def main(
         "devices"    : devices,
         "max_epochs" : max_epochs,
         "max_steps"  : max_steps,
-        "strategy"   : strategy,
+        "strategy"   : mon.DDPStrategy(find_unused_parameters=True),
     }
    
     if not exist_ok:

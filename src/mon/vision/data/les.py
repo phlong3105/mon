@@ -117,7 +117,7 @@ class Jin2022(base.UnlabeledImageDataset):
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "jin2022" / "clear",
+            # self.root / self.split / "jin2022" / "clear",
             self.root / self.split / "jin2022" / "light-effects",
         ]
         self.images: list[base.ImageLabel] = []

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Zero-ADCE models.
-"""
+"""This module implements Zero-ADCE models."""
 
 from __future__ import annotations
 
