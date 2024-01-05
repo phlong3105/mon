@@ -688,12 +688,27 @@ if [ "$task" == "predict" ]; then
           ## De-Hazing
           # ZID
           if [ "${model[i]}" == "zid" ]; then
-            model_dir="${dehaze_dir}/${model[i]}"
+            # model_dir="${dehaze_dir}/${model[i]}"
+            # cd "${model_dir}" || exit
+            # python -W ignore rw_dehazing.py \
+            #   --input-dir "data/" \
+            #   --output-dir "output/" \
+            #   --num-iters 500
+            model_dir="${current_dir}"
             cd "${model_dir}" || exit
-            python -W ignore rw_dehazing.py \
-              --input-dir "data/" \
-              --output-dir "output/" \
-              --num-iters 500
+            python -W ignore predict.py \
+              --config "${model[i]}_jin2022" \
+              --input-dir "${input_data_dirs[k]}" \
+              --output-dir "${predict_dir}" \
+              --root "${predict_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --image-size 512 \
+              --devices "cuda:0" \
+              --benchmark \
+              --save-image \
+              --verbose
           ## De-Raining
           # IPT
           elif [ "${model[i]}" == "ipt" ]; then
@@ -745,10 +760,11 @@ if [ "$task" == "predict" ]; then
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
               --weights "${weights}" \
-              --num_iters 8 \
               --image-size 512 \
+              --devices "cuda:0" \
+              --benchmark \
               --save-image \
-              --benchmark
+              --verbose
           # GCENetV2
           elif [ "${model[i]}" == "gcenetv2" ]; then
             model_dir="${current_dir}"
@@ -761,10 +777,10 @@ if [ "$task" == "predict" ]; then
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
               --weights "${weights}" \
-              --num_iters 8 \
-              --image-size 512 \
+              --devices "cuda:0" \
+              --benchmark \
               --save-image \
-              --benchmark
+              --verbose
           # IAT
           elif [ "${model[i]}" == "iat" ]; then
             model_dir="${llie_dir}/${model[i]}"
@@ -947,10 +963,11 @@ if [ "$task" == "predict" ]; then
               --project "${project}/${model[i]}" \
               --variant "${variant[j]}" \
               --weights "${weights}" \
-              --num_iters 8 \
               --image-size 512 \
+              --devices "cuda:0" \
+              --benchmark \
               --save-image \
-              --benchmark
+              --verbose
           # Zero-DCE
           elif [ "${model[i]}" == "zerodce" ]; then
             model_dir="${llie_dir}/${model[i]}"
