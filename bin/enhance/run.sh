@@ -14,6 +14,7 @@ models=(
   "zid"           # https://github.com/liboyun/ZID
   ## De-Raining
   "ipt"           # https://github.com/huawei-noah/Pretrained-IPT
+  "transweather"  #
   ## LES
   "jin2022"       # https://github.com/jinyeying/night-enhancement
   ## LLIE
@@ -40,13 +41,11 @@ models=(
   "zeroadce"      # https://github.com/phlong3105/mon
   "zerodce"       # https://github.com/Li-Chongyi/Zero-DCE
   "zerodce++"     # https://github.com/Li-Chongyi/Zero-DCE_extension
-  ## DERAIN
-  "ipt"           # 
-  "transweather"  #
 )
 train_datasets=(
   ## De-Raining
   "rain100l"
+  "gt-rain"
   ## LES
   "jin2022"
   "ledlight"
@@ -61,22 +60,22 @@ train_datasets=(
   "sice-grad"
   "sice-mix"
   "sice-zerodce"
-  "gtrain"
 )
 predict_datasets=(
   ## De-Raining
   "rain100l"
   "rain100h"
+  "gt-rain"
   ## LES
-  # "jin2022"
-  # "ledlight"
+  "jin2022"
+  "ledlight"
   ## LLIE
-  # "darkcityscapes"
-  # "darkface"
+  "darkcityscapes"
+  "darkface"
   "dicm"
-  # "exdark"
-  # "fivek-c"
-  # "fivek-e"
+  "exdark"
+  "fivek-c"
+  "fivek-e"
   "fusion"
   "lime"
   "lol-v1"
@@ -84,12 +83,8 @@ predict_datasets=(
   "lol-v2-syn"
   "mef"
   "npe"
-  # "sice"
+  "sice"
   "vv"
-  ## DERAIN
-  "rain100l"
-  "rain100h"
-  "gtrain"
 )
 
 
@@ -351,9 +346,6 @@ if [ "$task" == "train" ]; then
       ## De-Hazing
       # ZID
       if [ "${model[i]}" == "zid" ]; then
-        # model_dir="${dehaze_dir}/${model[i]}"
-        # cd "${model_dir}" || exit
-        # python -W ignore rw_dehazing.py
         model_dir="${current_dir}"
         cd "${model_dir}" || exit
         python -W ignore train.py \
@@ -381,6 +373,15 @@ if [ "$task" == "train" ]; then
         #   --display-iter 10 \
         #   --checkpoints-iter 10 \
         #   --checkpoints-dir "${train_dir}"
+      # TransWeather
+      elif [ "${model[i]}" == "transweather" ]; then
+        model_dir="${current_dir}"
+        cd "${model_dir}" || exit
+        python -W ignore train.py \
+          --name "${name}" \
+          --variant "${variant[j]}" \
+          --max-epochs "$epochs" \
+          --strategy "ddp_find_unused_parameters_true"
       ## LES
       # Jin2022
       elif [ "${model[i]}" == "jin2022" ]; then
@@ -616,39 +617,6 @@ if [ "$task" == "train" ]; then
           --display-iter 10 \
           --checkpoints-iter 10 \
           --checkpoints-dir "${train_dir}"
-      ## DERAIN
-      # IPT
-      elif [ "${model[i]}" == "ipt" ]; then
-        model_dir="${derain_dir}/${model[i]}"
-        cd "${model_dir}" || exit
-        echo -e "\nI have not prepared the training script for IPT."
-      # elif [ "${model[i]}" == "ipt" ]; then
-      #   model_dir="${derain_dir}/${model[i]}"
-      #   cd "${model_dir}" || exit
-      #   python -W ignore main.py \
-      #     --dir_data "${input_data_dirs[j]}" \
-      #     --pretrain "${weights}" \
-      #     --load-pretrain false \
-      #     --lr 0.0001 \
-      #     --weight-decay 0.0001 \
-      #     --grad-clip-norm 0.1 \
-      #     --scale-factor 1 \
-      #     --epochs "$epochs" \
-      #     --train-batch-size 8 \
-      #     --val-batch-size 4 \
-      #     --num-workers 4 \
-      #     --display-iter 10 \
-      #     --checkpoints-iter 10 \
-      #     --checkpoints-dir "${train_dir}"
-      # TransWeather
-      elif [ "${model[i]}" == "transweather" ]; then
-        model_dir="${current_dir}"
-        cd "${model_dir}" || exit
-        python -W ignore train.py \
-          --name "${name}" \
-          --variant "${variant[j]}" \
-          --max-epochs "$epochs" \
-          --strategy "ddp_find_unused_parameters_true"
       fi
     done
   done
