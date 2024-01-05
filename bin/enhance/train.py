@@ -38,10 +38,10 @@ hosts = {
         "verbose"    : True,
 	},
     "vsw-ws01": {
-        "config"     : "hinet_gt_rain",
+        "config"     : "transweather_gtrain",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/hinet",
-        "name"       : "hinet-gt-rain",
+        "project"    : "vision/enhance/derain/transweather",
+        "name"       : "transweather-gtrain",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 32,

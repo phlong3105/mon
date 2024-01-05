@@ -151,6 +151,7 @@ class Rain100L(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("/rain/", "/clear/")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -435,7 +436,7 @@ class GT_Rain(base.ImageEnhancementDataset):
     def get_images(self):
         """Get image files."""
         patterns = [
-            self.root / self.split / "gt_rain" / "*"
+            self.root / self.split / "gt_rain"
         ]
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
@@ -445,7 +446,6 @@ class GT_Rain(base.ImageEnhancementDataset):
                     description=f"Listing {self.__class__.__name__} {self.split} images"
                 ):
                     if path.is_image_file() and "-C-" not in str(path):
-                        print(str(path))
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
@@ -459,6 +459,7 @@ class GT_Rain(base.ImageEnhancementDataset):
             ):
                 if "Gurutto_1-2" in str(img.path):
                     path  = str(img.path).replace("-R-", "-C-")
+                    print(path)
                 else:
                     path  = str(img.path)[:-9] + "C-000.png"
                     
@@ -610,6 +611,8 @@ class Rain100LDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
+            self.train = Rain100L(split="train", **self.dataset_kwargs)
+            self.val = Rain100L(split="test", **self.dataset_kwargs)
             self.train = Rain100L(split="train", **self.dataset_kwargs)
             self.val   = Rain100L(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:

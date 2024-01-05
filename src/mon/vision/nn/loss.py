@@ -27,6 +27,7 @@ __all__ = [
     "SSIMLoss",
     "SpatialConsistencyLoss",
     "StdLoss",
+    "ContradictChannelLoss",
 ]
 
 from typing import Literal
@@ -187,6 +188,57 @@ class GrayscaleLoss(nn.Module):
         loss = self.mse(x_g, y_g)
         loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
+    
+
+@LOSSES.register(name="contradic_channel_loss")
+class ContradictChannelLoss(Loss):
+    """Contradic Channel Loss :math:`\mathcal{L}_{con}` measures the distance
+    between the average intensity value of a local region to the
+    well-exposedness level E.
+
+    Args:
+        patch_size: Kernel size for pooling layer.
+        mean_val: The :math:`E` value proposed in the paper. Default: ``0.6``.
+        reduction: Specifies the reduction to apply to the output.
+    
+    References:
+        `<https://openaccess.thecvf.com/content/ICCV2021/papers/Chen_ALL_Snow_Removed_Single_Image_Desnowing_Algorithm_Using_Hierarchical_Dual-Tree_ICCV_2021_paper.pdf>`__
+    """
+        
+    def __init__(
+        self,
+        reduction : Reduction | str = "mean",
+        patch_size: int | list[int] = 35,
+    ):
+        super().__init__(reduction=reduction)
+        self.patch_size = patch_size
+        self.pool       = nn.MaxPool2d(
+            kernel_size =self.patch_size,
+            stride      =1,
+            padding     =self.patch_size//2
+        )
+        self.mae = MAELoss()
+        self.sigmoid = nn.Sigmoid()
+    
+    def __str__(self) -> str:
+        return f"contradic_channel_loss"
+    
+    def forward(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None  = None
+    ) -> torch.Tensor:
+        y_pred = torch.min(input,dim=1,keepdim=True)
+        y_pred = torch.squeeze(y_pred[0])
+        y_pred = self.pool(y_pred)
+
+        y_true = torch.min(target,dim=1,keepdim=True)
+        y_true = torch.squeeze(y_true[0])
+        y_true = self.pool(y_true)
+
+        loss = self.mae(y_pred, y_true)
+        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        return self.sigmoid(loss)
 
 # endregion
 
@@ -330,7 +382,8 @@ class PerceptualLoss(Loss):
         super().__init__(reduction=reduction)
         self.mse = MSELoss(reduction=reduction)
         self.vgg = vgg
-        self.vgg.freeze()
+        for param in self.vgg.parameters():
+            param.requires_grad = False
     
     def __str__(self) -> str:
         return f"perceptual_Loss"
@@ -340,8 +393,8 @@ class PerceptualLoss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        if self.vgg.device != input[0].device:
-            self.vgg = self.vgg.to(input[0].device)
+        # if self.vgg.device != input[0].device:
+        #     self.vgg = self.vgg.to(input[0].device)
         input_feats  = self.vgg(input)
         target_feats = self.vgg(target)
         loss = self.mse(input=input_feats, target=target_feats)
