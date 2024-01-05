@@ -47,7 +47,7 @@ hosts = {
         "batch_size" : 32,
         "image_size" : (512, 512),
         "accelerator": "auto",
-        "devices"    : "auto",
+        "devices"    : [0, 1],
         "max_epochs" : None,
         "max_steps"  : None,
         "strategy"   : "auto",
