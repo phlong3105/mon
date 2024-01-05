@@ -733,7 +733,7 @@ if [ "$task" == "predict" ]; then
             cd "${model_dir}" || exit
             python -W ignore main.py \
               --dir_data "${input_data_dirs[k]}" \
-              --pretrain "${root_dir}/zoo/vision/enhance/derain/ipt/IPT_derain.pt" \
+              --pretrain "${root_dir}/zoo/vision/enhance/derain/ipt/ipt-derain.pt" \
               --scale 1 \
               --derain  \
               --test_only \
