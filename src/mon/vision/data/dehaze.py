@@ -85,7 +85,7 @@ class DenseHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -125,7 +125,7 @@ class IHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -165,7 +165,7 @@ class NHHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -205,7 +205,7 @@ class OHaze(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -271,7 +271,7 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -312,7 +312,7 @@ class RESIDEITS(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -353,7 +353,7 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -394,7 +394,7 @@ class RESIDEOTS(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -461,7 +461,7 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -502,7 +502,7 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 stem  = str(img.path.stem).split("_")[0]
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path).parent / f"{stem}.{img.path.suffix}"
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -570,7 +570,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -609,7 +609,7 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -648,7 +648,7 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -687,7 +687,7 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("haze", "clear")
+                path  = str(img.path).replace("/haze/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -787,7 +787,7 @@ class IHazeDataModule(base.DataModule):
             self.train = IHaze(split="train", **self.dataset_kwargs)
             self.val   = IHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = IHaze(split="test", **self.dataset_kwargs)
+            self.test  = IHaze(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -838,7 +838,7 @@ class NHHazeDataModule(base.DataModule):
             self.train = NHHaze(split="train", **self.dataset_kwargs)
             self.val   = NHHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = NHHaze(split="test", **self.dataset_kwargs)
+            self.test  = NHHaze(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -889,7 +889,7 @@ class OHazeDataModule(base.DataModule):
             self.train = OHaze(split="train", **self.dataset_kwargs)
             self.val   = OHaze(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = OHaze(split="test", **self.dataset_kwargs)
+            self.test  = OHaze(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -937,10 +937,10 @@ class RESIDEHSTSRealDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
+            self.val   = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
+            self.test  = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -988,10 +988,10 @@ class RESIDEHSTSSynDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
+            self.val   = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
+            self.test = RESIDEHSTSSyn(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1042,7 +1042,7 @@ class RESIDEITSDataModule(base.DataModule):
             self.train = RESIDEITS(split="train", **self.dataset_kwargs)
             self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = RESIDEITS(split="test", **self.dataset_kwargs)
+            self.test  = RESIDEITS(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1192,10 +1192,10 @@ class RESIDERTTSDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = RESIDERTTS(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = RESIDERTTS(split="test", **self.dataset_kwargs)
+            self.val   = RESIDERTTS(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDERTTS(split="test", **self.dataset_kwargs)
+            self.test = RESIDERTTS(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1243,10 +1243,10 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
+            self.val   = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
+            self.test = RESIDESOTSIndoor(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1294,10 +1294,10 @@ class RESIDESOTSOutdoorDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
+            self.val   = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
+            self.test  = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1348,7 +1348,7 @@ class SateHaze1KDataModule(base.DataModule):
             self.train = SateHaze1K(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1K(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1K(split="test", **self.dataset_kwargs)
+            self.test  = SateHaze1K(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1396,10 +1396,10 @@ class RESIDEUHIDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = RESIDEUHI(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = RESIDEUHI(split="test", **self.dataset_kwargs)
+            self.val   = RESIDEUHI(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = RESIDEUHI(split="test", **self.dataset_kwargs)
+            self.test  = RESIDEUHI(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1450,7 +1450,7 @@ class SateHaze1KThinDataModule(base.DataModule):
             self.train = SateHaze1KThin(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1KThin(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1KThin(split="test", **self.dataset_kwargs)
+            self.test  = SateHaze1KThin(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1501,7 +1501,7 @@ class SateHaze1KModerateDataModule(base.DataModule):
             self.train = SateHaze1KModerate(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1KModerate(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1KModerate(split="test", **self.dataset_kwargs)
+            self.test  = SateHaze1KModerate(split="test",  **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1552,7 +1552,7 @@ class SateHaze1KThickDataModule(base.DataModule):
             self.train = SateHaze1KThick(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1KThick(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = SateHaze1KThick(split="test", **self.dataset_kwargs)
+            self.test  = SateHaze1KThick(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

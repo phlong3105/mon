@@ -223,7 +223,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         train, self.val  = data.random_split(dataset, [train_size, val_size])
         self.train       = dataset if full_train else train
         self.classlabels = getattr(dataset, "classlabels", None)
-        # self.collate_fn  = getattr(dataset, "collate_fn",  None)
+        self.collate_fn  = getattr(dataset, "collate_fn",  None)
     
     @abstractmethod
     def get_classlabels(self):

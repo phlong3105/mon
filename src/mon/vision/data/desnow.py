@@ -66,7 +66,7 @@ class KITTISnow(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -106,7 +106,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -145,7 +145,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -184,7 +184,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -223,7 +223,7 @@ class Snow100K(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -262,7 +262,7 @@ class Snow100KS(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -301,7 +301,7 @@ class Snow100KM(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -340,7 +340,7 @@ class Snow100KL(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("snow", "clear")
+                path  = str(img.path).replace("/snow/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -386,10 +386,10 @@ class KITTISnowDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = KITTISnow(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = KITTISnow(split="train", **self.dataset_kwargs)
+            self.val   = KITTISnow(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = KITTISnow(split="train", **self.dataset_kwargs)
+            self.test  = KITTISnow(split="train", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -437,10 +437,10 @@ class KITTISnowSDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = KITTISnowS(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = KITTISnowS(split="test", **self.dataset_kwargs)
+            self.val   = KITTISnowS(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = KITTISnowS(split="test", **self.dataset_kwargs)
+            self.test  = KITTISnowS(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -488,10 +488,10 @@ class KITTISnowMDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = KITTISnowM(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = KITTISnowM(split="test", **self.dataset_kwargs)
+            self.val   = KITTISnowM(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = KITTISnowM(split="test", **self.dataset_kwargs)
+            self.test  = KITTISnowM(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -539,10 +539,10 @@ class KITTISnowLDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = KITTISnowL(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = KITTISnowL(split="test", **self.dataset_kwargs)
+            self.val   = KITTISnowL(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = KITTISnowL(split="test", **self.dataset_kwargs)
+            self.test  = KITTISnowL(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -590,10 +590,10 @@ class Snow100KDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Snow100K(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Snow100K(split="train", **self.dataset_kwargs)
+            self.val   = Snow100K(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Snow100K(split="train", **self.dataset_kwargs)
+            self.test  = Snow100K(split="train", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -641,11 +641,10 @@ class Snow100KSDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Snow100KS(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
-            self.train = Snow100KS(split="test", **self.dataset_kwargs)
+            self.train = Snow100KS(split="train", **self.dataset_kwargs)
+            self.val   = Snow100KS(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Snow100KS(split="test", **self.dataset_kwargs)
+            self.test  = Snow100KS(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -693,10 +692,10 @@ class Snow100KMDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Snow100KM(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Snow100KM(split="train", **self.dataset_kwargs)
+            self.val   = Snow100KM(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Snow100KM(split="test", **self.dataset_kwargs)
+            self.test  = Snow100KM(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -744,10 +743,10 @@ class Snow100KLDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Snow100KL(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Snow100KL(split="train", **self.dataset_kwargs)
+            self.val   = Snow100KL(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Snow100KL(split="test", **self.dataset_kwargs)
+            self.test  = Snow100KL(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

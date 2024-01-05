@@ -165,7 +165,7 @@ class FiveKC(base.UnlabeledImageDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -205,7 +205,7 @@ class FiveKE(base.UnlabeledImageDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -335,7 +335,7 @@ class LOLV1(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -378,7 +378,7 @@ class LOLV2Real(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -421,7 +421,7 @@ class LOLV2Syn(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -512,7 +512,7 @@ class SICEGrad(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -551,7 +551,7 @@ class SICEMix(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("low", "high")
+                path  = str(img.path).replace("/low/", "/high/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -650,10 +650,10 @@ class DarkFaceDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset  = DarkFace(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = DarkFace(split="test", **self.dataset_kwargs)
+            self.val   = DarkFace(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = DarkFace(split="test", **self.dataset_kwargs)
+            self.test  = DarkFace(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -701,10 +701,10 @@ class DICMDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = DICM(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = DICM(split="test", **self.dataset_kwargs)
+            self.val   = DICM(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = DICM(split="test", **self.dataset_kwargs)
+            self.test  = DICM(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -752,10 +752,10 @@ class ExDarkDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = ExDark(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = ExDark(split="test", **self.dataset_kwargs)
+            self.val   = ExDark(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = ExDark(split="test", **self.dataset_kwargs)
+            self.test  = ExDark(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -905,10 +905,10 @@ class FusionDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Fusion(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Fusion(split="test", **self.dataset_kwargs)
+            self.val   = Fusion(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Fusion(split="test", **self.dataset_kwargs)
+            self.test  = Fusion(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -956,10 +956,10 @@ class LIMEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = LIME(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = LIME(split="test", **self.dataset_kwargs)
+            self.val   = LIME(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = LIME(split="test", **self.dataset_kwargs)
+            self.test  = LIME(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1211,10 +1211,10 @@ class MEFDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = MEF(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = MEF(split="test", **self.dataset_kwargs)
+            self.val   = MEF(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = MEF(split="test", **self.dataset_kwargs)
+            self.test  = MEF(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1262,10 +1262,10 @@ class NPEDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = NPE(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = NPE(split="test", **self.dataset_kwargs)
+            self.val   = NPE(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = NPE(split="test", **self.dataset_kwargs)
+            self.test  = NPE(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1313,10 +1313,10 @@ class SICEGradDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = SICEGrad(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = SICEGrad(split="train", **self.dataset_kwargs)
+            self.val   = SICEGrad(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = SICEGrad(split="train", **self.dataset_kwargs)
+            self.test  = SICEGrad(split="train", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -1364,10 +1364,10 @@ class SICEMixDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = SICEMix(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = SICEMix(split="train", **self.dataset_kwargs)
+            self.val   = SICEMix(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = SICEMix(split="train", **self.dataset_kwargs)
+            self.test  = SICEMix(split="train", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -1466,10 +1466,10 @@ class VVDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = VV(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = VV(split="test", **self.dataset_kwargs)
+            self.val   = VV(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = VV(split="test", **self.dataset_kwargs)
+            self.test  = VV(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

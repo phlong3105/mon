@@ -60,7 +60,7 @@ class Flare7KPPReal(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("flare", "clears")
+                path  = str(img.path).replace("/flare/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -99,7 +99,7 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("flare", "clears")
+                path  = str(img.path).replace("/flare/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -165,7 +165,7 @@ class LEDLight(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("flare", "clears")
+                path  = str(img.path).replace("/flare/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -211,10 +211,10 @@ class Flare7KPPRealDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Flare7KPPReal(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Flare7KPPReal(split="test", **self.dataset_kwargs)
+            self.val   = Flare7KPPReal(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Flare7KPPReal(split="test", **self.dataset_kwargs)
+            self.test  = Flare7KPPReal(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -262,10 +262,10 @@ class Flare7KPPSynDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Flare7KPPSyn(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Flare7KPPSyn(split="test", **self.dataset_kwargs)
+            self.val   = Flare7KPPSyn(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Flare7KPPSyn(split="test", **self.dataset_kwargs)
+            self.test  = Flare7KPPSyn(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()
@@ -364,10 +364,10 @@ class LEDLightDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = LEDLight(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = LEDLight(split="test", **self.dataset_kwargs)
+            self.val   = LEDLight(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = LEDLight(split="test", **self.dataset_kwargs)
+            self.test  = LEDLight(split="test", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()

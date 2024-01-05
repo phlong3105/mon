@@ -48,10 +48,10 @@ def net_process(model, image, flip=False):
 
 def test(args: argparse.Namespace):
     # if args.save_images:
-    result_dir_img = os.path.join(args.result_dir, "result")
+    result_dir_img = os.path.join(args.output_dir, "result")
     utils.mkdir(result_dir_img)
 
-    visualization_dir_img = os.path.join(args.result_dir, "visualization")
+    visualization_dir_img = os.path.join(args.output_dir, "visualization")
     utils.mkdir(visualization_dir_img)
 
     img_options_val = {"val_h": 1536, "val_w": 2048}
@@ -115,14 +115,14 @@ def test(args: argparse.Namespace):
             target_img       = img_as_ubyte(target.data.cpu().numpy().squeeze().transpose((1, 2, 0)))
             input_img        = img_as_ubyte(input_.data.cpu().numpy().squeeze().transpose((1, 2, 0)))
             visualization    = np.concatenate([input_img, rgb_restored_img, target_img], axis=0)
-            utils.save_img(os.path.join(args.result_dir, "result/", filenames[0] + ".png"), rgb_restored_img)
-            utils.save_img(os.path.join(args.result_dir, "visualization/", filenames[0] + ".png"), visualization)
+            utils.save_img(os.path.join(args.output_dir, "result/", filenames[0] + ".png"), rgb_restored_img)
+            utils.save_img(os.path.join(args.output_dir, "visualization/", filenames[0] + ".png"), visualization)
 
 
-if __name__ == "__main__":
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Image de-raining evaluation on GT-Rain")
     parser.add_argument("--input-dir",        type=str,            default="fill in your test file with input and groundtruth", help="Directory of validation images")
-    parser.add_argument("--result-dir",       type=str,            default="./results/UG2/",     help="Directory for results")
+    parser.add_argument("--output-dir",       type=str,            default="./results/UG2/",     help="Directory for results")
     parser.add_argument("--weights",          type=str,            default="./model_latest.pth", help="Path to weights")  # /mnt/data/yeyuntong/Projects/Transformer/Uformer/logs/motiondeblur/GoPro/Uformer_B_Ours/models/model_latest.pth
     parser.add_argument("--gpus",             type=str,            default="1",                  help="CUDA_VISIBLE_DEVICES")
     parser.add_argument("--arch",             type=str,            default="Uformer_B",          help="arch")
@@ -142,7 +142,12 @@ if __name__ == "__main__":
     parser.add_argument("--global-skip",      action="store_true", default=False,                help="global skip connection")
     parser.add_argument("--local-skip",       action="store_true", default=False,                help="local skip connection")
     parser.add_argument("--vit-share",        action="store_true", default=False,                help="share vit module")
-    # args for train                 
+    # args for train
     parser.add_argument("--train_ps",         type=int,            default=128,                  help="patch size of training sample")
     args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
     test(args)

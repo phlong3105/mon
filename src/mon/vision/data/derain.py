@@ -68,7 +68,7 @@ class Rain100(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -108,7 +108,7 @@ class Rain100H(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -148,7 +148,7 @@ class Rain100L(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -187,7 +187,7 @@ class Rain12(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -234,7 +234,7 @@ class Rain1200(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -297,7 +297,7 @@ class Rain13K(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -337,7 +337,7 @@ class Rain1400(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -376,7 +376,7 @@ class Rain2800(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -415,7 +415,7 @@ class Rain800(base.ImageEnhancementDataset):
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
-                path  = str(img.path).replace("rain", "clear")
+                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -461,10 +461,10 @@ class Rain100DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Rain100(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Rain100(split="test", **self.dataset_kwargs)
+            self.val   = Rain100(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain100(split="test", **self.dataset_kwargs)
+            self.test  = Rain100(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -512,10 +512,10 @@ class Rain100HDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Rain100H(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Rain100H(split="train", **self.dataset_kwargs)
+            self.val   = Rain100H(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain100H(split="test", **self.dataset_kwargs)
+            self.test  = Rain100H(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -563,10 +563,10 @@ class Rain100LDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Rain100L(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Rain100L(split="train", **self.dataset_kwargs)
+            self.val   = Rain100L(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain100L(split="test", **self.dataset_kwargs)
+            self.test  = Rain100L(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -614,10 +614,10 @@ class Rain12DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Rain12(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Rain12(split="train", **self.dataset_kwargs)
+            self.val   = Rain12(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain12(split="train", **self.dataset_kwargs)
+            self.test  = Rain12(split="train", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -668,7 +668,7 @@ class Rain1200DataModule(base.DataModule):
             self.train = Rain1200(split="train", **self.dataset_kwargs)
             self.val   = Rain1200(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = Rain1200(split="test", **self.dataset_kwargs)
+            self.test  = Rain1200(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -719,7 +719,7 @@ class Rain13KDataModule(base.DataModule):
             self.train = Rain13K(split="train", **self.dataset_kwargs)
             self.val   = Rain13K(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = Rain13K(split="test", **self.dataset_kwargs)
+            self.test  = Rain13K(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -767,10 +767,10 @@ class Rain1400DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Rain1400(split="train", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Rain1400(split="train", **self.dataset_kwargs)
+            self.val   = Rain1400(split="test",  **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain1400(split="test", **self.dataset_kwargs)
+            self.test  = Rain1400(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -818,10 +818,10 @@ class Rain2800DataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            dataset = Rain2800(split="test", **self.dataset_kwargs)
-            self.split_train_val(dataset=dataset, split_ratio=0.8, full_train=True)
+            self.train = Rain2800(split="test", **self.dataset_kwargs)
+            self.val   = Rain2800(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test = Rain2800(split="test", **self.dataset_kwargs)
+            self.test  = Rain2800(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
@@ -872,7 +872,7 @@ class Rain800DataModule(base.DataModule):
             self.train = Rain800(split="train", **self.dataset_kwargs)
             self.val   = Rain800(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
-            self.test  = Rain800(split="test", **self.dataset_kwargs)
+            self.test  = Rain800(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
