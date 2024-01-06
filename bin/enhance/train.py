@@ -55,10 +55,10 @@ hosts = {
         "verbose"    : True,
 	},
     "vsw-ws02": {
-        "config"     : "zid_jin2022",
+        "config"     : "gcenetv2_sice_zerodce",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/dehaze/zid",
-        "name"       : "zid-jin2022",
+        "project"    : "vision/enhance/llie/gcenetv2",
+        "name"       : "gcenetv2-sice-zerodce",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 1,

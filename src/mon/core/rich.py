@@ -195,7 +195,7 @@ class GPUMemoryUsageColumn(progress.ProgressColumn):
     ):
         super().__init__(table_column=table_column)
         self.device = builtins.to_int(device)
-        self.unit = MemoryUnit.from_value(value=unit)
+        self.unit   = MemoryUnit.from_value(value=unit)
     
     def render(self, task: progress.Task) -> text.Text:
         """Return a :class:`rich.text.Text` object showing current GPU memory
