@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""GCENet model trained on Jin2022 datasets."""
+"""GCENet model trained on LightEffect datasets."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ root         = RUN_DIR / "train"
 project      = "gcenet"
 model_name   = "gcenet"
 model_config = None
-data_name    = "jin2022"
+data_name    = "light-effect"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]

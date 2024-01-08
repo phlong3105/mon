@@ -366,7 +366,8 @@ def parse_args():
     parser.add_argument("--lr",             type=float, default=1e-4,                                           help="Learning rate for the model.")
     parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/les/jin2022",   help="Location at which to save the light-effects suppression results.")
     parser.add_argument("--benchmark",      action="store_true")
-    return parser.parse_args()
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == "__main__":

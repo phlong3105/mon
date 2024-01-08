@@ -149,24 +149,9 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     return imgs_dict
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",           type=str,   default="GOPR0364_frame_000939_rgb_anon.png",           help="Image to be used for demo")
-    parser.add_argument("--weights",        type=str,   default=None,                                           help="model to initialize with")
-    parser.add_argument("--image-size",     type=int,   default=512,                                            help="The training size of image")
-    parser.add_argument("--load-size",      type=str,   default="Resize",                                       help="Width and height to resize training and testing frames. None for no resizing, only [512, 512] for no resizing")
-    parser.add_argument("--crop-size",      type=str,   default="[512, 512]",                                   help="Width and height to crop training and testing frames. Must be a multiple of 16")
-    parser.add_argument("--iters",          type=int,   default=60,                                             help="No of iterations to train the model.")
-    parser.add_argument("--lr",             type=float, default=1e-4,                                           help="Learning rate for the model.")
-    parser.add_argument("--output-dir",     type=str,   default=RUN_DIR / "predict/vision/enhance/les/jin2022", help="Location at which to save the light-effects suppression results.")
-    parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/les/jin2022",   help="Location at which to save the light-effects suppression results.")
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
+def main(args: argparse.Namespace):
     args.use_gray       = False
-    args.data           = mon.Path(args.data)
+    args.input_dir      = mon.Path(args.input_dir)
     args.output_dir     = mon.Path(args.output_dir)
     args.checkpoint_dir = mon.Path(args.checkpoint_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -179,17 +164,18 @@ if __name__ == "__main__":
     dle_net  = Net(input_nc=channels, output_nc=channels)
 
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = dle_net,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = dle_net,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
 
     # Load weights
     dle_net = Net(input_nc=channels, output_nc=channels)
@@ -202,7 +188,7 @@ if __name__ == "__main__":
     #
     num_items    = 0
     sum_time     = 0
-    in_filenames = sorted([join(args.data, x) for x in listdir(args.data) if is_image_file(x)])
+    in_filenames = sorted([join(args.input_dir, x) for x in listdir(args.input_dir) if is_image_file(x)])
     with mon.get_progress_bar() as pbar:
         for in_filename in pbar.track(
             sequence    = in_filenames,
@@ -210,7 +196,7 @@ if __name__ == "__main__":
             description = f"[bright_yellow] Inferring"
         ):
             img_name   = basename(in_filename)
-            da_list    = sorted([(args.data / file) for file in os.listdir(args.data) if file == img_name])
+            da_list    = sorted([(args.input_dir / file) for file in os.listdir(args.input_dir) if file == img_name])
             da_list    = [str(path) for path in da_list]
             num_items += len(da_list)
             demo_list  = da_list
@@ -230,7 +216,7 @@ if __name__ == "__main__":
                     count_idx = count_idx + 1
                     imgs_dict = demo(args, dle_net, optimizer_dle_net, inputs)
 
-                    if count_idx % 60 == 0:
+                    if count_idx % args.iters == 0:
                         img_in_path = mon.Path(img_in_path[0])
                         inout       = args.output_dir / f"{img_in_path.stem}_in_out.png"
                         out         = args.output_dir / f"{img_in_path.stem}_out.png"
@@ -245,36 +231,23 @@ if __name__ == "__main__":
     avg_time = float(sum_time / num_items)
     console.log(f"Average time: {avg_time}")
 
-    #
-    '''
-    image_paths = list(args.data.rglob("*"))
-    image_paths = [str(path) for path in image_paths if path.is_image_file()]
-    demo_list   = image_paths * args.iters
-    loader      = torch.utils.data.DataLoader(
-        DA.LoadImgs(args, demo_list, mode="demo"),
-        batch_size  = 1,
-        shuffle     = True,
-        num_workers = 16,
-        drop_last   = False
-    )
 
-    count_idx = 0
-    with mon.get_progress_bar() as pbar:
-        for batch_idx, (inputs, img_in_path) in pbar.track(
-            sequence    = enumerate(loader),
-            total       = len(loader),
-            description = f"[bright_yellow] Inferring"
-        ):
-            count_idx = count_idx + 1
-            imgs_dict = demo(args, dle_net, optimizer_dle_net, inputs)
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-dir",      type=str,   default="./light-effects",                              help="Image to be used for demo")
+    parser.add_argument("--output-dir",     type=str,   default=RUN_DIR / "predict/vision/enhance/les/jin2022", help="Location at which to save the light-effects suppression results.")
+    parser.add_argument("--weights",        type=str,   default=None,                                           help="model to initialize with")
+    parser.add_argument("--image-size",     type=int,   default=512,                                            help="The training size of image")
+    parser.add_argument("--load-size",      type=str,   default="Resize",                                       help="Width and height to resize training and testing frames. None for no resizing, only [512, 512] for no resizing")
+    parser.add_argument("--crop-size",      type=str,   default="[512, 512]",                                   help="Width and height to crop training and testing frames. Must be a multiple of 16")
+    parser.add_argument("--iters",          type=int,   default=60,                                             help="No of iterations to train the model.")
+    parser.add_argument("--lr",             type=float, default=1e-4,                                           help="Learning rate for the model.")
+    parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/les/jin2022",   help="Location at which to save the light-effects suppression results.")
+    parser.add_argument("--benchmark",      action="store_true")
+    args = parser.parse_args()
+    return args
 
-            if count_idx % 60 == 0:
-                img_in_path = mon.Path(img_in_path[0])
-                inout       = args.output_dir / f"{img_in_path.stem}_in_out.png"
-                out         = args.output_dir / f"{img_in_path.stem}_out.png"
-                save_img    = torch.cat((inputs["img_in"][0, :, :, :], imgs_dict["dle_pred"][0, :, :, :]), dim=2)
-                out_img     = imgs_dict["dle_pred"][0, :, :, :]
-                vutils.save_image(save_img, str(inout))
-                vutils.save_image(out_img,  str(out))
-                torch.save(dle_net.state_dict(), str(args.checkpoint_dir / "best.pt"))
-    '''
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)

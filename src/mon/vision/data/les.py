@@ -12,10 +12,10 @@ __all__ = [
     "Flare7KPPRealDataModule",
     "Flare7KPPSyn",
     "Flare7KPPSynDataModule",
-    "Jin2022",
-    "Jin2022DataModule",
     "LEDLight",
     "LEDLightDataModule",
+    "LightEffect",
+    "LightEffectDataModule",
 ]
 
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
@@ -105,33 +105,6 @@ class Flare7KPPSyn(base.ImageEnhancementDataset):
                 self.labels.append(label)
 
 
-@DATASETS.register(name="jin2022")
-class Jin2022(base.UnlabeledImageDataset):
-    """Jin2022 dataset consists 961 flare images.
-
-    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
-    """
-
-    splits = ["train"]
-
-    def get_images(self):
-        """Get image files."""
-        patterns = [
-            # self.root / self.split / "jin2022" / "clear",
-            self.root / self.split / "jin2022" / "light-effects",
-        ]
-        self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
-            for pattern in patterns:
-                for path in pbar.track(
-                    list(pattern.rglob("*")),
-                    description=f"Listing {self.__class__.__name__} {self.split} images"
-                ):
-                    if path.is_image_file():
-                        image = base.ImageLabel(path=path)
-                        self.images.append(image)
-
-
 @DATASETS.register(name="ledlight")
 class LEDLight(base.ImageEnhancementDataset):
     """LEDLight dataset consists of 100 flare/clear image pairs.
@@ -169,6 +142,35 @@ class LEDLight(base.ImageEnhancementDataset):
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
+
+
+@DATASETS.register(name="light-effect")
+@DATASETS.register(name="lighteffect")
+class LightEffect(base.UnlabeledImageDataset):
+    """LightEffect dataset consists 961 flare images.
+
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+
+    splits = ["train"]
+
+    def get_images(self):
+        """Get image files."""
+        patterns = [
+            # self.root / self.split / "light-effect" / "clear",
+            self.root / self.split / "light-effect" / "light-effects",
+        ]
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar() as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+
 
 # endregion
 
@@ -277,58 +279,7 @@ class Flare7KPPSynDataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="jin2022")
-class Jin2022DataModule(base.DataModule):
-    """Jin2022 datamodule.
-
-    See Also: :class:`mon.nn.data.datamodule.DataModule`.
-    """
-
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-
-    def setup(self, phase: ModelPhase | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = Jin2022(split="train", **self.dataset_kwargs)
-            self.val   = Jin2022(split="train", **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = Jin2022(split="train", **self.dataset_kwargs)
-
-        if self.classlabels is None:
-            self.get_classlabels()
-
-        self.summarize()
-
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
-@DATAMODULES.register(name="jin2022")
+@DATAMODULES.register(name="ledlight")
 class LEDLightDataModule(base.DataModule):
     """LEDLight datamodule.
 
@@ -368,6 +319,58 @@ class LEDLightDataModule(base.DataModule):
             self.val   = LEDLight(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = LEDLight(split="test", **self.dataset_kwargs)
+
+        if self.classlabels is None:
+            self.get_classlabels()
+
+        self.summarize()
+
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="light-effect")
+@DATAMODULES.register(name="lighteffect")
+class LightEffectDataModule(base.DataModule):
+    """LightEffect datamodule.
+
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = LightEffect(split="train", **self.dataset_kwargs)
+            self.val   = LightEffect(split="train", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = LightEffect(split="train", **self.dataset_kwargs)
 
         if self.classlabels is None:
             self.get_classlabels()

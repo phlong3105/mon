@@ -73,8 +73,8 @@ desnow_datasets=(
   "gt-snow"
 )
 les_datasets=(
-  "jin2022"
   "ledlight"
+  "light-effect"
 )
 llie_datasets=(
   "darkcityscapes"
@@ -228,13 +228,13 @@ for d in "${datasets[@]}"; do
   fi
 
   # LES
-  if [ "$d" == "jin2022" ]; then
-    input_dirs+=("${data_dir}/les/train/${d}/light-effects")
-    target_dirs+=("")
-  fi
   if [ "$d" == "ledlight" ]; then
     input_dirs+=("${data_dir}/les/test/${d}/light-effects")
     target_dirs+=("${data_dir}/les/test/${d}/clear")
+  fi
+  if [ "$d" == "light-effect" ]; then
+    input_dirs+=("${data_dir}/les/train/${d}/light-effects")
+    target_dirs+=("")
   fi
 
   # LLIE
