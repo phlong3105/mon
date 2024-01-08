@@ -176,15 +176,15 @@ class Dehaze(object):
     def finalize(self):
         self.final_t_map = np_imresize(self.current_result.t, output_shape=self.original_image.shape[1:])
         self.final_a     = np_imresize(self.current_result.a, output_shape=self.original_image.shape[1:])
-        print(f"final_t_map: {self.final_t_map.shape}")
+        # print(f"final_t_map: {self.final_t_map.shape}")
         mask_out_np      = self.t_matting(self.final_t_map)
-        print(f"final_t_map: {self.final_t_map.shape}")
-        print(f"original_image: {self.original_image.shape}")
+        # print(f"final_t_map: {self.final_t_map.shape}")
+        # print(f"original_image: {self.original_image.shape}")
         post             = np.clip((self.original_image - ((1 - mask_out_np) * self.final_a)) / mask_out_np, 0, 1)
-        save_image(self.image_name + "-final", post            , self.output_path)
-        save_image(self.image_name + "-t"    , self.final_t_map, self.output_path)
-        save_image(self.image_name + "-a"    , self.final_a    , self.output_path)
-        save_image(self.image_name + "-mask" , mask_out_np     , self.output_path)
+        save_image(self.image_name, post            , self.output_path)
+        save_image(self.image_name, self.final_t_map, self.output_path + "t/")
+        save_image(self.image_name, self.final_a    , self.output_path + "a/")
+        save_image(self.image_name, mask_out_np     , self.output_path + "mask/")
 
     def t_matting(self, mask_out_np):
         refine_t = guidedFilter(
@@ -208,7 +208,10 @@ def dehaze(args: argparse.Namespace):
     else:
         output_dir = mon.Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+    (output_dir / "t").mkdir(parents=True, exist_ok=True)
+    (output_dir / "a").mkdir(parents=True, exist_ok=True)
+    (output_dir / "mask").mkdir(parents=True, exist_ok=True)
+
     image_files = list(input_dir.rglob("*"))
     image_files = [f for f in image_files if f.is_image_file()]
     image_files = sorted(image_files)

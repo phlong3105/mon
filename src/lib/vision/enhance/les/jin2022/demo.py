@@ -44,6 +44,7 @@ def get_LFHF(image, rad_list=[4, 8, 16, 32], eps_list=[0.001, 0.0001]):
 
 
 class MeanShift(nn.Conv2d):
+
     def __init__(self, data_mean, data_std, data_range=1, norm=True):
         c = len(data_mean)
         super(MeanShift, self).__init__(c, c, kernel_size=1)
@@ -145,6 +146,7 @@ class StdLoss(nn.Module):
 
 
 class ExclusionLoss(nn.Module):
+
     def __init__(self, level=3):
         super(ExclusionLoss, self).__init__()
         self.level    = level
@@ -286,25 +288,9 @@ def demo(args, dle_net, optimizer_dle_net, inputs):
     return imgs_dict
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data",           type=str,   default="GOPR0364_frame_000939_rgb_anon.png",           help="Image to be used for demo")
-    parser.add_argument("--weights",        type=str,   default=None,                                           help="model to initialize with")
-    parser.add_argument("--image-size",     type=int,   default=512,                                            help="The training size of image")
-    parser.add_argument("--load-size",      type=str,   default="Resize",                                       help="Width and height to resize training and testing frames. None for no resizing, only [512, 512] for no resizing")
-    parser.add_argument("--crop-size",      type=str,   default="[512, 512]",                                   help="Width and height to crop training and testing frames. Must be a multiple of 16")
-    parser.add_argument("--iters",          type=int,   default=60,                                             help="No of iterations to train the model.")
-    parser.add_argument("--lr",             type=float, default=1e-4,                                           help="Learning rate for the model.")
-    parser.add_argument("--output-dir",     type=str,   default=RUN_DIR / "predict/vision/enhance/les/jin2022", help="Location at which to save the light-effects suppression results.")
-    parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/les/jin2022",   help="Location at which to save the light-effects suppression results.")
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-
+def main(args: args.Namespace):
     args.use_gray       = False
-    args.data           = mon.Path(args.data)
+    args.input_dir      = mon.Path(args.input_dir)
     args.output_dir     = mon.Path(args.output_dir)
     args.checkpoint_dir = mon.Path(args.checkpoint_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -316,17 +302,18 @@ if __name__ == "__main__":
     dle_net  = Net(input_nc=channels, output_nc=channels)
 
     # Measure efficiency score
-    flops, params, avg_time = mon.calculate_efficiency_score(
-        model      = dle_net,
-        image_size = args.image_size,
-        channels   = 3,
-        runs       = 100,
-        use_cuda   = True,
-        verbose    = False,
-    )
-    console.log(f"FLOPs  = {flops:.4f}")
-    console.log(f"Params = {params:.4f}")
-    console.log(f"Time   = {avg_time:.4f}")
+    if args.benchmark:
+        flops, params, avg_time = mon.calculate_efficiency_score(
+            model      = dle_net,
+            image_size = args.image_size,
+            channels   = 3,
+            runs       = 100,
+            use_cuda   = True,
+            verbose    = False,
+        )
+        console.log(f"FLOPs  = {flops:.4f}")
+        console.log(f"Params = {params:.4f}")
+        console.log(f"Time   = {avg_time:.4f}")
 
     dle_net = nn.DataParallel(dle_net).cuda()
     if args.weights is not None:
@@ -335,7 +322,7 @@ if __name__ == "__main__":
     optimizer_dle_net = optim.Adam(dle_net.parameters(), lr=args.lr, betas=(0.9, 0.999))
 
     #
-    image_paths = list(args.data.rglob("*"))
+    image_paths = list(args.input_dir.rglob("*"))
     image_paths = [str(path) for path in image_paths if path.is_image_file()]
     demo_list   = image_paths * args.iters
     loader      = torch.utils.data.DataLoader(
@@ -365,3 +352,23 @@ if __name__ == "__main__":
                 vutils.save_image(save_img, str(inout))
                 vutils.save_image(out_img,  str(out))
                 torch.save(dle_net.state_dict(), str(args.checkpoint_dir / "best.pt"))
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input-dir",      type=str,   default="GOPR0364_frame_000939_rgb_anon.png",           help="Image to be used for demo")
+    parser.add_argument("--output-dir",     type=str,   default=RUN_DIR / "predict/vision/enhance/les/jin2022", help="Location at which to save the light-effects suppression results.")
+    parser.add_argument("--weights",        type=str,   default=None,                                           help="model to initialize with")
+    parser.add_argument("--image-size",     type=int,   default=512,                                            help="The training size of image")
+    parser.add_argument("--load-size",      type=str,   default="Resize",                                       help="Width and height to resize training and testing frames. None for no resizing, only [512, 512] for no resizing")
+    parser.add_argument("--crop-size",      type=str,   default="[512, 512]",                                   help="Width and height to crop training and testing frames. Must be a multiple of 16")
+    parser.add_argument("--iters",          type=int,   default=60,                                             help="No of iterations to train the model.")
+    parser.add_argument("--lr",             type=float, default=1e-4,                                           help="Learning rate for the model.")
+    parser.add_argument("--checkpoint-dir", type=str,   default=RUN_DIR / "train/vision/enhance/les/jin2022",   help="Location at which to save the light-effects suppression results.")
+    parser.add_argument("--benchmark",      action="store_true")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)

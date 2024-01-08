@@ -12,7 +12,6 @@ __all__ = [
 from typing import Any, Callable
 
 import torch
-from torch import nn
 from torch.nn import functional
 
 from mon.globals import LAYERS, MODELS
