@@ -10,9 +10,9 @@ import logging
 import math
 import random
 import time
-import torch
 from os import path as osp
 
+import torch
 from basicsr.data import create_dataloader, create_dataset
 from basicsr.data.data_sampler import EnlargedSampler
 from basicsr.data.prefetch_dataloader import CPUPrefetcher, CUDAPrefetcher
@@ -158,7 +158,8 @@ def main():
         device_id = torch.cuda.current_device()
         resume_state = torch.load(
             opt['path']['resume_state'],
-            map_location=lambda storage, loc: storage.cuda(device_id))
+            map_location=lambda storage, loc: storage.cuda(device_id)
+        )
     else:
         resume_state = None
 
@@ -226,8 +227,7 @@ def main():
             if current_iter > total_iters:
                 break
             # update learning rate
-            model.update_learning_rate(
-                current_iter, warmup_iter=opt['train'].get('warmup_iter', -1))
+            model.update_learning_rate(current_iter, warmup_iter=opt['train'].get('warmup_iter', -1))
             # training
             model.feed_data(train_data)
             model.optimize_parameters(current_iter)
@@ -246,13 +246,11 @@ def main():
                 model.save(epoch, current_iter)
 
             # validation
-            if opt.get('val') is not None and (current_iter %
-                                               opt['val']['val_freq'] == 0):
+            if opt.get('val') is not None and (current_iter % opt['val']['val_freq'] == 0):
                 rgb2bgr = opt['val'].get('rgb2bgr', True)
                 # wheather use uint8 image to compute metrics
                 use_image = opt['val'].get('use_image', True)
-                model.validation(val_loader, current_iter, tb_logger,
-                                 opt['val']['save_img'], rgb2bgr, use_image )
+                model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'], rgb2bgr, use_image )
 
             data_time = time.time()
             iter_time = time.time()
@@ -268,10 +266,9 @@ def main():
     logger.info('Save the latest model.')
     model.save(epoch=-1, current_iter=-1)  # -1 stands for the latest
     if opt.get('val') is not None:
-        rgb2bgr = opt['val'].get('rgb2bgr', True)
+        rgb2bgr   = opt['val'].get('rgb2bgr', True)
         use_image = opt['val'].get('use_image', True)
-        model.validation(val_loader, current_iter, tb_logger,
-                         opt['val']['save_img'], rgb2bgr, use_image)
+        model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'], rgb2bgr, use_image)
     if tb_logger:
         tb_logger.close()
 

@@ -33,7 +33,7 @@ hosts = {
         "image_size" : (512, 512),
 		"devices"    : "cpu",
     },
-	"lp-labdesktop-01": {
+	"lp-labdesktop-01"   : {
 		"config"     : "",
         "root"       : mon.RUN_DIR / "predict",
         "project"    : None,
@@ -44,7 +44,7 @@ hosts = {
         "image_size" : (512, 512),
 		"devices"    : "cuda:0",
 	},
-    "vsw-ws02": {
+    "vsw-ws02" : {
 		"config"     : "",
         "root"       : mon.RUN_DIR / "predict",
         "project"    : None,

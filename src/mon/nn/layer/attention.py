@@ -761,7 +761,7 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
     def __init__(
         self,
         channels    : int,
-        kernel_size : _size_2_t,
+        kernel_size : _size_2_t = 3,
         stride      : _size_2_t = 1,
         dilation    : _size_2_t = 1,
         groups      : int       = 1,
@@ -816,7 +816,7 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         )
         self.act = activation.Sigmoid()
     
-    def forward(self, input: list[torch.Tensor]) -> list[torch.Tensor]:
+    def forward(self, input: torch.Tensor) -> list[torch.Tensor]:
         """Run forward pass.
 
         Args:

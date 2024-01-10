@@ -34,11 +34,11 @@ __all__ = [
 ]
 
 import random
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import torch
 from torch import nn
-from torch.nn import functional
+from torch.nn import functional as F
 from torchvision.ops import misc
 
 from mon.core import math
@@ -174,19 +174,24 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
         num_features: Number of input features.
         ratio: Ratio of input features that will be normalized. Default:
             ``0.5``.
-        selection: Feature selection mechanism. One of: ``'linear'``,
-            ``'random'``, or ``'interleave'``
-                - ``'linear'``    : normalized only first half.
-                - ``'random'``    : randomly choose features to normalize.
-                - ``'interleave'``: interleaving choose features to normalize.
-            Default: ``linear``.
+        scheme: Feature selection mechanism. One of:
+            - ``'linear'``    : normalized only first half.
+            - ``'random'``    : randomly choose features to normalize.
+            - ``'interleave'``: interleaving choose features to normalize.
+            Default: ``'linear'``.
     """
-    
+
+    schemes = ["linear", "random", "interleave"]
+
     def __init__(
         self,
         num_features       : int,
         ratio              : float = 0.5,
-        selection          : str   = "linear",
+        scheme             : Literal[
+                                "linear",
+                                "random",
+                                "interleave"
+                            ]   = "linear",
         eps                : float = 1e-5,
         momentum           : float = 0.1,
         affine             : bool  = True,
@@ -196,7 +201,7 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
     ):
         self.in_channels = num_features
         self.ratio       = ratio
-        self.selection   = selection
+        self.scheme      = scheme
         super().__init__(
             num_features        = math.ceil(num_features * self.ratio),
             eps                 = eps,
@@ -206,9 +211,9 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
             device              = device,
             dtype               = dtype,
         )
-        
-        if self.selection not in ["linear", "random", "interleave"]:
-            raise ValueError(f"{self.selection}")
+
+        if scheme not in self.schemes:
+            raise ValueError(f"``scheme`` must be one of: {self.schemes}. But got: {scheme}.")
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -218,7 +223,7 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
         if self.ratio == 0.0:
             return x
         elif self.ratio == 1.0:
-            y = functional.instance_norm(
+            y = F.instance_norm(
                 input           = x,
                 running_mean    = self.running_mean,
                 running_var     = self.running_var,
@@ -230,14 +235,14 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
             )
             return y
         else:
-            if self.selection == "random":
+            if self.scheme == "random":
                 y1_idxes = random.sample(range(self.in_channels), self.num_features)
                 y2_idxes = list(set(range(self.in_channels)) - set(y1_idxes))
                 y1_idxes = torch.Tensor(y1_idxes).to(torch.int).to(x.device)
                 y2_idxes = torch.Tensor(y2_idxes).to(torch.int).to(x.device)
                 y1       = torch.index_select(x, 1, y1_idxes)
                 y2       = torch.index_select(x, 1, y2_idxes)
-            elif self.selection == "interleave":
+            elif self.scheme == "interleave":
                 skip     = int(math.floor(self.in_channels / self.num_features))
                 y1_idxes = []
                 for i in range(0, self.in_channels, skip):
@@ -252,7 +257,7 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
                 split_size = [self.num_features, c - self.num_features]
                 y1, y2     = torch.split(x, split_size, dim=1)
             
-            y1 = functional.instance_norm(
+            y1 = F.instance_norm(
                 input           = y1,
                 running_mean    = self.running_mean,
                 running_var     = self.running_var,
@@ -262,7 +267,8 @@ class FractionalInstanceNorm2dOld(base.SameChannelsLayerParsingMixin, nn.Instanc
                 momentum        = self.momentum,
                 eps             = self.eps
             )
-            return torch.cat([y1, y2], dim=1)
+            y = torch.cat([y1, y2], dim=1)
+            return y
 
 
 @LAYERS.register()
@@ -287,7 +293,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
                                   channels' weights. Then apply weighted sum
                                   between the normalized tensor and the original
                                   tensor.
-            Default to ``'half'``.
+            Default: ``'half'``.
         pool: Pooling type. One of: ``'avg'``, or ``'max'``. Default: ``'avg'``.
         bias: Add bias for ``adaptive`` scheme. Default: ``True``.
     """
@@ -300,16 +306,26 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
     def __init__(
         self,
         num_features       : int,
-        p                  : float          = 0.5,
-        scheme             : str            = "half",
-        pool               : str | Callable = "avg",
-        bias               : bool           = True,
-        eps                : float          = 1e-5,
-        momentum           : float          = 0.1,
-        affine             : bool           = True,
-        track_running_stats: bool           = False,
-        device             : Any            = None,
-        dtype              : Any            = None,
+        p                  : float = 0.5,
+        scheme             : Literal[
+                                "half",
+                                "bipartite",
+                                "checkerboard",
+                                "random",
+                                "adaptive",
+                                "attention",
+                            ]   = "half",
+        pool               : Literal[
+                                "avg",
+                                "max"
+                             ]   = "avg",
+        bias               : bool  = True,
+        eps                : float = 1e-5,
+        momentum           : float = 0.1,
+        affine             : bool  = True,
+        track_running_stats: bool  = False,
+        device             : Any   = None,
+        dtype              : Any   = None,
     ):
         super().__init__(
             num_features        = num_features,
@@ -372,7 +388,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
         self._check_input_dim(input)
         x          = input
         b, c, h, w = x.shape
-        x_norm     = functional.instance_norm(
+        x_norm     = F.instance_norm(
             input           = x,
             running_mean    = self.running_mean,
             running_var     = self.running_var,
@@ -396,13 +412,13 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
                 y = (x_norm * alpha) + (x * (1 - alpha))
         elif self.scheme in ["attentive"]:
             if self.pool == "avg":
-                pool = functional.avg_pool2d(
+                pool = F.avg_pool2d(
                     input       = x,
                     kernel_size = (x.size(2), x.size(3)),
                     stride      = (x.size(2), x.size(3)),
                 )
             else:
-                pool = functional.max_pool2d(
+                pool = F.max_pool2d(
                     input       = x,
                     kernel_size = (x.size(2), x.size(3)),
                     stride      = (x.size(2), x.size(3)),
@@ -452,7 +468,7 @@ class HalfInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNorm2d):
             y1, y2 = torch.chunk(x, 2, dim=1)
         else:
             raise ValueError
-        y1 = functional.instance_norm(
+        y1 = F.instance_norm(
             input           = y1,
             running_mean    = self.running_mean,
             running_var     = self.running_var,
@@ -537,7 +553,7 @@ class GroupNormAct(GroupNorm):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = functional.group_norm(
+        y = F.group_norm(
             input      = x,
             num_groups = self.num_groups,
             weight     = self.weight,
@@ -579,7 +595,7 @@ class LayerNorm2d(base.SameChannelsLayerParsingMixin, nn.LayerNorm):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = functional.layer_norm(
+        y = F.layer_norm(
             input            = x.permute(0, 2, 3, 1),
             normalized_shape = self.normalized_shape,
             weight           = self.weight,

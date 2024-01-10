@@ -62,10 +62,8 @@ def parse_options(is_train=True):
 
 
 def init_loggers(opt):
-    log_file = osp.join(opt['path']['log'],
-                        f"train_{opt['name']}_{get_time_str()}.log")
-    logger = get_root_logger(
-        logger_name='basicsr', log_level=logging.INFO, log_file=log_file)
+    log_file = osp.join(opt['path']['log'], f"train_{opt['name']}_{get_time_str()}.log")
+    logger   = get_root_logger(logger_name='basicsr', log_level=logging.INFO, log_file=log_file)
     logger.info(get_env_info())
     logger.info(dict2str(opt))
 
@@ -125,18 +123,18 @@ def create_train_val_dataloader(opt, logger):
                 dataset_opt['dataroot_lq'] = os.path.join('./datasets/Rain13k/test', name, 'input')
                 dataset_opt['io_backend'] = {'type': 'disk'}
 
-
-                val_set = create_dataset(dataset_opt)
+                val_set    = create_dataset(dataset_opt)
                 val_loader = create_dataloader(
                     val_set,
                     dataset_opt,
-                    num_gpu=opt['num_gpu'],
-                    dist=opt['dist'],
-                    sampler=None,
-                    seed=opt['manual_seed'])
+                    num_gpu = opt['num_gpu'],
+                    dist    = opt['dist'],
+                    sampler = None,
+                    seed    = opt['manual_seed'])
                 logger.info(
                     f'Number of val images/folders in {dataset_opt["name"]}: '
-                    f'{len(val_set)}')
+                    f'{len(val_set)}'
+                )
 
                 val_loaders.append(val_loader)
         else:
@@ -171,15 +169,15 @@ def main():
         device_id = torch.cuda.current_device()
         resume_state = torch.load(
             opt['path']['resume_state'],
-            map_location=lambda storage, loc: storage.cuda(device_id))
+            map_location=lambda storage, loc: storage.cuda(device_id)
+        )
     else:
         resume_state = None
 
     # mkdir for experiments and logger
     if resume_state is None:
         make_exp_dirs(opt)
-        if opt['logger'].get('use_tb_logger') and 'debug' not in opt[
-                'name'] and opt['rank'] == 0:
+        if opt['logger'].get('use_tb_logger') and 'debug' not in opt['name'] and opt['rank'] == 0:
             mkdir_and_rename(osp.join('tb_logger', opt['name']))
 
     # initialize loggers
@@ -194,13 +192,15 @@ def main():
         check_resume(opt, resume_state['iter'])
         model = create_model(opt)
         model.resume_training(resume_state)  # handle optimizers and schedulers
-        logger.info(f"Resuming training from epoch: {resume_state['epoch']}, "
-                    f"iter: {resume_state['iter']}.")
-        start_epoch = resume_state['epoch']
+        logger.info(
+            f"Resuming training from epoch: {resume_state['epoch']}, "
+            f"iter: {resume_state['iter']}."
+        )
+        start_epoch  = resume_state['epoch']
         current_iter = resume_state['iter']
     else:
-        model = create_model(opt)
-        start_epoch = 0
+        model        = create_model(opt)
+        start_epoch  = 0
         current_iter = 0
 
     # create message logger (formatted outputs)
@@ -216,8 +216,10 @@ def main():
         if opt['datasets']['train'].get('pin_memory') is not True:
             raise ValueError('Please set pin_memory=True for CUDAPrefetcher.')
     else:
-        raise ValueError(f'Wrong prefetch_mode {prefetch_mode}.'
-                         "Supported ones are: None, 'cuda', 'cpu'.")
+        raise ValueError(
+            f'Wrong prefetch_mode {prefetch_mode}.'
+            "Supported ones are: None, 'cuda', 'cpu'."
+        )
 
     # training
     logger.info(
@@ -226,8 +228,8 @@ def main():
     start_time = time.time()
 
     # for epoch in range(start_epoch, total_epochs + 1):
-    epoch = start_epoch
-    best_psnr = -1.
+    epoch     = start_epoch
+    best_psnr = -1.0
     best_iter = -1
     while current_iter <= total_iters:
         train_sampler.set_epoch(epoch)
@@ -261,14 +263,12 @@ def main():
                 model.save(epoch, current_iter)
 
             # validation
-            if opt.get('val') is not None and (current_iter %
-                                               opt['val']['val_freq'] == 0):
+            if opt.get('val') is not None and (current_iter % opt['val']['val_freq'] == 0):
 
                 cnt = 0.
                 metric = 0.
                 for val_loader in val_loaders:
-                    metric += model.validation(val_loader, current_iter, tb_logger,
-                                     opt['val']['save_img'])
+                    metric += model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'])
                     cnt += 1
                 if metric > 0:
                     if metric / cnt > best_psnr:
@@ -290,8 +290,7 @@ def main():
     logger.info('Save the latest model.')
     model.save(epoch=-1, current_iter=-1)  # -1 stands for the latest
     if opt.get('val') is not None:
-        model.validation(val_loader, current_iter, tb_logger,
-                         opt['val']['save_img'])
+        model.validation(val_loader, current_iter, tb_logger, opt['val']['save_img'])
     if tb_logger:
         tb_logger.close()
 

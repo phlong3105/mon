@@ -52,32 +52,33 @@ class OPEmbedder(base.Embedder, nn.Module):
             feature vector and require more computation. Default: ``9``.
         
     See Also:
-        - :class:`mon.vision.model.embedding.base.Embedder`.
-        - :class:`cv2.HOGDescriptor`.
+        - :class:`mon.vision.feature.base.Embedder`.
     """
     
     def __init__(
         self,
-        img_size:   int=224,
-        patch_size: int=7,
-        stride:  int=4,
-        in_channels:int=3,
-        nbins       : int       = 9,embed_dim:  int=768,
+        image_size : int = 224,
+        patch_size : int = 7,
+        stride     : int = 4,
+        in_channels: int = 3,
+        nbins      : int = 9,
+        embed_dim  : int = 768,
         *args, **kwargs
     ):
-        super().__init__()
-        self.img_size = img_size
-        self.patch_size = patch_size
-        self.num_patches = (img_size//patch_size) * (img_size//patch_size)
-        self.proj = nn.Conv2d(
-            in_channels=in_channels,
-            out_channels=embed_dim,
-            kernel_size=patch_size,
-            stride=stride,
-            padding=(patch_size // 2, patch_size // 2)
+        super().__init__(*args, **kwargs)
+        self.image_size  = image_size
+        self.patch_size  = patch_size
+        self.num_patches = (image_size // patch_size) * (image_size // patch_size)
+        self.proj        = nn.Conv2d(
+            in_channels  = in_channels,
+            out_channels = embed_dim,
+            kernel_size  = patch_size,
+            stride       = stride,
+            padding      = (patch_size  // 2, patch_size // 2)
         )
-        self.normalization = nn.LayerNorm(embed_dim)
+        self.norm = nn.LayerNorm(embed_dim)
         self.apply(self.init_weights)
+
     def init_weights(self, m):
         if isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, std=.02)
@@ -93,22 +94,26 @@ class OPEmbedder(base.Embedder, nn.Module):
             if m.bias is not None:
                 m.bias.data.zero_()
         
-    def embed(self, images: torch.Tensor, normalization: bool = False) -> torch.Tensor:
+    def embed(
+        self,
+        images: torch.Tensor,
+        norm  : bool = False
+    ) -> tuple[torch.Tensor, int, int]:
         """Extract features in the images.
 
         Args:
             indexes: A :class:`list` of image indexes.
             images: Images of shape :math:`[N, C, H, W]`.
-            normalization: Whether to normalize the features.
+            norm: Whether to normalize the features.
 
         Returns:
            A 2-D :class:`list` of feature vectors.
         """
-        images = self.proj(images)
-        N, C, H, W = images.shape
-        images = images.flatten(2).transpose(1, 2) # N, HW, C
-        if normalization:
-            images = self.normalization(images)
-        return images, H, W
+        images     = self.proj(images)
+        n, c, h, w = images.shape
+        images     = images.flatten(2).transpose(1, 2)  # N, H, W, C
+        if norm:
+            images = self.norm(images)
+        return images, h, w
     
 # endregion

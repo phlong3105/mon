@@ -14,21 +14,29 @@ tasks=(
 )
 # Models
 deblur_models=(
+  "finet"         # https://github.com/phlong3105/mon
+  "hinet"         # https://github.com/megvii-model/HINet
   "uformer"       # https://github.com/ZhendongWang6/Uformer
 )
 dehaze_models=(
+  "finet"         # https://github.com/phlong3105/mon
   "zid"           # https://github.com/liboyun/ZID
 )
 denoise_models=(
+  "finet"         # https://github.com/phlong3105/mon
+  "hinet"         # https://github.com/megvii-model/HINet
   "uformer"       # https://github.com/ZhendongWang6/Uformer
 )
 derain_models=(
+  "finet"         # https://github.com/phlong3105/mon
+  "hinet"         # https://github.com/megvii-model/HINet
   "ipt"           # https://github.com/huawei-noah/Pretrained-IPT
   "transweather"  #
   "uformer"       # https://github.com/ZhendongWang6/Uformer
 )
 desnow_models=(
-
+  "finet"         # https://github.com/phlong3105/mon
+  "hinet"         # https://github.com/megvii-model/HINet
 )
 les_models=(
   "jin2022"       # https://github.com/jinyeying/night-enhancement
@@ -61,7 +69,11 @@ llie_models=(
 # Datasets
 deblur_datasets=()
 dehaze_datasets=(
-  "jin2022"
+  "dense-haze"
+  "i-haze"
+  "light-effect"
+  "nh-haze"
+  "o-haze"
 )
 denoise_datasets=()
 derain_datasets=(
@@ -185,6 +197,7 @@ current_dir=$(dirname "$script_path")
 bin_dir=$(dirname "$current_dir")
 root_dir=$(dirname "$bin_dir")
 data_dir="${root_dir}/data"
+run_dir="${root_dir}/run"
 model_dir="${root_dir}/src/lib/vision/enhance/${task}"
 deblur_dir="${root_dir}/src/lib/vision/enhance/deblur"
 dehaze_dir="${root_dir}/src/lib/vision/enhance/dehaze"
@@ -207,6 +220,24 @@ elif [ "$run" == "predict" ]; then
   split="test"
 fi
 for d in "${datasets[@]}"; do
+  # De-Hazing
+  if [ "$d" == "dense-haze" ]; then
+    input_dirs+=("${data_dir}/dehaze/${split}/${d}/haze")
+    target_dirs+=("${data_dir}/dehaze/${split}/${d}/clear")
+  fi
+  if [ "$d" == "i-haze" ]; then
+    input_dirs+=("${data_dir}/dehaze/${split}/${d}/haze")
+    target_dirs+=("${data_dir}/dehaze/${split}/${d}/clear")
+  fi
+  if [ "$d" == "nh-haze" ]; then
+    input_dirs+=("${data_dir}/dehaze/${split}/${d}/haze")
+    target_dirs+=("${data_dir}/dehaze/${split}/${d}/clear")
+  fi
+  if [ "$d" == "o-haze" ]; then
+    input_dirs+=("${data_dir}/dehaze/${split}/${d}/haze")
+    target_dirs+=("${data_dir}/dehaze/${split}/${d}/clear")
+  fi
+
   # De-Raining
   if [ "$d" == "gt-rain" ]; then
     input_dirs+=("${data_dir}/derain/${split}/${d}/rain")
@@ -334,6 +365,7 @@ if [ "$run" == "train" ]; then
       else
         name="${model_variant}-${train[0]}"
       fi
+      config="${model[i]}_${train[0]/-/_}"
       # Weights initialization
       train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train[0]}"
       zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train[0]}.pt"
@@ -404,6 +436,9 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "gcenet" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
+          --config "${config}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
@@ -411,6 +446,9 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "gcenetv2" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
+          --config "${config}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
@@ -557,8 +595,11 @@ if [ "$run" == "train" ]; then
         echo -e "\nI have not prepared the training script for UTVNet."
       # Zero-ADCE
       elif [ "${model[i]}" == "zeroadce" ]; then
-        cd "${llie_dir}/${model[i]}" || exit
+        cd "${current_dir}" || exit
         python -W ignore train.py \
+          --config "${config}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
           --name "${name}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs"
@@ -599,6 +640,26 @@ if [ "$run" == "train" ]; then
           --checkpoints-dir "${train_dir}"
 
       # Universal
+      # FINet
+      elif [ "${model[i]}" == "finet" ]; then
+        cd "${current_dir}" || exit
+        python -W ignore train.py \
+          --config "${config}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
+          --name "${name}" \
+          --variant "${variant[j]}" \
+          --max-epochs "$epochs"
+      # HINet
+      elif [ "${model[i]}" == "hinet" ]; then
+        cd "${current_dir}" || exit
+        python -W ignore train.py \
+          --config "${config}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
+          --name "${name}" \
+          --variant "${variant[j]}" \
+          --max-epochs "$epochs"
       # UFormer
       elif [ "${model[i]}" == "uformer" ]; then
         cd "${universal_dir}/${model[i]}" || exit
@@ -629,6 +690,7 @@ if [ "$run" == "predict" ]; then
         model_variant_weights="${model_variant}-${train[0]}"
         model_variant_suffix="${model_variant}"
       fi
+      config="${model[i]}_${train[0]/-/_}"
       # Weights initialization
       train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}"
       train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
@@ -736,7 +798,7 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "gcenet" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${model[i]}_sice_zerodce" \
+              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
               --root "${output_dir}" \
@@ -752,7 +814,7 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "gcenetv2" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${model[i]}_sice_zerodce" \
+              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
               --root "${output_dir}" \
@@ -921,7 +983,7 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "zeroadce" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${model[i]}_sice_zerodce" \
+              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
               --root "${output_dir}" \
@@ -954,6 +1016,40 @@ if [ "$run" == "predict" ]; then
               --benchmark
 
           # Universal
+          # FINet
+          elif [ "${model[i]}" == "finet" ]; then
+            cd "${current_dir}" || exit
+            python -W ignore predict.py \
+              --config "${config}" \
+              --input-dir "${input_dirs[k]}" \
+              --output-dir "${output_dir}" \
+              --root "${output_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --image-size 256 \
+              --resize \
+              --devices "cuda:0" \
+              --benchmark \
+              --save-image \
+              --verbose
+          # HINet
+          elif [ "${model[i]}" == "hinet" ]; then
+            cd "${current_dir}" || exit
+            python -W ignore predict.py \
+              --config "${config}" \
+              --input-dir "${input_dirs[k]}" \
+              --output-dir "${output_dir}" \
+              --root "${output_dir}" \
+              --project "${project}/${model[i]}" \
+              --variant "${variant[j]}" \
+              --weights "${weights}" \
+              --image-size 256 \
+              --resize \
+              --devices "cuda:0" \
+              --benchmark \
+              --save-image \
+              --verbose
           # UFormer
           elif [ "${model[i]}" == "uformer" ]; then
             cd "${universal_dir}/${model[i]}" || exit

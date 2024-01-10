@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements the base class for multitask image enhancement models.
+"""This module implements the base class for universal image enhancement models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "MultitaskImageEnhancementModel",
+    "UniversalImageEnhancementModel",
 ]
 
 from abc import ABC
@@ -22,10 +22,10 @@ _current_dir = core.Path(__file__).absolute().parent
 
 # region Model
 
-class MultitaskImageEnhancementModel(base.ImageEnhancementModel, ABC):
-    """The base class for all multitask image enhancement models.
+class UniversalImageEnhancementModel(base.ImageEnhancementModel, ABC):
+    """The base class for all universal image enhancement models.
     
-    See Also: :class:`mon.nn.model.Model`.
+    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`.
     """
     
     @property

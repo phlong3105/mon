@@ -196,7 +196,6 @@ class Rain100L(base.ImageEnhancementDataset):
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
             ):
                 path  = str(img.path).replace("/rain/", "/clear/")
-                path  = str(img.path).replace("/rain/", "/clear/")
                 path  = core.Path(path)
                 label = base.ImageLabel(path=path.image_file())
                 self.labels.append(label)
@@ -664,9 +663,7 @@ class Rain100LDataModule(base.DataModule):
         
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain100L(split="train", **self.dataset_kwargs)
-            self.val = Rain100L(split="test", **self.dataset_kwargs)
-            self.train = Rain100L(split="train", **self.dataset_kwargs)
-            self.val   = Rain100L(split="test",  **self.dataset_kwargs)
+            self.val   = Rain100L(split="test", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = Rain100L(split="test",  **self.dataset_kwargs)
         

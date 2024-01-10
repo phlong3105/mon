@@ -576,24 +576,39 @@ class PSNRLoss(Loss):
     
     def __init__(
         self,
-        reduction: Reduction | str = "mean",
-        max_val  : float           = 1.0
+        reduction : Reduction | str = "mean",
+        loss_weight: float          = 1.0,
+        to_y      : bool            = False,
     ):
         super().__init__(reduction=reduction)
-        self.mse     = MSELoss(reduction=reduction)
-        self.max_val = max_val
-    
+        self.loss_weight = loss_weight
+        self.scale       = 10 / np.log(10)
+        self.to_y        = to_y
+        self.coef        = torch.tensor([65.481, 128.553, 24.966]).reshape(1, 3, 1, 1)
+        self.first       = True
+
     def __str__(self) -> str:
         return f"psnr_loss"
-    
+
     def forward(
         self,
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        psnr = 10.0 * torch.log10(self.max_val ** 2 / self.mse(input, target))
-        loss = -1.0 * psnr
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        assert len(input.size()) == 4
+        if self.to_y:
+            if self.first:
+                self.coef  = self.coef.to(input.device)
+                self.first = False
+
+            input  = (input  * self.coef).sum(dim=1).unsqueeze(dim=1) + 16.0
+            target = (target * self.coef).sum(dim=1).unsqueeze(dim=1) + 16.0
+            input  = input  / 255.0
+            target = target / 255.0
+
+        psnr = torch.log(((input - target) ** 2).mean(dim=(1, 2, 3)) + 1e-8).mean()
+        loss = self.loss_weight * self.scale * psnr
+        # loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 

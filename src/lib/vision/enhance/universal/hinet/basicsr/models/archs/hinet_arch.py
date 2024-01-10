@@ -15,21 +15,27 @@ HINet: Half Instance Normalization Network for Image Restoration
 import torch
 import torch.nn as nn
 
+
 def conv3x3(in_chn, out_chn, bias=True):
     layer = nn.Conv2d(in_chn, out_chn, kernel_size=3, stride=1, padding=1, bias=bias)
     return layer
 
+
 def conv_down(in_chn, out_chn, bias=False):
     layer = nn.Conv2d(in_chn, out_chn, kernel_size=4, stride=2, padding=1, bias=bias)
     return layer
+
 
 def conv(in_channels, out_channels, kernel_size, bias=False, stride = 1):
     return nn.Conv2d(
         in_channels, out_channels, kernel_size,
         padding=(kernel_size//2), bias=bias, stride = stride)
 
-## Supervised Attention Module
+
+# Supervised Attention Module
+
 class SAM(nn.Module):
+
     def __init__(self, n_feat, kernel_size=3, bias=True):
         super(SAM, self).__init__()
         self.conv1 = conv(n_feat, n_feat, kernel_size, bias=bias)
@@ -40,30 +46,31 @@ class SAM(nn.Module):
         x1 = self.conv1(x)
         img = self.conv2(x) + x_img
         x2 = torch.sigmoid(self.conv3(img))
-        x1 = x1*x2
-        x1 = x1+x
+        x1 = x1 * x2
+        x1 = x1 + x
         return x1, img
+
 
 class HINet(nn.Module):
 
     def __init__(self, in_chn=3, wf=64, depth=5, relu_slope=0.2, hin_position_left=0, hin_position_right=4):
         super(HINet, self).__init__()
-        self.depth = depth
+        self.depth       = depth
         self.down_path_1 = nn.ModuleList()
         self.down_path_2 = nn.ModuleList()
-        self.conv_01 = nn.Conv2d(in_chn, wf, 3, 1, 1)
-        self.conv_02 = nn.Conv2d(in_chn, wf, 3, 1, 1)
+        self.conv_01     = nn.Conv2d(in_chn, wf, 3, 1, 1)
+        self.conv_02     = nn.Conv2d(in_chn, wf, 3, 1, 1)
 
         prev_channels = self.get_input_chn(wf)
         for i in range(depth): #0,1,2,3,4
-            use_HIN = True if hin_position_left <= i and i <= hin_position_right else False
+            use_HIN    = True if hin_position_left <= i and i <= hin_position_right else False
             downsample = True if (i+1) < depth else False
             self.down_path_1.append(UNetConvBlock(prev_channels, (2**i) * wf, downsample, relu_slope, use_HIN=use_HIN))
             self.down_path_2.append(UNetConvBlock(prev_channels, (2**i) * wf, downsample, relu_slope, use_csff=downsample, use_HIN=use_HIN))
             prev_channels = (2**i) * wf
 
-        self.up_path_1 = nn.ModuleList()
-        self.up_path_2 = nn.ModuleList()
+        self.up_path_1   = nn.ModuleList()
+        self.up_path_2   = nn.ModuleList()
         self.skip_conv_1 = nn.ModuleList()
         self.skip_conv_2 = nn.ModuleList()
         for i in reversed(range(depth - 1)):
@@ -75,11 +82,11 @@ class HINet(nn.Module):
         self.sam12 = SAM(prev_channels)
         self.cat12 = nn.Conv2d(prev_channels*2, prev_channels, 1, 1, 0)
 
-        self.last = conv3x3(prev_channels, in_chn, bias=True)
+        self.last  = conv3x3(prev_channels, in_chn, bias=True)
 
     def forward(self, x):
         image = x
-        #stage 1
+        # stage 1
         x1 = self.conv_01(image)
         encs = []
         decs = []
@@ -95,7 +102,7 @@ class HINet(nn.Module):
             decs.append(x1)
 
         sam_feature, out_1 = self.sam12(x1, image)
-        #stage 2
+        # stage 2
         x2 = self.conv_02(image)
         x2 = self.cat12(torch.cat([x2, sam_feature], dim=1))
         blocks = []
@@ -126,11 +133,12 @@ class HINet(nn.Module):
 
 
 class UNetConvBlock(nn.Module):
+
     def __init__(self, in_size, out_size, downsample, relu_slope, use_csff=False, use_HIN=False):
         super(UNetConvBlock, self).__init__()
         self.downsample = downsample
-        self.identity = nn.Conv2d(in_size, out_size, 1, 1, 0)
-        self.use_csff = use_csff
+        self.identity   = nn.Conv2d(in_size, out_size, 1, 1, 0)
+        self.use_csff   = use_csff
 
         self.conv_1 = nn.Conv2d(in_size, out_size, kernel_size=3, padding=1, bias=True)
         self.relu_1 = nn.LeakyReLU(relu_slope, inplace=False)
@@ -154,9 +162,8 @@ class UNetConvBlock(nn.Module):
         if self.use_HIN:
             out_1, out_2 = torch.chunk(out, 2, dim=1)
             out = torch.cat([self.norm(out_1), out_2], dim=1)
-        out = self.relu_1(out)
-        out = self.relu_2(self.conv_2(out))
-
+        out  = self.relu_1(out)
+        out  = self.relu_2(self.conv_2(out))
         out += self.identity(x)
         if enc is not None and dec is not None:
             assert self.use_csff
@@ -169,16 +176,18 @@ class UNetConvBlock(nn.Module):
 
 
 class UNetUpBlock(nn.Module):
+
     def __init__(self, in_size, out_size, relu_slope):
         super(UNetUpBlock, self).__init__()
-        self.up = nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2, bias=True)
+        self.up         = nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2, bias=True)
         self.conv_block = UNetConvBlock(in_size, out_size, False, relu_slope)
 
     def forward(self, x, bridge):
-        up = self.up(x)
+        up  = self.up(x)
         out = torch.cat([up, bridge], 1)
         out = self.conv_block(out)
         return out
+
 
 class Subspace(nn.Module):
 

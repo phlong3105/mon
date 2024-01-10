@@ -6,14 +6,14 @@
 from __future__ import annotations
 
 __all__ = [
-    "HINet", "HINetConvBlock", "HINetSkipBlock", "HINetUpBlock",
+    "HINet",
 ]
 
-from typing import Any, Sequence
+from typing import Any
 
 import torch
 
-from mon.globals import LAYERS, MODELS
+from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.enhance.universal import base
 
@@ -23,131 +23,73 @@ _current_dir = core.Path(__file__).absolute().parent
 
 # region Module
 
-@LAYERS.register()
-class HINetConvBlock(nn.ConvLayerParsingMixin, nn.Module):
-    
+class UNetConvBlock(nn.Module):
+
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         downsample  : bool,
         relu_slope  : float,
-        use_csff    : bool  = False,
-        use_hin     : bool  = False,
+        use_csff    : bool = False,
+        use_HIN     : bool = False,
+        *args, **kwargs
     ):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.downsample = downsample
+        self.identity   = nn.Conv2d(in_channels, out_channels, 1, 1, 0)
         self.use_csff   = use_csff
-        self.use_hin    = use_hin
-        
-        self.conv1 = nn.Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 3,
-            padding      = 1,
-            bias         = True,
-        )
-        self.relu1 = nn.LeakyReLU(relu_slope, inplace=False)
-        self.conv2 = nn.Conv2d(
-            in_channels  = out_channels,
-            out_channels = out_channels,
-            kernel_size  = 3,
-            padding      = 1,
-            bias         = True,
-        )
-        self.relu2    = nn.LeakyReLU(relu_slope, inplace = False)
-        self.identity = nn.Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            stride       = 1,
-            padding      = 0,
-        )
-        
+
+        self.conv_1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.relu_1 = nn.LeakyReLU(relu_slope, inplace=False)
+        self.conv_2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=True)
+        self.relu_2 = nn.LeakyReLU(relu_slope, inplace=False)
+
         if downsample and use_csff:
-            self.csff_enc = nn.Conv2d(
-                in_channels  = out_channels,
-                out_channels = out_channels,
-                kernel_size  = 3,
-                stride       = 1,
-                padding      = 1,
-            )
-            self.csff_dec = nn.Conv2d(
-                in_channels  = out_channels,
-                out_channels = out_channels,
-                kernel_size  = 3,
-                stride       = 1,
-                padding      = 1,
-            )
-        
-        if self.use_hin:
+            self.csff_enc = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
+            self.csff_dec = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
+
+        if use_HIN:
             self.norm = nn.InstanceNorm2d(out_channels // 2, affine=True)
-        
+        self.use_HIN = use_HIN
+
         if downsample:
-            self.downsample = nn.Conv2d(
-                in_channels  = out_channels,
-                out_channels = out_channels,
-                kernel_size  = 4,
-                stride       = 2,
-                padding      = 1,
-                bias         = False,
-            )
-    
+            self.downsample =  nn.Conv2d(out_channels, out_channels, 4, 2, 1, bias=False)
+
     def forward(
         self,
-        input: torch.Tensor | Sequence[torch.Tensor],
-    ) -> tuple[torch.Tensor | None, torch.Tensor]:
-        """
-        
-        Args:
-            input: A single tensor for the first UNet or a list of 3 tensors for
-                the second UNet.
-
-        Returns:
-            Output tensors.
-        """
-        enc = dec = None
-        if isinstance(input, torch.Tensor):
-            x = input
-        elif isinstance(input, Sequence):
-            x = input[0]  # Input
-            if len(input) == 2:
-                enc = input[1]  # Encode path
-            if len(input) == 3:
-                dec = input[2]  # Decode path
-        else:
-            raise TypeError()
-        
-        y = self.conv1(x)
-        if self.use_hin:
+        input: torch.Tensor,
+        enc  : torch.Tensor | None = None,
+        dec  : torch.Tensor | None = None
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        x = input
+        y = self.conv_1(x)
+        if self.use_HIN:
             y1, y2 = torch.chunk(y, 2, dim=1)
-            y      = torch.cat([self.norm(y1), y2], dim=1)
-        y  = self.relu1(y)
-        y  = self.relu2(self.conv2(y))
+            y = torch.cat([self.norm(y1), y2], dim=1)
+        y  = self.relu_1(y)
+        y  = self.relu_2(self.conv_2(y))
         y += self.identity(x)
-        
         if enc is not None and dec is not None:
-            if not self.use_csff:
-                raise ValueError()
+            assert self.use_csff
             y = y + self.csff_enc(enc) + self.csff_dec(dec)
-        
         if self.downsample:
             y_down = self.downsample(y)
             return y_down, y
         else:
-            return None, y
+            return y
 
 
-@LAYERS.register()
-class HINetUpBlock(nn.ConvLayerParsingMixin, nn.Module):
-    
+class UNetUpBlock(nn.Module):
+
     def __init__(
         self,
         in_channels : int,
         out_channels: int,
         relu_slope  : float,
+        *args, **kwargs
     ):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.up = nn.ConvTranspose2d(
             in_channels  = in_channels,
             out_channels = out_channels,
@@ -155,78 +97,18 @@ class HINetUpBlock(nn.ConvLayerParsingMixin, nn.Module):
             stride       = 2,
             bias         = True,
         )
-        self.conv = HINetConvBlock(
+        self.conv_block = UNetConvBlock(
             in_channels  = in_channels,
             out_channels = out_channels,
             downsample   = False,
             relu_slope   = relu_slope,
         )
-    
-    def forward(
-        self,
-        input: Sequence[torch.Tensor]
-    ) -> torch.Tensor:
-        assert isinstance(input, Sequence) and len(input) == 2
-        x    = input[0]
-        skip = input[1]
-        x_up = self.up(x)
-        y    = torch.cat([x_up, skip], dim=1)
-        y    = self.conv(y)
-        y    = y[-1]
-        return y
 
-
-@LAYERS.register()
-class HINetSkipBlock(nn.ConvLayerParsingMixin, nn.Module):
-    
-    def __init__(
-        self,
-        in_channels : int,
-        out_channels: int,
-        mid_channels: int = 128,
-        repeat_num  : int = 1,
-    ):
-        super().__init__()
-        self.repeat_num = repeat_num
-        self.shortcut   = nn.Conv2d(
-            in_channels  = in_channels,
-            out_channels = out_channels,
-            kernel_size  = 1,
-            bias         = True
-        )
-        blocks = []
-        blocks.append(
-            HINetConvBlock(
-                in_channels  = in_channels,
-                out_channels = mid_channels,
-                downsample   = False,
-                relu_slope   = 0.2
-            )
-        )
-        for i in range(self.repeat_num - 2):
-            blocks.append(
-                HINetConvBlock(
-                    in_channels  = mid_channels,
-                    out_channels = mid_channels,
-                    downsample   = False,
-                    relu_slope   = 0.2
-                )
-            )
-        blocks.append(
-            HINetConvBlock(
-                in_channels  = mid_channels,
-                out_channels = out_channels,
-                downsample   = False,
-                relu_slope   = 0.2
-            )
-        )
-        self.blocks = nn.Sequential(*blocks)
-    
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x      = input
-        x_skip = self.shortcut(x)
-        y      = self.blocks(x)
-        y      = y + x_skip
+    def forward(self, input: torch.Tensor, bridge: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.up(x)
+        y = torch.cat([y, bridge], 1)
+        y = self.conv_block(y)
         return y
 
 # endregion
@@ -235,264 +117,149 @@ class HINetSkipBlock(nn.ConvLayerParsingMixin, nn.Module):
 # region Model
 
 @MODELS.register(name="hinet")
-class HINet(base.MultitaskImageEnhancementModel):
+class HINet(base.UniversalImageEnhancementModel):
     """Half-Instance Normalization Network.
-    
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+
+    Reference:
+        `<https://github.com/megvii-model/HINet>`__
+
+    See Also: :class:`mon.vision.enhance.universal.base.UniversalImageEnhancementModel`
     """
     
-    configs = {}
-    zoo     = {
-        "hinet-deblur-gopro"     : {
-            "name"       : "gopro",
-            "path"       : "",
-            "file_name"  : "hinet-deblur-gopro.pth",
-            "num_classes": None,
-        },
-        "hinet-deblur-reds"      : {
-            "name"       : "reds",
-            "path"       : "",
-            "file_name"  : "hinet-deblur-reds.pth",
-            "num_classes": None,
-        },
-        "hinet-denoise-sidd-x1.0": {
-            "name"       : "sidd",
-            "path"       : "",
-            "file_name"  : "hinet-denoise-sidd-x1.0.pth",
-            "num_classes": None,
-        },
-        "hinet-denoise-sidd-x0.5": {
-            "name"       : "sidd",
-            "path"       : "",
-            "file_name"  : "hinet-denoise-sidd-x0.5.pth",
-            "num_classes": None,
-        },
-        "hinet-derain-rain13k"   : {
-            "name"       : "rain13k",
-            "path"       : "",
-            "file_name"  : "hinet-derain-rain13k.pth",
-            "num_classes": None,
-        },
-    }
+    configs     = {}
+    zoo         = {}
+    map_weights = {}
 
-    def __init__(self, config: Any = "hinet.yaml", *args, **kwargs):
+    def __init__(
+        self,
+        config      : Any         = None,
+        variant     : str | None  = None,
+        num_channels: int   | str = 64,
+        depth       : int   | str = 5,
+        relu_slope  : float | str = 0.2,
+        in_pos_left : int   | str = 0,
+        in_pos_right: int   | str = 4,
+        *args, **kwargs
+    ):
         super().__init__(config=config, *args, **kwargs)
-    
-    def load_weights(self):
-        """Load weights. It only loads the intersection layers of matching keys
-        and shapes between the current model and weights.
+        variant           = core.to_int(variant)
+        self.variant      = f"{variant:04d}" if isinstance(variant, int) else None
+        self.num_channels = core.to_int(num_channels) or 64
+        self.depth        = core.to_int(depth)        or 5
+        self.relu_slope   = core.to_float(relu_slope) or 0.2
+        self.in_pos_left  = core.to_int(in_pos_left)  or 0
+        self.in_pos_right = core.to_int(in_pos_right) or 4
+
+        self.down_path_1 = nn.ModuleList()
+        self.down_path_2 = nn.ModuleList()
+        self.conv_01     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+        self.conv_02     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+
+        prev_channels = self.num_channels
+        for i in range(depth):  # 0, 1, 2, 3, 4
+            use_HIN    = True if self.in_pos_left <= i <= self.in_pos_right else False
+            downsample = True if (i + 1) < depth else False
+            self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, relu_slope, use_HIN=use_HIN))
+            self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, relu_slope, use_csff=downsample, use_HIN=use_HIN))
+            prev_channels = (2 ** i) * self.num_channels
+
+        self.up_path_1   = nn.ModuleList()
+        self.up_path_2   = nn.ModuleList()
+        self.skip_conv_1 = nn.ModuleList()
+        self.skip_conv_2 = nn.ModuleList()
+        for i in reversed(range(depth - 1)):
+            self.up_path_1.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, relu_slope))
+            self.up_path_2.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, relu_slope))
+            self.skip_conv_1.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
+            self.skip_conv_2.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
+            prev_channels = (2 ** i) * self.num_channels
+        self.sam12 = nn.SAM(prev_channels)
+        self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
+
+        self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
+
+    def init_weights(self, m: nn.Module):
+        gain      = torch.nn.init.calculate_gain('leaky_relu', 0.20)
+        classname = m.__class__.__name__
+        if classname.find("Conv") != -1:
+            if hasattr(m, "conv"):
+                nn.init.orthogonal_(m.weight, gain=gain)
+                if not m.bias is None:
+                    nn.init.constant_(m.bias, 0)
+
+    def forward_loss(
+        self,
+        input : torch.Tensor,
+        target: torch.Tensor | None,
+        *args, **kwargs
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor | None]:
+        """Forward pass with loss value. Loss function may need more arguments
+        beside the ground-truth and prediction values. For calculating the
+        metrics, we only need the final predictions and ground-truth.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            target: A ground-truth of shape :math:`[N, C, H, W]`. Default: ``None``.
+
+        Return:
+            Predictions and loss value.
         """
-        if isinstance(self.weights, dict) \
-            and self.weights["name"] in ["gopro", "reds", "sidd", "rain13k"]:
-            map_weights = {
-                "backbone": {
-                    "1.weight"               : "conv_01.weight",
-                    "1.bias"                 : "conv_01.bias",
-                    "2.conv1.weight"         : "down_path_1.0.conv_1.weight",
-                    "2.conv1.bias"           : "down_path_1.0.conv_1.bias",
-                    "2.conv2.weight"         : "down_path_1.0.conv_2.weight",
-                    "2.conv2.bias"           : "down_path_1.0.conv_2.bias",
-                    "2.identity.weight"      : "down_path_1.0.identity.weight",
-                    "2.identity.bias"        : "down_path_1.0.identity.bias",
-                    "2.downsample.weight"    : "down_path_1.0.downsample.weight",
-                    "4.conv1.weight"         : "down_path_1.1.conv_1.weight",
-                    "4.conv1.bias"           : "down_path_1.1.conv_1.bias",
-                    "4.conv2.weight"         : "down_path_1.1.conv_2.weight",
-                    "4.conv2.bias"           : "down_path_1.1.conv_2.bias",
-                    "4.identity.weight"      : "down_path_1.1.identity.weight",
-                    "4.identity.bias"        : "down_path_1.1.identity.bias",
-                    "4.downsample.weight"    : "down_path_1.1.downsample.weight",
-                    "6.conv1.weight"         : "down_path_1.2.conv_1.weight",
-                    "6.conv1.bias"           : "down_path_1.2.conv_1.bias",
-                    "6.conv2.weight"         : "down_path_1.2.conv_2.weight",
-                    "6.conv2.bias"           : "down_path_1.2.conv_2.bias",
-                    "6.identity.weight"      : "down_path_1.2.identity.weight",
-                    "6.identity.bias"        : "down_path_1.2.identity.bias",
-                    "6.downsample.weight"    : "down_path_1.2.downsample.weight",
-                    "8.conv1.weight"         : "down_path_1.3.conv_1.weight",
-                    "8.conv1.bias"           : "down_path_1.3.conv_1.bias",
-                    "8.conv2.weight"         : "down_path_1.3.conv_2.weight",
-                    "8.conv2.bias"           : "down_path_1.3.conv_2.bias",
-                    "8.identity.weight"      : "down_path_1.3.identity.weight",
-                    "8.identity.bias"        : "down_path_1.3.identity.bias",
-                    "8.norm.weight"          : "down_path_1.3.norm.weight",
-                    "8.norm.bias"            : "down_path_1.3.norm.bias",
-                    "8.downsample.weight"    : "down_path_1.3.downsample.weight",
-                    "10.conv1.weight"        : "down_path_1.4.conv_1.weight",
-                    "10.conv1.bias"          : "down_path_1.4.conv_1.bias",
-                    "10.conv2.weight"        : "down_path_1.4.conv_2.weight",
-                    "10.conv2.bias"          : "down_path_1.4.conv_2.bias",
-                    "10.identity.weight"     : "down_path_1.4.identity.weight",
-                    "10.identity.bias"       : "down_path_1.4.identity.bias",
-                    "10.norm.weight"         : "down_path_1.4.norm.weight",
-                    "10.norm.bias"           : "down_path_1.4.norm.bias",
-                    "12.weight"              : "skip_conv_1.3.weight",
-                    "12.bias"                : "skip_conv_1.3.bias",
-                    "14.weight"              : "skip_conv_1.2.weight",
-                    "14.bias"                : "skip_conv_1.2.bias",
-                    "16.weight"              : "skip_conv_1.1.weight",
-                    "16.bias"                : "skip_conv_1.1.bias",
-                    "18.weight"              : "skip_conv_1.0.weight",
-                    "18.bias"                : "skip_conv_1.0.bias",
-                    "20.up.weight"           : "up_path_1.0.up.weight",
-                    "20.up.bias"             : "up_path_1.0.up.bias",
-                    "20.conv.conv1.weight"   : "up_path_1.0.conv_block.conv_1.weight",
-                    "20.conv.conv1.bias"     : "up_path_1.0.conv_block.conv_1.bias",
-                    "20.conv.conv2.weight"   : "up_path_1.0.conv_block.conv_2.weight",
-                    "20.conv.conv2.bias"     : "up_path_1.0.conv_block.conv_2.bias",
-                    "20.conv.identity.weight": "up_path_1.0.conv_block.identity.weight",
-                    "20.conv.identity.bias"  : "up_path_1.0.conv_block.identity.bias",
-                    "21.up.weight"           : "up_path_1.1.up.weight",
-                    "21.up.bias"             : "up_path_1.1.up.bias",
-                    "21.conv.conv1.weight"   : "up_path_1.1.conv_block.conv_1.weight",
-                    "21.conv.conv1.bias"     : "up_path_1.1.conv_block.conv_1.bias",
-                    "21.conv.conv2.weight"   : "up_path_1.1.conv_block.conv_2.weight",
-                    "21.conv.conv2.bias"     : "up_path_1.1.conv_block.conv_2.bias",
-                    "21.conv.identity.weight": "up_path_1.1.conv_block.identity.weight",
-                    "21.conv.identity.bias"  : "up_path_1.1.conv_block.identity.bias",
-                    "22.up.weight"           : "up_path_1.2.up.weight",
-                    "22.up.bias"             : "up_path_1.2.up.bias",
-                    "22.conv.conv1.weight"   : "up_path_1.2.conv_block.conv_1.weight",
-                    "22.conv.conv1.bias"     : "up_path_1.2.conv_block.conv_1.bias",
-                    "22.conv.conv2.weight"   : "up_path_1.2.conv_block.conv_2.weight",
-                    "22.conv.conv2.bias"     : "up_path_1.2.conv_block.conv_2.bias",
-                    "22.conv.identity.weight": "up_path_1.2.conv_block.identity.weight",
-                    "22.conv.identity.bias"  : "up_path_1.2.conv_block.identity.bias",
-                    "23.up.weight"           : "up_path_1.3.up.weight",
-                    "23.up.bias"             : "up_path_1.3.up.bias",
-                    "23.conv.conv1.weight"   : "up_path_1.3.conv_block.conv_1.weight",
-                    "23.conv.conv1.bias"     : "up_path_1.3.conv_block.conv_1.bias",
-                    "23.conv.conv2.weight"   : "up_path_1.3.conv_block.conv_2.weight",
-                    "23.conv.conv2.bias"     : "up_path_1.3.conv_block.conv_2.bias",
-                    "23.conv.identity.weight": "up_path_1.3.conv_block.identity.weight",
-                    "23.conv.identity.bias"  : "up_path_1.3.conv_block.identity.bias",
-                    "24.conv1.weight"        : "sam12.conv1.weight",
-                    "24.conv1.bias"          : "sam12.conv1.bias",
-                    "24.conv2.weight"        : "sam12.conv2.weight",
-                    "24.conv2.bias"          : "sam12.conv2.bias",
-                    "24.conv3.weight"        : "sam12.conv3.weight",
-                    "24.conv3.bias"          : "sam12.conv3.bias",
-                    "27.weight"              : "conv_02.weight",
-                    "27.bias"                : "conv_02.bias",
-                    "29.weight"              : "cat12.weight",
-                    "29.bias"                : "cat12.bias",
-                    "30.conv1.weight"        : "down_path_2.0.conv_1.weight",
-                    "30.conv1.bias"          : "down_path_2.0.conv_1.bias",
-                    "30.conv2.weight"        : "down_path_2.0.conv_2.weight",
-                    "30.conv2.bias"          : "down_path_2.0.conv_2.bias",
-                    "30.identity.weight"     : "down_path_2.0.identity.weight",
-                    "30.identity.bias"       : "down_path_2.0.identity.bias",
-                    "30.csff_enc.weight"     : "down_path_2.0.csff_enc.weight",
-                    "30.csff_enc.bias"       : "down_path_2.0.csff_enc.bias",
-                    "30.csff_dec.weight"     : "down_path_2.0.csff_dec.weight",
-                    "30.csff_dec.bias"       : "down_path_2.0.csff_dec.bias",
-                    "30.downsample.weight"   : "down_path_2.0.downsample.weight",
-                    "32.conv1.weight"        : "down_path_2.1.conv_1.weight",
-                    "32.conv1.bias"          : "down_path_2.1.conv_1.bias",
-                    "32.conv2.weight"        : "down_path_2.1.conv_2.weight",
-                    "32.conv2.bias"          : "down_path_2.1.conv_2.bias",
-                    "32.identity.weight"     : "down_path_2.1.identity.weight",
-                    "32.identity.bias"       : "down_path_2.1.identity.bias",
-                    "32.csff_enc.weight"     : "down_path_2.1.csff_enc.weight",
-                    "32.csff_enc.bias"       : "down_path_2.1.csff_enc.bias",
-                    "32.csff_dec.weight"     : "down_path_2.1.csff_dec.weight",
-                    "32.csff_dec.bias"       : "down_path_2.1.csff_dec.bias",
-                    "32.downsample.weight"   : "down_path_2.1.downsample.weight",
-                    "34.conv1.weight"        : "down_path_2.2.conv_1.weight",
-                    "34.conv1.bias"          : "down_path_2.2.conv_1.bias",
-                    "34.conv2.weight"        : "down_path_2.2.conv_2.weight",
-                    "34.conv2.bias"          : "down_path_2.2.conv_2.bias",
-                    "34.identity.weight"     : "down_path_2.2.identity.weight",
-                    "34.identity.bias"       : "down_path_2.2.identity.bias",
-                    "34.csff_enc.weight"     : "down_path_2.2.csff_enc.weight",
-                    "34.csff_enc.bias"       : "down_path_2.2.csff_enc.bias",
-                    "34.csff_dec.weight"     : "down_path_2.2.csff_dec.weight",
-                    "34.csff_dec.bias"       : "down_path_2.2.csff_dec.bias",
-                    "34.downsample.weight"   : "down_path_2.2.downsample.weight",
-                    "36.conv1.weight"        : "down_path_2.3.conv_1.weight",
-                    "36.conv1.bias"          : "down_path_2.3.conv_1.bias",
-                    "36.conv2.weight"        : "down_path_2.3.conv_2.weight",
-                    "36.conv2.bias"          : "down_path_2.3.conv_2.bias",
-                    "36.identity.weight"     : "down_path_2.3.identity.weight",
-                    "36.identity.bias"       : "down_path_2.3.identity.bias",
-                    "36.csff_enc.weight"     : "down_path_2.3.csff_enc.weight",
-                    "36.csff_enc.bias"       : "down_path_2.3.csff_enc.bias",
-                    "36.csff_dec.weight"     : "down_path_2.3.csff_dec.weight",
-                    "36.csff_dec.bias"       : "down_path_2.3.csff_dec.bias",
-                    "36.norm.weight"         : "down_path_2.3.norm.weight",
-                    "36.norm.bias"           : "down_path_2.3.norm.bias",
-                    "36.downsample.weight"   : "down_path_2.3.downsample.weight",
-                    "38.conv1.weight"        : "down_path_2.4.conv_1.weight",
-                    "38.conv1.bias"          : "down_path_2.4.conv_1.bias",
-                    "38.conv2.weight"        : "down_path_2.4.conv_2.weight",
-                    "38.conv2.bias"          : "down_path_2.4.conv_2.bias",
-                    "38.identity.weight"     : "down_path_2.4.identity.weight",
-                    "38.identity.bias"       : "down_path_2.4.identity.bias",
-                    "38.norm.weight"         : "down_path_2.4.norm.weight",
-                    "38.norm.bias"           : "down_path_2.4.norm.bias",
-                    "40.weight"              : "skip_conv_2.3.weight",
-                    "40.bias"                : "skip_conv_2.3.bias",
-                    "42.weight"              : "skip_conv_2.2.weight",
-                    "42.bias"                : "skip_conv_2.2.bias",
-                    "44.weight"              : "skip_conv_2.1.weight",
-                    "44.bias"                : "skip_conv_2.1.bias",
-                    "46.weight"              : "skip_conv_2.0.weight",
-                    "46.bias"                : "skip_conv_2.0.bias",
-                    "48.up.weight"           : "up_path_2.0.up.weight",
-                    "48.up.bias"             : "up_path_2.0.up.bias",
-                    "48.conv.conv1.weight"   : "up_path_2.0.conv_block.conv_1.weight",
-                    "48.conv.conv1.bias"     : "up_path_2.0.conv_block.conv_1.bias",
-                    "48.conv.conv2.weight"   : "up_path_2.0.conv_block.conv_2.weight",
-                    "48.conv.conv2.bias"     : "up_path_2.0.conv_block.conv_2.bias",
-                    "48.conv.identity.weight": "up_path_2.0.conv_block.identity.weight",
-                    "48.conv.identity.bias"  : "up_path_2.0.conv_block.identity.bias",
-                    "49.up.weight"           : "up_path_2.1.up.weight",
-                    "49.up.bias"             : "up_path_2.1.up.bias",
-                    "49.conv.conv1.weight"   : "up_path_2.1.conv_block.conv_1.weight",
-                    "49.conv.conv1.bias"     : "up_path_2.1.conv_block.conv_1.bias",
-                    "49.conv.conv2.weight"   : "up_path_2.1.conv_block.conv_2.weight",
-                    "49.conv.conv2.bias"     : "up_path_2.1.conv_block.conv_2.bias",
-                    "49.conv.identity.weight": "up_path_2.1.conv_block.identity.weight",
-                    "49.conv.identity.bias"  : "up_path_2.1.conv_block.identity.bias",
-                    "50.up.weight"           : "up_path_2.2.up.weight",
-                    "50.up.bias"             : "up_path_2.2.up.bias",
-                    "50.conv.conv1.weight"   : "up_path_2.2.conv_block.conv_1.weight",
-                    "50.conv.conv1.bias"     : "up_path_2.2.conv_block.conv_1.bias",
-                    "50.conv.conv2.weight"   : "up_path_2.2.conv_block.conv_2.weight",
-                    "50.conv.conv2.bias"     : "up_path_2.2.conv_block.conv_2.bias",
-                    "50.conv.identity.weight": "up_path_2.2.conv_block.identity.weight",
-                    "50.conv.identity.bias"  : "up_path_2.2.conv_block.identity.bias",
-                    "51.up.weight"           : "up_path_2.3.up.weight",
-                    "51.up.bias"             : "up_path_2.3.up.bias",
-                    "51.conv.conv1.weight"   : "up_path_2.3.conv_block.conv_1.weight",
-                    "51.conv.conv1.bias"     : "up_path_2.3.conv_block.conv_1.bias",
-                    "51.conv.conv2.weight"   : "up_path_2.3.conv_block.conv_2.weight",
-                    "51.conv.conv2.bias"     : "up_path_2.3.conv_block.conv_2.bias",
-                    "51.conv.identity.weight": "up_path_2.3.conv_block.identity.weight",
-                    "51.conv.identity.bias"  : "up_path_2.3.conv_block.identity.bias",
-                    "52.weight"              : "last.weight",
-                    "52.bias"                : "last.bias",
-                },
-                "head"    : {},
-            }
-            state_dict  = nn.load_state_dict_from_path(
-                model_dir=self.zoo_dir, **self.weights
-            )
-            state_dict       = state_dict["params"]
-            model_state_dict = self.model.state_dict()
-            """
-            for k in self.model.state_dict().keys():
-                print(f"\"{k}\": ")
-            for k in state_dict.keys():
-                print(f"\"{k}\"")
-            """
-            for k, v in map_weights["backbone"].items():
-                model_state_dict[k] = state_dict[v]
-            if self.weights["num_classes"] == self.num_classes:
-                for k, v in map_weights["head"].items():
-                    model_state_dict[k] = state_dict[v]
-            self.model.load_state_dict(model_state_dict)
-        else:
-            super().load_weights()
-    
+        pred = self.forward(input=input, *args, **kwargs)
+        loss = self.loss(input, pred) if self.loss else (None, None)
+        return pred, loss
+
+    def forward_once(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int = -1,
+        *args, **kwargs
+    ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
+        """Forward pass once. Implement the logic for a single forward pass.
+
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            profile: Measure processing time. Default: ``False``.
+            out_index: Return specific layer's output from :param:`out_index`.
+                Default: ``-1`` means the last layer.
+
+        Return:
+            Predictions.
+        """
+        x = input
+
+        # Stage 1
+        x1   = self.conv_01(x)
+        encs = []
+        decs = []
+        for i, down in enumerate(self.down_path_1):
+            if (i + 1) < self.depth:
+                x1, x1_up = down(x1)
+                encs.append(x1_up)
+            else:
+                x1 = down(x1)
+        for i, up in enumerate(self.up_path_1):
+            x1 = up(x1, self.skip_conv_1[i](encs[-i - 1]))
+            decs.append(x1)
+
+        # SAM
+        sam_feats, y1 = self.sam12(input=[x1, x])
+
+        # Stage 2
+        x2     = self.conv_02(x)
+        x2     = self.cat12(torch.cat([x2, sam_feats], dim=1))
+        blocks = []
+        for i, down in enumerate(self.down_path_2):
+            if (i + 1) < self.depth:
+                x2, x2_up = down(x2, encs[i], decs[-i - 1])
+                blocks.append(x2_up)
+            else:
+                x2 = down(x2)
+        for i, up in enumerate(self.up_path_2):
+            x2 = up(x2, self.skip_conv_2[i](blocks[-i - 1]))
+
+        y2 = self.last(x2)
+        y2 = y2 + x
+        return y2
+
 # endregion

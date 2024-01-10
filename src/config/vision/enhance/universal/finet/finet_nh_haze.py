@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""HINet model trained on Rain13K dataset."""
+"""FINet model trained on NH-Haze dataset."""
 
 from __future__ import annotations
 
@@ -12,14 +12,15 @@ from mon import DATA_DIR, RUN_DIR
 
 # region Basic
 
-root         = RUN_DIR/"train"
-project      = "hinet"
-model_name   = "hinet"
-model_config = "hinet.yaml"
-data_name    = "rain13k"
+root         = RUN_DIR / "train"
+project      = "finet"
+model_name   = "finet"
+model_config = None
+data_name    = "nh-haze"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [256, 256]
+verbose 	 = True
 
 # endregion
 
@@ -43,9 +44,9 @@ model = {
 		"name": "psnr_loss", "max_val": 1.0,
 	},          # Loss function for training the model.
 	"metrics"    : {
-	    "train": [{"name": "psnr"}],
+		"train": None,  # [{"name": "psnr"}],
 		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
-		"test" : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : None,  # [{"name": "psnr"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{
@@ -73,7 +74,7 @@ model = {
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
-	"verbose"    : True,           # Verbosity.
+	"verbose"    : verbose,        # Verbosity.
 }
 
 # endregion
@@ -83,18 +84,20 @@ model = {
 
 datamodule = {
     "name"        : data_name,
-    "root"        : DATA_DIR / "derain",  # A root directory where the data is stored.
+    "root"        : DATA_DIR / "dehaze",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
+		A.Flip(),
+		A.Rotate(),
     ]),  # Transformations performing on both the input and target.
-    "to_tensor"   : False,        # If ``True``, convert input and target to :class:`torch.Tensor`.
+    "to_tensor"   : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
     "cache_images": False,        # If ``True``, cache images into memory for faster training.
-    "batch_size"  : 8,            # The number of samples in one forward pass.
+    "batch_size"  : 16,            # The number of samples in one forward pass.
     "devices"     : 0,            # A list of devices to use. Default: ``0``.
     "shuffle"     : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
-    "verbose"     : True,         # Verbosity.
+    "verbose"     : verbose,      # Verbosity.
 }
 
 # endregion
@@ -105,8 +108,8 @@ datamodule = {
 trainer = default.trainer | {
 	"callbacks"       : [
 		default.model_checkpoint | {
-		    "monitor": "train/psnr",  # Quantity to monitor.
-			"mode"   : "max",         # ``'min'`` or ``'max'``.
+		    "monitor": "val/psnr",  # Quantity to monitor.
+			"mode"   : "max",       # ``'min'`` or ``'max'``.
 		},
 		default.learning_rate_monitor,
 		default.rich_model_summary,

@@ -54,8 +54,7 @@ class ORBEmbedder(base.Embedder):
         fast_threshold: The fast threshold.
     
     See Also:
-        - :class:`mon.vision.model.embedding.base.Embedder`.
-        - :class:`cv2.ORB_create`.
+        - :class:`mon.vision.feature.base.Embedder`.
     """
     
     def __init__(
@@ -71,7 +70,7 @@ class ORBEmbedder(base.Embedder):
         fast_threshold: int   = 20,
         *args, **kwargs
     ):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self.orb = cv2.ORB_create(
             nfeatures     = num_features,
             scaleFactor   = scale_factor,

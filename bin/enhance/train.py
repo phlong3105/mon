@@ -37,7 +37,7 @@ hosts = {
         "exist_ok"   : False,
         "verbose"    : True,
 	},
-    "vsw-ws01": {
+    "vsw-ws01" : {
         "config"     : "transweather_gtrain",
         "root"       : mon.RUN_DIR / "train",
         "project"    : "vision/enhance/derain/transweather",
@@ -54,15 +54,15 @@ hosts = {
         "exist_ok"   : False,
         "verbose"    : True,
 	},
-    "vsw-ws02": {
-        "config"     : "gcenetv2_sice_zerodce",
+    "vsw-ws02" : {
+        "config"     : "finet_i_haze",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/llie/gcenetv2",
-        "name"       : "gcenetv2-sice-zerodce",
+        "project"    : "vision/enhance/universal/finet",
+        "name"       : "finet-i-haze",
         "variant"    : None,
         "weights"    : None,
-        "batch_size" : 1,
-        "image_size" : (512, 512),
+        "batch_size" : 4,
+        "image_size" : (256, 256),
         "accelerator": "auto",
         "devices"    : "auto",
         "max_epochs" : 500,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements GCE-Net models.
+"""This module implements GCENet models.
 
 ./run.sh gcenet none none train 100 sice-zerodce all vision/enhance/llie no last
 """
@@ -18,7 +18,6 @@ from typing import Any, Literal
 import kornia
 import torch
 
-import mon
 from mon.globals import ModelPhase, MODELS
 from mon.vision import core, nn, prior
 from mon.vision.enhance.llie import base
@@ -166,13 +165,13 @@ class GCENet(base.LowLightImageEnhancementModel):
             loss   = loss,
             *args, **kwargs
         )
-        variant            = mon.to_int(variant)
+        variant            = core.to_int(variant)
         self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
-        self.num_channels  = mon.to_int(num_channels)    or 32
-        self.scale_factor  = mon.to_float(scale_factor)  or 1.0
-        self.gamma         = mon.to_float(gamma)         or 2.8
-        self.num_iters     = mon.to_int(num_iters)       or 8
-        self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
+        self.num_channels  = core.to_int(num_channels)    or 32
+        self.scale_factor  = core.to_float(scale_factor)  or 1.0
+        self.gamma         = core.to_float(gamma)         or 2.8
+        self.num_iters     = core.to_int(num_iters)       or 8
+        self.unsharp_sigma = core.to_float(unsharp_sigma) or None
         self.previous      = None
 
         if variant is None:  # Default model
@@ -798,7 +797,14 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
         p            : float | str | None = 0.5,
-        scheme       :         str | None = "half",
+        scheme       : Literal[
+                         "half",
+                         "bipartite",
+                         "checkerboard",
+                         "random",
+                         "adaptive",
+                         "attention",
+                     ]                = "half",
         gamma        : float | str | None = 2.8,
         num_iters    : int   | str        = 8,
         unsharp_sigma: int   | str | None = None,
@@ -810,15 +816,15 @@ class GCENetV2(base.LowLightImageEnhancementModel):
             *args, **kwargs
         )
 
-        variant            = mon.to_int(variant)
+        variant            = core.to_int(variant)
         self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
-        self.num_channels  = mon.to_int(num_channels)    or 32
-        self.p             = mon.to_float(p)             or 0.5
-        self.scheme        = scheme                      or "half"
-        self.scale_factor  = mon.to_float(scale_factor)  or 1.0
-        self.gamma         = mon.to_float(gamma)         or 2.8
-        self.num_iters     = mon.to_int(num_iters)       or 8
-        self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
+        self.num_channels  = core.to_int(num_channels)    or 32
+        self.p             = core.to_float(p)             or 0.5
+        self.scheme        = scheme                       or "half"
+        self.scale_factor  = core.to_float(scale_factor)  or 1.0
+        self.gamma         = core.to_float(gamma)         or 2.8
+        self.num_iters     = core.to_int(num_iters)       or 8
+        self.unsharp_sigma = core.to_float(unsharp_sigma) or None
         self.previous      = None
 
         if self.variant is None:  # Default model

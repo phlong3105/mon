@@ -90,15 +90,17 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
         self.images: list[label.ImageLabel] = []
         
         cache_file = self.root / f"{self.split}.cache"
-        if cache_data or not cache_file.is_file():
-            self.get_images()
-        else:
-            cache = torch.load(cache_file)
+        if cache_data and cache_file.is_file():
+            cache       = torch.load(cache_file)
             self.images = cache["images"]
-        
+        else:
+            self.get_images()
+
         self.filter()
         self.verify()
-        if cache_data or not cache_file.is_file():
+        if not cache_data:
+            core.delete_cache(cache_file)
+        elif cache_data and not cache_file.is_file():
             self.cache_data(path=cache_file)
         if cache_images:
             self.cache_images()
@@ -483,17 +485,19 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
             self.labels = []
         
         cache_file = self.root / f"{self.split}.cache"
-        if cache_data or not cache_file.is_file():
-            self.get_images()
-            self.get_labels()
-        else:
+        if cache_data and cache_file.is_file():
             cache       = torch.load(cache_file)
             self.images = cache["images"]
             self.labels = cache["labels"]
+        else:
+            self.get_images()
+            self.get_labels()
             
         self.filter()
         self.verify()
-        if cache_data or not cache_file.is_file():
+        if not cache_data:
+            core.delete_cache(cache_file)
+        elif cache_data and not cache_file.is_file():
             self.cache_data(path=cache_file)
         if cache_images:
             self.cache_images()

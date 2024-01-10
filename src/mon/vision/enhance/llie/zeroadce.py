@@ -14,7 +14,6 @@ from typing import Any
 import kornia
 import torch
 
-import mon
 from mon.globals import MODELS, ModelPhase
 from mon.vision import core, nn, prior
 from mon.vision.enhance.llie import base
@@ -163,13 +162,13 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
             loss   = loss,
             *args, **kwargs
         )
-        variant            = mon.to_int(variant)
+        variant            = core.to_int(variant)
         self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
-        self.num_channels  = mon.to_int(num_channels)    or 32
-        self.scale_factor  = mon.to_float(scale_factor)  or 1.0
-        self.gamma         = mon.to_float(gamma)         or 2.8
-        self.num_iters     = mon.to_int(num_iters)       or 8
-        self.unsharp_sigma = mon.to_float(unsharp_sigma) or None
+        self.num_channels  = core.to_int(num_channels)    or 32
+        self.scale_factor  = core.to_float(scale_factor)  or 1.0
+        self.gamma         = core.to_float(gamma)         or 2.8
+        self.num_iters     = core.to_int(num_iters)       or 8
+        self.unsharp_sigma = core.to_float(unsharp_sigma) or None
         self.previous      = None
 
         if variant is None:  # Default model

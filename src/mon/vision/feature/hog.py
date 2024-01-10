@@ -52,7 +52,7 @@ class HOGEmbedder(base.Embedder):
             feature vector and require more computation. Default: ``9``.
         
     See Also:
-        - :class:`mon.vision.model.embedding.base.Embedder`.
+        - :class:`mon.vision.feature.base.Embedder`.
         - :class:`cv2.HOGDescriptor`.
     """
     
