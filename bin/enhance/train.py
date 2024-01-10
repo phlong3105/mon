@@ -55,10 +55,10 @@ hosts = {
         "verbose"    : True,
 	},
     "vsw-ws02" : {
-        "config"     : "finet_i_haze",
+        "config"     : "hinet_rain100l",
         "root"       : mon.RUN_DIR / "train",
-        "project"    : "vision/enhance/universal/finet",
-        "name"       : "finet-i-haze",
+        "project"    : "vision/enhance/universal/hinet",
+        "name"       : "hinet-rain100l",
         "variant"    : None,
         "weights"    : None,
         "batch_size" : 4,

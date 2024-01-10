@@ -177,6 +177,7 @@ class HINet(base.UniversalImageEnhancementModel):
         self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
 
         self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
+        self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         gain      = torch.nn.init.calculate_gain('leaky_relu', 0.20)

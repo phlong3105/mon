@@ -576,9 +576,9 @@ class PSNRLoss(Loss):
     
     def __init__(
         self,
-        reduction : Reduction | str = "mean",
-        loss_weight: float          = 1.0,
-        to_y      : bool            = False,
+        reduction  : Reduction | str = "mean",
+        loss_weight: float           = 1.0,
+        to_y       : bool            = False,
     ):
         super().__init__(reduction=reduction)
         self.loss_weight = loss_weight
