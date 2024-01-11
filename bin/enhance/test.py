@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import importlib
+import random
 import socket
 from typing import Any
 
@@ -28,6 +29,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
         "accelerator": "auto",
 		"devices"    : "auto",
         "max_epochs" : None,
@@ -43,6 +45,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
         "accelerator": "auto",
 		"devices"    : "auto",
         "max_epochs" : None,
@@ -58,6 +61,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
         "accelerator": "auto",
 		"devices"    : "auto",
         "max_epochs" : None,
@@ -76,6 +80,9 @@ def test(args: dict):
     # Initialization
     console.rule("[bold red]1. INITIALIZATION")
     console.log(f"Machine: {args['hostname']}")
+
+    mon.set_random_seed(args["seed"])
+
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["datamodule"])
     datamodule.prepare_data()
     datamodule.setup(phase="testing")
@@ -130,6 +137,7 @@ def test(args: dict):
 @click.option("--weights",     type=click.Path(exists=False),  default=None,               help="Weights paths.")
 @click.option("--batch-size",  type=int,                       default=None,               help="Total Batch size for all GPUs.")
 @click.option("--image-size",  type=int,                       default=None,               help="Image sizes.")
+@click.option("--seed",        type=int,                       default=100,                help="Manual seed.")
 @click.option("--accelerator", type=click.Choice(["cpu", "gpu", "tpu", "ipu", "hpu", "mps", "auto"], case_sensitive=False), default="gpu")
 @click.option("--devices",     type=int,                       default=0,                  help="Will be mapped to either `gpus`, `tpu_cores`, `num_processes` or `ipus`.")
 @click.option("--max-epochs",  type=int,                       default=100,                help="Stop training once this number of epochs is reached.")
@@ -147,6 +155,7 @@ def main(
         weights    : Any,
         batch_size : int,
         image_size : int | list[int],
+        seed       : int,
         accelerator: str,
         devices    : int | str | list[int, str],
         max_epochs : int,
@@ -180,6 +189,7 @@ def main(
     weights     = weights     or host_args.get("weights",     None) or config_args.model["weights"]
     batch_size  = batch_size  or host_args.get("batch_size",  None) or config_args.data["batch_size"]
     image_size  = image_size  or host_args.get("image_size",  None) or config_args.data["image_size"]
+    seed        = seed        or host_args.get("seed",        None)  or config_args.data["seed"]          or random.randint(1, 10000)
     accelerator = accelerator or host_args.get("accelerator", None) or config_args.trainer["accelerator"]
     devices     = devices     or host_args.get("devices",     None) or config_args.trainer["devices"]
     max_epochs  = max_epochs  or host_args.get("max_epochs",  None) or config_args.trainer["max_epochs"]
@@ -192,6 +202,7 @@ def main(
     args["root"]         = root
     args["project"]      = project
     args["image_size"]   = image_size
+    args["seed"]         = seed
     args["verbose"]      = verbose
     args["config_file"]  = config_args.__file__
     args["datamodule"]  |= {

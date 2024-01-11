@@ -22,6 +22,7 @@ data_name    = "cifar10"
 num_classes  = 10
 fullname     = f"{model_name}-{data_name}"
 image_size   = [64, 64]
+seed	     = 100
 verbose 	 = True
 
 # endregion
@@ -59,7 +60,6 @@ model = {
 	            "betas"       : [0.9, 0.99],
 			},
 	        "lr_scheduler": None,
-            "frequency"   : None,
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.

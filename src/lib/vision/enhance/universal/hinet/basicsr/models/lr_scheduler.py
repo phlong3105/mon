@@ -51,6 +51,7 @@ class MultiStepRestartLR(_LRScheduler):
             for group in self.optimizer.param_groups
         ]
 
+
 class LinearLR(_LRScheduler):
     """
 
@@ -73,6 +74,7 @@ class LinearLR(_LRScheduler):
         weight = (1 - process)
         # print('get lr ', [weight * group['initial_lr'] for group in self.optimizer.param_groups])
         return [weight * group['initial_lr'] for group in self.optimizer.param_groups]
+
 
 class VibrateLR(_LRScheduler):
     """
@@ -116,6 +118,7 @@ class VibrateLR(_LRScheduler):
 
         # print('f {}, T {}, Th {}, t {}, f2 {}'.format(f, T, Th, t, f2))
         return [weight * group['initial_lr'] for group in self.optimizer.param_groups]
+
 
 def get_position_from_periods(iteration, cumulative_period):
     """Get the position from a period list.

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import importlib
+import random
 import socket
 import time
 from typing import Any
@@ -31,6 +32,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
 		"devices"    : "cpu",
     },
 	"lp-labdesktop-01"   : {
@@ -42,6 +44,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
 		"devices"    : "cuda:0",
 	},
     "vsw-ws02" : {
@@ -53,6 +56,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
 		"devices"    : "cuda:0",
 	},
     "vsw-ws-03": {
@@ -64,6 +68,7 @@ hosts = {
         "weights"    : None,
         "batch_size" : 8,
         "image_size" : (512, 512),
+        "seed"       : 100,
 		"devices"    : "cuda:0",
 	},
 }
@@ -80,12 +85,15 @@ def predict(args: dict):
     weights       = args["model"]["weights"]
     input_dir     = args["datamodule"]["root"]
     image_size    = args["datamodule"]["image_size"]
+    seed          = args["seed"]
     resize        = args["datamodule"]["resize"]
     devices       = args["predictor"]["devices"] or "auto"
     benchmark     = args["predictor"]["benchmark"]
     output_dir    = args["predictor"]["output_dir"]
     save_image    = args["predictor"]["save_image"]
     verbose       = args["predictor"]["verbose"]
+
+    mon.set_random_seed(seed)
 
     # Initialization
     variant       = variant if variant not in [None, "", "none"] else None
@@ -203,6 +211,7 @@ def predict(args: dict):
 @click.option("--weights",     type=click.Path(exists=False), default=None,                  help="Weights paths.")
 @click.option("--batch-size",  type=int,                      default=1,                     help="Total batch size for all GPUs.")
 @click.option("--image-size",  type=int,                      default=512,                   help="Image sizes.")
+@click.option("--seed",        type=int,                      default=100,                   help="Manual seed.")
 @click.option("--devices",     type=str,                      default=None,                  help="Running devices.")
 @click.option("--resize",      is_flag=True)
 @click.option("--benchmark",   is_flag=True)
@@ -221,6 +230,7 @@ def main(
     weights    : Any,
     batch_size : int,
     image_size : int | list[int],
+    seed       : int,
     devices    : str,
     resize     : bool,
     benchmark  : bool,
@@ -256,6 +266,7 @@ def main(
     weights     = weights     or host_args.get("weights",    None) or config_args.model["weights"]
     batch_size  = batch_size  or host_args.get("batch_size", None) or config_args.data["batch_size"]
     image_size  = image_size  or host_args.get("image_size", None) or config_args.data["image_size"]
+    seed        = seed        or host_args.get("seed",       None)  or config_args.data["seed"]      or random.randint(1, 10000)
     devices     = devices     or host_args.get("devices",    None) or config_args.data["devices"]
 
     # Update arguments
@@ -264,6 +275,7 @@ def main(
     args["root"]         = mon.Path(root)
     args["project"]      = project
     args["image_size"]   = image_size
+    args["seed"]         = seed
     args["verbose"]      = verbose
     args["config_file"]  = config_args.__file__,
     args["datamodule"]  |= {

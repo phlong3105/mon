@@ -20,6 +20,7 @@ data_name    = "rain100l"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [256, 256]
+seed	     = 100
 verbose 	 = True
 
 # endregion
@@ -41,7 +42,10 @@ model = {
 	"project"    : project,        # A project name.
 	"phase"      : "training",     # The model's running phase.
 	"loss"       : {
-		"name": "psnr_loss", "max_val": 1.0,
+		# "name"       : "psnr_loss",
+		# "loss_weight": 0.5,
+		# "to_y"       : True,
+		"name": "l1_loss",
 	},          # Loss function for training the model.
 	"metrics"    : {
 	    "train": None,
@@ -66,11 +70,10 @@ model = {
 				# REQUIRED: The scheduler measurement
 				"interval" : "epoch",     # Unit of the scheduler's step size. One of ['step', 'epoch'].
 				"frequency": 1,           # How many epochs/steps should pass between calls to `scheduler.step()`.
-				"monitor"  : "val_loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
+				"monitor"  : "val/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
 				"strict"   : True,
 				"name"     : None,
 			},
-            "frequency"   : None,
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
@@ -106,7 +109,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"       : [
+	"callbacks"        : [
 		default.model_checkpoint | {
 		    "monitor": "val/psnr",  # Quantity to monitor.
 			"mode"   : "max",       # ``'min'`` or ``'max'``.
@@ -115,8 +118,9 @@ trainer = default.trainer | {
 		default.rich_model_summary,
 		default.rich_progress_bar,
 	],
-	"default_root_dir": root,  # Default path for logs and weights.
-	"logger"          : {
+	"default_root_dir" : root,  # Default path for logs and weights.
+	"gradient_clip_val": 0.01,
+	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
 	

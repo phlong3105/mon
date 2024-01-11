@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""GCENet model trained on SICEMix dataset."""
+"""HINet model trained on Rain13K dataset."""
 
 from __future__ import annotations
 
@@ -13,13 +13,13 @@ from mon import DATA_DIR, RUN_DIR
 # region Basic
 
 root         = RUN_DIR / "train"
-project      = "gcenet"
-model_name   = "gcenet"
+project      = "hinet"
+model_name   = "hinet"
 model_config = None
-data_name    = "sice-mix"
+data_name    = "rain13k"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
-image_size   = [512, 512]
+image_size   = [256, 256]
 seed	     = 100
 verbose 	 = True
 
@@ -41,21 +41,39 @@ model = {
 	"root"       : root,           # The root directory of the model.
 	"project"    : project,        # A project name.
 	"phase"      : "training",     # The model's running phase.
-	# "loss"       : None,           # Loss function for training the model.
+	"loss"       : {
+		# "name"       : "psnr_loss",
+		# "loss_weight": 0.5,
+		# "to_y"       : True,
+		"name": "l1_loss",
+	},          # Loss function for training the model.
 	"metrics"    : {
-	    "train": None,  # [{"name": "psnr"}],
-		"val"  : None,  # [{"name": "psnr"}],
-		"test" : None,  # [{"name": "psnr"}],
+	    "train": None,
+		"val"  : [{"name": "psnr"}, {"name": "ssim"}],
+		"test" : [{"name": "psnr"}, {"name": "ssim"}],
     },          # A list metrics for validating and testing model.
 	"optimizers" : [
 		{
             "optimizer"   : {
 	            "name"        : "adam",
-	            "lr"          : 0.00005,
-	            "weight_decay": 0.00001,
+	            "lr"          : 2e-4,
+	            "weight_decay": 0,
 	            "betas"       : [0.9, 0.99],
 			},
-			"lr_scheduler": None,
+	        "lr_scheduler": {
+				"scheduler": {
+					"name"      : "cosine_annealing_lr",
+					"T_max"     : 400000,
+					"eta_min"   : 1e-7,
+					"last_epoch": -1
+				},
+				# REQUIRED: The scheduler measurement
+				"interval" : "epoch",     # Unit of the scheduler's step size. One of ['step', 'epoch'].
+				"frequency": 1,           # How many epochs/steps should pass between calls to `scheduler.step()`.
+				"monitor"  : "val/loss",  # Metric to monitor for schedulers like `ReduceLROnPlateau`.
+				"strict"   : True,
+				"name"     : None,
+			},
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
@@ -69,10 +87,12 @@ model = {
 
 datamodule = {
     "name"        : data_name,
-    "root"        : DATA_DIR / "llie",  # A root directory where the data is stored.
+    "root"        : DATA_DIR / "derain",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
     "transform"   : A.Compose([
         A.Resize(width=image_size[0], height=image_size[1]),
+		A.Flip(),
+		A.Rotate(),
     ]),  # Transformations performing on both the input and target.
     "to_tensor"   : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
@@ -89,7 +109,7 @@ datamodule = {
 # region Training
 
 trainer = default.trainer | {
-	"callbacks"       : [
+	"callbacks"        : [
 		default.model_checkpoint | {
 		    "monitor": "val/psnr",  # Quantity to monitor.
 			"mode"   : "max",       # ``'min'`` or ``'max'``.
@@ -99,10 +119,11 @@ trainer = default.trainer | {
 		default.rich_progress_bar,
 	],
 	"default_root_dir" : root,  # Default path for logs and weights.
-	"gradient_clip_val": 0.1,
+	"gradient_clip_val": 0.01,
 	"logger"           : {
 		"tensorboard": default.tensorboard,
 	},
+	
 }
 
 # endregion

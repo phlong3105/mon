@@ -80,6 +80,7 @@ derain_datasets=(
   "gt-rain"
   "rain100h"
   "rain100l"
+  "rain13k"
 )
 desnow_datasets=(
   "gt-snow"

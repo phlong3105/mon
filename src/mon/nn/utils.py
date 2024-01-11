@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+import random
 
 import multipledispatch
 import numpy as np
@@ -15,144 +15,18 @@ import torch
 # noinspection PyUnresolvedReferences
 from torch.nn.utils import *
 
-from mon.core import console
-from mon.nn.typing import _size_2_t, _size_3_t, _size_any_t
+from mon.nn.typing import _size_2_t, _size_3_t
 
 
-# region Assert
+# region Assign
 
-def check_kernel_size(
-    kernel_size: _size_any_t,
-    min_value  : int  = 0,
-    allow_even : bool = False,
-):
-    if isinstance(kernel_size, int):
-        kernel_size = (kernel_size,)
-    
-    fmt = "even or odd" if allow_even else "odd"
-    for size in kernel_size:
-        assert isinstance(size, int) and (((size % 2 == 1) or allow_even) and size > min_value), \
-            f"`kernel_size` must be an {fmt} integer bigger than {min_value}. " \
-            f"Gotcha {size} on {kernel_size}."
-
-
-def check_same_device(
-    x     : torch.Tensor,
-    y     : torch.Tensor,
-    raises: bool = True
-) -> bool:
-    """Check whether two tensors in the same device.
-
-    Args:
-        x: First tensor to evaluate.
-        y: Sencod tensor to evaluate.
-        raises: Whether an exception should be raised upon failure.
-
-    Raises:
-        TypeException: If the two tensors are not in the same device and raises
-            is ``True``.
-
-    Example:
-        >>> x1 = torch.rand(2, 3, 3)
-        >>> x2 = torch.rand(1, 3, 1)
-        >>> check_same_device(x1, x2)
-        True
-    """
-    if x.device != y.device:
-        if raises:
-            raise TypeError(
-                f"Not same device for tensors, but got: {x.device} != {y.device}"
-            )
-        return False
-    return True
-
-
-def check_same_devices(input: list[torch.Tensor], raises: bool = True) -> bool:
-    """Check whether a :class:`list` provided tensors live in the same device.
-
-    Args:
-        input: A :class:`list` of tensors.
-        raises: Whether an exception should be raised upon failure.
-
-    Raises:
-        Exception: If all the tensors are not in the same device and raises is
-            ``True``.
-
-    Example:
-        >>> x1 = torch.rand(2, 3, 3)
-        >>> x2 = torch.rand(1, 3, 1)
-        >>> check_same_devices([x1, x2], "Tensors not in the same device")
-        True
-    """
-    assert isinstance(input, list) and len(input) >= 1
-    if not all(input[0].device == x.device for x in tensors):
-        if raises:
-            raise Exception(
-                f"Not same device for tensors, but got: "
-                f"{[x.device for x in tensors]}.\n{msg}"
-            )
-        return False
-    return True
-
-def check_shape(
-    input : torch.Tensor | np.ndarray,
-    shape : Sequence[str],
-    raises: bool = True
-) -> bool:
-    """Check whether an :param:`input` has a specified shape.
-
-    The shape can be specified with a implicit or explicit :class:`list` of
-    :class:`str`. The guard also check whether the variable is a valid type.
-
-    Args:
-        input: The input to evaluate.
-        shape: A :class:`Sequence` with :class:`str` with the expected shape.
-        raises: A bool indicating whether an exception should be raised upon
-            failure. Default: ``True``.
-
-    Raises:
-        Exception: If the input tensor is has not the expected shape and raises
-            is ``True``.
-
-    Example:
-        >>> x = torch.rand(2, 3, 4, 4)
-        >>> check_shape(x, ["B", "C", "H", "W"])  # implicit
-        True
-    
-        >>> x = torch.rand(2, 3, 4, 4)
-        >>> check_shape(x, ["2", "3", "H", "W"])  # explicit
-        True
-    """
-    x = input
-    if "*" == shape[0]:
-        shape_to_check   = shape[1:]
-        x_shape_to_check = x.shape[-len(shape) + 1 :]
-    elif "*" == shape[-1]:
-        shape_to_check   = shape[:-1]
-        x_shape_to_check = x.shape[: len(shape) - 1]
-    else:
-        shape_to_check   = shape
-        x_shape_to_check = x.shape
-
-    if len(x_shape_to_check) != len(shape_to_check):
-        if raises:
-            raise TypeError(f"{x} shape must be [{shape}], but got {x.shape}.")
-        else:
-            return False
-
-    for i in range(len(x_shape_to_check)):
-        dim_: str = shape_to_check[i]
-        if not dim_.isnumeric():
-            continue
-        dim = int(dim_)
-        if x_shape_to_check[i] != dim:
-            if raises:
-                raise TypeError(
-                    f"{x} shape must be [{shape}], but got {x.shape}."
-                )
-            else:
-                return False
-    return True
+def set_random_seed(seed):
+    """Set random seeds."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 # endregion
 
@@ -296,13 +170,11 @@ def eye_like(n: int, input: torch.Tensor) -> torch.Tensor:
         A tensor of shape :math:`[input.shape[0], n, n]`.
     """
     if not input.ndim >= 1:
-        raise ValueError(
-            f"x's number of dimensions must be >= 1, but got {input.ndim}."
-        )
+        raise ValueError(f"``input``'s number of dimensions must be >= 1, but got {input.ndim}.")
     if not n > 0:
-        raise ValueError(f"n must be > 0, but got {n}.")
-    identity = torch.eye(n, device=input.device, dtype=input.dtype)
-    return identity[None].repeat(input.shape[0], 1, 1)
+        raise ValueError(f"``n`` must be > 0, but got {n}.")
+    eye = torch.eye(n, device=input.device, dtype=input.dtype)
+    return eye[None].repeat(input.shape[0], 1, 1)
 
 
 @multipledispatch.dispatch(int, torch.Tensor)
@@ -317,11 +189,9 @@ def vec_like(n: int, input: torch.Tensor) -> torch.Tensor:
         A tensor of zeros with the same shape as the input tensor.
     """
     if not input.ndim >= 1:
-        raise ValueError(
-            f"x's number of dimensions must be >= 1, but got {input.ndim}."
-        )
+        raise ValueError(f"``input``'s number of dimensions must be >= 1, but got {input.ndim}.")
     if not n > 0:
-        raise ValueError(f"n must be > 0, but got {n}.")
+        raise ValueError(f"``n`` must be > 0, but got {n}.")
     vec = torch.zeros(n, 1, device=input.device, dtype=input.dtype)
     return vec[None].repeat(input.shape[0], 1, 1)
 

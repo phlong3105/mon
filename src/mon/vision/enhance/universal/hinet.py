@@ -32,7 +32,7 @@ class UNetConvBlock(nn.Module):
         downsample  : bool,
         relu_slope  : float,
         use_csff    : bool = False,
-        use_HIN     : bool = False,
+        use_hin     : bool = False,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
@@ -49,12 +49,12 @@ class UNetConvBlock(nn.Module):
             self.csff_enc = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
             self.csff_dec = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
 
-        if use_HIN:
+        if use_hin:
             self.norm = nn.InstanceNorm2d(out_channels // 2, affine=True)
-        self.use_HIN = use_HIN
+        self.use_hin = use_hin
 
         if downsample:
-            self.downsample =  nn.Conv2d(out_channels, out_channels, 4, 2, 1, bias=False)
+            self.downsample = nn.Conv2d(out_channels, out_channels, 4, 2, 1, bias=False)
 
     def forward(
         self,
@@ -64,7 +64,7 @@ class UNetConvBlock(nn.Module):
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         x = input
         y = self.conv_1(x)
-        if self.use_HIN:
+        if self.use_hin:
             y1, y2 = torch.chunk(y, 2, dim=1)
             y = torch.cat([self.norm(y1), y2], dim=1)
         y  = self.relu_1(y)
@@ -156,20 +156,20 @@ class HINet(base.UniversalImageEnhancementModel):
         self.conv_02     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
 
         prev_channels = self.num_channels
-        for i in range(depth):  # 0, 1, 2, 3, 4
-            use_HIN    = True if self.in_pos_left <= i <= self.in_pos_right else False
-            downsample = True if (i + 1) < depth else False
-            self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, relu_slope, use_HIN=use_HIN))
-            self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, relu_slope, use_csff=downsample, use_HIN=use_HIN))
+        for i in range(self.depth):  # 0, 1, 2, 3, 4
+            use_hin    = True if self.in_pos_left <= i <= self.in_pos_right else False
+            downsample = True if (i + 1) < self.depth else False
+            self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, self.relu_slope, use_hin=use_hin))
+            self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, self.relu_slope, use_csff=downsample, use_hin=use_hin))
             prev_channels = (2 ** i) * self.num_channels
 
         self.up_path_1   = nn.ModuleList()
         self.up_path_2   = nn.ModuleList()
         self.skip_conv_1 = nn.ModuleList()
         self.skip_conv_2 = nn.ModuleList()
-        for i in reversed(range(depth - 1)):
-            self.up_path_1.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, relu_slope))
-            self.up_path_2.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, relu_slope))
+        for i in reversed(range(self.depth - 1)):
+            self.up_path_1.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, self.relu_slope))
+            self.up_path_2.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, self.relu_slope))
             self.skip_conv_1.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
             self.skip_conv_2.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
             prev_channels = (2 ** i) * self.num_channels

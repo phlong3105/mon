@@ -814,9 +814,10 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
             device       = device,
             dtype        = dtype,
         )
-        self.act = activation.Sigmoid()
-    
-    def forward(self, input: torch.Tensor) -> list[torch.Tensor]:
+
+    def forward(
+        self, input: list[torch.Tensor]
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Run forward pass.
 
         Args:
@@ -830,17 +831,17 @@ class SupervisedAttentionModule(base.SameChannelsLayerParsingMixin, nn.Module):
         """
         if not (isinstance(input, list | tuple) and len(input) == 2):
             raise ValueError(
-                f"input must be a list of 2 torch.Tensor, but got "
+                f"``input`` must be a list of 2 :class:`torch.Tensor`, but got "
                 f"{type(input)}."
             )
-        fy  = input[0]
-        x   = input[1]
-        y1  = self.conv1(fy)
-        img = self.conv2(fy) + x
-        y2  = self.act(self.conv3(img))
-        y   = y1 * y2
-        y   = y + fy
-        return [y, img]
+        x     = input[0]
+        x_img = input[1]
+        x1    = self.conv1(x)
+        img   = self.conv2(x) + x_img
+        x2    = torch.sigmoid(self.conv3(img))
+        x1    = x1 * x2
+        x1    = x1 + x
+        return x1, img
 
 
 GhostSAM = GhostSupervisedAttentionModule

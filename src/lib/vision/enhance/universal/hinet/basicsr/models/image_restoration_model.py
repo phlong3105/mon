@@ -26,39 +26,39 @@ class ImageRestorationModel(BaseModel):
         super(ImageRestorationModel, self).__init__(opt)
 
         # define network
-        self.net_g = define_network(deepcopy(opt['network_g']))
+        self.net_g = define_network(deepcopy(opt["network_g"]))
         self.net_g = self.model_to_device(self.net_g)
         self.print_network(self.net_g)
 
         # load pretrained models
-        load_path = self.opt['path'].get('pretrain_network_g', None)
+        load_path = self.opt["path"].get("pretrain_network_g", None)
         if load_path is not None:
-            self.load_network(self.net_g, load_path, self.opt['path'].get('strict_load_g', True), param_key=self.opt['path'].get('param_key', 'params'))
+            self.load_network(self.net_g, load_path, self.opt["path"].get("strict_load_g", True), param_key=self.opt["path"].get("param_key", "params"))
 
         if self.is_train:
             self.init_training_settings()
 
     def init_training_settings(self):
         self.net_g.train()
-        train_opt = self.opt['train']
+        train_opt = self.opt["train"]
 
         # define losses
-        if train_opt.get('pixel_opt'):
-            pixel_type   = train_opt['pixel_opt'].pop('type')
+        if train_opt.get("pixel_opt"):
+            pixel_type   = train_opt["pixel_opt"].pop("type")
             cri_pix_cls  = getattr(loss_module, pixel_type)
-            self.cri_pix = cri_pix_cls(**train_opt['pixel_opt']).to(self.device)
+            self.cri_pix = cri_pix_cls(**train_opt["pixel_opt"]).to(self.device)
         else:
             self.cri_pix = None
 
-        if train_opt.get('perceptual_opt'):
-            percep_type = train_opt['perceptual_opt'].pop('type')
-            cri_perceptual_cls = getattr(loss_module, percep_type)
-            self.cri_perceptual = cri_perceptual_cls(**train_opt['perceptual_opt']).to(self.device)
+        if train_opt.get("perceptual_opt"):
+            percep_type         = train_opt["perceptual_opt"].pop("type")
+            cri_perceptual_cls  = getattr(loss_module, percep_type)
+            self.cri_perceptual = cri_perceptual_cls(**train_opt["perceptual_opt"]).to(self.device)
         else:
             self.cri_perceptual = None
 
         if self.cri_pix is None and self.cri_perceptual is None:
-            raise ValueError('Both pixel and perceptual losses are None.')
+            raise ValueError("Both pixel and perceptual losses are None.")
 
         # set up optimizers and schedulers
         self.setup_optimizers()
@@ -87,16 +87,15 @@ class ImageRestorationModel(BaseModel):
         # elif optim_type == 'SGD':
         #     self.optimizer_g = torch.optim.SGD(optim_params, **train_opt['optim_g'])
         else:
-            raise NotImplementedError(
-                f'optimizer {optim_type} is not supported yet.')
+            raise NotImplementedError(f'optimizer {optim_type} is not supported yet.')
         self.optimizers.append(self.optimizer_g)
         # print(self.optimizer_g)
         # exit(0)
 
     def feed_data(self, data):
-        self.lq = data['lq'].to(self.device)
-        if 'gt' in data:
-            self.gt = data['gt'].to(self.device)
+        self.lq = data["lq"].to(self.device)
+        if "gt" in data:
+            self.gt = data["gt"].to(self.device)
 
     def transpose(self, t, trans_idx):
         # print('transpose jt .. ', t.size())
@@ -112,13 +111,13 @@ class ImageRestorationModel(BaseModel):
         return t
 
     def grids(self):
-        b, c, h, w = self.lq.size()
+        b, c, h, w         = self.lq.size()
         self.original_size = self.lq.size()
         assert b == 1
-        crop_size = self.opt['val'].get('crop_size')
+        crop_size = self.opt["val"].get("crop_size")
         # step_j = self.opt['val'].get('step_j', crop_size)
         # step_i = self.opt['val'].get('step_i', crop_size)
-        ##adaptive step_i, step_j
+        # adaptive step_i, step_j
         num_row = (h - 1) // crop_size + 1
         num_col = (w - 1) // crop_size + 1
 
@@ -134,35 +133,35 @@ class ImageRestorationModel(BaseModel):
 
         # cnt_idx = 0
 
-        i = 0  # 0~h-1
+        i      = 0  # 0~h-1
         last_i = False
         while i < h and not last_i:
             j = 0
             if i + crop_size >= h:
-                i = h - crop_size
+                i      = h - crop_size
                 last_i = True
 
             last_j = False
             while j < w and not last_j:
                 if j + crop_size >= w:
-                    j = w - crop_size
+                    j      = w - crop_size
                     last_j = True
                 # from i, j to i+crop_szie, j + crop_size
                 # print(' trans 8')
-                for trans_idx in range(self.opt['val'].get('trans_num', 1)):
+                for trans_idx in range(self.opt["val"].get("trans_num", 1)):
                     parts.append(self.transpose(self.lq[:, :, i:i + crop_size, j:j + crop_size], trans_idx))
-                    idxes.append({'i': i, 'j': j, 'trans_idx': trans_idx})
+                    idxes.append({"i": i, "j": j, "trans_idx": trans_idx})
                     # cnt_idx += 1
                 j = j + step_j
             i = i + step_i
-        if self.opt['val'].get('random_crop_num', 0) > 0:
-            for _ in range(self.opt['val'].get('random_crop_num')):
+        if self.opt["val"].get("random_crop_num", 0) > 0:
+            for _ in range(self.opt["val"].get("random_crop_num")):
                 import random
-                i = random.randint(0, h-crop_size)
-                j = random.randint(0, w-crop_size)
-                trans_idx = random.randint(0, self.opt['val'].get('trans_num', 1) - 1)
+                i = random.randint(0, h - crop_size)
+                j = random.randint(0, w - crop_size)
+                trans_idx = random.randint(0, self.opt["val"].get("trans_num", 1) - 1)
                 parts.append(self.transpose(self.lq[:, :, i:i + crop_size, j:j + crop_size], trans_idx))
-                idxes.append({'i': i, 'j': j, 'trans_idx': trans_idx})
+                idxes.append({"i": i, "j": j, "trans_idx": trans_idx})
 
         self.origin_lq = self.lq
         self.lq = torch.cat(parts, dim=0)
@@ -203,12 +202,10 @@ class ImageRestorationModel(BaseModel):
                 l_pix += self.cri_pix(pred, self.gt)
 
             # print('l pix ... ', l_pix)
-            l_total += l_pix
-            loss_dict['l_pix'] = l_pix
+            l_total            += l_pix
+            loss_dict['l_pix']  = l_pix
         # perceptual loss
         # if self.cri_perceptual:
-        #
-        #
         #     l_percep, l_style = self.cri_perceptual(self.output, self.gt)
         #
         #     if l_percep is not None:

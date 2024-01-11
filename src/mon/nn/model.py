@@ -947,7 +947,7 @@ class Model(lightning.LightningModule, ABC):
             # Define optimizer
             optimizer = optim.get("optimizer", None)
             if optimizer is None:
-                raise ValueError(f"optimizer must be defined.")
+                raise ValueError(f"``optimizer`` must be defined.")
             if isinstance(optimizer,  dict):
                 optimizer = OPTIMIZERS.build(net=self, config=optimizer)
             optim["optimizer"] = optimizer
@@ -959,11 +959,11 @@ class Model(lightning.LightningModule, ABC):
             elif lr_scheduler is not None:
                 scheduler = lr_scheduler.get("scheduler", None)
                 if scheduler is None:
-                    raise ValueError(f"scheduler must be defined.")
-                if isinstance(scheduler,  dict):
+                    raise ValueError(f"``scheduler`` must be defined.")
+                if isinstance(scheduler, dict):
                     scheduler = LR_SCHEDULERS.build(
                         optimizer = optim["optimizer"],
-                        config= scheduler
+                        config    = scheduler
                     )
                 lr_scheduler["scheduler"] = scheduler
             

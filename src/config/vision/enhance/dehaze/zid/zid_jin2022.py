@@ -24,6 +24,7 @@ data_name    = "jin2022"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [512, 512]
+seed	     = 100
 verbose 	 = True
 
 # endregion
@@ -55,7 +56,7 @@ model = {
 	            "weight_decay": 0.0001,
 	            "betas"       : [0.9, 0.99],
 			},
-            "frequency"   : None,
+			"lr_scheduler": None,
         }
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.

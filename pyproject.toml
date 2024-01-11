@@ -92,7 +92,7 @@ dev = [
     "joblib",
     "kornia",
     "linformer",
-    "mediapipe",
+    # "mediapipe",
     "natsort",
     "pandas",
     "ptflops",
