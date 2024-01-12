@@ -147,8 +147,6 @@ class RNet(base.LightEffectSuppressionModel):
     
     def __init__(
         self,
-        config       : Any                = None,
-        loss         : Any                = ZeroReferenceLoss(),
         variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
@@ -157,13 +155,13 @@ class RNet(base.LightEffectSuppressionModel):
         unsharp_sigma: int   | str | None = None,
         *args, **kwargs
     ):
+        variant = core.to_int(variant)
+        variant = f"{variant:04d}" if isinstance(variant, int) else None
         super().__init__(
-            config = config,
-            loss   = loss,
+            variant = variant,
+            loss    = ZeroReferenceLoss(),
             *args, **kwargs
         )
-        variant            = core.to_int(variant)
-        self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
         self.num_channels  = core.to_int(num_channels)    or 32
         self.scale_factor  = core.to_float(scale_factor)  or 1.0
         self.gamma         = core.to_float(gamma)         or 2.8

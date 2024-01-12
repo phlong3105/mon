@@ -146,7 +146,6 @@ class FINet(base.UniversalImageEnhancementModel):
 
     def __init__(
         self,
-        config      : Any                = None,
         variant     :         str | None = None,
         num_channels: int   | str        = 64,
         depth       : int   | str        = 5,
@@ -164,9 +163,10 @@ class FINet(base.UniversalImageEnhancementModel):
                       ]                = "half",
         *args, **kwargs
     ):
-        super().__init__(config=config, *args, **kwargs)
-        variant           = core.to_int(variant)
-        self.variant      = f"{variant:04d}" if isinstance(variant, int) else None
+        variant = core.to_int(variant)
+        variant = f"{variant:04d}" if isinstance(variant, int) else None
+        super().__init__(variant=variant, *args, **kwargs)
+
         self.num_channels = core.to_int(num_channels)  or 64
         self.depth        = core.to_int(depth)         or 5
         self.relu_slope   = core.to_float(relu_slope)  or 0.2

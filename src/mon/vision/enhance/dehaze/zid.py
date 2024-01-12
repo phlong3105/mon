@@ -325,21 +325,12 @@ class ZID(base.DehazingModel):
     
     def __init__(
         self,
-        config    : Any          = None,
-        loss      : Any          = None,
-        variant   : str  | None  = None,
         image_size: list | tuple = (512, 512, 3),
         clip      : bool         = True,
         save_image: bool         = False,
         *args, **kwargs
     ):
-        super().__init__(
-            config = config,
-            loss   = loss,
-            *args, **kwargs
-        )
-        variant         = core.to_int(variant)
-        self.variant    = f"{variant:04d}" if isinstance(variant, int) else None
+        super().__init__(loss=None, *args, **kwargs)
         self.image_size = core.get_hw(size=image_size or [512, 512, 3])
         self.clip       = clip
         self.save_image = save_image
