@@ -123,10 +123,8 @@ class ConNeXt(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
@@ -230,8 +228,7 @@ class ConNeXtTiny(ConNeXt):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
@@ -239,8 +236,7 @@ class ConNeXtTiny(ConNeXt):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "convnext-tiny.yaml",
@@ -284,8 +280,7 @@ class ConNeXtLarge(ConNeXt):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
@@ -293,8 +288,7 @@ class ConNeXtLarge(ConNeXt):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "convnext-large.yaml",

@@ -150,10 +150,8 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def load_weights(self):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
@@ -257,8 +255,7 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth",
@@ -266,8 +263,7 @@ class ShuffleNetV2_x1_0(ShuffleNetV2):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "shufflenet-v2-x1.0.yaml",
@@ -311,8 +307,7 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/shufflenetv2_x2_0-8be3c8ee.pth",
@@ -320,8 +315,7 @@ class ShuffleNetV2_x2_0(ShuffleNetV2):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "shufflenet-v2-x2.0.yaml",

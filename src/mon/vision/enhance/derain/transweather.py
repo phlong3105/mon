@@ -746,9 +746,7 @@ class Transweather(base.DerainingModel):
 
             return x
 
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+    zoo = {}
     
     def __init__(
         self,

@@ -26,8 +26,7 @@ class AlexNet(base.ImageClassificationModel):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",

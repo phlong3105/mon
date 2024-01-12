@@ -19,6 +19,7 @@ __all__ = [
     "BasicRGB",
     "BorderType",
     "CALLBACKS",
+    "CONFIG_DIR",
     "DATAMODULES",
     "DATASETS",
     "DATA_DIR",
@@ -73,10 +74,11 @@ _current_file = pathlib.Path(__file__).absolute()
 PACKAGE_DIR   = _current_file.parents[0]
 SOURCE_DIR    = _current_file.parents[1]
 ROOT_DIR      = _current_file.parents[2]
-BIN_DIR       = ROOT_DIR / "bin"
-DOCS_DIR      = ROOT_DIR / "docs"
-RUN_DIR       = ROOT_DIR / "run"
-TEST_DIR      = ROOT_DIR / "test"
+BIN_DIR       = ROOT_DIR   / "bin"
+DOCS_DIR      = ROOT_DIR   / "docs"
+RUN_DIR       = ROOT_DIR   / "run"
+TEST_DIR      = ROOT_DIR   / "test"
+CONFIG_DIR    = SOURCE_DIR / "config"
 
 ZOO_DIR = PACKAGE_DIR / "zoo"
 if not ZOO_DIR.is_dir():

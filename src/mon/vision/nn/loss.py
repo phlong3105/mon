@@ -14,6 +14,7 @@ __all__ = [
     "ChannelConsistencyLoss",
     "ChannelRatioConsistencyLoss",
     "ColorConstancyLoss",
+    "ContradictChannelLoss",
     "EdgeConstancyLoss",
     "ExclusionLoss",
     "ExposureControlLoss",
@@ -27,7 +28,6 @@ __all__ = [
     "SSIMLoss",
     "SpatialConsistencyLoss",
     "StdLoss",
-    "ContradictChannelLoss",
 ]
 
 from typing import Literal

@@ -26,10 +26,8 @@ class LeNet(base.ImageClassificationModel):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "lenet.yaml",

@@ -20,62 +20,6 @@ import mon
 console = mon.console
 
 
-# region Host
-
-hosts = {
-    "lp-macbookpro.local": {
-        "config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "seed"       : 100,
-		"devices"    : "cpu",
-    },
-	"lp-labdesktop-01"   : {
-		"config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "seed"       : 100,
-		"devices"    : "cuda:0",
-	},
-    "vsw-ws02" : {
-		"config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "seed"       : 100,
-		"devices"    : "cuda:0",
-	},
-    "vsw-ws-03": {
-		"config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "seed"       : 100,
-		"devices"    : "cuda:0",
-	},
-}
-
-# endregion
-
-
 # region Function
 
 def predict(args: dict):
@@ -201,18 +145,20 @@ def predict(args: dict):
     ignore_unknown_options = True,
     allow_extra_args       = True,
 ))
-@click.option("--config",      type=click.Path(exists=False), default="",                    help="The prediction config to use.")
+@click.option("--config",      type=click.Path(exists=False), default=None,                  help="The prediction config to use.")
 @click.option("--input-dir",   type=click.Path(exists=True),  default=mon.DATA_DIR,          help="Source data directory.")
 @click.option("--output-dir",  type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results location.")
-@click.option("--root",        type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results to root/project/name.")
-@click.option("--project",     type=click.Path(exists=False), default=None,                  help="Save results to root/project/name.")
-@click.option("--name",        type=click.Path(exists=False), default=None,                  help="Save results to root/project/name.")
+@click.option("--name",        type=str,                      default=None,                  help="Model name.")
 @click.option("--variant",     type=str,                      default=None,                  help="Model variant.")
+@click.option("--data",        type=str,                      default=None,                  help="Training dataset name.")
+@click.option("--root",        type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results to root/project/fullname.")
+@click.option("--project",     type=click.Path(exists=False), default=None,                  help="Save results to root/project/fullname.")
+@click.option("--fullname",    type=str,                      default=None,                  help="Save results to root/project/fullname.")
 @click.option("--weights",     type=click.Path(exists=False), default=None,                  help="Weights paths.")
 @click.option("--batch-size",  type=int,                      default=1,                     help="Total batch size for all GPUs.")
 @click.option("--image-size",  type=int,                      default=512,                   help="Image sizes.")
 @click.option("--seed",        type=int,                      default=100,                   help="Manual seed.")
-@click.option("--devices",     type=str,                      default=None,                  help="Running devices.")
+@click.option("--devices",                                    default=None,                  help="Running devices.")
 @click.option("--resize",      is_flag=True)
 @click.option("--benchmark",   is_flag=True)
 @click.option("--save-image",  is_flag=True)
@@ -220,13 +166,15 @@ def predict(args: dict):
 @click.pass_context
 def main(
     ctx,
-    config     : mon.Path | str,
+    config     : str,
     input_dir  : mon.Path | str,
     output_dir : mon.Path | str,
-    root       : mon.Path | str,
-    project    : str,
     name       : str,
     variant    : int | str | None,
+    data       : str,
+    root       : mon.Path | str,
+    project    : str,
+    fullname   : str | None,
     weights    : Any,
     batch_size : int,
     image_size : int | list[int],
@@ -244,36 +192,36 @@ def main(
     }
 
     # Obtain arguments
-    hostname  = socket.gethostname().lower()
-    host_args = hosts[hostname]
-    config    = config  or host_args.get("config",  None)
-    project   = project or host_args.get("project", None)
-    
-    if project is not None and project != "":
-        project_module = project.replace("/", ".")
-        config_args    = importlib.import_module(f"config.{project_module}.{config}")
-    else:
-        config_args    = importlib.import_module(f"config.{config}")
-    
-    # Prioritize input args --> predefined args --> config file args
+    hostname      = socket.gethostname().lower()
+    config_module = mon.get_config_module(
+        project = project,
+        name    = name,
+        variant = variant,
+        data    = data,
+        config  = config,
+    )
+    config_args = importlib.import_module(f"{config_module}")
+
+    # Prioritize input args --> config file args
     input_dir   = mon.Path(input_dir)
     project     = project or config_args.model["project"]
     project     = str(project).replace(".", "/")
-    root        = root        or host_args.get("root",       None)
-    name        = name        or host_args.get("name",       None) or config_args.model["name"]
-    variant     = variant     or host_args.get("variant",    None) or config_args.model["variant"]
+    root        = root
+    fullname    = fullname    or mon.get_model_fullname(name, data, variant) or config_args.model["fullname"]
+    variant     = variant     or config_args.model["variant"]
     variant     = None if variant in ["", "none", "None"] else variant
-    weights     = weights     or host_args.get("weights",    None) or config_args.model["weights"]
-    batch_size  = batch_size  or host_args.get("batch_size", None) or config_args.data["batch_size"]
-    image_size  = image_size  or host_args.get("image_size", None) or config_args.data["image_size"]
-    seed        = seed        or host_args.get("seed",       None)  or config_args.data["seed"]      or random.randint(1, 10000)
-    devices     = devices     or host_args.get("devices",    None) or config_args.data["devices"]
+    weights     = weights     or config_args.model["weights"]
+    batch_size  = batch_size  or config_args.datamodule["batch_size"]
+    image_size  = image_size  or config_args.datamodule["image_size"]
+    seed        = seed        or config_args["seed"] or random.randint(1, 10000)
+    devices     = devices     or config_args.trainer["devices"]
 
     # Update arguments
     args                 = mon.get_module_vars(config_args)
     args["hostname"]     = hostname
     args["root"]         = mon.Path(root)
     args["project"]      = project
+    args["fullname"]     = fullname
     args["image_size"]   = image_size
     args["seed"]         = seed
     args["verbose"]      = verbose
@@ -287,7 +235,7 @@ def main(
     }
     args["model"] |= {
         "weights"  : weights,
-        "name"     : name,
+        "name"     : fullname,
         "variant"  : variant,
         "root"     : mon.Path(root),
         "project"  : project,

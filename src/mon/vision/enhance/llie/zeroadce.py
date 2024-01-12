@@ -140,10 +140,8 @@ class ZeroADCE(base.LowLightImageEnhancementModel):
     
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
-    
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+
+    zoo = {}
     
     def __init__(
         self,

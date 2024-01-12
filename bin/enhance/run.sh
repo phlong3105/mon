@@ -19,7 +19,6 @@ deblur_models=(
   "uformer"       # https://github.com/ZhendongWang6/Uformer
 )
 dehaze_models=(
-  "finet"         # https://github.com/phlong3105/mon
   "zid"           # https://github.com/liboyun/ZID
 )
 denoise_models=(
@@ -163,7 +162,9 @@ else
   echo -e "\nWrong task"
   exit 1
 fi
-project="${project}${task}"
+if [ "$project" == "vision/enhance/" ]; then
+  project="${project}${task}"
+fi
 read -e -i "$variant" -p "Variant: " variant
 read -e -i "$suffix"  -p "Suffix: " suffix
 read -e -i "$project" -p "Project: " project
@@ -252,6 +253,10 @@ for d in "${datasets[@]}"; do
     input_dirs+=("${data_dir}/derain/${split}/${d}/rain")
     target_dirs+=("${data_dir}/derain/${split}/${d}/clear")
   fi
+  if [ "$d" == "rain13k" ]; then
+      input_dirs+=("${data_dir}/derain/train/${d}/rain")
+      target_dirs+=("${data_dir}/derain/train/${d}/clear")
+    fi
 
   # De-Snowing
   if [ "$d" == "gt-snow" ]; then
@@ -362,11 +367,10 @@ if [ "$run" == "train" ]; then
         model_variant="${model[i]}"
       fi
       if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
-        name="${model_variant}-${train[0]}-${suffix}"
+        fullname="${model_variant}-${train[0]}-${suffix}"
       else
-        name="${model_variant}-${train[0]}"
+        fullname="${model_variant}-${train[0]}"
       fi
-      config="${model[i]}_${train[0]/-/_}"
       # Weights initialization
       train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant}-${train[0]}"
       zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant}-${train[0]}.pt"
@@ -385,9 +389,13 @@ if [ "$run" == "train" ]; then
       if [ "${model[i]}" == "zid" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --name "${name}" \
+          --name "${model[i]}" \
           --variant "${variant[j]}" \
-          --max-epochs 500
+          --data "${train[0]}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
+          --fullname "${fullname}" \
+          --max-epochs "$epochs"
 
       # De-Raining
       # IPT
@@ -413,7 +421,7 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "transweather" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --name "${name}" \
+          --name "${fullname}" \
           --variant "${variant[j]}" \
           --max-epochs "$epochs" \
           --strategy "ddp_find_unused_parameters_true"
@@ -437,21 +445,23 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "gcenet" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --config "${config}" \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
           --root "${run_dir}/train" \
           --project "${project}/${model[i]}" \
-          --name "${name}" \
-          --variant "${variant[j]}" \
+          --fullname "${fullname}" \
           --max-epochs "$epochs"
       # GCENetV2
       elif [ "${model[i]}" == "gcenetv2" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --config "${config}" \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
           --root "${run_dir}/train" \
           --project "${project}/${model[i]}" \
-          --name "${name}" \
-          --variant "${variant[j]}" \
+          --fullname "${fullname}" \
           --max-epochs "$epochs"
       # IAT
       elif [ "${model[i]}" == "iat" ]; then
@@ -598,11 +608,12 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "zeroadce" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --config "${config}" \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
           --root "${run_dir}/train" \
           --project "${project}/${model[i]}" \
-          --name "${name}" \
-          --variant "${variant[j]}" \
+          --fullname "${fullname}" \
           --max-epochs "$epochs"
       # Zero-DCE
       elif [ "${model[i]}" == "zerodce" ]; then
@@ -645,21 +656,23 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "finet" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --config "${config}" \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
           --root "${run_dir}/train" \
           --project "${project}/${model[i]}" \
-          --name "${name}" \
-          --variant "${variant[j]}" \
+          --fullname "${fullname}" \
           --max-epochs "$epochs"
       # HINet
       elif [ "${model[i]}" == "hinet" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --config "${config}" \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
           --root "${run_dir}/train" \
           --project "${project}/${model[i]}" \
-          --name "${name}" \
-          --variant "${variant[j]}" \
+          --fullname "${fullname}" \
           --max-epochs "$epochs"
       # UFormer
       elif [ "${model[i]}" == "uformer" ]; then
@@ -685,21 +698,20 @@ if [ "$run" == "predict" ]; then
         model_variant="${model[i]}"
       fi
       if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
-        model_variant_weights="${model_variant}-${train[0]}-${suffix}"
-        model_variant_suffix="${model_variant}-${suffix}"
+        model_weights="${model_variant}-${train[0]}-${suffix}"
+        fullname="${model_variant}-${suffix}"
       else
-        model_variant_weights="${model_variant}-${train[0]}"
-        model_variant_suffix="${model_variant}"
+        model_weights="${model_variant}-${train[0]}"
+        fullname="${model_variant}"
       fi
-      config="${model[i]}_${train[0]/-/_}"
       # Weights initialization
-      train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}"
-      train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pt"
-      train_weights_pth="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.pth"
-      train_weights_ckpt="${root_dir}/run/train/${project}/${model[i]}/${model_variant_weights}/weights/${checkpoint}.ckpt"
-      zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.pt"
-      zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.pth"
-      zoo_weights_ckpt="${root_dir}/zoo/${project}/${model[i]}/${model_variant_weights}.ckpt"
+      train_dir="${root_dir}/run/train/${project}/${model[i]}/${model_weights}"
+      train_weights_pt="${root_dir}/run/train/${project}/${model[i]}/${model_weights}/weights/${checkpoint}.pt"
+      train_weights_pth="${root_dir}/run/train/${project}/${model[i]}/${model_weights}/weights/${checkpoint}.pth"
+      train_weights_ckpt="${root_dir}/run/train/${project}/${model[i]}/${model_weights}/weights/${checkpoint}.ckpt"
+      zoo_weights_pt="${root_dir}/zoo/${project}/${model[i]}/${model_weights}.pt"
+      zoo_weights_pth="${root_dir}/zoo/${project}/${model[i]}/${model_weights}.pth"
+      zoo_weights_ckpt="${root_dir}/zoo/${project}/${model[i]}/${model_weights}.ckpt"
       if [ -f "$train_weights_pt" ]; then
         weights=${train_weights_pt}
       elif [ -f "$train_weights_pth" ]; then
@@ -729,9 +741,9 @@ if [ "$run" == "predict" ]; then
       else
         for (( k=0; k<${#predict[@]}; k++ )); do
           if [ "${use_data_dir}" == "yes" ]; then
-            output_dir="${root_dir}/data/${task}/predict/${model_variant_suffix}/${predict[k]}"
+            output_dir="${root_dir}/data/${task}/predict/${fullname}/${predict[k]}"
           else
-            output_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict[k]}"
+            output_dir="${root_dir}/run/predict/${project}/${fullname}/${predict[k]}"
           fi
 
           # De-Hazing
@@ -742,20 +754,6 @@ if [ "$run" == "predict" ]; then
               --input-dir "data/" \
               --output-dir "output/" \
               --num-iters 500
-            # cd "${current_dir}" || exit
-            # python -W ignore predict.py \
-            #   --config "${model[i]}_jin2022" \
-            #   --input-dir "${input_dirs[k]}" \
-            #   --output-dir "${output_dir}" \
-            #   --root "${output_dir}" \
-            #   --project "${project}/${model[i]}" \
-            #   --variant "${variant[j]}" \
-            #   --weights "${weights}" \
-            #   --image-size 512 \
-            #   --devices "cuda:0" \
-            #   --benchmark \
-            #   --save-image \
-            #   --verbose
 
           # De-Raining
           # IPT
@@ -799,12 +797,14 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "gcenet" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
+              --name "${model[i]}" \
+              --variant "${variant[j]}" \
+              --data "${train[0]}" \
               --root "${output_dir}" \
               --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
+              --fullname "${fullname}" \
               --weights "${weights}" \
               --image-size 512 \
               --devices "cuda:0" \
@@ -815,13 +815,16 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "gcenetv2" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
+              --name "${model[i]}" \
+              --variant "${variant[j]}" \
+              --data "${train[0]}" \
               --root "${output_dir}" \
               --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
+              --fullname "${fullname}" \
               --weights "${weights}" \
+              --image-size 512 \
               --devices "cuda:0" \
               --benchmark \
               --save-image \
@@ -984,12 +987,14 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "zeroadce" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
+              --name "${model[i]}" \
+              --variant "${variant[j]}" \
+              --data "${train[0]}" \
               --root "${output_dir}" \
               --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
+              --fullname "${fullname}" \
               --weights "${weights}" \
               --image-size 512 \
               --devices "cuda:0" \
@@ -1021,15 +1026,16 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "finet" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
+              --name "${model[i]}" \
+              --variant "${variant[j]}" \
+              --data "${train[0]}" \
               --root "${output_dir}" \
               --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
+              --fullname "${fullname}" \
               --weights "${weights}" \
-              --image-size 256 \
-              --resize \
+              --image-size 512 \
               --devices "cuda:0" \
               --benchmark \
               --save-image \
@@ -1038,15 +1044,16 @@ if [ "$run" == "predict" ]; then
           elif [ "${model[i]}" == "hinet" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
-              --config "${config}" \
               --input-dir "${input_dirs[k]}" \
               --output-dir "${output_dir}" \
+              --name "${model[i]}" \
+              --variant "${variant[j]}" \
+              --data "${train[0]}" \
               --root "${output_dir}" \
               --project "${project}/${model[i]}" \
-              --variant "${variant[j]}" \
+              --fullname "${fullname}" \
               --weights "${weights}" \
-              --image-size 256 \
-              --resize \
+              --image-size 512 \
               --devices "cuda:0" \
               --benchmark \
               --save-image \
@@ -1085,22 +1092,22 @@ if [ "$run" == "evaluate" ]; then
             model_variant="${model[i]}"
           fi
           if [ "$suffix" != "none" ] && [ "$suffix" != "" ]; then
-            model_variant_suffix="${model_variant}-${suffix}"
+            fullname="${model_variant}-${suffix}"
           else
-            model_variant_suffix="${model_variant}"
+            fullname="${model_variant}"
           fi
 
           if [ "${predict[k]}" == "darkcityscapes" ]; then
             if [ "${use_data_dir}" == "yes" ]; then
-              output_dir="${data_dir}/${task}/predict/${model_variant_suffix}/${predict[k]}/enhance"
+              output_dir="${data_dir}/${task}/predict/${fullname}/${predict[k]}/enhance"
             else
-              output_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict[k]}/enhance"
+              output_dir="${root_dir}/run/predict/${project}/${fullname}/${predict[k]}/enhance"
             fi
           else
             if [ "${use_data_dir}" == "yes" ]; then
-              output_dir="${data_dir}/${task}/predict/${model_variant_suffix}/${predict[k]}"
+              output_dir="${data_dir}/${task}/predict/${fullname}/${predict[k]}"
             else
-              output_dir="${root_dir}/run/predict/${project}/${model_variant_suffix}/${predict[k]}"
+              output_dir="${root_dir}/run/predict/${project}/${fullname}/${predict[k]}"
             fi
           fi
 
@@ -1109,7 +1116,7 @@ if [ "$run" == "evaluate" ]; then
               --input-dir "${output_dir}" \
               --target-dir "${root_dir}/data/llie/test/${predict[k]}/high" \
               --result-file "${current_dir}" \
-              --name "${model_variant_suffix}" \
+              --name "${fullname}" \
               --image-size 256 \
               --test-y-channel \
               --backend "piqa" \
@@ -1130,7 +1137,7 @@ if [ "$run" == "evaluate" ]; then
               --input-dir "${output_dir}" \
               --target-dir "${root_dir}/data/llie/test/${predict[k]}/high" \
               --result-file "${current_dir}" \
-              --name "${model_variant_suffix}" \
+              --name "${fullname}" \
               --image-size 256 \
               --resize \
               --test-y-channel \

@@ -82,10 +82,8 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def load_weights(self):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
@@ -150,8 +148,7 @@ class SqueezeNet1_1(SqueezeNet):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
@@ -159,8 +156,7 @@ class SqueezeNet1_1(SqueezeNet):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "squeezenet-1.1.yaml",

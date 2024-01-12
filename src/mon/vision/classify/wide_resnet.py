@@ -29,10 +29,8 @@ class WideResNet(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
@@ -130,8 +128,7 @@ class WideResNet101(WideResNet):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/wide_resnet101_2-d733dc28.pth",
@@ -139,8 +136,7 @@ class WideResNet101(WideResNet):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "wide-resnet101.yaml",

@@ -640,8 +640,7 @@ class Inception(base.ImageClassificationModel):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/inception_v3_google-0cc3c7bd.pth",

@@ -9,7 +9,7 @@ __all__ = [
     "HINet",
 ]
 
-from typing import Any
+from abc import ABC
 
 import torch
 
@@ -126,43 +126,35 @@ class HINet(base.UniversalImageEnhancementModel):
     See Also: :class:`mon.vision.enhance.universal.base.UniversalImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+    zoo = {}
 
     def __init__(
         self,
-        config      : Any         = None,
-        variant     : str | None  = None,
-        num_channels: int   | str = 64,
-        depth       : int   | str = 5,
-        relu_slope  : float | str = 0.2,
-        in_pos_left : int   | str = 0,
-        in_pos_right: int   | str = 4,
+        num_channels: int   = 64,
+        depth       : int   = 5,
+        relu_slope  : float = 0.2,
+        in_pos_left : int   = 0,
+        in_pos_right: int   = 4,
         *args, **kwargs
     ):
-        super().__init__(config=config, *args, **kwargs)
-        variant           = core.to_int(variant)
-        self.variant      = f"{variant:04d}" if isinstance(variant, int) else None
-        self.num_channels = core.to_int(num_channels) or 64
-        self.depth        = core.to_int(depth)        or 5
-        self.relu_slope   = core.to_float(relu_slope) or 0.2
-        self.in_pos_left  = core.to_int(in_pos_left)  or 0
-        self.in_pos_right = core.to_int(in_pos_right) or 4
+        super().__init__(*args, **kwargs)
+        self.num_channels = num_channels
+        self.depth        = depth
+        self.relu_slope   = relu_slope
+        self.in_pos_left  = in_pos_left
+        self.in_pos_right = in_pos_right
 
-        self.down_path_1 = nn.ModuleList()
-        self.down_path_2 = nn.ModuleList()
-        self.conv_01     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
-        self.conv_02     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
-
-        prev_channels = self.num_channels
+        self.down_path_1  = nn.ModuleList()
+        self.down_path_2  = nn.ModuleList()
+        self.conv_01      = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+        self.conv_02      = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+        prev_channels     = self.num_channels
         for i in range(self.depth):  # 0, 1, 2, 3, 4
             use_hin    = True if self.in_pos_left <= i <= self.in_pos_right else False
             downsample = True if (i + 1) < self.depth else False
             self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, self.relu_slope, use_hin=use_hin))
             self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, downsample, self.relu_slope, use_csff=downsample, use_hin=use_hin))
             prev_channels = (2 ** i) * self.num_channels
-
         self.up_path_1   = nn.ModuleList()
         self.up_path_2   = nn.ModuleList()
         self.skip_conv_1 = nn.ModuleList()
@@ -175,7 +167,6 @@ class HINet(base.UniversalImageEnhancementModel):
             prev_channels = (2 ** i) * self.num_channels
         self.sam12 = nn.SAM(prev_channels)
         self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
-
         self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
         self.apply(self.init_weights)
 
@@ -206,14 +197,19 @@ class HINet(base.UniversalImageEnhancementModel):
             Predictions and loss value.
         """
         pred = self.forward(input=input, *args, **kwargs)
-        loss = self.loss(input, pred) if self.loss else (None, None)
-        return pred, loss
+        if self.loss:
+            loss = 0
+            for p in pred:
+                loss += self.loss(p, target)
+        else:
+            loss = None
+        return pred[-1], loss
 
     def forward_once(
         self,
         input    : torch.Tensor,
         profile  : bool = False,
-        out_index: int = -1,
+        out_index: int  = -1,
         *args, **kwargs
     ) -> torch.Tensor | tuple[torch.Tensor, torch.Tensor]:
         """Forward pass once. Implement the logic for a single forward pass.
@@ -261,6 +257,4 @@ class HINet(base.UniversalImageEnhancementModel):
 
         y2 = self.last(x2)
         y2 = y2 + x
-        return y2
-
-# endregion
+        return [y1, y2]

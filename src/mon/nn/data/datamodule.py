@@ -118,7 +118,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 num_workers        = self.num_workers,
                 pin_memory         = True,
                 drop_last          = False,
-                collate_fn         = getattr(self.train, "collate_fn",  None) or self.collate_fn,
+                collate_fn         = getattr(self.train, "collate_fn", None) or self.collate_fn,
                 # prefetch_factor  = 4,
                 persistent_workers = True,
             )
@@ -138,7 +138,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 num_workers        = self.num_workers,
                 pin_memory         = True,
                 drop_last          = False,
-                collate_fn         = getattr(self.val, "collate_fn",  None) or self.collate_fn,
+                collate_fn         = getattr(self.val, "collate_fn", None) or self.collate_fn,
                 # prefetch_factor  = 4,
                 persistent_workers = True,
             )
@@ -158,7 +158,7 @@ class DataModule(lightning.LightningDataModule, ABC):
                 num_workers        = self.num_workers,
                 pin_memory         = True,
                 drop_last          = False,
-                collate_fn         = getattr(self.test, "collate_fn",  None) or self.collate_fn,
+                collate_fn         = getattr(self.test, "collate_fn", None) or self.collate_fn,
                 # prefetch_factor  = 4,
                 persistent_workers = True,
             )

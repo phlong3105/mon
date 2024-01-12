@@ -84,7 +84,7 @@ class ImageEnhancementModel(nn.Model, ABC):
         input        : torch.Tensor | None = None,
         target	     : torch.Tensor | None = None,
         pred		 : torch.Tensor | None = None,
-        file_path    : core.Path | None = None,
+        file_path    : core.Path    | None = None,
         image_quality: int                 = 95,
         max_n        : int          | None = 8,
         nrow         : int          | None = 8,

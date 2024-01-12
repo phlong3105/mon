@@ -320,10 +320,8 @@ class ZID(base.DehazingModel):
     
     See Also: :class:`mon.vision.enhance.les.base.Dehazing`
     """
-    
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+
+    zoo = {}
     
     def __init__(
         self,

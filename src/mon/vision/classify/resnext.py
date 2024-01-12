@@ -29,10 +29,8 @@ class ResNeXt(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
@@ -130,8 +128,7 @@ class ResNeXt101_32X8D(ResNeXt):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/resnext101_32x8d-110c445d.pth",
@@ -139,8 +136,7 @@ class ResNeXt101_32X8D(ResNeXt):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "resnext101-32x8d.yaml",

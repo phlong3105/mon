@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import math
 #import pytorch_colors as colors
-import numpy as np
+
 
 class enhance_net_nopool(nn.Module):
 
@@ -25,7 +24,6 @@ class enhance_net_nopool(nn.Module):
 		self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
 
 
-		
 	def forward(self, x):
 
 		x1 = self.relu(self.e_conv1(x))
@@ -54,6 +52,3 @@ class enhance_net_nopool(nn.Module):
 		enhance_image = x + r8*(torch.pow(x,2)-x)
 		r = torch.cat([r1,r2,r3,r4,r5,r6,r7,r8],1)
 		return enhance_image_1,enhance_image,r
-
-
-

@@ -141,10 +141,8 @@ class FINet(base.UniversalImageEnhancementModel):
     
     See Also: :class:`mon.vision.enhance.universal.UniversalImageEnhancementModel`
     """
-    
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+
+    zoo = {}
 
     def __init__(
         self,

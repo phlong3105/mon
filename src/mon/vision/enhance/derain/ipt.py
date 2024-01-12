@@ -143,10 +143,8 @@ class IPT(base.DerainingModel):
     
     See Also: :class:`mon.vision.enhance.derain.base.DerainingModel`
     """
-    
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+
+    zoo = {}
     
     def __init__(
         self,

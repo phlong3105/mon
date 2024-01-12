@@ -6,87 +6,18 @@
 from __future__ import annotations
 
 import importlib
+import random
 import socket
 import time
 from typing import Any
 
 import click
-import cv2
-import numpy as np
 import torch
 import torchvision
 
 import mon
 
 console = mon.console
-
-
-# region Host
-
-hosts = {
-    "lp-macbookpro.local": {
-        "config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : "cpu",
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
-    },
-	"lp-labdesktop-01": {
-		"config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : "cuda:0",
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
-	},
-    "vsw-ws02": {
-		"config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : "cuda:0",
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
-	},
-    "vsw-ws-03": {
-		"config"     : "",
-        "root"       : mon.RUN_DIR / "predict",
-        "project"    : None,
-        "name"       : None,
-        "variant"    : None,
-        "weights"    : None,
-        "batch_size" : 8,
-        "image_size" : (512, 512),
-        "accelerator": "auto",
-		"devices"    : "cuda:0",
-        "max_epochs" : None,
-        "max_steps"  : None,
-		"strategy"   : None,
-	},
-}
-
-# endregion
 
 
 # region Function
@@ -135,7 +66,7 @@ def predict(args: dict):
         console.log(f"Time   = {avg_time:.4f}")
      
     # Data
-    input_dir = mon.Path(args["datamodule"]["root"])
+    input_dir = mon.Path(input_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     console.log(f"{input_dir}")
     if input_dir.is_video_file():
@@ -179,8 +110,10 @@ def predict(args: dict):
                 output      = output[-1] if isinstance(output, (list, tuple)) else output
                 if resize:
                     output  = mon.resize(input=images, size=[h0, w0])
-                output_path = output_dir / f"{files[0].stem}.png"
-                torchvision.utils.save_image(output, str(output_path))
+
+                if save_image:
+                    output_path = output_dir / f"{files[0].stem}.png"
+                    torchvision.utils.save_image(output, str(output_path))
                 if input_dir.is_video_file():
                     video_writer.write_batch(images=output)
                 sum_time += run_time
@@ -192,13 +125,15 @@ def predict(args: dict):
     ignore_unknown_options = True,
     allow_extra_args       = True,
 ))
-@click.option("--config",     type=click.Path(exists=False), default="",                    help="The training config to use.")
+@click.option("--config",     type=click.Path(exists=False), default=None,                  help="The training config to use.")
 @click.option("--input-dir",  type=click.Path(exists=True),  default=mon.DATA_DIR,          help="Source data directory.")
 @click.option("--output-dir", type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results location.")
-@click.option("--root",       type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results to root/project/name.")
-@click.option("--project",    type=click.Path(exists=False), default=None,                  help="Save results to root/project/name.")
-@click.option("--name",       type=click.Path(exists=False), default=None,                  help="Save results to root/project/name.")
+@click.option("--name",       type=str,                      default=None,                  help="Model name.")
 @click.option("--variant",    type=str,                      default=None,                  help="Model variant.")
+@click.option("--data",       type=str,                      default=None,                  help="Training dataset name.")
+@click.option("--root",       type=click.Path(exists=False), default=mon.RUN_DIR/"predict", help="Save results to root/project/fullname.")
+@click.option("--project",    type=click.Path(exists=False), default=None,                  help="Save results to root/project/fullname.")
+@click.option("--fullname",   type=str,                      default=None,                  help="Save results to root/project/fullname.")
 @click.option("--weights",    type=click.Path(exists=False), default=None,                  help="Weights paths.")
 @click.option("--batch-size", type=int,                      default=1,                     help="Total Batch size for all GPUs.")
 @click.option("--image-size", type=int,                      default=512,                   help="Image sizes.")
@@ -210,21 +145,24 @@ def predict(args: dict):
 @click.pass_context
 def main(
     ctx,
-    config    : mon.Path | str,
-    input_dir : mon.Path | str,
-    output_dir: mon.Path | str,
-    root      : mon.Path | str,
-    project   : str,
-    name      : str,
-    variant   : int | str | None,
-    weights   : Any,
-    batch_size: int,
-    image_size: int | list[int],
-    devices   : str,
-    resize    : bool,
-    benchmark : bool,
-    save_image: bool,
-    verbose   : bool
+    config     : str,
+    input_dir  : mon.Path | str,
+    output_dir : mon.Path | str,
+    name       : str,
+    variant    : int | str | None,
+    data       : str,
+    root       : mon.Path | str,
+    project    : str,
+    fullname   : str | None,
+    weights    : Any,
+    batch_size : int,
+    image_size : int | list[int],
+    seed       : int,
+    devices    : str,
+    resize     : bool,
+    benchmark  : bool,
+    save_image : bool,
+    verbose    : bool
 ):
     model_kwargs = {
         k.lstrip("--"): ctx.args[i + 1]
@@ -233,36 +171,38 @@ def main(
     }
     
     # Obtain arguments
-    hostname  = socket.gethostname().lower()
-    host_args = hosts[hostname]
-    config    = config  or host_args.get("config",  None)
-    project   = project or host_args.get("project", None)
+    hostname      = socket.gethostname().lower()
+    config_module = mon.get_config_module(
+        project = project,
+        name    = name,
+        variant = variant,
+        data    = data,
+        config  = config,
+    )
+    config_args = importlib.import_module(f"{config_module}")
     
-    if project is not None and project != "":
-        project_module = project.replace("/", ".")
-        config_args    = importlib.import_module(f"config.{project_module}.{config}")
-    else:
-        config_args    = importlib.import_module(f"config.{config}")
-    
-    # Prioritize input args --> predefined args --> config file args
+    # Prioritize input args --> config file args
     input_dir   = mon.Path(input_dir)
     project     = project or config_args.model["project"]
     project     = str(project).replace(".", "/")
-    root        = root        or host_args.get("root",        None)
-    name        = name        or host_args.get("name",        None) or config_args.model["name"]
-    variant     = variant     or host_args.get("variant",     None) or config_args.model["variant"]
+    root        = root
+    fullname    = fullname    or mon.get_model_fullname(name, data, variant) or config_args.model["fullname"]
+    variant     = variant     or config_args.model["variant"]
     variant     = None if variant in ["", "none", "None"] else variant
-    weights     = weights     or host_args.get("weights",     None) or config_args.model["weights"]
-    batch_size  = batch_size  or host_args.get("batch_size",  None) or config_args.data["batch_size"]
-    image_size  = image_size  or host_args.get("image_size",  None) or config_args.data["image_size"]
-    devices     = devices     or host_args.get("devices",     None) or config_args.data["devices"]
+    weights     = weights     or config_args.model["weights"]
+    batch_size  = batch_size  or config_args.datamodule["batch_size"]
+    image_size  = image_size  or config_args.datamodule["image_size"]
+    seed        = seed        or config_args["seed"] or random.randint(1, 10000)
+    devices     = devices     or config_args.trainer["devices"]
 
     # Update arguments
     args                 = mon.get_module_vars(config_args)
     args["hostname"]     = hostname
     args["root"]         = mon.Path(root)
     args["project"]      = project
+    args["fullname"]     = fullname
     args["image_size"]   = image_size
+    args["seed"]         = seed
     args["verbose"]      = verbose
     args["config_file"]  = config_args.__file__,
     args["datamodule"]  |= {
@@ -270,22 +210,23 @@ def main(
         "resize"    : resize,
         "image_size": image_size,
         "batch_size": batch_size,
+        # "verbose"   : verbose,
     }
     args["model"] |= {
-        "weights": weights,
-        "name"   : name,
-        "variant": variant,
-        "root"   : mon.Path(root),
-        "project": project,
-        # "verbose": verbose,
+        "weights"  : weights,
+        "name"     : fullname,
+        "variant"  : variant,
+        "root"     : mon.Path(root),
+        "project"  : project,
+        # "verbose"  : verbose,
     }
-    args["model"] |= model_kwargs
+    args["model"]     |= model_kwargs
     args["predictor"] |= {
         "devices"   : devices,
         "benchmark" : benchmark,
         "output_dir": mon.Path(output_dir),
         "save_image": save_image,
-        # "verbose"   : verbose,
+        "verbose"   : verbose,
     }
     predict(args=args)
 

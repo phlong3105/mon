@@ -142,10 +142,8 @@ class RNet(base.LightEffectSuppressionModel):
     
     See Also: :class:`mon.vision.enhance.les.base.LightEffectSuppressionModel`
     """
-    
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+
+    zoo = {}
     
     def __init__(
         self,

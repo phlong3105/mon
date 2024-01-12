@@ -11,10 +11,19 @@ from __future__ import annotations
 
 __all__ = [
     "ErrorRelativeGlobalDimensionlessSynthesis",
-    "MultiScaleStructuralSimilarityIndexMeasure", "PeakSignalNoiseRatio",
-    "SpectralAngleMapper", "SpectralDistortionIndex",
-    "StructuralSimilarityIndexMeasure", "TotalVariation",
-    "UniversalImageQualityIndex", "calculate_efficiency_score"
+    "MemorizationInformedFrechetInceptionDistance",
+    "MultiScaleStructuralSimilarityIndexMeasure",
+    "PeakSignalNoiseRatio",
+    "PeakSignalNoiseRatioWithBlockedEffect",
+    "RelativeAverageSpectralError",
+    "RootMeanSquaredErrorUsingSlidingWindow",
+    "SpectralAngleMapper",
+    "SpectralDistortionIndex",
+    "StructuralSimilarityIndexMeasure",
+    "TotalVariation",
+    "UniversalImageQualityIndex",
+    "VisualInformationFidelity",
+    "calculate_efficiency_score",
 ]
 
 import time
@@ -37,26 +46,36 @@ _current_dir = core.Path(__file__).absolute().parent
 
 # region Image Metric
 
-ErrorRelativeGlobalDimensionlessSynthesis  = torchmetrics.ErrorRelativeGlobalDimensionlessSynthesis
-MultiScaleStructuralSimilarityIndexMeasure = torchmetrics.MultiScaleStructuralSimilarityIndexMeasure
-PeakSignalNoiseRatio                       = torchmetrics.PeakSignalNoiseRatio
-SpectralAngleMapper                        = torchmetrics.SpectralAngleMapper
-SpectralDistortionIndex                    = torchmetrics.SpectralDistortionIndex
-StructuralSimilarityIndexMeasure           = torchmetrics.StructuralSimilarityIndexMeasure
-TotalVariation                             = torchmetrics.TotalVariation
-UniversalImageQualityIndex                 = torchmetrics.UniversalImageQualityIndex
+ErrorRelativeGlobalDimensionlessSynthesis    = torchmetrics.image.ErrorRelativeGlobalDimensionlessSynthesis
+MemorizationInformedFrechetInceptionDistance = torchmetrics.image.MemorizationInformedFrechetInceptionDistance
+MultiScaleStructuralSimilarityIndexMeasure   = torchmetrics.image.MultiScaleStructuralSimilarityIndexMeasure
+PeakSignalNoiseRatio                         = torchmetrics.image.PeakSignalNoiseRatio
+PeakSignalNoiseRatioWithBlockedEffect        = torchmetrics.image.PeakSignalNoiseRatioWithBlockedEffect
+RelativeAverageSpectralError                 = torchmetrics.image.RelativeAverageSpectralError
+RootMeanSquaredErrorUsingSlidingWindow       = torchmetrics.image.RootMeanSquaredErrorUsingSlidingWindow
+SpectralAngleMapper                          = torchmetrics.image.SpectralAngleMapper
+SpectralDistortionIndex                      = torchmetrics.image.SpectralDistortionIndex
+StructuralSimilarityIndexMeasure             = torchmetrics.image.StructuralSimilarityIndexMeasure
+TotalVariation                               = torchmetrics.image.TotalVariation
+UniversalImageQualityIndex                   = torchmetrics.image.UniversalImageQualityIndex
+VisualInformationFidelity                    = torchmetrics.image.VisualInformationFidelity
 
-METRICS.register(name="error_relative_global_dimensionless_synthesis",  module=ErrorRelativeGlobalDimensionlessSynthesis)
-METRICS.register(name="multiscale_structural_similarity_index_measure", module=MultiScaleStructuralSimilarityIndexMeasure)
-METRICS.register(name="multiscale_ssim",                                module=MultiScaleStructuralSimilarityIndexMeasure)
-METRICS.register(name="peak_signal_noise_ratio",                        module=PeakSignalNoiseRatio)
-METRICS.register(name="psnr",                                           module=PeakSignalNoiseRatio)
-METRICS.register(name="spectral_angle_mapper",                          module=SpectralAngleMapper)
-METRICS.register(name="spectral_distortion_index",                      module=SpectralDistortionIndex)
-METRICS.register(name="structural_similarity_index_measure",            module=StructuralSimilarityIndexMeasure)
-METRICS.register(name="ssim",                                           module=StructuralSimilarityIndexMeasure)
-METRICS.register(name="total_variation",                                module=TotalVariation)
-METRICS.register(name="universal_image_quality_index",                  module=UniversalImageQualityIndex)
+METRICS.register(name="error_relative_global_dimensionless_synthesis",    module=ErrorRelativeGlobalDimensionlessSynthesis)
+METRICS.register(name="memorization_informed_frechet_inception_distance", module=MemorizationInformedFrechetInceptionDistance)
+METRICS.register(name="multiscale_structural_similarity_index_measure",   module=MultiScaleStructuralSimilarityIndexMeasure)
+METRICS.register(name="multiscale_ssim",                                  module=MultiScaleStructuralSimilarityIndexMeasure)
+METRICS.register(name="peak_signal_noise_ratio",                          module=PeakSignalNoiseRatio)
+METRICS.register(name="psnr",                                             module=PeakSignalNoiseRatio)
+METRICS.register(name="peak_signal_noise_ratio_with_blocked_effect",      module=PeakSignalNoiseRatioWithBlockedEffect)
+METRICS.register(name="relative_average_spectral_error",                  module=RelativeAverageSpectralError)
+METRICS.register(name="root_mean_squared_error_using_sliding_window",     module=RootMeanSquaredErrorUsingSlidingWindow)
+METRICS.register(name="spectral_angle_mapper",                            module=SpectralAngleMapper)
+METRICS.register(name="spectral_distortion_index",                        module=SpectralDistortionIndex)
+METRICS.register(name="structural_similarity_index_measure",              module=StructuralSimilarityIndexMeasure)
+METRICS.register(name="ssim",                                             module=StructuralSimilarityIndexMeasure)
+METRICS.register(name="total_variation",                                  module=TotalVariation)
+METRICS.register(name="universal_image_quality_index",                    module=UniversalImageQualityIndex)
+METRICS.register(name="visual_information_fidelity",                      module=VisualInformationFidelity)
 
 # endregion
 

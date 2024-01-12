@@ -124,8 +124,7 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
             transformed = self.transform(image=image)
             image = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(
-                input=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
             
         return image, None, meta
         
@@ -1125,7 +1124,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         if self.to_tensor:
             image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
             label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
-           
+
         return image, label, meta
         
     def cache_images(self):

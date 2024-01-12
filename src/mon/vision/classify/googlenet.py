@@ -28,8 +28,7 @@ class GoogleNet(base.ImageClassificationModel):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/googlenet-1378be20.pth",

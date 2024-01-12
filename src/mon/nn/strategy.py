@@ -56,20 +56,22 @@ ACCELERATORS.register(name="xla" , module=XLAAccelerator)
 
 # region Strategy
 
-DDPStrategy          = strategies.DDPStrategy
-DeepSpeedStrategy    = strategies.DeepSpeedStrategy
-FSDPStrategy         = strategies.FSDPStrategy
-ParallelStrategy     = strategies.ParallelStrategy
-SingleDeviceStrategy = strategies.SingleDeviceStrategy
-Strategy             = strategies.Strategy
-XLAStrategy          = strategies.XLAStrategy
+DDPStrategy             = strategies.DDPStrategy
+DeepSpeedStrategy       = strategies.DeepSpeedStrategy
+FSDPStrategy            = strategies.FSDPStrategy
+ParallelStrategy        = strategies.ParallelStrategy
+SingleDeviceStrategy    = strategies.SingleDeviceStrategy
+SingleDeviceXLAStrategy = strategies.SingleDeviceXLAStrategy
+Strategy                = strategies.Strategy
+XLAStrategy             = strategies.XLAStrategy
 
-STRATEGIES.register(name="ddp"          , module=DDPStrategy)
-STRATEGIES.register(name="deepspeed"    , module=DeepSpeedStrategy)
-STRATEGIES.register(name="fsdp"         , module=FSDPStrategy)
-STRATEGIES.register(name="parallel"     , module=ParallelStrategy)
-STRATEGIES.register(name="single_device", module=SingleDeviceStrategy)
-STRATEGIES.register(name="xla"          , module=XLAStrategy)
+STRATEGIES.register(name="ddp"                       , module=DDPStrategy)
+STRATEGIES.register(name="deepspeed"                 , module=DeepSpeedStrategy)
+STRATEGIES.register(name="fsdp"                      , module=FSDPStrategy)
+STRATEGIES.register(name="parallel"                  , module=ParallelStrategy)
+STRATEGIES.register(name="single_device"             , module=SingleDeviceStrategy)
+STRATEGIES.register(name="single_device_xla_strategy", module=SingleDeviceXLAStrategy)
+STRATEGIES.register(name="xla"                       , module=XLAStrategy)
 
 # endregion
 

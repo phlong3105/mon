@@ -264,10 +264,8 @@ class ResNet(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
@@ -365,8 +363,7 @@ class ResNet34(ResNet):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/resnet34-b627a593.pth",
@@ -374,8 +371,7 @@ class ResNet34(ResNet):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "resnet34.yaml",
@@ -419,8 +415,7 @@ class ResNet101(ResNet):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/resnet101-cd907fc2.pth",
@@ -428,8 +423,7 @@ class ResNet101(ResNet):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "resnet101.yaml",

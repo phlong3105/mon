@@ -8,10 +8,21 @@ models.
 from __future__ import annotations
 
 __all__ = [
-    "Model", "attempt_load", "extract_weight_from_checkpoint", "get_epoch",
-    "get_global_step", "get_latest_checkpoint", "intersect_state_dicts",
-    "is_parallel", "load_state_dict_from_path", "match_state_dicts",
-    "sparsity", "strip_optimizer",
+    "Model",
+    "attempt_load",
+    "extract_weight_from_checkpoint",
+    "get_epoch",
+    "get_global_step",
+    "get_latest_checkpoint",
+    "get_model_fullname",
+    "intersect_state_dicts",
+    "is_parallel",
+    "load_state_dict",
+    "load_state_dict_from_path",
+    "load_weights",
+    "match_state_dicts",
+    "sparsity",
+    "strip_optimizer",
 ]
 
 import os
@@ -22,25 +33,26 @@ import humps
 import lightning.pytorch.utilities.types
 from thop.profile import *
 from torch import nn
+import torch.hub
 from torch.nn import parallel
 
-from mon.core import (
-    config as mconfig, console, error_console, pathlib, rich,
-)
+from mon import core
 from mon.globals import (
     LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS, ZOO_DIR,
 )
 from mon.nn import data as mdata, loss as mloss, metric as mmetric, parsing
 
-StepOutput  = lightning.pytorch.utilities.types.STEP_OUTPUT
-EpochOutput = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
+StepOutput    = lightning.pytorch.utilities.types.STEP_OUTPUT
+EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
+console       = core.console
+error_console = core.error_console
 
 
 # region Checkpoint
 
 def extract_weight_from_checkpoint(
-    ckpt       : pathlib.Path,
-    weight_file: pathlib.Path | None = None,
+    ckpt       : core.Path,
+    weight_file: core.Path | None = None,
 ):
     """Extract and save weights from the checkpoint :attr:`ckpt`.
     
@@ -50,7 +62,7 @@ def extract_weight_from_checkpoint(
             which saves the weights at the same location as the :param:`ckpt`
             file.
     """
-    ckpt = pathlib.Path(ckpt)
+    ckpt = core.Path(ckpt)
     if not ckpt.is_ckpt_file():
         raise ValueError(
             f"ckpt must be a valid path to .ckpt file, but got {ckpt}."
@@ -63,12 +75,12 @@ def extract_weight_from_checkpoint(
     if weight_file is None:
         weight_file = ckpt.parent / f"{ckpt.stem}.pth"
     else:
-        weight_file = pathlib.Path(weight_file)
+        weight_file = core.Path(weight_file)
     weight_file.parent.mkdir(parents=True, exist_ok=True)
     torch.save(state_dict, str(weight_file))
 
 
-def get_epoch(ckpt: pathlib.Path | None) -> int:
+def get_epoch(ckpt: core.Path | None) -> int:
     """Get an epoch value stored in a checkpoint file.
 
     Args:
@@ -78,14 +90,14 @@ def get_epoch(ckpt: pathlib.Path | None) -> int:
         return 0
     
     epoch = 0
-    ckpt  = pathlib.Path(ckpt)
+    ckpt  = core.Path(ckpt)
     if ckpt.is_torch_file():
         ckpt  = torch.load(ckpt)
         epoch = ckpt.get("epoch", 0)
     return epoch
 
 
-def get_global_step(ckpt: pathlib.Path | None) -> int:
+def get_global_step(ckpt: core.Path | None) -> int:
     """Get a global step stored in a checkpoint file.
 
     Args:
@@ -95,20 +107,20 @@ def get_global_step(ckpt: pathlib.Path | None) -> int:
         return 0
     
     global_step = 0
-    ckpt = pathlib.Path(ckpt)
+    ckpt        = core.Path(ckpt)
     if ckpt.is_torch_file():
-        ckpt = torch.load(ckpt)
+        ckpt        = torch.load(ckpt)
         global_step = ckpt.get("global_step", 0)
     return global_step
 
 
-def get_latest_checkpoint(dirpath: pathlib.Path) -> str | None:
+def get_latest_checkpoint(dirpath: core.Path) -> str | None:
     """Get the latest checkpoint (last saved) file path in a directory.
 
     Args:
         dirpath: The directory that contains the checkpoints.
     """
-    dirpath = pathlib.Path(dirpath)
+    dirpath = core.Path(dirpath)
     ckpt    = dirpath.latest_file()
     if ckpt is None:
         error_console.log(f"[red]Cannot find checkpoint file {dirpath}.")
@@ -174,10 +186,10 @@ def strip_optimizer(weight_file: str, new_file: str | None = None):
             is given, save the weights as a new file. Otherwise, overwrite the
             :param:`weight_file`.
     """
-    if not pathlib.Path(weight_file).is_weights_file():
+    if not core.Path(weight_file).is_weights_file():
         raise ValueError(
-            f"weight_file must be a valid path to a weights file, but got "
-            f"{pathlib}."
+            f"``weight_file`` must be a valid path to a weights file, but got "
+            f"{weight_file}."
         )
     
     x = torch.load(weight_file, map_location = torch.device("cpu"))
@@ -202,16 +214,16 @@ def strip_optimizer(weight_file: str, new_file: str | None = None):
 
 def attempt_load(
     model      : nn.Module | Model,
-    weights    : dict | pathlib.Path,
-    name       : str  | None                = None,
-    config     : dict | pathlib.Path | None = None,
-    fullname   : str  | None                = None,
-    num_classes: int  | None                = None,
-    phase      : str                        = "inference",
-    strict     : bool                       = True,
-    file_name  : str  | None                = None,
-    model_dir  : pathlib.Path | None        = ZOO_DIR,
-    debugging  : bool                       = True
+    weights    : dict | core.Path,
+    name       : str              | None = None,
+    config     : dict | core.Path | None = None,
+    fullname   : str              | None = None,
+    num_classes: int              | None = None,
+    phase      : str                     = "inference",
+    strict     : bool                    = True,
+    file_name  : str              | None = None,
+    model_dir  : core.Path        | None = ZOO_DIR,
+    debugging  : bool                    = True
 ):
     """Try to create a model from the given configuration and load pretrained
     weights.
@@ -264,7 +276,7 @@ def attempt_load(
         else:
             return model
     # Load weights for :class:`Model` from a checkpoint
-    elif isinstance(model, Model) and pathlib.Path(path=weights).is_ckpt_file():
+    elif isinstance(model, Model) and core.Path(path=weights).is_ckpt_file():
         model = model.load_from_checkpoint(
             checkpoint_path = weights,
             name            = name,
@@ -274,7 +286,7 @@ def attempt_load(
         )
     # All other cases
     else:
-        if isinstance(weights, str | pathlib.Path):
+        if isinstance(weights, str | core.Path):
             state_dict = load_state_dict_from_path(
                 path         = weights,
                 model_dir    = model_dir,
@@ -309,12 +321,12 @@ def attempt_load(
 
 
 def load_state_dict_from_path(
-    path        : pathlib.Path,
-    model_dir   : pathlib.Path | None = None,
-    map_location: str | None          = None,
-    progress    : bool                = True,
-    check_hash  : bool                = False,
-    file_name   : str | None          = None,
+    path        : core.Path,
+    model_dir   : core.Path | None = None,
+    map_location: str       | None = None,
+    progress    : bool             = True,
+    check_hash  : bool             = False,
+    file_name   : str       | None = None,
     **_
 ) -> dict | None:
     """Load state dict at the given URL. If downloaded file is a ``.zip`` file,
@@ -339,14 +351,14 @@ def load_state_dict_from_path(
     if path is None:
         raise ValueError()
     if model_dir:
-        model_dir = pathlib.Path(model_dir)
+        model_dir = core.Path(model_dir)
     
-    path = pathlib.Path(path)
+    path = core.Path(path)
     if not path.is_torch_file() \
         and (model_dir is None or not model_dir.is_dir()):
         raise ValueError(f"'model_dir' must be defined. But got: {model_dir}.")
     
-    save_weight = pathlib.Path()
+    save_weight = core.Path()
     if file_name:
         save_weight = model_dir / file_name
     
@@ -370,6 +382,65 @@ def load_state_dict_from_path(
     if state_dict and "state_dict" in state_dict:
         state_dict = state_dict["state_dict"]
     return state_dict
+
+
+def load_state_dict(
+    model  : nn.Module,
+    weights: dict | str | core.Path,
+) -> dict:
+    """Load state dict from :param:`weights` file."""
+    path = None
+    map  = {}
+
+    if isinstance(weights, dict):
+        path = weights.get("path", path)
+        url  = weights.get("url",  None)
+        map  = weights.get("map",  map)
+        if path is not None and url is not None:
+            if not core.Path(path).exists() and core.Path(url).is_url():
+                torch.hub.download_url_to_file(url, str(path), None, progress=True)
+
+    elif isinstance(weights, str | core.Path):
+        path = weights
+    else:
+        return {}
+
+    path = core.Path(path)
+    if not path.is_weights_file():
+        error_console.log(f"{path} is not a weights file.")
+
+    state_dict       = torch.load(str(weights), map_location=model.device)
+    model_state_dict = model.state_dict()
+    new_state_dict   = {}
+
+    for k, v in state_dict.items():
+        replace = False
+        for k1, k2 in map.items():
+            kr = k.replace(k1, k2)
+            if kr in model_state_dict and not replace:
+                new_state_dict[kr] = v
+                replace = True
+        if not replace:
+            new_state_dict[k] = v
+
+    new   = list(new_state_dict.items())
+    count = 0
+    for k, _ in model_state_dict.items():
+        _, v = new[count]
+        model_state_dict[k] = v
+        count += 1
+
+    return model_state_dict
+
+
+def load_weights(
+    model  : nn.Module,
+    weights: dict | str | core.Path,
+) -> nn.Module:
+    """Load weights to model."""
+    model_state_dict = load_state_dict(model=model, weights=weights)
+    model.load_state_dict(model_state_dict)
+    return model
 
 # endregion
 
@@ -400,24 +471,37 @@ def sparsity(model: nn.Module) -> float:
 
 # region Model
 
+def get_model_fullname(
+    name   : str,
+    data   : str,
+    variant: str | None = None,
+) -> str:
+    """Get model fullname"""
+    name    = name    or ""
+    variant = variant or ""
+    data    = data    or ""
+
+    if name != "" and variant != "" and name in variant:
+        fullname = variant
+    elif name != "" and variant != "":
+        fullname = f"{name}-{variant}"
+    else:
+        fullname = f"{name}"
+    fullname = f"{fullname}-{data}"
+    return fullname
+
+
 class Model(lightning.LightningModule, ABC):
     """The base class for all machine learning models.
     
     Attributes:
-        configs: A :class:`dict` containing all configurations of the model.
         zoo: A :class:`dict` containing all pretrained weights of the model.
         
     Args:
-        config: The model's configuration that's used to build the model.
-            Any of:
-                - A :class:`dict`.
-                - A key in the :attr:`cfgs`.
-                - A file name. Ex: 'alexnet.yaml'.
-                - A path to a ``.yaml`` file. Ex: '../cfgs/alexnet.yaml'.
-                - None, define each layer manually.
-        hparams: Model's hyperparameters. They are used to change the values of
-            :param:`args`. Usually used in grid search or random search during
-            training. Default: ``None``.
+        arch: Path or name of the model architecture file that's used to build
+            the model. Any of the following cases:
+                - Case 01: A file name, or a path to a ``.yaml`` file. Ex: 'alexnet.yaml'.
+                - Case 02: ``None``, define each layer manually.
         channels: The first layer's input channel. Default: ``3``.
         num_classes: A number of classes, which is also the last layer's output
             channels. Default: ``None`` mean it will be determined during model
@@ -427,19 +511,23 @@ class Model(lightning.LightningModule, ABC):
         weights: The model's weights. Any of:
             - A state :class:`dict`.
             - A key in the :attr:`zoo`. Ex: 'yolov8x-det-coco'.
-            - A path to a weights file or ckpt file.
+            - A path to an ``.pt``, ``.pth``, or ``.ckpt`` file.
         name: The model's name. Default: ``None`` mean it will be
             :attr:`self.__class__.__name__`. .
-        variant: The model's variant. For example, :param:`name` is ``'yolov8'``
-            and :param:`variant` is ``'yolov8x'``. Default: ``None`` mean it
-            will be same as :param:`name`.
+        variant: The model's variant, WHICH IS MAINLY USED FOR EXPERIMENTING
+            WITH DIFFERENT MODEL CONFIGURATIONS. For example, if we have a model
+            name as ``'yolov9-0010'``, then :param:`name` is ``'yolov9'`` and
+            :param:`variant` is ``'0010'``. Default: ``None`` FOR MOST OF THE TIME.
         fullname: The model's fullname to save the checkpoint or weights. It
             should have the following format:
-            {name}/{variant}-{dataset}-{postfix}. Default: ``None`` mean it will
-            be same as :param:`name`.
+            {name}/{variant}-{dataset}-{suffix}. Default: ``None`` mean it will
+             be the same as :param:`name`.
         root: The root directory of the model. It is used to save the model
             checkpoint during training: {root}/{project}/{fullname}.
         project: A project name. Default: ``None``.
+        hparams: Model's hyperparameters. They are used to change the values of
+            :param:`args`. Usually used in grid search or random search during
+            training. Default: ``None``.
         phase: The model's running phase. Default: ``'training'``.
         loss: Loss function for training the model. Default: ``None``.
         metrics: A list metrics for validating and testing model. Default:
@@ -447,48 +535,107 @@ class Model(lightning.LightningModule, ABC):
         optimizers: Optimizer(s) for a training model. Default: ``None``.
         debug: Debug configs. Default: ``None``.
         verbose: Verbosity. Default: ``True``.
+
+    Example:
+        DEFINING MODEL
+
+        Case 01: Define :param:`arch` as a full path to the ``.yaml`` file.
+        RECOMMENDED FOR MODELS WITH VARIOUS CONFIGURATIONS BUT IDENTICAL
+        FORWARD_PASS (ex: YOLO).
+
+            >>> # config
+            >>> #   |_ vgg16.yaml
+            >>> #   |_ vgg19.yaml
+            >>>
+            >>> model = Model(arch="vgg16")
+            >>> model = Model(arch="vgg19.yaml")
+            >>> model = Model(arch="/home/workspace/.../vgg19.yaml")
+
+        Case 02: Define :param:`arch` as ``None``. Then you have to manually
+        define the model in the traditional way. RECOMMENDED FOR SINGLE-PURPOSE
+        MODELS.
+
+            >>> model = Model(arch=None)
+
+    Example:
+        LOADING WEIGHTS
+
+        Case 01: Define a state :class:`dict`.
+
+            >>> model = Model(
+            >>>     weights={
+            >>>         "layer01": [],
+            >>>         "layer02": [],
+            >>>         "layer03": [],
+            >>>     },
+            >>> )
+
+        Case 02: Pre-define the weights file in ``zoo`` directory. Pre-define
+        the metadata in :attr:`zoo`. Then define :param:`weights` as a key in
+        :attr:`zoo`.
+
+            >>> zoo = {
+            >>>     "imagenet": {
+            >>>         "name"       : "imagenet",
+            >>>         "path"       : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
+            >>>         "file_name"  : "vgg19-imagenet.pth",  # Locate in ``zoo`` directory
+            >>>         "num_classes": 1000,
+            >>>     },
+            >>>     "cifar10": {},
+            >>> }
+            >>>
+            >>> model = Model(
+            >>>     arch="vgg19",
+            >>>     weights="imagenet",
+            >>> )
+
+        Case 03: Define the full path to an ``.pt``, ``.pth``, or ``.ckpt`` file.
+
+            >>> model = Model(
+            >>>     arch="vgg19",
+            >>>     weights="home/workspace/.../vgg19-imagenet.pth",
+            >>> )
     """
-    
-    configs = {}
-    zoo     = {}
-    
+
+    configs = {}  # A dictionary containing all configurations of the model.
+    zoo     = {}  # A dictionary containing all pretrained weights of the model.
+
     def __init__(
         self,
+        # For model architecture
         config     : Any                      = None,
-        hparams    : dict | None              = None,
         channels   : int                      = 3,
-        num_classes: int  | None              = None,
+        num_classes: int               | None = None,
         classlabels: mdata.ClassLabels | None = None,
         weights    : Any                      = None,
         # For saving/loading
-        name       : str  | None              = None,
-        variant    : int  | str | None        = None,
-        fullname   : str  | None              = None,
-        root       : pathlib.Path             = pathlib.Path(),
-        project    : str  | None              = None,
-        # For training                        
+        name       : str               | None = None,
+        variant    : int | str         | None = None,
+        fullname   : str               | None = None,
+        root       : core.Path                = core.Path(),
+        project    : str               | None = None,
+        # For training
+        hparams    : dict              | None = None,
         phase      : ModelPhase | str         = ModelPhase.TRAINING,
         loss       : Any                      = None,
         metrics    : Any                      = None,
         optimizers : Any                      = None,
-        debug      : dict | None              = None,
+        debug      : dict              | None = None,
         verbose    : bool                     = True,
         *args, **kwargs
     ):
         super().__init__(*args, **kwargs)
         self.config        = config
-        #
-        self.hyperparams   = hparams
         self.channels      = channels or self.channels
         self.num_classes   = num_classes
+        self.classlabels   = mdata.ClassLabels.from_value(classlabels) if classlabels is not None else None
         self.weights       = weights
-        self.name          = name     or self.name
-        self.variant       = variant  or self.variant
+        self.name          = name    or self.name
+        self.variant       = variant or None
         self.fullname      = fullname
         self.project       = project
         self.root          = root
-        self.classlabels   = mdata.ClassLabels.from_value(classlabels) \
-                             if classlabels is not None else None
+        self.hyperparams   = hparams
         self.loss          = loss
         self.train_metrics = metrics
         self.val_metrics   = metrics
@@ -500,18 +647,19 @@ class Model(lightning.LightningModule, ABC):
         
         # Define model
         if self.config is None:
-            console.log(f"No `config` has been provided. Model must be manually defined.")
+            console.log(f"No ``config`` has been provided. Model must be manually defined.")
             self.model            = None
             self.save: list[int]  = []
             self.info: list[dict] = []
         else:
             self.model, self.save, self.info = self.parse_model()
-            # Load weights
+            # Load weights (WE ONLY ATTEMPT TO LOAD WEIGHTS IF WE CAN BUILD
+            # MODEL FROM ``config``).
             if self.weights:
                 self.load_weights()
             else:
                 self.apply(self.init_weights)
-            if verbose:
+            if self.verbose:
                 self.print_info()
         
         # Set phase to freeze or unfreeze layers
@@ -544,15 +692,15 @@ class Model(lightning.LightningModule, ABC):
         self._fullname = fullname
     
     @property
-    def root(self) -> pathlib.Path:
+    def root(self) -> core.Path:
         return self._root
     
     @root.setter
     def root(self, root: Any):
         if root is None:
-            root = pathlib.Path() / "run"
+            root = core.Path() / "run"
         else:
-            root = pathlib.Path(root)
+            root = core.Path(root)
         self._root = root
         
         if self.project is not None and self.project != "":
@@ -565,30 +713,30 @@ class Model(lightning.LightningModule, ABC):
     
     @property
     @abstractmethod
-    def config_dir(self) -> pathlib.Path:
+    def config_dir(self) -> core.Path:
         pass
     
     @property
-    def ckpt_dir(self) -> pathlib.Path:
+    def ckpt_dir(self) -> core.Path:
         if self._ckpt_dir is None:
             self._ckpt_dir = self.root / "weights"
         return self._ckpt_dir
     
     @property
-    def debug_dir(self) -> pathlib.Path:
+    def debug_dir(self) -> core.Path:
         if self._debug_dir is None:
             self._debug_dir = self.root / "debug"
         return self._debug_dir
     
     @property
-    def debug_subdir(self) -> pathlib.Path:
+    def debug_subdir(self) -> core.Path:
         """The debug subdir path located at: <debug_dir>/<phase>_<epoch>."""
         debug_dir = self.debug_dir / f"{self.phase.value}_{(self.current_epoch + 1):03d}"
         debug_dir.mkdir(parents=True, exist_ok=True)
         return debug_dir
     
     @property
-    def debug_image_file_path(self) -> pathlib.Path:
+    def debug_image_file_path(self) -> core.Path:
         """The debug image file path located at: <debug_dir>/"""
         save_dir = self.debug_subdir \
             if self.debug["save_to_subdir"] \
@@ -599,7 +747,7 @@ class Model(lightning.LightningModule, ABC):
                           f"{(self.epoch_step + 1):06}.jpg"
     
     @property
-    def zoo_dir(self) -> pathlib.Path:
+    def zoo_dir(self) -> core.Path:
         return ZOO_DIR / self.name
     
     @property
@@ -608,27 +756,20 @@ class Model(lightning.LightningModule, ABC):
     
     @config.setter
     def config(self, config: Any = None):
-        variant = None
-        if isinstance(config, str) and config in self.configs:
-            variant = str(config)
-            config  = self.configs[config]
-        elif isinstance(config, str) and ".yaml" in config:
+        if isinstance(config, str) and ".yaml" in config:
+            config += ".yaml" if ".yaml" not in config else ""
             config  = self.config_dir / config
-            variant = str(config.stem)
-        elif isinstance(config, pathlib.Path):
-            variant = str(config.stem)
-        elif isinstance(config, dict):
-            variant = config.get("variant", None)
-        elif config is None:
-            pass
+        if not (isinstance(config, core.Path) and config.is_yaml_file()):
+            raise TypeError()
+
+        if config is not None:
+            self._config  = core.load_config(config=config)
+            self.name     = self._config.get("name",     None)
+            self.variant  = self._config.get("variant",  None)
+            self.channels = self._config.get("channels", None)
         else:
-            raise TypeError
-            
-        self._config  = mconfig.load_config(config=config) if config is not None else None
-        self.channels = self._config.get("channels", None) if config is not None else None
-        self.name     = self._config.get("name",     None) if config is not None else None
-        self.variant  = variant
-        
+            self._config  = None
+
     @property
     def params(self) -> int:
         if self.info is not None:
@@ -638,19 +779,23 @@ class Model(lightning.LightningModule, ABC):
             return 0
     
     @property
-    def weights(self) -> pathlib.Path | dict:
+    def weights(self) -> core.Path | dict:
         return self._weights
     
     @weights.setter
     def weights(self, weights: Any = None):
-        if isinstance(weights, str) and weights in self.zoo:
-            weights = self.zoo[weights]
-        elif isinstance(weights, pathlib.Path):
+        if isinstance(weights, str):
+            if weights in self.zoo:
+                weights = self.zoo[weights]
+                weights["path"] = self.zoo_dir / weights.get("path", "")
+            else:
+                raise ValueError(f"``'{weights}'`` has not been defined in ``zoo``.")
+        elif isinstance(weights, core.Path):
             pass
         elif isinstance(weights, dict):
             pass
         self._weights = weights
-    
+
     @property
     def phase(self) -> ModelPhase:
         return self._phase
@@ -889,28 +1034,24 @@ class Model(lightning.LightningModule, ABC):
         """Initialize model's weights."""
         pass
     
-    def load_weights(self):
+    def load_weights(self, weights: Any = None):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
-        if isinstance(self.weights, dict | pathlib.Path):
-            if "filename" in self.weights:
-                weights = self.zoo_dir / self.weights["filename"]
-            else:
-                weights = self.weights
+        if weights is not None:
+            self.weights = weights
+
+        if self.weights is not None:
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
-            self.model = attempt_load(
-                model     = self.model,
-                weights   = weights,
-                strict    = False,
-                model_dir = self.zoo_dir,
-            )
+            if self.model is not None:
+                self.model = load_weights(model=self.model, weights=weights)
+            else:
+                model_state_dict = load_state_dict(model=self, weights=weights)
+                self.load_state_dict(model_state_dict)
             if self.verbose:
                 console.log(f"Load weights from: {self.weights}!")
         else:
-            error_console.log(
-                f"[yellow]Cannot load from weights: {self.weights}!"
-            )
+            error_console.log(f"[yellow]Cannot load from weights: {self.weights}!")
     
     def configure_optimizers(self):
         """Choose what optimizers and learning-rate schedulers to use in your
@@ -1341,9 +1482,9 @@ class Model(lightning.LightningModule, ABC):
     
     def export_to_onnx(
         self,
-        input_dims   : list[int]    | None = None,
-        file_path    : pathlib.Path | None = None,
-        export_params: bool = True
+        input_dims   : list[int] | None = None,
+        file_path    : core.Path | None = None,
+        export_params: bool             = True
     ):
         """Export the model to ``onnx`` format.
 
@@ -1358,7 +1499,7 @@ class Model(lightning.LightningModule, ABC):
         if file_path in [None, ""]:
             file_path = self.root / f"{self.fullname}.onnx"
         if ".onnx" not in str(file_path):
-            file_path = pathlib.Path(str(file_path) + ".onnx")
+            file_path = core.Path(str(file_path) + ".onnx")
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
@@ -1373,9 +1514,9 @@ class Model(lightning.LightningModule, ABC):
     
     def export_to_torchscript(
         self,
-        input_dims: list[int]    | None = None,
-        file_path : pathlib.Path | None = None,
-        method    : str = "script"
+        input_dims: list[int] | None = None,
+        file_path : core.Path | None = None,
+        method    : str              = "script"
     ):
         """Export the model to TorchScript format.
 
@@ -1390,7 +1531,7 @@ class Model(lightning.LightningModule, ABC):
         if file_path in [None, ""]:
             file_path = self.root / f"{self.fullname}.pt"
         if ".pt" not in str(file_path):
-            file_path = pathlib.Path(str(file_path) + ".pt")
+            file_path = core.Path(str(file_path) + ".pt")
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
@@ -1406,10 +1547,10 @@ class Model(lightning.LightningModule, ABC):
         input        : torch.Tensor | None = None,
         target       : torch.Tensor | None = None,
         pred         : torch.Tensor | None = None,
-        file_path    : pathlib.Path | None = None,
+        file_path    : core.Path    | None = None,
         image_quality: int                 = 95,
-        max_n        : int | None          = 8,
-        nrow         : int | None          = 8,
+        max_n        : int          | None = 8,
+        nrow         : int          | None = 8,
         wait_time    : float               = 0.01,
         save         : bool                = False,
         verbose      : bool                = False,
@@ -1439,7 +1580,7 @@ class Model(lightning.LightningModule, ABC):
     def print_info(self):
         if self.verbose and self.model is not None:
             console.log(f"[red]{self.fullname}")
-            rich.print_table(self.info)
+            core.print_table(self.info)
             console.log(f"Save indexes: {self.save}")
     
 # endregion

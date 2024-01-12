@@ -71,9 +71,14 @@ datamodule = {
     "name"        : data_name,
     "root"        : DATA_DIR / "llie",  # A root directory where the data is stored.
     "image_size"  : image_size,   # The desired image size in HW format.
-    "transform"   : A.Compose([
-        A.Resize(width=image_size[0], height=image_size[1]),
-    ]),  # Transformations performing on both the input and target.
+	"transform"   : A.Compose(
+		transforms=[
+			A.Resize(width=image_size[0], height=image_size[1]),
+			# A.Flip(),
+			# A.Rotate(),
+		],
+		is_check_shapes=False,
+	),  # Transformations performing on both the input and target.
     "to_tensor"   : True,          # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data"  : False,         # If ``True``, cache data to disk for faster loading next time.
     "cache_images": False,         # If ``True``, cache images into memory for faster training.

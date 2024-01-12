@@ -240,10 +240,8 @@ class FFANet(base.DehazingModel):
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
-    
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+
+    zoo = {}
     
     def __init__(self, config: Any = "ffanet.yaml", *args, **kwargs):
         super().__init__(config=config, *args, **kwargs)

@@ -144,14 +144,10 @@ class GCENet(base.LowLightImageEnhancementModel):
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def __init__(
         self,
-        config       : Any                = None,
-        loss         : Any                = ZeroReferenceLoss(),
         variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
@@ -160,13 +156,13 @@ class GCENet(base.LowLightImageEnhancementModel):
         unsharp_sigma: int   | str | None = None,
         *args, **kwargs
     ):
+        variant = core.to_int(variant)
+        variant = f"{variant:04d}" if isinstance(variant, int) else None
         super().__init__(
-            config = config,
-            loss   = loss,
+            variant = variant,
+            loss    = ZeroReferenceLoss(),
             *args, **kwargs
         )
-        variant            = core.to_int(variant)
-        self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
         self.num_channels  = core.to_int(num_channels)    or 32
         self.scale_factor  = core.to_float(scale_factor)  or 1.0
         self.gamma         = core.to_float(gamma)         or 2.8
@@ -174,7 +170,7 @@ class GCENet(base.LowLightImageEnhancementModel):
         self.unsharp_sigma = core.to_float(unsharp_sigma) or None
         self.previous      = None
 
-        if variant is None:  # Default model
+        if self.variant is None:  # Default model
             self.gamma        = self.gamma or 2.8
             self.out_channels = 3
             self.conv1        = nn.DSConv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
@@ -785,14 +781,11 @@ class GCENetV2(base.LowLightImageEnhancementModel):
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
 
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
+    configs = {}
+    zoo     = {}
 
     def __init__(
         self,
-        config       : Any                = None,
-        loss         : Any                = ZeroReferenceLoss(),
         variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
@@ -810,14 +803,13 @@ class GCENetV2(base.LowLightImageEnhancementModel):
         unsharp_sigma: int   | str | None = None,
         *args, **kwargs
     ):
+        variant = core.to_int(variant)
+        variant = f"{variant:04d}" if isinstance(variant, int) else None
         super().__init__(
-            config = config,
-            loss   = loss,
+            variant = variant,
+            loss    = ZeroReferenceLoss(),
             *args, **kwargs
         )
-
-        variant            = core.to_int(variant)
-        self.variant       = f"{variant:04d}" if isinstance(variant, int) else None
         self.num_channels  = core.to_int(num_channels)    or 32
         self.p             = core.to_float(p)             or 0.5
         self.scheme        = scheme                       or "half"

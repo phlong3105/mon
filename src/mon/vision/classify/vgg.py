@@ -30,10 +30,8 @@ class VGG(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""
         if isinstance(m, torch.nn.Conv2d):
@@ -143,8 +141,8 @@ class VGG11(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    configs = {}
+    zoo     = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg11-8a719046.pth",
@@ -152,8 +150,7 @@ class VGG11(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg11.yaml",
@@ -170,8 +167,7 @@ class VGG11BN(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg11_bn-6002323d.pth",
@@ -179,8 +175,7 @@ class VGG11BN(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg11-bn.yaml",
@@ -197,8 +192,8 @@ class VGG13(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    configs = {}
+    zoo     = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg13-19584684.pth",
@@ -206,8 +201,7 @@ class VGG13(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg13.yaml",
@@ -224,8 +218,7 @@ class VGG13BN(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg13_bn-abd245e5.pth",
@@ -233,8 +226,7 @@ class VGG13BN(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg13-bn.yaml",
@@ -251,8 +243,8 @@ class VGG16(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    configs = {}
+    zoo     = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg16-397923af.pth",
@@ -260,8 +252,7 @@ class VGG16(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg16.yaml",
@@ -278,8 +269,7 @@ class VGG16BN(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg16_bn-6c64b313.pth",
@@ -287,8 +277,7 @@ class VGG16BN(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg16-bn.yaml",
@@ -305,8 +294,8 @@ class VGG19(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    configs = {}
+    zoo     = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg19-dcbb9e9d.pth",
@@ -314,8 +303,7 @@ class VGG19(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg19.yaml",
@@ -332,8 +320,7 @@ class VGG19BN(VGG):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/vgg19_bn-c79401a0.pth",
@@ -341,8 +328,7 @@ class VGG19BN(VGG):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "vgg19-bn.yaml",

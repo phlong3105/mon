@@ -300,29 +300,22 @@ class Rain13K(base.ImageEnhancementDataset):
         """Get image files."""
         if self.split in ["train"]:
             patterns = [
-                self.root / self.split / "rain12"          / "rain",
-                self.root / self.split / "rain100h"        / "rain",
-                self.root / self.split / "rain100l"        / "rain",
-                self.root / self.split / "rain800"         / "rain",
-                self.root / self.split / "rain1200-light"  / "rain",
-                self.root / self.split / "rain1200-medium" / "rain",
-                self.root / self.split / "rain1200-heavy"  / "rain",
-                self.root / self.split / "rain1400"        / "rain",
+                self.root / self.split / "rain13k" / "rain",
             ]
         elif self.split in ["val"]:
             patterns = [
-                self.root / self.split / "rain800"  / "rain",
                 self.root / self.split / "rain1200" / "rain",
+                self.root / self.split / "rain800"  / "rain",
             ]
         else:
             patterns = [
                 self.root / self.split / "rain100"  / "rain",
                 self.root / self.split / "rain100h" / "rain",
                 self.root / self.split / "rain100l" / "rain",
-                self.root / self.split / "rain800"  / "rain",
                 self.root / self.split / "rain1200" / "rain",
                 self.root / self.split / "rain1400" / "rain",
                 self.root / self.split / "rain2800" / "rain",
+                self.root / self.split / "rain800"  / "rain",
             ]
 
         self.images: list[base.ImageLabel] = []

@@ -160,10 +160,8 @@ class DenseNet(base.ImageClassificationModel, ABC):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {}
-    map_weights = {}
-    
+    zoo = {}
+
     def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
@@ -268,8 +266,7 @@ class DenseNet161(DenseNet):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/densenet161-8d451a50.pth",
@@ -277,8 +274,7 @@ class DenseNet161(DenseNet):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "densenet161.yaml",
@@ -322,8 +318,7 @@ class DenseNet201(DenseNet):
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
-    configs     = {}
-    zoo         = {
+    zoo = {
         "imagenet": {
             "name"       : "imagenet",
             "path"       : "https://download.pytorch.org/models/densenet201-c1103571.pth",
@@ -331,8 +326,7 @@ class DenseNet201(DenseNet):
             "num_classes": 1000,
         },
     }
-    map_weights = {}
-    
+
     def __init__(self, *args, **kwargs):
         kwargs |= {
             "config" : "densenet201.yaml",
