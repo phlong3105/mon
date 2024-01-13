@@ -781,8 +781,7 @@ class GCENetV2(base.LowLightImageEnhancementModel):
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
 
-    configs = {}
-    zoo     = {}
+    zoo = {}
 
     def __init__(
         self,
