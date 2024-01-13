@@ -9,446 +9,287 @@ __all__ = [
     "GoogleNet",
 ]
 
+from collections import namedtuple
+
 import torch
 
 from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.classify import base
+from mon.vision.nn import functional as F
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
 
 
+# region Module
+
+class BasicConv2d(nn.Module):
+    
+    def __init__(self, in_channels: int, out_channels: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
+        self.bn   = nn.BatchNorm2d(out_channels, eps=0.001)
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        x = self.conv(x)
+        x = self.bn(x)
+        y = F.relu(x, inplace=True)
+        return y
+    
+
+class Inception(nn.Module):
+    
+    def __init__(
+        self,
+        in_channels: int,
+        ch1x1      : int,
+        ch3x3red   : int,
+        ch3x3      : int,
+        ch5x5red   : int,
+        ch5x5      : int,
+        pool_proj  : int,
+        conv_block : nn.Module | None = None,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        if conv_block is None:
+            conv_block = BasicConv2d
+        self.branch1 = conv_block(in_channels, ch1x1, kernel_size=1)
+        self.branch2 = nn.Sequential(
+            conv_block(in_channels, ch3x3red, kernel_size=1),
+            conv_block(ch3x3red, ch3x3, kernel_size=3, padding=1)
+        )
+        self.branch3 = nn.Sequential(
+            conv_block(in_channels, ch5x5red, kernel_size=1),
+            # Here, kernel_size=3 instead of kernel_size=5 is a known bug.
+            # Please see https://github.com/pytorch/vision/issues/906 for details.
+            conv_block(ch5x5red, ch5x5, kernel_size=3, padding=1),
+        )
+        self.branch4 = nn.Sequential(
+            nn.MaxPool2d(kernel_size=3, stride=1, padding=1, ceil_mode=True),
+            conv_block(in_channels, pool_proj, kernel_size=1),
+        )
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x       = input
+        branch1 = self.branch1(x)
+        branch2 = self.branch2(x)
+        branch3 = self.branch3(x)
+        branch4 = self.branch4(x)
+        y       = torch.cat([branch1, branch2, branch3, branch4], dim=1)
+        return y
+    
+
+class InceptionAux(nn.Module):
+    
+    def __init__(
+        self,
+        in_channels: int,
+        num_classes: int,
+        conv_block : nn.Module | None = None,
+        dropout    : float = 0.7,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        if conv_block is None:
+            conv_block = BasicConv2d
+        self.conv    = conv_block(in_channels, 128, kernel_size=1)
+        self.fc1     = nn.Linear(2048, 1024)
+        self.fc2     = nn.Linear(1024, num_classes)
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        # aux1: N x 512 x 14 x 14, aux2: N x 528 x 14 x 14
+        x = F.adaptive_avg_pool2d(x, (4, 4))
+        # aux1: N x 512 x 4 x 4, aux2: N x 528 x 4 x 4
+        x = self.conv(x)
+        # N x 128 x 4 x 4
+        x = torch.flatten(x, 1)
+        # N x 2048
+        x = F.relu(self.fc1(x), inplace=True)
+        # N x 1024
+        x = self.dropout(x)
+        # N x 1024
+        y = self.fc2(x)
+        # N x 1000 (num_classes)
+        return y
+
+# endregion
+
+
 # region Model
+
+GoogLeNetOutputs = namedtuple("GoogLeNetOutputs", ["logits", "aux_logits2", "aux_logits1"])
+GoogLeNetOutputs.__annotations__ = {"logits": torch.Tensor, "aux_logits2": torch.Tensor | None, "aux_logits1": torch.Tensor | None}
+
 
 @MODELS.register(name="googlenet")
 class GoogleNet(base.ImageClassificationModel):
-    """GoogleNet.
+    """GoogLeNet (Inception v1) model architecture from
+    `Going Deeper with Convolutions <http://arxiv.org/abs/1409.4842>`_.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
+    constants = ["aux_logits", "transform_input"]
+    
     zoo = {
         "imagenet": {
-            "name"       : "imagenet",
-            "path"       : "https://download.pytorch.org/models/googlenet-1378be20.pth",
-            "file_name"  : "googlenet-imagenet.pth",
+            "url"        : "https://download.pytorch.org/models/googlenet-1378be20.pth",
+            "path"       : "googlenet-imagenet.pth",
             "num_classes": 1000,
-        },
-    }
-    map_weights = {
-        "backbone": {
-            "0.bn.bias"                          : "conv1.bn.bias",
-            "0.bn.num_batches_tracked"           : "conv1.bn.num_batches_tracked",
-            "0.bn.running_mean"                  : "conv1.bn.running_mean",
-            "0.bn.running_var"                   : "conv1.bn.running_var",
-            "0.bn.weight"                        : "conv1.bn.weight",
-            "0.conv.weight"                      : "conv1.conv.weight",
-            "2.bn.bias"                          : "conv2.bn.bias",
-            "2.bn.num_batches_tracked"           : "conv2.bn.num_batches_tracked",
-            "2.bn.running_mean"                  : "conv2.bn.running_mean",
-            "2.bn.running_var"                   : "conv2.bn.running_var",
-            "2.bn.weight"                        : "conv2.bn.weight",
-            "2.conv.weight"                      : "conv2.conv.weight",
-            "3.bn.bias"                          : "conv3.bn.bias",
-            "3.bn.num_batches_tracked"           : "conv3.bn.num_batches_tracked",
-            "3.bn.running_mean"                  : "conv3.bn.running_mean",
-            "3.bn.running_var"                   : "conv3.bn.running_var",
-            "3.bn.weight"                        : "conv3.bn.weight",
-            "3.conv.weight"                      : "conv3.conv.weight",
-            "5.branch1.bn.bias"                  : "inception3a.branch1.bn.bias",
-            "5.branch1.bn.num_batches_tracked"   : "inception3a.branch1.bn.num_batches_tracked",
-            "5.branch1.bn.running_mean"          : "inception3a.branch1.bn.running_mean",
-            "5.branch1.bn.running_var"           : "inception3a.branch1.bn.running_var",
-            "5.branch1.bn.weight"                : "inception3a.branch1.bn.weight",
-            "5.branch1.conv.weight"              : "inception3a.branch1.conv.weight",
-            "5.branch2.0.bn.bias"                : "inception3a.branch2.0.bn.bias",
-            "5.branch2.0.bn.num_batches_tracked" : "inception3a.branch2.0.bn.num_batches_tracked",
-            "5.branch2.0.bn.running_mean"        : "inception3a.branch2.0.bn.running_mean",
-            "5.branch2.0.bn.running_var"         : "inception3a.branch2.0.bn.running_var",
-            "5.branch2.0.bn.weight"              : "inception3a.branch2.0.bn.weight",
-            "5.branch2.0.conv.weight"            : "inception3a.branch2.0.conv.weight",
-            "5.branch2.1.bn.bias"                : "inception3a.branch2.1.bn.bias",
-            "5.branch2.1.bn.num_batches_tracked" : "inception3a.branch2.1.bn.num_batches_tracked",
-            "5.branch2.1.bn.running_mean"        : "inception3a.branch2.1.bn.running_mean",
-            "5.branch2.1.bn.running_var"         : "inception3a.branch2.1.bn.running_var",
-            "5.branch2.1.bn.weight"              : "inception3a.branch2.1.bn.weight",
-            "5.branch2.1.conv.weight"            : "inception3a.branch2.1.conv.weight",
-            "5.branch3.0.bn.bias"                : "inception3a.branch3.0.bn.bias",
-            "5.branch3.0.bn.num_batches_tracked" : "inception3a.branch3.0.bn.num_batches_tracked",
-            "5.branch3.0.bn.running_mean"        : "inception3a.branch3.0.bn.running_mean",
-            "5.branch3.0.bn.running_var"         : "inception3a.branch3.0.bn.running_var",
-            "5.branch3.0.bn.weight"              : "inception3a.branch3.0.bn.weight",
-            "5.branch3.0.conv.weight"            : "inception3a.branch3.0.conv.weight",
-            "5.branch3.1.bn.bias"                : "inception3a.branch3.1.bn.bias",
-            "5.branch3.1.bn.num_batches_tracked" : "inception3a.branch3.1.bn.num_batches_tracked",
-            "5.branch3.1.bn.running_mean"        : "inception3a.branch3.1.bn.running_mean",
-            "5.branch3.1.bn.running_var"         : "inception3a.branch3.1.bn.running_var",
-            "5.branch3.1.bn.weight"              : "inception3a.branch3.1.bn.weight",
-            "5.branch3.1.conv.weight"            : "inception3a.branch3.1.conv.weight",
-            "5.branch4.1.bn.bias"                : "inception3a.branch4.1.bn.bias",
-            "5.branch4.1.bn.num_batches_tracked" : "inception3a.branch4.1.bn.num_batches_tracked",
-            "5.branch4.1.bn.running_mean"        : "inception3a.branch4.1.bn.running_mean",
-            "5.branch4.1.bn.running_var"         : "inception3a.branch4.1.bn.running_var",
-            "5.branch4.1.bn.weight"              : "inception3a.branch4.1.bn.weight",
-            "5.branch4.1.conv.weight"            : "inception3a.branch4.1.conv.weight",
-            "6.branch1.bn.bias"                  : "inception3b.branch1.bn.bias",
-            "6.branch1.bn.num_batches_tracked"   : "inception3b.branch1.bn.num_batches_tracked",
-            "6.branch1.bn.running_mean"          : "inception3b.branch1.bn.running_mean",
-            "6.branch1.bn.running_var"           : "inception3b.branch1.bn.running_var",
-            "6.branch1.bn.weight"                : "inception3b.branch1.bn.weight",
-            "6.branch1.conv.weight"              : "inception3b.branch1.conv.weight",
-            "6.branch2.0.bn.bias"                : "inception3b.branch2.0.bn.bias",
-            "6.branch2.0.bn.num_batches_tracked" : "inception3b.branch2.0.bn.num_batches_tracked",
-            "6.branch2.0.bn.running_mean"        : "inception3b.branch2.0.bn.running_mean",
-            "6.branch2.0.bn.running_var"         : "inception3b.branch2.0.bn.running_var",
-            "6.branch2.0.bn.weight"              : "inception3b.branch2.0.bn.weight",
-            "6.branch2.0.conv.weight"            : "inception3b.branch2.0.conv.weight",
-            "6.branch2.1.bn.bias"                : "inception3b.branch2.1.bn.bias",
-            "6.branch2.1.bn.num_batches_tracked" : "inception3b.branch2.1.bn.num_batches_tracked",
-            "6.branch2.1.bn.running_mean"        : "inception3b.branch2.1.bn.running_mean",
-            "6.branch2.1.bn.running_var"         : "inception3b.branch2.1.bn.running_var",
-            "6.branch2.1.bn.weight"              : "inception3b.branch2.1.bn.weight",
-            "6.branch2.1.conv.weight"            : "inception3b.branch2.1.conv.weight",
-            "6.branch3.0.bn.bias"                : "inception3b.branch3.0.bn.bias",
-            "6.branch3.0.bn.num_batches_tracked" : "inception3b.branch3.0.bn.num_batches_tracked",
-            "6.branch3.0.bn.running_mean"        : "inception3b.branch3.0.bn.running_mean",
-            "6.branch3.0.bn.running_var"         : "inception3b.branch3.0.bn.running_var",
-            "6.branch3.0.bn.weight"              : "inception3b.branch3.0.bn.weight",
-            "6.branch3.0.conv.weight"            : "inception3b.branch3.0.conv.weight",
-            "6.branch3.1.bn.bias"                : "inception3b.branch3.1.bn.bias",
-            "6.branch3.1.bn.num_batches_tracked" : "inception3b.branch3.1.bn.num_batches_tracked",
-            "6.branch3.1.bn.running_mean"        : "inception3b.branch3.1.bn.running_mean",
-            "6.branch3.1.bn.running_var"         : "inception3b.branch3.1.bn.running_var",
-            "6.branch3.1.bn.weight"              : "inception3b.branch3.1.bn.weight",
-            "6.branch3.1.conv.weight"            : "inception3b.branch3.1.conv.weight",
-            "6.branch4.1.bn.bias"                : "inception3b.branch4.1.bn.bias",
-            "6.branch4.1.bn.num_batches_tracked" : "inception3b.branch4.1.bn.num_batches_tracked",
-            "6.branch4.1.bn.running_mean"        : "inception3b.branch4.1.bn.running_mean",
-            "6.branch4.1.bn.running_var"         : "inception3b.branch4.1.bn.running_var",
-            "6.branch4.1.bn.weight"              : "inception3b.branch4.1.bn.weight",
-            "6.branch4.1.conv.weight"            : "inception3b.branch4.1.conv.weight",
-            "8.branch1.bn.bias"                  : "inception4a.branch1.bn.bias",
-            "8.branch1.bn.num_batches_tracked"   : "inception4a.branch1.bn.num_batches_tracked",
-            "8.branch1.bn.running_mean"          : "inception4a.branch1.bn.running_mean",
-            "8.branch1.bn.running_var"           : "inception4a.branch1.bn.running_var",
-            "8.branch1.bn.weight"                : "inception4a.branch1.bn.weight",
-            "8.branch1.conv.weight"              : "inception4a.branch1.conv.weight",
-            "8.branch2.0.bn.bias"                : "inception4a.branch2.0.bn.bias",
-            "8.branch2.0.bn.num_batches_tracked" : "inception4a.branch2.0.bn.num_batches_tracked",
-            "8.branch2.0.bn.running_mean"        : "inception4a.branch2.0.bn.running_mean",
-            "8.branch2.0.bn.running_var"         : "inception4a.branch2.0.bn.running_var",
-            "8.branch2.0.bn.weight"              : "inception4a.branch2.0.bn.weight",
-            "8.branch2.0.conv.weight"            : "inception4a.branch2.0.conv.weight",
-            "8.branch2.1.bn.bias"                : "inception4a.branch2.1.bn.bias",
-            "8.branch2.1.bn.num_batches_tracked" : "inception4a.branch2.1.bn.num_batches_tracked",
-            "8.branch2.1.bn.running_mean"        : "inception4a.branch2.1.bn.running_mean",
-            "8.branch2.1.bn.running_var"         : "inception4a.branch2.1.bn.running_var",
-            "8.branch2.1.bn.weight"              : "inception4a.branch2.1.bn.weight",
-            "8.branch2.1.conv.weight"            : "inception4a.branch2.1.conv.weight",
-            "8.branch3.0.bn.bias"                : "inception4a.branch3.0.bn.bias",
-            "8.branch3.0.bn.num_batches_tracked" : "inception4a.branch3.0.bn.num_batches_tracked",
-            "8.branch3.0.bn.running_mean"        : "inception4a.branch3.0.bn.running_mean",
-            "8.branch3.0.bn.running_var"         : "inception4a.branch3.0.bn.running_var",
-            "8.branch3.0.bn.weight"              : "inception4a.branch3.0.bn.weight",
-            "8.branch3.0.conv.weight"            : "inception4a.branch3.0.conv.weight",
-            "8.branch3.1.bn.bias"                : "inception4a.branch3.1.bn.bias",
-            "8.branch3.1.bn.num_batches_tracked" : "inception4a.branch3.1.bn.num_batches_tracked",
-            "8.branch3.1.bn.running_mean"        : "inception4a.branch3.1.bn.running_mean",
-            "8.branch3.1.bn.running_var"         : "inception4a.branch3.1.bn.running_var",
-            "8.branch3.1.bn.weight"              : "inception4a.branch3.1.bn.weight",
-            "8.branch3.1.conv.weight"            : "inception4a.branch3.1.conv.weight",
-            "8.branch4.1.bn.bias"                : "inception4a.branch4.1.bn.bias",
-            "8.branch4.1.bn.num_batches_tracked" : "inception4a.branch4.1.bn.num_batches_tracked",
-            "8.branch4.1.bn.running_mean"        : "inception4a.branch4.1.bn.running_mean",
-            "8.branch4.1.bn.running_var"         : "inception4a.branch4.1.bn.running_var",
-            "8.branch4.1.bn.weight"              : "inception4a.branch4.1.bn.weight",
-            "8.branch4.1.conv.weight"            : "inception4a.branch4.1.conv.weight",
-            "9.branch1.bn.bias"                  : "inception4b.branch1.bn.bias",
-            "9.branch1.bn.num_batches_tracked"   : "inception4b.branch1.bn.num_batches_tracked",
-            "9.branch1.bn.running_mean"          : "inception4b.branch1.bn.running_mean",
-            "9.branch1.bn.running_var"           : "inception4b.branch1.bn.running_var",
-            "9.branch1.bn.weight"                : "inception4b.branch1.bn.weight",
-            "9.branch1.conv.weight"              : "inception4b.branch1.conv.weight",
-            "9.branch2.0.bn.bias"                : "inception4b.branch2.0.bn.bias",
-            "9.branch2.0.bn.num_batches_tracked" : "inception4b.branch2.0.bn.num_batches_tracked",
-            "9.branch2.0.bn.running_mean"        : "inception4b.branch2.0.bn.running_mean",
-            "9.branch2.0.bn.running_var"         : "inception4b.branch2.0.bn.running_var",
-            "9.branch2.0.bn.weight"              : "inception4b.branch2.0.bn.weight",
-            "9.branch2.0.conv.weight"            : "inception4b.branch2.0.conv.weight",
-            "9.branch2.1.bn.bias"                : "inception4b.branch2.1.bn.bias",
-            "9.branch2.1.bn.num_batches_tracked" : "inception4b.branch2.1.bn.num_batches_tracked",
-            "9.branch2.1.bn.running_mean"        : "inception4b.branch2.1.bn.running_mean",
-            "9.branch2.1.bn.running_var"         : "inception4b.branch2.1.bn.running_var",
-            "9.branch2.1.bn.weight"              : "inception4b.branch2.1.bn.weight",
-            "9.branch2.1.conv.weight"            : "inception4b.branch2.1.conv.weight",
-            "9.branch3.0.bn.bias"                : "inception4b.branch3.0.bn.bias",
-            "9.branch3.0.bn.num_batches_tracked" : "inception4b.branch3.0.bn.num_batches_tracked",
-            "9.branch3.0.bn.running_mean"        : "inception4b.branch3.0.bn.running_mean",
-            "9.branch3.0.bn.running_var"         : "inception4b.branch3.0.bn.running_var",
-            "9.branch3.0.bn.weight"              : "inception4b.branch3.0.bn.weight",
-            "9.branch3.0.conv.weight"            : "inception4b.branch3.0.conv.weight",
-            "9.branch3.1.bn.bias"                : "inception4b.branch3.1.bn.bias",
-            "9.branch3.1.bn.num_batches_tracked" : "inception4b.branch3.1.bn.num_batches_tracked",
-            "9.branch3.1.bn.running_mean"        : "inception4b.branch3.1.bn.running_mean",
-            "9.branch3.1.bn.running_var"         : "inception4b.branch3.1.bn.running_var",
-            "9.branch3.1.bn.weight"              : "inception4b.branch3.1.bn.weight",
-            "9.branch3.1.conv.weight"            : "inception4b.branch3.1.conv.weight",
-            "9.branch4.1.bn.bias"                : "inception4b.branch4.1.bn.bias",
-            "9.branch4.1.bn.num_batches_tracked" : "inception4b.branch4.1.bn.num_batches_tracked",
-            "9.branch4.1.bn.running_mean"        : "inception4b.branch4.1.bn.running_mean",
-            "9.branch4.1.bn.running_var"         : "inception4b.branch4.1.bn.running_var",
-            "9.branch4.1.bn.weight"              : "inception4b.branch4.1.bn.weight",
-            "9.branch4.1.conv.weight"            : "inception4b.branch4.1.conv.weight",
-            "10.branch1.bn.bias"                 : "inception4c.branch1.bn.bias",
-            "10.branch1.bn.num_batches_tracked"  : "inception4c.branch1.bn.num_batches_tracked",
-            "10.branch1.bn.running_mean"         : "inception4c.branch1.bn.running_mean",
-            "10.branch1.bn.running_var"          : "inception4c.branch1.bn.running_var",
-            "10.branch1.bn.weight"               : "inception4c.branch1.bn.weight",
-            "10.branch1.conv.weight"             : "inception4c.branch1.conv.weight",
-            "10.branch2.0.bn.bias"               : "inception4c.branch2.0.bn.bias",
-            "10.branch2.0.bn.num_batches_tracked": "inception4c.branch2.0.bn.num_batches_tracked",
-            "10.branch2.0.bn.running_mean"       : "inception4c.branch2.0.bn.running_mean",
-            "10.branch2.0.bn.running_var"        : "inception4c.branch2.0.bn.running_var",
-            "10.branch2.0.bn.weight"             : "inception4c.branch2.0.bn.weight",
-            "10.branch2.0.conv.weight"           : "inception4c.branch2.0.conv.weight",
-            "10.branch2.1.bn.bias"               : "inception4c.branch2.1.bn.bias",
-            "10.branch2.1.bn.num_batches_tracked": "inception4c.branch2.1.bn.num_batches_tracked",
-            "10.branch2.1.bn.running_mean"       : "inception4c.branch2.1.bn.running_mean",
-            "10.branch2.1.bn.running_var"        : "inception4c.branch2.1.bn.running_var",
-            "10.branch2.1.bn.weight"             : "inception4c.branch2.1.bn.weight",
-            "10.branch2.1.conv.weight"           : "inception4c.branch2.1.conv.weight",
-            "10.branch3.0.bn.bias"               : "inception4c.branch3.0.bn.bias",
-            "10.branch3.0.bn.num_batches_tracked": "inception4c.branch3.0.bn.num_batches_tracked",
-            "10.branch3.0.bn.running_mean"       : "inception4c.branch3.0.bn.running_mean",
-            "10.branch3.0.bn.running_var"        : "inception4c.branch3.0.bn.running_var",
-            "10.branch3.0.bn.weight"             : "inception4c.branch3.0.bn.weight",
-            "10.branch3.0.conv.weight"           : "inception4c.branch3.0.conv.weight",
-            "10.branch3.1.bn.bias"               : "inception4c.branch3.1.bn.bias",
-            "10.branch3.1.bn.num_batches_tracked": "inception4c.branch3.1.bn.num_batches_tracked",
-            "10.branch3.1.bn.running_mean"       : "inception4c.branch3.1.bn.running_mean",
-            "10.branch3.1.bn.running_var"        : "inception4c.branch3.1.bn.running_var",
-            "10.branch3.1.bn.weight"             : "inception4c.branch3.1.bn.weight",
-            "10.branch3.1.conv.weight"           : "inception4c.branch3.1.conv.weight",
-            "10.branch4.1.bn.bias"               : "inception4c.branch4.1.bn.bias",
-            "10.branch4.1.bn.num_batches_tracked": "inception4c.branch4.1.bn.num_batches_tracked",
-            "10.branch4.1.bn.running_mean"       : "inception4c.branch4.1.bn.running_mean",
-            "10.branch4.1.bn.running_var"        : "inception4c.branch4.1.bn.running_var",
-            "10.branch4.1.bn.weight"             : "inception4c.branch4.1.bn.weight",
-            "10.branch4.1.conv.weight"           : "inception4c.branch4.1.conv.weight",
-            "11.branch1.bn.bias"                 : "inception4d.branch1.bn.bias",
-            "11.branch1.bn.num_batches_tracked"  : "inception4d.branch1.bn.num_batches_tracked",
-            "11.branch1.bn.running_mean"         : "inception4d.branch1.bn.running_mean",
-            "11.branch1.bn.running_var"          : "inception4d.branch1.bn.running_var",
-            "11.branch1.bn.weight"               : "inception4d.branch1.bn.weight",
-            "11.branch1.conv.weight"             : "inception4d.branch1.conv.weight",
-            "11.branch2.0.bn.bias"               : "inception4d.branch2.0.bn.bias",
-            "11.branch2.0.bn.num_batches_tracked": "inception4d.branch2.0.bn.num_batches_tracked",
-            "11.branch2.0.bn.running_mean"       : "inception4d.branch2.0.bn.running_mean",
-            "11.branch2.0.bn.running_var"        : "inception4d.branch2.0.bn.running_var",
-            "11.branch2.0.bn.weight"             : "inception4d.branch2.0.bn.weight",
-            "11.branch2.0.conv.weight"           : "inception4d.branch2.0.conv.weight",
-            "11.branch2.1.bn.bias"               : "inception4d.branch2.1.bn.bias",
-            "11.branch2.1.bn.num_batches_tracked": "inception4d.branch2.1.bn.num_batches_tracked",
-            "11.branch2.1.bn.running_mean"       : "inception4d.branch2.1.bn.running_mean",
-            "11.branch2.1.bn.running_var"        : "inception4d.branch2.1.bn.running_var",
-            "11.branch2.1.bn.weight"             : "inception4d.branch2.1.bn.weight",
-            "11.branch2.1.conv.weight"           : "inception4d.branch2.1.conv.weight",
-            "11.branch3.0.bn.bias"               : "inception4d.branch3.0.bn.bias",
-            "11.branch3.0.bn.num_batches_tracked": "inception4d.branch3.0.bn.num_batches_tracked",
-            "11.branch3.0.bn.running_mean"       : "inception4d.branch3.0.bn.running_mean",
-            "11.branch3.0.bn.running_var"        : "inception4d.branch3.0.bn.running_var",
-            "11.branch3.0.bn.weight"             : "inception4d.branch3.0.bn.weight",
-            "11.branch3.0.conv.weight"           : "inception4d.branch3.0.conv.weight",
-            "11.branch3.1.bn.bias"               : "inception4d.branch3.1.bn.bias",
-            "11.branch3.1.bn.num_batches_tracked": "inception4d.branch3.1.bn.num_batches_tracked",
-            "11.branch3.1.bn.running_mean"       : "inception4d.branch3.1.bn.running_mean",
-            "11.branch3.1.bn.running_var"        : "inception4d.branch3.1.bn.running_var",
-            "11.branch3.1.bn.weight"             : "inception4d.branch3.1.bn.weight",
-            "11.branch3.1.conv.weight"           : "inception4d.branch3.1.conv.weight",
-            "11.branch4.1.bn.bias"               : "inception4d.branch4.1.bn.bias",
-            "11.branch4.1.bn.num_batches_tracked": "inception4d.branch4.1.bn.num_batches_tracked",
-            "11.branch4.1.bn.running_mean"       : "inception4d.branch4.1.bn.running_mean",
-            "11.branch4.1.bn.running_var"        : "inception4d.branch4.1.bn.running_var",
-            "11.branch4.1.bn.weight"             : "inception4d.branch4.1.bn.weight",
-            "11.branch4.1.conv.weight"           : "inception4d.branch4.1.conv.weight",
-            "12.branch1.bn.bias"                 : "inception4e.branch1.bn.bias",
-            "12.branch1.bn.num_batches_tracked"  : "inception4e.branch1.bn.num_batches_tracked",
-            "12.branch1.bn.running_mean"         : "inception4e.branch1.bn.running_mean",
-            "12.branch1.bn.running_var"          : "inception4e.branch1.bn.running_var",
-            "12.branch1.bn.weight"               : "inception4e.branch1.bn.weight",
-            "12.branch1.conv.weight"             : "inception4e.branch1.conv.weight",
-            "12.branch2.0.bn.bias"               : "inception4e.branch2.0.bn.bias",
-            "12.branch2.0.bn.num_batches_tracked": "inception4e.branch2.0.bn.num_batches_tracked",
-            "12.branch2.0.bn.running_mean"       : "inception4e.branch2.0.bn.running_mean",
-            "12.branch2.0.bn.running_var"        : "inception4e.branch2.0.bn.running_var",
-            "12.branch2.0.bn.weight"             : "inception4e.branch2.0.bn.weight",
-            "12.branch2.0.conv.weight"           : "inception4e.branch2.0.conv.weight",
-            "12.branch2.1.bn.bias"               : "inception4e.branch2.1.bn.bias",
-            "12.branch2.1.bn.num_batches_tracked": "inception4e.branch2.1.bn.num_batches_tracked",
-            "12.branch2.1.bn.running_mean"       : "inception4e.branch2.1.bn.running_mean",
-            "12.branch2.1.bn.running_var"        : "inception4e.branch2.1.bn.running_var",
-            "12.branch2.1.bn.weight"             : "inception4e.branch2.1.bn.weight",
-            "12.branch2.1.conv.weight"           : "inception4e.branch2.1.conv.weight",
-            "12.branch3.0.bn.bias"               : "inception4e.branch3.0.bn.bias",
-            "12.branch3.0.bn.num_batches_tracked": "inception4e.branch3.0.bn.num_batches_tracked",
-            "12.branch3.0.bn.running_mean"       : "inception4e.branch3.0.bn.running_mean",
-            "12.branch3.0.bn.running_var"        : "inception4e.branch3.0.bn.running_var",
-            "12.branch3.0.bn.weight"             : "inception4e.branch3.0.bn.weight",
-            "12.branch3.0.conv.weight"           : "inception4e.branch3.0.conv.weight",
-            "12.branch3.1.bn.bias"               : "inception4e.branch3.1.bn.bias",
-            "12.branch3.1.bn.num_batches_tracked": "inception4e.branch3.1.bn.num_batches_tracked",
-            "12.branch3.1.bn.running_mean"       : "inception4e.branch3.1.bn.running_mean",
-            "12.branch3.1.bn.running_var"        : "inception4e.branch3.1.bn.running_var",
-            "12.branch3.1.bn.weight"             : "inception4e.branch3.1.bn.weight",
-            "12.branch3.1.conv.weight"           : "inception4e.branch3.1.conv.weight",
-            "12.branch4.1.bn.bias"               : "inception4e.branch4.1.bn.bias",
-            "12.branch4.1.bn.num_batches_tracked": "inception4e.branch4.1.bn.num_batches_tracked",
-            "12.branch4.1.bn.running_mean"       : "inception4e.branch4.1.bn.running_mean",
-            "12.branch4.1.bn.running_var"        : "inception4e.branch4.1.bn.running_var",
-            "12.branch4.1.bn.weight"             : "inception4e.branch4.1.bn.weight",
-            "12.branch4.1.conv.weight"           : "inception4e.branch4.1.conv.weight",
-            "14.branch1.bn.bias"                 : "inception5a.branch1.bn.bias",
-            "14.branch1.bn.num_batches_tracked"  : "inception5a.branch1.bn.num_batches_tracked",
-            "14.branch1.bn.running_mean"         : "inception5a.branch1.bn.running_mean",
-            "14.branch1.bn.running_var"          : "inception5a.branch1.bn.running_var",
-            "14.branch1.bn.weight"               : "inception5a.branch1.bn.weight",
-            "14.branch1.conv.weight"             : "inception5a.branch1.conv.weight",
-            "14.branch2.0.bn.bias"               : "inception5a.branch2.0.bn.bias",
-            "14.branch2.0.bn.num_batches_tracked": "inception5a.branch2.0.bn.num_batches_tracked",
-            "14.branch2.0.bn.running_mean"       : "inception5a.branch2.0.bn.running_mean",
-            "14.branch2.0.bn.running_var"        : "inception5a.branch2.0.bn.running_var",
-            "14.branch2.0.bn.weight"             : "inception5a.branch2.0.bn.weight",
-            "14.branch2.0.conv.weight"           : "inception5a.branch2.0.conv.weight",
-            "14.branch2.1.bn.bias"               : "inception5a.branch2.1.bn.bias",
-            "14.branch2.1.bn.num_batches_tracked": "inception5a.branch2.1.bn.num_batches_tracked",
-            "14.branch2.1.bn.running_mean"       : "inception5a.branch2.1.bn.running_mean",
-            "14.branch2.1.bn.running_var"        : "inception5a.branch2.1.bn.running_var",
-            "14.branch2.1.bn.weight"             : "inception5a.branch2.1.bn.weight",
-            "14.branch2.1.conv.weight"           : "inception5a.branch2.1.conv.weight",
-            "14.branch3.0.bn.bias"               : "inception5a.branch3.0.bn.bias",
-            "14.branch3.0.bn.num_batches_tracked": "inception5a.branch3.0.bn.num_batches_tracked",
-            "14.branch3.0.bn.running_mean"       : "inception5a.branch3.0.bn.running_mean",
-            "14.branch3.0.bn.running_var"        : "inception5a.branch3.0.bn.running_var",
-            "14.branch3.0.bn.weight"             : "inception5a.branch3.0.bn.weight",
-            "14.branch3.0.conv.weight"           : "inception5a.branch3.0.conv.weight",
-            "14.branch3.1.bn.bias"               : "inception5a.branch3.1.bn.bias",
-            "14.branch3.1.bn.num_batches_tracked": "inception5a.branch3.1.bn.num_batches_tracked",
-            "14.branch3.1.bn.running_mean"       : "inception5a.branch3.1.bn.running_mean",
-            "14.branch3.1.bn.running_var"        : "inception5a.branch3.1.bn.running_var",
-            "14.branch3.1.bn.weight"             : "inception5a.branch3.1.bn.weight",
-            "14.branch3.1.conv.weight"           : "inception5a.branch3.1.conv.weight",
-            "14.branch4.1.bn.bias"               : "inception5a.branch4.1.bn.bias",
-            "14.branch4.1.bn.num_batches_tracked": "inception5a.branch4.1.bn.num_batches_tracked",
-            "14.branch4.1.bn.running_mean"       : "inception5a.branch4.1.bn.running_mean",
-            "14.branch4.1.bn.running_var"        : "inception5a.branch4.1.bn.running_var",
-            "14.branch4.1.bn.weight"             : "inception5a.branch4.1.bn.weight",
-            "14.branch4.1.conv.weight"           : "inception5a.branch4.1.conv.weight",
-            "15.branch1.bn.bias"                 : "inception5b.branch1.bn.bias",
-            "15.branch1.bn.num_batches_tracked"  : "inception5b.branch1.bn.num_batches_tracked",
-            "15.branch1.bn.running_mean"         : "inception5b.branch1.bn.running_mean",
-            "15.branch1.bn.running_var"          : "inception5b.branch1.bn.running_var",
-            "15.branch1.bn.weight"               : "inception5b.branch1.bn.weight",
-            "15.branch1.conv.weight"             : "inception5b.branch1.conv.weight",
-            "15.branch2.0.bn.bias"               : "inception5b.branch2.0.bn.bias",
-            "15.branch2.0.bn.num_batches_tracked": "inception5b.branch2.0.bn.num_batches_tracked",
-            "15.branch2.0.bn.running_mean"       : "inception5b.branch2.0.bn.running_mean",
-            "15.branch2.0.bn.running_var"        : "inception5b.branch2.0.bn.running_var",
-            "15.branch2.0.bn.weight"             : "inception5b.branch2.0.bn.weight",
-            "15.branch2.0.conv.weight"           : "inception5b.branch2.0.conv.weight",
-            "15.branch2.1.bn.bias"               : "inception5b.branch2.1.bn.bias",
-            "15.branch2.1.bn.num_batches_tracked": "inception5b.branch2.1.bn.num_batches_tracked",
-            "15.branch2.1.bn.running_mean"       : "inception5b.branch2.1.bn.running_mean",
-            "15.branch2.1.bn.running_var"        : "inception5b.branch2.1.bn.running_var",
-            "15.branch2.1.bn.weight"             : "inception5b.branch2.1.bn.weight",
-            "15.branch2.1.conv.weight"           : "inception5b.branch2.1.conv.weight",
-            "15.branch3.0.bn.bias"               : "inception5b.branch3.0.bn.bias",
-            "15.branch3.0.bn.num_batches_tracked": "inception5b.branch3.0.bn.num_batches_tracked",
-            "15.branch3.0.bn.running_mean"       : "inception5b.branch3.0.bn.running_mean",
-            "15.branch3.0.bn.running_var"        : "inception5b.branch3.0.bn.running_var",
-            "15.branch3.0.bn.weight"             : "inception5b.branch3.0.bn.weight",
-            "15.branch3.0.conv.weight"           : "inception5b.branch3.0.conv.weight",
-            "15.branch3.1.bn.bias"               : "inception5b.branch3.1.bn.bias",
-            "15.branch3.1.bn.num_batches_tracked": "inception5b.branch3.1.bn.num_batches_tracked",
-            "15.branch3.1.bn.running_mean"       : "inception5b.branch3.1.bn.running_mean",
-            "15.branch3.1.bn.running_var"        : "inception5b.branch3.1.bn.running_var",
-            "15.branch3.1.bn.weight"             : "inception5b.branch3.1.bn.weight",
-            "15.branch3.1.conv.weight"           : "inception5b.branch3.1.conv.weight",
-            "15.branch4.1.bn.bias"               : "inception5b.branch4.1.bn.bias",
-            "15.branch4.1.bn.num_batches_tracked": "inception5b.branch4.1.bn.num_batches_tracked",
-            "15.branch4.1.bn.running_mean"       : "inception5b.branch4.1.bn.running_mean",
-            "15.branch4.1.bn.running_var"        : "inception5b.branch4.1.bn.running_var",
-            "15.branch4.1.bn.weight"             : "inception5b.branch4.1.bn.weight",
-            "15.branch4.1.conv.weight"           : "inception5b.branch4.1.conv.weight",
-            "16.conv.bn.bias"                    : "aux1.conv.bn.bias",
-            "16.conv.bn.num_batches_tracked"     : "aux1.conv.bn.num_batches_tracked",
-            "16.conv.bn.running_mean"            : "aux1.conv.bn.running_mean",
-            "16.conv.bn.running_var"             : "aux1.conv.bn.running_var",
-            "16.conv.bn.weight"                  : "aux1.conv.bn.weight",
-            "16.conv.conv.weight"                : "aux1.conv.conv.weight",
-            "16.fc1.bias"                        : "aux1.fc1.bias",
-            "16.fc1.weight"                      : "aux1.fc1.weight",
-            "16.fc2.bias"                        : "aux1.fc2.bias",
-            "16.fc2.weight"                      : "aux1.fc2.weight",
-            "17.conv.bn.bias"                    : "aux2.conv.bn.bias",
-            "17.conv.bn.num_batches_tracked"     : "aux2.conv.bn.num_batches_tracked",
-            "17.conv.bn.running_mean"            : "aux2.conv.bn.running_mean",
-            "17.conv.bn.running_var"             : "aux2.conv.bn.running_var",
-            "17.conv.bn.weight"                  : "aux2.conv.bn.weight",
-            "17.conv.conv.weight"                : "aux2.conv.conv.weight",
-            "17.fc1.bias"                        : "aux2.fc1.bias",
-            "17.fc1.weight"                      : "aux2.fc1.weight",
-            "17.fc2.bias"                        : "aux2.fc2.bias",
-            "17.fc2.weight"                      : "aux2.fc2.weight",
-        },
-        "head"    : {
-            "18.fc.bias"  : "fc.bias",
-            "18.fc.weight": "fc.weight",
+            "map": {},
         },
     }
 
-    def __init__(self, *args, **kwargs):
-        kwargs |= {
-            "config" : "googlenet.yaml",
-            "name"   : "googlenet",
-            "variant": "googlenet"
-        }
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        num_classes    : int                    = 1000,
+        aux_logits     : bool                   = True,
+        transform_input: bool                   = False,
+        init_weights   : bool            | None = None,
+        blocks         : list[nn.Module] | None = None,
+        dropout        : float                  = 0.2,
+        dropout_aux    : float                  = 0.7,
+        name           : str                    = "googlenet",
+        *args, **kwargs
+    ):
+        super().__init__(
+            num_classes = num_classes,
+            name        = name,
+            *args, **kwargs
+        )
+        
+        if blocks is None:
+            blocks = [BasicConv2d, Inception, InceptionAux]
+        if init_weights is None:
+            console.warning(
+                f"The default weight initialization of GoogleNet will be "
+                f"changed in future releases of ``torchvision``. If you wish "
+                f"to keep the old behavior (which leads to long initialization "
+                f"times due to scipy/scipy#11299), please set init_weights=True."
+            )
+            init_weights = True
+        if len(blocks) != 3:
+            raise ValueError(f"``blocks``'s length should be ``3``, but got {len(blocks)}.")
+       
+        conv_block          = blocks[0]
+        inception_block     = blocks[1]
+        inception_aux_block = blocks[2]
+
+        self.aux_logits      = aux_logits
+        self.transform_input = transform_input
+        self.blocks          = blocks
+        self.dropout         = dropout
+        self.dropout_aux     = dropout_aux
+        
+        self.conv1       = conv_block(3,  64, kernel_size=7, stride=2, padding=3)
+        self.maxpool1    = nn.MaxPool2d(3, stride=2, ceil_mode=True)
+        self.conv2       = conv_block(64, 64, kernel_size=1)
+        self.conv3       = conv_block(64, 192, kernel_size=3, padding=1)
+        self.maxpool2    = nn.MaxPool2d(3, stride=2, ceil_mode=True)
+
+        self.inception3a = inception_block(192,  64,  96, 128, 16, 32, 32)
+        self.inception3b = inception_block(256, 128, 128, 192, 32, 96, 64)
+        self.maxpool3    = nn.MaxPool2d(3, stride=2, ceil_mode=True)
+
+        self.inception4a = inception_block(480, 192, 96,  208, 16,  48, 64)
+        self.inception4b = inception_block(512, 160, 112, 224, 24,  64, 64)
+        self.inception4c = inception_block(512, 128, 128, 256, 24,  64, 64)
+        self.inception4d = inception_block(512, 112, 144, 288, 32,  64, 64)
+        self.inception4e = inception_block(528, 256, 160, 320, 32, 128, 128)
+        self.maxpool4    = nn.MaxPool2d(2, stride=2, ceil_mode=True)
+
+        self.inception5a = inception_block(832, 256, 160, 320, 32, 128, 128)
+        self.inception5b = inception_block(832, 384, 192, 384, 48, 128, 128)
+
+        if self.aux_logits:
+            self.aux1 = inception_aux_block(512, self.num_classes, dropout=self.dropout_aux)
+            self.aux2 = inception_aux_block(528, self.num_classes, dropout=self.dropout_aux)
+        else:
+            self.aux1 = None  # type: ignore[assignment]
+            self.aux2 = None  # type: ignore[assignment]
+        
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.dropout = nn.Dropout(p=self.dropout)
+        self.fc      = nn.Linear(1024, self.num_classes)
+        
+        if init_weights:
+            self.apply(self.init_weights)
     
     def init_weights(self, m: torch.nn.Module):
-        classname    = m.__class__.__name__
-        init_weights = self.config["init_weights"]
-        if init_weights:
-            if isinstance(m, torch.nn.Conv2d) or isinstance(m, torch.nn.Linear):
-                stddev = float(m.stddev) if hasattr(m, "stddev") else 0.1  # type: ignore
-                torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=stddev, a=-2, b=2)
-            elif isinstance(m, torch.nn.BatchNorm2d):
-                torch.nn.init.constant_(m.weight, 1)
-                torch.nn.init.constant_(m.bias, 0)
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+            torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=0.01, a=-2, b=2)
+        elif isinstance(m, nn.BatchNorm2d):
+            nn.init.constant_(m.weight, 1)
+            nn.init.constant_(m.bias, 0)
     
-    def load_weights(self):
-        """Load weights. It only loads the intersection layers of matching keys
-        and shapes between the current model and weights.
-        """
-        if isinstance(self.weights, dict) \
-            and self.weights["name"] in ["imagenet"]:
-            state_dict = nn.load_state_dict_from_path(
-                model_dir=self.zoo_dir, **self.weights
-            )
-            model_state_dict = self.model.state_dict()
-            """
-            for k in self.model.state_dict().keys():
-                print(f"\"{k}\": ")
-            for k in state_dict.keys():
-                print(f"\"{k}\"")
-            """
-            for k, v in self.map_weights["backbone"].items():
-                model_state_dict[k] = state_dict[v]
-            if self.weights["num_classes"] == self.num_classes:
-                for k, v in self.map_weights["head"].items():
-                    model_state_dict[k] = state_dict[v]
-            self.model.load_state_dict(model_state_dict)
+    def _transform_input(self, x: torch.Tensor) -> torch.sTensor:
+        if self.transform_input:
+            x_ch0 = torch.unsqueeze(x[:, 0], 1) * (0.229 / 0.5) + (0.485 - 0.5) / 0.5
+            x_ch1 = torch.unsqueeze(x[:, 1], 1) * (0.224 / 0.5) + (0.456 - 0.5) / 0.5
+            x_ch2 = torch.unsqueeze(x[:, 2], 1) * (0.225 / 0.5) + (0.406 - 0.5) / 0.5
+            x = torch.cat((x_ch0, x_ch1, x_ch2), 1)
+        return x
+    
+    @torch.jit.unused
+    def eager_outputs(
+        self,
+        x   : torch.Tensor,
+        aux2: torch.Tensor,
+        aux1: torch.Tensor | None
+    ) -> GoogLeNetOutputs:
+        if self.training and self.aux_logits:
+            return GoogLeNetOutputs(x, aux2, aux1)
         else:
-            super().load_weights()
+            return x  # type: ignore[return-value]
+    
+    def forward_once(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> GoogLeNetOutputs:
+        x = input                         # N x 3 x 224 x 224
+        x = self.conv1(x)                 # N x 64 x 112 x 112
+        x = self.maxpool1(x)              # N x 64 x 56 x 56
+        x = self.conv2(x)                 # N x 64 x 56 x 56
+        x = self.conv3(x)                 # N x 192 x 56 x 56
+        x = self.maxpool2(x)              # N x 192 x 28 x 28
+        x = self.inception3a(x)           # N x 256 x 28 x 28
+        x = self.inception3b(x)           # N x 480 x 28 x 28
+        x = self.maxpool3(x)              # N x 480 x 14 x 14
+        x = self.inception4a(x)           # N x 512 x 14 x 14
+        aux1: torch.Tensor | None = None
+        if self.aux1 is not None:
+            if self.training:
+                aux1 = self.aux1(x)
+        x = self.inception4b(x)           # N x 512 x 14 x 14
+        x = self.inception4c(x)           # N x 512 x 14 x 14
+        x = self.inception4d(x)           # N x 528 x 14 x 14
+        aux2: torch.Tensor | None = None
+        if self.aux2 is not None:
+            if self.training:
+                aux2 = self.aux2(x)
+        x = self.inception4e(x)           # N x 832 x 14 x 14
+        x = self.maxpool4(x)              # N x 832 x 7 x 7
+        x = self.inception5a(x)           # N x 832 x 7 x 7
+        x = self.inception5b(x)           # N x 1024 x 7 x 7
+        x = self.avgpool(x)               # N x 1024 x 1 x 1
+        x = torch.flatten(x, 1)           # N x 1024
+        x = self.dropout(x)
+        x = self.fc(x)                    # N x 1000 (num_classes) 
         
+        aux_defined = self.training and self.aux_logits
+        if torch.jit.is_scripting():
+            if not aux_defined:
+                console.warning("Scripted GoogleNet always returns GoogleNetOutputs Tuple")
+            return GoogLeNetOutputs(x, aux2, aux1)
+        else:
+            return self.eager_outputs(x, aux2, aux1)
+    
 # endregion

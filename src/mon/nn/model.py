@@ -31,9 +31,9 @@ from typing import Any
 
 import humps
 import lightning.pytorch.utilities.types
+import torch.hub
 from thop.profile import *
 from torch import nn
-import torch.hub
 from torch.nn import parallel
 
 from mon import core
@@ -576,12 +576,11 @@ class Model(lightning.LightningModule, ABC):
 
             >>> zoo = {
             >>>     "imagenet": {
-            >>>         "name"       : "imagenet",
-            >>>         "path"       : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
-            >>>         "file_name"  : "vgg19-imagenet.pth",  # Locate in ``zoo`` directory
+            >>>         "url"        : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
+            >>>         "path"       : "vgg19-imagenet.pth",  # Locate in ``zoo`` directory
             >>>         "num_classes": 1000,
+            >>>         "map": {}
             >>>     },
-            >>>     "cifar10": {},
             >>> }
             >>>
             >>> model = Model(
@@ -597,8 +596,7 @@ class Model(lightning.LightningModule, ABC):
             >>> )
     """
 
-    configs = {}  # A dictionary containing all configurations of the model.
-    zoo     = {}  # A dictionary containing all pretrained weights of the model.
+    zoo = {}  # A dictionary containing all pretrained weights of the model.
 
     def __init__(
         self,

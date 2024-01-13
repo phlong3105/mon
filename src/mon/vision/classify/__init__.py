@@ -10,7 +10,6 @@ import mon.vision.classify.base
 import mon.vision.classify.densenet
 import mon.vision.classify.googlenet
 import mon.vision.classify.inception
-import mon.vision.classify.lenet
 import mon.vision.classify.resnet
 import mon.vision.classify.resnext
 import mon.vision.classify.shufflenet_v2
@@ -22,7 +21,6 @@ from mon.vision.classify.base import *
 from mon.vision.classify.densenet import *
 from mon.vision.classify.googlenet import *
 from mon.vision.classify.inception import *
-from mon.vision.classify.lenet import *
 from mon.vision.classify.resnet import *
 from mon.vision.classify.resnext import *
 from mon.vision.classify.shufflenet_v2 import *
