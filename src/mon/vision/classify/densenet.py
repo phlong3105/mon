@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "DenseNet",
     "DenseNet121",
     "DenseNet161",
     "DenseNet169",
@@ -274,16 +275,16 @@ class DenseNet(base.ImageClassificationModel, ABC):
 
 @MODELS.register(name="densenet121")
 class DenseNet121(DenseNet):
-    """ensenet-121 model from
+    """Densenet-121 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
     See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/densenet121-a639ec97.pth",
-            "path"       : "densenet121-imagenet.pth",
+            "path"       : "densenet121-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -314,9 +315,9 @@ class DenseNet161(DenseNet):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/densenet161-8d451a50.pth",
-            "path"       : "densenet161-imagenet.pth",
+            "path"       : "densenet161-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -347,9 +348,9 @@ class DenseNet169(DenseNet):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/densenet169-b2777c0a.pth",
-            "path"       : "densenet169-imagenet.pth",
+            "path"       : "densenet169-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -380,9 +381,9 @@ class DenseNet201(DenseNet):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/densenet201-c1103571.pth",
-            "path"       : "densenet201-imagenet.pth",
+            "path"       : "densenet201-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },

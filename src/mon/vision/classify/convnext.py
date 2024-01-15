@@ -219,9 +219,9 @@ class ConNeXtBase(ConNeXt):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
-            "path"       : "convnext-base-imagenet.pth",
+            "path"       : "convnext-base-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -258,9 +258,9 @@ class ConNeXtTiny(ConNeXt):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
-            "path"       : "convnext-tiny-imagenet.pth",
+            "path"       : "convnext-tiny-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -297,9 +297,9 @@ class ConNeXtSmall(ConNeXt):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k": {
             "url"        : "https://download.pytorch.org/models/convnext_small-0c510722.pth",
-            "path"       : "convnext-small-imagenet.pth",
+            "path"       : "convnext-small-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -335,9 +335,9 @@ class ConNeXtLarge(ConNeXt):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
-            "path"       : "convnext-large-imagenet.pth",
+            "path"       : "convnext-large-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },

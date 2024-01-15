@@ -137,9 +137,9 @@ class GoogleNet(base.ImageClassificationModel):
     constants = ["aux_logits", "transform_input"]
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/googlenet-1378be20.pth",
-            "path"       : "googlenet-imagenet.pth",
+            "path"       : "googlenet-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },

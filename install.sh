@@ -51,6 +51,7 @@ case "$OSTYPE" in
         echo -e "... Done"
       else
         echo -e "\nCreating 'mon' environment:"
+        sudo apt-get install gcc g++
         conda env create -f "${env_yml_path}"
         echo -e "... Done"
       fi

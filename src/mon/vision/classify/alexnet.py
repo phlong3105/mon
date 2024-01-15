@@ -29,9 +29,9 @@ class AlexNet(base.ImageClassificationModel):
     """
     
     zoo = {
-        "imagenet": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/alexnet-owt-7be5be79.pth",
-            "path"       : "alexnet-imagenet.pth",
+            "path"       : "alexnet-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
