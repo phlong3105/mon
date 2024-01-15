@@ -167,7 +167,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
             efficient, but slower. Default: ``False``.
             See `"paper" <https://arxiv.org/pdf/1707.06990.pdf>`_.
           
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {}
@@ -234,7 +234,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
         
         self.apply(self.init_weights)
     
-    def init_weights(self, m: torch.nn.Module):
+    def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
             nn.init.kaiming_normal_(m.weight)
@@ -278,7 +278,7 @@ class DenseNet121(DenseNet):
     """Densenet-121 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -311,7 +311,7 @@ class DenseNet161(DenseNet):
     """Densenet-161 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -344,7 +344,7 @@ class DenseNet169(DenseNet):
     """Densenet-169 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -377,7 +377,7 @@ class DenseNet201(DenseNet):
     """Densenet-201 model from
     `Densely Connected Convolutional Networks <https://arxiv.org/abs/1608.06993>`_.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {

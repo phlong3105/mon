@@ -25,7 +25,7 @@ _current_dir = core.Path(__file__).absolute().parent
 class AlexNet(base.ImageClassificationModel):
     """AlexNet.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {

@@ -12,24 +12,21 @@ __all__ = [
     "Transweather",
 ]
 
-from typing import Any, Literal
+from functools import partial
+from typing import Any
 
 import kornia
-import torch
+from torchvision.models import VGG16_Weights
+from torchvision.models import vgg16
 
 import mon
-from mon.globals import ModelPhase, MODELS, LAYERS
-from mon.vision import core, nn, prior
+from mon.globals import MODELS, LAYERS
+from mon.vision import core, nn
 from mon.vision.enhance.derain import base
-from mon.vision.nn import functional as F
 from mon.vision.nn.loss import PerceptualL1Loss, ContradictChannelLoss
+from .decoder import Block_dec
 # from mon.vision.feature import OPEmbedder
 from .encoder import Transformer_Block
-from .decoder import Block_dec
-from torchvision.models import vgg16
-from torchvision.models import VGG16_Weights
-from torchvision.models._api import Weights
-from functools import partial
 
 math         = core.math
 console      = core.console
@@ -84,6 +81,7 @@ class Loss(nn.Loss):
         return loss, pred
         
 # endregion
+
 
 # region embedder
 @LAYERS.register()

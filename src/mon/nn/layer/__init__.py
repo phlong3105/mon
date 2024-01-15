@@ -20,8 +20,8 @@ import mon.nn.layer.conv
 import mon.nn.layer.dropout
 import mon.nn.layer.ffconv
 import mon.nn.layer.ghost
-import mon.nn.layer.head
 import mon.nn.layer.linear
+import mon.nn.layer.mlp
 import mon.nn.layer.mobileone
 import mon.nn.layer.mutating
 import mon.nn.layer.normalization
@@ -37,8 +37,8 @@ from mon.nn.layer.conv import *
 from mon.nn.layer.dropout import *
 from mon.nn.layer.ffconv import *
 from mon.nn.layer.ghost import *
-from mon.nn.layer.head import *
 from mon.nn.layer.linear import *
+from mon.nn.layer.mlp import *
 from mon.nn.layer.mobileone import *
 from mon.nn.layer.mutating import *
 from mon.nn.layer.normalization import *

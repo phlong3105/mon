@@ -6,14 +6,17 @@
 from __future__ import annotations
 
 __all__ = [
-    "Fire", "SqueezeNet1_0", "SqueezeNet1_1",
+    "SqueezeNet",
+    "SqueezeNet1_0",
+    "SqueezeNet1_1",
 ]
 
 from abc import ABC
+from typing import Callable
 
 import torch
 
-from mon.globals import LAYERS, MODELS
+from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -23,54 +26,36 @@ _current_dir = core.Path(__file__).absolute().parent
 
 # region Module
 
-@LAYERS.register()
-class Fire(nn.LayerParsingMixin, nn.Module):
+class Fire(nn.Module):
     
     def __init__(
         self,
-        in_channels     : int,
+        inplanes        : int,
         squeeze_planes  : int,
         expand1x1_planes: int,
         expand3x3_planes: int,
+        *args, **kwargs
     ):
-        super().__init__()
-        self.in_channels = in_channels
-        self.squeeze     = nn.Conv2d(
-            in_channels  = in_channels,
-            out_channels = squeeze_planes,
-            kernel_size  = 1,
-        )
-        self.squeeze_activation = nn.ReLU(inplace = True)
-        self.expand1x1 = nn.Conv2d(
-            in_channels  = squeeze_planes,
-            out_channels = expand1x1_planes,
-            kernel_size  = 1,
-        )
+        super().__init__(*args, **kwargs)
+        self.inplanes             = inplanes
+        self.squeeze              = nn.Conv2d(inplanes, squeeze_planes, kernel_size=1)
+        self.squeeze_activation   = nn.ReLU(inplace=True)
+        self.expand1x1            = nn.Conv2d(squeeze_planes, expand1x1_planes, kernel_size=1)
         self.expand1x1_activation = nn.ReLU(inplace=True)
-        self.expand3x3 = nn.Conv2d(
-            in_channels  = squeeze_planes,
-            out_channels = expand3x3_planes,
-            kernel_size  = 3,
-            padding      = 1,
-        )
+        self.expand3x3            = nn.Conv2d(squeeze_planes, expand3x3_planes, kernel_size=3, padding=1)
         self.expand3x3_activation = nn.ReLU(inplace=True)
-    
+
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x     = input
-        x     = self.squeeze_activation(self.squeeze(x))
-        y_1x1 = self.expand1x1_activation(self.expand1x1(x))
-        y_3x3 = self.expand3x3_activation(self.expand3x3(x))
-        y     = torch.cat([y_1x1, y_3x3], dim=1)
+        x = input
+        x = self.squeeze_activation(self.squeeze(x))
+        y = torch.cat(
+            [
+                self.expand1x1_activation(self.expand1x1(x)),
+                self.expand3x3_activation(self.expand3x3(x))
+            ], 1
+        )
         return y
     
-    @classmethod
-    def parse_layer_args(cls, f: int, args: list, ch: list) -> tuple[list, list]:
-        expand1x1_planes = args[2]
-        expand3x3_planes = args[3]
-        c2 = expand1x1_planes + expand3x3_planes
-        ch.append(c2)
-        return args, ch
-
 # endregion
 
 
@@ -79,89 +64,157 @@ class Fire(nn.LayerParsingMixin, nn.Module):
 class SqueezeNet(base.ImageClassificationModel, ABC):
     """SqueezeNet.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {}
 
-    def load_weights(self):
-        """Load weights. It only loads the intersection layers of matching keys
-        and shapes between the current model and weights.
-        """
-        if isinstance(self.weights, dict) \
-            and self.weights["name"] in ["imagenet"]:
-            state_dict = nn.load_state_dict_from_path(
-                model_dir=self.zoo_dir, **self.weights
+    def __init__(
+        self,
+        version    : str   = "1_0",
+        num_classes: int   = 1000,
+        dropout    : float = 0.5,
+        name       : str   = "squeezenet",
+        *args, **kwargs
+    ):
+        super().__init__(
+            num_classes = num_classes,
+            name        = name,
+            *args, **kwargs
+        )
+        if version == "1_0":
+            self.features = nn.Sequential(
+                nn.Conv2d(3, 96, kernel_size=7, stride=2),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
+                Fire(96, 16, 64, 64),
+                Fire(128, 16, 64, 64),
+                Fire(128, 32, 128, 128),
+                nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
+                Fire(256, 32, 128, 128),
+                Fire(256, 48, 192, 192),
+                Fire(384, 48, 192, 192),
+                Fire(384, 64, 256, 256),
+                nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
+                Fire(512, 64, 256, 256),
             )
-            model_state_dict = self.model.state_dict()
-            """
-            for k in self.model.state_dict().keys():
-                print(f"\"{k}\": ")
-            for k in state_dict.keys():
-                print(f"\"{k}\"")
-            """
-            for k, v in state_dict.items():
-                if "features." in k:
-                    k = k.replace("features.", "")
-                else:
-                    continue
-                model_state_dict[k] = v
-            if self.weights["num_classes"] == self.num_classes:
-                model_state_dict["13.conv.bias"]   = state_dict["classifier.1.bias"]
-                model_state_dict["13.conv.weight"] = state_dict["classifier.1.weight"]
-            self.model.load_state_dict(model_state_dict)
+        elif version == "1_1":
+            self.features = nn.Sequential(
+                nn.Conv2d(3, 64, kernel_size=3, stride=2),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
+                Fire(64, 16, 64, 64),
+                Fire(128, 16, 64, 64),
+                nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
+                Fire(128, 32, 128, 128),
+                Fire(256, 32, 128, 128),
+                nn.MaxPool2d(kernel_size=3, stride=2, ceil_mode=True),
+                Fire(256, 48, 192, 192),
+                Fire(384, 48, 192, 192),
+                Fire(384, 64, 256, 256),
+                Fire(512, 64, 256, 256),
+            )
         else:
-            super().load_weights()
+            # FIXME: Is this needed? SqueezeNet should only be called from the
+            # FIXME: squeezenet1_x() functions
+            # FIXME: This checking is not done for the other models
+            raise ValueError(f"Unsupported SqueezeNet version {version}: ``1_0`` or ``1_1`` expected")
+        
+        # The final convolution is initialized differently from the rest
+        final_conv      = nn.Conv2d(512, self.num_classes, kernel_size=1)
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=dropout),
+            final_conv,
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool2d((1, 1))
+        )
+        
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                if m is final_conv:
+                    nn.init.normal_(m.weight, mean=0.0, std=0.01)
+                else:
+                    nn.init.kaiming_uniform_(m.weight)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+                    
+    def forward_once(
+        self,
+        input    : torch.Tensor,
+        profile  : bool = False,
+        out_index: int  = -1,
+        *args, **kwargs
+    ) -> torch.Tensor:
+        x = input
+        x = self.features(x)
+        x = self.classifier(x)
+        y = torch.flatten(x, 1)
+        return y
 
 
-@MODELS.register(name="squeezenet-1.0")
+@MODELS.register(name="squeezenet1_0")
 class SqueezeNet1_0(SqueezeNet):
-    """SqueezeNet-1.0.
+    """SqueezeNet model architecture from the `SqueezeNet: AlexNet-level
+    accuracy with 50x fewer parameters and <0.5MB model size
+    <https://arxiv.org/abs/1602.07360>`_ paper.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
-    """
-    
-    configs     = {}
-    zoo         = {
-        "imagenet": {
-            "name"       : "imagenet",
-            "path"       : "https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth",
-            "file_name"  : "squeezenet-1.0-imagenet.pth",
-            "num_classes": 1000,
-        },
-    }
-    map_weights = {}
-    
-    def __init__(self, *args, **kwargs):
-        kwargs |= {
-            "config" : "squeezenet-1.0.yaml",
-            "name"   : "squeezenet",
-            "variant": "squeezenet-1.0"
-        }
-        super().__init__(*args, **kwargs)
-
-
-@MODELS.register(name="squeezenet-1.1")
-class SqueezeNet1_1(SqueezeNet):
-    """SqueezeNet-1.1.
-    
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
-        "imagenet": {
-            "name"       : "imagenet",
-            "path"       : "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
-            "file_name"  : "squeezenet-1.1-imagenet.pth",
+        "imagenet1k-v1": {
+            "url"        : "https://download.pytorch.org/models/squeezenet1_0-b66bff10.pth",
+            "path"       : "squeezenet1_0-imagenet1k-v1.pth",
             "num_classes": 1000,
+            "map": {},
         },
     }
+    
+    def __init__(
+        self,
+        name   : str = "squeezenet",
+        variant: str = "squeezenet1_0",
+        *args, **kwargs
+    ):
+        super().__init__(
+            version = "1_0",
+            name    = name,
+            variant = variant,
+            *args, **kwargs
+        )
+       
 
-    def __init__(self, *args, **kwargs):
-        kwargs |= {
-            "config" : "squeezenet-1.1.yaml",
-            "name"   : "squeezenet",
-            "variant": "squeezenet-1.1"
-        }
-        super().__init__(*args, **kwargs)
+@MODELS.register(name="squeezenet1_1")
+class SqueezeNet1_1(SqueezeNet):
+    """SqueezeNet 1.1 model from the `official SqueezeNet repo
+    <https://github.com/DeepScale/SqueezeNet/tree/master/SqueezeNet_v1.1>`__.
+    
+    SqueezeNet 1.1 has 2.4x less computation and slightly fewer parameters
+    than SqueezeNet 1.0, without sacrificing accuracy.
+    
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
+    """
+    
+    zoo = {
+        "imagenet1k-v1": {
+            "url"        : "https://download.pytorch.org/models/squeezenet1_1-b8a52dc0.pth",
+            "path"       : "squeezenet1_1-imagenet1k-v1.pth",
+            "num_classes": 1000,
+            "map": {},
+        },
+    }
+    
+    def __init__(
+        self,
+        name   : str = "squeezenet",
+        variant: str = "squeezenet1_1",
+        *args, **kwargs
+    ):
+        super().__init__(
+            version = "1_1",
+            name    = name,
+            variant = variant,
+            *args, **kwargs
+        )
+        
 # endregion

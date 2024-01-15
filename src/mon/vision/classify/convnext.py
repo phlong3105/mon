@@ -57,12 +57,12 @@ class CNBlock(nn.Module):
 
         self.block = nn.Sequential(
             nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim, bias=True),
-            ops.Permute([0, 2, 3, 1]),
+            nn.Permute([0, 2, 3, 1]),
             norm_layer(dim),
             nn.Linear(in_features=dim, out_features=4 * dim, bias=True),
             nn.GELU(),
             nn.Linear(in_features=4 * dim, out_features=dim, bias=True),
-            ops.Permute([0, 3, 1, 2]),
+            nn.Permute([0, 3, 1, 2]),
         )
         self.layer_scale      = nn.Parameter(torch.ones(dim, 1, 1) * layer_scale)
         self.stochastic_depth = ops.StochasticDepth(stochastic_depth_prob, "row")
@@ -104,7 +104,7 @@ class CNBlockConfig:
 class ConNeXt(base.ImageClassificationModel, ABC):
     """ConNeXt.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {}
@@ -144,7 +144,7 @@ class ConNeXt(base.ImageClassificationModel, ABC):
         # Stem
         firstconv_output_channels = self.block_setting[0].input_channels
         layers.append(
-            ops.Conv2dNormActivation(
+            nn.Conv2dNormAct(
                 in_channels      = 3,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 4,
@@ -189,7 +189,7 @@ class ConNeXt(base.ImageClassificationModel, ABC):
         
         self.apply(self.init_weights)
 
-    def init_weights(self, m: torch.nn.Module):
+    def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, (nn.Conv2d, nn.Linear)):
             nn.init.trunc_normal_(m.weight, std=0.02)
@@ -215,7 +215,7 @@ class ConNeXtBase(ConNeXt):
     """ConvNeXt Base model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -254,7 +254,7 @@ class ConNeXtTiny(ConNeXt):
     """ConvNeXt Tiny model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -293,7 +293,7 @@ class ConNeXtSmall(ConNeXt):
     """ConvNeXt Small model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -331,7 +331,7 @@ class ConNeXtSmall(ConNeXt):
 class ConNeXtLarge(ConNeXt):
     """ConNeXt-Large.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {

@@ -21,6 +21,8 @@ __all__ = [
     "InterpolateConcat",
     "Join",
     "Max",
+    "PatchMerging",
+    "PatchMergingV2",
     "Permute",
     "PixelShuffle",
     "PixelUnshuffle",
@@ -36,11 +38,12 @@ from typing import Sequence
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional
+from torch.nn import functional as F
 from torchvision.ops.misc import Permute
 
 from mon.core import builtins
 from mon.globals import LAYERS
+from mon.nn.layer import normalization as norm
 from mon.nn.layer import base
 
 
@@ -347,7 +350,7 @@ class InterpolateConcat(base.ConcatLayerParsingMixin, nn.Module):
         for x_i in x:
             s = x_i.size()
             if s[2] != h or s[3] != w:
-                y.append(functional.interpolate(input=x_i, size=(h, w)))
+                y.append(F.interpolate(input=x_i, size=(h, w)))
             else:
                 y.append(x_i)
         y = torch.cat(builtins.to_list(y), dim=self.dim)
@@ -363,6 +366,98 @@ class Join(base.MergingLayerParsingMixin, nn.Module):
         y = builtins.to_list(x)
         return y
 
+
+@LAYERS.register()
+class PatchMerging(base.MergingLayerParsingMixin, nn.Module):
+    """Patch Merging Layer.
+    
+    Args:
+        dim: Number of input channels.
+        norm: Normalization layer. Default: :class:`nn.LayerNorm`.
+    """
+    
+    def __init__(
+        self,
+        dim : int,
+        norm: nn.Module = norm.LayerNorm,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.dim       = dim
+        self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
+        self.norm      = norm(4 * dim)
+    
+    def _patch_merging_pad(self, x: torch.Tensor) -> torch.Tensor:
+        h, w, _ = x.shape[-3:]
+        x  = F.pad(x, (0, 0, 0, w % 2, 0, h % 2))
+        x0 = x[..., 0::2, 0::2, :]  # ... H/2 W/2 C
+        x1 = x[..., 1::2, 0::2, :]  # ... H/2 W/2 C
+        x2 = x[..., 0::2, 1::2, :]  # ... H/2 W/2 C
+        x3 = x[..., 1::2, 1::2, :]  # ... H/2 W/2 C
+        x  = torch.cat([x0, x1, x2, x3], -1)  # ... H/2 W/2 4*C
+        return x
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+        
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            
+        Returns:
+            Tensor with a layout of :math:`[N, H / 2, W / 2, 2 * C]`.
+        """
+        x = input
+        x = self._patch_merging_pad(x)
+        x = self.norm(x)
+        y = self.reduction(x)  # ... H/2 W/2 2*C
+        return y
+        
+
+@LAYERS.register()
+class PatchMergingV2(base.MergingLayerParsingMixin, nn.Module):
+    """Patch Merging Layer for Swin Transformer V2.
+    
+    Args:
+        dim: Number of input channels.
+        norm: Normalization layer. Default: :class:`nn.LayerNorm`.
+    """
+    
+    def __init__(
+        self,
+        dim : int,
+        norm: nn.Module = norm.LayerNorm,
+        *args, **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        self.dim       = dim
+        self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
+        self.norm      = norm(4 * dim)
+    
+    def _patch_merging_pad(self, x: torch.Tensor) -> torch.Tensor:
+        h, w, _ = x.shape[-3:]
+        x  = F.pad(x, (0, 0, 0, w % 2, 0, h % 2))
+        x0 = x[..., 0::2, 0::2, :]  # ... H/2 W/2 C
+        x1 = x[..., 1::2, 0::2, :]  # ... H/2 W/2 C
+        x2 = x[..., 0::2, 1::2, :]  # ... H/2 W/2 C
+        x3 = x[..., 1::2, 1::2, :]  # ... H/2 W/2 C
+        x  = torch.cat([x0, x1, x2, x3], -1)  # ... H/2 W/2 4*C
+        return x
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+        
+        Args:
+            input: An input of shape :math:`[N, C, H, W]`.
+            
+        Returns:
+            Tensor with a layout of :math:`[N, H / 2, W / 2, 2 * C]`.
+        """
+        x = input
+        x = self._patch_merging_pad(x)
+        x = self.reduction(x)  # ... H/2 W/2 2*C
+        y = self.norm(x)
+        return y
+    
 
 @LAYERS.register()
 class Shortcut(base.MergingLayerParsingMixin, nn.Module):
@@ -423,7 +518,6 @@ class Sum(base.MergingLayerParsingMixin, nn.Module):
         for i in range(1, len(x)):
             y += x[i]
         return y
-
 
 # endregion
 

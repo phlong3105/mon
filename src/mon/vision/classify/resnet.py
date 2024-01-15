@@ -69,15 +69,15 @@ class BasicBlock(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         identity = x
-        y = self.conv1(x)
-        y = self.bn1(y)
-        y = self.relu(y)
-        y = self.conv2(y)
-        y = self.bn2(y)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(y)
+        x = self.bn2(x)
         if self.downsample is not None:
             identity = self.downsample(x)
-        y += identity
-        y = self.relu(y)
+        x += identity
+        y  = self.relu(x)
         return y
     
 
@@ -120,18 +120,18 @@ class Bottleneck(nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
         identity = x
-        y = self.conv1(x)
-        y = self.bn1(y)
-        y = self.relu(y)
-        y = self.conv2(y)
-        y = self.bn2(y)
-        y = self.relu(y)
-        y = self.conv3(y)
-        y = self.bn3(y)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        x = self.conv3(x)
+        x = self.bn3(x)
         if self.downsample is not None:
             identity = self.downsample(x)
-        y += identity
-        y = self.relu(y)
+        x += identity
+        y  = self.relu(x)
         return y
 
 # endregion
@@ -142,7 +142,7 @@ class Bottleneck(nn.Module):
 class ResNet(base.ImageClassificationModel, ABC):
     """ResNet.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {}
@@ -267,25 +267,26 @@ class ResNet(base.ImageClassificationModel, ABC):
         *args, **kwargs
     ) -> torch.Tensor:
         x = input
-        y = self.conv1(x)
-        y = self.bn1(y)
-        y = self.relu(y)
-        y = self.maxpool(y)
-        y = self.layer1(y)
-        y = self.layer2(y)
-        y = self.layer3(y)
-        y = self.layer4(y)
-        y = self.avgpool(y)
-        y = torch.flatten(y, 1)
-        y = self.fc(y)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        y = self.fc(x)
         return y
     
 
 @MODELS.register(name="resnet18")
 class ResNet18(ResNet):
-    """ResNet-18 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
+    """ResNet-18 from `Deep Residual Learning for Image Recognition
+    <https://arxiv.org/abs/1512.03385>`__.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -345,9 +346,10 @@ class ResNet34(ResNet):
 
 @MODELS.register(name="resnet50")
 class ResNet50(ResNet):
-    """ResNet-50 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
+    """ResNet-50 from `Deep Residual Learning for Image Recognition
+    <https://arxiv.org/abs/1512.03385>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -382,9 +384,10 @@ class ResNet50(ResNet):
 
 @MODELS.register(name="resnet101")
 class ResNet101(ResNet):
-    """ResNet-101 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
+    """ResNet-101 from `Deep Residual Learning for Image Recognition
+    <https://arxiv.org/abs/1512.03385>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -419,9 +422,10 @@ class ResNet101(ResNet):
 
 @MODELS.register(name="resnet152")
 class ResNet152(ResNet):
-    """ResNet-152 from `Deep Residual Learning for Image Recognition <https://arxiv.org/abs/1512.03385>`__.
+    """ResNet-152 from `Deep Residual Learning for Image Recognition
+    <https://arxiv.org/abs/1512.03385>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -463,7 +467,7 @@ class ResNeXt50_32X4D(ResNet):
     """ResNeXt-50 32x4d model from `Aggregated Residual Transformation for Deep
     Neural Networks <https://arxiv.org/abs/1611.05431>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -503,7 +507,7 @@ class ResNeXt101_32X8D(ResNet):
     """ResNeXt-101 32x8d model from `Aggregated Residual Transformation for
     Deep Neural Networks <https://arxiv.org/abs/1611.05431>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -543,7 +547,7 @@ class ResNeXt101_64X4D(ResNet):
     """ResNeXt-101 32x8d model from `Aggregated Residual Transformation for
     Deep Neural Networks <https://arxiv.org/abs/1611.05431>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -578,9 +582,10 @@ class ResNeXt101_64X4D(ResNet):
 
 @MODELS.register(name="wide_resnet50")
 class WideResNet50(ResNet):
-    """Wide ResNet-50-2 model from `Wide Residual Networks <https://arxiv.org/abs/1605.07146>`__.
+    """Wide ResNet-50-2 model from `Wide Residual Networks
+    <https://arxiv.org/abs/1605.07146>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {
@@ -616,9 +621,10 @@ class WideResNet50(ResNet):
 
 @MODELS.register(name="wide_resnet101")
 class WideResNet101(ResNet):
-    """Wide ResNet-101-2 model from `Wide Residual Networks <https://arxiv.org/abs/1605.07146>`__.
+    """Wide ResNet-101-2 model from `Wide Residual Networks
+    <https://arxiv.org/abs/1605.07146>`__.
 
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {

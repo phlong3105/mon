@@ -131,7 +131,7 @@ class GoogleNet(base.ImageClassificationModel):
     """GoogLeNet (Inception v1) model architecture from
     `Going Deeper with Convolutions <http://arxiv.org/abs/1409.4842>`_.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     constants = ["aux_logits", "transform_input"]
@@ -220,7 +220,7 @@ class GoogleNet(base.ImageClassificationModel):
         if init_weights:
             self.apply(self.init_weights)
     
-    def init_weights(self, m: torch.nn.Module):
+    def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=0.01, a=-2, b=2)
         elif isinstance(m, nn.BatchNorm2d):

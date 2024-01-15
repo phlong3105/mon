@@ -10,13 +10,11 @@ __all__ = [
 ]
 
 from collections import namedtuple
-from typing import Any, Callable
+from typing import Callable
 
 import torch
-from torch.nn import functional
 
 from mon.globals import MODELS
-from mon.nn.typing import _size_2_t
 from mon.vision import core, nn
 from mon.vision.classify import base
 from mon.vision.nn import functional as F
@@ -273,7 +271,7 @@ class Inception3(base.ImageClassificationModel):
         expects tensors with a size of :math:`N x 3 x 299 x 299`, so ensure
         your images are sized accordingly.
     
-    See Also: :class:`mon.vision.enhance.base.ImageEnhancementModel`
+    See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
     """
     
     zoo = {

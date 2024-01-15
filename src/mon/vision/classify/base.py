@@ -38,7 +38,7 @@ class ImageClassificationModel(nn.Model, ABC):
     def zoo_dir(self) -> core.Path:
         return ZOO_DIR / "vision" / "classify" / self.name
     
-    def init_weights(self, m: torch.nn.Module):
+    def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         pass
     
