@@ -10,7 +10,9 @@ __all__ = [
     "load_config",
 ]
 
-from mon.core import file, pathlib, console
+from mon.core import file, pathlib, rich
+
+console = rich.console
 
 
 # region Config
