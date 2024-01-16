@@ -744,7 +744,12 @@ class Transweather(base.DerainingModel):
 
             return x
 
-    zoo = {}
+    zoo = {
+        "transweather-rain100l": {
+            "path"        : "transweather-rain100l.pt",
+            "num_channels": 32,
+        },
+    }
     
     def __init__(
         self,
@@ -757,6 +762,7 @@ class Transweather(base.DerainingModel):
         unsharp_sigma: int   | str | None = None,
         *args, **kwargs
     ):
+        self.name          = "transweather"
         super().__init__(
             config = config,
             loss   = loss,
@@ -1035,7 +1041,7 @@ class Transweather(base.DerainingModel):
             Predictions and loss value.
         """
         pred  = self.forward(input=input, *args, **kwargs)
-        loss, self.previous = self.loss(pred, target) if self.loss else (None, None)
+        loss, self.previous = self.loss(pred, target) 
         loss += self.regularization_loss(alpha=0.1)
         return pred, loss
 

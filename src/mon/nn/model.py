@@ -754,19 +754,19 @@ class Model(lightning.LightningModule, ABC):
     
     @config.setter
     def config(self, config: Any = None):
-        if isinstance(config, str) and ".yaml" in config:
-            config += ".yaml" if ".yaml" not in config else ""
-            config  = self.config_dir / config
-        if not (isinstance(config, core.Path) and config.is_yaml_file()):
-            raise TypeError()
+        if config is None:
+            self._config = None
+        else:
+            if isinstance(config, str) and ".yaml" in config:
+                config += ".yaml" if ".yaml" not in config else ""
+                config  = self.config_dir / config
+            if not (isinstance(config, core.Path) and config.is_yaml_file()):
+                raise TypeError()
 
-        if config is not None:
             self._config  = core.load_config(config=config)
             self.name     = self._config.get("name",     None)
             self.variant  = self._config.get("variant",  None)
             self.channels = self._config.get("channels", None)
-        else:
-            self._config  = None
 
     @property
     def params(self) -> int:
