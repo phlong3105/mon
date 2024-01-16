@@ -421,11 +421,16 @@ if [ "$run" == "train" ]; then
       elif [ "${model[i]}" == "transweather" ]; then
         cd "${current_dir}" || exit
         python -W ignore train.py \
-          --name "${fullname}" \
+          --name "${model[i]}" \
           --variant "${variant[j]}" \
+          --data "${train[0]}" \
+          --batch-size 8 \
+          --image-size 512 \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
+          --fullname "${fullname}" \
           --max-epochs "$epochs" \
           --strategy "ddp_find_unused_parameters_true"
-
       # LES
       # Jin2022
       elif [ "${model[i]}" == "jin2022" ]; then

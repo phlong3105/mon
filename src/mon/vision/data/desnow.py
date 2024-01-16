@@ -45,6 +45,20 @@ class GTSnow(base.ImageEnhancementDataset):
 
     splits = ["train"]
 
+    def __init__(
+        self,
+        dataset: GTSnow  | None = None,
+        indices: list[int] | None = None,
+        *args,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        if dataset is None:
+            return
+        dataset_size = len(dataset)
+        self.images = [dataset.images[i] for i in range(dataset_size) if i in indices]
+        self.labels = [dataset.labels[i] for i in range(dataset_size) if i in indices]
+
     def get_images(self):
         """Get image files."""
         patterns = [
@@ -431,8 +445,25 @@ class GTSnowDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = GTSnow(split="train", **self.dataset_kwargs)
-            self.val   = GTSnow(split="train", **self.dataset_kwargs)
+            # self.train = GTSnow(split="train", **self.dataset_kwargs)
+            # self.val   = GTSnow(split="train", **self.dataset_kwargs)
+            dataset = GTSnow(split="train", **self.dataset_kwargs)
+            import torch
+
+            validation_split = 0.2
+            random_seed = 42
+            dataset_size = len(dataset)
+            indices = list(range(dataset_size))
+            split = int(validation_split * dataset_size)
+
+            if self.shuffle:
+                torch.manual_seed(random_seed)
+                indices = torch.randperm(dataset_size).tolist()
+            train_indices, val_indices = indices[split:], indices[:split]
+
+            self.train = GTSnow(dataset=dataset, indices=train_indices,split="train", **self.dataset_kwargs)
+
+            self.val = GTSnow(dataset=dataset, indices=val_indices,split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = GTSnow(split="train", **self.dataset_kwargs)
 

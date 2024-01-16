@@ -770,13 +770,10 @@ class Model(lightning.LightningModule, ABC):
         if not (isinstance(config, core.Path) and config.is_yaml_file()):
             pass
 
-        if config is not None:
             self._config  = core.load_config(config=config)
             self.name     = self._config.get("name",     None)
             self.variant  = self._config.get("variant",  None)
             self.channels = self._config.get("channels", None)
-        else:
-            self._config  = None
 
     @property
     def params(self) -> int:
