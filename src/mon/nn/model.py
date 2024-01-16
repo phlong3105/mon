@@ -764,11 +764,14 @@ class Model(lightning.LightningModule, ABC):
     
     @config.setter
     def config(self, config: Any = None):
-        if isinstance(config, str) and ".yaml" in config:
-            config += ".yaml" if ".yaml" not in config else ""
-            config  = self.config_dir / config
-        if not (isinstance(config, core.Path) and config.is_yaml_file()):
-            pass
+        if config is None:
+            self._config = None
+        else:
+            if isinstance(config, str) and ".yaml" in config:
+                config += ".yaml" if ".yaml" not in config else ""
+                config  = self.config_dir / config
+            if not (isinstance(config, core.Path) and config.is_yaml_file()):
+                raise TypeError()
 
             self._config  = core.load_config(config=config)
             self.name     = self._config.get("name",     None)
