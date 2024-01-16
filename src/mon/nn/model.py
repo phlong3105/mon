@@ -28,6 +28,7 @@ __all__ = [
 import os
 from abc import ABC, abstractmethod
 from typing import Any
+from urllib.parse import urlparse  # noqa: F401
 
 import humps
 import lightning.pytorch.utilities.types
@@ -385,21 +386,27 @@ def load_state_dict_from_path(
 
 
 def load_state_dict(
-    model  : nn.Module,
-    weights: dict | str | core.Path,
+    model    : nn.Module,
+    weights  : dict | str | core.Path,
+    overwrite: bool = False,
 ) -> dict:
     """Load state dict from :param:`weights` file."""
     path = None
     map  = {}
-
+    
     if isinstance(weights, dict):
         path = weights.get("path", path)
         url  = weights.get("url",  None)
         map  = weights.get("map",  map)
         if path is not None and url is not None:
-            if not core.Path(path).exists() and core.Path(url).is_url():
-                torch.hub.download_url_to_file(url, str(path), None, progress=True)
-
+            path = core.Path(path)
+            core.mkdirs(paths=[path.parent], exist_ok=True)
+            if core.is_url(url):
+                if path.exists() and overwrite:
+                    core.delete_files(regex=path.name, path=path.parent)
+                    torch.hub.download_url_to_file(str(url), str(path), None, progress=True)
+                elif not path.exists():
+                    torch.hub.download_url_to_file(str(url), str(path), None, progress=True)
     elif isinstance(weights, str | core.Path):
         path = weights
     else:
@@ -409,7 +416,7 @@ def load_state_dict(
     if not path.is_weights_file():
         error_console.log(f"{path} is not a weights file.")
 
-    state_dict       = torch.load(str(weights), map_location=model.device)
+    state_dict       = torch.load(str(path), map_location=model.device)
     model_state_dict = model.state_dict()
     new_state_dict   = {}
 
@@ -422,20 +429,23 @@ def load_state_dict(
                 replace = True
         if not replace:
             new_state_dict[k] = v
-
-    new   = list(new_state_dict.items())
-    count = 0
-    for k, _ in model_state_dict.items():
-        _, v = new[count]
-        model_state_dict[k] = v
-        count += 1
-
+    
+    # print(state_dict.keys())
+    # print(model_state_dict.keys())
+    # print(new_state_dict.keys())
+    # print([value.shape for value in model_state_dict.values()])
+    # print([value.shape for value in new_state_dict.values()])
+    for k, v in new_state_dict.items():
+        if k in model_state_dict:
+            model_state_dict[k] = v
+    
     return model_state_dict
 
 
 def load_weights(
-    model  : nn.Module,
-    weights: dict | str | core.Path,
+    model    : nn.Module,
+    weights  : dict | str | core.Path,
+    overwrite: bool = False,
 ) -> nn.Module:
     """Load weights to model."""
     model_state_dict = load_state_dict(model=model, weights=weights)
@@ -627,12 +637,12 @@ class Model(lightning.LightningModule, ABC):
         self.channels      = channels or self.channels
         self.num_classes   = num_classes
         self.classlabels   = mdata.ClassLabels.from_value(classlabels) if classlabels is not None else None
-        self.weights       = weights
         self.name          = name    or self.name
         self.variant       = variant or None
         self.fullname      = fullname
         self.project       = project
         self.root          = root
+        self.weights       = weights
         self.hyperparams   = hparams
         self.loss          = loss
         self.train_metrics = metrics
@@ -754,14 +764,11 @@ class Model(lightning.LightningModule, ABC):
     
     @config.setter
     def config(self, config: Any = None):
-        if config is None:
-            self._config = None
-        else:
-            if isinstance(config, str) and ".yaml" in config:
-                config += ".yaml" if ".yaml" not in config else ""
-                config  = self.config_dir / config
-            if not (isinstance(config, core.Path) and config.is_yaml_file()):
-                raise TypeError()
+        if isinstance(config, str) and ".yaml" in config:
+            config += ".yaml" if ".yaml" not in config else ""
+            config  = self.config_dir / config
+        if not (isinstance(config, core.Path) and config.is_yaml_file()):
+            pass
 
             self._config  = core.load_config(config=config)
             self.name     = self._config.get("name",     None)
@@ -973,7 +980,7 @@ class Model(lightning.LightningModule, ABC):
             A :class:`list` of layer's info for debugging.
         """
         if self.config is None:
-            console.log(f"No `config` has been provided. Model must be manually defined.")
+            console.log(f"No :param:`config` has been provided. Model must be manually defined.")
             return None, None, None
         if not isinstance(self.config, dict):
             raise TypeError(f"config must be a dictionary, but got {self.config}.")
@@ -1032,7 +1039,7 @@ class Model(lightning.LightningModule, ABC):
         """Initialize model's weights."""
         pass
     
-    def load_weights(self, weights: Any = None):
+    def load_weights(self, weights: Any = None, overwrite: bool = False):
         """Load weights. It only loads the intersection layers of matching keys
         and shapes between the current model and weights.
         """
@@ -1042,9 +1049,9 @@ class Model(lightning.LightningModule, ABC):
         if self.weights is not None:
             self.zoo_dir.mkdir(parents=True, exist_ok=True)
             if self.model is not None:
-                self.model = load_weights(model=self.model, weights=weights)
+                self.model = load_weights(model=self.model, weights=self.weights)
             else:
-                model_state_dict = load_state_dict(model=self, weights=weights)
+                model_state_dict = load_state_dict(model=self, weights=self.weights)
                 self.load_state_dict(model_state_dict)
             if self.verbose:
                 console.log(f"Load weights from: {self.weights}!")

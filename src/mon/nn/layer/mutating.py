@@ -431,7 +431,7 @@ class PatchMergingV2(base.MergingLayerParsingMixin, nn.Module):
         super().__init__(*args, **kwargs)
         self.dim       = dim
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias=False)
-        self.norm      = norm(4 * dim)
+        self.norm      = norm(2 * dim)
     
     def _patch_merging_pad(self, x: torch.Tensor) -> torch.Tensor:
         h, w, _ = x.shape[-3:]

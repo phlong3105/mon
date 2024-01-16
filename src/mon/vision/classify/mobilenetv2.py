@@ -9,7 +9,7 @@ __all__ = [
     "MobileNetV2",
 ]
 
-from typing import Callable
+from typing import Callable, Any
 
 import torch
 from torchvision.models import _utils
@@ -36,7 +36,7 @@ class InvertedResidual(nn.Module):
         norm_layer  : Callable[..., nn.Module] | None = None,
         *args, **kwargs,
     ):
-        super().__init__(*args, **kwargs,)
+        super().__init__()
         self.stride = stride
         if stride not in [1, 2]:
             raise ValueError(f":param:`stride` should be ``1`` or ``2``, but got {stride}.")
@@ -123,11 +123,13 @@ class MobileNetV2(base.ImageClassificationModel):
         block                    : Callable[..., nn.Module] | list = None,
         norm_layer               : Callable[..., nn.Module] | list = None,
         dropout                  : float = 0.2,
-        name                     : str   = "mobilenet_v2",
+        weights                  : Any   = None,
+        name                     : str   = "mobilenetv2",
         *args, **kwargs,
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -207,20 +209,23 @@ class MobileNetV2(base.ImageClassificationModel):
             nn.Linear(self.last_channel, self.num_classes),
         )
         
-        self.apply(self.init_weights)
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
-            nn.init.kaiming_normal_(m.weight, mode="fan_out")
+            torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
             if m.bias is not None:
-                nn.init.zeros_(m.bias)
+                torch.nn.init.zeros_(m.bias)
         elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-            nn.init.ones_(m.weight)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.ones_(m.weight)
+            torch.nn.init.zeros_(m.bias)
         elif isinstance(m, nn.Linear):
-            nn.init.normal_(m.weight, 0, 0.01)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.normal_(m.weight, 0, 0.01)
+            torch.nn.init.zeros_(m.bias)
     
     def forward_once(
         self,

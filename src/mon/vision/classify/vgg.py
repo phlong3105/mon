@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import cast
+from typing import cast, Any
 
 import torch
 
@@ -46,11 +46,13 @@ class VGG(base.ImageClassificationModel, ABC):
         num_classes : int   = 1000,
         init_weights: bool  = True,
         dropout     : float = 0.5,
+        weights     : Any   = None,
         name        : str   = "vgg",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -68,21 +70,23 @@ class VGG(base.ImageClassificationModel, ABC):
             nn.Linear(4096, self.num_classes),
         )
         
-        if init_weights:
+        if self.weights:
+            self.load_weights()
+        elif init_weights:
             self.apply(self.init_weights)
     
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
-            nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+            torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             if m.bias is not None:
-                nn.init.constant_(m.bias, 0)
+                torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.BatchNorm2d):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
+            torch.nn.init.constant_(m.weight, 1)
+            torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.Linear):
-            nn.init.normal_(m.weight, 0, 0.01)
-            nn.init.constant_(m.bias, 0)
+            torch.nn.init.normal_(m.weight, 0, 0.01)
+            torch.nn.init.constant_(m.bias, 0)
     
     def forward_once(
         self,

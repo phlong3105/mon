@@ -10,7 +10,7 @@ __all__ = [
 ]
 
 from collections import namedtuple
-from typing import Callable
+from typing import Callable, Any
 
 import torch
 
@@ -28,7 +28,7 @@ _current_dir = core.Path(__file__).absolute().parent
 class BasicConv2d(nn.Module):
     
     def __init__(self, in_channels: int, out_channels: int, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
         self.bn   = nn.BatchNorm2d(out_channels, eps=0.001)
     
@@ -49,7 +49,7 @@ class InceptionA(nn.Module):
         conv_block   : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.branch1x1      = conv_block(in_channels, 64, kernel_size=1)
@@ -82,7 +82,7 @@ class InceptionB(nn.Module):
         conv_block : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.branch3x3      = conv_block(in_channels, 384, kernel_size=3, stride=2)
@@ -110,7 +110,7 @@ class InceptionC(nn.Module):
         conv_block  : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.branch1x1      = conv_block(in_channels, 192, kernel_size=1)
@@ -149,7 +149,7 @@ class InceptionD(nn.Module):
         conv_block : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.branch3x3_1   = conv_block(in_channels, 192, kernel_size=1)
@@ -180,7 +180,7 @@ class InceptionE(nn.Module):
         conv_block : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__( *args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.branch1x1       = conv_block(in_channels, 320, kernel_size=1)
@@ -224,7 +224,7 @@ class InceptionAux(nn.Module):
         conv_block : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.conv0 = conv_block(in_channels, 128, kernel_size=1)
@@ -250,8 +250,7 @@ class InceptionAux(nn.Module):
         y = self.fc(x)
         # N x 1000
         return y
-
-    
+ 
 # endregion
 
 
@@ -291,12 +290,14 @@ class Inception3(base.ImageClassificationModel):
         inception_blocks: list[Callable[..., nn.Module]] | None = None,
         init_weights    : bool | None = None,
         dropout         : float       = 0.5,
+        weights         : Any         = None,
         name            : str         = "inception",
         variant         : str         = "inception3",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             variant     = variant,
             *args, **kwargs
@@ -304,7 +305,7 @@ class Inception3(base.ImageClassificationModel):
         if inception_blocks is None:
             inception_blocks = [BasicConv2d, InceptionA, InceptionB, InceptionC, InceptionD, InceptionE, InceptionAux]
         if init_weights is None:
-            console.warning(
+            console.log(
                 f"The default weight initialization of ``inception_v3`` will "
                 f"be changed in future releases of `torchvision`. If you wish "
                 f"to keep the old behavior (which leads to long initialization "
@@ -353,7 +354,9 @@ class Inception3(base.ImageClassificationModel):
         self.dropout  = nn.Dropout(p=self.dropout)
         self.fc       = nn.Linear(2048, self.num_classes)
         
-        if init_weights:
+        if self.weights:
+            self.load_weights()
+        elif init_weights:
             self.apply(self.init_weights)
         
     def init_weights(self, m: nn.Module):
@@ -361,8 +364,8 @@ class Inception3(base.ImageClassificationModel):
             stddev = float(m.stddev) if hasattr(m, "stddev") else 0.1  # type: ignore
             torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=stddev, a=-2, b=2)
         elif isinstance(m, nn.BatchNorm2d):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
+            torch.nn.init.constant_(m.weight, 1)
+            torch.nn.init.constant_(m.bias, 0)
     
     def _transform_input(self, x: torch.Tensor) -> torch.Tensor:
         if self.transform_input:

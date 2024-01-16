@@ -114,8 +114,8 @@ class MBConv(nn.Module):
         norm_layer           : Callable[..., nn.Module],
         se_layer             : Callable[..., nn.Module] = nn.SqueezeExcitation,
         *args, **kwargs
-    ) -> None:
-        super().__init__(*args, **kwargs)
+    ):
+        super().__init__()
 
         if not (1 <= cnf.stride <= 2):
             raise ValueError("Illegal stride value")
@@ -194,7 +194,7 @@ class FusedMBConv(nn.Module):
         norm_layer           : Callable[..., nn.Module],
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         if not (1 <= cnf.stride <= 2):
             raise ValueError(f"Illegal stride value")
@@ -331,11 +331,13 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         num_classes              : int        = 1000,
         norm_layer               : Callable[..., nn.Module] | None = None,
         last_channel             : int | None = None,
+        weights                  : Any   = None,
         name                     : str        = "efficientnet",
         *args, **kwargs,
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -407,21 +409,24 @@ class EfficientNet(base.ImageClassificationModel, ABC):
             nn.Linear(lastconv_output_channels, num_classes),
         )
         
-        self.apply(self.init_weights)
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
-            nn.init.kaiming_normal_(m.weight, mode="fan_out")
+            torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
             if m.bias is not None:
-                nn.init.zeros_(m.bias)
+                torch.nn.init.zeros_(m.bias)
         elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-            nn.init.ones_(m.weight)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.ones_(m.weight)
+            torch.nn.init.zeros_(m.bias)
         elif isinstance(m, nn.Linear):
             init_range = 1.0 / math.sqrt(m.out_features)
-            nn.init.uniform_(m.weight, -init_range, init_range)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.uniform_(m.weight, -init_range, init_range)
+            torch.nn.init.zeros_(m.bias)
     
     def forward_once(
         self,

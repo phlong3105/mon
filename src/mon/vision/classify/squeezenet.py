@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Callable
+from typing import Any
 
 import torch
 
@@ -36,7 +36,7 @@ class Fire(nn.Module):
         expand3x3_planes: int,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.inplanes             = inplanes
         self.squeeze              = nn.Conv2d(inplanes, squeeze_planes, kernel_size=1)
         self.squeeze_activation   = nn.ReLU(inplace=True)
@@ -74,11 +74,13 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
         version    : str   = "1_0",
         num_classes: int   = 1000,
         dropout    : float = 0.5,
+        weights    : Any   = None,
         name       : str   = "squeezenet",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -132,12 +134,17 @@ class SqueezeNet(base.ImageClassificationModel, ABC):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 if m is final_conv:
-                    nn.init.normal_(m.weight, mean=0.0, std=0.01)
+                    torch.nn.init.normal_(m.weight, mean=0.0, std=0.01)
                 else:
-                    nn.init.kaiming_uniform_(m.weight)
+                    torch.nn.init.kaiming_uniform_(m.weight)
                 if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
-                    
+                    torch.nn.init.constant_(m.bias, 0)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+            
     def forward_once(
         self,
         input    : torch.Tensor,

@@ -69,6 +69,7 @@ dependencies:
       - multipledispatch      # Multiple dispatch.
       - protobuf              # Protocol Buffers - Google's data interchange format.
       - pyhumps               # Convert strings (and dictionary keys) between snake case, camel case and pascal case in Python.
+      - pytest
       - PyYAML                # YAML parser and emitter for Python.
       - sortedcontainers      # Python Sorted Container Types: SortedList, SortedDict, and SortedSet.
       - typing-extensions     # Backported and Experimental Type Hints for Python 3.7+.
