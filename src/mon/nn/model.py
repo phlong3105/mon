@@ -767,9 +767,7 @@ class Model(lightning.LightningModule, ABC):
         if isinstance(config, str) and ".yaml" in config:
             config += ".yaml" if ".yaml" not in config else ""
             config  = self.config_dir / config
-        if isinstance(config, core.Path) and config.is_yaml_file():
-            pass
-
+            
         self._config = core.load_config(config=config)
         if isinstance(self._config, dict):
             self.name     = self._config.get("name",     None)
