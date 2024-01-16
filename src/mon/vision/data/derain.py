@@ -171,6 +171,20 @@ class Rain100L(base.ImageEnhancementDataset):
     
     splits = ["train", "test"]
     
+    def __init__(
+        self,
+        dataset: Rain100L  | None = None,
+        indices: list[int] | None = None,
+        *args,
+        **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+        if dataset is None:
+            return
+        dataset_size = len(dataset)
+        self.images = [dataset.images[i] for i in range(dataset_size) if i in indices]
+        self.labels = [dataset.labels[i] for i in range(dataset_size) if i in indices]
+
     def get_images(self):
         """Get image files."""
         patterns = [
@@ -655,8 +669,28 @@ class Rain100LDataModule(base.DataModule):
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
-            self.train = Rain100L(split="train", **self.dataset_kwargs)
-            self.val   = Rain100L(split="test", **self.dataset_kwargs)
+            # self.train = Rain100L(split="train", **self.dataset_kwargs)
+            # self.val = Rain100L(split="train", **self.dataset_kwargs)
+            dataset = Rain100L(split="train", **self.dataset_kwargs)
+
+            import torch
+
+            validation_split = 0.2
+            random_seed = 42
+            dataset_size = len(dataset)
+            indices = list(range(dataset_size))
+            split = int(validation_split * dataset_size)
+
+            if self.shuffle:
+                torch.manual_seed(random_seed)
+                indices = torch.randperm(dataset_size).tolist()
+            train_indices, val_indices = indices[split:], indices[:split]
+
+            self.train = Rain100L(dataset=dataset, indices=train_indices,split="train", **self.dataset_kwargs)
+
+            self.val = Rain100L(dataset=dataset, indices=val_indices,split="train", **self.dataset_kwargs)
+
+
         if phase in [None, ModelPhase.TESTING]:
             self.test  = Rain100L(split="test",  **self.dataset_kwargs)
         
