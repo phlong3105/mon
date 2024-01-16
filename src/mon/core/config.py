@@ -10,7 +10,7 @@ __all__ = [
     "load_config",
 ]
 
-from mon.core import file, pathlib
+from mon.core import file, pathlib, console
 
 
 # region Config
@@ -53,7 +53,7 @@ def get_config_module(
     return config_module
 
 
-def load_config(config: dict | pathlib.Path | str) -> dict:
+def load_config(config: dict | pathlib.Path | str | None) -> dict | None:
     """Load configuration as a :class:`dict`. If it is a file, load its
     contents.
     
@@ -63,15 +63,15 @@ def load_config(config: dict | pathlib.Path | str) -> dict:
     Returns:
         A :class:`dict` of configuration.
     """
+    if config is None:
+        console.log(f":param:`config` is ``None``.")
+        return None
+    
+    data = None
     if isinstance(config, dict):
         data = config
     elif isinstance(config, pathlib.Path | str):
         data = file.read_from_file(path=config)
-    else:
-        raise TypeError(
-            f"config must be a dict or a path to the config file, but got "
-            f"{config}."
-        )
     if data is None:
         raise IOError(f"No configuration is found at {config}.")
     return data
