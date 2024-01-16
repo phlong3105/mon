@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 __all__ = [
-    "ConNeXt",
-    "ConNeXtBase",
-    "ConNeXtLarge",
-    "ConNeXtSmall",
-    "ConNeXtTiny",
+    "ConvNeXt",
+    "ConvNeXtBase",
+    "ConvNeXtLarge",
+    "ConvNeXtSmall",
+    "ConvNeXtTiny",
 ]
 
 import functools
@@ -50,8 +50,8 @@ class CNBlock(nn.Module):
         stochastic_depth_prob: float,
         norm_layer           : nn.Module | None = None,
         *args, **kwargs
-    ) -> None:
-        super().__init__(*args, **kwargs)
+    ):
+        super().__init__()
         if norm_layer is None:
             norm_layer = functools.partial(nn.LayerNorm, eps=1e-6)
 
@@ -101,7 +101,7 @@ class CNBlockConfig:
         return s.format(**self.__dict__)
     
 
-class ConNeXt(base.ImageClassificationModel, ABC):
+class ConvNeXt(base.ImageClassificationModel, ABC):
     """ConNeXt.
     
     See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
@@ -117,11 +117,13 @@ class ConNeXt(base.ImageClassificationModel, ABC):
         num_classes          : int   = 1000,
         block                : Any   = None,
         norm_layer           : Any   = None,
+        weights              : Any   = None,
         name                 : str   = "connext",
         *args, **kwargs,
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -187,14 +189,17 @@ class ConNeXt(base.ImageClassificationModel, ABC):
             nn.Linear(lastconv_output_channels, self.num_classes)
         )
         
-        self.apply(self.init_weights)
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, (nn.Conv2d, nn.Linear)):
-            nn.init.trunc_normal_(m.weight, std=0.02)
+            torch.nn.init.trunc_normal_(m.weight, std=0.02)
             if m.bias is not None:
-                nn.init.zeros_(m.bias)
+                torch.nn.init.zeros_(m.bias)
     
     def forward_once(
         self,
@@ -210,8 +215,8 @@ class ConNeXt(base.ImageClassificationModel, ABC):
         return y
     
 
-@MODELS.register(name="convnext-base")
-class ConNeXtBase(ConNeXt):
+@MODELS.register(name="convnext_base")
+class ConvNeXtBase(ConvNeXt):
     """ConvNeXt Base model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
@@ -221,7 +226,7 @@ class ConNeXtBase(ConNeXt):
     zoo = {
         "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_base-6075fbad.pth",
-            "path"       : "convnext-base-imagenet1k-v1.pth",
+            "path"       : "convnext_base-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -230,7 +235,7 @@ class ConNeXtBase(ConNeXt):
     def __init__(
         self,
         name   : str = "convnext",
-        variant: str = "convnext-base",
+        variant: str = "convnext_base",
         *args, **kwargs
     ):
         block_setting = [
@@ -249,8 +254,8 @@ class ConNeXtBase(ConNeXt):
         )
 
 
-@MODELS.register(name="convnext-tiny")
-class ConNeXtTiny(ConNeXt):
+@MODELS.register(name="convnext_tiny")
+class ConvNeXtTiny(ConvNeXt):
     """ConvNeXt Tiny model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
@@ -260,7 +265,7 @@ class ConNeXtTiny(ConNeXt):
     zoo = {
         "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_tiny-983f1562.pth",
-            "path"       : "convnext-tiny-imagenet1k-v1.pth",
+            "path"       : "convnext_tiny-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -269,7 +274,7 @@ class ConNeXtTiny(ConNeXt):
     def __init__(
         self,
         name   : str = "convnext",
-        variant: str = "convnext-base",
+        variant: str = "convnext_tiny",
         *args, **kwargs
     ):
         block_setting = [
@@ -288,8 +293,8 @@ class ConNeXtTiny(ConNeXt):
         )
 
 
-@MODELS.register(name="convnext-small")
-class ConNeXtSmall(ConNeXt):
+@MODELS.register(name="convnext_small")
+class ConvNeXtSmall(ConvNeXt):
     """ConvNeXt Small model architecture from the
     `A ConvNet for the 2020s <https://arxiv.org/abs/2201.03545>`_ paper.
     
@@ -297,9 +302,9 @@ class ConNeXtSmall(ConNeXt):
     """
     
     zoo = {
-        "imagenet1k": {
+        "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_small-0c510722.pth",
-            "path"       : "convnext-small-imagenet1k-v1.pth",
+            "path"       : "convnext_small-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -308,7 +313,7 @@ class ConNeXtSmall(ConNeXt):
     def __init__(
         self,
         name   : str = "convnext",
-        variant: str = "convnext-small",
+        variant: str = "convnext_small",
         *args, **kwargs
     ):
         block_setting = [
@@ -327,8 +332,8 @@ class ConNeXtSmall(ConNeXt):
         )
         
         
-@MODELS.register(name="convnext-large")
-class ConNeXtLarge(ConNeXt):
+@MODELS.register(name="convnext_large")
+class ConvNeXtLarge(ConvNeXt):
     """ConNeXt-Large.
     
     See Also: :class:`mon.vision.classify.base.ImageClassificationModel`
@@ -337,7 +342,7 @@ class ConNeXtLarge(ConNeXt):
     zoo = {
         "imagenet1k-v1": {
             "url"        : "https://download.pytorch.org/models/convnext_large-ea097f82.pth",
-            "path"       : "convnext-large-imagenet1k-v1.pth",
+            "path"       : "convnext_large-imagenet1k-v1.pth",
             "num_classes": 1000,
             "map": {},
         },
@@ -346,14 +351,14 @@ class ConNeXtLarge(ConNeXt):
     def __init__(
         self,
         name   : str = "convnext",
-        variant: str = "convnext-small",
+        variant: str = "convnext_large",
         *args, **kwargs
     ):
         block_setting = [
-            CNBlockConfig(128,  256,  3),
-            CNBlockConfig(256,  512,  3),
-            CNBlockConfig(512,  1024, 27),
-            CNBlockConfig(1024, None, 3),
+            CNBlockConfig(192,  384,  3),
+            CNBlockConfig(384,  768,  3),
+            CNBlockConfig(768,  1536, 27),
+            CNBlockConfig(1536, None, 3),
         ]
         stochastic_depth_prob = kwargs.pop("stochastic_depth_prob", 0.5)
         super().__init__(

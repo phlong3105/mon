@@ -10,6 +10,7 @@ __all__ = [
 ]
 
 from collections import namedtuple
+from typing import Any
 
 import torch
 
@@ -27,7 +28,7 @@ _current_dir = core.Path(__file__).absolute().parent
 class BasicConv2d(nn.Module):
     
     def __init__(self, in_channels: int, out_channels: int, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, bias=False, **kwargs)
         self.bn   = nn.BatchNorm2d(out_channels, eps=0.001)
     
@@ -53,7 +54,7 @@ class Inception(nn.Module):
         conv_block : nn.Module | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.branch1 = conv_block(in_channels, ch1x1, kernel_size=1)
@@ -92,7 +93,7 @@ class InceptionAux(nn.Module):
         dropout    : float = 0.7,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if conv_block is None:
             conv_block = BasicConv2d
         self.conv    = conv_block(in_channels, 128, kernel_size=1)
@@ -154,11 +155,13 @@ class GoogleNet(base.ImageClassificationModel):
         blocks         : list[nn.Module] | None = None,
         dropout        : float                  = 0.2,
         dropout_aux    : float                  = 0.7,
+        weights        : Any                    = None,
         name           : str                    = "googlenet",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -166,7 +169,7 @@ class GoogleNet(base.ImageClassificationModel):
         if blocks is None:
             blocks = [BasicConv2d, Inception, InceptionAux]
         if init_weights is None:
-            console.warning(
+            console.log(
                 f"The default weight initialization of GoogleNet will be "
                 f"changed in future releases of ``torchvision``. If you wish "
                 f"to keep the old behavior (which leads to long initialization "
@@ -217,15 +220,17 @@ class GoogleNet(base.ImageClassificationModel):
         self.dropout = nn.Dropout(p=self.dropout)
         self.fc      = nn.Linear(1024, self.num_classes)
         
-        if init_weights:
+        if self.weights:
+            self.load_weights()
+        elif init_weights:
             self.apply(self.init_weights)
-    
+        
     def init_weights(self, m: nn.Module):
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
             torch.nn.init.trunc_normal_(m.weight, mean=0.0, std=0.01, a=-2, b=2)
         elif isinstance(m, nn.BatchNorm2d):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
+            torch.nn.init.constant_(m.weight, 1)
+            torch.nn.init.constant_(m.bias, 0)
     
     def _transform_input(self, x: torch.Tensor) -> torch.sTensor:
         if self.transform_input:

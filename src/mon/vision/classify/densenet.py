@@ -15,6 +15,7 @@ __all__ = [
 
 from abc import ABC
 from collections import OrderedDict
+from typing import Any
 
 import torch
 import torch.utils.checkpoint as cp
@@ -41,7 +42,7 @@ class DenseLayer(nn.Module):
         memory_efficient: bool  = False,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.norm1 = nn.BatchNorm2d(in_channels)
         self.relu1 = nn.ReLU(inplace=True)
         self.conv1 = nn.Conv2d(in_channels, bn_size * growth_rate, kernel_size=1, stride=1, bias=False)
@@ -116,14 +117,14 @@ class DenseBlock(nn.ModuleDict):
         memory_efficient: bool = False,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         for i in range(num_layers):
             layer = DenseLayer(
-                num_input_features = in_channels + i * growth_rate,
-                growth_rate        = growth_rate,
-                bn_size            = bn_size,
-                drop_rate          = drop_rate,
-                memory_efficient   = memory_efficient,
+                in_channels      = in_channels + i * growth_rate,
+                growth_rate      = growth_rate,
+                bn_size          = bn_size,
+                drop_rate        = drop_rate,
+                memory_efficient = memory_efficient,
             )
             self.add_module("denselayer%d" % (i + 1), layer)
 
@@ -138,7 +139,7 @@ class DenseBlock(nn.ModuleDict):
 class Transition(nn.Sequential):
     
     def __init__(self, in_channels: int, out_channels: int, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.norm = nn.BatchNorm2d(in_channels)
         self.relu = nn.ReLU(inplace=True)
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, bias=False)
@@ -181,15 +182,17 @@ class DenseNet(base.ImageClassificationModel, ABC):
         drop_rate        : float = 0,
         num_classes      : int   = 1000,
         memory_efficient : bool  = False,
+        weights          : Any   = None,
         name             : str   = "densenet",
         *args, **kwargs
     ):
         super().__init__(
-            num_channels = num_channels,
-            num_classes  = num_classes,
-            name         = name,
+            num_classes = num_classes,
+            weights     = weights,
+            name        = name,
             *args, **kwargs
         )
+        self.num_channels     = num_channels
         self.growth_rate      = growth_rate
         self.block_config     = block_config
         self.bn_size          = bn_size
@@ -232,17 +235,20 @@ class DenseNet(base.ImageClassificationModel, ABC):
         # Linear layer
         self.classifier = nn.Linear(num_features, self.num_classes)
         
-        self.apply(self.init_weights)
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
     
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
-            nn.init.kaiming_normal_(m.weight)
+            torch.nn.init.kaiming_normal_(m.weight)
         elif isinstance(m, nn.BatchNorm2d):
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
+            torch.nn.init.constant_(m.weight, 1)
+            torch.nn.init.constant_(m.bias, 0)
         elif isinstance(m, nn.Linear):
-            nn.init.constant_(m.bias, 0)
+            torch.nn.init.constant_(m.bias, 0)
         '''
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:

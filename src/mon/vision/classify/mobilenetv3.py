@@ -13,7 +13,7 @@ __all__ = [
 
 import functools
 from abc import ABC
-from typing import Sequence, Callable
+from typing import Sequence, Callable, Any
 
 import torch
 from torchvision.models import _utils
@@ -35,9 +35,9 @@ class InvertedResidualConfig:
     def __init__(
         self,
         in_channels      : int,
-        out_channels     : int,
         kernel           : int,
         expanded_channels: int,
+        out_channels     : int,
         use_se           : bool,
         activation       : str,
         stride           : int,
@@ -68,14 +68,14 @@ class InvertedResidual(nn.Module):
         se_layer  : Callable[..., nn.Module] = functools.partial(nn.SqueezeExcitation, scale_activation=nn.Hardsigmoid),
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if not (1 <= cnf.stride <= 2):
             raise ValueError(f"Illegal stride value.")
 
         self.use_res_connect = cnf.stride == 1 and cnf.in_channels == cnf.out_channels
 
         layers: list[nn.Module] = []
-        activation_layer        = nn.Hardswish if cnf.use_hs else nn.ReLU
+        activation_layer = nn.Hardswish if cnf.use_hs else nn.ReLU
 
         # Expand
         if cnf.expanded_channels != cnf.in_channels:
@@ -202,11 +202,13 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         block                    : Callable[..., nn.Module] | None = None,
         norm_layer               : Callable[..., nn.Module] | None = None,
         dropout                  : float = 0.2,
+        weights                  : Any   = None,
         name                     : str   = "mobilenetv3",
         *args, **kwargs,
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -266,20 +268,23 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
             nn.Linear(last_channel, self.num_classes),
         )
         
-        self.apply(self.init_weights)
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
-            nn.init.kaiming_normal_(m.weight, mode="fan_out")
+            torch.nn.init.kaiming_normal_(m.weight, mode="fan_out")
             if m.bias is not None:
-                nn.init.zeros_(m.bias)
+                torch.nn.init.zeros_(m.bias)
         elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-            nn.init.ones_(m.weight)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.ones_(m.weight)
+            torch.nn.init.zeros_(m.bias)
         elif isinstance(m, nn.Linear):
-            nn.init.normal_(m.weight, 0, 0.01)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.normal_(m.weight, 0, 0.01)
+            torch.nn.init.zeros_(m.bias)
     
     def forward_once(
         self,
@@ -325,7 +330,7 @@ class MobileNetV3_Large(MobileNetV3):
         variant: str = "mobilenetv3_large",
         *args, **kwargs
     ):
-        inverted_residual_setting, last_channel = _mobilenetv3_conf(arch="mobilenet_v3_large", **kwargs)
+        inverted_residual_setting, last_channel = _mobilenetv3_conf(arch="mobilenetv3_large", **kwargs)
         super().__init__(
             inverted_residual_setting = inverted_residual_setting,
             last_channel              = last_channel,

@@ -14,7 +14,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Callable
+from typing import Callable, Any
 
 import torch
 
@@ -48,7 +48,7 @@ class InvertedResidual(nn.Module):
         stride      : int,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if not (1 <= stride <= 3):
             raise ValueError("Illegal stride value.")
         self.stride = stride
@@ -132,11 +132,13 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         stages_out_channels: list[int],
         num_classes        : int = 1000,
         inverted_residual  : Callable[..., nn.Module] = InvertedResidual,
+        weights            : Any = None,
         name               : str = "shufflenetv2",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -175,6 +177,11 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
             nn.ReLU(inplace=True),
         )
         self.fc = nn.Linear(output_channels, self.num_classes)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
         
     def forward_once(
         self,

@@ -27,7 +27,7 @@ __all__ = [
 from abc import ABC
 from collections import OrderedDict
 from functools import partial
-from typing import Callable
+from typing import Callable, Any
 
 import torch
 from torchvision.models import _utils
@@ -137,7 +137,7 @@ class ResBottleneckBlock(nn.Module):
         se_ratio             : float | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
         # Use skip connection with projection if shape changes
         self.proj   = None
@@ -190,7 +190,7 @@ class AnyStage(nn.Sequential):
         stage_index          : int          = 0,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         for i in range(depth):
             block = block_constructor(
                 width_in              = width_in if i == 0 else width_out,
@@ -281,7 +281,7 @@ class BlockParams:
         group_widths = [group_width] * num_stages
 
         # Adjust the compatibility of stage widths and group widths
-        stage_widths, group_widths = cls._adjust_widths_groups_compatibilty(
+        stage_widths, group_widths = cls._adjust_widths_groups_compatibility(
             stage_widths, bottleneck_multipliers, group_widths
         )
 
@@ -336,11 +336,13 @@ class RegNet(base.ImageClassificationModel, ABC):
         block_type  : Callable[..., nn.Module] | None = None,
         norm_layer  : Callable[..., nn.Module] | None = None,
         activation  : Callable[..., nn.Module] | None = None,
+        weights     : Any = None,
         name        : str = "regnet",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -387,19 +389,24 @@ class RegNet(base.ImageClassificationModel, ABC):
         self.trunk_output = nn.Sequential(OrderedDict(blocks))
         self.avgpool      = nn.AdaptiveAvgPool2d((1, 1))
         self.fc           = nn.Linear(in_features=current_width, out_features=num_classes)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
     
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
         if isinstance(m, nn.Conv2d):
             # Note that there is no bias due to BN
             fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-            nn.init.normal_(m.weight, mean=0.0, std=math.sqrt(2.0 / fan_out))
+            torch.nn.init.normal_(m.weight, mean=0.0, std=math.sqrt(2.0 / fan_out))
         elif isinstance(m, nn.BatchNorm2d):
-            nn.init.ones_(m.weight)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.ones_(m.weight)
+            torch.nn.init.zeros_(m.bias)
         elif isinstance(m, nn.Linear):
-            nn.init.normal_(m.weight, mean=0.0, std=0.01)
-            nn.init.zeros_(m.bias)
+            torch.nn.init.normal_(m.weight, mean=0.0, std=0.01)
+            torch.nn.init.zeros_(m.bias)
         
     def forward_once(
         self,

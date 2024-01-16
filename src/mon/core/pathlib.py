@@ -20,6 +20,7 @@ __all__ = [
     "get_image_file",
     "get_next_version",
     "hash_files",
+    "is_url",
     "mkdirs",
     "rmdirs",
 ]
@@ -134,14 +135,14 @@ class Path(type(pathlib.Path())):
         """Return ``True`` if the current path is a valid URL. Otherwise, return
         ``False``.
         """
-        return not isinstance(validators.url(str(self)), validators.ValidationFailure)
+        return not isinstance(validators.url(str(self)), validators.ValidationError)
     
     def is_url_or_file(self, exist: bool = True) -> bool:
         """Return ``True`` if the path is a file or a valid URL. Otherwise,
         return ``False``.
         """
         return (self.is_file() if exist else True) or \
-            not isinstance(validators.url(self), validators.ValidationFailure)
+            not isinstance(validators.url(self), validators.ValidationError)
     
     def is_video_file(self, exist: bool = True) -> bool:
         """Return ``True`` if the current path is a video file. Otherwise,
@@ -232,6 +233,17 @@ class Path(type(pathlib.Path())):
         if replace:
             dst.unlink(missing_ok=True)
         shutil.copyfile(src=str(self), dst=str(dst))
+
+# endregion
+
+
+# region Check
+
+def is_url(url: str) -> bool:
+    """Return ``True`` if the current path is a valid URL. Otherwise, return
+	``False``.
+	"""
+    return not isinstance(validators.url(str(url)), validators.ValidationError)
 
 # endregion
 

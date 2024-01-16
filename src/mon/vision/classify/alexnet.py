@@ -9,6 +9,8 @@ __all__ = [
     "AlexNet",
 ]
 
+from typing import Any
+
 import torch
 
 from mon.globals import MODELS
@@ -41,11 +43,13 @@ class AlexNet(base.ImageClassificationModel):
         self,
         num_classes: int   = 1000,
         dropout    : float = 0.5,
+        weights    : Any   = None,
         name       : str   = "alexnet",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -75,6 +79,11 @@ class AlexNet(base.ImageClassificationModel):
             nn.ReLU(inplace=True),
             nn.Linear(4096, self.num_classes),
         )
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def forward_once(
         self,
@@ -89,6 +98,5 @@ class AlexNet(base.ImageClassificationModel):
         x = torch.flatten(x, 1)
         y = self.classifier(x)
         return y
-
 
 # endregion

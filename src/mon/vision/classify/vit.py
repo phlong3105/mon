@@ -18,7 +18,7 @@ __all__ = [
 import functools
 from abc import ABC
 from collections import OrderedDict
-from typing import Callable, NamedTuple
+from typing import Callable, NamedTuple, Any
 
 import torch
 
@@ -56,9 +56,9 @@ class MLPBlock(nn.MLP):
         )
         for m in self.modules():
             if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight)
+                torch.nn.init.xavier_uniform_(m.weight)
                 if m.bias is not None:
-                    nn.init.normal_(m.bias, std=1e-6)
+                    torch.nn.init.normal_(m.bias, std=1e-6)
 
     def _load_from_state_dict(
         self,
@@ -104,7 +104,7 @@ class EncoderBlock(nn.Module):
         norm_layer       : Callable[..., nn.Module] = functools.partial(nn.LayerNorm, eps = 1e-6),
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.num_heads = num_heads
         # Attention block
         self.ln_1           = norm_layer(hidden_dim)
@@ -140,7 +140,7 @@ class Encoder(nn.Module):
         norm_layer       : Callable[..., torch.nn.Module] = functools.partial(nn.LayerNorm, eps = 1e-6),
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         # Note that batch_size is on the first dim because we have
         # batch_first=True in nn.MultiAttention() by default
         self.pos_embedding = nn.Parameter(torch.empty(1, seq_length, hidden_dim).normal_(std=0.02))  # from BERT
@@ -191,11 +191,13 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         representation_size: int | None = None,
         norm_layer         : Callable[..., torch.nn.Module] = functools.partial(nn.LayerNorm, eps = 1e-6),
         conv_stem_configs  : list[ConvStemConfig] | None    = None,
+        weights            : Any = None,
         name               : str = "vit",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -269,25 +271,30 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         if isinstance(self.conv_proj, nn.Conv2d):
             # Init the patchify stem
             fan_in = self.conv_proj.in_channels * self.conv_proj.kernel_size[0] * self.conv_proj.kernel_size[1]
-            nn.init.trunc_normal_(self.conv_proj.weight, std=math.sqrt(1 / fan_in))
+            torch.nn.init.trunc_normal_(self.conv_proj.weight, std=math.sqrt(1 / fan_in))
             if self.conv_proj.bias is not None:
-                nn.init.zeros_(self.conv_proj.bias)
+                torch.nn.init.zeros_(self.conv_proj.bias)
         elif self.conv_proj.conv_last is not None and isinstance(self.conv_proj.conv_last, nn.Conv2d):
             # Init the last 1x1 conv of the conv stem
-            nn.init.normal_(
+            torch.nn.init.normal_(
                 self.conv_proj.conv_last.weight, mean=0.0, std=math.sqrt(2.0 / self.conv_proj.conv_last.out_channels)
             )
             if self.conv_proj.conv_last.bias is not None:
-                nn.init.zeros_(self.conv_proj.conv_last.bias)
+                torch.nn.init.zeros_(self.conv_proj.conv_last.bias)
         
         if hasattr(self.heads, "pre_logits") and isinstance(self.heads.pre_logits, nn.Linear):
             fan_in = self.heads.pre_logits.in_features
-            nn.init.trunc_normal_(self.heads.pre_logits.weight, std=math.sqrt(1 / fan_in))
-            nn.init.zeros_(self.heads.pre_logits.bias)
+            torch.nn.init.trunc_normal_(self.heads.pre_logits.weight, std=math.sqrt(1 / fan_in))
+            torch.nn.init.zeros_(self.heads.pre_logits.bias)
 
         if isinstance(self.heads.head, nn.Linear):
-            nn.init.zeros_(self.heads.head.weight)
-            nn.init.zeros_(self.heads.head.bias)
+            torch.nn.init.zeros_(self.heads.head.weight)
+            torch.nn.init.zeros_(self.heads.head.bias)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def _process_input(self, x: torch.Tensor) -> torch.Tensor:
         n, c, h, w = x.shape

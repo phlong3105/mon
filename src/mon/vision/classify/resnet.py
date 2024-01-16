@@ -20,7 +20,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Callable, Type
+from typing import Callable, Type, Any
 
 import torch
 
@@ -33,6 +33,47 @@ _current_dir = core.Path(__file__).absolute().parent
 
 
 # region Module
+
+class Conv3x3(nn.Conv2d):
+    """3x3 convolution with padding"""
+    
+    def __init__(
+        self,
+        in_planes : int,
+        out_planes: int,
+        stride    : int = 1,
+        groups    : int = 1,
+        dilation  : int = 1,
+    ):
+        super().__init__(
+            in_channels  = in_planes,
+            out_channels = out_planes,
+            kernel_size  = 3,
+            stride       = stride,
+            padding      = dilation,
+            groups       = groups,
+            bias         = False,
+            dilation     = dilation,
+        )
+
+
+class Conv1x1(nn.Conv2d):
+    """1x1 convolution"""
+    
+    def __init__(
+        self,
+        in_planes : int,
+        out_planes: int,
+        stride    : int = 1,
+    ):
+        super().__init__(
+            in_channels  = in_planes,
+            out_channels = out_planes,
+            kernel_size  = 1,
+            stride       = stride,
+            bias         = False,
+        )
+
 
 class BasicBlock(nn.Module):
     
@@ -50,7 +91,7 @@ class BasicBlock(nn.Module):
         norm_layer  : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         if groups != 1 or base_width != 64:
@@ -58,10 +99,10 @@ class BasicBlock(nn.Module):
         if dilation > 1:
             raise NotImplementedError(":math:`dilation > 1` not supported in :class:`BasicBlock`")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1      = nn.Conv2d(in_channels,  out_channels, 3, stride, padding=1, groups=1, bias=False, dilation=1)
+        self.conv1      = Conv3x3(in_channels, out_channels, stride)
         self.bn1        = norm_layer(out_channels)
         self.relu       = nn.ReLU(inplace=True)
-        self.conv2      = nn.Conv2d(out_channels, out_channels, 3, stride, padding=1, groups=1, bias=False, dilation=1)
+        self.conv2      = Conv3x3(out_channels, out_channels)
         self.bn2        = norm_layer(out_channels)
         self.downsample = downsample
         self.stride     = stride
@@ -72,7 +113,7 @@ class BasicBlock(nn.Module):
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.conv2(y)
+        x = self.conv2(x)
         x = self.bn2(x)
         if self.downsample is not None:
             identity = self.downsample(x)
@@ -99,19 +140,19 @@ class Bottleneck(nn.Module):
         groups      : int = 1,
         base_width  : int = 64,
         dilation    : int = 1,
-        norm_layer: Callable[..., nn.Module] | None = None,
+        norm_layer  : Callable[..., nn.Module] | None = None,
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
-        width = int(in_channels * (base_width / 64.0)) * groups
+        width = int(out_channels * (base_width / 64.0)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv1      = nn.Conv2d(in_channels, width, 1, 1, bias=False)
+        self.conv1      = Conv1x1(in_channels, width)
         self.bn1        = norm_layer(width)
-        self.conv2      = nn.Conv2d(width, width, 3, stride=stride, padding=dilation, groups=groups, bias=False, dilation=dilation)
+        self.conv2      = Conv3x3(width, width, stride, groups, dilation)
         self.bn2        = norm_layer(width)
-        self.conv3      = nn.Conv2d(width, out_channels * self.expansion, 1, 1, bias=False)
+        self.conv3      = Conv1x1(width, out_channels * self.expansion)
         self.bn3        = norm_layer(out_channels * self.expansion)
         self.relu       = nn.ReLU(inplace=True)
         self.downsample = downsample
@@ -157,11 +198,13 @@ class ResNet(base.ImageClassificationModel, ABC):
         width_per_group             : int  = 64,
         replace_stride_with_dilation: list[bool]               | None = None,
         norm_layer                  : Callable[..., nn.Module] | None = None,
+        weights                     : Any = None,
         name                        : str = "resnet",
         *args, **kwargs
     ):
         super().__init__(
             num_classes = num_classes,
+            weights     = weights,
             name        = name,
             *args, **kwargs
         )
@@ -172,7 +215,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         self.num_channels = 64
         self.dilation     = 1
         if replace_stride_with_dilation is None:
-            # each element in the tuple indicates if we should replace
+            # Each element in the tuple indicates if we should replace
             # the 2x2 stride with a dilated convolution instead
             replace_stride_with_dilation = [False, False, False]
         if len(replace_stride_with_dilation) != 3:
@@ -191,14 +234,14 @@ class ResNet(base.ImageClassificationModel, ABC):
         self.layer3     = self._make_layer(block, 256, layers[2], stride=2, dilate=replace_stride_with_dilation[1])
         self.layer4     = self._make_layer(block, 512, layers[3], stride=2, dilate=replace_stride_with_dilation[2])
         self.avgpool    = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc         = nn.Linear(512 * block.expansion, num_classes)
+        self.fc         = nn.Linear(512 * block.expansion, self.num_classes)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+                torch.nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
-                nn.init.constant_(m.weight, 1)
-                nn.init.constant_(m.bias, 0)
+                torch.nn.init.constant_(m.weight, 1)
+                torch.nn.init.constant_(m.bias, 0)
 
         # Zero-initialize the last BN in each residual branch, so that the
         # residual branch starts with zeros, and each residual block behaves
@@ -207,10 +250,15 @@ class ResNet(base.ImageClassificationModel, ABC):
         if zero_init_residual:
             for m in self.modules():
                 if isinstance(m, Bottleneck) and m.bn3.weight is not None:
-                    nn.init.constant_(m.bn3.weight, 0)  # type: ignore[arg-type]
+                    torch.nn.init.constant_(m.bn3.weight, 0)  # type: ignore[arg-type]
                 elif isinstance(m, BasicBlock) and m.bn2.weight is not None:
-                    nn.init.constant_(m.bn2.weight, 0)  # type: ignore[arg-type]
-    
+                    torch.nn.init.constant_(m.bn2.weight, 0)  # type: ignore[arg-type]
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+        
     def _make_layer(
         self,
         block : Type[BasicBlock | Bottleneck],
@@ -225,16 +273,16 @@ class ResNet(base.ImageClassificationModel, ABC):
         if dilate:
             self.dilation *= stride
             stride = 1
-        if stride != 1 or self.inplanes != planes * block.expansion:
+        if stride != 1 or self.num_channels != planes * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion, stride),
+                Conv1x1(self.num_channels, planes * block.expansion, stride),
                 norm_layer(planes * block.expansion),
             )
 
         layers = []
         layers.append(
             block(
-                in_channels  = self.inplanes,
+                in_channels  = self.num_channels,
                 out_channels = planes,
                 stride       = stride,
                 downsample   = downsample,
@@ -248,7 +296,7 @@ class ResNet(base.ImageClassificationModel, ABC):
         for _ in range(1, blocks):
             layers.append(
                 block(
-                    in_channels  = self.inplanes,
+                    in_channels  = self.num_channels,
                     out_channels = planes,
                     groups       = self.groups,
                     base_width   = self.base_width,
