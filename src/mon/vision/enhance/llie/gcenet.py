@@ -148,19 +148,24 @@ class GCENet(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
-        variant      :         str | None = None,
         num_channels : int   | str        = 32,
         scale_factor : float | str        = 1.0,
         gamma        : float | str | None = 2.8,
         num_iters    : int   | str        = 8,
         unsharp_sigma: int   | str | None = None,
+        weights      : Any                = None,
+        name         :         str        = "gcenet",
+        variant      :         str | None = None,
         *args, **kwargs
     ):
         variant = core.to_int(variant)
         variant = f"{variant:04d}" if isinstance(variant, int) else None
         super().__init__(
-            variant = variant,
-            loss    = ZeroReferenceLoss(),
+            channels = 3,
+            weights  = weights,
+            name     = name,
+            variant  = variant,
+            loss     = ZeroReferenceLoss(),
             *args, **kwargs
         )
         self.num_channels  = core.to_int(num_channels)    or 32
@@ -198,7 +203,10 @@ class GCENet(base.LowLightImageEnhancementModel):
                 weight_tvA      = 1600,
                 reduction       = "mean",
             )
-            self.apply(self.init_weights)
+            if self.weights:
+                self.load_weights()
+            else:
+                self.apply(self.init_weights)
         else:
             self.config_model_variant()
 

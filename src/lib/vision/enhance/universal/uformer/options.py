@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 
-class Options():
-
+class Options:
     def __init__(self):
         pass
 
@@ -59,11 +58,11 @@ class Options():
         parser.add_argument('--resume', action='store_true',default=False)
         parser.add_argument('--train_dir', type=str, default ='./datasets/SIDD/train',  help='dir of train data')
         parser.add_argument('--val_dir', type=str, default ='./datasets/SIDD/val',  help='dir of train data')
-        parser.add_argument('--warmup', action='store_true', default=False, help='warmup') 
-        parser.add_argument('--warmup_epochs', type=int,default=3, help='epochs for warmup') 
+        parser.add_argument('--warmup', action='store_true', default=False, help='warmup')
+        parser.add_argument('--warmup_epochs', type=int,default=3, help='epochs for warmup')
 
         # ddp
         parser.add_argument("--local_rank", type=int,default=-1,help='DDP parameter, do not modify')#不需要赋值，启动命令 torch.distributed.launch会自动赋值
-        parser.add_argument("--distribute",action='store_true',help='whether using multi gpu train')
-        parser.add_argument("--distribute_mode",type=str,default='DDP',help="using which mode to ")
+        parser.add_argument("--distribute",      action='store_true',help='whether using multi gpu train')
+        parser.add_argument("--distribute_mode", type=str,default='DDP',help="using which mode to ")
         return parser

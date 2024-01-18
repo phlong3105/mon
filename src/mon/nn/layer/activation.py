@@ -49,7 +49,7 @@ __all__ = [
 
 import functools
 import types
-from typing import Callable
+from typing import Callable, Any
 
 import torch
 from torch import nn
@@ -57,7 +57,7 @@ from torch.nn import functional
 
 from mon.core import builtins
 from mon.globals import LAYERS
-from mon.nn.layer import base, linear
+from mon.nn.layer import base
 from mon.nn.typing import _size_2_t
 
 
@@ -429,13 +429,17 @@ class Threshold(base.PassThroughLayerParsingMixin, nn.Threshold):
 # endregion
 
 
-def to_act_layer(act: Callable = ReLU(), *args, **kwargs) -> nn.Module:
+# region Utils
+
+def to_act_layer(act_layer: Any = ReLU(), *args, **kwargs) -> nn.Module:
     """Create activation layer."""
     # if isinstance(norm, str):
     #     norm = LAYER.build(name=norm)
-    act_layer = act
-    if act is None or act == False:
+    act_layer = act_layer
+    if act_layer is None or act_layer == False:
         act_layer = nn.Identity()
-    elif isinstance(act, Callable | types.FunctionType | functools.partial):
-        act_layer = act(*args, **kwargs)
+    elif isinstance(act_layer, Callable | types.FunctionType | functools.partial):
+        act_layer = act_layer(*args, **kwargs)
     return act_layer
+
+# endregion

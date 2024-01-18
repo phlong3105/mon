@@ -66,7 +66,7 @@ class BatchNorm2dAct(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
         track_running_stats: bool     = True,
         device             : Any      = None,
         dtype              : Any      = None,
-        act                : Callable = activation.ReLU(),
+        act_layer          : Callable = activation.ReLU(),
         inplace            : bool     = True,
         *args, **kwargs
     ):
@@ -79,7 +79,7 @@ class BatchNorm2dAct(base.SameChannelsLayerParsingMixin, nn.BatchNorm2d):
             device              = device,
             dtype               = dtype
         )
-        self.act = activation.to_act_layer(act, inplace)
+        self.act = activation.to_act_layer(act_layer, inplace)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
@@ -119,7 +119,7 @@ class BatchNorm2dReLU(BatchNorm2dAct):
             track_running_stats = track_running_stats,
             device              = device,
             dtype               = dtype,
-            act                 = activation.ReLU(),
+            act_layer           = activation.ReLU(),
             inplace             = inplace,
             drop_block          = drop_block
         )
@@ -538,7 +538,7 @@ class GroupNormAct(GroupNorm):
         affine      : bool     = True,
         device      : Any      = None,
         dtype       : Any      = None,
-        act         : Callable = activation.ReLU,
+        act_layer   : Callable = activation.ReLU,
         inplace     : bool     = True,
     ):
         super().__init__(
@@ -549,7 +549,7 @@ class GroupNormAct(GroupNorm):
             device       = device,
             dtype        = dtype
         )
-        self.act = activation.to_act_layer(act, inplace)
+        self.act = activation.to_act_layer(act_layer, inplace)
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input

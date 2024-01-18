@@ -19,6 +19,7 @@ import torch
 from torchvision.models import _utils
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -64,8 +65,8 @@ class InvertedResidual(nn.Module):
     def __init__(
         self,
         cnf       : InvertedResidualConfig,
-        norm_layer: Callable[..., nn.Module],
-        se_layer  : Callable[..., nn.Module] = functools.partial(nn.SqueezeExcitation, scale_activation=nn.Hardsigmoid),
+        norm_layer: _callable,
+        se_layer  : _callable = functools.partial(nn.SqueezeExcitation, scale_activation=nn.Hardsigmoid),
         *args, **kwargs
     ):
         super().__init__()
@@ -198,15 +199,17 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         self,
         inverted_residual_setting: list[InvertedResidualConfig],
         last_channel             : int,
-        num_classes              : int   = 1000,
-        block                    : Callable[..., nn.Module] | None = None,
-        norm_layer               : Callable[..., nn.Module] | None = None,
-        dropout                  : float = 0.2,
-        weights                  : Any   = None,
-        name                     : str   = "mobilenetv3",
+        channels                 : int       = 3,
+        num_classes              : int       = 1000,
+        block                    : _callable = None,
+        norm_layer               : _callable = None,
+        dropout                  : float     = 0.2,
+        weights                  : Any       = None,
+        name                     : str       = "mobilenetv3",
         *args, **kwargs,
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -233,7 +236,7 @@ class MobileNetV3(base.ImageClassificationModel, ABC):
         firstconv_output_channels = inverted_residual_setting[0].in_channels
         layers.append(
             nn.Conv2dNormAct(
-                in_channels      = 3,
+                in_channels      = self.channels,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 3,
                 stride           = 2,

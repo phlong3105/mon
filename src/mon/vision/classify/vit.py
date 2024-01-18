@@ -18,11 +18,12 @@ __all__ = [
 import functools
 from abc import ABC
 from collections import OrderedDict
-from typing import Callable, NamedTuple, Any
+from typing import NamedTuple, Any
 
 import torch
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -37,8 +38,8 @@ class ConvStemConfig(NamedTuple):
     out_channels    : int
     kernel_size     : int
     stride          : int
-    norm_layer      : Callable[..., nn.Module] = nn.BatchNorm2d
-    activation_layer: Callable[..., nn.Module] = nn.ReLU
+    norm_layer      : _callable = nn.BatchNorm2d
+    activation_layer: _callable = nn.ReLU
 
 
 class MLPBlock(nn.MLP):
@@ -101,7 +102,7 @@ class EncoderBlock(nn.Module):
         mlp_dim          : int,
         dropout          : float,
         attention_dropout: float,
-        norm_layer       : Callable[..., nn.Module] = functools.partial(nn.LayerNorm, eps = 1e-6),
+        norm_layer       : _callable = functools.partial(nn.LayerNorm, eps = 1e-6),
         *args, **kwargs
     ):
         super().__init__()
@@ -137,7 +138,7 @@ class Encoder(nn.Module):
         mlp_dim          : int,
         dropout          : float,
         attention_dropout: float,
-        norm_layer       : Callable[..., torch.nn.Module] = functools.partial(nn.LayerNorm, eps = 1e-6),
+        norm_layer       : _callable = functools.partial(nn.LayerNorm, eps = 1e-6),
         *args, **kwargs
     ):
         super().__init__()
@@ -168,7 +169,6 @@ class Encoder(nn.Module):
 
 # region Model
 
-
 class VisionTransformer(base.ImageClassificationModel, ABC):
     """Vision Transformer as per https://arxiv.org/abs/2010.11929.
     
@@ -187,21 +187,23 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
         mlp_dim            : int,
         dropout            : float      = 0.0,
         attention_dropout  : float      = 0.0,
+        channels           : int        = 3,
         num_classes        : int        = 1000,
         representation_size: int | None = None,
-        norm_layer         : Callable[..., torch.nn.Module] = functools.partial(nn.LayerNorm, eps = 1e-6),
+        norm_layer         : _callable = functools.partial(nn.LayerNorm, eps = 1e-6),
         conv_stem_configs  : list[ConvStemConfig] | None    = None,
         weights            : Any = None,
         name               : str = "vit",
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
             *args, **kwargs
         )
-        torch._assert(image_size % patch_size == 0, "Input shape indivisible by patch size!")
+        assert image_size % patch_size == 0, "Input shape indivisible by patch size!"
         self.image_size          = image_size
         self.patch_size          = patch_size
         self.hidden_dim          = hidden_dim
@@ -234,7 +236,7 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
             self.conv_proj: nn.Module = seq_proj
         else:
             self.conv_proj = nn.Conv2d(
-                in_channels  = 3,
+                in_channels  = self.channels,
                 out_channels = hidden_dim,
                 kernel_size  = patch_size,
                 stride       = patch_size,
@@ -299,8 +301,8 @@ class VisionTransformer(base.ImageClassificationModel, ABC):
     def _process_input(self, x: torch.Tensor) -> torch.Tensor:
         n, c, h, w = x.shape
         p = self.patch_size
-        torch._assert(h == self.image_size, f"Wrong image height! Expected {self.image_size} but got {h}!")
-        torch._assert(w == self.image_size, f"Wrong image width!  Expected {self.image_size} but got {w}!")
+        assert h == self.image_size, f"Wrong image height! Expected {self.image_size} but got {h}!"
+        assert w == self.image_size, f"Wrong image width!  Expected {self.image_size} but got {w}!"
         n_h = h // p
         n_w = w // p
         # (n, c, h, w) -> (n, hidden_dim, n_h, n_w)

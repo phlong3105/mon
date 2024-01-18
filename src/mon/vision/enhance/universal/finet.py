@@ -11,11 +11,12 @@ __all__ = [
     "FINet",
 ]
 
-from typing import Any, Literal
+from typing import Any, Literal, Sequence
 
 import torch
 
 from mon.globals import MODELS
+from mon.nn.typing import _size_2_t
 from mon.vision import core, nn
 from mon.vision.enhance.universal import base
 
@@ -129,6 +130,85 @@ class UNetUpBlock(nn.Module):
         y = torch.cat([y, bridge], 1)
         y = self.conv_block(y)
         return y
+
+
+class SupervisedAttentionModule(nn.Module):
+    """Supervised Attention Module."""
+    
+    def __init__(
+        self,
+        channels    : int,
+        kernel_size : _size_2_t = 3,
+        stride      : _size_2_t = 1,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
+    ):
+        super().__init__()
+        padding = kernel_size[0] // 2 \
+            if isinstance(kernel_size, Sequence) \
+            else kernel_size // 2
+        
+        self.conv1 = nn.Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels  = channels,
+            out_channels = 3,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv3 = nn.Conv2d(
+            in_channels  = 3,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+    
+    def forward(self, x: torch.Tensor, x_img: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Run forward pass.
+
+        Args:
+            x: The first tensor is the output from the previous layer.
+            x_img: The second tensor is the current step input.
+            
+        Returns:
+            Supervised attention features.
+            Output feature for the next layer.
+        """
+        x1  = self.conv1(x)
+        img = self.conv2(x) + x_img
+        x2  = torch.sigmoid(self.conv3(img))
+        x1  = x1 * x2
+        x1  = x1 + x
+        return x1, img
 
 # endregion
 
@@ -259,7 +339,7 @@ class FINet(base.UniversalImageEnhancementModel):
                 self.skip_conv_2.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
                 prev_channels = (2 ** i) * self.num_channels
 
-            self.sam12 = nn.SAM(prev_channels)
+            self.sam12 = SupervisedAttentionModule(prev_channels)
             self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
             self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
 

@@ -27,12 +27,13 @@ __all__ = [
 from abc import ABC
 from collections import OrderedDict
 from functools import partial
-from typing import Callable, Any
+from typing import Any
 
 import torch
 from torchvision.models import _utils
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -50,8 +51,8 @@ class SimpleStemIN(nn.Conv2dNormAct):
         self,
         width_in        : int,
         width_out       : int,
-        norm_layer      : Callable[..., nn.Module],
-        activation_layer: Callable[..., nn.Module],
+        norm_layer      : _callable,
+        activation_layer: _callable,
         *args, **kwargs
     ):
         super().__init__(
@@ -73,8 +74,8 @@ class BottleneckTransform(nn.Sequential):
         width_in             : int,
         width_out            : int,
         stride               : int,
-        norm_layer           : Callable[..., nn.Module],
-        activation_layer     : Callable[..., nn.Module],
+        norm_layer           : _callable,
+        activation_layer     : _callable,
         group_width          : int,
         bottleneck_multiplier: float,
         se_ratio             : float | None,
@@ -130,8 +131,8 @@ class ResBottleneckBlock(nn.Module):
         width_in             : int,
         width_out            : int,
         stride               : int,
-        norm_layer           : Callable[..., nn.Module],
-        activation_layer     : Callable[..., nn.Module],
+        norm_layer           : _callable,
+        activation_layer     : _callable,
         group_width          : int          = 1,
         bottleneck_multiplier: float        = 1.0,
         se_ratio             : float | None = None,
@@ -181,9 +182,9 @@ class AnyStage(nn.Sequential):
         width_out            : int,
         stride               : int,
         depth                : int,
-        block_constructor    : Callable[..., nn.Module],
-        norm_layer           : Callable[..., nn.Module],
-        activation_layer     : Callable[..., nn.Module],
+        block_constructor    : _callable,
+        norm_layer           : _callable,
+        activation_layer     : _callable,
         group_width          : int,
         bottleneck_multiplier: float,
         se_ratio             : float | None = None,
@@ -330,17 +331,19 @@ class RegNet(base.ImageClassificationModel, ABC):
     def __init__(
         self,
         block_params: BlockParams,
-        num_classes : int = 1000,
-        stem_width  : int = 32,
-        stem_type   : Callable[..., nn.Module] | None = None,
-        block_type  : Callable[..., nn.Module] | None = None,
-        norm_layer  : Callable[..., nn.Module] | None = None,
-        activation  : Callable[..., nn.Module] | None = None,
-        weights     : Any = None,
-        name        : str = "regnet",
+        channels    : int       = 3,
+        num_classes : int       = 1000,
+        stem_width  : int       = 32,
+        stem_type   : _callable = None,
+        block_type  : _callable = None,
+        norm_layer  : _callable = None,
+        activation  : _callable = None,
+        weights     : Any       = None,
+        name        : str       = "regnet",
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -357,7 +360,7 @@ class RegNet(base.ImageClassificationModel, ABC):
 
         # Ad hoc stem
         self.stem = stem_type(
-            3,  # width_in
+            self.channels,  # width_in
             stem_width,
             norm_layer,
             activation,
@@ -380,7 +383,7 @@ class RegNet(base.ImageClassificationModel, ABC):
                          group_width          = group_width,
                          bottleneck_multiplier= bottleneck_multiplier,
                          se_ratio             = block_params.se_ratio,
-                        stage_index           = i + 1,
+                         stage_index          = i + 1,
                     ),
                 )
             )
@@ -388,7 +391,7 @@ class RegNet(base.ImageClassificationModel, ABC):
 
         self.trunk_output = nn.Sequential(OrderedDict(blocks))
         self.avgpool      = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc           = nn.Linear(in_features=current_width, out_features=num_classes)
+        self.fc           = nn.Linear(in_features=current_width, out_features=self.num_classes)
         
         if self.weights:
             self.load_weights()

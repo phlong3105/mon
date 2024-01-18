@@ -58,7 +58,8 @@ from torch import nn
 
 from mon.core import math
 from mon.globals import LAYERS
-from mon.nn.layer import activation, attention, base, conv
+from mon.nn.layer import activation, attention, base
+from mon.nn.layer.conv import base as conv
 from mon.nn.typing import _size_2_t
 
 
@@ -108,7 +109,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             dtype        = dtype,
         )
         self.act1 = activation.to_act_layer(
-            act          = act,
+            act_layer= act,
             num_features = mid_channels
         )  # if norm else None
         self.pw_conv2 = conv.Conv2d(
@@ -125,7 +126,7 @@ class SubspaceBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             dtype        = dtype,
         )
         self.act2    = activation.to_act_layer(
-            act          = act,
+            act_layer= act,
             num_features = out_channels
         )  # if norm else None
         self.dw_conv = conv.Conv2d(
@@ -208,7 +209,7 @@ class UnconstrainedBlueprintSeparableConv2d(base.ConvLayerParsingMixin, nn.Modul
             device       = device,
             dtype        = dtype,
         )
-        self.act     = activation.to_act_layer(act=act, num_features=out_channels)
+        self.act     = activation.to_act_layer(act_layer=act, num_features=out_channels)
         self.dw_conv = conv.Conv2d(
             in_channels  = out_channels,
             out_channels = out_channels,

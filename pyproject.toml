@@ -9,7 +9,7 @@
 #
 [tool.poetry]
 name          = "mon"
-version       = "1.3.2"
+version       = "1.3.3"
 description   = "MON covers a wide range of research topics in computer vision, machine learning, and deep learning."
 license       = "MIT"
 authors       = [

@@ -31,6 +31,7 @@ from torchvision import ops
 from torchvision.models import _utils
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -49,7 +50,7 @@ class _MBConvConfig:
     in_channels : int
     out_channels: int
     num_layers  : int
-    block       : Callable[..., nn.Module]
+    block       : _callable
 
     @staticmethod
     def adjust_channels(channels: int, width_mult: float, min_value: int | None = None) -> int:
@@ -69,9 +70,9 @@ class MBConvConfig(_MBConvConfig):
         in_channels : int,
         out_channels: int,
         num_layers  : int,
-        width_mult  : float = 1.0,
-        depth_mult  : float = 1.0,
-        block       : Callable[..., nn.Module] | None = None,
+        width_mult  : float     = 1.0,
+        depth_mult  : float     = 1.0,
+        block       : _callable = None,
         *args, **kwargs
     ):
         in_channels  = self.adjust_channels(in_channels, width_mult)
@@ -97,7 +98,7 @@ class FusedMBConvConfig(_MBConvConfig):
         in_channels : int,
         out_channels: int,
         num_layers  : int,
-        block       : Callable[..., nn.Module] | None = None,
+        block       : _callable = None,
         *args, **kwargs
     ):
         if block is None:
@@ -111,8 +112,8 @@ class MBConv(nn.Module):
         self,
         cnf                  : MBConvConfig,
         stochastic_depth_prob: float,
-        norm_layer           : Callable[..., nn.Module],
-        se_layer             : Callable[..., nn.Module] = nn.SqueezeExcitation,
+        norm_layer           : _callable,
+        se_layer             : _callable = nn.SqueezeExcitation,
         *args, **kwargs
     ):
         super().__init__()
@@ -191,7 +192,7 @@ class FusedMBConv(nn.Module):
         self,
         cnf                  : FusedMBConvConfig,
         stochastic_depth_prob: float,
-        norm_layer           : Callable[..., nn.Module],
+        norm_layer           : _callable,
         *args, **kwargs
     ):
         super().__init__()
@@ -328,14 +329,16 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         inverted_residual_setting: Sequence[MBConvConfig | FusedMBConvConfig],
         dropout                  : float,
         stochastic_depth_prob    : float      = 0.2,
+        channels                 : int        = 3,
         num_classes              : int        = 1000,
-        norm_layer               : Callable[..., nn.Module] | None = None,
+        norm_layer               : _callable  = None,
         last_channel             : int | None = None,
-        weights                  : Any   = None,
+        weights                  : Any        = None,
         name                     : str        = "efficientnet",
         *args, **kwargs,
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -358,7 +361,7 @@ class EfficientNet(base.ImageClassificationModel, ABC):
         firstconv_output_channels = inverted_residual_setting[0].in_channels
         layers.append(
             nn.Conv2dNormAct(
-                in_channels      = 3,
+                in_channels      = self.channels,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 3,
                 stride           = 2,

@@ -7,7 +7,8 @@ same naming convention as in :mod:`torch`.
 
 from __future__ import annotations
 
-from typing import Optional, TypeVar, Union
+from typing import Optional, TypeVar, Union, Callable
+from torch import nn
 
 # Create some useful type aliases
 
@@ -45,3 +46,6 @@ _size_3_opt_t   = _scalar_or_tuple_3_t[Optional[int]]
 _ratio_2_t   = _scalar_or_tuple_2_t[float]
 _ratio_3_t   = _scalar_or_tuple_3_t[float]
 _ratio_any_t = _scalar_or_tuple_any_t[float]
+
+#
+_callable    = Union[None, nn.Module, Callable]

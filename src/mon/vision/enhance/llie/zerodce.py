@@ -10,6 +10,8 @@ __all__ = [
     "ZeroDCEPP",
 ]
 
+from typing import Any
+
 import torch
 
 from mon.globals import MODELS
@@ -21,7 +23,7 @@ console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
 
 
-# region Layer
+# region Module
 
 class PixelwiseHigherOrderLECurve(nn.MergingLayerParsingMixin, nn.Module):
     """Pixelwise Light-Enhancement Curve is a higher-order curves that can be
@@ -209,7 +211,14 @@ class CombinedLoss02(nn.Loss):
 @MODELS.register(name="zerodce")
 class ZeroDCE(base.LowLightImageEnhancementModel):
     """Zero-DCE (Zero-Reference Deep Curve Estimation) model.
-
+    
+    Args:
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        num_channels: The number of input and output channels for subsequent
+            layers. Default: ``32``.
+        num_filters: The number of convolutional layers in the model.
+            Default: ``8``.
+        
     References:
         `<https://github.com/Li-Chongyi/Zero-DCE>`__
 
@@ -217,25 +226,47 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
     """
     
     zoo = {
-        "zerodce-sice": {
+        "sice-zerodce": {
+            "url"         : None,
             "path"        : "best.pth",
+            "channels"    : 3,
             "num_channels": 32,
+            "num_iters"   : 8,
+            "map": {},
         },
     }
 
     def __init__(
         self,
+        channels    : int = 3,
         num_channels: int = 32,
         num_iters   : int = 8,
+        weights     : Any = None,
+        name        : str = "zerodce",
         *args, **kwargs
     ):
-        super().__init__(loss=CombinedLoss01(), *args, **kwargs)
+        super().__init__(
+            channels = channels,
+            weights  = weights,
+            name     = name,
+            loss     = CombinedLoss01(),
+            *args, **kwargs
+        )
         assert num_iters <= 8
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels     = self.weights.get("channels",     channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            num_iters    = self.weights.get("num_iters",    num_iters)
+            
+        self.channels     = channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
-
+        
+        # Construct model
         self.relu     = nn.ReLU(inplace=True)
-        self.e_conv1  = nn.Conv2d(3,          self.num_channels, 3, 1, 1, bias=True)
+        self.e_conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
         self.e_conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
         self.e_conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
         self.e_conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
@@ -244,7 +275,12 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         self.e_conv7  = nn.Conv2d(self.num_channels * 2, 24,    3, 1, 1, bias=True)
         self.maxpool  = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
-        self.apply(self.init_weights)
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         """Initialize model's weights."""
@@ -322,7 +358,15 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
 @MODELS.register(name="zerodce++")
 class ZeroDCEPP(base.LowLightImageEnhancementModel):
     """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
-
+    
+    Args:
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        num_channels: The number of input and output channels for subsequent
+            layers. Default: ``32``.
+        num_filters: The number of convolutional layers in the model.
+            Default: ``8``.
+        scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
+        
     References:
         `<https://github.com/Li-Chongyi/Zero-DCE_extension>`__
 
@@ -330,9 +374,13 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
     """
 
     zoo = {
-        "zerodce-sice" : {
+        "sice-zerodce" : {
+            "url"         : None,
             "path"        : "best.pth",
+            "channels"    : 3,
             "num_channels": 32,
+            "num_iters"   : 8,
+            "scale_factor": 1.0,
             "map": {
                 "depth_conv": "dw_conv",
                 "point_conv": "pw_conv",
@@ -342,27 +390,50 @@ class ZeroDCEPP(base.LowLightImageEnhancementModel):
 
     def __init__(
         self,
+        channels    : int   = 3,
         num_channels: int   = 32,
         num_iters   : int   = 8,
         scale_factor: float = 1.0,
+        weights     : Any   = None,
+        name        : str   = "zerodce++",
         *args, **kwargs
     ):
-        super().__init__(loss=CombinedLoss01(), *args, **kwargs)
+        super().__init__(
+            channels = channels,
+            weights  = weights,
+            name     = name,
+            loss     = CombinedLoss01(),
+            *args, **kwargs
+        )
         assert num_iters <= 8
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels     = self.weights.get("channels",     channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            num_iters    = self.weights.get("num_iters",    num_iters)
+            scale_factor = self.weights.get("scale_factor",    scale_factor)
+        
+        self.channels     = channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
         self.scale_factor = scale_factor
-
+        
+        # Construct model
         self.relu     = nn.ReLU(inplace=True)
         self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
-        self.e_conv1  = nn.DSConv2d(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.e_conv2  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.e_conv3  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.e_conv4  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.e_conv5  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.e_conv6  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.e_conv7  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, dw_stride=1, dw_padding=1, groups=1)
-        self.apply(self.init_weights)
+        self.e_conv1  = nn.DSConv2d(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv2  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv3  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv4  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv5  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv6  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv7  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""

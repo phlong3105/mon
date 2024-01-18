@@ -157,12 +157,12 @@ class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
         pool_type  : str  = "fast",
         flatten    : bool = False,
     ):
-        from mon.nn.layer import linear, mutating
+        from mon.nn.layer import linear, transform
         
         super().__init__()
         self.pool_type = pool_type or ""
         
-        self.flatten = mutating.Flatten(1) \
+        self.flatten = transform.Flatten(1) \
             if flatten else linear.Identity()
         if pool_type == "":
             self.pool = linear.Identity()  # pass through

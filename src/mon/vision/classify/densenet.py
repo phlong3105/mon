@@ -39,7 +39,7 @@ class DenseLayer(nn.Module):
         growth_rate     : int,
         bn_size         : int,
         drop_rate       : float,
-        memory_efficient: bool  = False,
+        memory_efficient: bool = False,
         *args, **kwargs
     ):
         super().__init__()
@@ -177,6 +177,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
         self,
         growth_rate      : int   = 32,
         block_config     : tuple[int, int, int, int] = (6, 12, 24, 16),
+        channels         : int   = 3,
         num_channels     : int   = 64,
         bn_size          : int   = 4,
         drop_rate        : float = 0,
@@ -187,6 +188,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -203,7 +205,7 @@ class DenseNet(base.ImageClassificationModel, ABC):
         self.features = nn.Sequential(
             OrderedDict(
                 [
-                    ("conv0", nn.Conv2d(3, self.num_channels, kernel_size=7, stride=2, padding=3, bias=False)),
+                    ("conv0", nn.Conv2d(self.channels, self.num_channels, kernel_size=7, stride=2, padding=3, bias=False)),
                     ("norm0", nn.BatchNorm2d(self.num_channels)),
                     ("relu0", nn.ReLU(inplace=True)),
                     ("pool0", nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),

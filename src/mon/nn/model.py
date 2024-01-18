@@ -512,7 +512,7 @@ class Model(lightning.LightningModule, ABC):
             the model. Any of the following cases:
                 - Case 01: A file name, or a path to a ``.yaml`` file. Ex: 'alexnet.yaml'.
                 - Case 02: ``None``, define each layer manually.
-        channels: The first layer's input channel. Default: ``3``.
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_classes: A number of classes, which is also the last layer's output
             channels. Default: ``None`` mean it will be determined during model
             parsing.
@@ -634,10 +634,10 @@ class Model(lightning.LightningModule, ABC):
     ):
         super().__init__(*args, **kwargs)
         self.config        = config
-        self.channels      = channels or self.channels
+        self.channels      = channels or None
         self.num_classes   = num_classes
         self.classlabels   = mdata.ClassLabels.from_value(classlabels) if classlabels is not None else None
-        self.name          = name    or self.name
+        self.name          = name    or None
         self.variant       = variant or None
         self.fullname      = fullname
         self.project       = project
@@ -790,8 +790,12 @@ class Model(lightning.LightningModule, ABC):
     def weights(self, weights: Any = None):
         if isinstance(weights, str):
             if weights in self.zoo:
-                weights = self.zoo[weights]
+                weights         = self.zoo[weights]
                 weights["path"] = self.zoo_dir / weights.get("path", "")
+                if "num_classes" in weights:
+                    num_classes = weights["num_classes"]
+                    if num_classes is not None and num_classes != self.num_classes:
+                        self.num_classes = num_classes
             else:
                 raise ValueError(f"``'{weights}'`` has not been defined in ``zoo``.")
         elif isinstance(weights, core.Path):
@@ -999,6 +1003,8 @@ class Model(lightning.LightningModule, ABC):
         # Channels
         if "channels" in self.config:
             channels = self.config["channels"]
+            if self.channels is None:
+                self.channels = channels
             if channels != self.channels:
                 self.config["channels"] = self.channels
                 console.log(

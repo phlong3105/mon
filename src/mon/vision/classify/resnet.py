@@ -25,6 +25,7 @@ from typing import Callable, Type, Any
 import torch
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -39,15 +40,15 @@ class Conv3x3(nn.Conv2d):
     
     def __init__(
         self,
-        in_planes : int,
-        out_planes: int,
-        stride    : int = 1,
-        groups    : int = 1,
-        dilation  : int = 1,
+        in_channels : int,
+        out_channels: int,
+        stride      : int = 1,
+        groups      : int = 1,
+        dilation    : int = 1,
     ):
         super().__init__(
-            in_channels  = in_planes,
-            out_channels = out_planes,
+            in_channels  = in_channels,
+            out_channels = out_channels,
             kernel_size  = 3,
             stride       = stride,
             padding      = dilation,
@@ -62,13 +63,13 @@ class Conv1x1(nn.Conv2d):
     
     def __init__(
         self,
-        in_planes : int,
-        out_planes: int,
-        stride    : int = 1,
+        in_channels : int,
+        out_channels: int,
+        stride      : int = 1,
     ):
         super().__init__(
-            in_channels  = in_planes,
-            out_channels = out_planes,
+            in_channels  = in_channels,
+            out_channels = out_channels,
             kernel_size  = 1,
             stride       = stride,
             bias         = False,
@@ -88,7 +89,7 @@ class BasicBlock(nn.Module):
         groups      : int = 1,
         base_width  : int = 64,
         dilation    : int = 1,
-        norm_layer  : Callable[..., nn.Module] | None = None,
+        norm_layer  : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -140,7 +141,7 @@ class Bottleneck(nn.Module):
         groups      : int = 1,
         base_width  : int = 64,
         dilation    : int = 1,
-        norm_layer  : Callable[..., nn.Module] | None = None,
+        norm_layer  : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -192,17 +193,19 @@ class ResNet(base.ImageClassificationModel, ABC):
         self,
         block                       : Type[BasicBlock | Bottleneck],
         layers                      : list[int],
+        channels                    : int  = 3,
         num_classes                 : int  = 1000,
         zero_init_residual          : bool = False,
         groups                      : int  = 1,
         width_per_group             : int  = 64,
-        replace_stride_with_dilation: list[bool]               | None = None,
-        norm_layer                  : Callable[..., nn.Module] | None = None,
-        weights                     : Any = None,
-        name                        : str = "resnet",
+        replace_stride_with_dilation: list[bool] | None = None,
+        norm_layer                  : _callable = None,
+        weights                     : Any       = None,
+        name                        : str       = "resnet",
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -225,7 +228,7 @@ class ResNet(base.ImageClassificationModel, ABC):
             )
         self.groups     = groups
         self.base_width = width_per_group
-        self.conv1      = nn.Conv2d(3, self.num_channels, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1      = nn.Conv2d(self.channels, self.num_channels, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1        = norm_layer(self.num_channels)
         self.relu       = nn.ReLU(inplace=True)
         self.maxpool    = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)

@@ -21,6 +21,7 @@ import torch
 from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.classify import base
+from mon.nn.typing import _callable
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -130,13 +131,15 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         self,
         stages_repeats     : list[int],
         stages_out_channels: list[int],
-        num_classes        : int = 1000,
-        inverted_residual  : Callable[..., nn.Module] = InvertedResidual,
-        weights            : Any = None,
-        name               : str = "shufflenetv2",
+        channels           : int       = 3,
+        num_classes        : int       = 1000,
+        inverted_residual  : _callable = InvertedResidual,
+        weights            : Any       = None,
+        name               : str       = "shufflenetv2",
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -145,10 +148,10 @@ class ShuffleNetV2(base.ImageClassificationModel, ABC):
         if len(stages_repeats) != 3:
             raise ValueError("Expected :param:`stages_repeats` as :class:`list` of 3 positive ints")
         if len(stages_out_channels) != 5:
-            raise ValueError("Expected :paramL`stages_out_channels` as :class:`list` of 5 positive ints")
+            raise ValueError("Expected :param:`stages_out_channels` as :class:`list` of 5 positive ints")
         self._stage_out_channels = stages_out_channels
 
-        input_channels  = 3
+        input_channels  = self.channels
         output_channels = self._stage_out_channels[0]
         self.conv1 = nn.Sequential(
             nn.Conv2d(input_channels, output_channels, 3, 2, 1, bias=False),

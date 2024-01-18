@@ -14,8 +14,8 @@ import pickle
 
 import numpy as np
 from torchvision.datasets.utils import (
-    check_integrity,
-    download_and_extract_archive,
+	check_integrity,
+	download_and_extract_archive,
 )
 
 from mon.globals import DATAMODULES, DATASETS, ModelPhase

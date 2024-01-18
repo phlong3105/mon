@@ -17,8 +17,8 @@ import glob
 
 from mon.vision.transform import transform as t
 from mon.vision.typing import (
-    CallableType, ClassLabelsType, Ints,
-    ModelPhaseType, PathType, Strs, TransformType, VisionBackendType,
+	CallableType, ClassLabelsType, Ints,
+	ModelPhaseType, PathType, Strs, TransformType, VisionBackendType,
 )
 from torch.utils.data import random_split
 

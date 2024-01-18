@@ -9,11 +9,12 @@ __all__ = [
     "HINet",
 ]
 
-from abc import ABC
+from typing import Any, Sequence
 
 import torch
 
 from mon.globals import MODELS
+from mon.nn.typing import _size_2_t
 from mon.vision import core, nn
 from mon.vision.enhance.universal import base
 
@@ -111,6 +112,85 @@ class UNetUpBlock(nn.Module):
         y = self.conv_block(y)
         return y
 
+
+class SupervisedAttentionModule(nn.Module):
+    """Supervised Attention Module."""
+    
+    def __init__(
+        self,
+        channels    : int,
+        kernel_size : _size_2_t = 3,
+        stride      : _size_2_t = 1,
+        dilation    : _size_2_t = 1,
+        groups      : int       = 1,
+        bias        : bool      = True,
+        padding_mode: str       = "zeros",
+        device      : Any       = None,
+        dtype       : Any       = None,
+    ):
+        super().__init__()
+        padding = kernel_size[0] // 2 \
+            if isinstance(kernel_size, Sequence) \
+            else kernel_size // 2
+        
+        self.conv1 = nn.Conv2d(
+            in_channels  = channels,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv2 = nn.Conv2d(
+            in_channels  = channels,
+            out_channels = 3,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.conv3 = nn.Conv2d(
+            in_channels  = 3,
+            out_channels = channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+    
+    def forward(self, x: torch.Tensor, x_img: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Run forward pass.
+
+        Args:
+            x: The first tensor is the output from the previous layer.
+            x_img: The second tensor is the current step input.
+            
+        Returns:
+            Supervised attention features.
+            Output feature for the next layer.
+        """
+        x1  = self.conv1(x)
+        img = self.conv2(x) + x_img
+        x2  = torch.sigmoid(self.conv3(img))
+        x1  = x1 * x2
+        x1  = x1 + x
+        return x1, img
+
 # endregion
 
 
@@ -126,24 +206,84 @@ class HINet(base.UniversalImageEnhancementModel):
     See Also: :class:`mon.vision.enhance.universal.base.UniversalImageEnhancementModel`
     """
     
-    zoo = {}
-
+    zoo = {
+        "gopro": {
+            "url"         : None,
+            "path"        : "hinet-deblur-gopro.pth",
+            "channels"    : 3,
+            "num_classes" : None,
+            "num_channels": 64,
+            "in_pos_left" : 3,
+            "in_pos_right": 4,
+            "map": {},
+        },
+        "reds": {
+            "url"         : None,
+            "path"        : "hinet-deblur-reds.pth",
+            "channels"    : 3,
+            "num_classes" : None,
+            "num_channels": 64,
+            "in_pos_left" : 3,
+            "in_pos_right": 4,
+            "map": {},
+        },
+        "sidd": {
+            "url"         : None,
+            "path"        : "hinet-denoise-sidd-x1.0.pth",
+            "channels"    : 3,
+            "num_classes" : None,
+            "num_channels": 64,
+            "in_pos_left" : 0,
+            "in_pos_right": 4,
+            "map": {},
+        },
+        "rain13k": {
+            "url"         : None,
+            "path"        : "hinet-derain-rain13k.pth",
+            "channels"    : 3,
+            "num_classes" : None,
+            "num_channels": 64,
+            "in_pos_left" : 0,
+            "in_pos_right": 4,
+            "map": {},
+        },
+    }
+    
     def __init__(
         self,
+        channels    : int   = 3,
         num_channels: int   = 64,
         depth       : int   = 5,
         relu_slope  : float = 0.2,
         in_pos_left : int   = 0,
         in_pos_right: int   = 4,
+        weights     : Any   = None,
+        name        : str   = "hinet",
         *args, **kwargs
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            channels = channels,
+            weights  = weights,
+            name     = name,
+            *args, **kwargs
+        )
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels     = self.weights.get("channels",     channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            depth        = self.weights.get("depth"       , depth)
+            relu_slope   = self.weights.get("relu_slope"  , relu_slope)
+            in_pos_left  = self.weights.get("in_pos_left" , in_pos_left)
+            in_pos_right = self.weights.get("in_pos_right", in_pos_right)
+            
+        self.channels     = channels
         self.num_channels = num_channels
         self.depth        = depth
         self.relu_slope   = relu_slope
         self.in_pos_left  = in_pos_left
         self.in_pos_right = in_pos_right
-
+        
+        # Construct model
         self.down_path_1  = nn.ModuleList()
         self.down_path_2  = nn.ModuleList()
         self.conv_01      = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
@@ -165,10 +305,15 @@ class HINet(base.UniversalImageEnhancementModel):
             self.skip_conv_1.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
             self.skip_conv_2.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
             prev_channels = (2 ** i) * self.num_channels
-        self.sam12 = nn.SAM(prev_channels)
+        self.sam12 = SupervisedAttentionModule(prev_channels)
         self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
         self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
-        self.apply(self.init_weights)
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
 
     def init_weights(self, m: nn.Module):
         gain      = torch.nn.init.calculate_gain('leaky_relu', 0.20)
@@ -240,7 +385,7 @@ class HINet(base.UniversalImageEnhancementModel):
             decs.append(x1)
 
         # SAM
-        sam_feats, y1 = self.sam12(input=[x1, x])
+        sam_feats, y1 = self.sam12(x1, x)
 
         # Stage 2
         x2     = self.conv_02(x)
@@ -258,3 +403,5 @@ class HINet(base.UniversalImageEnhancementModel):
         y2 = self.last(x2)
         y2 = y2 + x
         return [y1, y2]
+
+# endregion

@@ -15,6 +15,7 @@ from typing import Any
 import torch
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 from mon.vision.nn import functional as F
@@ -51,7 +52,7 @@ class Inception(nn.Module):
         ch5x5red   : int,
         ch5x5      : int,
         pool_proj  : int,
-        conv_block : nn.Module | None = None,
+        conv_block : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -89,8 +90,8 @@ class InceptionAux(nn.Module):
         self,
         in_channels: int,
         num_classes: int,
-        conv_block : nn.Module | None = None,
-        dropout    : float = 0.7,
+        conv_block : _callable = None,
+        dropout    : float     = 0.7,
         *args, **kwargs
     ):
         super().__init__()
@@ -148,6 +149,7 @@ class GoogleNet(base.ImageClassificationModel):
 
     def __init__(
         self,
+        channels       : int                    = 3,
         num_classes    : int                    = 1000,
         aux_logits     : bool                   = True,
         transform_input: bool                   = False,
@@ -160,6 +162,7 @@ class GoogleNet(base.ImageClassificationModel):
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -177,19 +180,20 @@ class GoogleNet(base.ImageClassificationModel):
             )
             init_weights = True
         if len(blocks) != 3:
-            raise ValueError(f"``blocks``'s length should be ``3``, but got {len(blocks)}.")
+            raise ValueError(f":param:`blocks`'s length should be ``3``, but got {len(blocks)}.")
        
         conv_block          = blocks[0]
         inception_block     = blocks[1]
         inception_aux_block = blocks[2]
-
+        
+        # Construct model
         self.aux_logits      = aux_logits
         self.transform_input = transform_input
         self.blocks          = blocks
         self.dropout         = dropout
         self.dropout_aux     = dropout_aux
         
-        self.conv1       = conv_block(3,  64, kernel_size=7, stride=2, padding=3)
+        self.conv1       = conv_block(self.channels, 64, kernel_size=7, stride=2, padding=3)
         self.maxpool1    = nn.MaxPool2d(3, stride=2, ceil_mode=True)
         self.conv2       = conv_block(64, 64, kernel_size=1)
         self.conv3       = conv_block(64, 192, kernel_size=3, padding=1)
@@ -220,6 +224,7 @@ class GoogleNet(base.ImageClassificationModel):
         self.dropout = nn.Dropout(p=self.dropout)
         self.fc      = nn.Linear(1024, self.num_classes)
         
+        # Load weights
         if self.weights:
             self.load_weights()
         elif init_weights:

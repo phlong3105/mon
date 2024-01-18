@@ -88,7 +88,7 @@ def encoder_decoder_skip(
     downsample_mode  : str          = "stride",
     need_1x1_up      : bool         = True,
     sigmoid          : bool         = True,
-    act              : Any          = nn.LeakyReLU,
+    act_layer        : Any          = nn.LeakyReLU,
 ) -> nn.Sequential:
     """Encoder-decoder network with skip connections.
 
@@ -110,7 +110,7 @@ def encoder_decoder_skip(
             ``'max'``, or ``'lanczos2'``. Default: ``'stride'``.
         need_1x1_up: Whether to use 1x1 convolution.
         sigmoid: Whether to use sigmoid function.
-        act: Activation layer.
+        act_layer: Activation layer.
     """
     assert len(channels_down) == len(channels_up) == len(channels_skip)
     n_scales = len(channels_down)
@@ -144,15 +144,15 @@ def encoder_decoder_skip(
         if channels_skip[i] != 0:
             skip.add(conv(input_depth, channels_skip[i], kernel_size_skip, bias=bias, padding=padding))
             skip.add(nn.BatchNorm2d(channels_skip[i]))
-            skip.add(act())
+            skip.add(act_layer())
 
         deeper.add(conv(input_depth, channels_down[i], kernel_size_down[i], 2, bias=bias, padding=padding, downsample_mode=downsample_mode[i]))
         deeper.add(nn.BatchNorm2d(channels_down[i]))
-        deeper.add(act())
+        deeper.add(act_layer())
 
         deeper.add(conv(channels_down[i], channels_down[i], kernel_size_down[i], bias=bias, padding=padding))
         deeper.add(nn.BatchNorm2d(channels_down[i]))
-        deeper.add(act())
+        deeper.add(act_layer())
 
         deeper_main = nn.Sequential()
 
@@ -168,12 +168,12 @@ def encoder_decoder_skip(
         model_tmp.add(conv(channels_skip[i] + k, channels_up[i], kernel_size_up[i], 1, bias=bias, padding=padding))
         model_tmp.add(nn.BatchNorm2d(channels_up[i]))
         # model_tmp.add(layer_norm(num_channels_up[i]))
-        model_tmp.add(act())
+        model_tmp.add(act_layer())
 
         if need_1x1_up:
             model_tmp.add(conv(channels_up[i], channels_up[i], 1, bias=bias, padding=padding))
             model_tmp.add(nn.BatchNorm2d(channels_up[i]))
-            model_tmp.add(act())
+            model_tmp.add(act_layer())
 
         input_depth = channels_down[i]
         model_tmp   = deeper_main
@@ -328,9 +328,16 @@ class ZID(base.DehazingModel):
         image_size: list | tuple = (512, 512, 3),
         clip      : bool         = True,
         save_image: bool         = False,
+        weights   : Any         = None,
+        name      : str         = "zid",
         *args, **kwargs
     ):
-        super().__init__(loss=None, *args, **kwargs)
+        super().__init__(
+            weights = weights,
+            name    = name,
+            loss    = None,
+            *args, **kwargs
+        )
         self.image_size = core.get_hw(size=image_size or [512, 512, 3])
         self.clip       = clip
         self.save_image = save_image
@@ -346,7 +353,7 @@ class ZID(base.DehazingModel):
             bias          = True,
             upsample_mode = "bilinear",
             sigmoid       = True,
-            act           = nn.LeakyReLU
+            act_layer= nn.LeakyReLU
         ).type(torch.cuda.FloatTensor)
 
         # Mask Network
@@ -360,7 +367,7 @@ class ZID(base.DehazingModel):
             padding       = "reflection",
             upsample_mode = "bilinear",
             sigmoid       = True,
-            act           = nn.LeakyReLU
+            act_layer= nn.LeakyReLU
         ).type(torch.cuda.FloatTensor)
         
         # Ambient Network
@@ -369,6 +376,11 @@ class ZID(base.DehazingModel):
         # Loss Functions
         self.mse_loss = nn.MSELoss().type(torch.cuda.FloatTensor)
         self.std_loss = nn.StdLoss().type(torch.cuda.FloatTensor)
+        
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
     
     def forward_loss(
         self,

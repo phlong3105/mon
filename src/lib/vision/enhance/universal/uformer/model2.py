@@ -764,7 +764,7 @@ class LeFF(nn.Module):
         # fc2
         flops += H * W * self.hidden_dim * self.dim
         print("LeFF:{%.2f}" % (flops / 1e9))
-        # eca 
+        # eca
         if hasattr(self.eca, 'flops'):
             flops += self.eca.flops()
         return flops

@@ -9,9 +9,11 @@ __all__ = [
     "CustomDownsample",
     "CustomUpsample",
     "Downsample",
+    "DownsampleConv2d",
     "Interpolate",
     "Scale",
     "Upsample",
+    "UpsampleConv2d",
     "UpsamplingBilinear2d",
     "UpsamplingNearest2d",
 ]
@@ -21,7 +23,7 @@ from typing import Literal
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional
+from torch.nn import functional as F
 
 from mon.core import math
 from mon.globals import LAYERS
@@ -100,7 +102,7 @@ class Downsample(base.PassThroughLayerParsingMixin, nn.Module):
             and isinstance(self.scale_factor, tuple) \
             and (self.scale_factor == 1.0 or all(s == 1.0 for s in self.scale_factor)):
             return x
-        y = functional.interpolate(
+        y = F.interpolate(
             input                  = x,
             size                   = self.size,
             scale_factor           = self.scale_factor,
@@ -109,6 +111,34 @@ class Downsample(base.PassThroughLayerParsingMixin, nn.Module):
             recompute_scale_factor = self.recompute_scale_factor
         )
         return y
+
+
+@LAYERS.register()
+class DownsampleConv2d(base.PassThroughLayerParsingMixin, nn.Module):
+    
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1),
+        )
+        self.in_channels  = in_channels
+        self.out_channels = out_channels
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        b, l, c = x.shape
+        h = int(math.sqrt(l))
+        w = int(math.sqrt(l))
+        x = x.transpose(1, 2).contiguous().view(b, c, h, w)
+        x = self.conv(x).flatten(2).transpose(1, 2).contiguous()  # B H*W C
+        return x
+    
+    def flops(self, h: int, w: int) -> int:
+        flops = 0
+        # conv
+        flops += h / 2 * w / 2 * self.in_channels * self.out_channels * 4 * 4
+        # print("Downsample:{%.2f}" % (flops / 1e9))
+        return flops
 
 
 @LAYERS.register()
@@ -271,6 +301,34 @@ class Upsample(base.PassThroughLayerParsingMixin, nn.Upsample):
 
 
 @LAYERS.register()
+class UpsampleConv2d(base.PassThroughLayerParsingMixin, nn.Module):
+    
+    def __init__(self, in_channels: int, out_channels: int):
+        super().__init__()
+        self.deconv = nn.Sequential(
+            nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2),
+        )
+        self.in_channels  = in_channels
+        self.out_channels = out_channels
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        b, l, c = x.shape
+        h = int(math.sqrt(l))
+        w = int(math.sqrt(l))
+        x = x.transpose(1, 2).contiguous().view(b, c, h, w)
+        x = self.deconv(x).flatten(2).transpose(1, 2).contiguous()  # B H*W C
+        return x
+    
+    def flops(self, h: int, w: int) -> int:
+        flops = 0
+        # conv
+        flops += h * 2 * w * 2 * self.in_channels * self.out_channels * 2 * 2
+        # print("Upsample:{%.2f}" % (flops / 1e9))
+        return flops
+    
+
+@LAYERS.register()
 class UpsamplingBilinear2d(base.PassThroughLayerParsingMixin, nn.UpsamplingBilinear2d):
     pass
 
@@ -329,7 +387,7 @@ class Interpolate(base.PassThroughLayerParsingMixin, nn.Module):
     
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         x = input
-        y = functional.interpolate(input=x, size=self.size)
+        y = F.interpolate(input=x, size=self.size)
         return y
 
 # endregion

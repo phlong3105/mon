@@ -15,6 +15,7 @@ import torch
 from torchvision.models import _utils
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 
@@ -33,7 +34,7 @@ class InvertedResidual(nn.Module):
         out_channels: int,
         stride      : int,
         expand_ratio: int,
-        norm_layer  : Callable[..., nn.Module] | None = None,
+        norm_layer  : _callable = None,
         *args, **kwargs,
     ):
         super().__init__()
@@ -116,18 +117,20 @@ class MobileNetV2(base.ImageClassificationModel):
     
     def __init__(
         self,
-        num_classes              : int   = 1000,
-        width_mult               : float = 1.0,
+        channels                 : int       = 3,
+        num_classes              : int       = 1000,
+        width_mult               : float     = 1.0,
         inverted_residual_setting: list[list[int]] | None = None,
-        round_nearest            : int   = 8,
-        block                    : Callable[..., nn.Module] | list = None,
-        norm_layer               : Callable[..., nn.Module] | list = None,
-        dropout                  : float = 0.2,
-        weights                  : Any   = None,
-        name                     : str   = "mobilenetv2",
+        round_nearest            : int       = 8,
+        block                    : _callable = None,
+        norm_layer               : _callable = None,
+        dropout                  : float     = 0.2,
+        weights                  : Any       = None,
+        name                     : str       = "mobilenetv2",
         *args, **kwargs,
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -168,7 +171,7 @@ class MobileNetV2(base.ImageClassificationModel):
         self.last_channel = _utils._make_divisible(last_channel * max(1.0, self.width_mult), self.round_nearest)
         features: list[nn.Module] = [
             nn.Conv2dNormAct(
-                in_channels      = 3,
+                in_channels      = self.channels,
                 out_channels     = input_channel,
                 stride           = 2,
                 norm_layer       = norm_layer,

@@ -14,6 +14,8 @@ import mon
 
 class TestModel(unittest.TestCase):
     
+    # Classify
+    
     def test_alexnet(self):
         num_classes = mon.AlexNet.zoo["imagenet1k-v1"]["num_classes"]
         model = mon.AlexNet(channels=3, num_classes=num_classes, weights="imagenet1k-v1", verbose=True)
@@ -522,6 +524,26 @@ class TestModel(unittest.TestCase):
     def test_vit_l_32(self):
         num_classes = mon.ViT_L_32.zoo["imagenet1k-v1"]["num_classes"]
         model = mon.ViT_L_32(channels=3, num_classes=num_classes, weights="imagenet1k-v1", verbose=True)
+        self.assertIsNotNone(model)
+    
+    # Enhance
+    
+    def test_hinet(self):
+        model = mon.HINet(weights="gopro", verbose=True)
+        self.assertIsNotNone(model)
+        model = mon.HINet(weights="reds", verbose=True)
+        self.assertIsNotNone(model)
+        model = mon.HINet(weights="sidd", verbose=True)
+        self.assertIsNotNone(model)
+        model = mon.HINet(weights="rain13k", verbose=True)
+        self.assertIsNotNone(model)
+    
+    def test_zerodce(self):
+        model = mon.ZeroDCE(weights="sice-zerodce", verbose=True)
+        self.assertIsNotNone(model)
+    
+    def test_zerodcepp(self):
+        model = mon.ZeroDCEPP(weights="sice-zerodce", verbose=True)
         self.assertIsNotNone(model)
     
 # endregion

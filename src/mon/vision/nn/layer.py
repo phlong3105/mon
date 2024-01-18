@@ -13,7 +13,7 @@ __all__ = [
 
 ]
 
-from mon import core, nn
+from mon import core
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

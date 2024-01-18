@@ -15,7 +15,7 @@ __all__ = [
 
 import functools
 from abc import ABC
-from typing import Any, Sequence
+from typing import Any, Sequence, Callable
 
 import torch
 from torchvision import ops
@@ -24,6 +24,7 @@ from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.classify import base
 from mon.vision.nn import functional as F
+from mon.nn.typing import _callable
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -45,10 +46,10 @@ class CNBlock(nn.Module):
     
     def __init__(
         self,
-        dim                  : int,
+        channels             : int,
         layer_scale          : float,
         stochastic_depth_prob: float,
-        norm_layer           : nn.Module | None = None,
+        norm_layer           : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -56,15 +57,15 @@ class CNBlock(nn.Module):
             norm_layer = functools.partial(nn.LayerNorm, eps=1e-6)
 
         self.block = nn.Sequential(
-            nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim, bias=True),
+            nn.Conv2d(channels, channels, kernel_size=7, padding=3, groups=channels, bias=True),
             nn.Permute([0, 2, 3, 1]),
-            norm_layer(dim),
-            nn.Linear(in_features=dim, out_features=4 * dim, bias=True),
+            norm_layer(channels),
+            nn.Linear(in_features=channels, out_features=4 * channels, bias=True),
             nn.GELU(),
-            nn.Linear(in_features=4 * dim, out_features=dim, bias=True),
+            nn.Linear(in_features=4 * channels, out_features=channels, bias=True),
             nn.Permute([0, 3, 1, 2]),
         )
-        self.layer_scale      = nn.Parameter(torch.ones(dim, 1, 1) * layer_scale)
+        self.layer_scale      = nn.Parameter(torch.ones(channels, 1, 1) * layer_scale)
         self.stochastic_depth = ops.StochasticDepth(stochastic_depth_prob, "row")
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
@@ -84,17 +85,17 @@ class CNBlockConfig:
     # Stores information listed at Section 3 of the ConvNeXt paper
     def __init__(
         self,
-        input_channels: int,
-        out_channels  : int | None,
-        num_layers    : int,
+        in_channels : int,
+        out_channels: int | None,
+        num_layers  : int,
     ):
-        self.input_channels = input_channels
-        self.out_channels   = out_channels
-        self.num_layers     = num_layers
+        self.in_channels  = in_channels
+        self.out_channels = out_channels
+        self.num_layers   = num_layers
 
     def __repr__(self) -> str:
         s = self.__class__.__name__ + "("
-        s += "input_channels={input_channels}"
+        s += "in_channels={in_channels}"
         s += ", out_channels={out_channels}"
         s += ", num_layers={num_layers}"
         s += ")"
@@ -112,16 +113,18 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
     def __init__(
         self,
         block_setting        : list[CNBlockConfig],
-        stochastic_depth_prob: float = 0.0,
-        layer_scale          : float = 1e-6,
-        num_classes          : int   = 1000,
-        block                : Any   = None,
-        norm_layer           : Any   = None,
-        weights              : Any   = None,
-        name                 : str   = "connext",
+        stochastic_depth_prob: float     = 0.0,
+        layer_scale          : float     = 1e-6,
+        channels             : int       = 3,
+        num_classes          : int       = 1000,
+        block                : Any       = None,
+        norm_layer           : _callable = None,
+        weights              : Any       = None,
+        name                 : str       = "connext",
         *args, **kwargs,
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -129,9 +132,9 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         )
         
         if not block_setting:
-            raise ValueError("The ``block_setting`` should not be empty")
+            raise ValueError("The :param:`block_setting` should not be empty.")
         elif not (isinstance(block_setting, Sequence) and all([isinstance(s, CNBlockConfig) for s in block_setting])):
-            raise TypeError("The ``block_setting`` should be :class:`list[CNBlockConfig]`")
+            raise TypeError("The :param:`block_setting` should be :class:`list[CNBlockConfig]`.")
         if block is None:
             block = CNBlock
         if norm_layer is None:
@@ -144,10 +147,10 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         layers: list[nn.Module] = []
 
         # Stem
-        firstconv_output_channels = self.block_setting[0].input_channels
+        firstconv_output_channels = self.block_setting[0].in_channels
         layers.append(
             nn.Conv2dNormAct(
-                in_channels      = 3,
+                in_channels      = self.channels,
                 out_channels     = firstconv_output_channels,
                 kernel_size      = 4,
                 stride           = 4,
@@ -166,15 +169,15 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
             for _ in range(cnf.num_layers):
                 # Adjust stochastic depth probability based on the depth of the stage block
                 sd_prob = self.stochastic_depth_prob * stage_block_id / (total_stage_blocks - 1.0)
-                stage.append(block(cnf.input_channels, self.layer_scale, sd_prob))
+                stage.append(block(cnf.in_channels, self.layer_scale, sd_prob))
                 stage_block_id += 1
             layers.append(nn.Sequential(*stage))
             if cnf.out_channels is not None:
                 # Downsampling
                 layers.append(
                     nn.Sequential(
-                        norm_layer(cnf.input_channels),
-                        nn.Conv2d(cnf.input_channels, cnf.out_channels, kernel_size=2, stride=2),
+                        norm_layer(cnf.in_channels),
+                        nn.Conv2d(cnf.in_channels, cnf.out_channels, kernel_size=2, stride=2),
                     )
                 )
 
@@ -182,7 +185,7 @@ class ConvNeXt(base.ImageClassificationModel, ABC):
         self.avgpool  = nn.AdaptiveAvgPool2d(1)
 
         lastblock = block_setting[-1]
-        lastconv_output_channels = (lastblock.out_channels if lastblock.out_channels is not None else lastblock.input_channels)
+        lastconv_output_channels = (lastblock.out_channels if lastblock.out_channels is not None else lastblock.in_channels)
         self.classifier = nn.Sequential(
             norm_layer(lastconv_output_channels),
             nn.Flatten(1),

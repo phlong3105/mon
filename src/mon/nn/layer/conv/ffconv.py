@@ -24,7 +24,8 @@ import torch
 from torch import nn
 
 from mon.globals import LAYERS
-from mon.nn.layer import activation, base, conv, linear, normalization, pooling
+from mon.nn.layer import activation, base, linear, normalization, pooling
+from mon.nn.layer.conv import base as conv
 from mon.nn.typing import _size_2_t
 
 

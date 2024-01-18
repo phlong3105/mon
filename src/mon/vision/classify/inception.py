@@ -10,11 +10,12 @@ __all__ = [
 ]
 
 from collections import namedtuple
-from typing import Callable, Any
+from typing import Any
 
 import torch
 
 from mon.globals import MODELS
+from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
 from mon.vision.nn import functional as F
@@ -46,7 +47,7 @@ class InceptionA(nn.Module):
         self,
         in_channels  : int,
         pool_features: int,
-        conv_block   : Callable[..., nn.Module] | None = None,
+        conv_block   : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -79,7 +80,7 @@ class InceptionB(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        conv_block : Callable[..., nn.Module] | None = None,
+        conv_block : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -107,7 +108,7 @@ class InceptionC(nn.Module):
         self,
         in_channels : int,
         channels_7x7: int,
-        conv_block  : Callable[..., nn.Module] | None = None,
+        conv_block  : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -146,7 +147,7 @@ class InceptionD(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        conv_block : Callable[..., nn.Module] | None = None,
+        conv_block : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -177,7 +178,7 @@ class InceptionE(nn.Module):
     def __init__(
         self,
         in_channels: int,
-        conv_block : Callable[..., nn.Module] | None = None,
+        conv_block : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -221,7 +222,7 @@ class InceptionAux(nn.Module):
         self,
         in_channels: int,
         num_classes: int,
-        conv_block : Callable[..., nn.Module] | None = None,
+        conv_block : _callable = None,
         *args, **kwargs
     ):
         super().__init__()
@@ -284,10 +285,11 @@ class Inception3(base.ImageClassificationModel):
 
     def __init__(
         self,
+        channels        : int         = 3,
         num_classes     : int         = 1000,
         aux_logits      : bool        = True,
         transform_input : bool        = False,
-        inception_blocks: list[Callable[..., nn.Module]] | None = None,
+        inception_blocks: list[_callable] | None = None,
         init_weights    : bool | None = None,
         dropout         : float       = 0.5,
         weights         : Any         = None,
@@ -296,6 +298,7 @@ class Inception3(base.ImageClassificationModel):
         *args, **kwargs
     ):
         super().__init__(
+            channels    = channels,
             num_classes = num_classes,
             weights     = weights,
             name        = name,
@@ -329,7 +332,7 @@ class Inception3(base.ImageClassificationModel):
         self.transform_input = transform_input
         self.dropout         = dropout
         
-        self.Conv2d_1a_3x3   = conv_block(3, 32, kernel_size=3, stride=2)
+        self.Conv2d_1a_3x3   = conv_block(self.channels, 32, kernel_size=3, stride=2)
         self.Conv2d_2a_3x3   = conv_block(32, 32, kernel_size=3)
         self.Conv2d_2b_3x3   = conv_block(32, 64, kernel_size=3, padding=1)
         self.maxpool1        = nn.MaxPool2d(kernel_size=3, stride=2)

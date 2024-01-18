@@ -8,7 +8,7 @@ from functools import partial
 
 from mon.globals import LAYERS
 from mon.nn.layer import (
-    activation, base, conv, ghost, linear, normalization, pooling, dropout
+    activation, base, conv, linear, normalization, pooling, dropout
 )
 from mon.nn.typing import _size_2_t
 from mon.vision import core, nn, prior
@@ -174,4 +174,3 @@ class Transformer_Block(nn.Module):
         x = x + self.drop_path(self.attn(self.norm1(x), H, W))
         x = x + self.drop_path(self.ffn(self.norm2(x), H, W))
         return x
-

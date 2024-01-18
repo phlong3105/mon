@@ -20,14 +20,20 @@ __all__ = [
     "ConvTranspose3d",
     "DSConv2d",
     "DSConv2dReLU",
+    "DSConvAct2d",
+    "DWConv2d",
+    "DepthwiseConv2d",
     "DepthwiseSeparableConv2d",
     "DepthwiseSeparableConv2dReLU",
+    "DepthwiseSeparableConvAct2d",
     "LazyConv1d",
     "LazyConv2d",
     "LazyConv3d",
     "LazyConvTranspose1d",
     "LazyConvTranspose2d",
     "LazyConvTranspose3d",
+    "PWConv2d",
+    "PointwiseConv2d",
     "conv2d_same",
 ]
 
@@ -35,16 +41,13 @@ from typing import Any
 
 import torch
 from torch import nn
-from torch.autograd import Function
 from torch.nn import functional as F
 from torchvision.ops import misc
 
 from mon.core import math
 from mon.globals import LAYERS
-from mon.nn.layer import (
-    activation, base, normalization, padding as pad, pooling as pool,
-)
-from mon.nn.typing import _size_2_t, _size_any_t
+from mon.nn.layer import activation, base, normalization, padding as pad
+from mon.nn.typing import _size_2_t, _size_any_t, _callable
 
 
 # region Convolution
@@ -294,20 +297,16 @@ LAYERS.register(name="Conv3dNormAct", module=Conv3dNormAct)
 # region Depthwise Separable Convolution
 
 @LAYERS.register()
-class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
-    """Depthwise Separable Conv2d."""
+class DepthwiseConv2d(base.ConvLayerParsingMixin, nn.Module):
+    """Depthwise Conv2d."""
     
     def __init__(
         self,
         in_channels : int,
-        out_channels: int,
         kernel_size : _size_2_t,
-        dw_stride   : _size_2_t       = 1,
-        dw_padding  : _size_2_t | str = 0,
-        pw_stride   : _size_2_t       = 1,
-        pw_padding  : _size_2_t | str = 0,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
         dilation    : _size_2_t       = 1,
-        groups      : int             = 1,
         bias        : bool            = True,
         padding_mode: str             = "zeros",
         device      : Any             = None,
@@ -318,8 +317,84 @@ class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             in_channels  = in_channels,
             out_channels = in_channels,
             kernel_size  = kernel_size,
-            stride       = dw_stride,
-            padding      = dw_padding,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = in_channels,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.dw_conv(x)
+        return y
+
+
+@LAYERS.register()
+class PointwiseConv2d(base.ConvLayerParsingMixin, nn.Module):
+    """Pointwise Conv2d."""
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        groups      : int             = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+    ):
+        super().__init__()
+        self.pw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = 1,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
+            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.pw_conv(x)
+        return y
+    
+
+@LAYERS.register()
+class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
+    """Depthwise Separable Conv2d."""
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+    ):
+        super().__init__()
+        self.dw_conv = Conv2d(
+            in_channels  = in_channels,
+            out_channels = in_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
             dilation     = dilation,
             groups       = in_channels,
             bias         = bias,
@@ -331,10 +406,6 @@ class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = 1,
-            stride       = pw_stride,
-            padding      = pw_padding,
-            dilation     = dilation,
-            groups       = groups,
             bias         = bias,
             padding_mode = padding_mode,
             device       = device,
@@ -349,36 +420,70 @@ class DepthwiseSeparableConv2d(base.ConvLayerParsingMixin, nn.Module):
 
 
 @LAYERS.register()
-class DepthwiseSeparableConv2dReLU(base.ConvLayerParsingMixin, nn.Module):
-    """Depthwise Separable Conv2d ReLU."""
+class DepthwiseSeparableConvAct2d(base.ConvLayerParsingMixin, nn.Module):
+    """Depthwise Separable Conv2d + Activation."""
     
     def __init__(
         self,
         in_channels   : int,
         out_channels  : int,
         kernel_size   : _size_2_t,
-        dw_stride     : _size_2_t       = 1,
-        dw_padding    : _size_2_t | str = 0,
-        pw_stride     : _size_2_t       = 1,
-        pw_padding    : _size_2_t | str = 0,
+        stride        : _size_2_t       = 1,
+        padding       : _size_2_t | str = 0,
         dilation      : _size_2_t       = 1,
-        groups        : int             = 1,
         bias          : bool            = True,
         padding_mode  : str             = "zeros",
         device        : Any             = None,
         dtype         : Any             = None,
+        act_layer     : _callable       = nn.ReLU,
     ):
         super().__init__()
         self.ds_conv = DepthwiseSeparableConv2d(
             in_channels  = in_channels,
             out_channels = out_channels,
             kernel_size  = kernel_size,
-            dw_stride    = dw_stride,
-            dw_padding   = dw_padding,
-            pw_stride    = pw_stride,
-            pw_padding   = pw_padding,
+            stride       = stride,
+            padding      = padding,
             dilation     = dilation,
-            groups       = groups,
+            bias         = bias,
+            padding_mode = padding_mode,
+            device       = device,
+            dtype        = dtype,
+        )
+        self.act = act_layer()
+    
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        x = input
+        y = self.ds_conv(x)
+        y = self.act(y)
+        return y
+
+
+@LAYERS.register()
+class DepthwiseSeparableConv2dReLU(base.ConvLayerParsingMixin, nn.Module):
+    """Depthwise Separable Conv2d ReLU."""
+    
+    def __init__(
+        self,
+        in_channels : int,
+        out_channels: int,
+        kernel_size : _size_2_t,
+        stride      : _size_2_t       = 1,
+        padding     : _size_2_t | str = 0,
+        dilation    : _size_2_t       = 1,
+        bias        : bool            = True,
+        padding_mode: str             = "zeros",
+        device      : Any             = None,
+        dtype       : Any             = None,
+    ):
+        super().__init__()
+        self.ds_conv = DepthwiseSeparableConv2d(
+            in_channels  = in_channels,
+            out_channels = out_channels,
+            kernel_size  = kernel_size,
+            stride       = stride,
+            padding      = padding,
+            dilation     = dilation,
             bias         = bias,
             padding_mode = padding_mode,
             device       = device,
@@ -393,9 +498,15 @@ class DepthwiseSeparableConv2dReLU(base.ConvLayerParsingMixin, nn.Module):
         return y
 
 
+DWConv2d     = DepthwiseConv2d
+PWConv2d     = PointwiseConv2d
 DSConv2d     = DepthwiseSeparableConv2d
+DSConvAct2d  = DepthwiseSeparableConvAct2d
 DSConv2dReLU = DepthwiseSeparableConv2dReLU
+LAYERS.register(name="DWConv2d",     module=DWConv2d)
+LAYERS.register(name="PWConv2d",     module=PWConv2d)
 LAYERS.register(name="DSConv2d",     module=DSConv2d)
+LAYERS.register(name="DSConvAct2d",  module=DSConvAct2d)
 LAYERS.register(name="DSConv2dReLU", module=DSConv2dReLU)
 
 # endregion
