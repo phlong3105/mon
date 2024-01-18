@@ -1,3 +1,0 @@
-ToolSet: 1.0 (local)Options: 
-
-Options:-DCMAKE_MAKE_PROGRAM=/Users/longpham/Applications/CLion Nova.app/Contents/bin/ninja/mac/aarch64/ninja

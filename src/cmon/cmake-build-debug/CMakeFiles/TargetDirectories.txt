@@ -1,3 +1,0 @@
-/Users/longpham/10-workspace/11-code/mon/src/cmon/cmake-build-debug/CMakeFiles/cmon.dir
-/Users/longpham/10-workspace/11-code/mon/src/cmon/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/longpham/10-workspace/11-code/mon/src/cmon/cmake-build-debug/CMakeFiles/rebuild_cache.dir

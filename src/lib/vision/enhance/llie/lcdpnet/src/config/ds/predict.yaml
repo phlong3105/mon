@@ -1,5 +1,0 @@
-# @package ds
-class: img_dataset
-name: lcdp_data.predict
-input:
-  - ../../../../../../data/lol/val/low/*

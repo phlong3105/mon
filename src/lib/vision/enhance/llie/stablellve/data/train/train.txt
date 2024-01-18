@@ -1,1 +1,0 @@
-The folder for input images in the training set.
