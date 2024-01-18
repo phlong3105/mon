@@ -1,0 +1,139 @@
+aug:
+  crop: false
+  downsample:
+  - 512
+  - 512
+  h-flip: true
+  v-flip: true
+train_ds:
+  class: img_dataset
+  name: lcdp_data.train
+  input:
+  - ../../../../../../data/lol/train/low/lol/*
+  GT:
+  - ../../../../../../data/lol/train/high/lol/*
+test_ds:
+  class: img_dataset
+  name: lcdp_data.test
+  input:
+  - ../../../../../../data/llie/test/lol-v2-syn/low/*
+  GT:
+  - ../../../../../../data/llie/test/lol-v2-syn/high/*
+valid_ds:
+  class: img_dataset
+  name: lcdp_data.valid
+  input:
+  - ../../../../../../data/lol/val/low/lol/*
+  GT:
+  - ../../../../../../data/lol/val/high/lol/*
+predict_ds:
+  class: img_dataset
+  name: lcdp_data.predict
+  input:
+  - ../../../../../../data/lol/val/low/*
+runtime:
+  bilateral_upsample_net:
+    hist_unet:
+      n_bins: 8
+      hist_as_guide: false
+      channel_nums:
+      - 8
+      - 16
+      - 32
+      - 64
+      - 128
+      encoder_use_hist: false
+      guide_feature_from_hist: true
+      region_num: 2
+      use_gray_hist: false
+      conv_type: drconv
+      down_ratio: 2
+      hist_conv_trainable: false
+      drconv_position:
+      - 0
+      - 1
+    modelname: bilateral_upsample_net
+    predict_illumination: false
+    loss:
+      mse: 1.0
+      cos: 0.1
+      ltv: 0.1
+    luma_bins: 8
+    channel_multiplier: 1
+    spatial_bin: 16
+    batch_norm: true
+    low_resolution: 256
+    coeffs_type: matrix
+    conv_type: conv
+    backbone: hist-unet
+    illu_map_power: false
+  hist_unet:
+    n_bins: 8
+    hist_as_guide: false
+    channel_nums: false
+    encoder_use_hist: false
+    guide_feature_from_hist: false
+    region_num: 8
+    use_gray_hist: false
+    conv_type: drconv
+    down_ratio: 2
+    hist_conv_trainable: false
+    drconv_position:
+    - 1
+    - 1
+  modelname: lcdpnet
+  use_wavelet: false
+  use_attn_map: false
+  use_non_local: false
+  how_to_fuse: cnn-weights
+  backbone: bilateral_upsample_net
+  conv_type: conv
+  backbone_out_illu: true
+  illumap_channel: 3
+  share_weights: true
+  n_bins: 8
+  hist_as_guide: false
+  loss:
+    ltv: 0
+    cos: 0
+    weighted_loss: 0
+    tvloss1: 0
+    tvloss2: 0
+    tvloss1_new: 0.01
+    tvloss2_new: 0.01
+    l1_loss: 1.0
+    ssim_loss: 0
+    psnr_loss: 0
+    illumap_loss: 0
+    hist_loss: 0
+    inter_hist_loss: 0
+    vgg_loss: 0
+    cos2: 0.5
+project: default_proj
+name: default_name
+comment: false
+debug: false
+val_debug_step_nums: 2
+gpu: -1
+backend: ddp
+runtime_precision: 16
+amp_backend: native
+amp_level: O1
+dataloader_num_worker: 5
+mode: train
+logger: tb
+num_epoch: 1000
+valid_every: 10
+savemodel_every: 4
+log_every: 100
+batchsize: 1
+valid_batchsize: 1
+lr: 0.0001
+checkpoint_path: /home/longpham/10-workspace/11-code/mon/zoo/vision/enhance/llie/lcdpnet/lcdpnet-ours.ckpt
+checkpoint_monitor: loss
+resume_training: true
+monitor_mode: min
+early_stop: false
+valid_ratio: 0.1
+flags: {}
+image_size: 512
