@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements Zero-DCE models."""
+"""This module implements Zero-DCE++ models."""
 
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCE",
+    "ZeroDCEPP",
 ]
 
 from typing import Any
@@ -16,6 +16,7 @@ import torch
 from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.enhance.llie import base
+from mon.vision.nn import functional as F
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -203,44 +204,50 @@ class CombinedLoss02(nn.Loss):
 # endregion
 
 
-# region Zero-DCE
+# region Model
 
-@MODELS.register(name="zero-dce")
-@MODELS.register(name="zerodce")
-class ZeroDCE(base.LowLightImageEnhancementModel):
-    """Zero-DCE (Zero-Reference Deep Curve Estimation) model.
+@MODELS.register(name="zero-dce++")
+@MODELS.register(name="zerodce++")
+class ZeroDCEPP(base.LowLightImageEnhancementModel):
+    """Zero-DCE++ (Zero-Reference Deep Curve Estimation) model.
     
     Args:
         channels: The first layer's input channel. Default: ``3`` for RGB image.
         num_channels: The number of input and output channels for subsequent
             layers. Default: ``32``.
-        num_filters: The number of convolutional layers in the model.
+        num_iters: The number of convolutional layers in the model.
             Default: ``8``.
+        scale_factor: Downsampling/upsampling ratio. Defaults: ``1``.
         
     References:
-        `<https://github.com/Li-Chongyi/Zero-DCE>`__
+        `<https://github.com/Li-Chongyi/Zero-DCE_extension>`__
 
     See Also: :class:`mon.vision.enhance.llie.base.LowLightImageEnhancementModel`
     """
-    
+
     zoo = {
-        "sice-zerodce": {
+        "sice-zerodce" : {
             "url"         : None,
             "path"        : "best.pth",
             "channels"    : 3,
             "num_channels": 32,
             "num_iters"   : 8,
-            "map": {},
+            "scale_factor": 1.0,
+            "map": {
+                "depth_conv": "dw_conv",
+                "point_conv": "pw_conv",
+            }
         },
     }
 
     def __init__(
         self,
-        channels    : int = 3,
-        num_channels: int = 32,
-        num_iters   : int = 8,
-        weights     : Any = None,
-        name        : str = "zerodce",
+        channels    : int   = 3,
+        num_channels: int   = 32,
+        num_iters   : int   = 8,
+        scale_factor: float = 1.0,
+        weights     : Any   = None,
+        name        : str   = "zerodce++",
         *args, **kwargs
     ):
         super().__init__(
@@ -251,28 +258,28 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
             *args, **kwargs
         )
         assert num_iters <= 8
-        
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             channels     = self.weights.get("channels",     channels)
             num_channels = self.weights.get("num_channels", num_channels)
             num_iters    = self.weights.get("num_iters",    num_iters)
-            
+            scale_factor = self.weights.get("scale_factor",    scale_factor)
+        
         self.channels     = channels
         self.num_channels = num_channels
         self.num_iters    = num_iters
+        self.scale_factor = scale_factor
         
         # Construct model
         self.relu     = nn.ReLU(inplace=True)
-        self.e_conv1  = nn.Conv2d(self.channels,         self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv2  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv3  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv4  = nn.Conv2d(self.num_channels,     self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv5  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv6  = nn.Conv2d(self.num_channels * 2, self.num_channels, 3, 1, 1, bias=True)
-        self.e_conv7  = nn.Conv2d(self.num_channels * 2, 24,    3, 1, 1, bias=True)
-        self.maxpool  = nn.MaxPool2d(2, stride=2, return_indices=False, ceil_mode=False)
-        self.upsample = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.upsample = nn.UpsamplingBilinear2d(scale_factor=self.scale_factor)
+        self.e_conv1  = nn.DSConv2d(in_channels=3,                     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv2  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv3  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv4  = nn.DSConv2d(in_channels=self.num_channels,     out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv5  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv6  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=self.num_channels, kernel_size=3, stride=1, padding=1)
+        self.e_conv7  = nn.DSConv2d(in_channels=self.num_channels * 2, out_channels=3,                 kernel_size=3, stride=1, padding=1)
         
         # Load weights
         if self.weights:
@@ -280,17 +287,18 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         else:
             self.apply(self.init_weights)
 
-    def init_weights(self, m: nn.Module):
+    def init_weights(self, m: torch.nn.Module):
         """Initialize model's weights."""
         classname = m.__class__.__name__
         if classname.find("Conv") != -1:
             if hasattr(m, "conv"):
                 m.conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "dw_conv"):
+                m.dw_conv.weight.data.normal_(0.0, 0.02)
+            elif hasattr(m, "pw_conv"):
+                m.pw_conv.weight.data.normal_(0.0, 0.02)
             else:
                 m.weight.data.normal_(0.0, 0.02)
-        elif classname.find("BatchNorm") != -1:
-            m.weight.data.normal_(1.0, 0.02)
-            m.bias.data.fill_(0)
 
     def forward_loss(
         self,
@@ -331,20 +339,27 @@ class ZeroDCE(base.LowLightImageEnhancementModel):
         Return:
             Predictions.
         """
-        x   = input
-        x1  = self.relu(self.e_conv1(x))
+        x = input
+        if self.scale_factor == 1:
+            x_down = x
+        else:
+            x_down = F.interpolate(x, scale_factor=1 / self.scale_factor, mode="bilinear")
+
+        x1  = self.relu(self.e_conv1(x_down))
         x2  = self.relu(self.e_conv2(x1))
         x3  = self.relu(self.e_conv3(x2))
         x4  = self.relu(self.e_conv4(x3))
         x5  = self.relu(self.e_conv5(torch.cat([x3, x4], 1)))
         x6  = self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
         x_r = torch.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
+        if self.scale_factor == 1:
+            x_r = x_r
+        else:
+            x_r = self.upsample(x_r)
 
-        x_rs = torch.split(x_r, 3, dim=1)
-        y    = x
+        y = x
         for i in range(0, self.num_iters):
-            y = y + x_rs[i] * (torch.pow(y, 2) - y)
-
+            y = y + x_r * (torch.pow(y, 2) - y)
         return x_r, y
 
 # endregion
