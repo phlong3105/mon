@@ -219,6 +219,19 @@ class SupervisedAttentionModule(nn.Module):
 class FINet(base.UniversalImageEnhancementModel):
     """Fractional-Instance Normalization Network.
     
+    Args:
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        num_channels: Output channels for subsequent layers. Default: ``64``.
+        depth: The depth of the network. Default: ``5``.
+        relu_slope: The slope of the ReLU activation. Default: ``0.2``,
+        in_pos_left: The layer index to begin applying the Instance
+            Normalization. Default: ``0``.
+        in_pos_right: The layer index to end applying the Instance
+            Normalization. Default: ``4``.
+        p: The probability of applying the Instance Normalization.
+            Default: ``0.5``.
+        scheme: The scheme of the Instance Normalization. Default: ``'half'``.
+        
     See Also: :class:`mon.vision.enhance.universal.UniversalImageEnhancementModel`
     """
 
@@ -226,13 +239,13 @@ class FINet(base.UniversalImageEnhancementModel):
 
     def __init__(
         self,
-        variant     :         str | None = None,
-        num_channels: int   | str        = 64,
-        depth       : int   | str        = 5,
-        relu_slope  : float | str        = 0.2,
-        in_pos_left : int   | str        = 0,
-        in_pos_right: int   | str        = 4,
-        p           : float | str | None = 0.5,
+        channels    : int          = 3,
+        num_channels: int          = 64,
+        depth       : int          = 5,
+        relu_slope  : float        = 0.2,
+        in_pos_left : int          = 0,
+        in_pos_right: int          = 4,
+        p           : float | None = 0.5,
         scheme      : Literal[
                         "half",
                         "bipartite",
@@ -240,26 +253,54 @@ class FINet(base.UniversalImageEnhancementModel):
                         "random",
                         "adaptive",
                         "attention",
-                      ]                = "half",
+                      ]          = "half",
+        weights     : Any        = None,
+        name        : str        = "finet",
+        variant     : str | None = None,
         *args, **kwargs
     ):
         variant = core.to_int(variant)
         variant = f"{variant:04d}" if isinstance(variant, int) else None
-        super().__init__(variant=variant, *args, **kwargs)
-
-        self.num_channels = core.to_int(num_channels)  or 64
-        self.depth        = core.to_int(depth)         or 5
-        self.relu_slope   = core.to_float(relu_slope)  or 0.2
-        self.in_pos_left  = core.to_int(in_pos_left)   or 0
-        self.in_pos_right = core.to_int(in_pos_right)  or 4
-        self.p            = core.to_float(p)           or 0.5
-        self.scheme       = scheme                     or "half"
-
+        super().__init__(
+            channels = channels,
+            weights  = weights,
+            name     = name,
+            variant  = variant,
+            *args, **kwargs
+        )
+        
+        # Populate hyperparameter values from pretrained weights
+        if isinstance(self.weights, dict):
+            channels     = self.weights.get("channels"    , channels)
+            num_channels = self.weights.get("num_channels", num_channels)
+            depth        = self.weights.get("depth"       , depth)
+            relu_slope   = self.weights.get("relu_slope"  , relu_slope)
+            in_pos_left  = self.weights.get("in_pos_left" , in_pos_left)
+            in_pos_right = self.weights.get("in_pos_right", in_pos_right)
+            p            = self.weights.get("p"           , p)
+            scheme       = self.weights.get("scheme"      , scheme)
+            
+        self.channels     = channels
+        self.num_channels = num_channels
+        self.depth        = depth
+        self.relu_slope   = relu_slope
+        self.in_pos_left  = in_pos_left
+        self.in_pos_right = in_pos_right
+        self.p            = p
+        self.scheme       = scheme
+        
+        # Construct model
         if self.variant is None:  # Default model
             raise ValueError(f"``variant`` must be defined.")
         else:
             self.config_model_variant()
-
+        
+        # Load weights
+        if self.weights:
+            self.load_weights()
+        else:
+            self.apply(self.init_weights)
+        
     def config_model_variant(self):
         """Config the model based on ``self.variant``.
         Mainly used in ablation study.

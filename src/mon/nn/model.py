@@ -789,7 +789,9 @@ class Model(lightning.LightningModule, ABC):
     @weights.setter
     def weights(self, weights: Any = None):
         if isinstance(weights, str):
-            if weights in self.zoo:
+            if core.Path(weights).is_weights_file():
+                weights = core.Path(weights)
+            elif weights in self.zoo:
                 weights         = self.zoo[weights]
                 weights["path"] = self.zoo_dir / weights.get("path", "")
                 if "num_classes" in weights:

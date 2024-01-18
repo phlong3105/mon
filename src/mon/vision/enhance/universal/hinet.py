@@ -199,7 +199,17 @@ class SupervisedAttentionModule(nn.Module):
 @MODELS.register(name="hinet")
 class HINet(base.UniversalImageEnhancementModel):
     """Half-Instance Normalization Network.
-
+    
+    Args:
+        channels: The first layer's input channel. Default: ``3`` for RGB image.
+        num_channels: Output channels for subsequent layers. Default: ``64``.
+        depth: The depth of the network. Default: ``5``.
+        relu_slope: The slope of the ReLU activation. Default: ``0.2``,
+        in_pos_left: The layer index to begin applying the Instance
+            Normalization. Default: ``0``.
+        in_pos_right: The layer index to end applying the Instance
+            Normalization. Default: ``4``.
+        
     Reference:
         `<https://github.com/megvii-model/HINet>`__
 
@@ -267,6 +277,7 @@ class HINet(base.UniversalImageEnhancementModel):
             name     = name,
             *args, **kwargs
         )
+        
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             channels     = self.weights.get("channels",     channels)
