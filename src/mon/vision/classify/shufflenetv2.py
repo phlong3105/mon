@@ -14,14 +14,14 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Callable, Any
+from typing import Any
 
 import torch
 
 from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.classify import base
-from mon.nn.typing import _callable
+from mon.vision.nn import _callable
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

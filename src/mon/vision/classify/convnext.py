@@ -15,7 +15,7 @@ __all__ = [
 
 import functools
 from abc import ABC
-from typing import Any, Sequence, Callable
+from typing import Any, Sequence
 
 import torch
 from torchvision import ops
@@ -23,8 +23,7 @@ from torchvision import ops
 from mon.globals import MODELS
 from mon.vision import core, nn
 from mon.vision.classify import base
-from mon.vision.nn import functional as F
-from mon.nn.typing import _callable
+from mon.vision.nn import functional as F, _callable
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

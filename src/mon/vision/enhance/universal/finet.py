@@ -16,9 +16,9 @@ from typing import Any, Literal, Sequence
 import torch
 
 from mon.globals import MODELS
-from mon.nn.typing import _size_2_t
 from mon.vision import core, nn
 from mon.vision.enhance.universal import base
+from mon.vision.nn import _size_2_t
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -228,9 +228,9 @@ class FINet(base.UniversalImageEnhancementModel):
             Normalization. Default: ``0``.
         in_pos_right: The layer index to end applying the Instance
             Normalization. Default: ``4``.
+        scheme: The scheme of the Instance Normalization. Default: ``'half'``.
         p: The probability of applying the Instance Normalization.
             Default: ``0.5``.
-        scheme: The scheme of the Instance Normalization. Default: ``'half'``.
         
     See Also: :class:`mon.vision.enhance.universal.UniversalImageEnhancementModel`
     """
@@ -245,7 +245,6 @@ class FINet(base.UniversalImageEnhancementModel):
         relu_slope  : float        = 0.2,
         in_pos_left : int          = 0,
         in_pos_right: int          = 4,
-        p           : float | None = 0.5,
         scheme      : Literal[
                         "half",
                         "bipartite",
@@ -254,13 +253,14 @@ class FINet(base.UniversalImageEnhancementModel):
                         "adaptive",
                         "attention",
                       ]          = "half",
+        p           : float | None = 0.5,
         weights     : Any        = None,
         name        : str        = "finet",
         variant     : str | None = None,
         *args, **kwargs
     ):
         variant = core.to_int(variant)
-        variant = f"{variant:04d}" if isinstance(variant, int) else None
+        variant = f"{variant:03d}" if isinstance(variant, int) else None
         super().__init__(
             channels = channels,
             weights  = weights,
@@ -269,6 +269,23 @@ class FINet(base.UniversalImageEnhancementModel):
             *args, **kwargs
         )
         
+        # Experiment: [0-5][00-10]: x-scheme, yy-p
+        if isinstance(self.variant, str) and self.variant.isnumeric():
+            scheme = int(self.variant[0:1])
+            p      = int(self.variant[1:3])
+            if scheme == 0:
+                scheme = "half"
+            elif scheme == 1:
+                scheme = "bipartite"
+            elif scheme == 2:
+                scheme = "checkerboard"
+            elif scheme == 3:
+                scheme = "random"
+            elif scheme == 4:
+                scheme = "adaptive"
+            elif scheme == 5:
+                scheme = "attention"
+                
         # Populate hyperparameter values from pretrained weights
         if isinstance(self.weights, dict):
             channels     = self.weights.get("channels"    , channels)
@@ -290,104 +307,40 @@ class FINet(base.UniversalImageEnhancementModel):
         self.scheme       = scheme
         
         # Construct model
-        if self.variant is None:  # Default model
-            raise ValueError(f"``variant`` must be defined.")
-        else:
-            self.config_model_variant()
+        self.down_path_1 = nn.ModuleList()
+        self.down_path_2 = nn.ModuleList()
+        self.conv_01     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+        self.conv_02     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
+
+        prev_channels    = self.num_channels
+        for i in range(self.depth):  # 0,1,2,3,4
+            use_fin    = True if self.in_pos_left <= i <= self.in_pos_right else False
+            downsample = True if (i + 1) < self.depth else False
+            self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.p, self.scheme, downsample, self.relu_slope, use_fin=use_fin))
+            self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.p, self.scheme, downsample, self.relu_slope, use_csff=downsample, use_fin=use_fin))
+            prev_channels = (2 ** i) * self.num_channels
+
+        self.up_path_1   = nn.ModuleList()
+        self.up_path_2   = nn.ModuleList()
+        self.skip_conv_1 = nn.ModuleList()
+        self.skip_conv_2 = nn.ModuleList()
+        for i in reversed(range(self.depth - 1)):
+            self.up_path_1.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, self.relu_slope))
+            self.up_path_2.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, self.relu_slope))
+            self.skip_conv_1.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
+            self.skip_conv_2.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
+            prev_channels = (2 ** i) * self.num_channels
+
+        self.sam12 = SupervisedAttentionModule(prev_channels)
+        self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
+        self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
         
         # Load weights
         if self.weights:
             self.load_weights()
         else:
             self.apply(self.init_weights)
-        
-    def config_model_variant(self):
-        """Config the model based on ``self.variant``.
-        Mainly used in ablation study.
-        """
-        self.num_channels = 64
-        self.depth        = 5
-        self.relu_slope   = 0.2
-        self.in_pos_left  = 0
-        self.in_pos_right = 4
-        self.p            = 0.5
-        self.scheme       = "half"
-
-        # Variant code: [aa][p][s]
-        # p: probability
-        if self.variant[2] == "0":
-            self.p = 0.0
-        elif self.variant[2] == "1":
-            self.p = 0.1
-        elif self.variant[2] == "2":
-            self.p = 0.2
-        elif self.variant[2] == "3":
-            self.p = 0.3
-        elif self.variant[2] == "4":
-            self.p = 0.4
-        elif self.variant[2] == "5":
-            self.p = 0.5
-        elif self.variant[2] == "6":
-            self.p = 0.6
-        elif self.variant[2] == "7":
-            self.p = 0.7
-        elif self.variant[2] == "8":
-            self.p = 0.8
-        elif self.variant[2] == "9":
-            self.p = 0.9
-        else:
-            raise ValueError
-
-        # Variant code: [aa][p][s]
-        # s: scheme
-        if self.variant[3] == "0":
-            self.scheme = "half"
-        elif self.variant[3] == "1":
-            self.scheme = "bipartite"
-        elif self.variant[3] == "2":
-            self.scheme = "checkerboard"
-        elif self.variant[3] == "3":
-            self.scheme = "random"
-        elif self.variant[3] == "4":
-            self.scheme = "adaptive"
-        elif self.variant[3] == "5":
-            self.scheme = "attentive"
-
-        # Variant code: [aa][p][s]
-        # aa: architecture
-        if self.variant[0:2] == "00":
-            self.down_path_1 = nn.ModuleList()
-            self.down_path_2 = nn.ModuleList()
-            self.conv_01     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
-            self.conv_02     = nn.Conv2d(self.channels, self.num_channels, 3, 1, 1)
-
-            prev_channels    = self.num_channels
-            for i in range(self.depth):  # 0,1,2,3,4
-                use_fin    = True if self.in_pos_left <= i <= self.in_pos_right else False
-                downsample = True if (i + 1) < self.depth else False
-                self.down_path_1.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.p, self.scheme, downsample, self.relu_slope, use_fin=use_fin))
-                self.down_path_2.append(UNetConvBlock(prev_channels, (2 ** i) * self.num_channels, self.p, self.scheme, downsample, self.relu_slope, use_csff=downsample, use_fin=use_fin))
-                prev_channels = (2 ** i) * self.num_channels
-
-            self.up_path_1   = nn.ModuleList()
-            self.up_path_2   = nn.ModuleList()
-            self.skip_conv_1 = nn.ModuleList()
-            self.skip_conv_2 = nn.ModuleList()
-            for i in reversed(range(self.depth - 1)):
-                self.up_path_1.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, self.relu_slope))
-                self.up_path_2.append(UNetUpBlock(prev_channels, (2 ** i) * self.num_channels, self.relu_slope))
-                self.skip_conv_1.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
-                self.skip_conv_2.append(nn.Conv2d((2 ** i) * self.num_channels, (2 ** i) * self.num_channels, 3, 1, 1))
-                prev_channels = (2 ** i) * self.num_channels
-
-            self.sam12 = SupervisedAttentionModule(prev_channels)
-            self.cat12 = nn.Conv2d(prev_channels * 2, prev_channels, 1, 1, 0)
-            self.last  = nn.Conv2d(prev_channels, self.channels, 3, 1, 1, bias=True)
-
-            self.apply(self.init_weights)
-        else:
-            raise ValueError
-
+    
     def init_weights(self, m: nn.Module):
         gain      = torch.nn.init.calculate_gain('leaky_relu', 0.20)
         classname = m.__class__.__name__
@@ -396,7 +349,7 @@ class FINet(base.UniversalImageEnhancementModel):
                 nn.init.orthogonal_(m.weight, gain=gain)
                 if not m.bias is None:
                     nn.init.constant_(m.bias, 0)
-
+    
     def forward_loss(
         self,
         input : torch.Tensor,
@@ -415,8 +368,13 @@ class FINet(base.UniversalImageEnhancementModel):
             Predictions and loss value.
         """
         pred = self.forward(input=input, *args, **kwargs)
-        loss = self.loss(input, pred) if self.loss else (None, None)
-        return pred, loss
+        if self.loss:
+            loss = 0
+            for p in pred:
+                loss += self.loss(p, target)
+        else:
+            loss = None
+        return pred[-1], loss
 
     def forward_once(
         self,
@@ -470,6 +428,6 @@ class FINet(base.UniversalImageEnhancementModel):
 
         y2 = self.last(x2)
         y2 = y2 + x
-        return y2
+        return [y1, y2]
 
 # endregion

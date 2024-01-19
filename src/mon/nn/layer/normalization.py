@@ -337,7 +337,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             dtype               = dtype,
         )
         if scheme not in self.schemes:
-            raise ValueError(f"``scheme`` must be one of: {self.schemes}. But got: {scheme}.")
+            raise ValueError(f":param:`scheme` must be one of: {self.schemes}, but got: ``'{scheme}'``.")
         if scheme == "half":
             self.alpha = torch.zeros(num_features)
             self.alpha[0:math.ceil(num_features * 0.5)] = 1
@@ -346,8 +346,8 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             self.alpha[0:math.ceil(num_features * p)] = 1
         elif scheme == "checkerboard":
             in_channels = math.ceil(num_features * p)
-            step_size  = int(math.floor(in_channels / num_features))
-            self.alpha = torch.zeros(num_features)
+            step_size   = int(math.floor(in_channels / num_features))
+            self.alpha  = torch.zeros(num_features)
             for i in range(0, in_channels, step_size):
                 self.alpha[i] = 1
         elif scheme == "random":
@@ -360,7 +360,7 @@ class FractionalInstanceNorm2d(base.SameChannelsLayerParsingMixin, nn.InstanceNo
             self.alpha = torch.nn.Parameter(torch.full([num_features], p))
         elif scheme == "attentive":
             if pool not in ["avg", "max"]:
-                raise ValueError(f"``pool`` must be one of: [``'avg'``, ``'max'``], but got {pool}.")
+                raise ValueError(f":param:`pool` must be one of: [``'avg'``, ``'max'``], but got ``'{pool}'``.")
             self.channel_attention = nn.Sequential(
                 self.Flatten(),
                 linear.Linear(

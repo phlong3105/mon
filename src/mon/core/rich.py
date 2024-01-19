@@ -62,7 +62,7 @@ rich_console_theme = theme.Theme(
 console = rich.console.Console(
     color_system    = "auto",
     log_time_format = "[%m/%d/%Y %H:%M:%S]",
-    soft_wrap       = False,
+    soft_wrap       = True,
     width           = 150,
     theme           = rich_console_theme,
 )
@@ -243,7 +243,6 @@ class ProcessingSpeedColumn(progress.ProgressColumn):
         speed_text = "{:.2f}".format(speed)
         speed_text = text.Text(f"{speed_text}it/s", style="progress.data.speed")
         return speed_text
-
 
 # endregion
 

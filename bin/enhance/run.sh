@@ -43,7 +43,6 @@ les_models=(
 llie_models=(
   "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
   "gcenet"        # https://github.com/phlong3105/mon
-  "gcenetv2"      # https://github.com/phlong3105/mon
   "iat"           # https://github.com/cuiziteng/Illumination-Adaptive-Transformer/tree/main/IAT_enhance
   "kind"          # https://github.com/zhangyhuaee/KinD
   "kind++"        # https://github.com/zhangyhuaee/KinD_plus
@@ -457,17 +456,6 @@ if [ "$run" == "train" ]; then
           --project "${project}/${model[i]}" \
           --fullname "${fullname}" \
           --max-epochs "$epochs"
-      # GCENetV2
-      elif [ "${model[i]}" == "gcenetv2" ]; then
-        cd "${current_dir}" || exit
-        python -W ignore train.py \
-          --name "${model[i]}" \
-          --variant "${variant[j]}" \
-          --data "${train[0]}" \
-          --root "${run_dir}/train" \
-          --project "${project}/${model[i]}" \
-          --fullname "${fullname}" \
-          --max-epochs "$epochs"
       # IAT
       elif [ "${model[i]}" == "iat" ]; then
         cd "${${llie_dir}/${model[i]}}" || exit
@@ -800,24 +788,6 @@ if [ "$run" == "predict" ]; then
               --benchmark
           # GCENet
           elif [ "${model[i]}" == "gcenet" ]; then
-            cd "${current_dir}" || exit
-            python -W ignore predict.py \
-              --input-dir "${input_dirs[k]}" \
-              --output-dir "${output_dir}" \
-              --name "${model[i]}" \
-              --variant "${variant[j]}" \
-              --data "${train[0]}" \
-              --root "${output_dir}" \
-              --project "${project}/${model[i]}" \
-              --fullname "${fullname}" \
-              --weights "${weights}" \
-              --image-size 512 \
-              --devices "cuda:0" \
-              --benchmark \
-              --save-image \
-              --verbose
-          # GCENetV2
-          elif [ "${model[i]}" == "gcenetv2" ]; then
             cd "${current_dir}" || exit
             python -W ignore predict.py \
               --input-dir "${input_dirs[k]}" \
