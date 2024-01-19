@@ -324,7 +324,8 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 if c in self.keys:
                     self.keys[c] = v
             self.keys["reach"] = f"not in top {self.save_top_k}"
-            self._log(data=self.keys)
+            if trainer.is_global_zero:
+                self._log(data=self.keys)
            
     def _update_best_and_save(
         self,
@@ -386,8 +387,8 @@ class ModelCheckpoint(callbacks.ModelCheckpoint):
                 self._log(data=self.keys)
         else:
             self._save_checkpoint(trainer=trainer, filepath=filepath)
-            if self.verbose and trainer.is_global_zero:
-                self._log(data=self.keys)
+            # if self.verbose and trainer.is_global_zero:
+                # self._log(data=self.keys)
         # Our extension
         trainer.save_checkpoint(
             filepath     = pathlib.Path(filepath).parent / f"{self.CHECKPOINT_NAME_LAST}.ckpt",

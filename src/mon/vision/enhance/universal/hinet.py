@@ -14,9 +14,9 @@ from typing import Any, Sequence
 import torch
 
 from mon.globals import MODELS
-from mon.nn.typing import _size_2_t
 from mon.vision import core, nn
 from mon.vision.enhance.universal import base
+from mon.vision.nn import _size_2_t
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

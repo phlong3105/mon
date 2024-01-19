@@ -24,16 +24,16 @@ import copy
 import functools
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, Sequence, Callable
+from typing import Any, Sequence
 
 import torch
 from torchvision import ops
 from torchvision.models import _utils
 
 from mon.globals import MODELS
-from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
+from mon.vision.nn import _callable
 
 console      = core.console
 math         = core.math

@@ -57,7 +57,7 @@ from mon.nn.optimizer import *
 from mon.nn.parsing import *
 from mon.nn.strategy import *
 from mon.nn.typing import (
-    _ratio_2_t, _ratio_3_t, _ratio_any_t, _scalar_or_tuple_1_t,
+    _callable, _ratio_2_t, _ratio_3_t, _ratio_any_t, _scalar_or_tuple_1_t,
     _scalar_or_tuple_2_t, _scalar_or_tuple_3_t, _scalar_or_tuple_4_t,
     _scalar_or_tuple_5_t, _scalar_or_tuple_6_t, _scalar_or_tuple_any_t,
     _size_1_t, _size_2_opt_t, _size_2_t, _size_3_opt_t, _size_3_t, _size_4_t,

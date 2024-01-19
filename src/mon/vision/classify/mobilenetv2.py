@@ -9,15 +9,15 @@ __all__ = [
     "MobileNetV2",
 ]
 
-from typing import Callable, Any
+from typing import Any
 
 import torch
 from torchvision.models import _utils
 
 from mon.globals import MODELS
-from mon.nn.typing import _callable
 from mon.vision import core, nn
 from mon.vision.classify import base
+from mon.vision.nn import _callable
 
 console      = core.console
 math         = core.math
