@@ -6,8 +6,14 @@
 from __future__ import annotations
 
 __all__ = [
-    "ChainDataset", "ConcatDataset", "Dataset", "IterableDataset",
-    "LabeledDataset", "Subset", "TensorDataset", "UnlabeledDataset",
+    "ChainDataset",
+    "ConcatDataset",
+    "Dataset",
+    "IterableDataset",
+    "LabeledDataset",
+    "Subset",
+    "TensorDataset",
+    "UnlabeledDataset",
     "random_split",
 ]
 
@@ -46,7 +52,7 @@ class Dataset(dataset.Dataset, ABC):
         split    : str  = "train",
         transform: Any  = None,
         to_tensor: bool = False,
-        verbose  : bool = True,
+        verbose  : bool = False,
         *args, **kwargs
     ):
         super().__init__()
@@ -93,7 +99,7 @@ class Dataset(dataset.Dataset, ABC):
         if split in self.splits:
             self._split = split
         else:
-            console.log(f"``split`` must be one of {self.splits}, but got {self.split}.")
+            console.log(f":param:`split` must be one of {self.splits}, but got {self.split}.")
             raise ValueError
             
     @abstractmethod

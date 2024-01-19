@@ -141,7 +141,8 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
         """Verify and check data."""
         if not len(self.images) > 0:
             raise RuntimeError(f"No images in dataset.")
-        console.log(f"Number of samples: {len(self.images)}.")
+        if self.verbose:
+            console.log(f"Number of samples: {len(self.images)}.")
     
     def cache_data(self, path: core.Path):
         """Cache data to :param:`path`."""
@@ -158,7 +159,8 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
     
     def reset(self):
         """Reset and start over."""
@@ -330,7 +332,8 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
         """Verify and check data."""
         if not self.num_images > 0:
             raise RuntimeError(f"No images in dataset.")
-        console.log(f"Number of samples: {self.num_images}.")
+        if self.verbose:
+            console.log(f"Number of samples: {self.num_images}.")
 
     def reset(self):
         """Reset and start over."""
@@ -540,7 +543,8 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
                 f"Number of images and labels must be the same, but got "
                 f"{len(self.images)} and {len(self.labels)}."
             )
-        console.log(f"Number of {self.split} samples: {len(self.images)}.")
+        if self.verbose:
+            console.log(f"Number of {self.split} samples: {len(self.images)}.")
         
     def cache_data(self, path: core.Path):
         """Cache data to :param:`path`."""
@@ -549,7 +553,8 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
             "labels": self.labels,
         }
         torch.save(cache, str(path))
-        console.log(f"Cache data to: {path}")
+        if self.verbose:
+            console.log(f"Cache data to: {path}")
     
     @abstractmethod
     def cache_images(self):
@@ -646,7 +651,8 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
 
     @staticmethod
     def collate_fn(batch) -> tuple[
@@ -792,7 +798,8 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
     
     def filter(self):
         """Filter unwanted samples."""
@@ -1137,7 +1144,8 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
         
         with core.get_download_bar() as pbar:
             for i in pbar.track(
@@ -1145,7 +1153,8 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
-        console.log(f"Labels have been cached.")
+        if self.verbose:
+            console.log(f"Labels have been cached.")
     
     def filter(self):
         """Filter unwanted samples."""
@@ -1272,7 +1281,8 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
         
         with core.get_download_bar() as pbar:
             for i in pbar.track(
@@ -1280,7 +1290,8 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
-        console.log(f"Labels have been cached.")
+        if self.verbose:
+            console.log(f"Labels have been cached.")
     
     def filter(self):
         """Filter unwanted samples."""

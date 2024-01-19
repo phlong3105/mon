@@ -242,6 +242,10 @@ class DataModule(lightning.LightningDataModule, ABC):
         table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "num_workers", f"{self.num_workers}")
-        console.log(table)
+        if (
+            self.verbose and
+            self.trainer is not None and self.trainer.global_rank == 0
+        ):
+            console.log(table)
     
 # endregion

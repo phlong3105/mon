@@ -729,7 +729,8 @@ class DenseHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -780,7 +781,8 @@ class IHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -831,7 +833,8 @@ class NHHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -882,7 +885,8 @@ class OHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -933,7 +937,8 @@ class RESIDEHSTSRealDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -984,7 +989,8 @@ class RESIDEHSTSSynDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1035,7 +1041,8 @@ class RESIDEITSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1086,7 +1093,8 @@ class RESIDEITSV2DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1137,7 +1145,8 @@ class RESIDEOTSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1188,7 +1197,8 @@ class RESIDERTTSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1239,7 +1249,8 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1290,7 +1301,8 @@ class RESIDESOTSOutdoorDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1341,7 +1353,8 @@ class SateHaze1KDataModule(base.DataModule):
                 - None:      : prepares all.
                 Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -1392,7 +1405,8 @@ class RESIDEUHIDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -1443,7 +1457,8 @@ class SateHaze1KThinDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -1494,7 +1509,8 @@ class SateHaze1KModerateDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -1545,7 +1561,8 @@ class SateHaze1KThickDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:

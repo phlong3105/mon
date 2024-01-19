@@ -22,11 +22,12 @@ console = mon.console
 
 def train(args: dict):
     # Initialization
-    console.rule("[bold red]1. INITIALIZATION")
-    console.log(f"Machine: {args['hostname']}")
-
+    if mon.is_rank_zero():
+        console.rule("[bold red]1. INITIALIZATION")
+        console.log(f"Machine: {args['hostname']}")
+    
     mon.set_random_seed(args["seed"])
-
+    
     datamodule: mon.DataModule = mon.DATAMODULES.build(config=args["datamodule"])
     datamodule.prepare_data()
     datamodule.setup(phase="training")
@@ -34,13 +35,15 @@ def train(args: dict):
     args["model"]["classlabels"] = datamodule.classlabels
     model: mon.Model             = mon.MODELS.build(config=args["model"])
     model.phase                  = "training"
-
-    mon.print_dict(args, title=model.fullname)
-    console.log("[green]Done")
-
+    
+    if mon.is_rank_zero():
+        mon.print_dict(args, title=model.fullname)
+        console.log("[green]Done")
+    
     # Trainer
-    console.rule("[bold red]2. SETUP TRAINER")
-    mon.copy_file(src=args["config_file"], dst=model.root/"config.py")
+    if mon.is_rank_zero():
+        console.rule("[bold red]2. SETUP TRAINER")
+        mon.copy_file(src=args["config_file"], dst=model.root/"config.py")
     
     ckpt      = mon.get_latest_checkpoint(dirpath=model.ckpt_dir) if model.ckpt_dir.exists() else None
     callbacks = mon.CALLBACKS.build_instances(configs=args["trainer"]["callbacks"])
@@ -60,18 +63,21 @@ def train(args: dict):
     trainer               = mon.Trainer(**args["trainer"])
     trainer.current_epoch = mon.get_epoch(ckpt=ckpt)
     trainer.global_step   = mon.get_global_step(ckpt=ckpt)
-    console.log("[green]Done")
+    if mon.is_rank_zero():
+        console.log("[green]Done")
     
     # Training
-    console.rule("[bold red]3. TRAINING")
+    if mon.is_rank_zero():
+        console.rule("[bold red]3. TRAINING")
     trainer.fit(
         model             = model,
         train_dataloaders = datamodule.train_dataloader,
         val_dataloaders   = datamodule.val_dataloader,
         ckpt_path         = ckpt,
     )
-    console.log(f"Model: {args['model']['fullname']}")  # Log
-    console.log("[green]Done")
+    if mon.is_rank_zero():
+        console.log(f"Model: {args['model']['fullname']}")  # Log
+        console.log("[green]Done")
     
 
 @click.command(context_settings=dict(

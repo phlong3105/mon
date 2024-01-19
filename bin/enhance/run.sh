@@ -361,7 +361,11 @@ if [ "$run" == "train" ]; then
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
       if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
-        model_variant="${model[i]}-${variant[j]}"
+        if [[ ${variant[j]} == *"${model[i]}"* ]]; then
+          model_variant="${variant[j]}"
+        else
+          model_variant="${model[i]}-${variant[j]}"
+        fi
       else
         model_variant="${model[i]}"
       fi
@@ -669,10 +673,19 @@ if [ "$run" == "train" ]; then
           --max-epochs "$epochs"
       # UFormer
       elif [ "${model[i]}" == "uformer" ]; then
-        cd "${universal_dir}/${model[i]}" || exit
-        if [ "${task}" == "derain" ]; then
-            echo -e "\nI have not prepared the training script for UFormer."
-        fi
+        # cd "${universal_dir}/${model[i]}" || exit
+        # if [ "${task}" == "derain" ]; then
+        #     echo -e "\nI have not prepared the training script for UFormer."
+        # fi
+        cd "${current_dir}" || exit
+        python -W ignore train.py \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
+          --fullname "${fullname}" \
+          --max-epochs "$epochs"
       fi
     done
   done
@@ -686,7 +699,11 @@ if [ "$run" == "predict" ]; then
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
       if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
-        model_variant="${model[i]}-${variant[j]}"
+        if [[ ${variant[j]} == *"${model[i]}"* ]]; then
+          model_variant="${variant[j]}"
+        else
+          model_variant="${model[i]}-${variant[j]}"
+        fi
       else
         model_variant="${model[i]}"
       fi

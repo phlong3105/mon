@@ -230,7 +230,7 @@ class Rain12(base.ImageEnhancementDataset):
             self.root / self.split / "rain12" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=not self.verbose) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -243,7 +243,7 @@ class Rain12(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=not self.verbose) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -331,7 +331,7 @@ class Rain13K(base.ImageEnhancementDataset):
                 self.root / self.split / "rain2800" / "rain",
                 self.root / self.split / "rain800"  / "rain",
             ]
-
+        
         self.images: list[base.ImageLabel] = []
         with core.get_progress_bar() as pbar:
             for pattern in patterns:
@@ -512,7 +512,8 @@ class GTRainDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
@@ -563,7 +564,8 @@ class Rain100DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -614,7 +616,8 @@ class Rain100HDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -665,7 +668,8 @@ class Rain100LDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -736,7 +740,8 @@ class Rain12DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -787,7 +792,8 @@ class Rain1200DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -838,7 +844,8 @@ class Rain13KDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -889,7 +896,8 @@ class Rain1400DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -940,7 +948,8 @@ class Rain2800DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:
@@ -991,7 +1000,8 @@ class Rain800DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.verbose:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
         
         if phase in [None, ModelPhase.TRAINING]:

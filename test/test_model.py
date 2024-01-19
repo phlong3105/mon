@@ -538,6 +538,18 @@ class TestModel(unittest.TestCase):
         model = mon.HINet(weights="rain13k", verbose=True)
         self.assertIsNotNone(model)
     
+    def test_uformer_t(self):
+        model = mon.UformerT(weights=None, verbose=True)
+        self.assertIsNotNone(model)
+    
+    def test_uformer_s(self):
+        model = mon.UformerS(weights=None, verbose=True)
+        self.assertIsNotNone(model)
+    
+    def test_uformer_b(self):
+        model = mon.UformerB(weights=None, verbose=True)
+        self.assertIsNotNone(model)
+    
     def test_zerodce(self):
         model = mon.ZeroDCE(weights="sice-zerodce", verbose=True)
         self.assertIsNotNone(model)
