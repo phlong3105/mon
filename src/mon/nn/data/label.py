@@ -76,8 +76,8 @@ class ClassLabel(dict, Label):
             return value
         else:
             raise ValueError(
-                f"value must be a ClassLabel class or a dict, but got "
-                f"{type(value)}."
+                f":param:`value` must be a :class:`ClassLabel` class or a "
+                f":class:`dict`, but got {type(value)}."
             )
     
     @property
@@ -122,8 +122,8 @@ class ClassLabels(list[ClassLabel]):
         classlabels = value["classlabels"]
         if not isinstance(classlabels, list | tuple):
             raise TypeError(
-                f"classlabels must be a list or tuple, but got "
-                f"{type(classlabels)}."
+                f":param:`classlabels` must be a :class:`list` or "
+                f":class:`tuple`, but got {type(classlabels)}."
             )
         return cls(seq=classlabels)
     
@@ -134,7 +134,7 @@ class ClassLabels(list[ClassLabel]):
         """
         path = pathlib.Path(path)
         if not path.is_json_file():
-            raise ValueError(f"path must be a .json file, but got {path}.")
+            raise ValueError(f":param:`path` must be a ``.json`` file, but got {path}.")
         return cls.from_dict(file.read_from_file(path=path))
     
     @classmethod
@@ -177,8 +177,7 @@ class ClassLabels(list[ClassLabel]):
         # Loop over the class names + colors
         for i, label in enumerate(self):
             color = label.color  # Draw the class name + color on the legend
-            color = color[
-                    ::-1]  # Convert to BGR format since OpenCV operates on
+            color = color[::-1]  # Convert to BGR format since OpenCV operates on
             # BGR format.
             cv2.putText(
                 img       = legend,

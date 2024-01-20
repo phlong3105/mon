@@ -1095,6 +1095,11 @@ class Uformer(base.UniversalImageEnhancementModel):
 
 @MODELS.register(name="uformer_t")
 class UformerT(Uformer):
+    """Uformer Tiny model.
+    
+    Reference:
+        `<https://github.com/ZhendongWang6/Uformer>`__
+    """
     
     zoo = {}
     
@@ -1121,6 +1126,11 @@ class UformerT(Uformer):
 
 @MODELS.register(name="uformer_s")
 class UformerS(Uformer):
+    """Uformer Small model.
+    
+    Reference:
+        `<https://github.com/ZhendongWang6/Uformer>`__
+    """
     
     zoo = {}
     
@@ -1206,6 +1216,11 @@ class UformerSFastleff(Uformer):
 
 @MODELS.register(name="uformer_b")
 class UformerB(Uformer):
+    """Uformer Big model.
+    
+    Reference:
+        `<https://github.com/ZhendongWang6/Uformer>`__
+    """
     
     zoo = {
         "gopro": {

@@ -18,6 +18,7 @@ __all__ = [
     "LEDLightDataModule",
     "LightEffect",
     "LightEffectDataModule",
+    "MIPIFlare",
 ]
 
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
@@ -364,6 +365,64 @@ class FlareReal800DataModule(base.DataModule):
             self.val   = FlareReal800(split="val",   **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = FlareReal800(split="val",   **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="mipiflare")
+class MIPIFlare(base.DataModule):
+    """Flare datamodule used in MIPI 2024 Challenge
+    `<https://mipi-challenge.org/MIPI2024/index.html>`__
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = (
+                FlareReal800(split="train", **self.dataset_kwargs)
+                + Flare7KPPReal(split="test", **self.dataset_kwargs)
+                + Flare7KPPSyn(split="test", **self.dataset_kwargs)
+            )
+            self.val   = Flare7KPPReal(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = Flare7KPPReal(split="test", **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()

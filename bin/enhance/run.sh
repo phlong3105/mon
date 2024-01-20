@@ -40,6 +40,7 @@ desnow_models=(
 les_models=(
   "flarereal800"  #
   "jin2022"       # https://github.com/jinyeying/night-enhancement
+  "mipiflare"     #
 )
 llie_models=(
   "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
@@ -266,6 +267,15 @@ for d in "${datasets[@]}"; do
   fi
 
   # LES
+  if [ "$d" == "flarereal800" ]; then
+    if [ ${split} == "train" ]; then
+      input_dirs+=("${data_dir}/les/train/${d}/flare")
+      target_dirs+=("${data_dir}/les/train/${d}/clear")
+    else
+      input_dirs+=("${data_dir}/les/val/${d}/flare")
+      target_dirs+=("")
+    fi
+  fi
   if [ "$d" == "ledlight" ]; then
     input_dirs+=("${data_dir}/les/test/${d}/light-effects")
     target_dirs+=("${data_dir}/les/test/${d}/clear")

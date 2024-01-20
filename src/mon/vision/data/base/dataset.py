@@ -12,12 +12,23 @@ For transformation operations, we use
 from __future__ import annotations
 
 __all__ = [
-    "COCODetectionDataset", "DataModule", "ImageClassificationDataset",
-    "ImageClassificationDirectoryTree", "ImageDetectionDataset",
-    "ImageDirectoryDataset", "ImageEnhancementDataset", "ImageLabelsDataset",
-    "ImageSegmentationDataset", "LabeledImageDataset", "LabeledVideoDataset",
-    "UnlabeledImageDataset", "UnlabeledVideoDataset", "VOCDetectionDataset",
-    "VideoClassificationDataset", "VideoDetectionDataset", "VideoLabelsDataset",
+    "COCODetectionDataset",
+    "DataModule",
+    "ImageClassificationDataset",
+    "ImageClassificationDirectoryTree",
+    "ImageDetectionDataset",
+    "ImageDirectoryDataset",
+    "ImageEnhancementDataset",
+    "ImageLabelsDataset",
+    "ImageSegmentationDataset",
+    "LabeledImageDataset",
+    "LabeledVideoDataset",
+    "UnlabeledImageDataset",
+    "UnlabeledVideoDataset",
+    "VOCDetectionDataset",
+    "VideoClassificationDataset",
+    "VideoDetectionDataset",
+    "VideoLabelsDataset",
     "YOLODetectionDataset",
 ]
 
@@ -195,7 +206,7 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         target = None
@@ -287,7 +298,7 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
                 ret_val, image = self.video_capture.read()
                 rel_path       = self.source.name
             else:
-                raise RuntimeError(f"video_capture has not been initialized.")
+                raise RuntimeError(f":param:`video_capture` has not been initialized.")
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             meta  = {"rel_path": rel_path}
 
@@ -371,7 +382,7 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         target = None
@@ -414,7 +425,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         """Get image files."""
         if not self.root.is_dir():
             raise ValueError(
-                f"root must be a valid directory, but got {self.root}."
+                f":param:`root` must be a valid directory, but got {self.root}."
             )
         
         with core.get_progress_bar() as pbar:
@@ -633,10 +644,9 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
 
         if self.transform is not None:
             transformed = self.transform(image=image)
-            image = transformed["image"]
+            image       = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(
-                input=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
             label = torch.Tensor(label)
             
         return image, label, meta
@@ -679,7 +689,7 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         if all(isinstance(t, torch.Tensor) for t in target):
@@ -830,7 +840,7 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         for i, l in enumerate(target):
@@ -1125,12 +1135,16 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         meta  = self.images[index].meta
         
         if self.transform is not None:
-            transformed = self.transform(image=image, mask=label)
-            image       = transformed["image"]
-            label       = transformed["mask"]
+            if label is not None:
+                transformed = self.transform(image=image, mask=label)
+                image       = transformed["image"]
+                label       = transformed["mask"]
+            else:
+                transformed = self.transform(image=image)
+                image       = transformed["image"]
         if self.to_tensor:
             image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True) if label is None else None
 
         return image, label, meta
         
@@ -1190,7 +1204,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         if all(isinstance(t, torch.Tensor) and t.ndim == 3 for t in target):
@@ -1203,11 +1217,11 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             target = np.concatenate(target, axis=0)
         else:
             raise ValueError(
-                f"target's number of dimensions must be between 2 and 4."
+                f"target's number of dimensions must be between ``2`` and ``4``."
             )
         
         return input, target, meta
-    
+
 # endregion
 
 
@@ -1258,17 +1272,19 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         image = self.images[index].data
         label = self.labels[index].data
         meta  = self.images[index].meta
-
+        
         if self.transform is not None:
-            transformed = self.transform(image=image, mask=label)
-            image       = transformed["image"]
-            label       = transformed["mask"]
+            if label is not None:
+                transformed = self.transform(image=image, mask=label)
+                image       = transformed["image"]
+                label       = transformed["mask"]
+            else:
+                transformed = self.transform(image=image)
+                image       = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(
-                input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(
-                input=label, keepdim=False, normalize=True)
-            
+            image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True) if label is None else None
+        
         return image, label, meta
     
     def cache_images(self):
@@ -1327,7 +1343,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         if all(isinstance(t, torch.Tensor) and t.ndim == 3 for t in target):
@@ -1340,7 +1356,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
             target = np.concatenate(target, axis=0)
         else:
             raise ValueError(
-                f"target's number of dimensions must be between 2 and 4."
+                f"target's number of dimensions must be between ``2`` and ``4``."
             )
         
         return input, target, meta
