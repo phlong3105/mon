@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""HINet model trained on Rain13K dataset."""
+"""UformerB model trained on FlareReal800 dataset."""
 
 from __future__ import annotations
 
@@ -13,14 +13,14 @@ from mon import DATA_DIR, RUN_DIR
 # region Basic
 
 root         = RUN_DIR / "train"
-project      = "hinet"
-model_name   = "hinet"
+project      = "uformer"
+model_name   = "uformer_b"
 model_config = None
-data_name    = "rain13k"
+data_name    = "flarereal800"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
-image_size   = [256, 256]
-seed	     = 100
+image_size   = [128, 128]
+seed	     = 1234
 verbose 	 = True
 
 # endregion
@@ -32,6 +32,7 @@ model = {
 	"config"     : model_config,   # The model's configuration that is used to build the model.
 	"hparams"    : None,           # Model's hyperparameters.
 	"channels"   : 3,              # The first layer's input channel.
+	"dd_in"		 : 3,
 	"num_classes": None,           # A number of classes, which is also the last layer's output channels.
 	"classlabels": None,           # A :class:`mon.nn.data.label.ClassLabels` object that contains all labels in the dataset.
 	"weights"    : None,           # The model's weights.
@@ -42,10 +43,7 @@ model = {
 	"project"    : project,        # A project name.
 	"phase"      : "training",     # The model's running phase.
 	"loss"       : {
-		"name"       : "psnr_loss",
-		"loss_weight": 0.5,
-		"to_y"       : True,
-		# "name": "l1_loss",
+		"name": "charbonnier_loss",
 	},          # Loss function for training the model.
 	"metrics"    : {
 	    "train": None,
@@ -55,16 +53,22 @@ model = {
 	"optimizers" : [
 		{
             "optimizer"   : {
-	            "name"        : "adam",
-	            "lr"          : 2e-4,
-	            "weight_decay": 0,
-	            "betas"       : [0.9, 0.99],
+	            # "name"        : "adam",
+	            # "lr"          : 0.0002,
+	            # "weight_decay": 0.02,
+	            # "betas"       : [0.9, 0.999],
+				# "eps"		    : 1e-8,
+				"name"        : "adamw",
+				"lr"          : 0.0002,
+				"weight_decay": 0.02,
+				"betas"       : [0.9, 0.999],
+				"eps"		  : 1e-8,
 			},
 	        "lr_scheduler": {
 				"scheduler": {
 					"name"      : "cosine_annealing_lr",
 					"T_max"     : 400000,
-					"eta_min"   : 1e-7,
+					"eta_min"   : 1e-6,
 					"last_epoch": -1
 				},
 				# REQUIRED: The scheduler measurement
@@ -78,12 +82,6 @@ model = {
     ],          # Optimizer(s) for training model.
 	"debug"      : default.debug,  # Debug configs.
 	"verbose"    : verbose,        # Verbosity.
-	# Model args
-	"num_channels": 64,
-	"depth"       : 5,
-	"relu_slope"  : 0.2,
-	"in_pos_left" : 0,
-	"in_pos_right": 4,
 }
 
 # endregion
@@ -106,7 +104,7 @@ datamodule = {
     "to_tensor"   : True,         # If ``True``, convert input and target to :class:`torch.Tensor`.
     "cache_data"  : False,        # If ``True``, cache data to disk for faster loading next time.
     "cache_images": False,        # If ``True``, cache images into memory for faster training.
-    "batch_size"  : 32,           # The number of samples in one forward pass.
+    "batch_size"  : 16,           # The number of samples in one forward pass.
     "devices"     : 0,            # A list of devices to use. Default: ``0``.
     "shuffle"     : True,         # If ``True``, reshuffle the datapoints at the beginning of every epoch.
     "verbose"     : verbose,      # Verbosity.

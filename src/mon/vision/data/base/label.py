@@ -10,11 +10,24 @@ datasets. We try to support all possible data types: :class:`torch.Tensor`,
 from __future__ import annotations
 
 __all__ = [
-    "COCODetectionsLabel", "COCOKeypointsLabel", "ClassificationLabel",
-    "ClassificationsLabel", "DetectionLabel", "DetectionsLabel", "HeatmapLabel",
-    "ImageLabel", "KITTIDetectionsLabel", "KeypointLabel", "KeypointsLabel",
-    "PolylineLabel", "PolylinesLabel", "RegressionLabel", "SegmentationLabel",
-    "TemporalDetectionLabel", "VOCDetectionsLabel", "YOLODetectionsLabel",
+    "COCODetectionsLabel",
+    "COCOKeypointsLabel",
+    "ClassificationLabel",
+    "ClassificationsLabel",
+    "DetectionLabel",
+    "DetectionsLabel",
+    "HeatmapLabel",
+    "ImageLabel",
+    "KITTIDetectionsLabel",
+    "KeypointLabel",
+    "KeypointsLabel",
+    "PolylineLabel",
+    "PolylinesLabel",
+    "RegressionLabel",
+    "SegmentationLabel",
+    "TemporalDetectionLabel",
+    "VOCDetectionsLabel",
+    "YOLODetectionsLabel",
 ]
 
 import uuid
@@ -23,6 +36,9 @@ import numpy as np
 import torch
 
 from mon.vision import core, geometry, io, nn
+
+console       = core.console
+error_console = core.error_console
 
 
 # region Classification
@@ -51,11 +67,13 @@ class ClassificationLabel(nn.Label):
         super().__init__(*args, **kwargs)
         if not 0.0 <= confidence <= 1.0:
             raise ValueError(
-                f"conf must be between 0.0 and 1.0, but got {confidence}."
+                f":param:`conf` must be between ``0.0`` and ``1.0``, "
+                f"but got {confidence}."
             )
         if id_ <= 0 and label == "":
             raise ValueError(
-                f"Either id or name must be defined, but got {id_} and {label}."
+                f"Either :param:`id` or name must be defined, "
+                f"but got {id_} and {label}."
             )
         self.id_        = id_
         self.label      = label
@@ -159,11 +177,13 @@ class DetectionLabel(nn.Label):
         super().__init__(*args, **kwargs)
         if not 0.0 <= confidence <= 1.0:
             raise ValueError(
-                f"conf must be between 0.0 and 1.0, but got {confidence}."
+                f":param:`conf` must be between ``0.0`` and ``1.0``, "
+                f"but got {confidence}."
             )
         if id_ <= 0 and label == "":
             raise ValueError(
-                f"Either id or name must be defined, but got {id_} and {label}."
+                f"Either :param:`id` or name must be defined, "
+                f"but got {id_} and {label}."
             )
         self.id_        = id_
         self.index      = index
@@ -200,8 +220,8 @@ class DetectionLabel(nn.Label):
             return value
         else:
             raise ValueError(
-                f"value must be a DetectionLabel class or a dict, but got "
-                f"{type(value)}."
+                f":param:`value` must be a :class:`DetectionLabel` class or "
+                f"a :class:`dict`, but got {type(value)}."
             )
     
     @property
@@ -433,12 +453,13 @@ class VOCDetectionsLabel(DetectionsLabel):
         path = core.Path(path)
         if not path.is_xml_file():
             raise ValueError(
-                f"path must be a valid path to an .xml file, but got {path}."
+                f":param:`path` must be a valid path to an ``.xml`` file, "
+                f"but got {path}."
             )
         
         xml_data = core.read_from_file(path=path)
         if "annotation" not in xml_data:
-            raise ValueError("xml_data must contain the 'annotation' key.")
+            raise ValueError("xml_data must contain the ``'annotation'`` key.")
        
         annotation = xml_data["annotation"]
         folder     = annotation.get("folder", "")
@@ -513,7 +534,8 @@ class YOLODetectionsLabel(DetectionsLabel):
         path = core.Path(path)
         if not path.is_txt_file():
             raise ValueError(
-                f"path must be a valid path to an .txt file, but got {path}."
+                f":param:`path` must be a valid path to an ``.txt`` file, "
+                f"but got {path}."
             )
         
         detections: list[DetectionLabel] = []
@@ -614,13 +636,13 @@ class ImageLabel(nn.Label):
         self.image          = None
         self.keep_in_memory = keep_in_memory
         
-        if path is not None:
-            path = core.Path(path)
-            if not path.is_image_file():
-                raise ValueError(
-                    f"path must be a valid path to an image file, but got {path}."
-                )
-        self.path = path
+        self.path = core.Path(path) if path is not None else None
+        if self.path is None or not self.path.is_image_file():
+            error_console.log(
+                f":param:`path` must be a valid path to an image file, "
+                f"but got {path}."
+            )
+            return
         
         if name is None:
             name = str(core.Path(path).name) if path.is_image_file() else f"{id_}"
@@ -638,7 +660,7 @@ class ImageLabel(nn.Label):
         self,
         path          : core.Path | None = None,
         keep_in_memory: bool = False,
-    ) -> np.ndarray:
+    ) -> np.ndarray | None:
         """Loads image into memory.
         
         Args:
@@ -647,7 +669,7 @@ class ImageLabel(nn.Label):
                 and kept there. Default: ``False``.
             
         Return:
-            An image of shape :math:`[H, W, C]` .
+            An image of shape :math:`[H, W, C]`.
         """
         self.keep_in_memory = keep_in_memory
         
@@ -655,10 +677,12 @@ class ImageLabel(nn.Label):
             path = core.Path(path)
             if path.is_image_file():
                 self.path = path
-        if not self.path.is_image_file():
-            raise ValueError(
-                f"path must be a valid path to an image file, but got {self.path}."
+        if self.path is None or not self.path.is_image_file():
+            error_console.log(
+                f":param:`path` must be a valid path to an image file, "
+                f"but got {self.path}."
             )
+            return None
         
         image = io.read_image(
             path      = self.path,
@@ -692,7 +716,6 @@ class ImageLabel(nn.Label):
         else:
             return self.image
        
-
 # endregion
 
 
@@ -723,11 +746,13 @@ class KeypointLabel(nn.Label):
         super().__init__(*args, **kwargs)
         if not 0.0 <= confidence <= 1.0:
             raise ValueError(
-                f"conf must be between 0.0 and 1.0, but got {confidence}."
+                f":param:`conf` must be between ``0.0`` and ``1.0``, "
+                f"but got {confidence}."
             )
         if id_ <= 0 and label == "":
             raise ValueError(
-                f"Either id or name must be defined, but got {id_} and {label}."
+                f"Either :param:`id` or name must be defined, "
+                f"but got {id_} and {label}."
             )
         self.id_        = id_
         self.index      = index
@@ -746,8 +771,8 @@ class KeypointLabel(nn.Label):
             return value
         else:
             raise ValueError(
-                f"value must be a KeypointLabel class or a dict, but got "
-                f"{type(value)}."
+                f":param:`value` must be a :class:`KeypointLabel` class or a "
+                f":class:`dict`, but got {type(value)}."
             )
     
     @property
@@ -847,11 +872,13 @@ class PolylineLabel(nn.Label):
         super().__init__(*args, **kwargs)
         if not 0.0 <= confidence <= 1.0:
             raise ValueError(
-                f"conf must be between 0.0 and 1.0, but got {confidence}."
+                f":param:`conf` must be between ``0.0`` and ``1.0``, "
+                f"but got {confidence}."
             )
         if id_ <= 0 and label == "":
             raise ValueError(
-                f"Either id or name must be defined, but got {id_} and {label}."
+                f"Either :param:`id` or name must be defined, "
+                f"but got {id_} and {label}."
             )
         self.id_        = id_
         self.index      = index
@@ -899,8 +926,8 @@ class PolylineLabel(nn.Label):
             return value
         else:
             raise ValueError(
-                f"value must be a PolylineLabel class or a dict, but got "
-                f"{type(value)}."
+                f":param:`value` must be a :class:`PolylineLabel` class or a "
+                f":class:`dict`, but got {type(value)}."
             )
         
     @property
@@ -1084,7 +1111,8 @@ class RegressionLabel(nn.Label):
         super().__init__(*args, **kwargs)
         if not 0.0 <= confidence <= 1.0:
             raise ValueError(
-                f"conf must be between 0.0 and 1.0, but got {confidence}."
+                f":param:`conf` must be between ``0.0`` and ``1.0``, "
+                f"but got {confidence}."
             )
         self.value      = value
         self.confidence = confidence
@@ -1137,13 +1165,13 @@ class SegmentationLabel(nn.Label):
         self.image          = None
         self.keep_in_memory = keep_in_memory
         
-        if path is not None:
-            path = core.Path(path)
-            if not path.is_image_file():
-                raise ValueError(
-                    f"path must be a valid path to an image file, but got {path}."
-                )
-        self.path = path
+        self.path = core.Path(path) if path is not None else None
+        if self.path is None or not self.path.is_image_file():
+            error_console.log(
+                f":param:`path` must be a valid path to an image file, "
+                f"but got {path}."
+            )
+            return
         
         if name is None:
             name = str(core.Path(path).name) if path.is_image_file() else f"{id_}"
@@ -1178,9 +1206,12 @@ class SegmentationLabel(nn.Label):
             path = core.Path(path)
             if path.is_image_file():
                 self.path = path
-        if not path.is_image_file():
-            raise ValueError(
-                f"path must be a valid path to an image file, but got {path}."
+        
+        self.path = core.Path(path) if path is not None else None
+        if self.path is None or not self.path.is_image_file():
+            error_console.log(
+                f":param:`path` must be a valid path to an image file, "
+                f"but got {path}."
             )
         
         mask = io.read_image(

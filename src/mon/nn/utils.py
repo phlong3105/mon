@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 import random
 
 import multipledispatch
@@ -16,6 +17,25 @@ import torch
 from torch.nn.utils import *
 
 from mon.nn.typing import _size_2_t, _size_3_t
+
+
+# region Access
+
+def is_rank_zero() -> bool:
+    """From Pytorch Lightning Official Document on DDP, we know that PL
+    intended call the main script multiple times to spin off the child
+    processes that take charge of GPUs.
+
+    They used the environment variable "LOCAL_RANK" and "NODE_RANK" to denote
+    GPUs. So we can add conditions to bypass the code blocks that we don't want
+    to get executed repeatedly.
+    """
+    return True if (
+        "LOCAL_RANK" not in os.environ.keys() and
+        "NODE_RANK"  not in os.environ.keys()
+    ) else False
+
+# endregion
 
 
 # region Assign

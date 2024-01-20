@@ -42,48 +42,48 @@ def remove_background(image):
 
 class Flare_Image_Loader(data.Dataset):
 	def __init__(self, image_path ,transform_base=None,transform_flare=None,mask_type=None):
-		self.ext = ['png','jpeg','jpg','bmp','tif']
-		self.data_list=[]
+		self.ext = ['png', 'jpeg', 'jpg', 'bmp', 'tif']
+		self.data_list		 = []
 		[self.data_list.extend(glob.glob(image_path + '/*.' + e)) for e in self.ext]
-		self.flare_dict={}
-		self.flare_list=[]
-		self.flare_name_list=[]
+		self.flare_dict		 = {}
+		self.flare_list		 = []
+		self.flare_name_list = []
 
-		self.reflective_flag=False
-		self.reflective_dict={}
-		self.reflective_list=[]
-		self.reflective_name_list=[]
+		self.reflective_flag 	  = False
+		self.reflective_dict 	  = {}
+		self.reflective_list	  = []
+		self.reflective_name_list = []
 
-		self.mask_type=mask_type #It is a str which may be None,"luminance" or "color"
+		self.mask_type = mask_type  # It is a str which may be None,"luminance" or "color"
 
-		self.transform_base=transform_base
-		self.transform_flare=transform_flare
+		self.transform_base  = transform_base
+		self.transform_flare = transform_flare
 
 		print("Base Image Loaded with examples:", len(self.data_list))
 
 	def __getitem__(self, index):
 		# load base image
-		img_path=self.data_list[index]
-		base_img= Image.open(img_path)
+		img_path = self.data_list[index]
+		base_img = Image.open(img_path)
 		
-		gamma=np.random.uniform(1.8,2.2)
-		to_tensor=transforms.ToTensor()
-		adjust_gamma=RandomGammaCorrection(gamma)
-		adjust_gamma_reverse=RandomGammaCorrection(1/gamma)
-		color_jitter=transforms.ColorJitter(brightness=(0.8,3),hue=0.0)
+		gamma = np.random.uniform(1.8, 2.2)
+		to_tensor = transforms.ToTensor()
+		adjust_gamma = RandomGammaCorrection(gamma)
+		adjust_gamma_reverse = RandomGammaCorrection(1 / gamma)
+		color_jitter = transforms.ColorJitter(brightness=(0.8, 3), hue=0.0)
 		if self.transform_base is not None:
-			base_img=to_tensor(base_img)
-			base_img=adjust_gamma(base_img)
-			base_img=self.transform_base(base_img)
+			base_img = to_tensor(base_img)
+			base_img = adjust_gamma(base_img)
+			base_img = self.transform_base(base_img)
 		else:
-			base_img=to_tensor(base_img)
-			base_img=adjust_gamma(base_img)
-		sigma_chi=0.01*np.random.chisquare(df=1)
-		base_img=Normal(base_img,sigma_chi).sample()
-		gain=np.random.uniform(0.5,1.2)
-		flare_DC_offset=np.random.uniform(-0.02,0.02)
-		base_img=gain*base_img
-		base_img=torch.clamp(base_img,min=0,max=1)
+			base_img = to_tensor(base_img)
+			base_img = adjust_gamma(base_img)
+		sigma_chi = 0.01 * np.random.chisquare(df=1)
+		base_img = Normal(base_img, sigma_chi).sample()
+		gain = np.random.uniform(0.5, 1.2)
+		flare_DC_offset = np.random.uniform(-0.02, 0.02)
+		base_img = gain * base_img
+		base_img = torch.clamp(base_img, min=0, max=1)
 
 		#load flare image
 		flare_path=random.choice(self.flare_list)

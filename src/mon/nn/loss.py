@@ -163,7 +163,9 @@ class CharbonnierLoss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        loss = torch.sqrt((input - target) ** 2 + (self.eps * self.eps))
+        # loss = torch.sqrt((input - target) ** 2 + (self.eps * self.eps))
+        diff = input - target
+        loss = torch.mean(torch.sqrt((diff * diff) + (self.eps * self.eps)))
         loss = reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 

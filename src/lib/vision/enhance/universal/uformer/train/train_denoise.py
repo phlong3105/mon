@@ -150,10 +150,10 @@ with torch.no_grad():
 
 ######### train ###########
 print('===> Start Epoch {} End Epoch {}'.format(start_epoch,opt.nepoch))
-best_psnr = 0
+best_psnr  = 0
 best_epoch = 0
-best_iter = 0
-eval_now = len(train_loader)//4
+best_iter  = 0
+eval_now   = len(train_loader)//4
 print("\nEvaluation after every {} Iterations !!!\n".format(eval_now))
 
 loss_scaler = NativeScaler()
@@ -161,7 +161,7 @@ torch.cuda.empty_cache()
 for epoch in range(start_epoch, opt.nepoch + 1):
     epoch_start_time = time.time()
     epoch_loss = 0
-    train_id = 1
+    train_id   = 1
 
     for i, data in enumerate(tqdm(train_loader), 0): 
         # zero_grad
@@ -169,24 +169,23 @@ for epoch in range(start_epoch, opt.nepoch + 1):
 
         target = data[0].cuda()
         input_ = data[1].cuda()
-
-        if epoch>5:
+        
+        if epoch > 5:
             target, input_ = utils.MixUp_AUG().aug(target, input_)
         with torch.cuda.amp.autocast():
             restored = model_restoration(input_)
             loss = criterion(restored, target)
-        loss_scaler(
-                loss, optimizer,parameters=model_restoration.parameters())
-        epoch_loss +=loss.item()
+        loss_scaler(loss, optimizer, parameters=model_restoration.parameters())
+        epoch_loss += loss.item()
 
         #### Evaluation ####
-        if (i+1)%eval_now==0 and i>0:
+        if (i + 1) % eval_now == 0 and i > 0:
             with torch.no_grad():
                 model_restoration.eval()
                 psnr_val_rgb = []
                 for ii, data_val in enumerate((val_loader), 0):
-                    target = data_val[0].cuda()
-                    input_ = data_val[1].cuda()
+                    target    = data_val[0].cuda()
+                    input_    = data_val[1].cuda()
                     filenames = data_val[2]
                     with torch.cuda.amp.autocast():
                         restored = model_restoration(input_)

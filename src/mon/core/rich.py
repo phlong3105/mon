@@ -119,6 +119,7 @@ def get_error_console() -> rich.console.Console:
 
 def get_download_bar(
     transient: bool = False,
+    disable  : bool = False,
 ) -> progress.Progress:
     """Return a :class:`rich.progress.Progress` object displaying the current
     time, the task description, a progress bar, the percentage complete, the
@@ -144,11 +145,13 @@ def get_download_bar(
         progress.TimeElapsedColumn(),
         console   = console,
         transient = transient,
+        disable   = disable,
     )
 
 
 def get_progress_bar(
     transient: bool = False,
+    disable  : bool = False,
 ) -> progress.Progress:
     """Return a :class:`rich.progress.Progress` object displaying the current
     time, the task description, a progress bar, the percentage complete, the
@@ -175,6 +178,7 @@ def get_progress_bar(
         progress.SpinnerColumn(),
         console   = console,
         transient = transient,
+        disable   = disable,
     )
 
 

@@ -45,27 +45,13 @@ class GTSnow(base.ImageEnhancementDataset):
 
     splits = ["train"]
 
-    def __init__(
-        self,
-        dataset: GTSnow  | None = None,
-        indices: list[int] | None = None,
-        *args,
-        **kwargs
-    ):
-        super().__init__(*args, **kwargs)
-        if dataset is None:
-            return
-        dataset_size = len(dataset)
-        self.images = [dataset.images[i] for i in range(dataset_size) if i in indices]
-        self.labels = [dataset.labels[i] for i in range(dataset_size) if i in indices]
-
     def get_images(self):
         """Get image files."""
         patterns = [
             self.root / self.split / "gt-snow" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -78,7 +64,7 @@ class GTSnow(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -106,7 +92,7 @@ class KITTISnow(base.ImageEnhancementDataset):
             self.root / self.split / "kitti-snow" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -119,7 +105,7 @@ class KITTISnow(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -145,7 +131,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
             self.root / self.split / "kitti-snow-s" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
 
             for pattern in patterns:
                 for path in pbar.track(
@@ -159,7 +145,7 @@ class KITTISnowS(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -185,7 +171,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
             self.root / self.split / "kitti-snow-m" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -198,7 +184,7 @@ class KITTISnowM(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -224,7 +210,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
             self.root / self.split / "kitti-snow-l" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -237,7 +223,7 @@ class KITTISnowL(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -263,7 +249,7 @@ class Snow100K(base.ImageEnhancementDataset):
             self.root / self.split / "snow100k" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -276,7 +262,7 @@ class Snow100K(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -302,7 +288,7 @@ class Snow100KS(base.ImageEnhancementDataset):
             self.root / self.split / "snow100k-s" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -315,7 +301,7 @@ class Snow100KS(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -341,7 +327,7 @@ class Snow100KM(base.ImageEnhancementDataset):
             self.root / self.split / "snow100k-m" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -354,7 +340,7 @@ class Snow100KM(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -380,7 +366,7 @@ class Snow100KL(base.ImageEnhancementDataset):
             self.root / self.split / "snow100k-l" / "snow"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -393,7 +379,7 @@ class Snow100KL(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -441,29 +427,13 @@ class GTSnowDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         phase = ModelPhase.from_value(phase) if phase is not None else phase
 
         if phase in [None, ModelPhase.TRAINING]:
-            # self.train = GTSnow(split="train", **self.dataset_kwargs)
-            # self.val   = GTSnow(split="train", **self.dataset_kwargs)
-            dataset = GTSnow(split="train", **self.dataset_kwargs)
-            import torch
-
-            validation_split = 0.2
-            random_seed = 42
-            dataset_size = len(dataset)
-            indices = list(range(dataset_size))
-            split = int(validation_split * dataset_size)
-
-            if self.shuffle:
-                torch.manual_seed(random_seed)
-                indices = torch.randperm(dataset_size).tolist()
-            train_indices, val_indices = indices[split:], indices[:split]
-
-            self.train = GTSnow(dataset=dataset, indices=train_indices,split="train", **self.dataset_kwargs)
-
-            self.val = GTSnow(dataset=dataset, indices=val_indices,split="train", **self.dataset_kwargs)
+            self.train = GTSnow(split="train", **self.dataset_kwargs)
+            self.val   = GTSnow(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = GTSnow(split="train", **self.dataset_kwargs)
 
@@ -509,9 +479,10 @@ class KITTISnowDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = KITTISnow(split="train", **self.dataset_kwargs)
             self.val   = KITTISnow(split="train", **self.dataset_kwargs)
@@ -520,8 +491,9 @@ class KITTISnowDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -560,9 +532,10 @@ class KITTISnowSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = KITTISnowS(split="test", **self.dataset_kwargs)
             self.val   = KITTISnowS(split="test", **self.dataset_kwargs)
@@ -571,8 +544,9 @@ class KITTISnowSDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -611,9 +585,10 @@ class KITTISnowMDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = KITTISnowM(split="test", **self.dataset_kwargs)
             self.val   = KITTISnowM(split="test", **self.dataset_kwargs)
@@ -622,8 +597,9 @@ class KITTISnowMDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -662,9 +638,10 @@ class KITTISnowLDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = KITTISnowL(split="test", **self.dataset_kwargs)
             self.val   = KITTISnowL(split="test", **self.dataset_kwargs)
@@ -673,8 +650,9 @@ class KITTISnowLDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -713,9 +691,10 @@ class Snow100KDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Snow100K(split="train", **self.dataset_kwargs)
             self.val   = Snow100K(split="train", **self.dataset_kwargs)
@@ -725,7 +704,8 @@ class Snow100KDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -764,9 +744,10 @@ class Snow100KSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Snow100KS(split="train", **self.dataset_kwargs)
             self.val   = Snow100KS(split="test",  **self.dataset_kwargs)
@@ -776,7 +757,8 @@ class Snow100KSDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -815,9 +797,10 @@ class Snow100KMDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Snow100KM(split="train", **self.dataset_kwargs)
             self.val   = Snow100KM(split="test",  **self.dataset_kwargs)
@@ -827,7 +810,8 @@ class Snow100KMDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -866,9 +850,10 @@ class Snow100KLDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Snow100KL(split="train", **self.dataset_kwargs)
             self.val   = Snow100KL(split="test",  **self.dataset_kwargs)
@@ -878,7 +863,8 @@ class Snow100KLDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""

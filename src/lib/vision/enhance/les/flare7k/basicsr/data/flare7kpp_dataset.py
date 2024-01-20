@@ -51,6 +51,7 @@ def glod_from_folder(folder_list, index_list):
 		index_dict[index_list[i]]=data_list
 	return index_dict
 
+
 class Flare_Image_Loader(data.Dataset):
 	def __init__(self, image_path ,transform_base,transform_flare,mask_type=None):
 		self.ext = ['png','jpeg','jpg','bmp','tif']
@@ -257,6 +258,7 @@ class Flare_Image_Loader(data.Dataset):
 			self.reflective_flag=True
 			print("Reflective Flare Image:",reflective_name, " is loaded successfully with examples", str(len_reflective_list))
 		print("Now we have",len(self.reflective_list),'refelctive flare images')
+
 
 @DATASET_REGISTRY.register()
 class Flare7kpp_Pair_Loader(Flare_Image_Loader):

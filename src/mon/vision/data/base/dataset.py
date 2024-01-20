@@ -12,12 +12,23 @@ For transformation operations, we use
 from __future__ import annotations
 
 __all__ = [
-    "COCODetectionDataset", "DataModule", "ImageClassificationDataset",
-    "ImageClassificationDirectoryTree", "ImageDetectionDataset",
-    "ImageDirectoryDataset", "ImageEnhancementDataset", "ImageLabelsDataset",
-    "ImageSegmentationDataset", "LabeledImageDataset", "LabeledVideoDataset",
-    "UnlabeledImageDataset", "UnlabeledVideoDataset", "VOCDetectionDataset",
-    "VideoClassificationDataset", "VideoDetectionDataset", "VideoLabelsDataset",
+    "COCODetectionDataset",
+    "DataModule",
+    "ImageClassificationDataset",
+    "ImageClassificationDirectoryTree",
+    "ImageDetectionDataset",
+    "ImageDirectoryDataset",
+    "ImageEnhancementDataset",
+    "ImageLabelsDataset",
+    "ImageSegmentationDataset",
+    "LabeledImageDataset",
+    "LabeledVideoDataset",
+    "UnlabeledImageDataset",
+    "UnlabeledVideoDataset",
+    "VOCDetectionDataset",
+    "VideoClassificationDataset",
+    "VideoDetectionDataset",
+    "VideoLabelsDataset",
     "YOLODetectionDataset",
 ]
 
@@ -141,7 +152,8 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
         """Verify and check data."""
         if not len(self.images) > 0:
             raise RuntimeError(f"No images in dataset.")
-        console.log(f"Number of samples: {len(self.images)}.")
+        if self.verbose:
+            console.log(f"Number of samples: {len(self.images)}.")
     
     def cache_data(self, path: core.Path):
         """Cache data to :param:`path`."""
@@ -158,7 +170,8 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
     
     def reset(self):
         """Reset and start over."""
@@ -193,7 +206,7 @@ class UnlabeledImageDataset(nn.UnlabeledDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         target = None
@@ -285,7 +298,7 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
                 ret_val, image = self.video_capture.read()
                 rel_path       = self.source.name
             else:
-                raise RuntimeError(f"video_capture has not been initialized.")
+                raise RuntimeError(f":param:`video_capture` has not been initialized.")
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             meta  = {"rel_path": rel_path}
 
@@ -330,7 +343,8 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
         """Verify and check data."""
         if not self.num_images > 0:
             raise RuntimeError(f"No images in dataset.")
-        console.log(f"Number of samples: {self.num_images}.")
+        if self.verbose:
+            console.log(f"Number of samples: {self.num_images}.")
 
     def reset(self):
         """Reset and start over."""
@@ -368,7 +382,7 @@ class UnlabeledVideoDataset(nn.UnlabeledDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         target = None
@@ -411,7 +425,7 @@ class ImageDirectoryDataset(UnlabeledImageDataset):
         """Get image files."""
         if not self.root.is_dir():
             raise ValueError(
-                f"root must be a valid directory, but got {self.root}."
+                f":param:`root` must be a valid directory, but got {self.root}."
             )
         
         with core.get_progress_bar() as pbar:
@@ -540,7 +554,8 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
                 f"Number of images and labels must be the same, but got "
                 f"{len(self.images)} and {len(self.labels)}."
             )
-        console.log(f"Number of {self.split} samples: {len(self.images)}.")
+        if self.verbose:
+            console.log(f"Number of {self.split} samples: {len(self.images)}.")
         
     def cache_data(self, path: core.Path):
         """Cache data to :param:`path`."""
@@ -549,7 +564,8 @@ class LabeledImageDataset(nn.LabeledDataset, ABC):
             "labels": self.labels,
         }
         torch.save(cache, str(path))
-        console.log(f"Cache data to: {path}")
+        if self.verbose:
+            console.log(f"Cache data to: {path}")
     
     @abstractmethod
     def cache_images(self):
@@ -628,10 +644,9 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
 
         if self.transform is not None:
             transformed = self.transform(image=image)
-            image = transformed["image"]
+            image       = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(
-                input=image, keepdim=False, normalize=True)
+            image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
             label = torch.Tensor(label)
             
         return image, label, meta
@@ -646,7 +661,8 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
 
     @staticmethod
     def collate_fn(batch) -> tuple[
@@ -673,7 +689,7 @@ class ImageClassificationDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         if all(isinstance(t, torch.Tensor) for t in target):
@@ -792,7 +808,8 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
     
     def filter(self):
         """Filter unwanted samples."""
@@ -823,7 +840,7 @@ class ImageDetectionDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         for i, l in enumerate(target):
@@ -1118,12 +1135,16 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         meta  = self.images[index].meta
         
         if self.transform is not None:
-            transformed = self.transform(image=image, mask=label)
-            image       = transformed["image"]
-            label       = transformed["mask"]
+            if label is not None:
+                transformed = self.transform(image=image, mask=label)
+                image       = transformed["image"]
+                label       = transformed["mask"]
+            else:
+                transformed = self.transform(image=image)
+                image       = transformed["image"]
         if self.to_tensor:
             image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True) if label is None else None
 
         return image, label, meta
         
@@ -1137,7 +1158,8 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
         
         with core.get_download_bar() as pbar:
             for i in pbar.track(
@@ -1145,7 +1167,8 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
-        console.log(f"Labels have been cached.")
+        if self.verbose:
+            console.log(f"Labels have been cached.")
     
     def filter(self):
         """Filter unwanted samples."""
@@ -1181,7 +1204,7 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         if all(isinstance(t, torch.Tensor) and t.ndim == 3 for t in target):
@@ -1194,11 +1217,11 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
             target = np.concatenate(target, axis=0)
         else:
             raise ValueError(
-                f"target's number of dimensions must be between 2 and 4."
+                f"target's number of dimensions must be between ``2`` and ``4``."
             )
         
         return input, target, meta
-    
+
 # endregion
 
 
@@ -1249,17 +1272,19 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         image = self.images[index].data
         label = self.labels[index].data
         meta  = self.images[index].meta
-
+        
         if self.transform is not None:
-            transformed = self.transform(image=image, mask=label)
-            image       = transformed["image"]
-            label       = transformed["mask"]
+            if label is not None:
+                transformed = self.transform(image=image, mask=label)
+                image       = transformed["image"]
+                label       = transformed["mask"]
+            else:
+                transformed = self.transform(image=image)
+                image       = transformed["image"]
         if self.to_tensor:
-            image = core.to_image_tensor(
-                input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(
-                input=label, keepdim=False, normalize=True)
-            
+            image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True) if label is None else None
+        
         return image, label, meta
     
     def cache_images(self):
@@ -1272,7 +1297,8 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} images"
             ):
                 self.images[i].load(keep_in_memory=True)
-        console.log(f"Images have been cached.")
+        if self.verbose:
+            console.log(f"Images have been cached.")
         
         with core.get_download_bar() as pbar:
             for i in pbar.track(
@@ -1280,7 +1306,8 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
                 description=f"Caching {self.__class__.__name__} {self.split} labels"
             ):
                 self.labels[i].load(keep_in_memory=True)
-        console.log(f"Labels have been cached.")
+        if self.verbose:
+            console.log(f"Labels have been cached.")
     
     def filter(self):
         """Filter unwanted samples."""
@@ -1316,7 +1343,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
             input = np.concatenate(input, axis=0)
         else:
             raise ValueError(
-                f"input's number of dimensions must be between 2 and 4."
+                f"input's number of dimensions must be between ``2`` and ``4``."
             )
         
         if all(isinstance(t, torch.Tensor) and t.ndim == 3 for t in target):
@@ -1329,7 +1356,7 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
             target = np.concatenate(target, axis=0)
         else:
             raise ValueError(
-                f"target's number of dimensions must be between 2 and 4."
+                f"target's number of dimensions must be between ``2`` and ``4``."
             )
         
         return input, target, meta

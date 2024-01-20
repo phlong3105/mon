@@ -86,7 +86,7 @@ OPTIMIZERS.register(name="sparse_adam", module=SparseAdam)
 # endregion
 
 
-# region Learning Rate Scheduler
+# region Scheduler
 
 @LR_SCHEDULERS.register(name="vibrate_lr")
 class VibrateLR(_LRScheduler):

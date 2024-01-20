@@ -6,8 +6,14 @@
 from __future__ import annotations
 
 __all__ = [
-    "ChainDataset", "ConcatDataset", "Dataset", "IterableDataset",
-    "LabeledDataset", "Subset", "TensorDataset", "UnlabeledDataset",
+    "ChainDataset",
+    "ConcatDataset",
+    "Dataset",
+    "IterableDataset",
+    "LabeledDataset",
+    "Subset",
+    "TensorDataset",
+    "UnlabeledDataset",
     "random_split",
 ]
 
@@ -42,19 +48,19 @@ class Dataset(dataset.Dataset, ABC):
     
     def __init__(
         self,
-        root     : pathlib.Path,
-        split    : str  = "train",
-        transform: Any  = None,
-        to_tensor: bool = False,
-        verbose  : bool = True,
+        root      : pathlib.Path,
+        split     : str  = "train",
+        transform : Any  = None,
+        to_tensor : bool = False,
+        verbose   : bool = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.root      = pathlib.Path(root)
-        self.split     = split
-        self.transform = transform
-        self.to_tensor = to_tensor
-        self.verbose   = verbose
+        self.root       = pathlib.Path(root)
+        self.split      = split
+        self.transform  = transform
+        self.to_tensor  = to_tensor
+        self.verbose    = verbose
     
     def __iter__(self):
         """Returns an iterator starting at index ``0``."""
@@ -85,6 +91,10 @@ class Dataset(dataset.Dataset, ABC):
         self.close()
     
     @property
+    def disable_pbar(self) -> bool:
+        return not self.verbose
+    
+    @property
     def split(self) -> str:
         return self._split
     
@@ -93,7 +103,7 @@ class Dataset(dataset.Dataset, ABC):
         if split in self.splits:
             self._split = split
         else:
-            console.log(f"``split`` must be one of {self.splits}, but got {self.split}.")
+            console.log(f":param:`split` must be one of {self.splits}, but got {self.split}.")
             raise ValueError
             
     @abstractmethod

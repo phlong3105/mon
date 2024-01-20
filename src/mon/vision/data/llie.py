@@ -68,7 +68,7 @@ class DarkFace(base.UnlabeledImageDataset):
         ]
 
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -94,7 +94,7 @@ class DICM(base.UnlabeledImageDataset):
             self.root / self.split / "dicm" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -120,7 +120,7 @@ class ExDark(base.UnlabeledImageDataset):
             self.root / self.split / "exdark" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -147,7 +147,7 @@ class FiveKC(base.UnlabeledImageDataset):
             self.root / self.split / "fivek-c" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -160,7 +160,7 @@ class FiveKC(base.UnlabeledImageDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -187,7 +187,7 @@ class FiveKE(base.UnlabeledImageDataset):
             self.root / self.split / "fivek-e" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -200,7 +200,7 @@ class FiveKE(base.UnlabeledImageDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -226,7 +226,7 @@ class Fusion(base.UnlabeledImageDataset):
             self.root / self.split / "fusion" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -252,7 +252,7 @@ class LIME(base.UnlabeledImageDataset):
             self.root / self.split / "low" / "lime"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -288,7 +288,7 @@ class LLIE(base.UnlabeledImageDataset):
             self.root / "train/sice-zerodce/low",
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -317,7 +317,7 @@ class LOLV1(base.ImageEnhancementDataset):
             self.root / self.split / "lol-v1" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -330,7 +330,7 @@ class LOLV1(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -360,7 +360,7 @@ class LOLV2Real(base.ImageEnhancementDataset):
             self.root / self.split / "lol-v2-real" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -373,7 +373,7 @@ class LOLV2Real(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -403,7 +403,7 @@ class LOLV2Syn(base.ImageEnhancementDataset):
             self.root / self.split / "lol-v2-syn" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -416,7 +416,7 @@ class LOLV2Syn(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -442,7 +442,7 @@ class MEF(base.UnlabeledImageDataset):
             self.root / self.split / "mef" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -468,7 +468,7 @@ class NPE(base.UnlabeledImageDataset):
             self.root / self.split / "npe" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -494,7 +494,7 @@ class SICEGrad(base.ImageEnhancementDataset):
             self.root / self.split / "sice-grad" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -507,7 +507,7 @@ class SICEGrad(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -533,7 +533,7 @@ class SICEMix(base.ImageEnhancementDataset):
             self.root / self.split / "sice-mix" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -546,7 +546,7 @@ class SICEMix(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -573,7 +573,7 @@ class SICEZeroDCE(base.UnlabeledImageDataset):
             self.root / self.split / "sice-zerodce" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -599,7 +599,7 @@ class VV(base.UnlabeledImageDataset):
             self.root / self.split / "vv" / "low"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -646,9 +646,10 @@ class DarkFaceDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = DarkFace(split="test", **self.dataset_kwargs)
             self.val   = DarkFace(split="test", **self.dataset_kwargs)
@@ -658,7 +659,8 @@ class DarkFaceDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -697,9 +699,10 @@ class DICMDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = DICM(split="test", **self.dataset_kwargs)
             self.val   = DICM(split="test", **self.dataset_kwargs)
@@ -709,7 +712,8 @@ class DICMDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -748,9 +752,10 @@ class ExDarkDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = ExDark(split="test", **self.dataset_kwargs)
             self.val   = ExDark(split="test", **self.dataset_kwargs)
@@ -760,7 +765,8 @@ class ExDarkDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -799,9 +805,10 @@ class FiveKCDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
         if phase in [None, ModelPhase.TRAINING]:
             self.train = FiveKC(split="train", **self.dataset_kwargs)
             self.val   = LOLV1(split="test",  **self.dataset_kwargs)
@@ -811,7 +818,8 @@ class FiveKCDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -850,9 +858,10 @@ class FiveKEDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = FiveKE(split="train", **self.dataset_kwargs)
             self.val   = LOLV1(split="test",  **self.dataset_kwargs)
@@ -862,7 +871,8 @@ class FiveKEDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -901,9 +911,10 @@ class FusionDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Fusion(split="test", **self.dataset_kwargs)
             self.val   = Fusion(split="test", **self.dataset_kwargs)
@@ -913,7 +924,8 @@ class FusionDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -952,9 +964,10 @@ class LIMEDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = LIME(split="test", **self.dataset_kwargs)
             self.val   = LIME(split="test", **self.dataset_kwargs)
@@ -964,7 +977,8 @@ class LIMEDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1003,9 +1017,10 @@ class LLIEDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train =   LLIE(split="train", **self.dataset_kwargs)
             self.val   = LOLV1(split="test",  **self.dataset_kwargs)
@@ -1015,7 +1030,8 @@ class LLIEDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1054,9 +1070,10 @@ class LOLV1DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = LOLV1(split="train", **self.dataset_kwargs)
             self.val   = LOLV1(split="test",  **self.dataset_kwargs)
@@ -1066,7 +1083,8 @@ class LOLV1DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1105,9 +1123,10 @@ class LOLV2RealDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
         if phase in [None, ModelPhase.TRAINING]:
             self.train = LOLV2Real(split="train", **self.dataset_kwargs)
             self.val   = LOLV2Real(split="test",  **self.dataset_kwargs)
@@ -1117,7 +1136,8 @@ class LOLV2RealDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1156,9 +1176,10 @@ class LOLV2SynDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = LOLV2Syn(split="train", **self.dataset_kwargs)
             self.val   = LOLV2Syn(split="test",  **self.dataset_kwargs)
@@ -1168,7 +1189,8 @@ class LOLV2SynDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1207,9 +1229,10 @@ class MEFDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = MEF(split="test", **self.dataset_kwargs)
             self.val   = MEF(split="test", **self.dataset_kwargs)
@@ -1219,7 +1242,8 @@ class MEFDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1258,9 +1282,10 @@ class NPEDataModule(base.DataModule):
                 - None:      : prepares all.
                 Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = NPE(split="test", **self.dataset_kwargs)
             self.val   = NPE(split="test", **self.dataset_kwargs)
@@ -1270,7 +1295,8 @@ class NPEDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1309,9 +1335,10 @@ class SICEGradDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SICEGrad(split="train", **self.dataset_kwargs)
             self.val   = SICEGrad(split="train", **self.dataset_kwargs)
@@ -1321,7 +1348,8 @@ class SICEGradDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1360,9 +1388,10 @@ class SICEMixDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SICEMix(split="train", **self.dataset_kwargs)
             self.val   = SICEMix(split="train", **self.dataset_kwargs)
@@ -1372,7 +1401,8 @@ class SICEMixDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1411,9 +1441,10 @@ class SICEZeroDCEDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SICEZeroDCE(split="train", **self.dataset_kwargs)
             self.val   = LOLV1(split="test", **self.dataset_kwargs)
@@ -1423,7 +1454,8 @@ class SICEZeroDCEDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1462,9 +1494,10 @@ class VVDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = VV(split="test", **self.dataset_kwargs)
             self.val   = VV(split="test", **self.dataset_kwargs)
@@ -1474,7 +1507,8 @@ class VVDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""

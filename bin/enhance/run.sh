@@ -38,7 +38,9 @@ desnow_models=(
   "hinet"         # https://github.com/megvii-model/HINet
 )
 les_models=(
+  "flarereal800"  #
   "jin2022"       # https://github.com/jinyeying/night-enhancement
+  "mipiflare"     #
 )
 llie_models=(
   "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
@@ -86,6 +88,7 @@ desnow_datasets=(
 les_datasets=(
   "ledlight"
   "light-effect"
+  "uformer"
 )
 llie_datasets=(
   "darkcityscapes"
@@ -264,6 +267,15 @@ for d in "${datasets[@]}"; do
   fi
 
   # LES
+  if [ "$d" == "flarereal800" ]; then
+    if [ ${split} == "train" ]; then
+      input_dirs+=("${data_dir}/les/train/${d}/flare")
+      target_dirs+=("${data_dir}/les/train/${d}/clear")
+    else
+      input_dirs+=("${data_dir}/les/val/${d}/flare")
+      target_dirs+=("")
+    fi
+  fi
   if [ "$d" == "ledlight" ]; then
     input_dirs+=("${data_dir}/les/test/${d}/light-effects")
     target_dirs+=("${data_dir}/les/test/${d}/clear")
@@ -361,7 +373,11 @@ if [ "$run" == "train" ]; then
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
       if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
-        model_variant="${model[i]}-${variant[j]}"
+        if [[ ${variant[j]} == *"${model[i]}"* ]]; then
+          model_variant="${variant[j]}"
+        else
+          model_variant="${model[i]}-${variant[j]}"
+        fi
       else
         model_variant="${model[i]}"
       fi
@@ -669,10 +685,20 @@ if [ "$run" == "train" ]; then
           --max-epochs "$epochs"
       # UFormer
       elif [ "${model[i]}" == "uformer" ]; then
-        cd "${universal_dir}/${model[i]}" || exit
-        if [ "${task}" == "derain" ]; then
-            echo -e "\nI have not prepared the training script for UFormer."
-        fi
+        # cd "${universal_dir}/${model[i]}" || exit
+        # if [ "${task}" == "derain" ]; then
+        #     echo -e "\nI have not prepared the training script for UFormer."
+        # fi
+        cd "${current_dir}" || exit
+        python -W ignore train.py \
+          --name "${model[i]}" \
+          --variant "${variant[j]}" \
+          --data "${train[0]}" \
+          --root "${run_dir}/train" \
+          --project "${project}/${model[i]}" \
+          --fullname "${fullname}" \
+          --max-epochs "$epochs" \
+          --verbose
       fi
     done
   done
@@ -686,7 +712,11 @@ if [ "$run" == "predict" ]; then
     for (( j=0; j<${#variant[@]}; j++ )); do
       # Model initialization
       if [ "${variant[j]}" != "none" ] && [ "${variant[j]}" != "" ]; then
-        model_variant="${model[i]}-${variant[j]}"
+        if [[ ${variant[j]} == *"${model[i]}"* ]]; then
+          model_variant="${variant[j]}"
+        else
+          model_variant="${model[i]}-${variant[j]}"
+        fi
       else
         model_variant="${model[i]}"
       fi
