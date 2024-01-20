@@ -38,9 +38,8 @@ desnow_models=(
   "hinet"         # https://github.com/megvii-model/HINet
 )
 les_models=(
-  "flarereal800"  #
   "jin2022"       # https://github.com/jinyeying/night-enhancement
-  "mipiflare"     #
+  "uformer"       # https://github.com/ZhendongWang6/Uformer
 )
 llie_models=(
   "enlightengan"  # https://github.com/arsenyinfo/EnlightenGAN-inference
@@ -86,9 +85,10 @@ desnow_datasets=(
   "gt-snow"
 )
 les_datasets=(
+  "flarereal800"
   "ledlight"
   "light-effect"
-  "uformer"
+  "mipiflare"
 )
 llie_datasets=(
   "darkcityscapes"

@@ -19,6 +19,7 @@ __all__ = [
     "LightEffect",
     "LightEffectDataModule",
     "MIPIFlare",
+    "MIPIFlareDataModule"
 ]
 
 from mon.globals import DATAMODULES, DATASETS, ModelPhase
@@ -213,6 +214,56 @@ class LightEffect(base.UnlabeledImageDataset):
                         image = base.ImageLabel(path=path)
                         self.images.append(image)
 
+
+@DATASETS.register(name="mipiflare")
+class MIPIFlare(base.ImageEnhancementDataset):
+    """Combined Flare dataset used in MIPI 2024 Challenge
+    `<https://mipi-challenge.org/MIPI2024/index.html>`__
+    
+    See Also: :class:`mon.vision.dataset.base.dataset.UnlabeledImageDataset`.
+    """
+    
+    splits = ["train", "test"]
+    
+    def get_images(self):
+        """Get image files."""
+        if self.split == "train":
+            patterns = [
+                self.root / "test"  / "flare7k++-real" / "flare",
+                self.root / "test"  / "flare7k++-syn"  / "flare",
+                self.root / "train" / "flarereal800"   / "flare",
+            ]
+        elif self.split == "test":
+            patterns = [
+                self.root / "test" / "flare7k++-real"  / "flare",
+            ]
+        else:
+            patterns = []
+        self.images: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for pattern in patterns:
+                for path in pbar.track(
+                    list(pattern.rglob("*")),
+                    description=f"Listing {self.__class__.__name__} {self.split} images"
+                ):
+                    if path.is_image_file():
+                        image = base.ImageLabel(path=path)
+                        self.images.append(image)
+    
+    def get_labels(self):
+        """Get label files."""
+        self.labels: list[base.ImageLabel] = []
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
+            for img in pbar.track(
+                self.images,
+                description=f"Listing {self.__class__.__name__} {self.split} labels"
+            ):
+                path  = str(img.path).replace("/flare/", "/clear/")
+                path  = core.Path(path)
+                label = base.ImageLabel(path=path.image_file())
+                self.labels.append(label)
+
+
 # endregion
 
 
@@ -377,64 +428,6 @@ class FlareReal800DataModule(base.DataModule):
         pass
 
 
-@DATAMODULES.register(name="mipiflare")
-class MIPIFlare(base.DataModule):
-    """Flare datamodule used in MIPI 2024 Challenge
-    `<https://mipi-challenge.org/MIPI2024/index.html>`__
-    
-    See Also: :class:`mon.nn.data.datamodule.DataModule`.
-    """
-    
-    def prepare_data(self, *args, **kwargs):
-        """Use this method to do things that might write to disk, or that need
-        to be done only from a single GPU in distributed settings.
-            - Download.
-            - Tokenize.
-        """
-        if self.classlabels is None:
-            self.get_classlabels()
-    
-    def setup(self, phase: ModelPhase | None = None):
-        """Use this method to do things on every device:
-            - Count number of classes.
-            - Build classlabels vocabulary.
-            - Prepare train/val/test splits.
-            - Apply transformations.
-            - Define :attr:`collate_fn` for your custom dataset.
-
-        Args:
-            phase: The model phase. One of:
-                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
-                - ``'testing'``  : prepares :attr:'test'.
-                - ``'inference'``: prepares :attr:`predict`.
-                - ``None``:      : prepares all.
-                - Default: ``None``.
-        """
-        if self.can_log:
-            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
-        if phase in [None, ModelPhase.TRAINING]:
-            self.train = (
-                FlareReal800(split="train", **self.dataset_kwargs)
-                + Flare7KPPReal(split="test", **self.dataset_kwargs)
-                + Flare7KPPSyn(split="test", **self.dataset_kwargs)
-            )
-            self.val   = Flare7KPPReal(split="test", **self.dataset_kwargs)
-        if phase in [None, ModelPhase.TESTING]:
-            self.test  = Flare7KPPReal(split="test", **self.dataset_kwargs)
-        
-        if self.classlabels is None:
-            self.get_classlabels()
-        
-        if self.can_log:
-            self.summarize()
-    
-    def get_classlabels(self):
-        """Load all the class-labels of the dataset."""
-        pass
-
-
 @DATAMODULES.register(name="ledlight")
 class LEDLightDataModule(base.DataModule):
     """LEDLight datamodule.
@@ -537,6 +530,60 @@ class LightEffectDataModule(base.DataModule):
         if self.can_log:
             self.summarize()
 
+    def get_classlabels(self):
+        """Load all the class-labels of the dataset."""
+        pass
+
+
+@DATAMODULES.register(name="mipiflare")
+class MIPIFlareDataModule(base.DataModule):
+    """Combined Flare datamodule used in MIPI 2024 Challenge
+    `<https://mipi-challenge.org/MIPI2024/index.html>`__
+    
+    See Also: :class:`mon.nn.data.datamodule.DataModule`.
+    """
+    
+    def prepare_data(self, *args, **kwargs):
+        """Use this method to do things that might write to disk, or that need
+        to be done only from a single GPU in distributed settings.
+            - Download.
+            - Tokenize.
+        """
+        if self.classlabels is None:
+            self.get_classlabels()
+    
+    def setup(self, phase: ModelPhase | None = None):
+        """Use this method to do things on every device:
+            - Count number of classes.
+            - Build classlabels vocabulary.
+            - Prepare train/val/test splits.
+            - Apply transformations.
+            - Define :attr:`collate_fn` for your custom dataset.
+
+        Args:
+            phase: The model phase. One of:
+                - ``'training'`` : prepares :attr:'train' and :attr:'val'.
+                - ``'testing'``  : prepares :attr:'test'.
+                - ``'inference'``: prepares :attr:`predict`.
+                - ``None``:      : prepares all.
+                - Default: ``None``.
+        """
+        if self.can_log:
+            console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
+        if phase in [None, ModelPhase.TRAINING]:
+            self.train = MIPIFlare(split="train", **self.dataset_kwargs)
+            self.val   = MIPIFlare(split="test", **self.dataset_kwargs)
+        if phase in [None, ModelPhase.TESTING]:
+            self.test  = MIPIFlare(split="test", **self.dataset_kwargs)
+        
+        if self.classlabels is None:
+            self.get_classlabels()
+        
+        if self.can_log:
+            self.summarize()
+    
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
         pass

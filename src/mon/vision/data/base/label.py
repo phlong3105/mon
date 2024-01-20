@@ -638,11 +638,10 @@ class ImageLabel(nn.Label):
         
         self.path = core.Path(path) if path is not None else None
         if self.path is None or not self.path.is_image_file():
-            error_console.log(
+            raise ValueError(
                 f":param:`path` must be a valid path to an image file, "
                 f"but got {path}."
             )
-            return
         
         if name is None:
             name = str(core.Path(path).name) if path.is_image_file() else f"{id_}"
@@ -678,11 +677,10 @@ class ImageLabel(nn.Label):
             if path.is_image_file():
                 self.path = path
         if self.path is None or not self.path.is_image_file():
-            error_console.log(
+            raise ValueError(
                 f":param:`path` must be a valid path to an image file, "
                 f"but got {self.path}."
             )
-            return None
         
         image = io.read_image(
             path      = self.path,
@@ -1167,11 +1165,10 @@ class SegmentationLabel(nn.Label):
         
         self.path = core.Path(path) if path is not None else None
         if self.path is None or not self.path.is_image_file():
-            error_console.log(
+            raise ValueError(
                 f":param:`path` must be a valid path to an image file, "
                 f"but got {path}."
             )
-            return
         
         if name is None:
             name = str(core.Path(path).name) if path.is_image_file() else f"{id_}"
@@ -1209,7 +1206,7 @@ class SegmentationLabel(nn.Label):
         
         self.path = core.Path(path) if path is not None else None
         if self.path is None or not self.path.is_image_file():
-            error_console.log(
+            raise ValueError(
                 f":param:`path` must be a valid path to an image file, "
                 f"but got {path}."
             )
