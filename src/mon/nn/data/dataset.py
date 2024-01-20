@@ -48,19 +48,19 @@ class Dataset(dataset.Dataset, ABC):
     
     def __init__(
         self,
-        root     : pathlib.Path,
-        split    : str  = "train",
-        transform: Any  = None,
-        to_tensor: bool = False,
-        verbose  : bool = False,
+        root      : pathlib.Path,
+        split     : str  = "train",
+        transform : Any  = None,
+        to_tensor : bool = False,
+        verbose   : bool = False,
         *args, **kwargs
     ):
         super().__init__()
-        self.root      = pathlib.Path(root)
-        self.split     = split
-        self.transform = transform
-        self.to_tensor = to_tensor
-        self.verbose   = verbose
+        self.root       = pathlib.Path(root)
+        self.split      = split
+        self.transform  = transform
+        self.to_tensor  = to_tensor
+        self.verbose    = verbose
     
     def __iter__(self):
         """Returns an iterator starting at index ``0``."""
@@ -89,6 +89,10 @@ class Dataset(dataset.Dataset, ABC):
     
     def __del__(self):
         self.close()
+    
+    @property
+    def disable_pbar(self) -> bool:
+        return not self.verbose
     
     @property
     def split(self) -> str:

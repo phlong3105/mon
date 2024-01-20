@@ -38,6 +38,7 @@ desnow_models=(
   "hinet"         # https://github.com/megvii-model/HINet
 )
 les_models=(
+  "flarereal800"  #
   "jin2022"       # https://github.com/jinyeying/night-enhancement
 )
 llie_models=(
@@ -86,6 +87,7 @@ desnow_datasets=(
 les_datasets=(
   "ledlight"
   "light-effect"
+  "uformer"
 )
 llie_datasets=(
   "darkcityscapes"
@@ -685,7 +687,8 @@ if [ "$run" == "train" ]; then
           --root "${run_dir}/train" \
           --project "${project}/${model[i]}" \
           --fullname "${fullname}" \
-          --max-epochs "$epochs"
+          --max-epochs "$epochs" \
+          --verbose
       fi
     done
   done

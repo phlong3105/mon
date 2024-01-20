@@ -171,6 +171,7 @@ def main(
     args["datamodule"]  |= {
         "image_size": image_size,
         "batch_size": batch_size,
+        "verbose"   : verbose,
     }
     args["model"] |= {
         "weights" : weights,
@@ -178,6 +179,7 @@ def main(
         "fullname": fullname,
         "root"    : root,
         "project" : project,
+        "verbose" : verbose,
     }
     args["model"]   |= model_kwargs
     args["trainer"] |= {

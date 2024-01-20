@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""UformerB model trained on Rain13K dataset."""
+"""UformerB model trained on FlareReal800 dataset."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ root         = RUN_DIR / "train"
 project      = "uformer"
 model_name   = "uformer_b"
 model_config = None
-data_name    = "rain13k"
+data_name    = "flarereal800"
 num_classes  = None
 fullname     = f"{model_name}-{data_name}"
 image_size   = [128, 128]
@@ -57,12 +57,12 @@ model = {
 	            # "lr"          : 0.0002,
 	            # "weight_decay": 0.02,
 	            # "betas"       : [0.9, 0.999],
-				# "eps"		  : 1e-8,
+				# "eps"		    : 1e-8,
 				"name"        : "adamw",
 				"lr"          : 0.0002,
 				"weight_decay": 0.02,
 				"betas"       : [0.9, 0.999],
-				"eps"		    : 1e-8,
+				"eps"		  : 1e-8,
 			},
 	        "lr_scheduler": {
 				"scheduler": {

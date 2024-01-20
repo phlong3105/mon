@@ -58,7 +58,7 @@ class DataModule(lightning.LightningDataModule, ABC):
         self.collate_fn     = collate_fn
         self.verbose        = verbose
         self.dataset_kwargs = kwargs | {
-            "verbose": self.verbose,
+            "verbose": verbose,
         }
 
         train, val, test, predict = None, None, None, None
@@ -88,6 +88,23 @@ class DataModule(lightning.LightningDataModule, ABC):
     @devices.setter
     def devices(self, devices: int | str | list[int | str]):
         self._devices = builtins.to_list(devices)
+    
+    @property
+    def verbose(self) -> bool:
+        return self._verbose
+    
+    @verbose.setter
+    def verbose(self, verbose: bool):
+        self._verbose = verbose
+        #
+        if hasattr(self, "train") and hasattr(self.train, "verbose"):
+            self.train.verbose = verbose
+        if hasattr(self, "val") and hasattr(self.val, "verbose"):
+            self.val.verbose = verbose
+        if hasattr(self, "test") and hasattr(self.test, "verbose"):
+            self.test.verbose = verbose
+        if hasattr(self, "predict") and hasattr(self.predict, "verbose"):
+            self.predict.verbose = verbose
     
     @property
     def num_classes(self) -> int:
@@ -183,6 +200,15 @@ class DataModule(lightning.LightningDataModule, ABC):
             )
         return None
     
+    @property
+    def can_log(self) -> bool:
+        if self.verbose:
+            if self.trainer is None:
+                return True
+            elif self.trainer is not None and self.trainer.global_rank == 0:
+                return True
+        return False
+    
     @abstractmethod
     def prepare_data(self, *args, **kwargs):
         """Use this method to do things that might write to disk, or that need
@@ -203,7 +229,6 @@ class DataModule(lightning.LightningDataModule, ABC):
 
         Args:
             phase: The model phase. One of:
-            
                 - ``'training'`` : prepares :attr:`train` and :attr:`val`.
                 - ``'testing'``  : prepares :attr:`test`.
                 - ``'inference'``: prepares :attr:`predict`.
@@ -242,10 +267,6 @@ class DataModule(lightning.LightningDataModule, ABC):
         table.add_row("4", "classlabels", f"{self.classlabels.num_classes if self.classlabels is not None else None}")
         table.add_row("5", "batch_size",  f"{self.batch_size}")
         table.add_row("6", "num_workers", f"{self.num_workers}")
-        if (
-            self.verbose and
-            self.trainer is not None and self.trainer.global_rank == 0
-        ):
-            console.log(table)
+        console.log(table)
     
 # endregion

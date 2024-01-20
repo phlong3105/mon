@@ -231,7 +231,7 @@ def main(
         "resize"    : resize,
         "image_size": image_size,
         "batch_size": batch_size,
-        # "verbose"   : verbose,
+        "verbose"   : verbose,
     }
     args["model"] |= {
         "weights"  : weights,
@@ -239,7 +239,7 @@ def main(
         "variant"  : variant,
         "root"     : mon.Path(root),
         "project"  : project,
-        # "verbose"  : verbose,
+        "verbose"  : verbose,
     }
     args["model"]     |= model_kwargs
     args["predictor"] |= {

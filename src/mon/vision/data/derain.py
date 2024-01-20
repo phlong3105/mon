@@ -53,7 +53,7 @@ class GTRain(base.ImageEnhancementDataset):
             self.root / self.split / "gt-rain" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -66,7 +66,7 @@ class GTRain(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -97,7 +97,7 @@ class Rain100(base.ImageEnhancementDataset):
             self.root / self.split / "rain100" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -110,7 +110,7 @@ class Rain100(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -137,7 +137,7 @@ class Rain100H(base.ImageEnhancementDataset):
             self.root / self.split / "rain100h" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -150,7 +150,7 @@ class Rain100H(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -191,7 +191,7 @@ class Rain100L(base.ImageEnhancementDataset):
             self.root / self.split / "rain100l" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -204,7 +204,7 @@ class Rain100L(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -230,7 +230,7 @@ class Rain12(base.ImageEnhancementDataset):
             self.root / self.split / "rain12" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=not self.verbose) as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -243,7 +243,7 @@ class Rain12(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar(disable=not self.verbose) as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -277,7 +277,7 @@ class Rain1200(base.ImageEnhancementDataset):
                 self.root / self.split / "rain1200" / "rain"
             ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -290,7 +290,7 @@ class Rain1200(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -333,7 +333,7 @@ class Rain13K(base.ImageEnhancementDataset):
             ]
         
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -346,7 +346,7 @@ class Rain13K(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -373,7 +373,7 @@ class Rain1400(base.ImageEnhancementDataset):
             self.root / self.split / "rain1400" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -386,7 +386,7 @@ class Rain1400(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -412,7 +412,7 @@ class Rain2800(base.ImageEnhancementDataset):
             self.root / self.split / "rain2800" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -425,7 +425,7 @@ class Rain2800(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -451,7 +451,7 @@ class Rain800(base.ImageEnhancementDataset):
             self.root / self.split / "rain800" / "rain"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -464,7 +464,7 @@ class Rain800(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -512,10 +512,10 @@ class GTRainDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = GTRain(split="train", **self.dataset_kwargs)
             self.val   = GTRain(split="val",   **self.dataset_kwargs)
@@ -524,8 +524,9 @@ class GTRainDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -564,10 +565,10 @@ class Rain100DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain100(split="test", **self.dataset_kwargs)
             self.val   = Rain100(split="test", **self.dataset_kwargs)
@@ -577,7 +578,8 @@ class Rain100DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -616,10 +618,10 @@ class Rain100HDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain100H(split="train", **self.dataset_kwargs)
             self.val   = Rain100H(split="test",  **self.dataset_kwargs)
@@ -629,7 +631,8 @@ class Rain100HDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -668,40 +671,21 @@ class Rain100LDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
-            # self.train = Rain100L(split="train", **self.dataset_kwargs)
-            # self.val = Rain100L(split="train", **self.dataset_kwargs)
-            dataset = Rain100L(split="train", **self.dataset_kwargs)
-
-            import torch
-
-            validation_split = 0.2
-            random_seed = 42
-            dataset_size = len(dataset)
-            indices = list(range(dataset_size))
-            split = int(validation_split * dataset_size)
-
-            if self.shuffle:
-                torch.manual_seed(random_seed)
-                indices = torch.randperm(dataset_size).tolist()
-            train_indices, val_indices = indices[split:], indices[:split]
-
-            self.train = Rain100L(dataset=dataset, indices=train_indices,split="train", **self.dataset_kwargs)
-
-            self.val = Rain100L(dataset=dataset, indices=val_indices,split="train", **self.dataset_kwargs)
-
-
+            self.train = Rain100L(split="train", **self.dataset_kwargs)
+            self.val   = Rain100L(split="train", **self.dataset_kwargs)
         if phase in [None, ModelPhase.TESTING]:
             self.test  = Rain100L(split="test",  **self.dataset_kwargs)
         
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -740,10 +724,10 @@ class Rain12DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain12(split="train", **self.dataset_kwargs)
             self.val   = Rain12(split="train", **self.dataset_kwargs)
@@ -753,7 +737,8 @@ class Rain12DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -792,10 +777,10 @@ class Rain1200DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain1200(split="train", **self.dataset_kwargs)
             self.val   = Rain1200(split="val",   **self.dataset_kwargs)
@@ -805,7 +790,8 @@ class Rain1200DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -844,10 +830,10 @@ class Rain13KDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain13K(split="train", **self.dataset_kwargs)
             self.val   = Rain13K(split="val",   **self.dataset_kwargs)
@@ -857,7 +843,8 @@ class Rain13KDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -896,10 +883,10 @@ class Rain1400DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain1400(split="train", **self.dataset_kwargs)
             self.val   = Rain1400(split="test",  **self.dataset_kwargs)
@@ -909,7 +896,8 @@ class Rain1400DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -948,10 +936,10 @@ class Rain2800DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain2800(split="test", **self.dataset_kwargs)
             self.val   = Rain2800(split="test", **self.dataset_kwargs)
@@ -961,7 +949,8 @@ class Rain2800DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1000,10 +989,10 @@ class Rain800DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
         if phase in [None, ModelPhase.TRAINING]:
             self.train = Rain800(split="train", **self.dataset_kwargs)
             self.val   = Rain800(split="val",   **self.dataset_kwargs)
@@ -1013,7 +1002,8 @@ class Rain800DataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""

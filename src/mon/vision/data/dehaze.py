@@ -67,7 +67,7 @@ class DenseHaze(base.ImageEnhancementDataset):
             self.root / self.split / "dense-haze" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -80,7 +80,7 @@ class DenseHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -107,7 +107,7 @@ class IHaze(base.ImageEnhancementDataset):
             self.root / self.split / "i-haze" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -120,7 +120,7 @@ class IHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -147,7 +147,7 @@ class NHHaze(base.ImageEnhancementDataset):
             self.root / self.split / "nh-haze" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -160,7 +160,7 @@ class NHHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -187,7 +187,7 @@ class OHaze(base.ImageEnhancementDataset):
             self.root / self.split / "o-haze" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -200,7 +200,7 @@ class OHaze(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -226,7 +226,7 @@ class RESIDEHSTSReal(base.UnlabeledImageDataset):
             self.root / self.split / "reside-hsts-real" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -253,7 +253,7 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
             self.root / self.split / "reside-hsts-syn" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -266,7 +266,7 @@ class RESIDEHSTSSyn(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -293,7 +293,7 @@ class RESIDEITS(base.ImageEnhancementDataset):
             self.root / self.split / "reside-its" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -306,7 +306,7 @@ class RESIDEITS(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -334,7 +334,7 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
             self.root / self.split / "reside-its-v2" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -347,7 +347,7 @@ class RESIDEITSV2(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -375,7 +375,7 @@ class RESIDEOTS(base.ImageEnhancementDataset):
             self.root / self.split / "reside-ots" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -388,7 +388,7 @@ class RESIDEOTS(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -415,7 +415,7 @@ class RESIDERTTS(base.UnlabeledImageDataset):
             self.root / self.split / "reside-rtts" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -442,7 +442,7 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
             self.root / self.split / "reside-sots-indoor" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -455,7 +455,7 @@ class RESIDESOTSIndoor(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -483,7 +483,7 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
             self.root / self.split / "reside-sots-outdoor" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -496,7 +496,7 @@ class RESIDESOTSOutdoor(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -523,7 +523,7 @@ class RESIDEUHI(base.UnlabeledImageDataset):
             self.root / self.split / "reside-uhi" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -552,7 +552,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
             self.root / self.split / "satehaze1k-thick" / "haze",
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -565,7 +565,7 @@ class SateHaze1K(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -591,7 +591,7 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
             self.root / self.split / "satehaze1k-thin" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -604,7 +604,7 @@ class SateHaze1KThin(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -630,7 +630,7 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
             self.root / self.split / "satehaze1k-moderate" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -643,7 +643,7 @@ class SateHaze1KModerate(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -669,7 +669,7 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
             self.root / self.split / "satehaze1k-thick" / "haze"
         ]
         self.images: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for pattern in patterns:
                 for path in pbar.track(
                     list(pattern.rglob("*")),
@@ -682,7 +682,7 @@ class SateHaze1KThick(base.ImageEnhancementDataset):
     def get_labels(self):
         """Get label files."""
         self.labels: list[base.ImageLabel] = []
-        with core.get_progress_bar() as pbar:
+        with core.get_progress_bar(disable=self.disable_pbar) as pbar:
             for img in pbar.track(
                 self.images,
                 description=f"Listing {self.__class__.__name__} {self.split} labels"
@@ -729,10 +729,10 @@ class DenseHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = DenseHaze(split="train", **self.dataset_kwargs)
             self.val   = DenseHaze(split="val",   **self.dataset_kwargs)
@@ -742,7 +742,8 @@ class DenseHazeDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -781,10 +782,10 @@ class IHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = IHaze(split="train", **self.dataset_kwargs)
             self.val   = IHaze(split="val",   **self.dataset_kwargs)
@@ -794,7 +795,8 @@ class IHazeDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -833,10 +835,10 @@ class NHHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = NHHaze(split="train", **self.dataset_kwargs)
             self.val   = NHHaze(split="val",   **self.dataset_kwargs)
@@ -846,7 +848,8 @@ class NHHazeDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -885,10 +888,10 @@ class OHazeDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = OHaze(split="train", **self.dataset_kwargs)
             self.val   = OHaze(split="val",   **self.dataset_kwargs)
@@ -898,7 +901,8 @@ class OHazeDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -937,10 +941,10 @@ class RESIDEHSTSRealDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
             self.val   = RESIDEHSTSReal(split="test", **self.dataset_kwargs)
@@ -949,8 +953,9 @@ class RESIDEHSTSRealDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -989,10 +994,10 @@ class RESIDEHSTSSynDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
             self.val   = RESIDEHSTSSyn(split="test", **self.dataset_kwargs)
@@ -1001,8 +1006,9 @@ class RESIDEHSTSSynDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1041,10 +1047,10 @@ class RESIDEITSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDEITS(split="train", **self.dataset_kwargs)
             self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
@@ -1053,8 +1059,9 @@ class RESIDEITSDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1093,10 +1100,10 @@ class RESIDEITSV2DataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDEITSV2(split="train", **self.dataset_kwargs)
             self.val   =   RESIDEITS(split="val",   **self.dataset_kwargs)
@@ -1105,8 +1112,9 @@ class RESIDEITSV2DataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1145,10 +1153,10 @@ class RESIDEOTSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDEOTS(split="train", **self.dataset_kwargs)
             self.val   = RESIDEITS(split="val",   **self.dataset_kwargs)
@@ -1157,8 +1165,9 @@ class RESIDEOTSDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1197,10 +1206,10 @@ class RESIDERTTSDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDERTTS(split="test", **self.dataset_kwargs)
             self.val   = RESIDERTTS(split="test", **self.dataset_kwargs)
@@ -1209,8 +1218,9 @@ class RESIDERTTSDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1249,10 +1259,10 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
             self.val   = RESIDESOTSIndoor(split="test", **self.dataset_kwargs)
@@ -1261,8 +1271,9 @@ class RESIDESOTSIndoorDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1301,10 +1312,10 @@ class RESIDESOTSOutdoorDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
             self.val   = RESIDESOTSOutdoor(split="test", **self.dataset_kwargs)
@@ -1313,8 +1324,9 @@ class RESIDESOTSOutdoorDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1353,10 +1365,10 @@ class SateHaze1KDataModule(base.DataModule):
                 - None:      : prepares all.
                 Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SateHaze1K(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1K(split="val",   **self.dataset_kwargs)
@@ -1366,7 +1378,8 @@ class SateHaze1KDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1405,10 +1418,10 @@ class RESIDEUHIDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+        
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-
         if phase in [None, ModelPhase.TRAINING]:
             self.train = RESIDEUHI(split="test", **self.dataset_kwargs)
             self.val   = RESIDEUHI(split="test", **self.dataset_kwargs)
@@ -1417,8 +1430,9 @@ class RESIDEUHIDataModule(base.DataModule):
 
         if self.classlabels is None:
             self.get_classlabels()
-
-        self.summarize()
+        
+        if self.can_log:
+            self.summarize()
 
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1457,10 +1471,10 @@ class SateHaze1KThinDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SateHaze1KThin(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1KThin(split="val",   **self.dataset_kwargs)
@@ -1470,7 +1484,8 @@ class SateHaze1KThinDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1509,10 +1524,10 @@ class SateHaze1KModerateDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
+       
         phase = ModelPhase.from_value(phase) if phase is not None else phase
-        
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SateHaze1KModerate(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1KModerate(split="val",   **self.dataset_kwargs)
@@ -1522,7 +1537,8 @@ class SateHaze1KModerateDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
@@ -1561,10 +1577,10 @@ class SateHaze1KThickDataModule(base.DataModule):
                 - ``None``:      : prepares all.
                 - Default: ``None``.
         """
-        if self.verbose:
+        if self.can_log:
             console.log(f"Setup [red]{self.__class__.__name__}[/red].")
-        phase = ModelPhase.from_value(phase) if phase is not None else phase
         
+        phase = ModelPhase.from_value(phase) if phase is not None else phase
         if phase in [None, ModelPhase.TRAINING]:
             self.train = SateHaze1KThick(split="train", **self.dataset_kwargs)
             self.val   = SateHaze1KThick(split="val",   **self.dataset_kwargs)
@@ -1574,7 +1590,8 @@ class SateHaze1KThickDataModule(base.DataModule):
         if self.classlabels is None:
             self.get_classlabels()
         
-        self.summarize()
+        if self.can_log:
+            self.summarize()
     
     def get_classlabels(self):
         """Load all the class-labels of the dataset."""
