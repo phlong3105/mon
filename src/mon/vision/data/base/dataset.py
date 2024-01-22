@@ -1135,16 +1135,12 @@ class ImageEnhancementDataset(LabeledImageDataset, ABC):
         meta  = self.images[index].meta
         
         if self.transform is not None:
-            if label is not None:
-                transformed = self.transform(image=image, mask=label)
-                image       = transformed["image"]
-                label       = transformed["mask"]
-            else:
-                transformed = self.transform(image=image)
-                image       = transformed["image"]
+            transformed = self.transform(image=image, mask=label)
+            image       = transformed["image"]
+            label       = transformed["mask"]
         if self.to_tensor:
             image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(input=label, keepdim=False, normalize=True) if label is None else None
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
 
         return image, label, meta
         
@@ -1274,16 +1270,12 @@ class ImageSegmentationDataset(LabeledImageDataset, ABC):
         meta  = self.images[index].meta
         
         if self.transform is not None:
-            if label is not None:
-                transformed = self.transform(image=image, mask=label)
-                image       = transformed["image"]
-                label       = transformed["mask"]
-            else:
-                transformed = self.transform(image=image)
-                image       = transformed["image"]
+            transformed = self.transform(image=image, mask=label)
+            image       = transformed["image"]
+            label       = transformed["mask"]
         if self.to_tensor:
             image = core.to_image_tensor(input=image, keepdim=False, normalize=True)
-            label = core.to_image_tensor(input=label, keepdim=False, normalize=True) if label is None else None
+            label = core.to_image_tensor(input=label, keepdim=False, normalize=True)
         
         return image, label, meta
     
