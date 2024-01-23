@@ -9,8 +9,12 @@ https://www.geeksforgeeks.org/concatenate-images-using-opencv-in-python/
 from __future__ import annotations
 
 __all__ = [
-    "get_grid_size", "imshow", "imshow_classification", "imshow_enhancement",
-    "move_figure", "plt",
+    "get_grid_size",
+    "imshow",
+    "imshow_classification",
+    "imshow_enhancement",
+    "move_figure",
+    "plt",
 ]
 
 from typing import Any
@@ -20,11 +24,10 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 
-from mon.vision import core, nn
+from mon import core, nn
 
-math         = core.math
-console      = core.console
-_current_dir = core.Path(__file__).absolute().parent
+math    = core.math
+console = core.console
 
 
 # mpl.use("wxAgg")

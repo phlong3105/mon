@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This package implements base class for augmentation.
+"""This package implements data augmentation functions by extending
+:mod:`albumentations` package.`
 """
 
 from __future__ import annotations
@@ -14,6 +15,8 @@ import numpy as np
 # noinspection PyPackageRequirements,PyUnresolvedReferences
 from albumentations import *
 
+
+# region Crop
 
 class CropPatch(DualTransform):
     """Crop a patch of the image according to
@@ -54,3 +57,5 @@ class CropPatch(DualTransform):
             r = np.random.randint(0, h - self.patch_size)
             c = np.random.randint(0, w - self.patch_size)
         return {"r": r, "c": c}
+
+# endregion

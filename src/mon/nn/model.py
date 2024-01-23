@@ -37,23 +37,21 @@ from thop.profile import *
 from torch import nn
 from torch.nn import parallel
 
-from mon import core
+from mon.core import config as cfg, console, error_console, pathlib, rich
 from mon.globals import (
     LOSSES, LR_SCHEDULERS, METRICS, ModelPhase, MODELS, OPTIMIZERS, ZOO_DIR,
 )
 from mon.nn import data as mdata, loss as mloss, metric as mmetric, parsing
 
-StepOutput    = lightning.pytorch.utilities.types.STEP_OUTPUT
-EpochOutput   = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
-console       = core.console
-error_console = core.error_console
+StepOutput  = lightning.pytorch.utilities.types.STEP_OUTPUT
+EpochOutput = Any  # lightning.pytorch.utilities.types.EPOCH_OUTPUT
 
 
 # region Checkpoint
 
 def extract_weight_from_checkpoint(
-    ckpt       : core.Path,
-    weight_file: core.Path | None = None,
+    ckpt       : pathlib.Path,
+    weight_file: pathlib.Path | None = None,
 ):
     """Extract and save weights from the checkpoint :attr:`ckpt`.
     
@@ -63,7 +61,7 @@ def extract_weight_from_checkpoint(
             which saves the weights at the same location as the :param:`ckpt`
             file.
     """
-    ckpt = core.Path(ckpt)
+    ckpt = pathlib.Path(ckpt)
     if not ckpt.is_ckpt_file():
         raise ValueError(
             f"ckpt must be a valid path to .ckpt file, but got {ckpt}."
@@ -76,12 +74,12 @@ def extract_weight_from_checkpoint(
     if weight_file is None:
         weight_file = ckpt.parent / f"{ckpt.stem}.pth"
     else:
-        weight_file = core.Path(weight_file)
+        weight_file = pathlib.Path(weight_file)
     weight_file.parent.mkdir(parents=True, exist_ok=True)
     torch.save(state_dict, str(weight_file))
 
 
-def get_epoch(ckpt: core.Path | None) -> int:
+def get_epoch(ckpt: pathlib.Path | None) -> int:
     """Get an epoch value stored in a checkpoint file.
 
     Args:
@@ -91,14 +89,14 @@ def get_epoch(ckpt: core.Path | None) -> int:
         return 0
     
     epoch = 0
-    ckpt  = core.Path(ckpt)
+    ckpt  = pathlib.Path(ckpt)
     if ckpt.is_torch_file():
         ckpt  = torch.load(ckpt)
         epoch = ckpt.get("epoch", 0)
     return epoch
 
 
-def get_global_step(ckpt: core.Path | None) -> int:
+def get_global_step(ckpt: pathlib.Path | None) -> int:
     """Get a global step stored in a checkpoint file.
 
     Args:
@@ -108,20 +106,20 @@ def get_global_step(ckpt: core.Path | None) -> int:
         return 0
     
     global_step = 0
-    ckpt        = core.Path(ckpt)
+    ckpt        = pathlib.Path(ckpt)
     if ckpt.is_torch_file():
         ckpt        = torch.load(ckpt)
         global_step = ckpt.get("global_step", 0)
     return global_step
 
 
-def get_latest_checkpoint(dirpath: core.Path) -> str | None:
+def get_latest_checkpoint(dirpath: pathlib.Path) -> str | None:
     """Get the latest checkpoint (last saved) file path in a directory.
 
     Args:
         dirpath: The directory that contains the checkpoints.
     """
-    dirpath = core.Path(dirpath)
+    dirpath = pathlib.Path(dirpath)
     ckpt    = dirpath.latest_file()
     if ckpt is None:
         error_console.log(f"[red]Cannot find checkpoint file {dirpath}.")
@@ -187,7 +185,7 @@ def strip_optimizer(weight_file: str, new_file: str | None = None):
             is given, save the weights as a new file. Otherwise, overwrite the
             :param:`weight_file`.
     """
-    if not core.Path(weight_file).is_weights_file():
+    if not pathlib.Path(weight_file).is_weights_file():
         raise ValueError(
             f"``weight_file`` must be a valid path to a weights file, but got "
             f"{weight_file}."
@@ -215,16 +213,16 @@ def strip_optimizer(weight_file: str, new_file: str | None = None):
 
 def attempt_load(
     model      : nn.Module | Model,
-    weights    : dict | core.Path,
-    name       : str              | None = None,
-    config     : dict | core.Path | None = None,
-    fullname   : str              | None = None,
-    num_classes: int              | None = None,
-    phase      : str                     = "inference",
-    strict     : bool                    = True,
-    file_name  : str              | None = None,
-    model_dir  : core.Path        | None = ZOO_DIR,
-    debugging  : bool                    = True
+    weights    : dict | pathlib.Path,
+    name       : str                 | None = None,
+    config     : dict | pathlib.Path | None = None,
+    fullname   : str                 | None = None,
+    num_classes: int                 | None = None,
+    phase      : str                        = "inference",
+    strict     : bool                       = True,
+    file_name  : str                 | None = None,
+    model_dir  : pathlib.Path        | None = ZOO_DIR,
+    debugging  : bool                       = True
 ):
     """Try to create a model from the given configuration and load pretrained
     weights.
@@ -277,7 +275,7 @@ def attempt_load(
         else:
             return model
     # Load weights for :class:`Model` from a checkpoint
-    elif isinstance(model, Model) and core.Path(path=weights).is_ckpt_file():
+    elif isinstance(model, Model) and pathlib.Path(path=weights).is_ckpt_file():
         model = model.load_from_checkpoint(
             checkpoint_path = weights,
             name            = name,
@@ -287,7 +285,7 @@ def attempt_load(
         )
     # All other cases
     else:
-        if isinstance(weights, str | core.Path):
+        if isinstance(weights, str | pathlib.Path):
             state_dict = load_state_dict_from_path(
                 path         = weights,
                 model_dir    = model_dir,
@@ -322,12 +320,12 @@ def attempt_load(
 
 
 def load_state_dict_from_path(
-    path        : core.Path,
-    model_dir   : core.Path | None = None,
-    map_location: str       | None = None,
-    progress    : bool             = True,
-    check_hash  : bool             = False,
-    file_name   : str       | None = None,
+    path        : pathlib.Path,
+    model_dir   : pathlib.Path | None = None,
+    map_location: str          | None = None,
+    progress    : bool                = True,
+    check_hash  : bool                = False,
+    file_name   : str          | None = None,
     **_
 ) -> dict | None:
     """Load state dict at the given URL. If downloaded file is a ``.zip`` file,
@@ -352,14 +350,14 @@ def load_state_dict_from_path(
     if path is None:
         raise ValueError()
     if model_dir:
-        model_dir = core.Path(model_dir)
+        model_dir = pathlib.Path(model_dir)
     
-    path = core.Path(path)
+    path = pathlib.Path(path)
     if not path.is_torch_file() \
         and (model_dir is None or not model_dir.is_dir()):
         raise ValueError(f"'model_dir' must be defined. But got: {model_dir}.")
     
-    save_weight = core.Path()
+    save_weight = pathlib.Path()
     if file_name:
         save_weight = model_dir / file_name
     
@@ -387,7 +385,7 @@ def load_state_dict_from_path(
 
 def load_state_dict(
     model    : nn.Module,
-    weights  : dict | str | core.Path,
+    weights  : dict | str | pathlib.Path,
     overwrite: bool = False,
 ) -> dict:
     """Load state dict from :param:`weights` file."""
@@ -399,20 +397,20 @@ def load_state_dict(
         url  = weights.get("url",  None)
         map  = weights.get("map",  map)
         if path is not None and url is not None:
-            path = core.Path(path)
-            core.mkdirs(paths=[path.parent], exist_ok=True)
-            if core.is_url(url):
+            path = pathlib.Path(path)
+            pathlib.mkdirs(paths=[path.parent], exist_ok=True)
+            if pathlib.is_url(url):
                 if path.exists() and overwrite:
-                    core.delete_files(regex=path.name, path=path.parent)
+                    pathlib.delete_files(regex=path.name, path=path.parent)
                     torch.hub.download_url_to_file(str(url), str(path), None, progress=True)
                 elif not path.exists():
                     torch.hub.download_url_to_file(str(url), str(path), None, progress=True)
-    elif isinstance(weights, str | core.Path):
+    elif isinstance(weights, str | pathlib.Path):
         path = weights
     else:
         return {}
 
-    path = core.Path(path)
+    path = pathlib.Path(path)
     if not path.is_weights_file():
         error_console.log(f"{path} is not a weights file.")
 
@@ -444,7 +442,7 @@ def load_state_dict(
 
 def load_weights(
     model    : nn.Module,
-    weights  : dict | str | core.Path,
+    weights  : dict | str | pathlib.Path,
     overwrite: bool = False,
 ) -> nn.Module:
     """Load weights to model."""
@@ -620,7 +618,7 @@ class Model(lightning.LightningModule, ABC):
         name       : str               | None = None,
         variant    : int | str         | None = None,
         fullname   : str               | None = None,
-        root       : core.Path                = core.Path(),
+        root       : pathlib.Path             = pathlib.Path(),
         project    : str               | None = None,
         # For training
         hparams    : dict              | None = None,
@@ -700,15 +698,15 @@ class Model(lightning.LightningModule, ABC):
         self._fullname = fullname
     
     @property
-    def root(self) -> core.Path:
+    def root(self) -> pathlib.Path:
         return self._root
     
     @root.setter
     def root(self, root: Any):
         if root is None:
-            root = core.Path() / "run"
+            root = pathlib.Path() / "run"
         else:
-            root = core.Path(root)
+            root = pathlib.Path(root)
         self._root = root
         
         if self.project is not None and self.project != "":
@@ -721,30 +719,30 @@ class Model(lightning.LightningModule, ABC):
     
     @property
     @abstractmethod
-    def config_dir(self) -> core.Path:
+    def config_dir(self) -> pathlib.Path:
         pass
     
     @property
-    def ckpt_dir(self) -> core.Path:
+    def ckpt_dir(self) -> pathlib.Path:
         if self._ckpt_dir is None:
             self._ckpt_dir = self.root / "weights"
         return self._ckpt_dir
     
     @property
-    def debug_dir(self) -> core.Path:
+    def debug_dir(self) -> pathlib.Path:
         if self._debug_dir is None:
             self._debug_dir = self.root / "debug"
         return self._debug_dir
     
     @property
-    def debug_subdir(self) -> core.Path:
+    def debug_subdir(self) -> pathlib.Path:
         """The debug subdir path located at: <debug_dir>/<phase>_<epoch>."""
         debug_dir = self.debug_dir / f"{self.phase.value}_{(self.current_epoch + 1):03d}"
         debug_dir.mkdir(parents=True, exist_ok=True)
         return debug_dir
     
     @property
-    def debug_image_file_path(self) -> core.Path:
+    def debug_image_file_path(self) -> pathlib.Path:
         """The debug image file path located at: <debug_dir>/"""
         save_dir = self.debug_subdir \
             if self.debug["save_to_subdir"] \
@@ -755,7 +753,7 @@ class Model(lightning.LightningModule, ABC):
                           f"{(self.epoch_step + 1):06}.jpg"
     
     @property
-    def zoo_dir(self) -> core.Path:
+    def zoo_dir(self) -> pathlib.Path:
         return ZOO_DIR / self.name
     
     @property
@@ -768,7 +766,7 @@ class Model(lightning.LightningModule, ABC):
             config += ".yaml" if ".yaml" not in config else ""
             config  = self.config_dir / config
             
-        self._config = core.load_config(config=config)
+        self._config = cfg.load_config(config=config)
         if isinstance(self._config, dict):
             self.name     = self._config.get("name",     None)
             self.variant  = self._config.get("variant",  None)
@@ -783,14 +781,14 @@ class Model(lightning.LightningModule, ABC):
             return 0
     
     @property
-    def weights(self) -> core.Path | dict:
+    def weights(self) -> pathlib.Path | dict:
         return self._weights
     
     @weights.setter
     def weights(self, weights: Any = None):
         if isinstance(weights, str):
-            if core.Path(weights).is_weights_file():
-                weights = core.Path(weights)
+            if pathlib.Path(weights).is_weights_file():
+                weights = pathlib.Path(weights)
             elif weights in self.zoo:
                 weights         = self.zoo[weights]
                 weights["path"] = self.zoo_dir / weights.get("path", "")
@@ -800,7 +798,7 @@ class Model(lightning.LightningModule, ABC):
                         self.num_classes = num_classes
             else:
                 raise ValueError(f"``'{weights}'`` has not been defined in ``zoo``.")
-        elif isinstance(weights, core.Path):
+        elif isinstance(weights, pathlib.Path):
             pass
         elif isinstance(weights, dict):
             pass
@@ -1495,7 +1493,7 @@ class Model(lightning.LightningModule, ABC):
     def export_to_onnx(
         self,
         input_dims   : list[int] | None = None,
-        file_path    : core.Path | None = None,
+        file_path    : pathlib.Path | None = None,
         export_params: bool             = True
     ):
         """Export the model to ``onnx`` format.
@@ -1511,7 +1509,7 @@ class Model(lightning.LightningModule, ABC):
         if file_path in [None, ""]:
             file_path = self.root / f"{self.fullname}.onnx"
         if ".onnx" not in str(file_path):
-            file_path = core.Path(str(file_path) + ".onnx")
+            file_path = pathlib.Path(str(file_path) + ".onnx")
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
@@ -1527,7 +1525,7 @@ class Model(lightning.LightningModule, ABC):
     def export_to_torchscript(
         self,
         input_dims: list[int] | None = None,
-        file_path : core.Path | None = None,
+        file_path : pathlib.Path | None = None,
         method    : str              = "script"
     ):
         """Export the model to TorchScript format.
@@ -1543,7 +1541,7 @@ class Model(lightning.LightningModule, ABC):
         if file_path in [None, ""]:
             file_path = self.root / f"{self.fullname}.pt"
         if ".pt" not in str(file_path):
-            file_path = core.Path(str(file_path) + ".pt")
+            file_path = pathlib.Path(str(file_path) + ".pt")
         
         if input_dims is not None:
             input_sample = torch.randn(input_dims)
@@ -1559,7 +1557,7 @@ class Model(lightning.LightningModule, ABC):
         input        : torch.Tensor | None = None,
         target       : torch.Tensor | None = None,
         pred         : torch.Tensor | None = None,
-        file_path    : core.Path    | None = None,
+        file_path    : pathlib.Path    | None = None,
         image_quality: int                 = 95,
         max_n        : int          | None = 8,
         nrow         : int          | None = 8,
@@ -1592,7 +1590,7 @@ class Model(lightning.LightningModule, ABC):
     def print_info(self):
         if self.verbose and self.model is not None:
             console.log(f"[red]{self.fullname}")
-            core.print_table(self.info)
+            rich.print_table(self.info)
             console.log(f"Save indexes: {self.save}")
     
 # endregion

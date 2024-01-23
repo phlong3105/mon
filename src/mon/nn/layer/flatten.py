@@ -18,6 +18,7 @@ from mon.globals import LAYERS
 from mon.nn.layer import base
 
 
+# region Flatten
 @LAYERS.register()
 class FlattenSingle(base.PassThroughLayerParsingMixin, nn.Module):
 	"""Flatten a tensor along a single dimension.
@@ -67,6 +68,10 @@ class Flatten(base.PassThroughLayerParsingMixin, nn.Flatten):
     """
 	pass
 
+# endregion
+
+
+# region Unflatten
 
 @LAYERS.register()
 class Unflatten(base.PassThroughLayerParsingMixin, nn.Unflatten):
@@ -116,3 +121,5 @@ class Unflatten(base.PassThroughLayerParsingMixin, nn.Unflatten):
         torch.Size([2, 2, 5, 5])
     """
 	pass
+
+# endregion

@@ -24,9 +24,7 @@ import ffmpeg
 import numpy as np
 import torch
 
-from mon.vision import core
-from mon.vision.core import base
-from mon.vision.core import image as I
+from mon.core import image as I, pathlib
 
 
 # region I/O
@@ -113,7 +111,7 @@ def write_video_ffmpeg(
 	)
 
 
-class VideoLoader(base.Loader, ABC):
+class VideoLoader(ABC):
 	"""The base class for all video loaders.
 	
 	Args:
@@ -134,7 +132,7 @@ class VideoLoader(base.Loader, ABC):
 	
 	def __init__(
 		self,
-		source     : core.Path,
+		source     : pathlib.Path,
 		max_samples: int | None = None,
 		batch_size : int        = 1,
 		to_rgb     : bool       = True,
@@ -143,17 +141,34 @@ class VideoLoader(base.Loader, ABC):
 		verbose    : bool       = False,
 		*args, **kwargs
 	):
-		self.frame_rate = 0
-		super().__init__(
-			source      = source,
-			max_samples = max_samples,
-			batch_size  = batch_size,
-			to_rgb      = to_rgb,
-			to_tensor   = to_tensor,
-			normalize   = normalize,
-			verbose     = verbose,
-			*args, **kwargs
-		)
+		self.frame_rate  = 0
+		self.source      = pathlib.Path(source)
+		self.batch_size  = batch_size
+		self.to_rgb      = to_rgb
+		self.to_tensor   = to_tensor
+		self.normalize   = normalize
+		self.verbose     = verbose
+		self.index       = 0
+		self.max_samples = max_samples
+		self.num_images  = 0
+		self.init()
+	
+	def __iter__(self):
+		"""Return an iterator object starting at index ``0``."""
+		self.reset()
+		return self
+	
+	def __len__(self) -> int:
+		"""Return the number of images in the dataset."""
+		return self.num_images
+		
+	@abstractmethod
+	def __next__(self):
+		pass
+	
+	def __del__(self):
+		"""Close."""
+		self.close()
 	
 	@property
 	@abstractmethod
@@ -192,7 +207,26 @@ class VideoLoader(base.Loader, ABC):
 		:math:`[H, W, C]` format.
 		"""
 		return [self.frame_height, self.frame_width, 3]
-
+	
+	def batch_len(self) -> int:
+		"""Return the number of batches."""
+		return int(self.__len__() / self.batch_size)
+	
+	@abstractmethod
+	def init(self):
+		"""Initialize the data source."""
+		pass
+	
+	@abstractmethod
+	def reset(self):
+		"""Reset and start over."""
+		pass
+	
+	@abstractmethod
+	def close(self):
+		"""Stop and release."""
+		pass
+	
 
 class VideoLoaderCV(VideoLoader):
 	"""A video loader that retrieves and loads frame(s) from a video or a stream
@@ -221,7 +255,7 @@ class VideoLoaderCV(VideoLoader):
 	
 	def __init__(
 		self,
-		source        : core.Path,
+		source        : pathlib.Path,
 		max_samples   : int | None = None,
 		batch_size    : int        = 1,
 		to_rgb        : bool       = True,
@@ -361,7 +395,7 @@ class VideoLoaderCV(VideoLoader):
 	
 	def init(self):
 		"""Initialize the data source."""
-		source = core.Path(self.source)
+		source = pathlib.Path(self.source)
 		if source.is_video_file():
 			self.video_capture = cv2.VideoCapture(
 				str(source),
@@ -423,7 +457,7 @@ class VideoLoaderFFmpeg(VideoLoader):
 	
 	def __init__(
 		self,
-		source     : core.Path,
+		source     : pathlib.Path,
 		max_samples: int  = 0,
 		batch_size : int  = 1,
 		to_rgb     : bool = True,
@@ -574,7 +608,7 @@ class VideoLoaderFFmpeg(VideoLoader):
 			# raise StopIteration
 
 
-class VideoWriter(base.Writer, ABC):
+class VideoWriter(ABC):
 	"""The base class for all video writers.
 
 	Args:
@@ -590,7 +624,7 @@ class VideoWriter(base.Writer, ABC):
 	
 	def __init__(
 		self,
-		destination: core.Path,
+		destination: pathlib.Path,
 		image_size : int | list[int] = [480, 640],
 		frame_rate : float = 10,
 		save_image : bool  = False,
@@ -600,14 +634,66 @@ class VideoWriter(base.Writer, ABC):
 	):
 		self.frame_rate = frame_rate
 		self.save_image = save_image
-		super().__init__(
-			destination = destination,
-			image_size  = image_size,
-			denormalize = denormalize,
-			verbose     = verbose,
-			*args, **kwargs
-		)
+		self.dst         = pathlib.Path(destination)
+		self.img_size    = I.get_hw(size=image_size)
+		self.denormalize = denormalize
+		self.verbose     = verbose
+		self.index       = 0
+		self.init()
+	
+	def __len__(self) -> int:
+		"""Return the number frames of already written frames."""
+		return self.index
+	
+	def __del__(self):
+		"""Close."""
+		self.close()
+	
+	@abstractmethod
+	def init(self):
+		"""Initialize the output handler."""
+		pass
+	
+	@abstractmethod
+	def close(self):
+		"""Close."""
+		pass
+	
+	@abstractmethod
+	def write(
+		self,
+		image      : torch.Tensor | np.ndarray,
+		path       : pathlib.Path | None = None,
+		denormalize: bool = False
+	):
+		"""Write an image to :attr:`dst`.
 
+		Args:
+			image: An image.
+			path: An image file path with an extension. Default: ``None``.
+			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+				Default: ``False``.
+		"""
+		pass
+	
+	@abstractmethod
+	def write_batch(
+		self,
+		images     : list[torch.Tensor  | np.ndarray],
+		paths      : list[pathlib.Path] | None = None,
+		denormalize: bool = False
+	):
+		"""Write a batch of images to :attr:`dst`.
+
+		Args:
+			images: A :class:`list` of images.
+			paths: A :class:`list` of image file paths with extensions.
+				Default: ``None``.
+			denormalize: If ``True``, convert image to :math:`[0, 255]`.
+				Default: ``False``.
+		"""
+		pass
+	
 
 class VideoWriterCV(VideoWriter):
 	"""A video writer that writes images to a video file using :mod:`cv2`.
@@ -627,7 +713,7 @@ class VideoWriterCV(VideoWriter):
 	
 	def __init__(
 		self,
-		destination: core.Path,
+		destination: pathlib.Path,
 		image_size : list[int] = [480, 640],
 		frame_rate : float = 30,
 		fourcc     : str   = "mp4v",
@@ -678,7 +764,7 @@ class VideoWriterCV(VideoWriter):
 	def write(
 		self,
 		image      : torch.Tensor | np.ndarray,
-		path       : core.Path | None = None,
+		path       : pathlib.Path | None = None,
 		denormalize: bool = False
 	):
 		"""Write an image to :attr:`dst`.
@@ -693,7 +779,7 @@ class VideoWriterCV(VideoWriter):
 			I.write_image_cv(
 				image       = image,
 				dir_path    = self.dst,
-				name        = f"{core.Path(path).stem}.png",
+				name        = f"{pathlib.Path(path).stem}.png",
 				prefix      = "",
 				extension   =".png",
 				denormalize = denormalize or self.denormalize
@@ -713,7 +799,7 @@ class VideoWriterCV(VideoWriter):
 	def write_batch(
 		self,
 		images     : list[torch.Tensor | np.ndarray],
-		paths      : list[core.Path] | None = None,
+		paths      : list[pathlib.Path] | None = None,
 		denormalize: bool  = False
 	):
 		"""Write a batch of images to :attr:`dst`.
@@ -749,7 +835,7 @@ class VideoWriterFFmpeg(VideoWriter):
 	
 	def __init__(
 		self,
-		destination: core.Path,
+		destination: pathlib.Path,
 		image_size : int | list[int] = [480, 640],
 		frame_rate : float = 10,
 		pix_fmt    : str   = "yuv420p",
@@ -826,7 +912,7 @@ class VideoWriterFFmpeg(VideoWriter):
 	def write(
 		self,
 		image      : torch.Tensor | np.ndarray,
-		path       : core.Path | None = None,
+		path       : pathlib.Path | None = None,
 		denormalize: bool = False
 	):
 		"""Write an image to :attr:`dst`.
@@ -838,11 +924,11 @@ class VideoWriterFFmpeg(VideoWriter):
 				Default: ``False``.
 		"""
 		if self.save_image:
-			assert isinstance(path, core.Path)
+			assert isinstance(path, pathlib.Path)
 			I.write_image_cv(
 				image       = image,
 				dir_path	= self.dst,
-				name        = f"{core.Path(path).stem}.png",
+				name        = f"{pathlib.Path(path).stem}.png",
 				prefix      = "",
 				extension   =".png",
 				denormalize = denormalize or self.denormalize
@@ -858,7 +944,7 @@ class VideoWriterFFmpeg(VideoWriter):
 	def write_batch(
 		self,
 		images     : list[torch.Tensor | np.ndarray],
-		paths      : list[core.Path] | None = None,
+		paths      : list[pathlib.Path] | None = None,
 		denormalize: bool = False,
 	):
 		"""Write a batch of images to :attr:`dst`.

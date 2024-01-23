@@ -41,8 +41,8 @@ import cv2
 import numpy as np
 import torch
 
+from mon import core, nn
 from mon.globals import BBoxFormat
-from mon.vision import core, nn
 from mon.vision.data.base import label
 
 console    = core.console

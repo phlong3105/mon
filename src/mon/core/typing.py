@@ -7,7 +7,8 @@ same naming convention as in :mod:`torch`.
 
 from __future__ import annotations
 
-from typing import Optional, TypeVar, Union, Callable
+from typing import Callable, Optional, TypeVar, Union
+
 from torch import nn
 
 # Create some useful type aliases

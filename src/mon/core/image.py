@@ -60,9 +60,9 @@ import numpy as np
 import torch
 import torchvision
 
-from mon import nn, core
-from mon.core import error_console, math
-from mon.vision.core import base
+from mon.core import math, pathlib
+from mon.core.device import select_device
+from mon.core.rich import error_console
 
 
 # region Assert
@@ -863,7 +863,7 @@ def to_image_tensor(
     # Place in memory
     input = input.contiguous()
     if device is not None:
-        device = nn.select_device(device=device) \
+        device = select_device(device=device) \
             if not isinstance(device, torch.device) else device
         input = input.to(device)
     return input
@@ -945,7 +945,7 @@ def blend(
 # region I/O
 
 def read_image(
-    path     : core.Path,
+    path     : pathlib.Path,
     to_rgb   : bool = True,
     to_tensor: bool = False,
     normalize: bool = False,
@@ -976,7 +976,7 @@ def read_image(
 
 
 def write_image(
-    path       : core.Path,
+    path       : pathlib.Path,
     image      : torch.Tensor | np.ndarray,
     denormalize: bool = False
 ):
@@ -997,7 +997,7 @@ def write_image(
 
 def write_image_cv(
     image      : torch.Tensor | np.ndarray,
-    dir_path   : core.Path,
+    dir_path   : pathlib.Path,
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
@@ -1024,9 +1024,9 @@ def write_image_cv(
             f"but got {image.ndim}."
         )
     # Write image
-    dir_path  = core.Path(dir_path)
+    dir_path  = pathlib.Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
-    name      = core.Path(name)
+    name      = pathlib.Path(name)
     stem      = name.stem
     extension = extension  # name.suffix
     extension = f"{name.suffix}" if extension == "" else extension
@@ -1039,7 +1039,7 @@ def write_image_cv(
 
 def write_image_torch(
     image      : torch.Tensor | np.ndarray,
-    dir_path   : core.Path,
+    dir_path   : pathlib.Path,
     name       : str,
     prefix     : str  = "",
     extension  : str  = ".png",
@@ -1069,9 +1069,9 @@ def write_image_torch(
             f"but got {image.ndim}."
         )
     # Write image
-    dir_path  = core.Path(dir_path)
+    dir_path  = pathlib.Path(dir_path)
     dir_path.mkdir(parents=True, exist_ok=True)
-    name      = core.Path(name)
+    name      = pathlib.Path(name)
     stem      = name.stem
     extension = extension  # name.suffix
     extension = f"{name.suffix}" if extension == "" else extension
@@ -1087,7 +1087,7 @@ def write_image_torch(
 
 def write_images_cv(
     images     : list[torch.Tensor | np.ndarray],
-    dir_path   : core.Path,
+    dir_path   : pathlib.Path,
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
@@ -1129,7 +1129,7 @@ def write_images_cv(
 
 def write_images_torch(
     images     : Sequence[torch.Tensor | np.ndarray],
-    dir_path   : core.Path,
+    dir_path   : pathlib.Path,
     names      : list[str],
     prefixes   : list[str] = "",
     extension  : str       = ".png",
@@ -1169,7 +1169,7 @@ def write_images_torch(
     )
 
 
-class ImageLoader(base.Loader):
+class ImageLoader:
     """An image loader that retrieves and loads image(s) from a file path,
     file path pattern, or directory.
     
@@ -1195,32 +1195,37 @@ class ImageLoader(base.Loader):
     
     def __init__(
         self,
-        source     : core.Path,
+        source     : pathlib.Path,
         max_samples: int | None = None,
         batch_size : int        = 1,
         to_rgb     : bool       = True,
         to_tensor  : bool       = False,
         normalize  : bool       = False,
         verbose    : bool       = False,
-        *args, **kwargs
     ):
         self.images = []
-        super().__init__(
-            source      = source,
-            max_samples = max_samples,
-            batch_size  = batch_size,
-            to_rgb      = to_rgb,
-            to_tensor   = to_tensor,
-            normalize   = normalize,
-            verbose     = verbose
-        )
+        self.source      = pathlib.Path(source)
+        self.batch_size  = batch_size
+        self.to_rgb      = to_rgb
+        self.to_tensor   = to_tensor
+        self.normalize   = normalize
+        self.verbose     = verbose
+        self.index       = 0
+        self.max_samples = max_samples
+        self.num_images  = 0
+        self.init()
+    
+    def __iter__(self):
+        """Return an iterator object starting at index ``0``."""
+        self.reset()
+        return self
+    
+    def __len__(self) -> int:
+        """Return the number of images in the dataset."""
+        return self.num_images
     
     def __next__(self) -> tuple[torch.Tensor | np.ndarray, list, list, list]:
         """Load the next batch of images from the disk.
-        
-        Examples:
-            >>> images = ImageLoader("cam_1.mp4")
-            >>> for index, image in enumerate(images):
         
         Return:
             Images of shape :math:`[H, W, C]` or :math:`[B, H, W, C]`.
@@ -1261,6 +1266,14 @@ class ImageLoader(base.Loader):
                 images = np.stack(images, axis=0)
             return images, indexes, files, rel_paths
     
+    def __del__(self):
+        """Close."""
+        self.close()
+    
+    def batch_len(self) -> int:
+        """Return the number of batches."""
+        return int(self.__len__() / self.batch_size)
+    
     def init(self):
         """Initialize the data source."""
         if self.source.is_image_file():
@@ -1268,7 +1281,7 @@ class ImageLoader(base.Loader):
         elif self.source.is_dir():
             images = [i for i in self.source.rglob("*") if i.is_image_file()]
         elif isinstance(self.source, str):
-            images = [core.Path(i) for i in glob.glob(self.source)]
+            images = [pathlib.Path(i) for i in glob.glob(self.source)]
             images = [i for i in images if i.is_image_file()]
         else:
             raise IOError(f"Error when listing image files.")
@@ -1286,5 +1299,5 @@ class ImageLoader(base.Loader):
     def close(self):
         """Stop and release."""
         pass
-    
+
 # endregion

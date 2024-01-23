@@ -17,10 +17,11 @@ from typing import Any, Literal
 import kornia
 import torch
 
+from mon import core, nn
 from mon.globals import ModelPhase, MODELS
-from mon.vision import core, nn, prior
+from mon.nn import functional as F
+from mon.vision import prior
 from mon.vision.enhance.llie import base
-from mon.vision.nn import functional as F
 
 math         = core.math
 console      = core.console

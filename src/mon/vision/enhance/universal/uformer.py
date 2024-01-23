@@ -16,15 +16,16 @@ __all__ = [
 
 from typing import Any
 
+import skimage
 import torch
 import torch.utils.checkpoint as checkpoint
 from einops import rearrange
-import skimage
 
-from mon.globals import MODELS, ModelPhase
-from mon.vision import core, nn
+from mon import core, nn
+from mon.core.typing import _callable, _size_2_t
+from mon.globals import ModelPhase, MODELS
+from mon.nn import functional as F
 from mon.vision.enhance.universal import base
-from mon.vision.nn import functional as F, _callable, _size_2_t
 
 console      = core.console
 math         = core.math

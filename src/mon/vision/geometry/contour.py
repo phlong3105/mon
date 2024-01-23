@@ -6,14 +6,17 @@
 from __future__ import annotations
 
 __all__ = [
-    "contour_voc_to_yolo", "contour_yolo_to_voc", "convert_contour",
-    "denormalize_contour", "normalize_contour",
+    "contour_voc_to_yolo",
+    "contour_yolo_to_voc",
+    "convert_contour",
+    "denormalize_contour",
+    "normalize_contour",
 ]
 
 import numpy as np
 
+from mon import core
 from mon.globals import ShapeCode
-from mon.vision import core
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

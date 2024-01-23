@@ -15,8 +15,9 @@ import numpy as np
 import torch
 from cv2.ximgproc import guidedFilter
 
+from mon import core, nn
 from mon.globals import MODELS
-from mon.vision import core, nn, prior
+from mon.vision import prior
 from mon.vision.enhance.dehaze import base
 
 math         = core.math

@@ -13,9 +13,9 @@ from typing import Any, Sequence
 
 import torch
 
+from mon import core, nn
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS, MODELS
-from mon.nn.typing import _size_2_t
-from mon.vision import core, nn
 from mon.vision.enhance.dehaze import base
 
 console      = core.console

@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements loss functions for training machine learning models.
-"""
+"""This module implements basic loss functions."""
 
 from __future__ import annotations
 
@@ -21,7 +20,6 @@ __all__ = [
     "KLDivLoss",
     "L1Loss",
     "L2Loss",
-    "Loss",
     "MAELoss",
     "MSELoss",
     "MarginRankingLoss",
@@ -31,125 +29,25 @@ __all__ = [
     "NLLLoss",
     "NLLLoss2d",
     "PoissonNLLLoss",
-    "reduce_loss",
     "SmoothL1Loss",
     "SmoothMAELoss",
     "SoftMarginLoss",
     "TripletMarginLoss",
     "TripletMarginWithDistanceLoss",
-    "WeightedLoss",
 ]
 
-from abc import ABC, abstractmethod
-
-import humps
 import torch
 from torch import nn
 from torch.nn import functional as F
-from torch.nn.modules.loss import _Loss
 
 from mon.globals import LOSSES, Reduction
-
-
-# region Base Loss
-
-def reduce_loss(
-    loss     : torch.Tensor,
-    weight   : torch.Tensor | None = None,
-    reduction: Reduction | str     = "mean",
-) -> torch.Tensor:
-    """Reduces the loss tensor.
-
-    Args:
-        loss: Elementwise loss tensor.
-        reduction: Reduction value to use.
-        weight: Element-wise weights. Default: ``None``.
-        
-    Returns:
-        Reduced loss.
-    """
-    reduction = Reduction.from_value(reduction)
-    if reduction == Reduction.NONE:
-        return loss
-    if reduction == Reduction.MEAN:
-        return torch.mean(loss)
-    if reduction == Reduction.SUM:
-        return torch.sum(loss)
-    if reduction == Reduction.WEIGHTED_SUM:
-        if weight is None:
-            return torch.sum(loss)
-        else:
-            if weight.devices != loss.device:
-                weight.to(loss.device)
-            if weight.ndim != loss.ndim:
-                raise ValueError(
-                    f"'weight' and 'loss' must have the same ndim."
-                    f" But got: {weight.dim()} != {loss.dim()}"
-                )
-            loss *= weight
-            return torch.sum(loss)
-
-
-class Loss(_Loss, ABC):
-    """The base class for all loss functions.
-    
-    Args:
-        reduction: Specifies the reduction to apply to the output.
-            One of: ``'none'``, ``'mean'``, ``'sum'``, or ``'weighted_sum'``.
-            
-            - ``None``: No reduction will be applied.
-            - ``'mean'``: The sum of the output will be divided by the number of
-              elements in the output.
-            - ``'sum'``: The output will be summed.
-            - Default: ``'mean'``.
-    """
-    
-    # If your loss function only supports some custom reduction. Consider
-    # overwriting this value.
-    reductions = ["none", "mean", "sum", "weighted_sum"]
-    
-    def __init__(self, reduction: Reduction | str = "mean"):
-        reduction = str(Reduction.from_value(value=reduction).value)
-        super().__init__(reduction=reduction)
-        
-        if self.reduction not in self.reductions:
-            raise ValueError(
-                f"'reduction' must be one of: {self.reductions}. "
-                f"But got: {self.reduction}."
-            )
-    
-    def __str__(self):
-        return humps.depascalize(self.__class__.__name__).lower()
-    
-    @abstractmethod
-    def forward(
-        self,
-        input : torch.Tensor,
-        target: torch.Tensor
-    ) -> torch.Tensor:
-        pass
-
-
-class WeightedLoss(Loss, ABC):
-    """The base class for weighted loss functions."""
-    
-    def __init__(
-        self,
-        weight   : torch.Tensor | None = None,
-        reduction: Reduction | str     = "mean",
-    ):
-        super().__init__(reduction=reduction)
-        self.register_buffer("weight", weight)
-        self.weight: torch.Tensor | None
-
-
-# endregion
+from mon.nn.loss import base
 
 
 # region General Loss
 
 @LOSSES.register(name="charbonnier_loss")
-class CharbonnierLoss(Loss):
+class CharbonnierLoss(base.Loss):
     
     def __init__(self, reduction: Reduction | str = "mean", eps: float = 1e-3):
         super().__init__(reduction=reduction)
@@ -166,12 +64,12 @@ class CharbonnierLoss(Loss):
         # loss = torch.sqrt((input - target) ** 2 + (self.eps * self.eps))
         diff = input - target
         loss = torch.mean(torch.sqrt((diff * diff) + (self.eps * self.eps)))
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 
 @LOSSES.register(name="l1_loss")
-class L1Loss(Loss):
+class L1Loss(base.Loss):
     """L1 Loss or Mean Absolute Error."""
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -194,7 +92,7 @@ class L1Loss(Loss):
 
 
 @LOSSES.register(name="l2_loss")
-class L2Loss(Loss):
+class L2Loss(base.Loss):
     """L2 Loss or Mean Squared Error."""
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -217,7 +115,7 @@ class L2Loss(Loss):
 
 
 @LOSSES.register(name="extended_l1_loss")
-class ExtendedL1Loss(Loss):
+class ExtendedL1Loss(base.Loss):
     """Also pays attention to the mask, to be relative to its size."""
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -236,7 +134,7 @@ class ExtendedL1Loss(Loss):
     ) -> torch.Tensor:
         norm = self.l1(mask, torch.zeros(mask.shape).to(mask.device))
         loss = self.l1(mask * input, mask * target) / norm
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 

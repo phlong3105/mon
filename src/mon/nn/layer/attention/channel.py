@@ -23,9 +23,9 @@ import torch
 from torch import nn
 from torchvision.ops import misc as torchvision_misc
 
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import activation as act, base, conv, linear, pooling
-from mon.nn.typing import _size_2_t
 
 
 # region Efficient Channel Attention

@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""This module implements loss functions for training vision deep learning
-models.
-
-This module is built on top of :mod:`mon.nn.loss`.
-"""
+"""This module implements loss functions for images."""
 
 from __future__ import annotations
 
@@ -35,21 +31,17 @@ from typing import Literal
 import numpy as np
 import piqa
 import torch
+from torch import nn
+from torch.nn import functional as F
 
-from mon import core, nn
 from mon.globals import LOSSES, Reduction
-from mon.nn import functional as F
-from mon.nn.loss import *
-from mon.vision import prior
-
-console      = core.console
-_current_dir = core.Path(__file__).absolute().parent
+from mon.nn.loss import base, basic
 
 
 # region Channel Loss
 
 @LOSSES.register(name="channel_consistency_loss")
-class ChannelConsistencyLoss(Loss):
+class ChannelConsistencyLoss(base.Loss):
     """Channel Consistency Loss :math:`\mathcal{L}_{kl}` enhances the
     consistency between the original image and the enhanced image in the channel
     pixel difference through KL divergence. It also suppresses the generation of
@@ -104,7 +96,7 @@ class ChannelConsistencyLoss(Loss):
 
 
 @LOSSES.register(name="channel_ratio_consistency_loss")
-class ChannelRatioConsistencyLoss(Loss):
+class ChannelRatioConsistencyLoss(base.Loss):
     """Channel Ratio Consistency Loss :math:`\mathcal{L}_{crl}` constrains the
     intrinsic ratio among three channels to prevent potential color deviations
     in the enhanced image.
@@ -141,7 +133,7 @@ class ChannelRatioConsistencyLoss(Loss):
 
     
 @LOSSES.register(name="color_constancy_loss")
-class ColorConstancyLoss(Loss):
+class ColorConstancyLoss(base.Loss):
     """Color Constancy Loss :math:`\mathcal{L}_{col}` corrects the potential
     color deviations in the enhanced image and builds the relations among the
     three adjusted channels.
@@ -167,16 +159,16 @@ class ColorConstancyLoss(Loss):
         d_rb       = torch.pow(mr - mb, 2)
         d_gb       = torch.pow(mb - mg, 2)
         loss       = torch.pow(torch.pow(d_rg, 2) + torch.pow(d_rb, 2) + torch.pow(d_gb, 2), 0.5)
-        loss       = reduce_loss(loss=loss, reduction=self.reduction)
+        loss       = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 
 @LOSSES.register(name="grayscale_loss")
-class GrayscaleLoss(nn.Module):
+class GrayscaleLoss(base.Loss):
 
     def __init__(self, reduction: Reduction | str = "mean"):
         super().__init__(reduction=reduction)
-        self.mse = MSELoss()
+        self.mse = basic.MSELoss()
 
     def forward(
         self,
@@ -186,12 +178,12 @@ class GrayscaleLoss(nn.Module):
         x_g  = torch.mean(input,  1, keepdim=True)
         y_g  = torch.mean(target, 1, keepdim=True)
         loss = self.mse(x_g, y_g)
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
     
 
 @LOSSES.register(name="contradict_channel_loss")
-class ContradictChannelLoss(Loss):
+class ContradictChannelLoss(base.Loss):
     """Contradic Channel Loss :math:`\mathcal{L}_{con}` measures the distance
     between the average intensity value of a local region to the
     well-exposedness level E.
@@ -207,7 +199,7 @@ class ContradictChannelLoss(Loss):
         
     def __init__(
         self,
-        reduction : Reduction | str = "mean",
+        reduction  : Reduction | str = "mean",
         kernel_size: int | list[int] = 35,
     ):
         super().__init__(reduction=reduction)
@@ -217,7 +209,7 @@ class ContradictChannelLoss(Loss):
             stride      = 1,
             padding     = int(self.kernel_size//2)
         )
-        self.mae = MAELoss()
+        self.mae     = basic.MAELoss()
         self.sigmoid = nn.Sigmoid()
     
     def __str__(self) -> str:
@@ -237,7 +229,7 @@ class ContradictChannelLoss(Loss):
         y_true = self.pool(y_true)
 
         loss = self.mae(y_pred, y_true)
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return self.sigmoid(loss)
 
 # endregion
@@ -246,7 +238,7 @@ class ContradictChannelLoss(Loss):
 # region Exposure Loss
 
 @LOSSES.register(name="brightness_constancy_loss")
-class BrightnessConstancyLoss(Loss):
+class BrightnessConstancyLoss(base.Loss):
     """Brightness Constancy Loss
 
     Args:
@@ -278,15 +270,16 @@ class BrightnessConstancyLoss(Loss):
         input : torch.Tensor,
         target: torch.Tensor
     ) -> torch.Tensor:
-        target = prior.get_guided_brightness_enhancement_map_prior(target,  self.gamma, self.ksize)
+        from mon.vision import prior
+        target = prior.get_guided_brightness_enhancement_map_prior(target, self.gamma, self.ksize)
         # loss    = torch.abs(target - input)
         loss    = torch.sqrt((target - input) ** 2 + (self.eps * self.eps))
-        loss    = reduce_loss(loss=loss, reduction=self.reduction)
+        loss    = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
     
 
 @LOSSES.register(name="exposure_control_loss")
-class ExposureControlLoss(Loss):
+class ExposureControlLoss(base.Loss):
     """Exposure Control Loss :math:`\mathcal{L}_{exp}` measures the distance
     between the average intensity value of a local region to the
     well-exposedness level E.
@@ -323,7 +316,7 @@ class ExposureControlLoss(Loss):
         x    = torch.mean(x, 1, keepdim=True)
         mean = self.pool(x)
         loss = torch.pow(mean - torch.FloatTensor([self.mean_val]).to(input.device), 2)
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 # endregion
@@ -332,7 +325,7 @@ class ExposureControlLoss(Loss):
 # region Perceptual Loss
 
 @LOSSES.register(name="edge_constancy_loss")
-class EdgeConstancyLoss(Loss):
+class EdgeConstancyLoss(base.Loss):
     """Edge Constancy Loss :math:`\mathcal{L}_{edge}`."""
     
     def __init__(self, reduction: Reduction | str = "mean", eps: float = 1e-3):
@@ -353,7 +346,7 @@ class EdgeConstancyLoss(Loss):
         edge1 = self.laplacian_kernel(input)
         edge2 = self.laplacian_kernel(target)
         loss  = torch.sqrt((edge1 - edge2) ** 2 + (self.eps * self.eps))
-        loss  = reduce_loss(loss=loss, reduction=self.reduction)
+        loss  = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
     
     def gauss_conv(self, image: torch.Tensor) -> torch.Tensor:
@@ -375,12 +368,12 @@ class EdgeConstancyLoss(Loss):
 
 
 @LOSSES.register(name="perceptual_loss")
-class PerceptualLoss(Loss):
+class PerceptualLoss(base.Loss):
     """Perceptual Loss."""
     
     def __init__(self, vgg: nn.Module, reduction: Reduction | str = "mean"):
         super().__init__(reduction=reduction)
-        self.mse = MSELoss(reduction=reduction)
+        self.mse = basic.MSELoss(reduction=reduction)
         self.vgg = vgg
         for param in self.vgg.parameters():
             param.requires_grad = False
@@ -402,7 +395,7 @@ class PerceptualLoss(Loss):
 
 
 @LOSSES.register(name="perceptual_l1_loss")
-class PerceptualL1Loss(Loss):
+class PerceptualL1Loss(base.Loss):
     """Loss = weights[0] * Perceptual Loss + weights[1] * L1 Loss."""
     
     def __init__(self, vgg: nn.Module, reduction: Reduction | str = "mean"):
@@ -411,7 +404,7 @@ class PerceptualL1Loss(Loss):
             vgg       = vgg,
             reduction = reduction,
         )
-        self.l1_loss = L1Loss(
+        self.l1_loss = basic.L1Loss(
             reduction=reduction,
         )
         self.layer_name_mapping = {
@@ -508,7 +501,7 @@ class ExclusionLoss(nn.Module):
 
 
 @LOSSES.register(name="gradient_loss")
-class GradientLoss(Loss):
+class GradientLoss(base.Loss):
     """L1 loss on the gradient of the image."""
     
     def __init__(self, reduction: Reduction | str = "mean"):
@@ -524,7 +517,7 @@ class GradientLoss(Loss):
     ) -> torch.Tensor:
         gradient_a_x = torch.abs(input[:, :, :, :-1] - input[:, :, :, 1:])
         gradient_a_y = torch.abs(input[:, :, :-1, :] - input[:, :, 1:, :])
-        loss = reduce_loss(
+        loss = base.reduce_loss(
             loss      = torch.mean(gradient_a_x) + torch.mean(gradient_a_y),
             reduction = self.reduction
         )
@@ -532,11 +525,11 @@ class GradientLoss(Loss):
 
 
 @LOSSES.register(name="gray_loss")
-class GrayLoss(nn.Module):
+class GrayLoss(base.Loss):
 
     def __init__(self, reduction: Reduction | str = "mean"):
         super().__init__(reduction=reduction)
-        self.mae = MAELoss()
+        self.mae = basic.MAELoss()
 
     def forward(
         self,
@@ -546,17 +539,17 @@ class GrayLoss(nn.Module):
         x = input
         y = torch.ones_like(x) / 2.0
         loss = 1 / self.mae(x, y)
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 
 @LOSSES.register(name="non_blurry_loss")
-class NonBlurryLoss(nn.Module):
+class NonBlurryLoss(base.Loss):
     """Loss on the distance to 0.5."""
 
     def __init__(self, reduction: Reduction | str = "mean"):
         super().__init__(reduction=reduction)
-        self.mse = MSELoss()
+        self.mse = basic.MSELoss()
 
     def forward(
         self,
@@ -565,12 +558,12 @@ class NonBlurryLoss(nn.Module):
     ) -> torch.Tensor:
         x    = input
         loss = 1 - self.mse(x, torch.ones_like(x) * 0.5)
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 
 @LOSSES.register(name="psnr_loss")
-class PSNRLoss(Loss):
+class PSNRLoss(base.Loss):
     """PSNR loss. Modified from BasicSR: `<https://github.com/xinntao/BasicSR>`__
     """
     
@@ -613,7 +606,7 @@ class PSNRLoss(Loss):
 
 
 @LOSSES.register(name="ssim_loss")
-class SSIMLoss(Loss):
+class SSIMLoss(base.Loss):
     """SSIM Loss. Modified from BasicSR: https://github.com/xinntao/BasicSR"""
     
     def __init__(
@@ -645,12 +638,12 @@ class SSIMLoss(Loss):
         ssim_map = self.ssim(input=input, target=target)
         # Compute and reduce the loss
         loss = torch.clamp((1.0 - ssim_map) / 2, min=0, max=1)
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 
 @LOSSES.register(name="std_loss")
-class StdLoss(Loss):
+class StdLoss(base.Loss):
     """Loss on the variance of the image. Works in the grayscale. If the image
     is smooth, gets zero.
     """
@@ -660,7 +653,7 @@ class StdLoss(Loss):
         blur      = (1 / 25) * np.ones((5, 5))
         blur      = blur.reshape(1, 1, blur.shape[0], blur.shape[1])
         self.blur = nn.Parameter(data=torch.cuda.FloatTensor(blur), requires_grad=False)
-        self.mse  = MSELoss()
+        self.mse  = basic.MSELoss()
 
         image       = np.zeros((5, 5))
         image[2, 2] = 1
@@ -677,7 +670,7 @@ class StdLoss(Loss):
         if self.image.device != x.device:
             self.image = self.image.to(x.device)
         loss = self.mse(F.conv2d(x, self.image), F.conv2d(x, self.blur))
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 # endregion
@@ -686,7 +679,7 @@ class StdLoss(Loss):
 # region Smoothness Loss
 
 @LOSSES.register(name="illumination_smoothness_loss")
-class IlluminationSmoothnessLoss(Loss):
+class IlluminationSmoothnessLoss(base.Loss):
     """Illumination Smoothness Loss :math:`\mathcal{L}_{tvA}` preserve the
     monotonicity relations between neighboring pixels. It is used to avoid
     aggressive and sharp changes between neighboring pixels.
@@ -728,7 +721,7 @@ class IlluminationSmoothnessLoss(Loss):
 # region Spatial Loss
 
 @LOSSES.register(name="spatial_consistency_loss")
-class SpatialConsistencyLoss(Loss):
+class SpatialConsistencyLoss(base.Loss):
     """Spatial Consistency Loss :math:`\mathcal{L}_{spa}` encourages spatial
     coherence of the enhanced image through preserving the difference of
     neighboring regions between the input image and its enhanced version.
@@ -1094,7 +1087,7 @@ class SpatialConsistencyLoss(Loss):
             loss += (d_up2left1 + d_up2right1 + d_up1left2 + d_up1right2 +
                      d_down2left1 + d_down2right1 + d_down1left2 + d_down1right2)
         
-        loss = reduce_loss(loss=loss, reduction=self.reduction)
+        loss = base.reduce_loss(loss=loss, reduction=self.reduction)
         return loss
 
 # endregion

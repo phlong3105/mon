@@ -67,7 +67,6 @@ import cv2
 
 from mon.core import enum, factory, pathlib
 
-
 # region Directory
 
 _current_file = pathlib.Path(__file__).absolute()
@@ -102,6 +101,7 @@ if not DATA_DIR.is_dir():
 # region Factory
 
 ACCELERATORS  = factory.Factory(name="Accelerators")
+AUGMENTS      = factory.Factory(name="Augments")
 CALLBACKS     = factory.Factory(name="Callbacks")
 DATAMODULES   = factory.Factory(name="DataModules")
 DATASETS      = factory.Factory(name="Datasets")

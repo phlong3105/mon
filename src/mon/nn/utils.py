@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import os
-import random
 
 import multipledispatch
 import numpy as np
@@ -16,7 +15,7 @@ import torch
 # noinspection PyUnresolvedReferences
 from torch.nn.utils import *
 
-from mon.nn.typing import _size_2_t, _size_3_t
+from mon.core.typing import _size_2_t, _size_3_t
 
 
 # region Access
@@ -34,19 +33,6 @@ def is_rank_zero() -> bool:
         "LOCAL_RANK" not in os.environ.keys() and
         "NODE_RANK"  not in os.environ.keys()
     ) else False
-
-# endregion
-
-
-# region Assign
-
-def set_random_seed(seed):
-    """Set random seeds."""
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
 
 # endregion
 

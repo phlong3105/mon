@@ -35,7 +35,8 @@ import uuid
 import numpy as np
 import torch
 
-from mon.vision import core, geometry, nn
+from mon import core, nn
+from mon.vision import geometry
 
 console       = core.console
 error_console = core.error_console

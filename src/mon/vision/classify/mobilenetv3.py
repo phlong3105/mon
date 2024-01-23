@@ -13,15 +13,15 @@ __all__ = [
 
 import functools
 from abc import ABC
-from typing import Sequence, Any
+from typing import Any, Sequence
 
 import torch
 from torchvision.models import _utils
 
+from mon import core, nn
+from mon.core.typing import _callable
 from mon.globals import MODELS
-from mon.vision import core, nn
 from mon.vision.classify import base
-from mon.vision.nn import _callable
 
 console      = core.console
 math         = core.math

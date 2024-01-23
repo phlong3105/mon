@@ -49,16 +49,16 @@ __all__ = [
 
 import functools
 import types
-from typing import Callable, Any
+from typing import Any, Callable
 
 import torch
 from torch import nn
 from torch.nn import functional
 
 from mon.core import builtins
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import base
-from mon.nn.typing import _size_2_t
 
 
 # region Linear Unit

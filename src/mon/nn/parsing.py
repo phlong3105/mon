@@ -11,11 +11,8 @@ __all__ = [
 
 from torch import nn
 
-from mon import core as mf
-from mon.nn.layer import *
 from mon.globals import LAYERS
-
-console = mf.console
+from mon.nn.layer import *
 
 
 # region Model Parsing

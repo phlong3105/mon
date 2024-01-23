@@ -12,7 +12,7 @@ __all__ = [
 from abc import ABC
 
 from mon.globals import ZOO_DIR
-from mon.vision import core
+from mon import core
 from mon.vision.enhance import base
 
 console      = core.console

@@ -20,10 +20,7 @@ import kornia
 import numpy as np
 import torch
 
-from mon.vision import core
-
-console      = core.console
-_current_dir = core.Path(__file__).absolute().parent
+from mon import core
 
 
 # region Image Feature Prior: Intensity & Gradient

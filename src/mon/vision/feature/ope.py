@@ -13,8 +13,8 @@ __all__ = [
 
 import torch
 
+from mon import core, nn
 from mon.globals import EMBEDDERS
-from mon.vision import core, nn
 from mon.vision.feature import base
 
 math         = core.math

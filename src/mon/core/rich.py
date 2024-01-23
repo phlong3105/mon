@@ -8,13 +8,6 @@ beautiful formatting in the terminal, console, and logging throughout the
 
 from __future__ import annotations
 
-import multipledispatch
-import rich
-from rich import panel, pretty, progress, table, text, theme
-
-from mon.core import builtins, pynvml
-from mon.globals import MemoryUnit
-
 __all__ = [
     "GPUMemoryUsageColumn",
     "ProcessedItemsColumn",
@@ -31,6 +24,13 @@ __all__ = [
     "print_table",
     "rich_console_theme",
 ]
+
+import multipledispatch
+import rich
+from rich import panel, pretty, progress, table, text, theme
+
+from mon.core import builtins, pynvml
+from mon.globals import MemoryUnit
 
 # region Console
 

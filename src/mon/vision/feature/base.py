@@ -9,13 +9,14 @@ __all__ = [
     "DeepEmbedder", "Embedder",
 ]
 
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from typing import Any
 
 import numpy as np
 import torch
 
-from mon.vision import core, nn
+from mon import core
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
@@ -71,7 +72,7 @@ class DeepEmbedder(Embedder, ABC):
         self.config     = config
         self.weight     = weight
         self.image_size = core.get_hw(size=image_size)
-        self.device     = nn.select_device(device=device)
+        self.device     = core.select_device(device=device)
         self.to_numpy   = to_numpy
         # Load model
         self.model = None

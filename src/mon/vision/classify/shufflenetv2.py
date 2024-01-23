@@ -18,10 +18,10 @@ from typing import Any
 
 import torch
 
+from mon import core, nn
+from mon.core.typing import _callable
 from mon.globals import MODELS
-from mon.vision import core, nn
 from mon.vision.classify import base
-from mon.vision.nn import _callable
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent

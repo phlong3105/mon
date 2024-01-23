@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 __all__ = [
-    "LRSchedulerFactory", "OptimizerFactory",
+    "LRSchedulerFactory",
+    "OptimizerFactory",
 ]
 
 import copy
@@ -195,7 +196,6 @@ class LRSchedulerFactory(factory.Factory):
             )
         
         return schedulers if len(schedulers) > 0 else None
-
 
 # endregion
 

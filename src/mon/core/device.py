@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 __all__ = [
-    "extract_device_dtype", "select_device", "time_synchronized",
+    "extract_device_dtype",
+    "select_device",
+    "time_synchronized",
 ]
 
 import os
@@ -15,7 +17,7 @@ from typing import Any
 
 import torch
 
-from mon.core import console
+from mon.core.rich import console
 
 
 # region Device Selection

@@ -17,10 +17,16 @@ from mon.globals import LAYERS
 from mon.nn.layer import base
 
 
+# region Channel Shuffle
+
 @LAYERS.register()
 class ChannelShuffle(base.PassThroughLayerParsingMixin, nn.ChannelShuffle):
 	pass
 
+# endregion
+
+
+# region Pixel Shuffle
 
 @LAYERS.register()
 class PixelShuffle(base.PassThroughLayerParsingMixin, nn.PixelShuffle):
@@ -30,3 +36,5 @@ class PixelShuffle(base.PassThroughLayerParsingMixin, nn.PixelShuffle):
 @LAYERS.register()
 class PixelUnshuffle(base.PassThroughLayerParsingMixin, nn.PixelUnshuffle):
 	pass
+
+# endregion

@@ -17,7 +17,7 @@ import torch
 
 from mon.core import console, pathlib
 from mon.globals import ModelPhase
-from mon.nn import device as d, model
+from mon.nn import model
 
 
 class Inferrer(ABC):
@@ -26,17 +26,17 @@ class Inferrer(ABC):
     def __init__(
         self,
         source     : pathlib.Path | None = None,
-        root       : pathlib.Path     = pathlib.Path() / "infer",
-        project    : str              = "",
-        name       : str              = "exp",
-        max_samples: int | None       = None,
-        batch_size : int              = 1,
-        image_size : int | list[int]  = 256,
-        device     : int | str        = "cpu",
-        phase      : ModelPhase | str = "training",
-        tensorrt   : bool             = True,
-        save       : bool             = True,
-        verbose    : bool             = True,
+        root       : pathlib.Path        = pathlib.Path() / "infer",
+        project    : str                 = "",
+        name       : str                 = "exp",
+        max_samples: int | None          = None,
+        batch_size : int                 = 1,
+        image_size : int | list[int]     = 256,
+        device     : int | str           = "cpu",
+        phase      : ModelPhase | str    = "training",
+        tensorrt   : bool                = True,
+        save       : bool                = True,
+        verbose    : bool                = True,
     ):
         self.source      = pathlib.Path(source) if source is not None else source
         self.root        = pathlib.Path(root)
@@ -44,7 +44,7 @@ class Inferrer(ABC):
         self.shape       = image_size
         self.max_samples = max_samples
         self.batch_size  = batch_size
-        self.device      = d.select_device(device=device, batch_size=batch_size)
+        self.device      = core.select_device(device=device, batch_size=batch_size)
         self.phase       = phase
         self.tensorrt    = tensorrt
         self.save        = save

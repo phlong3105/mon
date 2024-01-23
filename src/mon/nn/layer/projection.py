@@ -21,9 +21,9 @@ from einops import rearrange
 from torch import nn
 
 from mon.core import math
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import conv, linear
-from mon.nn.typing import _size_2_t
 
 
 # region Embedding Q, K, V

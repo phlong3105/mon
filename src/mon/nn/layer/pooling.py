@@ -47,9 +47,9 @@ from torch import nn
 from torch.nn import functional
 
 from mon.core import builtins
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import base, padding as pad
-from mon.nn.typing import _size_2_t
 
 
 # region Adaptive Pool
@@ -157,12 +157,12 @@ class AdaptivePool2d(base.PassThroughLayerParsingMixin, nn.Module):
         pool_type  : str  = "fast",
         flatten    : bool = False,
     ):
-        from mon.nn.layer import linear, transform
+        from mon.nn.layer import linear, flatten
         
         super().__init__()
         self.pool_type = pool_type or ""
         
-        self.flatten = transform.Flatten(1) \
+        self.flatten = flatten.Flatten(1) \
             if flatten else linear.Identity()
         if pool_type == "":
             self.pool = linear.Identity()  # pass through

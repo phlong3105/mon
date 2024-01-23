@@ -18,12 +18,12 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import cast, Any
+from typing import Any, cast
 
 import torch
 
+from mon import core, nn
 from mon.globals import MODELS
-from mon.vision import core, nn
 from mon.vision.classify import base
 
 console      = core.console

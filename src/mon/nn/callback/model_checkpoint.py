@@ -23,7 +23,7 @@ import lightning.pytorch as pl
 import torch
 from lightning.pytorch import callbacks
 
-from mon.core import console, error_console, pathlib
+from mon import console, error_console, pathlib
 from mon.globals import CALLBACKS
 
 

@@ -23,10 +23,10 @@ from typing import Any
 import torch
 from torch import nn
 
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import activation, base, linear, normalization, pooling
 from mon.nn.layer.conv import base as conv
-from mon.nn.typing import _size_2_t
 
 
 # region Fourier Transform

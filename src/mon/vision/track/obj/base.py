@@ -18,8 +18,9 @@ from typing import Any, Callable
 import cv2
 import numpy as np
 
+from mon import core, nn
 from mon.globals import AppleRGB, MOTIONS, MovingState
-from mon.vision import core, draw, geometry, nn
+from mon.vision import geometry
 from mon.vision.track import motion as mmotion
 
 console      = core.console

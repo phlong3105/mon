@@ -18,12 +18,12 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from mon.core.typing import _size_2_t
 from mon.globals import LAYERS
 from mon.nn.layer import (
 	activation as act, base, conv, flatten, linear, normalization as norm,
 	pooling
 )
-from mon.nn.typing import _size_2_t
 
 
 # region Channel Attention Module

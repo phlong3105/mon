@@ -13,8 +13,9 @@ from abc import ABC
 
 import torch
 
+from mon import core, nn
 from mon.globals import ZOO_DIR
-from mon.vision import core, nn, view
+from mon.vision import view
 
 console      = core.console
 _current_dir = core.Path(__file__).absolute().parent
