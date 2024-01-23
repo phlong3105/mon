@@ -55,7 +55,7 @@ dependencies:
       - piq                   # A collection of measures and metrics for image quality assessment.
       - piqa                  # PyTorch Image Quality Assessment package.
       - pyiqa                 # PyTorch Toolbox for Image Quality Assessment.
-      - torchmetrics>=1.2.1   # Collection of PyTorch native metrics for easy evaluating machine learning models.
+      - torchmetrics>=1.3.0   # Collection of PyTorch native metrics for easy evaluating machine learning models.
       # Ray                   
       - ray[tune]             # Ray is a fast and simple framework for building and running distributed applications.
       # Scientific            

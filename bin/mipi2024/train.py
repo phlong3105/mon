@@ -156,7 +156,7 @@ def main(
     devices     = devices     or config_args.trainer["devices"]
     max_epochs  = max_epochs  or config_args.trainer["max_epochs"]
     max_steps   = max_steps   or config_args.trainer["max_steps"]
-    strategy    = strategy    or config_args.trainer["strategy"]
+    strategy    = "ddp_find_unused_parameters_true"  # strategy    or config_args.trainer["strategy"]
 
     # Update arguments
     args                 = mon.get_module_vars(config_args)

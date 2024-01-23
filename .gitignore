@@ -13,6 +13,7 @@ build/
 dist/
 
 /.idea/
+/.sync/
 /archive/
 /data/*/
 /run/*/
